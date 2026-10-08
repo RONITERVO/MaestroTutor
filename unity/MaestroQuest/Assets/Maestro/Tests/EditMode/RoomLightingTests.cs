@@ -29,6 +29,14 @@ namespace Maestro.Quest.Tests
             var j=new RoomJournal(Room());var light=j.Lighting;light.sunIntensity=value;
             Assert.That(j.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,lighting:light),Is.False);Assert.That(j.CanUndo,Is.False);
         }
+        [TestCase("#123456\n")] [TestCase("#123456\r\n")] [TestCase(" #123456")] [TestCase("#12345G")]
+        public void SavedLightingAndDailyFramesRejectInvalidHexColours(string color) {
+            var room=Room();room.lighting.ambientColor=color;Assert.That(room.lighting.Valid,Is.False);
+            Assert.Throws<InvalidDataException>(()=>RoomSnapshotTransaction.FromDocuments(room,ProgramMemoryDocument.Empty()));
+            room=Room();room.worldTime.settings.frames=new[]{new WorldLightKeyframe{sunColor=color}};
+            Assert.That(room.worldTime.Valid,Is.False);
+            Assert.Throws<InvalidDataException>(()=>RoomSnapshotTransaction.FromDocuments(room,ProgramMemoryDocument.Empty()));
+        }
         [Test]public void DirectionUsesAuthoredAxesAndCurrentWireCannotOmitOrInventFields() {
             var l=new RoomLighting{azimuth=0,elevation=0};Assert.That(Vector3.Distance(l.SunDirection,Vector3.forward),Is.LessThan(.00001));
             l.azimuth=90;Assert.That(Vector3.Distance(l.SunDirection,Vector3.right),Is.LessThan(.00001));l.elevation=90;Assert.That(Vector3.Distance(l.SunDirection,Vector3.up),Is.LessThan(.00001));

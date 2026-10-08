@@ -36,6 +36,13 @@ namespace Maestro.Quest.Tests
             Light(Vector3.back,new Vector3(.2f,.4f,.6f),0);Pixel(Read(c),.1f,.2f,.3f,.5f);
             var tex=Own(new Texture2D(1,1,TextureFormat.RGBA32,false,true));tex.SetPixel(0,0,new Color(1,1,1,.1f));tex.Apply();m.mainTexture=tex;Assert.That(IllustratedSurface.TryCreate("cutout",1,.5f,true,out surface,out error),Is.True,error);surface.Apply(m,true);Pixel(Read(c),0,0,0,0);
         }
+        [Test]public void DailyKeyframesProduceContinuousPixelsAcrossMidnight(){
+            var m=Own(IllustratedMaterials.Create(Color.white,0));Quad(m);var camera=View();
+            var cycle=new Maestro.Quest.Creation.WorldTimeSettings{cycleEnabled=true,frames=new[]{new Maestro.Quest.Creation.WorldLightKeyframe{second=21600,ambientColor="#0000FF",ambientIntensity=.6f,sunIntensity=0},new Maestro.Quest.Creation.WorldLightKeyframe{second=64800,ambientColor="#FF0000",ambientIntensity=.2f,sunIntensity=0}}};
+            var projection=new WorldLightingProjection(new Maestro.Quest.Creation.RoomLighting(),cycle);
+            foreach(double second in new[]{0d,86399.999}){var sample=projection.Sample(second);Light(sample.Direction,sample.Ambient,0);Pixel(Read(camera),.1f,0,.3f,1);}
+            var morning=projection.Sample(21600);Light(morning.Direction,morning.Ambient,0);Pixel(Read(camera),0,0,.6f,1);
+        }
         [Test]public void ActualPalmRecoveryControlRetainsItsColourInAnUnlitWorld(){
             var c=View();var control=Own(new GameObject("Recall acceptance")).AddComponent<Maestro.Quest.Interaction.PalmRecoveryButton>();control.Build(0,null,null,control.transform,c.transform);
             var material=control.GetComponentsInChildren<Renderer>(true).First(x=>x.sharedMaterial.shader.name=="Maestro/Watercolor").sharedMaterial;Quad(material);

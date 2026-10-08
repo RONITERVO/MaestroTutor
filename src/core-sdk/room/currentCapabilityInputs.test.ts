@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(90);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(92);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -110,4 +110,19 @@ it('loads complete region lighting without aliasing state and isolates edit guar
  expect(currentInputIdentity(input,{...loaded,revision:20},'workspace')).not.toBe(identity);
  expect(currentInputIdentity(input,loaded,'other')).not.toBe(identity);
  expect(()=>applyCurrentInputs(input,draft,{...observation,value:{...value,settings:{...settings,sunIntensity:3}}})).toThrow();
+});
+
+it('loads clock configuration without turning a moving time observation into an implicit seek',()=>{
+ const settings={running:true,rate:60,cycleEnabled:true,frames:[{second:0,ambientColor:'#203060',sunColor:'#8899FF',ambientIntensity:.1,sunIntensity:0,azimuth:180,elevation:-45},{second:43200,ambientColor:'#FFFFFF',sunColor:'#FFDD99',ambientIntensity:.3,sunIntensity:1,azimuth:0,elevation:60}]};
+ const value={revision:12,worldId:'a'.repeat(32),regionId:'b'.repeat(32),day:5,second:45001,settings,advancing:true,temporary:false};
+ const snapshot:CatalogView={operation:'inspect',category:'facts',capability:'world.time',version:1,definition:behaviourFact('world.time')!,available:true,value,status:'Available'};
+ const configure=capabilityDefinition('world.time.configure')!.input,input={revision:1,settings:{running:false,rate:1,cycleEnabled:false,frames:[]}};
+ const loaded=applyCurrentInputs(configure,input,snapshot);expect(loaded).toEqual({revision:12,settings});
+ const copied=loaded.settings as typeof settings;copied.frames[0].sunColor='#000000';expect(settings.frames[0].sunColor).toBe('#8899FF');
+ const seek=capabilityDefinition('world.time.seek')!.input,destination={revision:1,day:2,second:64800};
+ expect(applyCurrentInputs(seek,destination,snapshot)).toEqual({...destination,revision:12});
+ const later={...snapshot,value:{...value,second:45002}} as CatalogView;
+ expect(applyCurrentInputs(seek,destination,later)).toEqual({...destination,revision:12});
+ expect(currentInputIdentity(configure,loaded,'room')).toBe(currentInputIdentity(configure,{...loaded,settings:{...copied,rate:120}},'room'));
+ expect(()=>applyCurrentInputs(configure,input,{...snapshot,value:{...value,settings:{...settings,frames:Array.from({length:9},()=>settings.frames[0])}}} as CatalogView)).toThrow();
 });

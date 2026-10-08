@@ -888,3 +888,25 @@ uses its existing bounded provider deadline and receipt/usage evidence. It never
 reuses captured private chat or headset media. Native pixel tests separately check
 world-space direction, opacity/cutout preservation, and readable book/control
 materials. These checks do not establish Quest lighting or performance acceptance.
+
+
+### Authored world time and daily lighting
+
+`-ProviderScenario WorldTime` uses a fresh learner request for blue midnight,
+warm noon, a 24-minute day, and a paused noon starting point. Follow-up requests
+start the clock, then pause at midnight while retaining the authored cycle.
+Assertions inspect native clock progression, stable edit guards during ticking,
+keyframes, effective illumination, unchanged objects, view and collision policy.
+The original tutor/verifier/provider/handoff path and its usage/receipt checks
+remain in effect. Managed and BYOK results must be recorded separately; scenario
+availability is not an acceptance claim.
+
+The deterministic native journey additionally checks explicit seek Undo/Redo,
+static-preset preservation and restoration. The original-book seek form verifies
+that loading its current guard never overwrites the user's destination. It also
+adds two daily frames through the visible array controls, saves them natively,
+and disables the cycle without losing its frames. Repeated actions require a new
+invocation ID, preventing a prior receipt from satisfying a later check. Native
+pixel tests check midnight interpolation using actual rendered materials; separate
+lifecycle tests cover write/runtime holds, save failure and temporary Keep/Discard.
+These desktop checks do not establish Quest appearance or frame-time acceptance.

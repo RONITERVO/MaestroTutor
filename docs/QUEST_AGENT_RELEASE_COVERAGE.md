@@ -1234,3 +1234,75 @@ lighting and performance acceptance remain on hold for the owner's cooldown/char
 readiness and a fresh health check. This implementation supplies one active
 region's ambient/directional illumination; shadows, local lights, time/weather,
 streamed-region projection and the remaining release gates are still open.
+
+
+## Authored world time and daily lighting (2026-10-08)
+
+The shared region clock supplies saved day/second, running intent, rate and an
+optional daily lighting cycle through `world.time.configure`, `world.time.seek`,
+`world.time` and `world.illumination`. Settings edits preserve the current position;
+explicit seeking uses a separate action. Two to eight ordered frames interpolate
+ambient/sun energy and authored angles continuously across midnight. The same
+sample drives rendering and agent/program readback. Physics and animation speed
+remain independent. Room v28, paired snapshot v27 and archive v26 retain the state.
+
+Fresh English-native/Spanish-learning conversations pass three requests: create
+a dim blue midnight / warm noon cycle lasting 24 real minutes, start it, then
+pause at midnight. Both access routes complete the normal tutor, verifier,
+original-context handoff, native receipts, final chat and provider-usage checks.
+
+| Access | Run | Confirmed native operations |
+| --- | --- | --- |
+| Managed | `75136da3d9234a2db9e9dcfc9bc1ec4b` | 12 |
+| BYOK | `5d7f3b40744a4a489d954344a7750afd` | 11 |
+
+Native readback confirms active advancement with stable edit guards, exact frame
+retention, paused midnight and unchanged objects, view and collision policy.
+Duplicate handoff checks dispatch and charge nothing extra. Managed accounting
+reconciles **478 credits / USD 0.462308** across 24 usage and 24 charge entries,
+with zero reservations before/after every turn. This excludes introductory chat.
+BYOK usage belongs to the configured test-key owner. These are fresh synthetic
+conversations; no previously captured private media was reused.
+
+Verification passes **969 EditMode tests** and **1,579 shared tests in 157 files**
+(room, headless, Quest and prompt directories). After the final search/colour
+validation changes, **147 focused shared tests** and **13 focused native
+PlayMode authoring/rendering tests** pass. The full PlayMode suite passes **848
+cases**, with three known optional external-asset skips; that broad run preceded
+the small final search/colour validation fixes. App/probe types, lint, production
+build, catalog provenance, core boundaries and included-asset integrity pass.
+The catalog exports 117 actions, 133 facts and 92 current-input mappings, with
+465 discovered runtime source inputs.
+
+Native run `de6c607a65764d5cafb619e7e6aab7df` passes **648 observations** including
+clock settings, seek Undo/Redo, advancement, pause, readback and restoration.
+Original-book run `9211e37294974a1c94814a46a55288fa` sets the requested day/second
+without letting current-value loading overwrite the destination, adds two daily
+frames through visible controls, saves them, then disables the cycle while
+retaining both frames. Repeated actions require distinct native invocation IDs.
+Its seek and cycle forms were visually inspected; existing original-chat,
+resource-selector, construction, fade and reload checks also pass.
+
+The first book attempt `6c939c1100e1476bb9386ff36809d992` exposed exact-name search
+results buried behind description matches. Native discovery now ranks exact
+names/IDs first, then name/ID matches before description-only results, with stable
+ID ordering within ties and unchanged bounded pages. Book and agent share this
+search implementation. Regression checks ensure no matches disappear or repeat.
+The failed run remains failed. Saved colour validation now rejects a trailing
+newline that the old regular-expression end anchor could admit; static settings
+and daily frames both have regression coverage. An initial test compilation error
+used a nonexistent snapshot helper and was corrected to the existing archive
+fingerprint API before any passing result was recorded.
+
+Clock advancement stops under focus/runtime/write holds, skips resumed/stalled
+frames and performs no offline catch-up. Runtime progress creates no Undo entries
+or edit-guard churn; explicit changes do. Existing save paths checkpoint time and
+preserve save-failure and temporary Keep/Discard semantics. Tests cover archive
+fingerprints, unsupported files, midnight rendered pixels and allocation-free
+cached lighting sampling. They do not establish zero allocation for the entire
+frame or physical Quest timing/appearance.
+
+No new APK, signing, installation, upload or deployment occurred. Headset work
+remains on the outstanding cooling/charging readiness hold. Weather, local lights,
+shadows, water-aware traversal and medium interactions, streamed regions and the
+remaining novice/device/Store release gates remain accepted unfinished work.

@@ -247,8 +247,9 @@ try{
   await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
  };
  const runNamedAction=async(id:string)=>{
+  const previous=await page!.evaluate(()=>window.nativeBookEvidence!().state!.execution?.selected?.id);
   await page!.getByRole('button',{name:'Run action now',exact:true}).click();
-  await page!.waitForFunction(id=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability===id&&r.phase==='completed';},id);
+  await page!.waitForFunction(({id,previous})=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.id!==previous&&r?.capability===id&&r.phase==='completed';},{id,previous});
   return page!.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
  };
  await openNamedAction('Set world lighting','world.lighting.set');
@@ -261,6 +262,32 @@ try{
  assert.equal((lighting.output!.settings as {enabled:boolean}).enabled,true);assert.ok(Math.abs((lighting.output!.settings as {ambientIntensity:number}).ambientIntensity-.2)<1e-6);
  await writeFile(join(directory,'book-native-lighting.json'),JSON.stringify({boundary:'Real generated book form, current-value guard and native saved lighting receipt; no headset/provider proof.',lighting},null,2));
  await page.screenshot({path:join(directory,'book-native-lighting.png')});
+ await openNamedAction('Set world time','world.time.seek');
+ await page.getByLabel('Action inputs day',{exact:true}).fill('2');await page.getByLabel('Action inputs second',{exact:true}).fill('64800');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs day',{exact:true}).inputValue(),'2');assert.equal(await page.getByLabel('Action inputs second',{exact:true}).inputValue(),'64800');
+ const worldTime=await runNamedAction('world.time.seek');assert.equal(worldTime.output!.day,2);assert.equal(worldTime.output!.second,64800);
+ await writeFile(join(directory,'book-native-world-time.json'),JSON.stringify({boundary:'Actual generated book seek form, guard-only loading and native saved time receipt; no headset or real-provider proof.',worldTime},null,2));
+ await page.screenshot({path:join(directory,'book-native-world-time.png')});
+ await openNamedAction('Configure world time and day lighting','world.time.configure');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs settings running',{exact:true}).selectOption('false');
+ await page.getByLabel('Action inputs settings rate',{exact:true}).fill('60');
+ await page.getByLabel('Action inputs settings cycleEnabled',{exact:true}).selectOption('true');
+ await page.getByText('Action inputs settings frames · 0 entries',{exact:true}).click();
+ const frames=[{second:0,ambientColor:'#0000FF',sunColor:'#FFFFFF',ambientIntensity:.2,sunIntensity:0,azimuth:0,elevation:-60},{second:43200,ambientColor:'#FFFFFF',sunColor:'#FFF0DD',ambientIntensity:.6,sunIntensity:1,azimuth:0,elevation:60}];
+ for(const [index,frame] of frames.entries()){
+  await page.getByRole('button',{name:'Add Action inputs settings frames entry',exact:true}).click();
+  for(const [key,value] of Object.entries(frame))await page.getByLabel(`Action inputs settings frames ${index+1} ${key}`,{exact:true}).fill(String(value));
+ }
+ const dayCycle=await runNamedAction('world.time.configure');
+ const cycleSettings=dayCycle.output!.settings as {running:boolean;rate:number;cycleEnabled:boolean;frames:typeof frames};
+ assert.equal(cycleSettings.cycleEnabled,true);assert.equal(cycleSettings.running,false);assert.equal(cycleSettings.rate,60);assert.equal(cycleSettings.frames.length,2);assert.equal(cycleSettings.frames[0].ambientColor,'#0000FF');assert.equal(cycleSettings.frames[1].second,43200);assert.equal(dayCycle.output!.day,2);assert.equal(dayCycle.output!.second,64800);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs settings cycleEnabled',{exact:true}).selectOption('false');const retainedCycle=await runNamedAction('world.time.configure');
+ assert.equal((retainedCycle.output!.settings as typeof cycleSettings).cycleEnabled,false);assert.deepEqual((retainedCycle.output!.settings as typeof cycleSettings).frames,cycleSettings.frames);
+ await writeFile(join(directory,'book-native-day-cycle.json'),JSON.stringify({boundary:'Actual generated book controls add two daily frames, save through native receipts and disable the cycle without losing its frames; no headset/provider claim.',dayCycle,retainedCycle},null,2));
+ await page.getByRole('heading',{name:'Configure world time and day lighting',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-day-cycle.png')});
  await openNamedAction('Blend a visual layer','visibility.layer.present');
  await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
  await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,null]));

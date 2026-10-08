@@ -47,6 +47,26 @@ namespace Maestro.Quest.Tests
             var factSearch=Query("{\"operation\":\"search\",\"category\":\"facts\",\"query\":\"suspension\",\"offset\":0}");
             Assert.That(factSearch["entries"].Select(x=>(string)x["id"]),Does.Contain("maestro.state"));
         }
+        [Test] public void ExactCatalogNamesLeadWithoutDroppingDescriptionMatchesOrChangingPages() {
+            var catalog=new RoomCapabilityCatalog(null);
+            JObject Query(string category,string text,int offset=0) {
+                Assert.That(catalog.Execute(new JObject{["operation"]="search",["category"]=category,["query"]=text,["offset"]=offset},out var error),Is.True,error);
+                return catalog.Observe();
+            }
+            foreach(var query in new[]{"Set world time","SET  WORLD TIME","world.time.seek"})
+                Assert.That((string)Query("actions",query)["entries"][0]["id"],Is.EqualTo("world.time.seek"));
+            foreach(var fact in BehaviourCatalog.Facts)
+                Assert.That((string)Query("facts",fact.Id)["entries"][0]["id"],Is.EqualTo(fact.Id));
+            foreach(var item in BehaviourCatalog.Events)
+                Assert.That((string)Query("events",item.Id)["entries"][0]["id"],Is.EqualTo(item.Id));
+            var first=Query("actions","Set world time");var entries=new System.Collections.Generic.List<string>();
+            for(int offset=0;offset<(int)first["total"];offset+=RoomCapabilityCatalog.PageSize)
+                entries.AddRange(Query("actions","Set world time",offset)["entries"].Select(x=>(string)x["id"]));
+            var expected=BehaviourCatalog.Actions.Where(x=>new[]{"Set","world","time"}.All(term=>x.SearchText.IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).Select(x=>x.Id).ToArray();
+            Assert.That(entries,Is.EquivalentTo(expected));Assert.That(entries.Distinct().Count(),Is.EqualTo(entries.Count));
+            Assert.That(JToken.DeepEquals(Query("actions","Set world time"),first),Is.True,"Repeated queries retain page order");
+            var empty=Query("actions","");Assert.That(empty["entries"].Select(x=>(string)x["id"]),Is.EqualTo(BehaviourCatalog.Actions.Select(x=>x.Id).OrderBy(x=>x,StringComparer.Ordinal).Take(RoomCapabilityCatalog.PageSize)));
+        }
         [Test] public void NativeDefinitionsEqualTheCommittedWebManifest()
         {
             string path=Environment.GetEnvironmentVariable("MAESTRO_BEHAVIOUR_CATALOG");
@@ -83,7 +103,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(90));
+            Assert.That(count,Is.EqualTo(92));
         }
         [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
         {

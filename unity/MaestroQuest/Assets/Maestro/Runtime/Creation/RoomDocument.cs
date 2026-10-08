@@ -55,7 +55,7 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=27;
+        public const int CurrentVersion=28;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -70,6 +70,7 @@ namespace Maestro.Quest.Creation
         public RoomAppearance[] appearances=Array.Empty<RoomAppearance>();
         public RoomVisibilityLayer[] visibilityLayers=Array.Empty<RoomVisibilityLayer>();
         public RoomLighting lighting=new();
+        public RoomWorldTime worldTime=new();
 
         public static (float minimum, float maximum) ScaleLimits(RoomObjectKind kind) => kind switch {
             RoomObjectKind.Book => (.65f, 1.8f), RoomObjectKind.Maestro => (.3f, 1.5f), _ => (.1f, 4f)
@@ -78,7 +79,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
@@ -169,6 +170,7 @@ namespace Maestro.Quest.Creation
             if (objects.Count(item => item.kind == RoomObjectKind.ImportedModel) > 4) return Fail("Keep at most four imported models in this room.", out error);
             if(version<3 && (structures?.Length??0)>0)return Fail("Structures require the current room format.",out error);
             if(!RoomConnection.ValidateCollection(objects,out error))return false;
+            if((version>=28||worldTime!=null)&&(worldTime==null||!worldTime.Valid)){error="Invalid world time";return false;}
             if((version>=27||lighting!=null)&&(lighting==null||!lighting.Valid)){error="Invalid world lighting";return false;}
             if(!RoomVisibilityLayer.ValidateCollection(visibilityLayers??(version<26?Array.Empty<RoomVisibilityLayer>():null),objects,version,out error))return false;
             if(!RoomAppearance.ValidateCollection(appearances??(version<25?Array.Empty<RoomAppearance>():null),objects,version,out error))return false;
@@ -188,13 +190,13 @@ namespace Maestro.Quest.Creation
         static bool Unit(float value) => float.IsFinite(value) && value >= 0 && value <= 1;
         static bool Finite(Vector3 value) => float.IsFinite(value.x) && float.IsFinite(value.y) && float.IsFinite(value.z);
         static bool Fail(string message, out string error) { error = message; return false; }
-        public RoomDocument Copy() => new() { version = version, lighting=lighting?.Copy(), visibilityLayers=visibilityLayers?.Select(x=>x.Copy()).ToArray(), appearances=appearances?.Select(x=>x.Copy()).ToArray(), environmentProfiles=environmentProfiles?.Select(x=>x.Copy()).ToArray(), world=world?.Copy(), WorldNeedsSave=WorldNeedsSave, viewpoint=viewpoint?.Copy(), objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>(), audioSources=audioSources?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomAudioDefinition>() };
+        public RoomDocument Copy() => new() { version = version, worldTime=worldTime?.Copy(), lighting=lighting?.Copy(), visibilityLayers=visibilityLayers?.Select(x=>x.Copy()).ToArray(), appearances=appearances?.Select(x=>x.Copy()).ToArray(), environmentProfiles=environmentProfiles?.Select(x=>x.Copy()).ToArray(), world=world?.Copy(), WorldNeedsSave=WorldNeedsSave, viewpoint=viewpoint?.Copy(), objects = objects.Select(item => item.Copy()).ToArray(), structures = structures?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomStructure>(), audioSources=audioSources?.Select(item=>item.Copy()).ToArray()??Array.Empty<RoomAudioDefinition>() };
     }
 
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
     public sealed partial class RoomJournal
     {
-        sealed class Change { public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; }
+        sealed class Change { public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; }
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
         readonly Dictionary<string,int> revisions = new();
@@ -213,7 +215,7 @@ namespace Maestro.Quest.Creation
         {
             if (!document.Validate(out var error)) throw new ArgumentException(error, nameof(document));
             world=document.world?.Copy()??RoomWorldIdentity.Create();
-            SetLighting(document.lighting??new RoomLighting());
+            SetLighting(document.lighting??new RoomLighting());SetWorldTime(document.worldTime??new RoomWorldTime());
             viewpoint=document.version>=22?document.viewpoint.Copy():new RoomViewpoint();
             foreach (var item in document.objects) { items.Add(item.id, item.Copy()); revisions[item.id]=clock.Next++; }
             SetStructures(Array.Empty<RoomStructure>(),document.structures??Array.Empty<RoomStructure>());
@@ -224,7 +226,7 @@ namespace Maestro.Quest.Creation
         }
         RoomJournal(RoomJournal source)
         {
-            clock=source.clock;world=source.world.Copy();viewpoint=source.viewpoint.Copy();lighting=source.lighting.Copy();lightingRevision=source.lightingRevision;
+            clock=source.clock;world=source.world.Copy();viewpoint=source.viewpoint.Copy();lighting=source.lighting.Copy();lightingRevision=source.lightingRevision;worldTime=source.worldTime.Copy();worldTimeRevision=source.worldTimeRevision;
             foreach(var pair in source.items) items.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
             foreach(var pair in source.structures)structures.Add(pair.Key,pair.Value.Copy());
@@ -258,11 +260,12 @@ namespace Maestro.Quest.Creation
             var layers=new VisibilityLayerEdits{Replacements=(document.visibilityLayers??Array.Empty<RoomVisibilityLayer>()).Where(x=>!visibilityLayers.TryGetValue(x.id,out var before)||!EquivalentVisibility(new[]{before},new[]{x})).ToArray(),Removals=visibilityLayers.Keys.Where(id=>!visibilityIds.Contains(id)).ToArray()};
             var appearanceIds=(document.appearances??Array.Empty<RoomAppearance>()).Select(x=>x.id).ToHashSet();
             var styles=new AppearanceEdits{Replacements=(document.appearances??Array.Empty<RoomAppearance>()).Where(x=>!appearances.TryGetValue(x.id,out var before)||!EquivalentAppearances(new[]{before},new[]{x})).ToArray(),Removals=appearances.Keys.Where(id=>!appearanceIds.Contains(id)).ToArray()};
-            if(!Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error,structureEdits:edits,audioEdits:sounds,environmentEdits:profiles,appearanceEdits:styles,visibilityEdits:layers,lighting:document.lighting??new RoomLighting()))return false;
+            if(!Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error,structureEdits:edits,audioEdits:sounds,environmentEdits:profiles,appearanceEdits:styles,visibilityEdits:layers,lighting:document.lighting??new RoomLighting(),worldTime:document.worldTime??new RoomWorldTime()))return false;
             if(document.version>=22)viewpoint=document.viewpoint.Copy();return true;
         }
         public void InvalidateChangedObservations(RoomJournal other)
         {
+            if(worldTimeRevision!=other.worldTimeRevision||!worldTime.Same(other.worldTime))worldTimeRevision=clock.Next++;
             if(lightingRevision!=other.lightingRevision)lightingRevision=clock.Next++;
             foreach(var id in items.Keys)
                 if(ObjectRevision(id)!=other.ObjectRevision(id))revisions[id]=clock.Next++;
@@ -280,7 +283,7 @@ namespace Maestro.Quest.Creation
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
             data.position = position; data.rotation = rotation; revisions[id]=clock.Next++; return true;
         }
-        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot(), environmentProfiles=EnvironmentSnapshot(), appearances=AppearanceSnapshot(), visibilityLayers=VisibilitySnapshot(), lighting=Lighting };
+        public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot(), environmentProfiles=EnvironmentSnapshot(), appearances=AppearanceSnapshot(), visibilityLayers=VisibilitySnapshot(), lighting=Lighting,worldTime=WorldTime };
 
         internal bool PlacementBaseline(RoomLayout layout,out RoomObjectData[] baseline,out string error)
         {
@@ -300,13 +303,14 @@ namespace Maestro.Quest.Creation
             if(removals.Length!=0||!existing.SetEquals(observedBefore.placements.Select(p=>p.target))){error="Layout baseline must match the existing edited members";return false;}
             return PlacementBaseline(observedBefore,out baseline,out error);
         }
-        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null)
+        public bool Apply(RoomObjectData[] replacements, string[] removals, out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null,RoomWorldTime worldTime=null)
         {
             if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
             if(audioEdits!=null&&!audioEdits.Validate(out error))return false;
             if(environmentEdits!=null&&!environmentEdits.Validate(out error))return false;
             if(visibilityEdits!=null&&!visibilityEdits.Validate(out error))return false;
             if(appearanceEdits!=null&&!appearanceEdits.Validate(out error))return false;
+            if(worldTime!=null&&!worldTime.Valid){error="Invalid world time";return false;}
             if(lighting!=null&&!lighting.Valid){error="Invalid world lighting";return false;}
             var changedIds = replacements.Select(item => item.id).Concat(removals).ToHashSet();
             var candidate = new Dictionary<string, RoomObjectData>(items);
@@ -319,13 +323,15 @@ namespace Maestro.Quest.Creation
             var visibilityIds=(visibilityEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(visibilityEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var styles=appearanceEdits?.Apply(AppearanceSnapshot())??AppearanceSnapshot();
             var appearanceIds=(appearanceEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(appearanceEdits?.Removals??Array.Empty<string>()).ToHashSet();
-            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds,environmentProfiles=profiles,appearances=styles,visibilityLayers=layers,lighting=lighting??Lighting }).Validate(out error)) return false;
+            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds,environmentProfiles=profiles,appearances=styles,visibilityLayers=layers,lighting=lighting??Lighting,worldTime=worldTime??WorldTime }).Validate(out error)) return false;
             var profileIds=(environmentEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(environmentEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var soundIds=(audioEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(audioEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var groupIds=(structureEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(structureEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var before=changedIds.Where(items.ContainsKey).Select(id=>items[id].Copy()).ToArray();
             if(observedBefore!=null&&!EditBaseline(replacements,removals,observedBefore,out before,out error))return false;
             var change = new Change {
+                BeforeWorldTime=worldTime!=null&&!this.worldTime.Same(worldTime)?WorldTime:null,
+                AfterWorldTime=worldTime!=null&&!this.worldTime.Same(worldTime)?worldTime.Copy():null,
                 BeforeLighting=lighting!=null&&!this.lighting.Same(lighting)?Lighting:null,
                 AfterLighting=lighting!=null&&!this.lighting.Same(lighting)?lighting.Copy():null,
                 Before = before,
@@ -341,13 +347,13 @@ namespace Maestro.Quest.Creation
                 BeforeAppearances=appearanceIds.Where(appearances.ContainsKey).Select(id=>appearances[id].Copy()).ToArray(),
                 AfterAppearances=styles.Where(x=>appearanceIds.Contains(x.id)).Select(x=>x.Copy()).ToArray()
             };
-            if (change.AfterLighting==null&&Equivalent(change.Before, change.After)&&EquivalentStructures(change.BeforeStructures,change.AfterStructures)&&EquivalentAudio(change.BeforeAudio,change.AfterAudio)&&EquivalentEnvironments(change.BeforeEnvironments,change.AfterEnvironments)&&EquivalentVisibility(change.BeforeVisibility,change.AfterVisibility)&&EquivalentAppearances(change.BeforeAppearances,change.AfterAppearances)) {
+            if (change.AfterWorldTime==null&&change.AfterLighting==null&&Equivalent(change.Before, change.After)&&EquivalentStructures(change.BeforeStructures,change.AfterStructures)&&EquivalentAudio(change.BeforeAudio,change.AfterAudio)&&EquivalentEnvironments(change.BeforeEnvironments,change.AfterEnvironments)&&EquivalentVisibility(change.BeforeVisibility,change.AfterVisibility)&&EquivalentAppearances(change.BeforeAppearances,change.AfterAppearances)) {
                 // A live layout may already match while its periodic saved pose lags.
                 // Accept that snapshot without an empty Undo entry or stale journal.
                 if(observedBefore!=null&&!Equivalent(changedIds.Where(items.ContainsKey).Select(id=>items[id]).ToArray(),change.After))Set(change.Before,change.After);
                 return true;
             }
-            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting);
+            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting);SetWorldTime(change.AfterWorldTime);
             undo.Add(change); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); return true;
         }
 
@@ -355,13 +361,13 @@ namespace Maestro.Quest.Creation
         {
             if (!CanUndo) return false;
             var change = undo[undo.Count - 1]; undo.RemoveAt(undo.Count - 1);
-            Set(change.After, change.Before);SetStructures(change.AfterStructures,change.BeforeStructures);SetAudio(change.AfterAudio,change.BeforeAudio);SetEnvironments(change.AfterEnvironments,change.BeforeEnvironments);SetAppearances(change.AfterAppearances,change.BeforeAppearances);SetVisibility(change.AfterVisibility,change.BeforeVisibility);SetLighting(change.BeforeLighting); redo.Add(change); return true;
+            Set(change.After, change.Before);SetStructures(change.AfterStructures,change.BeforeStructures);SetAudio(change.AfterAudio,change.BeforeAudio);SetEnvironments(change.AfterEnvironments,change.BeforeEnvironments);SetAppearances(change.AfterAppearances,change.BeforeAppearances);SetVisibility(change.AfterVisibility,change.BeforeVisibility);SetLighting(change.BeforeLighting);SetWorldTime(change.BeforeWorldTime); redo.Add(change); return true;
         }
         public bool Redo()
         {
             if (!CanRedo) return false;
             var change = redo[redo.Count - 1]; redo.RemoveAt(redo.Count - 1);
-            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting); undo.Add(change); return true;
+            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting);SetWorldTime(change.AfterWorldTime); undo.Add(change); return true;
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {

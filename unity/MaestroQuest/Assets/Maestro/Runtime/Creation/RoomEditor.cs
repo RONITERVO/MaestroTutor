@@ -240,7 +240,7 @@ namespace Maestro.Quest.Creation
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
-        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null) {
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
             if(audioEdits!=null&&!audioEdits.Validate(out error))return false;
@@ -249,6 +249,7 @@ namespace Maestro.Quest.Creation
             if(appearanceEdits!=null&&!appearanceEdits.Validate(out error))return false;
             var candidate=journal.Snapshot();
             if(lighting!=null)candidate.lighting=lighting.Copy();
+            if(worldTime!=null)candidate.worldTime=worldTime.Copy();
             var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
             candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
             if(structureEdits!=null)candidate.structures=structureEdits.Apply(candidate.structures);
@@ -259,14 +260,14 @@ namespace Maestro.Quest.Creation
             if(!candidate.Validate(out error))return false;
             if(observedBefore!=null&&!journal.EditBaseline(replacements,removals,observedBefore,out _,out error))return false;
             if(TemporaryRoom) {
-                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting)){error=Status;return false;}
+                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting,worldTime)){error=Status;return false;}
                 return true;
             }
             // Same serialized writer and journal as manual edits; no global Editing
             // signal here because the caller already owns only the affected targets.
             CompleteSave(wait:true);
             if(!storage.Save(candidate,out error))return false;
-            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting)){error=Status;return false;}
+            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting,worldTime)){error=Status;return false;}
             dirty=false;lastSaveError=null;return true;
         }
 
@@ -361,12 +362,12 @@ namespace Maestro.Quest.Creation
             return true;
         }
 
-        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null)
+        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null)
         {
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return false;}
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
-            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting)) { SetStatus(error); return false; }
+            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime)) { SetStatus(error); return false; }
             if(visualOnly)ReconcileVisibility();else Reconcile(replacements.Select(item => item.id).ToHashSet(), applyPose ?? !placement); MarkDirty(); SetStatus(success); return true;
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
@@ -558,6 +559,7 @@ namespace Maestro.Quest.Creation
         float captureAt;
         void Update()
         {
+            TickWorldTime(UnityEngine.Time.unscaledDeltaTime);
             TickLayerPresentation(UnityEngine.Time.unscaledDeltaTime);
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
             CompleteTemporarySave();
@@ -643,6 +645,7 @@ namespace Maestro.Quest.Creation
         public void ReportStatus(string value)=>SetStatus(value);
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void RefreshOwnership() {
+            worldTimeTickReady=false;
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
             if(Ownership.Suspended){SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
@@ -650,7 +653,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
-        void OnDisable()=>ResetLayerPresentation(true);
+        void OnDisable(){worldTimeTickReady=false;ResetLayerPresentation(true);}
         void OnDestroy()
         {
             ClearViewCapture();FinishLiquidPour(out _);

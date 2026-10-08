@@ -1,9 +1,11 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {runAgentWorldTimeProof} from './probe-agent-world-time';
 import {runAgentLightingProof} from './probe-agent-lighting';
 import {runAgentPresentationProof} from './probe-agent-presentation';
 import {probeWorldPresentation} from './probe-world-presentation';
 import {probeWorldLighting} from './probe-world-lighting';
+import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeConstructionResources} from './probe-construction-resources';
 import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering';
@@ -34,7 +36,7 @@ import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} f
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
-if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
+if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
@@ -92,7 +94,7 @@ try{
   try{
    await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
    const spoken=providerScenario==='LiveVisual'||providerScenario==='ObserverVisual';
-   const contextTurn=await runHeadlessChatTurn(client,{text:['WorldPresentation','WorldLighting'].includes(providerScenario||'')?"Hello! I am learning Spanish. I will try the room view controls next, but please do not change anything yet.":(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
+   const contextTurn=await runHeadlessChatTurn(client,{text:['WorldPresentation','WorldLighting','WorldTime'].includes(providerScenario||'')?"Hello! I am learning Spanish. I will try the room view controls next, but please do not change anything yet.":(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
    const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
    if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
    const presentationBaseline=providerScenario==='WorldPresentation'
@@ -105,6 +107,8 @@ try{
     ?await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.lighting',version:1}}])
     :initial;
    if(providerScenario==='WorldLighting')await writeFile(join(directory,'lighting-baseline.json'),JSON.stringify({startup:initial,beforeRequest:lightingBaseline},null,2));
+   const worldTimeBaseline=providerScenario==='WorldTime'?await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.time',version:1}}]):initial;
+   if(providerScenario==='WorldTime')await writeFile(join(directory,'world-time-baseline.json'),JSON.stringify({startup:initial,beforeRequest:worldTimeBaseline},null,2));
    let createdJourney;
    if(spoken){
     const fixture=JSON.parse(await readFile(process.env.MAESTRO_ROOM_PROBE_SPEECH!,'utf8'));
@@ -125,6 +129,7 @@ try{
      createdJourney,finalState,liveInput:{pcm:input.pcm,audioBytes:sent.audioBytes,frames:sent.frames}};
     await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(scenarioEvidence,null,2));outcome=scenarioEvidence;
    }else {createdJourney=await runHeadlessRoomTurn(client,{text:prompt});outcome=createdJourney;}
+   if(providerScenario==='WorldTime'){outcome={scenario:providerScenario,createdJourney,time:await runAgentWorldTimeProof({client,initial:worldTimeBaseline,execute,directory,read:()=>lease.state()})};}
    if(providerScenario==='WorldLighting'){
     outcome={scenario:providerScenario,createdJourney,lighting:await runAgentLightingProof({client,initial:lightingBaseline,execute,directory,read:()=>lease.state()})};
    }
@@ -323,6 +328,7 @@ try{
 
   await probeWorldPresentation(execute,directory);
   await probeWorldLighting(execute,directory);
+  await probeWorldTime(execute,directory);
   await probeVisibilityLayers(execute,directory);
 
   const profileSaved=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:'',revision:0,name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]);

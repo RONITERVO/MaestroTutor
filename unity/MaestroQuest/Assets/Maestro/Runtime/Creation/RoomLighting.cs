@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation
         public string ambientColor="#FFFFFF",sunColor="#FFF4D6";
         public float ambientIntensity=.35f,sunIntensity=.65f,azimuth=-150,elevation=55;
         public RoomLighting Copy()=>(RoomLighting)MemberwiseClone();
-        internal static bool ColorValid(string v)=>v!=null&&Regex.IsMatch(v,"^#[0-9A-Fa-f]{6}$");
+        internal static bool ColorValid(string v)=>v?.Length==7&&Regex.IsMatch(v,"^#[0-9A-Fa-f]{6}$");
         static bool Range(float v,float min,float max)=>float.IsFinite(v)&&v>=min&&v<=max;
         public bool Valid=>version==1&&ColorValid(ambientColor)&&ColorValid(sunColor)&&Range(ambientIntensity,0,2)&&Range(sunIntensity,0,2)&&Range(azimuth,-180,180)&&Range(elevation,-90,90);
         internal bool Same(RoomLighting other)=>other!=null&&JsonUtility.ToJson(this)==JsonUtility.ToJson(other);
@@ -42,6 +42,7 @@ namespace Maestro.Quest.Creation
         internal bool CanSetLighting(int revision,RoomLighting value,out string error) {
             if(!CanEditStructures(out error))return false;
             if(!WorldIdentityReady||revision!=LightingRevision){error="Read the current world lighting before changing it";return false;}
+            if(DayCycleEnabled){error="Disable the world.time lighting cycle before editing static lighting";return false;}
             if(value==null||!value.Valid){error="Choose valid lighting colours, intensities and sun angles";return false;}
             return true;
         }

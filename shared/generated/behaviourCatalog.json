@@ -4578,7 +4578,7 @@
         "workspace.available",
         "storage.writable"
       ],
-      "description": "Save ambient and directional sun lighting for the active world region. Read world.lighting and pass its exact revision. Colours are sRGB hex; intensities are multipliers 0–2. Azimuth is degrees around authored +Y (0 faces +Z, +90 faces +X); elevation is -90–90 above the authored horizon. enabled=false restores the original illustrated lighting while retaining these settings. This affects illustrated virtual surfaces including imported models; it does not relight passthrough, cast shadows, create local lights or simulate time/weather. Browser pages and tool labels remain readable. Movement, animation, sound, physics and view opacity continue independently. One Undo and temporary Keep/Discard apply; failed saving changes nothing. Readback confirms accepted settings, not physical headset appearance.",
+      "description": "While the world.time lighting cycle is disabled, save ambient and directional sun lighting for the active world region. Read world.lighting and pass its exact revision. Colours are sRGB hex; intensities are multipliers 0–2. Azimuth is degrees around authored +Y (0 faces +Z, +90 faces +X); elevation is -90–90 above the authored horizon. enabled=false restores the original illustrated lighting while retaining these settings. This affects illustrated virtual surfaces including imported models; it does not relight passthrough, cast shadows, create local lights or simulate time/weather. Browser pages and tool labels remain readable. Movement, animation, sound, physics and view opacity continue independently. One Undo and temporary Keep/Discard apply; failed saving changes nothing. Readback confirms accepted settings, not physical headset appearance.",
       "example": {
         "revision": 1,
         "settings": {
@@ -4673,6 +4673,452 @@
           "worldId",
           "regionId",
           "settings",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "world.time.configure",
+      "version": 1,
+      "label": "Configure world time and day lighting",
+      "input": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "running": {
+                "type": "boolean"
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 3600.0
+              },
+              "cycleEnabled": {
+                "type": "boolean"
+              },
+              "frames": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ambientColor": {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "maxLength": 7
+                    },
+                    "sunColor": {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "maxLength": 7
+                    },
+                    "ambientIntensity": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "sunIntensity": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "azimuth": {
+                      "type": "number",
+                      "minimum": -180.0,
+                      "maximum": 180.0
+                    },
+                    "elevation": {
+                      "type": "number",
+                      "minimum": -90.0,
+                      "maximum": 90.0
+                    },
+                    "second": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 86399.999
+                    }
+                  },
+                  "required": [
+                    "ambientColor",
+                    "sunColor",
+                    "ambientIntensity",
+                    "sunIntensity",
+                    "azimuth",
+                    "elevation",
+                    "second"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 8
+              }
+            },
+            "required": [
+              "running",
+              "rate",
+              "cycleEnabled",
+              "frames"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "revision",
+          "settings"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "world.time",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "settings": [
+              "settings"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-features": [
+          "worldTime.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "world.time.current",
+        "workspace.available",
+        "storage.writable"
+      ],
+      "description": "Configure the region's authored environment clock and optional daily lighting keyframes while retaining its current day/second. Read world.time and its exact edit revision. rate is authored seconds per active real second (0–3600). running=false pauses time; rate=0 freezes it too. A lighting cycle needs 2–8 strictly time-ordered frames, at seconds 0–86400 exclusive. It loops at midnight, interpolating light energy and the shortest sun-azimuth arc. Disabling the cycle retains its frames and restores world.lighting's manual preset. Static lighting edits refuse while the cycle owns lighting. Focus loss, app suspension, workspace write/runtime holds and invalid world frames freeze advancement; the first resumed tick and gaps over one second are skipped. Saved running intent resumes from the saved position, without offline catch-up. Clock progress checkpoints through room persistence at most every five active seconds; explicit saves and lifecycle flush include current position. A crash may lose progress since the last successful checkpoint. Ordinary editing, looking away and viewer opacity do not stop it. This does not scale physics/animation, change the device calendar, simulate weather or cast shadows. Exact save/Undo/temporary semantics apply.",
+      "example": {
+        "revision": 1,
+        "settings": {
+          "running": false,
+          "cycleEnabled": false,
+          "rate": 1.0,
+          "frames": []
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "worldId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "regionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 999999.0
+          },
+          "second": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 86400.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "running": {
+                "type": "boolean"
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 3600.0
+              },
+              "cycleEnabled": {
+                "type": "boolean"
+              },
+              "frames": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ambientColor": {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "maxLength": 7
+                    },
+                    "sunColor": {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "maxLength": 7
+                    },
+                    "ambientIntensity": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "sunIntensity": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "azimuth": {
+                      "type": "number",
+                      "minimum": -180.0,
+                      "maximum": 180.0
+                    },
+                    "elevation": {
+                      "type": "number",
+                      "minimum": -90.0,
+                      "maximum": 90.0
+                    },
+                    "second": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 86399.999
+                    }
+                  },
+                  "required": [
+                    "ambientColor",
+                    "sunColor",
+                    "ambientIntensity",
+                    "sunIntensity",
+                    "azimuth",
+                    "elevation",
+                    "second"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 8
+              }
+            },
+            "required": [
+              "running",
+              "rate",
+              "cycleEnabled",
+              "frames"
+            ],
+            "additionalProperties": false
+          },
+          "advancing": {
+            "type": "boolean"
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "worldId",
+          "regionId",
+          "day",
+          "second",
+          "settings",
+          "advancing",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "world.time.seek",
+      "version": 1,
+      "label": "Set world time",
+      "input": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 999999.0
+          },
+          "second": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 86399.999
+          }
+        },
+        "required": [
+          "revision",
+          "day",
+          "second"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "world.time",
+          "version": 1,
+          "arguments": {},
+          "fields": {
+            "revision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-features": [
+          "worldTime.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "world.time.current",
+        "workspace.available",
+        "storage.writable"
+      ],
+      "description": "Explicitly seek the authored day and second of day without changing clock settings. Day is 0–999999; second is 0 inclusive to 86400 exclusive. Read world.time for the exact edit revision. Lighting samples the resulting time immediately. This is not a physical calendar, a physics simulation seek, or replay of past events. One Undo restores the prior world time; runtime progress creates no Undo entries.",
+      "example": {
+        "revision": 1,
+        "day": 0,
+        "second": 64800
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "worldId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "regionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 999999.0
+          },
+          "second": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 86400.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "running": {
+                "type": "boolean"
+              },
+              "rate": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 3600.0
+              },
+              "cycleEnabled": {
+                "type": "boolean"
+              },
+              "frames": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ambientColor": {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "maxLength": 7
+                    },
+                    "sunColor": {
+                      "type": "string",
+                      "pattern": "^#[0-9A-Fa-f]{6}$",
+                      "maxLength": 7
+                    },
+                    "ambientIntensity": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "sunIntensity": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 2.0
+                    },
+                    "azimuth": {
+                      "type": "number",
+                      "minimum": -180.0,
+                      "maximum": 180.0
+                    },
+                    "elevation": {
+                      "type": "number",
+                      "minimum": -90.0,
+                      "maximum": 90.0
+                    },
+                    "second": {
+                      "type": "number",
+                      "minimum": 0.0,
+                      "maximum": 86399.999
+                    }
+                  },
+                  "required": [
+                    "ambientColor",
+                    "sunColor",
+                    "ambientIntensity",
+                    "sunIntensity",
+                    "azimuth",
+                    "elevation",
+                    "second"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 0,
+                "maxItems": 8
+              }
+            },
+            "required": [
+              "running",
+              "rate",
+              "cycleEnabled",
+              "frames"
+            ],
+            "additionalProperties": false
+          },
+          "advancing": {
+            "type": "boolean"
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revision",
+          "worldId",
+          "regionId",
+          "day",
+          "second",
+          "settings",
+          "advancing",
           "temporary"
         ],
         "additionalProperties": false
@@ -37454,6 +37900,77 @@
       ]
     },
     {
+      "id": "world.time",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "worldId": "text",
+          "regionId": "text",
+          "day": "number",
+          "second": "number",
+          "settings": {
+            "record": {
+              "running": "boolean",
+              "rate": "number",
+              "cycleEnabled": "boolean",
+              "frames": {
+                "list": {
+                  "record": {
+                    "ambientColor": "text",
+                    "sunColor": "text",
+                    "ambientIntensity": "number",
+                    "sunIntensity": "number",
+                    "azimuth": "number",
+                    "elevation": "number",
+                    "second": "number"
+                  }
+                }
+              }
+            }
+          },
+          "advancing": "boolean",
+          "temporary": "boolean"
+        }
+      },
+      "label": "World time and lighting cycle",
+      "description": "Current authored day/second and saved clock settings. Revision guards explicit edits; ordinary ticking does not invalidate settings. advancing reports current runtime eligibility. This is not calendar time or offline progression.",
+      "features": [
+        "worldTime.v1"
+      ]
+    },
+    {
+      "id": "world.illumination",
+      "version": 1,
+      "type": {
+        "record": {
+          "enabled": "boolean",
+          "ambient": {
+            "record": {
+              "r": "number",
+              "g": "number",
+              "b": "number"
+            }
+          },
+          "sun": {
+            "record": {
+              "r": "number",
+              "g": "number",
+              "b": "number"
+            }
+          },
+          "azimuth": "number",
+          "elevation": "number",
+          "colorSpace": "text"
+        }
+      },
+      "label": "Effective world illumination",
+      "description": "Sampled manual/day-cycle light energy in the renderer's working colour space and authored-axis sun angles. Independent of physical passthrough, viewer state and collisions. This is mathematical readback, not measured device pixels.",
+      "features": [
+        "worldTime.v1"
+      ]
+    },
+    {
       "id": "world.identity",
       "version": 1,
       "type": {
@@ -38760,8 +39277,12 @@
       "sha256": "e13268b6edbfc71c24bf7526796cfea1d9ed4ed31d7d61972406ed2e239ff8fc"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldLightingProjection.cs",
+      "sha256": "ccc735b8c3480bb28c44a82270637527a45d3843cc3b1239b245dab191aaaf93"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WorldLightingView.cs",
-      "sha256": "87dfe7f8e23ec4e378e2b6ded0a08129f6d948667efd5e928914a32b1071a312"
+      "sha256": "279d23d35f1359bcf14d147737ad8e02e245567efa18ec6a8abe123de3c8b5aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/AssemblyInfo.cs",
@@ -38993,7 +39514,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "8ecf47a60647544b2612a62796e17f6eda03437af1cd5416903f88561fdcfbfc"
+      "sha256": "dee80f33a43a2c6c3ce72865e88a2ecd0f74f9d2730db42d1e26d76290c8e7d4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -39349,11 +39870,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldLightingCapability.cs",
-      "sha256": "b8cc96347c285eac7092d32a6456813376c89600951d4be938bde5213846cf12"
+      "sha256": "41aeb7dc0858e45ffa9fc3143313ed60593a3a78f084270605b3a72231011153"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldPresentationCapability.cs",
       "sha256": "c62a9606830ae75daaedd68f70bf4c3f248ffe25884695c4ea96a6ea5c7eed4a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldTimeCapability.cs",
+      "sha256": "d2bf24e2e2740481eb4d77690c64ae1eee1b95f8d764aed2ce6a4b3baa54fcd0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
@@ -39569,7 +40094,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "9cb784b7bf665b2cca58a708597266fa18c1308257d2e9bf1a5546a6e04dc057"
+      "sha256": "92b5790a4700bc6cfb632e2ed30695faffc2aaa9ef1f18634ceb938d72c383dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionEdits.cs",
@@ -39597,11 +40122,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "9d1ae303eba60c2d40637e0f6cbd1f08f39f1cc4938f2c352c7a982547ecb4c3"
+      "sha256": "bc5774bd35d7fe359a9c4a7ad3f108a3268b00c59e26e5aa111f57542ff6d42f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "eba942713606997106c23bbe9a9ea3afbdc7800680ac8755e051ebc99ae73fc5"
+      "sha256": "a7801b5d5faf404a98d695aec73d1c05b2c6a3f2cff18cb2647db6ccd7bc137b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -39617,7 +40142,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "31904bd3abd6bff5b06f9b69f7aaf6fe0eb8bb13a91b9a552470cd3215bedfed"
+      "sha256": "7156607fda77152b42837fd8c2c2873441edea3f1937b6c536d0b013ccd158c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -39665,7 +40190,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLighting.cs",
-      "sha256": "dd430196044519361b939de0d9b408da8e4d0735eff3c8044f9dac4b1503d57f"
+      "sha256": "e61ac1ca05556f1faa004e1e2ad09ff8155fa67807a80f5724f977b4c57dcde9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -39737,7 +40262,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "9dfa919738df888017c2c363605b96199b877fd65e30f24e820056893bb9bc2a"
+      "sha256": "d983554ac57ecd2f5aeca968d34b23682f8fac9d85679bbca703e8708393eec9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -39782,6 +40307,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldPlacement.cs",
       "sha256": "0002e78953fc0992d0b6d44b7441b9acaf27133d27a223c71af848dcfef7bc9a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldTime.cs",
+      "sha256": "b3f6968ffe09cc3e59c6c64414fd065ad51851ebba86f139e1b2e2b44f642fe2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ScanDrawingAnchor.cs",
@@ -40161,7 +40690,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "5f1ddf98605bbbd0623b4787d4d8694991775fc1b0b6bb236405912fb568ac62"
+      "sha256": "f131eec68783e47a59cb20c4e57694a7ec798ecf0ce2182dfb2802219187a54c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -40173,7 +40702,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "8975b1696e2ff2590bd2cc234c96e97d988e0433ff77dd23499fea9e5e2057d2"
+      "sha256": "ebbeadf77d69a441c5ff6d632ad74f4c419098c827994b14d83445968a5dad07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -40181,7 +40710,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "6a1721e7f8db13b15cc549bcdfe16361e9da46f4e9630631d8e15d7a40a8542b"
+      "sha256": "6dc8695f77ccf1bd05b8919518240de5c91106fce60065694c82b8fccf9d3a1b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -40289,7 +40818,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "869ed0fdeadbe52deeb2424b8e223b653545df6444785f7df25c73a62e4e8e9e"
+      "sha256": "9a0b6ddfa16b19d1a9c9321e57ceabefb446642ea6715839a01dab5eb214ec14"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

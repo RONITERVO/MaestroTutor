@@ -67,6 +67,15 @@ namespace Maestro.Quest.Creation
             "facts"=>BehaviourCatalog.Facts.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.Id+" "+x.Label+" "+x.Description+" "+x.Type,Definition=x.ToJson}).ToArray(),
             _=>BehaviourCatalog.Actions.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.SearchText,Definition=x.ToJson}).ToArray()
         };
+        // Keep discovery shared by book controls and agents. Exact names/IDs lead;
+        // label matches precede incidental description matches, with stable paging.
+        static int SearchRank(Entry entry,string query,string[] terms) {
+            if(query.Length==0)return 0;
+            if(string.Equals(entry.Id,query,StringComparison.OrdinalIgnoreCase)||string.Equals(entry.Label,query,StringComparison.OrdinalIgnoreCase))return 0;
+            if(entry.Id.StartsWith(query,StringComparison.OrdinalIgnoreCase)||entry.Label.StartsWith(query,StringComparison.OrdinalIgnoreCase))return 1;
+            if(terms.All(term=>(entry.Id+" "+entry.Label).IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0))return 2;
+            return 3;
+        }
         static readonly System.Collections.Generic.Dictionary<string,Entry[]> vocabulary=new() {
             ["actions"]=Entries("actions"),["events"]=Entries("events"),["facts"]=Entries("facts")
         };
@@ -109,7 +118,7 @@ namespace Maestro.Quest.Creation
             if(operation=="search") {
                 string query=((string)request["query"]).Trim();
                 var terms=query.Split(' ',StringSplitOptions.RemoveEmptyEntries);
-                var matches=vocabulary[category].Where(x=>terms.All(term=>x.Search.IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(x=>x.Id,StringComparer.Ordinal).ToArray();
+                var matches=vocabulary[category].Where(x=>terms.All(term=>x.Search.IndexOf(term,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(x=>SearchRank(x,string.Join(" ",terms),terms)).ThenBy(x=>x.Id,StringComparer.Ordinal).ToArray();
                 int offset=Math.Min((int)request["offset"],Math.Max(0,(matches.Length-1)/PageSize*PageSize));
                 return Cache(Scoped(new JObject {["operation"]=operation,["query"]=query,["offset"]=offset,["pageSize"]=PageSize,["total"]=matches.Length,
                     ["entries"]=new JArray(matches.Skip(offset).Take(PageSize).Select(x=>new JObject {["id"]=x.Id,["version"]=x.Version,["label"]=x.Label})),

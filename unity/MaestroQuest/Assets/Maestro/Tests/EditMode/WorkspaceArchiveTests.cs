@@ -254,6 +254,13 @@ namespace Maestro.Quest.Tests
             }finally{capture.Dispose();}
             await removal;Assert.That(library.PayloadPresent(motionId),Is.False);Assert.That(library.Inspect(motionId).removed,Is.True);
         }
+        [Test] public void WorldTimeAndKeyframesRoundTripAndUnknownNestedFieldsReject(){
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.worldTime.settings=WorldTimeTests.Cycle();room.worldTime.day=12;room.worldTime.second=321.5;
+            documents[RoomStorage.FileName]=Bytes(JsonUtility.ToJson(room));var before=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;
+            using var stage=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory);var restored=new RoomStorage(stage.DirectoryPath).Load(out var e);Assert.That(restored.worldTime.Same(room.worldTime),Is.True,e);
+            room.worldTime.second++;documents[RoomStorage.FileName]=Bytes(JsonUtility.ToJson(room));Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(before));
+            var wire=JObject.Parse(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));wire["worldTime"]["settings"]["frames"][0]["extra"]=1;documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.Throws<InvalidDataException>(()=>Snapshot());
+        }
         sealed class FailingStream:MemoryStream {public override void Write(byte[] bytes,int offset,int count){if(Length+count>100)throw new IOException("Injected storage failure");base.Write(bytes,offset,count);}}
     }
 }

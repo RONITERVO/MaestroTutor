@@ -5162,3 +5162,65 @@ are in [the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#saved-region-lighti
 The local `.quest-evidence/spatial-state/lighting-working.json` checkpoint records
 active release work. These journeys use fresh synthetic English-to-Spanish chat,
 not previously captured private media.
+
+
+### Authored world time and daily lighting (2026-10-08)
+
+The region now has one authored day/second clock. Its saved settings select
+running/paused, a rate from zero to 3,600 authored seconds per active real second,
+and an optional daily lighting cycle. This clock is independent of device/calendar
+schedules and does not scale rigid-body physics or animation. It supplies the time
+authority for later environment/weather consumers. Day values are bounded to
+0–999999; reaching the end stops progression instead of wrapping the day counter.
+
+`world.time.configure` edits settings while retaining the current position.
+`world.time.seek` deliberately changes day/second; loading current values fills
+only its guard, preserving the requested destination. Ordinary ticking does not
+invalidate edit guards or add Undo records. Explicit edits and Undo do, and Undo
+of an unrelated object edit leaves time alone. Time progression uses the same room
+journal and write gates as other world state. Automatic checkpoints are scheduled
+at five active seconds; ordinary edits, explicit Save and lifecycle flushes can
+also persist the current position. A crash can lose progress since the last
+successful checkpoint. Temporary forks keep their own time; Keep records the exact
+captured snapshot and Discard restores the saved time without replaying actions.
+
+Focus/app suspension, native lifetime/write holds, invalid authored frames and
+unavailable storage stop advancement. The first tick after resumption or a time
+edit is skipped; gaps over one second are not caught up. Saved running intent
+resumes at the saved position when the world becomes active, with no offline
+progression. This is an environment-clock policy, not permission to resume Live,
+audio capture, previously running actions or old calendar events. Looking away,
+viewer opacity and ordinary object editing do not freeze the clock.
+
+The optional day cycle has two to eight ordered keyframes, each specifying
+ambient/sun colour and intensity and authored sun angles. It wraps continuously
+at midnight, interpolates energy in the renderer's working colour space, and
+uses the shortest azimuth arc. `world.illumination` exposes the effective sample.
+Runtime sampling caches converted frames and allocates no objects per frame.
+Disabling the cycle retains its keyframes and restores the manual lighting preset;
+static `world.lighting.set` refuses while the cycle controls illumination, avoiding
+an accepted but invisible edit. Browser pages and built-in controls retain their
+lighting exemptions. Room v28, paired snapshot v27 and archive v26 retain the clock
+and cycle; exact wire validation protects missing/unknown fields.
+
+The same catalog definitions serve generated book controls, programs and agent
+requests. Native, book and fresh managed/BYOK `WorldTime` journeys cover configuration,
+seeking, active progress, pause, readback and preserving unrelated world state.
+Current results and incomplete checks are recorded in
+`.quest-evidence/spatial-state/world-time-working.json`; a configured test scenario
+is not itself proof that its run passed. Daily lighting supplies environment timing
+and transitions, not weather, shadows, local lights or water-medium simulation.
+Those accepted requirements and physical Quest performance/appearance acceptance
+remain open. No device work resumes before the existing cooling/charging hold clears.
+
+
+Verified results for this increment: 969 EditMode cases, 848 full PlayMode cases
+(with three known optional skips), 13 final focused native tests, 1,579 scoped
+shared tests and 147 final focused shared tests pass. Native, original-book and
+fresh real managed/BYOK `WorldTime` journeys pass. The book journey also creates
+keyframes through visible controls and retains them after disabling the cycle.
+Exact-name catalog search now ranks the intended control ahead of incidental
+description matches; saved colour validation rejects trailing newlines. Run IDs,
+billing reconciliation, final-source boundaries and retained failed attempts are
+in [the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#authored-world-time-and-daily-lighting-2026-10-08).
+These results do not complete physical Quest or broader weather/water acceptance.
