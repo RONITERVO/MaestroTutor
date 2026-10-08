@@ -21,31 +21,39 @@ namespace Maestro.Quest.Creation {
         // The cylinder uses sixteen circumscribed planes (at most 2% wider at a
         // corner). Expanded planes conservatively include the body footprint:
         // a narrow cavity cannot be skipped between movement frames.
-        internal bool Sweep(Vector3 from,Vector3 to,float radius,float height,out float depth,out Vector3 contact){
-            depth=0;contact=default;if(Contents.amountMl<=0)return false;
+        internal bool Sweep(Vector3 from,Vector3 to,float radius,float height,out float depth,out Vector3 contact)=>Sweep(from,to,radius,height,out depth,out contact,out _);
+        internal bool Sweep(Vector3 from,Vector3 to,float radius,float height,out float depth,out Vector3 contact,out Vector3 foot){
+            depth=0;contact=foot=default;if(Contents.amountMl<=0)return false;
             var a=inverse.MultiplyPoint3x4(from);var d=inverse.MultiplyVector(to-from);float enter=0,exit=1;
-            if(!Plane(Vector3.down,0,a,d,radius,height,ref enter,ref exit)||
-                !Plane(Vector3.up,Contents.height,a,d,radius,height,ref enter,ref exit))return false;
-            if(Contents.IsRectangular){
-                if(!Plane(Vector3.right,Contents.rectangle.width*.5f,a,d,radius,height,ref enter,ref exit)||
-                    !Plane(Vector3.left,Contents.rectangle.width*.5f,a,d,radius,height,ref enter,ref exit)||
-                    !Plane(Vector3.forward,Contents.rectangle.depth*.5f,a,d,radius,height,ref enter,ref exit)||
-                    !Plane(Vector3.back,Contents.rectangle.depth*.5f,a,d,radius,height,ref enter,ref exit))return false;
-            }else for(int i=0;i<16;i++){
-                float angle=i*Mathf.PI/8;
-                if(!Plane(new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle)),Contents.radius,a,d,radius,height,ref enter,ref exit))return false;
-            }
+            for(int i=0;i<PlaneCount;i++){LocalPlane(i,out var normal,out float limit);if(!Plane(normal,limit,a,d,radius,height,ref enter,ref exit))return false;}
             // The liquid surface stays perpendicular to gravity, including tilted vessels.
-            float support=radius*Mathf.Sqrt(Up.x*Up.x+Up.z*Up.z)-Mathf.Min(0,Up.y*height);
+            float support=Support(Up,radius,height);
             if(!Clip(Vector3.Dot(Up,from),Vector3.Dot(Up,to-from),Level+support,ref enter,ref exit))return false;
-            var foot=Vector3.Lerp(from,to,Vector3.Dot(Up,to-from)<0?exit:enter);
+            foot=Vector3.Lerp(from,to,Vector3.Dot(Up,to-from)<0?exit:enter);
             depth=Mathf.Max(0,Level-Vector3.Dot(Up,foot));
             contact=foot+Vector3.up*Mathf.Clamp(depth*.5f,.001f,height);
             return depth>.0001f;
         }
+        int PlaneCount=>Contents.IsRectangular?6:18;
+        void LocalPlane(int index,out Vector3 normal,out float limit){
+            if(index<2){normal=index==0?Vector3.down:Vector3.up;limit=index==0?0:Contents.height;return;}
+            if(Contents.IsRectangular){normal=index switch{2=>Vector3.right,3=>Vector3.left,4=>Vector3.forward,_=>Vector3.back};limit=index<4?Contents.rectangle.width*.5f:Contents.rectangle.depth*.5f;return;}
+            float angle=(index-2)*Mathf.PI/8;normal=new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle));limit=Contents.radius;
+        }
+        static float Support(Vector3 normal,float radius,float height)=>radius*Mathf.Sqrt(normal.x*normal.x+normal.z*normal.z)-Mathf.Min(0,normal.y*height);
+        // Exactly the same expanded half-spaces as Sweep, restricted to a foot
+        // height. Tilted volumes must not use a narrower rendered-volume outline.
+        internal void RouteLines(float radius,float height,float footY,System.Collections.Generic.List<Vector3> lines){
+            lines.Clear();var foot=new Vector3(0,footY,0);var local=inverse.MultiplyPoint3x4(foot);
+            for(int i=0;i<PlaneCount;i++){
+                LocalPlane(i,out var normal,out float limit);var worldNormal=inverse.transpose.MultiplyVector(normal);
+                lines.Add(new Vector3(worldNormal.x,worldNormal.z,limit+Support(worldNormal,radius,height)-Vector3.Dot(normal,local)));
+            }
+            lines.Add(new Vector3(Up.x,Up.z,Level+Support(Up,radius,height)-Vector3.Dot(Up,foot)));
+        }
         bool Plane(Vector3 normal,float limit,Vector3 a,Vector3 d,float radius,float height,ref float enter,ref float exit){
             var worldNormal=inverse.transpose.MultiplyVector(normal);
-            float support=radius*Mathf.Sqrt(worldNormal.x*worldNormal.x+worldNormal.z*worldNormal.z)-Mathf.Min(0,worldNormal.y*height);
+            float support=Support(worldNormal,radius,height);
             return Clip(Vector3.Dot(normal,a),Vector3.Dot(normal,d),limit+support,ref enter,ref exit);
         }
         static bool Clip(float at,float change,float limit,ref float enter,ref float exit){

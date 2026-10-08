@@ -95,21 +95,19 @@ namespace Maestro.Quest.Tests {
         }
     }
     public sealed partial class AvatarSpatialTests {
-        void WaterBasin(){
+        string WaterBasin(){
             Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();editor.Liquids.enabled=false;
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Walking pool",new Vector3(.8f,-.2f,0),1,Color.white,out var id,out var e),Is.True,e);
             Assert.That(editor.EditContainer(id,editor.ObjectRevision(id),new(){version=2,rectangle=new(){width=1,depth=1},frame=new(){position=new Vector3(0,.2f,0)},height=.3f,capacityMl=300,amountMl=200},out e),Is.True,e);
             Assert.That(editor.SetItemPhysics(id,new ObjectPhysicsSettings{mode="fixed",shape="box",mass=1}),Is.True,editor.Status);Ready();
-            Assert.That(navigation.Prepare(.25f,1.7f,out e,editor.Find("maestro")),Is.True,e);
+            Assert.That(navigation.Prepare(.25f,1.7f,out e,editor.Find("maestro")),Is.True,e);return id;
         }
-        [UnityTest]public IEnumerator WaterTraversalGuardsFollowManualAndAuthoredWalkingThroughTheSameBodySweep(){
+        [UnityTest]public IEnumerator WaterTraversalKeepsManualAndAuthoredWalkingLiteral(){
             WaterBasin();var to=new Vector3(1.6f,0,0);
             Assert.That(navigation.Traverse(Vector3.zero,to,_=>false,out _,out var e),Is.False);StringAssert.Contains("avoids water",e);
             Assert.That(navigation.ClearAuthoredStep(Vector3.zero,to,0,_=>false),Is.False);StringAssert.Contains("avoids water",navigation.WaterBlocker);
-            viewer.transform.position=new Vector3(3,1.6f,0);Assert.That(motion.Begin("water follow",Maestro.Quest.Avatar.AvatarSpatialMode.Follow,out e),Is.True,e);
-            yield return new WaitForSeconds(.2f);StringAssert.Contains("water",motion.Status);Assert.That(avatar.transform.position.x,Is.LessThan(.05f));motion.Stop();
             Assert.That(editor.ConfigureWaterTraversal("maestro",editor.ObjectRevision("maestro"),new(){mode="wade",maxDepthMetres=.25f},out e),Is.True,e);
-            Assert.That(navigation.Traverse(Vector3.zero,to,_=>false,out _,out e),Is.True,e);
+            Assert.That(navigation.Traverse(Vector3.zero,to,_=>false,out _,out e),Is.True,e);yield return null;
         }
         [UnityTest]public IEnumerator WaterTraversalPreventsSkippedRecordedFramesAndPhysicalPreviewFromCrossingWater(){
             WaterBasin();var saved=new RoomMotion{frames=new[]{new MotionFrame{position=Vector3.zero},new MotionFrame{time=.01f,position=new Vector3(1.6f,0,0)}}};

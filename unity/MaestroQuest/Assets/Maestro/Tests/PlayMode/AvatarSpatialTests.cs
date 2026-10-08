@@ -96,7 +96,7 @@ namespace Maestro.Quest.Tests
             Assert.That(scheduler.Invoke(wave,0,out var waving,out error),Is.True,error);
             yield return new WaitForSeconds(.4f);
             Assert.That(motion.OwnedBy(walking),Is.True);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
-            Assert.That(Vector3.Distance(start,avatar.transform.position),Is.GreaterThan(.1f));
+            Assert.That(Vector3.Distance(start,avatar.transform.position),Is.GreaterThan(.1f),motion.Status);
             Assert.That(Quaternion.Angle(handBefore,shownArm),Is.GreaterThan(70),"A greeting must raise the arm, not merely restore the bind pose");
             var reference=UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Avatars/DefaultMaestro"),root.transform);
             if(!reference.TryGetComponent<Animator>(out var referenceAnimator))referenceAnimator=reference.AddComponent<Animator>();referenceAnimator.enabled=false;

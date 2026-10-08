@@ -15,7 +15,8 @@ and evidence](#swept-world-travel-in-mixed-reality-2026-10-08). These changes ar
 not physical Quest acceptance.
 Saved actor water policies now share live liquid geometry across walking and
 recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
-Automatic water detours, swimming and terrain reservoirs remain open.
+Follow now finds bounded routes around finite water cavities; see [water-aware following](#water-aware-following--2026-10-09).
+Swimming, escape behavior and terrain reservoirs remain open.
 Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
@@ -5539,3 +5540,71 @@ The introductory chat is outside those totals. BYOK provider usage is retained;
 managed billing is inapplicable because the API-key owner pays the provider.
 All ten protected unrelated working files remain unchanged. Headset, signing,
 upload, deployment and Store acceptance were not exercised by this increment.
+
+
+## Water-aware following — 2026-10-09
+
+Following now searches around finite liquid cavities using the same conservative
+body-expanded planes as the live traversal guard. Rectangular and cylindrical
+cavities retain rotation, scale, tilt and the gravity-level clipping plane.
+Candidate footprints use the actual blocked foot height; a sloping route's
+midpoint can be above water while its destination is submerged. Candidates are
+projected onto the actor's accepted ground, including virtual ground below the
+scanned floor when both participants' environment policies permit it.
+
+The search is a transient, bounded visibility graph over accepted NavMesh paths.
+It discovers additional intersected liquid bodies as needed, samples at most
+546 nodes and queries at most 2,048 directed edges; a published route has at most
+128 corners. Each tick performs up to four edge, sample or final-validation work
+units and checks a soft 2 ms elapsed budget between units. One native edge query
+can itself exceed that interval, so this is not a measured Quest frame budget.
+No liquid edit triggers a ground rebake. This is a supported-route search, not a
+shortest-path guarantee or complete navigation over arbitrary multi-level worlds.
+
+Geometry, actor policy and moved endpoints retire pending searches. Every
+candidate detour checks non-ground props; the assembled path is revalidated
+before publication, and every actual step still checks current water, accepted
+ground and body clearance. Ordinary following retains incremental approach to
+movable props rather than freezing because an obstacle exists farther along the
+route. Concrete blockers remain visible in status. Search exhaustion or an
+underwater destination produces a truthful refusal, and Stop cancels pending
+work. The follow destination accounts for the user's chosen distance so the
+book near the user does not become an unnecessary destination obstruction.
+
+Manual controls and authored/recorded root paths remain literal. This does not
+create a generic NPC movement controller, arbitrary prop detour planner, swimming,
+escape from existing submersion, terrain reservoirs or viewer water policy. The
+existing shared follow capability gains this behavior without another agent-only
+tool or saved format. The generated water-policy description advertises the
+bounded behavior and retains the distinction between water admission and a full
+navigable route.
+
+Initial checks found and repaired: tilted rendered footprints that disagreed with
+the conservative sweep; Unity's restriction on native NavMeshPath construction
+inside a component field initializer; loss of concrete collision status; and
+whole-route prop checks preventing ordinary follow from approaching distant
+obstacles. All 94 avatar movement cases passed after those repairs. The eight
+water-route cases additionally pass moving-water replanning and policy changes
+during a pending search. The final full regression is recorded separately below.
+
+
+Final native regression passes **988 EditMode** and **886 PlayMode** cases, with
+zero failures and three established optional private-asset ignores. This includes
+the complete existing avatar, ownership, terrain, audio, physics, storage and
+world-motion suites. Shared room/book contracts pass **1,414 tests in 133 files**,
+with **22 probe-contract tests** separately passing. Probe types, native catalog
+provenance, core boundaries, included assets and unique Unity metadata pass.
+The generated catalog retains 119 actions, 140 facts and 18 events, now backed
+by 483 native source inputs. This increment changes no provider orchestration,
+UI layout or storage format; prior provider/book results retain their original
+scope. The native transport journey is recorded separately below.
+
+
+Deterministic native journey **0dcaaab3664e4c58bd11ea8c3f88bcc6** passes with
+**700 observations**, client exit 0 and Editor exit 0. It rechecks the complete
+existing shared room command/receipt/save workflow, including water settings;
+the separate native movement tests establish the new routing behavior. No real
+provider, physical headset, new package, release signing, upload or deployment
+was used for this routing increment. All ten protected unrelated working files
+remain unchanged. Physical movement quality, thermal behavior and planning cost
+remain pending the existing headset cooling/charge hold.

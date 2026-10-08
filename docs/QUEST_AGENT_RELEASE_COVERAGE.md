@@ -1596,3 +1596,48 @@ The introductory chat is outside those totals. BYOK provider usage is retained;
 managed billing is inapplicable because the API-key owner pays the provider.
 All ten protected unrelated working files remain unchanged. Headset, signing,
 upload, deployment and Store acceptance were not exercised by this increment.
+
+
+## Water-aware following (2026-10-09)
+
+The existing native follow capability now detours around finite liquid cavities.
+There is no new agent-specific action or saved format. Users, programs and agents
+retain the same water policy, follow invocation, cancellation and live status.
+Candidates use the same expanded geometry as actual traversal, with accepted
+ground and per-participant environment admission. Search work is cooperative and
+bounded; actual steps always recheck current water and body clearance.
+
+Eight native route scenarios cover following around a pool, personal distance
+with a book near the viewer, water moved into an accepted path, policy changes
+during planning, newly permitted or emptied water, multiple pools, a submerged
+destination/Stop, and virtual ground below the scanned floor. Geometry tests
+cover rotated/scaled/tilted shapes and actual wet foot height on a sloping edge.
+A deterministic search test requires bounded work per tick and rejects a route
+whose final validation fails. Final full-regression results follow below.
+
+The preceding managed/BYOK water-policy runs remain evidence for the unchanged
+shared authoring and handoff contract. They did not walk around water and are not
+relabelled as provider or headset acceptance for this routing change. Swimming,
+escape, generic NPC movement and complete multi-level navigation remain open.
+
+
+Final native regression passes **988 EditMode** and **886 PlayMode** cases, with
+zero failures and three established optional private-asset ignores. This includes
+the complete existing avatar, ownership, terrain, audio, physics, storage and
+world-motion suites. Shared room/book contracts pass **1,414 tests in 133 files**,
+with **22 probe-contract tests** separately passing. Probe types, native catalog
+provenance, core boundaries, included assets and unique Unity metadata pass.
+The generated catalog retains 119 actions, 140 facts and 18 events, now backed
+by 483 native source inputs. This increment changes no provider orchestration,
+UI layout or storage format; prior provider/book results retain their original
+scope. The native transport journey is recorded separately below.
+
+
+Deterministic native journey **0dcaaab3664e4c58bd11ea8c3f88bcc6** passes with
+**700 observations**, client exit 0 and Editor exit 0. It rechecks the complete
+existing shared room command/receipt/save workflow, including water settings;
+the separate native movement tests establish the new routing behavior. No real
+provider, physical headset, new package, release signing, upload or deployment
+was used for this routing increment. All ten protected unrelated working files
+remain unchanged. Physical movement quality, thermal behavior and planning cost
+remain pending the existing headset cooling/charge hold.

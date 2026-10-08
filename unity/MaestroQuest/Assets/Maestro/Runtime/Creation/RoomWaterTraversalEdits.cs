@@ -47,11 +47,15 @@ namespace Maestro.Quest.Creation {
         }
     }
     internal readonly struct WaterTraversalResult {
-        internal readonly string BodyId,Reason;internal readonly float Depth;
-        internal WaterTraversalResult(string id,float depth,string reason){BodyId=id;Depth=depth;Reason=reason;}
+        internal readonly string BodyId,Reason;internal readonly float Depth;internal readonly Vector3 Foot;
+        internal WaterTraversalResult(string id,float depth,string reason,Vector3 foot=default){BodyId=id;Depth=depth;Reason=reason;Foot=foot;}
         internal static WaterTraversalResult Refused(string reason)=>new("",0,reason);
     }
     public sealed partial class LiquidPouring {
+        internal void RouteFootprint(string id,float padding,float height,float footHeight,System.Collections.Generic.List<Vector3> result){
+            result.Clear();CaptureMedia(false);
+            for(int i=0;i<mediaCount;i++)if(media[i].Id==id){LiquidRouteFootprint.Build(in media[i],padding,height,footHeight,result);return;}
+        }
         internal bool CheckTraversal(RoomItem actor,Vector3 from,Vector3 to,float radius,float height,out WaterTraversalResult result){
             result=default;var policy=actor?actor.WaterTraversal:null;
             if(policy==null||!policy.Valid||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to)||!float.IsFinite(radius)||!float.IsFinite(height)||radius<=0||height<=0){
@@ -67,11 +71,11 @@ namespace Maestro.Quest.Creation {
             CaptureMedia(false);using var environment=mediumEnvironment.Begin(world);
             float allowedDepth=Mathf.Min(policy.maxDepthMetres*editor.Frame.MetresPerUnit,height*.6f);
             for(int i=0;i<mediaCount;i++){
-                var medium=media[i];if(medium.Item==actor||!medium.Sweep(from,to,radius,height,out float depth,out var point))continue;
+                var medium=media[i];if(medium.Item==actor||!medium.Sweep(from,to,radius,height,out float depth,out var point,out var foot))continue;
                 string reason=!medium.Item.GetComponent<RigidRoomItem>().GeometryReady||!environment.CanOccupy(point,actor,medium.Item)?"The water or actor environment is unavailable":
                     policy.mode!="wade"?"This actor avoids water":depth>allowedDepth+.001f?"This water is too deep for the actor to wade; swimming is not available":null;
-                if(reason!=null){result=new(medium.Id,depth,reason);return false;}
-                if(depth>result.Depth)result=new(medium.Id,depth,null);
+                if(reason!=null){result=new(medium.Id,depth,reason,foot);return false;}
+                if(depth>result.Depth)result=new(medium.Id,depth,null,foot);
             }
             return true;
         }

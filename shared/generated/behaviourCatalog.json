@@ -29495,7 +29495,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid stops at water; wade permits depth up to maxDepthMetres in authored-room metres, capped at 60% of walking body height; ignore is for deliberate non-walking movement. Swimming and water-aware route detours are not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid stops at water; wade permits depth up to maxDepthMetres in authored-room metres, capped at 60% of walking body height; ignore is for deliberate non-walking movement. Following can plan bounded routes around liquid footprints; manual movement and authored recordings keep their literal paths. Swimming is not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -40254,7 +40254,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "b2b1922baf0792dd52752a8d3e319875ff664cd3a835fd0e7ab63c73b397d646"
+      "sha256": "58012d452ab3f933bac65d0c887953c39ab16651e67d7fca57fc9b7ad14469ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -40766,7 +40766,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
-      "sha256": "3e0d12cde113bda615b079747160d9075ade371a9ca717f1fbaa0ee6787e48ea"
+      "sha256": "ba5b760ff88d9716ebf99ae4d9fe5a2f386bd984304b636aabe8fa3d86eef118"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
@@ -40958,7 +40958,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "34c1fe434063ad341e18d564a233df394b0f549c49b6e483335a8c565abbcd62"
+      "sha256": "5ff632b05d39938d5e9d281f783ebb754066bf0ac460adbd65d64268b5784f92"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
@@ -40971,6 +40971,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
       "sha256": "fa5cd79780bd73af107b6ffc2f4bdef878a3b0899a31d78d1a8ab2292c17e454"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRouteFootprint.cs",
+      "sha256": "9a175a8f7c753c8e5be7871439cc3139a555bbc132f96b9acf87ae11f8b48a7d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/MaterialToolContentsView.cs",
@@ -41274,7 +41278,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversalEdits.cs",
-      "sha256": "033e12d72f950611d92897e713b5470ffdd1c71c055888ef5bfaf83cd3f6b8df"
+      "sha256": "e55abcf9e550b9cb131a777e43f99ab41fb9ad48bcdc0ba052bfdd22ca6436a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",
@@ -41558,11 +41562,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "438ad56bbb809c8454fa9ec37455ed4731ef0413d943a383b4ec606cf8d99654"
+      "sha256": "e9a3b5664aff35969fd52bd1a5d43e57dbb5130cfe531a28792834e0e58dfee8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
       "sha256": "ef326d320dc385c03e4f1b05827831c1919ff6f0ddd31c89cf5914710e86bb4b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
+      "sha256": "0e34b3effb7b83f6702d3367572901b71ff4db28ef21e1ea39c24fd782796ba7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomOwnership.cs",
@@ -41583,6 +41591,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPropAnchor.cs",
       "sha256": "2052e92c539db3babe49213f45776d69fcde7859d6aa3d536f1a721330a86ac1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRouteSearch.cs",
+      "sha256": "0ec7ba2ff84111d780d9adaa57936803e9744379ca818d78b9d1090aac626c4b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRuntimeGate.cs",

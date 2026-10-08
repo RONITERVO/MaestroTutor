@@ -8,7 +8,7 @@ using UnityEngine.AI;
 namespace Maestro.Quest.Interaction
 {
     /// <summary>Owned navigation built from accepted scanned and authored collision surfaces.</summary>
-    public sealed class RoomNavigation : MonoBehaviour
+    public sealed partial class RoomNavigation : MonoBehaviour
     {
         RoomPhysicsWorld world;
         RoomItem actor;
@@ -113,6 +113,10 @@ namespace Maestro.Quest.Interaction
                     !world.ContainsSimulation(current.point+Vector3.up*.1f,actor))return false;
                 floor=current.point;return true;
             }
+            return SampleInstalled(point,maximumDistance,out floor);
+        }
+        bool SampleInstalled(Vector3 point,float maximumDistance,out Vector3 floor){
+            floor=default;
             if (!NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || !world.ContainsSimulation(hit.position + Vector3.up*.1f,actor)) return false;
             // NavMesh is a route approximation. Foot placement uses the accepted
             // collider itself, including its current revision and rendered height.
@@ -155,7 +159,7 @@ namespace Maestro.Quest.Interaction
         }
         void Clear()
         {
-            PathsPending=false;
+            PathsPending=false;CancelFollowRoute();
             if (installed.valid) { installed.Remove(); SurfaceRevision++; }
             ArtResources.Release(data); data = null;
             if (agentType != -1) NavMesh.RemoveSettings(agentType);

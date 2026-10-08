@@ -5,7 +5,6 @@ using Maestro.Quest.Creation;
 using Maestro.Quest.Programs;
 using Maestro.Quest.Interaction;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace Maestro.Quest.Avatar
 {
@@ -30,7 +29,7 @@ namespace Maestro.Quest.Avatar
         public void ManualDirection(string identity,Vector3 direction) { if (owner == identity && mode == AvatarSpatialMode.Manual && float.IsFinite(direction.sqrMagnitude)) { manualDirection=Vector3.ClampMagnitude(Vector3.ProjectOnPlane(direction,Vector3.up),1); manualAt=Time.unscaledTime; } }
         AvatarSpatialMode mode;
         bool paused, focused = true;
-        NavMeshPath path;
+        Vector3 pathGoal,followDestination;
         Vector3[] corners = Array.Empty<Vector3>();
         int corner;
         uint navigationRevision;
@@ -43,7 +42,6 @@ namespace Maestro.Quest.Avatar
         public event Action Changed;
         public void Initialize(RoomEditor source, AnimationWorkshop authoring, RoomInteraction interaction, RoomNavigation paths, Func<bool> headTracked = null)
         {
-            path = new NavMeshPath();
             avatar = GetComponent<MaestroAvatar>(); item = GetComponent<RoomItem>();
             editor = source; animations = authoring; room = interaction; navigation = paths; tracked = headTracked ?? (() => room.Viewer && room.Viewer.gameObject.activeInHierarchy);
             editor.Editing += Stop; editor.ItemGrabbed += Grabbed; animations.Starting += Authoring;
@@ -94,7 +92,7 @@ namespace Maestro.Quest.Avatar
         public void Stop()
         {
             if (!Active) return;
-            owner = null; corners = Array.Empty<Vector3>();ownershipLease?.Dispose();ownershipLease=null;
+            owner = null; corners = Array.Empty<Vector3>();if(navigation)navigation.CancelFollowRoute();ownershipLease?.Dispose();ownershipLease=null;
             if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");
@@ -102,7 +100,7 @@ namespace Maestro.Quest.Avatar
         public void SetPreferences(float distance, float speed)
         {
             Distance = Mathf.Clamp(distance,.8f,2.5f); Speed = Mathf.Clamp(speed,.2f,1.2f);
-            nextPath = 0; Changed?.Invoke();
+            nextPath = 0;corners=Array.Empty<Vector3>();if(navigation)navigation.CancelFollowRoute(); Changed?.Invoke();
         }
         void ReadPreferences()
         {
@@ -127,10 +125,11 @@ namespace Maestro.Quest.Avatar
             if (delta.magnitude > Distance + .05f && dt > 0)
             {
                 var goal = new Vector3(room.Viewer.position.x,transform.position.y,room.Viewer.position.z);
-                if (Time.unscaledTime >= nextPath)
+                if (navigation.FollowRoutePending||Time.unscaledTime>=nextPath&&(corners.Length==0||(goal-pathGoal).sqrMagnitude>.04f))
                 {
                     nextPath = Time.unscaledTime + .35f;
-                    corners = navigation.Path(transform.position,goal,path) ? path.corners : Array.Empty<Vector3>(); corner = 1;
+                    if(!navigation.FollowRoutePending||Vector3.Distance(goal,pathGoal)>.2f){pathGoal=goal;followDestination=goal-delta.normalized*Mathf.Max(0,Distance-.02f);}
+                    corners=navigation.FollowRoute(transform.position,followDestination,walkingObstacle??=BodyObstacle,out var planned)?planned:Array.Empty<Vector3>();corner=1;
                 }
                 while (corner < corners.Length && Vector3.Distance(transform.position,corners[corner]) < .06f) corner++;
                 if (corner < corners.Length)
@@ -144,9 +143,9 @@ namespace Maestro.Quest.Avatar
                         direction.y = 0; if (direction.sqrMagnitude > .0001f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(direction),120*dt);
                         Say("Following you — Stop or grip Maestro to end");
                     }
-                    else Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);
+                    else {corners=Array.Empty<Vector3>();nextPath=0;Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);}
                 }
-                else Say(navigation.WaterBlocker??(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor"));
+                else Say(!navigation.FollowRoutePending&&navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.FollowRouteStatus??navigation.WaterBlocker??(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor"));
             }
             else
             {
