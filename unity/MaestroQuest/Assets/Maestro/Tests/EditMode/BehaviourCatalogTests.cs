@@ -83,7 +83,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(88));
+            Assert.That(count,Is.EqualTo(89));
         }
         [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
         {
@@ -101,6 +101,10 @@ namespace Maestro.Quest.Tests
                     Assert.That((string)output["total"],Is.EqualTo("number"));
                     Assert.That((string)entries["id"],Is.EqualTo("text"));Assert.That((string)entries["name"],Is.EqualTo("text"));Assert.That((string)entries["revision"],Is.EqualTo("number"));
                     Assert.That((string)output["next"]=="number"||((string)output["offset"]=="number"&&(string)output["pageSize"]=="number"),Is.True);
+                    bool lookup=(bool?)choice["lookup"]==true;
+                    if(lookup){Assert.That(choice["revision"],Is.Null);Assert.That(choice["emptyLabel"],Is.Null);}
+                    bool dependency=(schema["x-current"]?["arguments"] as JObject)?.Properties().Any(p=>(string)p.Value==(string)choice["id"])==true;
+                    Assert.That(lookup,Is.EqualTo(dependency),"Only explicit lookup choices can replace current-value dependencies");
                     foreach(string name in new[]{"id","revision"}) {
                         if(choice[name]==null)continue;string path=(string)choice[name];Assert.That(destinations.Add(path),Is.True);
                         Assert.That(path.Split('.').All(part=>System.Text.RegularExpressions.Regex.IsMatch(part,"^[a-zA-Z0-9_]{1,32}$")&&!new[]{"__proto__","constructor","prototype"}.Contains(part)),Is.True);
@@ -111,7 +115,7 @@ namespace Maestro.Quest.Tests
                     }
                 }
             }
-            Assert.That(count,Is.EqualTo(4));
+            Assert.That(count,Is.EqualTo(5));
         }
         static bool AcceptsCurrentType(JObject schema,JToken type,int depth=0){
             if(schema==null||type==null||depth>4||schema["oneOf"]!=null||(bool?)schema["x-static"]==true)return false;

@@ -10,7 +10,7 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        readonly Dictionary<string,VisibilityState> visibleLayers=new(StringComparer.Ordinal);
+        readonly Dictionary<string,LayerPresentation> visibleLayers=new(StringComparer.Ordinal);
         public RoomVisibilityLayer[] VisibilityLayers()=>journal.VisibilitySnapshot();
         public int VisibilityRevision(string id)=>journal.VisibilityRevision(id);
         public RoomVisibilityLayer ReadVisibility(string id)=>journal.ReadVisibility(id);
@@ -55,14 +55,14 @@ namespace Maestro.Quest.Creation
             var present=document.visibilityLayers.Select(v=>v.id).ToHashSet();
             foreach(var id in visibleLayers.Keys.Where(id=>!present.Contains(id)).ToArray())visibleLayers.Remove(id);
             foreach(var definition in document.visibilityLayers) {
-                if(!visibleLayers.TryGetValue(definition.id,out var state)){state=new VisibilityState();visibleLayers.Add(definition.id,state);}
-                state.Set(definition.opacity,definition.realDepth);
+                if(!visibleLayers.TryGetValue(definition.id,out var state)){state=new LayerPresentation();visibleLayers.Add(definition.id,state);}
+                state.Synchronize(VisibilityRevision(definition.id),definition.opacity,definition.realDepth);
             }
         }
         void ApplyVisibility(RoomObjectData data,RoomItem item,RoomDocument document) {
             var view=item.GetComponent<RoomAppearanceView>();
             if(!view&&(data.appearanceBindings.Length>0||data.visibilityLayer!=""))view=item.gameObject.AddComponent<RoomAppearanceView>();
-            if(view)view.ConfigureLayer(data,document.appearances,data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer]);
+            if(view)view.ConfigureLayer(data,document.appearances,data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);
         }
         void ReconcileVisibility() {
             var document=journal.Snapshot();SynchronizeVisibility(document);

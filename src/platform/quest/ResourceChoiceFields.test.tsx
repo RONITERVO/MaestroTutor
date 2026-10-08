@@ -51,3 +51,19 @@ it('keeps a manually selected saved identity literal in reusable programs even i
  expect((screen.getByLabelText('Keep current layerId when running') as HTMLInputElement).checked).toBe(false);expect((screen.getByLabelText('Keep current layerRevision when running') as HTMLInputElement).checked).toBe(false);
  fireEvent.click(screen.getByRole('button',{name:'Add read and action to draft'}));expect(insert).toHaveBeenCalledWith({id:d.id,version:1,arguments:{target:'maestro',revision:12,layerId:first.id,layerRevision:3}},{kind:'current',fields:['revision']});expect(client.snapshot().request).toBeNull();client.cancel();
 });
+
+it('chooses a named lookup first, requires its own current read and invalidates that read on switching away and back',async()=>{
+ const {client,receive}=setup(),insert=vi.fn(()=>null),d=capabilityDefinition('visibility.layer.present')!;
+ const screen=render(<CapabilityBrowser client={client} onClose={()=>{}} onInsert={insert} initialCall={{id:d.id,version:1,arguments:d.example!}}/>);
+ await receive({operation:'inspect',capability:d.id,version:1,definition:d,status:'Available'}, {capabilities:[...new Set([...native.capabilities,'catalog.v1','catalogVocabulary.v1','factQueries.v1','structuredValues.v1','layerPresentation.v1'])]});
+ expect((screen.getByRole('button',{name:'Load saved visual layer'}) as HTMLButtonElement).disabled).toBe(false);
+ expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Load saved visual layer'}));await receive(list());
+ const choose=(id:string)=>fireEvent.change(screen.getByLabelText('Choose visual layer'),{target:{value:JSON.stringify([id,null])}});
+ choose(first.id);expect(client.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Load current values'}));expect(client.snapshot().request?.commands[0].catalog).toMatchObject({capability:'visibility.presentation',arguments:{id:first.id}});
+ await receive(fact('visibility.presentation',{id:first.id,stateId:'c'.repeat(32),viewStateId:'d'.repeat(32),opacity:.4,realDepth:true,progress:{currentOpacity:.5,effectiveOpacity:.25,effectiveRealDepth:true,blending:true,remainingSeconds:.2}},{id:first.id}));
+ expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(false);
+ choose(second.id);expect(screen.queryByText('Current values loaded. Review your changes before running.')).toBeNull();choose(first.id);expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(true);
+ expect((screen.getByRole('button',{name:'Add read and action to draft'}) as HTMLButtonElement).disabled).toBe(true);expect(insert).not.toHaveBeenCalled();expect(client.snapshot().request).toBeNull();client.cancel();
+});

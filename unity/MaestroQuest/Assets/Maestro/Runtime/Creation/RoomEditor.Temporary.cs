@@ -90,7 +90,7 @@ namespace Maestro.Quest.Creation
             try{TemporaryMemory?.BeginTemporary();}catch(Exception e){error=e.Message;return false;}
             savedPair=null;TemporaryStorageUncertain=false;
             savedJournal=journal;journal=journal.Fork();savedBaseDurable=false;dirty=false;
-            TemporarySaveRevision=0;TemporarySessionId=Guid.NewGuid().ToString("N");Revision++;ClearConstructionSelection();
+            TemporarySaveRevision=0;TemporarySessionId=Guid.NewGuid().ToString("N");ResetLayerPresentation(true);Revision++;ClearConstructionSelection();
             var previous=saveTask;saveTask=null;
             DispatchTemporarySave(baseline,baseline:true,previous);
             SetStatus("Starting temporary room: saving its base; new edits stay temporary");return true;
@@ -176,7 +176,7 @@ namespace Maestro.Quest.Creation
             bool viewpointChanged=savedJournal.UpdateViewpoint(journal.Viewpoint);
             journal=savedJournal;savedJournal=null;TemporarySessionId=Guid.NewGuid().ToString("N");TemporarySaveId="";TemporarySaveRevision=0;dirty=!savedBaseDurable||viewpointChanged;saveAt=UnityEngine.Time.unscaledTime+.5f;Revision++;ClearConstructionSelection();
             if(journal.Read(selected)==null)selected=null;
-            Reconcile();TemporarySaveError=null;
+            ResetLayerPresentation(true);Reconcile();TemporarySaveError=null;
             SetStatus(savedBaseDurable?"Temporary changes discarded: returned to the last saved room":"Temporary changes discarded: returned to the starting room; saving its pending edits");return true;
         }
     }

@@ -95,8 +95,9 @@ namespace Maestro.Quest.Programs
             return schema;
         }
         /// <summary>A named library choice only fills literal references in a reviewed draft.</summary>
-        public static JObject ResourceChoice(JObject schema,string label,string fact,string id,string revision=null,string emptyLabel=null) {
+        public static JObject ResourceChoice(JObject schema,string label,string fact,string id,string revision=null,string emptyLabel=null,bool lookup=false) {
             var choice=new JObject {["label"]=label,["fact"]=fact,["version"]=1,["id"]=id};
+            if(lookup)choice["lookup"]=true;
             if(revision!=null)choice["revision"]=revision;if(emptyLabel!=null)choice["emptyLabel"]=emptyLabel;
             if(schema["x-choices"] is not JArray choices){choices=new JArray();schema["x-choices"]=choices;}
             choices.Add(choice);return schema;

@@ -5,9 +5,9 @@ import {argumentValue,type CapabilitySchema,type ResourceChoice} from '../../../
 import {applyResourceChoice,resourceChoices,resourceChoiceKey,resourceChoiceRequest,readResourceChoicePage,type ResourceChoicePage} from '../../../shared/resourceChoices';
 import type {RoomAgentClient} from './roomAgentBridge';
 const displayName=(name:string)=>name.trim()||'Unnamed resource';
-export function ResourceChoiceFields({schema,value,onChange,client,ready,session}:{schema:CapabilitySchema;value:unknown;onChange:(value:unknown,fields:string[])=>void;client:RoomAgentClient;ready:boolean;session:string}) {
+export function ResourceChoiceFields({schema,value,onChange,client,ready,session,canLookup=false}:{schema:CapabilitySchema;value:unknown;onChange:(value:unknown,fields:string[])=>void;client:RoomAgentClient;ready:boolean;session:string;canLookup?:boolean}) {
  let choices:ResourceChoice[];try{choices=resourceChoices(schema);}catch{return <p role="alert">Saved resource choices are unavailable for this action.</p>;}
- return <>{choices.map(choice=><ResourceChoiceField key={session+JSON.stringify(choice)} {...{schema,value,onChange,client,ready,session,choice}}/>)}</>;
+ return <>{choices.map(choice=><ResourceChoiceField key={session+JSON.stringify(choice)} {...{schema,value,onChange,client,session,choice}} ready={ready||choice.lookup===true&&canLookup}/>)}</>;
 }
 function ResourceChoiceField({schema,value,onChange,client,ready,session,choice}:{schema:CapabilitySchema;value:unknown;onChange:(value:unknown,fields:string[])=>void;client:RoomAgentClient;ready:boolean;session:string;choice:ResourceChoice}) {
  const [page,setPage]=useState<ResourceChoicePage|null>(null),[back,setBack]=useState<number[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(false);
@@ -46,6 +46,6 @@ function ResourceChoiceField({schema,value,onChange,client,ready,session,choice}
    <button disabled={!ready||loading||page.next===null} onClick={()=>void load(page.next!,[...back,page.offset])}>Next {choice.label.toLowerCase()}</button>
   </>}
   {loading&&<p role="status">Loading saved resources…</p>}{error&&<p role="alert">{error}</p>}
-  {typeof id==='string'&&id&&<details><summary>Selected {choice.label.toLowerCase()} identity</summary><code>{id}</code>{choice.revision?<p>Revision {String(revision)}. Reloading the list never changes this selection; choose a resource explicitly to replace it.</p>:<p>Shared source: future plays use its saved definition when playback begins. Editing it does not replace audio already playing.</p>}</details>}
+  {typeof id==='string'&&id&&<details><summary>Selected {choice.label.toLowerCase()} identity</summary><code>{id}</code>{choice.revision?<p>Revision {String(revision)}. Reloading the list never changes this selection; choose a resource explicitly to replace it.</p>:choice.lookup?<p>Changing this selection requires a new current-value read before running.</p>:<p>Shared source: future plays use its saved definition when playback begins. Editing it does not replace audio already playing.</p>}</details>}
  </section>;
 }

@@ -81,7 +81,12 @@ try{
     const receipt=await native.execute(...args);await receiptObserver?.(args[0],receipt);return receipt;
    }};
   });client.roomAgent=agent;
-  const timer=setTimeout(()=>agent.tasks.stopAll(),['PhysicsLaunch','TaskSteering'].includes(providerScenario||'')?780000:providerScenario?600000:240000);
+  // The eight-turn presentation journey includes independent tutor, verifier,
+  // planner and final-reply calls for each turn. Keep it bounded below the
+  // native probe's 15-minute lifetime, without cutting it off at the old six-turn budget.
+  const timeoutMs=['PhysicsLaunch','TaskSteering','WorldPresentation'].includes(providerScenario||'')?780000:providerScenario?600000:240000;
+  const startedAt=Date.now();let deadlineExpiredAt:number|null=null;
+  const timer=setTimeout(()=>{deadlineExpiredAt=Date.now();agent.tasks.stopAll();},timeoutMs);
   try{
    await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
    const spoken=providerScenario==='LiveVisual'||providerScenario==='ObserverVisual';
@@ -156,6 +161,7 @@ try{
     await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(scenarioEvidence,null,2));
     outcome=scenarioEvidence;
    }
+   if(deadlineExpiredAt!==null)throw new Error('Provider scenario exceeded its bounded '+timeoutMs+' ms deadline.');
    const records=await agent.store.list();
    for(const record of records)for(const operation of record.operations)if(operation.receipt)observations.push(operation.receipt);
    await writeFile(join(directory,'agent-journal.json'),JSON.stringify(records,null,2));
@@ -163,7 +169,9 @@ try{
    const record=records.find(record=>record.id===createdJourney.task?.id)!;const revision=lease.state().sceneRevision,usageCount=agent.usage.length;
    await agent.start(record.handoff.sourceAssistantId);
    if(lease.state().sceneRevision!==revision||agent.usage.length!==usageCount)throw new Error('Duplicate handoff was executed again.');
-  }catch(error){await writeFile(join(directory,'agent-failure.json'),JSON.stringify({message:error instanceof Error?error.message:String(error),evidence:(error as {evidence?:unknown}).evidence},null,2));throw error;
+  }catch(error){await writeFile(join(directory,'agent-failure.json'),JSON.stringify({message:error instanceof Error?error.message:String(error),
+   deadline:{timeoutMs,startedAt,expiredAt:deadlineExpiredAt,elapsedMs:Date.now()-startedAt},
+   evidence:(error as {evidence?:unknown}).evidence},null,2));throw error;
   }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
 
  }else{

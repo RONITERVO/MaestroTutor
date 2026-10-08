@@ -9,11 +9,11 @@ const own=(v:object,k:string)=>Object.prototype.hasOwnProperty.call(v,k);
 const need=(v:unknown,message:string)=>{if(!v)throw new Error(message);};
 const path=(v:unknown):v is string=>typeof v==='string'&&v.split('.').length<=4&&v.split('.').every(k=>/^[a-zA-Z0-9_]{1,32}$/.test(k)&&!['__proto__','constructor','prototype'].includes(k));
 const text=(v:unknown,empty=false)=>typeof v==='string'&&(empty||v.trim().length>0)&&v.length<=80&&!/[\x00-\x1f\x7f-\x9f]/.test(v);
-function mutableField(schema:CapabilitySchema,key:string):CapabilitySchema|undefined {
+function mutableField(schema:CapabilitySchema,key:string,lookup=false):CapabilitySchema|undefined {
  if(!path(key))return undefined;
  for(const part of key.split('.')){
   if(schema.type!=='object'||schema.oneOf||schema['x-static']||!own(schema.properties??{},part))return undefined;
-  if(schema['x-discriminators']?.includes(part)||schema['x-current']?.guards.includes(part)||Object.values(schema['x-current']?.arguments??{}).includes(part))return undefined;
+  if(schema['x-discriminators']?.includes(part)||schema['x-current']?.guards.includes(part)||!lookup&&Object.values(schema['x-current']?.arguments??{}).includes(part))return undefined;
   schema=schema.properties![part];
  }
  return schema['x-static']||schema.oneOf?undefined:schema;
@@ -25,12 +25,13 @@ export function resourceChoices(schema:CapabilitySchema):ResourceChoice[] {
  need(Array.isArray(choices)&&choices.length>0&&choices.length<=8,'Invalid resource choices');
  const used:string[]=[];
  for(const choice of choices){
-  need(record(choice)&&Object.keys(choice).every(k=>['label','fact','version','id','revision','emptyLabel'].includes(k))&&text(choice.label),'Invalid resource choice metadata');
+  need(record(choice)&&Object.keys(choice).every(k=>['label','fact','version','id','revision','emptyLabel','lookup'].includes(k))&&text(choice.label),'Invalid resource choice metadata');
   const fact=behaviourFact(choice.fact),input=fact?.input,offset=input?.properties?.offset;
   need(fact&&fact.version===choice.version&&input?.type==='object'&&Object.keys(input.properties??{}).join(',')==='offset'&&input.required?.join(',')==='offset'&&offset?.type==='integer'&&offset.minimum===0&&Number.isSafeInteger(offset.maximum)&&offset.maximum!>=1&&offset.maximum!<=1024,'Resource choice needs a bounded paged fact');
   const output=fields(fact!.type),list=output?.entries,entry=fields(typeof list==='object'&&'list' in list?list.list:undefined);
   need(output?.total==='number'&&entry?.id==='text'&&entry?.name==='text'&&entry?.revision==='number'&&(output?.next==='number'||output?.offset==='number'&&output?.pageSize==='number'),'Resource choice fact has incompatible entries');
-  const id=mutableField(schema,choice.id),revision=choice.revision===undefined?undefined:mutableField(schema,choice.revision);
+  if(choice.lookup!==undefined)need(choice.lookup===true&&choice.revision===undefined&&choice.emptyLabel===undefined&&Object.values(schema['x-current']?.arguments??{}).includes(choice.id),'Lookup choice must select exactly one current-value dependency');
+  const id=mutableField(schema,choice.id,choice.lookup),revision=choice.revision===undefined?undefined:mutableField(schema,choice.revision);
   need(id?.type==='string'&&(choice.revision===undefined||revision?.type==='integer'),'Resource choice has an invalid destination');
   for(const key of [choice.id,...(choice.revision===undefined?[]:[choice.revision])]){
    need(!used.some(p=>p===key||p.startsWith(key+'.')||key.startsWith(p+'.')),'Resource choice destinations overlap');used.push(key);

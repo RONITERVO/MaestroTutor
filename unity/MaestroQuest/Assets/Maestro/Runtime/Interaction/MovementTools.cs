@@ -49,7 +49,7 @@ namespace Maestro.Quest.Interaction
             summary.text="Maestro "+prefs.avatarStick+" / "+(controls.AvatarEnabled ? "ON" : "off")+" · You "+prefs.userStick+" / "+(controls.UserEnabled ? "ON" : "off")+" · "+("Backdrop "+Mathf.RoundToInt(controls.BackdropOpacity*100)+"%")+
                 "\nYour speed "+prefs.userSpeed.ToString("0.00")+" m/s · Dead zone "+prefs.deadZone.ToString("0.0")+
                 "\n"+Buttons[selectedButton]+" → "+controls.ButtonLabel(selectedButton);
-            status.text=string.Join("\n",ModelText.Wrap(controls.Status,75).Take(2))+"\nB / Y and palm Recall always recover";
+            status.text=string.Join("\n",ModelText.Wrap(controls.Status,75).Take(2))+"\nB / Y and palm Recall bring back book and tools";
         }
         Material Paint(string color) { var value=IllustratedMaterials.Create(IllustratedMaterials.Hex(color)); paints.Add(value); return value; }
         static void Part(Transform parent,Vector3 point,Vector3 scale,Material paint)

@@ -13,9 +13,11 @@ Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
 and evidence](#swept-world-travel-in-mixed-reality-2026-10-08). These changes are
 not physical Quest acceptance.
-The next visual-layer increment starts with an internal renderer composition path;
-its saved definitions and shared user/agent controls are still pending. See
-[visibility composition](#visibility-composition-foundation-2026-10-08).
+Saved visual layers now use the same native catalog and named resource forms for
+users and agents. Transient viewing controls extend that foundation; see
+[saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
+[temporary layer presentation](#temporary-layer-presentation--2026-10-08).
+Imported surroundings, camera choices and editable passthrough windows remain open.
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
@@ -5045,3 +5047,68 @@ and BYOK WorldPresentation runs remain separate evidence; this UI/catalog
 increment does not claim a new live-provider or physical-headset pass. No new
 APK, release signing, upload or deployment occurred. Device work remains on
 hold pending the owner's cooldown/charge readiness and a fresh health check.
+
+
+### Temporary layer presentation — 2026-10-08
+
+`visibility.layer.present` starts a transient view transition for an existing
+saved layer. A named library selection supplies its stable ID, then the ordinary
+current-value read loads two guards: the layer view state and tracked world view
+state. The user and agent use this same registered action and the
+`visibility.presentation` fact. Changing a lookup selection invalidates the
+reviewed snapshot, including when switching back. Choosing a name never executes
+or refreshes a guard by itself.
+
+Requested opacity multiplies the authored layer default. A multiplier of 1 returns
+to that default; it does not force an authored translucent object opaque. The depth
+preference is also an upper bound on authored and global depth eligibility. It
+cannot enable an unavailable depth provider. Zero to thirty seconds controls a
+smooth interpolation, with zero snapping immediately. Retargeting begins from the
+current interpolated value; an identical request does not restart an active fade.
+The native renderer retains its leased material identities while values change.
+
+A completed command receipt confirms the target preference was accepted. It does
+not claim the transition has finished: `progress.blending`, `currentOpacity`,
+`effectiveOpacity` and `remainingSeconds` expose its progress. The fade continues
+independently of the issuing program after command completion. Program Stop does
+not reverse an already completed view request; a fresh guarded request changes
+it. Frame progress does not invalidate the control identity.
+
+Saved layer membership remains live: newly assigned members inherit its current
+viewing preference. Editing or undoing the saved layer definition resets that
+layer to the accepted authored default. The movement tray's explicit **Stop / MR**
+control, tracking/focus loss, disabled view/editor, temporary-room boundaries and
+workspace recovery discard transient preferences. Keep saves authored contents
+only. Book/tool Recall preserves the current view and movement opt-ins, as its
+existing contract promises; it is distinct from Stop / MR. The earlier backdrop
+notes used “Recall” ambiguously for movement recovery. The native descriptions
+now make the distinction explicit.
+
+No frame writes a room document, creates an Undo entry, changes collisions or
+sound, repositions objects, stops autonomous NPC activity, or dims the book's
+browser pages. Saved collision profiles remain independently responsible for who
+interacts with the scanned physical floor and walls. A transparent visual layer
+can still be solid when its collision policy says so.
+
+Desktop verification passes 947 EditMode tests, six focused final-source layer
+runtime cases and 1,734 shared room/headless/Quest/prompt tests in 170 files.
+The final full PlayMode suite passes **835 cases**, with only the three documented
+optional external-asset skips. Native run
+`0c92674367ef4f8b8afe509a56c47d84` passes 612 observations; original-book run
+`f7a3e11a1ea849a99e9d551bf74a0ec4` exercises named lookup, current reads and native
+fade execution, with its screenshot inspected.
+
+Fresh managed `226b39ac50de432a9921bde2ec933fff` and BYOK
+`2191c5ea08434456b183c57d9868674d` journeys both pass eight ordinary-language
+action turns, including fade, restoration and final chat. Managed billing reconciles
+1,178 test credits / USD 1.145306 across 70 usage/charge rows, with no reservations
+remaining; introductory chat and failed attempts are excluded. The expanded test's
+old ten-minute supervisor interrupted an earlier managed run; a bounded thirteen-minute
+window and explicit timeout diagnostics address that harness limit without changing
+app safeguards. Full evidence and limitations are in
+[the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#temporary-layer-presentation-2026-10-08).
+
+Physical Quest acceptance remains on hold for the existing cooling/charging
+readiness reply and a fresh health check. No APK was built or installed for this
+increment. Imported environment scenes, passthrough windows, camera sharing and
+streamed regions remain separate accepted work.

@@ -13,7 +13,7 @@ export interface CurrentInputMapping {
  fact:string;version:number;arguments:Record<string,string>;fields:Record<string,string[]>;guards:string[];
 }
 export interface ResourceChoice {
- label:string;fact:string;version:number;id:string;revision?:string;emptyLabel?:string;
+ label:string;fact:string;version:number;id:string;revision?:string;emptyLabel?:string;lookup?:true;
 }
 export interface CapabilitySchema {
  type:'object'|'array'|'string'|'number'|'integer'|'boolean';

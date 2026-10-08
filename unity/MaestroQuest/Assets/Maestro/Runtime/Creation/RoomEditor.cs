@@ -556,6 +556,7 @@ namespace Maestro.Quest.Creation
         float captureAt;
         void Update()
         {
+            TickLayerPresentation(UnityEngine.Time.unscaledDeltaTime);
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
@@ -641,12 +642,13 @@ namespace Maestro.Quest.Creation
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void RefreshOwnership() {
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
-            if(Ownership.Suspended){SuspendConstructionPicking();ClearViewCapture();}
+            if(Ownership.Suspended){SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
+        void OnDisable()=>ResetLayerPresentation(true);
         void OnDestroy()
         {
             ClearViewCapture();FinishLiquidPour(out _);

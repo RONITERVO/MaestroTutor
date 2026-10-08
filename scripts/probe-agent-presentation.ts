@@ -39,8 +39,16 @@ export async function runAgentPresentationProof({client,initial,execute,director
  assert.ok(layerBinding.layerId);assert.ok(Math.abs(Number(layerBinding.opacity)-.5)<1e-6);assert.equal(layerBinding.realDepth,false);
  const entityAfter=await fact('object.environment',{target:'maestro'});delete entityBefore.revision;delete entityAfter.revision;assert.deepEqual(entityAfter,entityBefore);
  const unchangedView=await fact('world.presentation');assert.equal(unchangedView.backdropOpacity,0);assert.equal(unchangedView.realDepth,true);
+ const savedLayer=await fact('visibility.layer',{id:layerBinding.layerId});
+ const fadeJourney=await runHeadlessRoomTurn(client,{text:'For now, could you fade Maestro to half of how visible he is at the moment, over one second? Just change my view temporarily, without saving another appearance change. Keep everything else as it is.'});
+ let faded=await fact('visibility.presentation',{id:layerBinding.layerId});const deadline=Date.now()+10000;
+ while((faded.progress as {blending:boolean}).blending&&Date.now()<deadline){await new Promise(r=>setTimeout(r,100));faded=await fact('visibility.presentation',{id:layerBinding.layerId});}
+ assert.equal(faded.opacity,.5);assert.equal((faded.progress as {blending:boolean}).blending,false);assert.ok(Math.abs(Number((faded.progress as {effectiveOpacity:number}).effectiveOpacity)-.25)<1e-6);
+ assert.deepEqual(await fact('visibility.layer',{id:layerBinding.layerId}),savedLayer,'Temporary fade changed saved appearance');
+ const restoreFadeJourney=await runHeadlessRoomTurn(client,{text:'Thanks. Bring Maestro back to the saved appearance he had just before that temporary fade. Please leave the saved style and the rest of the room unchanged.'});
+ const restoredFade=await fact('visibility.presentation',{id:layerBinding.layerId});assert.equal(restoredFade.opacity,1);assert.deepEqual(await fact('visibility.layer',{id:layerBinding.layerId}),savedLayer);
  const clearLayerJourney=await runHeadlessRoomTurn(client,{text:'Thanks. Please remove that visual-layer assignment from Maestro, so he is fully visible with the normal real-world hiding again. Leave everything else alone.'});
  const clearLayer=await fact('object.visibility',{target:'maestro'});assert.equal(clearLayer.layerId,'');assert.equal(clearLayer.opacity,1);assert.equal(clearLayer.realDepth,true);
- const result={scenario:'WorldPresentation',phase:'passed',boundary:'Real chat handoff and provider planning/execution against desktop Unity; no real passthrough pixels, device depth or headset acceptance.',changed,physics,restoredJourney,restored,restoredPhysics,movementJourney,enabled,movingView,stopJourney,stopped,layerJourney,layerBinding,entityAfter,clearLayerJourney,clearLayer};
+ const result={scenario:'WorldPresentation',phase:'passed',boundary:'Real chat handoff and provider planning/execution against desktop Unity; no real passthrough pixels, device depth or headset acceptance.',changed,physics,restoredJourney,restored,restoredPhysics,movementJourney,enabled,movingView,stopJourney,stopped,layerJourney,layerBinding,entityAfter,savedLayer,fadeJourney,faded,restoreFadeJourney,restoredFade,clearLayerJourney,clearLayer};
  await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(result,null,2));return result;
 }

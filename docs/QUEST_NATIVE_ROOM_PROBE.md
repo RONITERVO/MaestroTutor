@@ -831,3 +831,40 @@ when they happen to match current bindings. Appearance guard loading uses the
 all-object saved definition fact. List and selection reads do not execute room
 mutations. This is scripted-provider desktop coverage; physical headset input
 and audible source acceptance are separate gates.
+
+
+## Transient layer presentation (2026-10-08)
+
+The native journey now captures the saved layer after assigning Maestro, requests
+an interpolated opacity multiplier, observes completion, and restores the authored
+appearance. `visibility-layers.json` retains the requested and effective values,
+unchanged saved layer/binding, independent depth eligibility, and native receipts.
+The post-assignment baseline matters because assigning a member changes the
+member count without changing the definition revision.
+
+The book journey chooses **Blend a visual layer**, selects its saved name before
+loading current values, changes opacity and duration, and runs the generated form.
+`book-native-layer-presentation.json` and its PNG retain that UI/native result.
+A named selection cannot reuse an unrelated current-value guard. Changing the
+lookup clears the reviewed snapshot and its status message, even if the user
+switches back to the previous layer.
+
+WorldPresentation adds two ordinary learner requests between the saved-layer
+creation and removal: temporarily fade Maestro to half of his current visibility
+over one second, then restore the saved appearance. Native checks distinguish the
+requested multiplier from effective alpha and check that the saved definition is
+unchanged. These requests use the existing tutor/verifier/delegated agent and
+managed/BYOK provider adapters. They do not prove headset pixels or comfort.
+
+Book/tool Recall retains the view and movement opt-ins. The movement tray's
+separate **Stop / MR** control resets transient presentation and manual movement;
+tracking/focus loss and workspace lifecycle boundaries also recover. Native tests
+cover these distinctions, independent active NPC movement, invalid/stale requests,
+live membership, saved edits, material identity, and transient storage isolation.
+
+The expanded WorldPresentation scenario has eight action turns plus introductory
+chat. Its provider supervisor is bounded to thirteen minutes, below the native
+probe's fifteen-minute lifetime. Failure evidence includes the supervisor start,
+limit and actual expiry, so harness cancellation cannot be mistaken for an
+unexplained runtime stop. This does not extend app leases, provider request
+budgets, task planning limits or native action deadlines.

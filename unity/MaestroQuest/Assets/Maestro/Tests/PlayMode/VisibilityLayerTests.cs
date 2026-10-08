@@ -51,6 +51,14 @@ namespace Maestro.Quest.Tests
             Assert.That(actual.b,Is.EqualTo(Mathf.LinearToGammaSpace(b)).Within(.03),label+" blue");
             Assert.That(actual.a,Is.EqualTo(alpha).Within(.025),label+" compositor alpha");
         }
+        [Test]public void InterpolatedViewUsesTheSameLeasedMaterialAndPreservesItsAuthoredSource() {
+            var source=Paint(Color.red);Surface(source,"blend",.6f);var presentation=new LayerPresentation();presentation.Synchronize(1,.4f,true);
+            var lease=Lease(source,presentation.Visual);var material=lease.Material;int count=VisibilityMaterials.LiveVariants;
+            presentation.Set(0,false,1);
+            for(int i=0;i<1000;i++){presentation.Tick(.001f);Assert.That(lease.Material,Is.SameAs(material));Assert.That(VisibilityMaterials.LiveVariants,Is.EqualTo(count));}
+            presentation.Tick(1);Assert.That(material.GetFloat("_VisibilityOpacity"),Is.Zero);Assert.That(material.GetFloat("_SurfaceOpacity"),Is.EqualTo(.6f));Assert.That(source.GetFloat("_VisibilityOpacity"),Is.EqualTo(1));
+            presentation.Reset();Assert.That(material.GetFloat("_VisibilityOpacity"),Is.EqualTo(.4f));Assert.That(material.GetFloat("_VisibilityRealDepth"),Is.EqualTo(1));
+        }
         [Test]public void InvalidLayerValuesDoNotChangeAnyConsumer() {
             var state=new VisibilityState();var source=Paint(Color.white);var lease=Lease(source,state);state.Set(.6f,false);
             foreach(float value in new[]{float.NaN,float.PositiveInfinity,float.NegativeInfinity,-.01f,1.01f})Assert.Throws<ArgumentOutOfRangeException>(()=>state.Set(value,true));

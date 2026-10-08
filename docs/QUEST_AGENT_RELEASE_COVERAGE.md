@@ -1109,3 +1109,68 @@ and BYOK WorldPresentation runs remain separate evidence; this UI/catalog
 increment does not claim a new live-provider or physical-headset pass. No new
 APK, release signing, upload or deployment occurred. Device work remains on
 hold pending the owner's cooldown/charge readiness and a fresh health check.
+
+
+## Temporary layer presentation (2026-10-08)
+
+The native `visibility.layer.present` action and `visibility.presentation` fact
+share the generated catalog with book forms, programs and the delegated agent.
+Named lookup choices select a stable layer ID before reading current guards.
+Switching that selection away and back cannot revive an earlier reviewed state.
+Ordinary changes to the requested fade retain the current guards.
+
+The renderer smoothly multiplies saved alpha using a transient viewer preference.
+The action receipt confirms admission; nested progress reports actual completion.
+No blend frame writes a document or replaces leased material identities. Saved
+layer membership stays live. Authored definition edits reset only that layer;
+tracking/focus loss, view disablement and temporary/workspace boundaries clear
+transient preferences. The movement tray's Stop / MR resets them explicitly.
+Book/tool Recall preserves viewing preferences and movement opt-ins. Collision,
+sound, object placement and autonomous action ownership remain independent.
+
+Fresh real-provider journeys pass all eight action turns through streamed tutor,
+verifier, original-context handoff, native execution, final chat and usage checks:
+
+| Access | Run | Confirmed native operations |
+| --- | --- | --- |
+| Managed | `226b39ac50de432a9921bde2ec933fff` | 37 |
+| BYOK | `2191c5ea08434456b183c57d9868674d` | 33 |
+
+Both used Gemini 3.8 Flash. Ordinary learner requests fade Maestro over one second
+to half of the saved visibility, then restore his exact saved appearance. Native
+facts confirm effective alpha 0.25 during the faded state and 0.5 after restoration,
+with unchanged saved definitions. Final removal of the assignment restores normal
+visibility. All eight task journals completed and their final replies reached the
+original chat. Managed billing reconciles **1,178 credits / USD 1.145306**, with
+70 usage and charge entries and zero reserved credits. This excludes introductory
+chat and earlier failed attempts. Both runs use fresh synthetic text without old
+private chat, images, speech or room frames.
+
+The first managed attempt `d3fe050a2d474dfc9225c0845ac6d09f` correctly executed
+the native fade and restoration but hit the probe's old ten-minute supervisor on
+the seventh turn before its final reply and accounting check settled. Native ready
+was 11:47:48.243 UTC; the task stopped at 11:57:48.571 UTC. The expanded eight-turn
+scenario now has a bounded thirteen-minute window within the native fifteen-minute
+probe lifetime. Failures retain explicit deadline timing. App leases, provider
+request limits and planning budgets are unchanged; the failed run remains failed.
+
+Shared verification passes **1,734 room/headless/Quest/prompt tests in 170 files**,
+plus build, lint, probe types, catalog provenance, boundaries and asset integrity.
+The native catalog exports 114 actions, 130 facts and 458 discovered runtime inputs;
+**947 EditMode tests** and six focused final-source layer runtime tests pass.
+The final full PlayMode suite passes **835 cases**, with only the three documented
+optional external-asset skips. Scripted native run
+`0c92674367ef4f8b8afe509a56c47d84` passes **612 observations**. Scripted original-book
+run `f7a3e11a1ea849a99e9d551bf74a0ec4` chooses the layer by name, loads exact guards,
+executes a fade, receives its native receipt and reloads without replay. Its form
+screenshot was inspected. An earlier native probe compared membership before
+assignment with membership afterward; its baseline now captures assignment before
+the fade, keeping the saved-state equality check strict.
+
+No new APK, signing, installation, upload or deployment occurred. Physical Quest
+acceptance remains on hold for the owner's cooldown/charge readiness and a fresh
+health check. Desktop interpolation and provider success do not establish visual
+comfort, real depth or sustained headset performance. Imported surroundings,
+passthrough windows, image-backed texture authoring, camera/audio completion,
+weather/light, water-aware traversal, streamed regions and the remaining novice
+and Store release gates remain open.

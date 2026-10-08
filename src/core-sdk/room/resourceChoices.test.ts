@@ -10,7 +10,7 @@ const entry={id:'a'.repeat(32),name:'Distant landscape',revision:7};
 const view=(fact='visibility.layers',value:unknown={offset:0,total:1,pageSize:3,entries:[entry]},offset=0):CatalogView=>({operation:'inspect',category:'facts',capability:fact,version:1,definition:behaviourFact(fact)!,arguments:{offset},available:true,value,status:'Available'}) as CatalogView;
 it('checks every native resource choice against its paged fact and destination fields',()=>{
  let count=0;const visit=(s:CapabilitySchema)=>{count+=resourceChoices(s).length;for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(4);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(5);
 });
 it('rejects arbitrary facts, guards, prototype paths and overlapping or incompatible destinations',()=>{
  for(const mutate of [(s:CapabilitySchema)=>s['x-choices']![0].fact='object.visibility',(s:CapabilitySchema)=>s['x-choices']![0].version=2,(s:CapabilitySchema)=>s['x-choices']![0].id='constructor',(s:CapabilitySchema)=>s['x-choices']![0].id='target',(s:CapabilitySchema)=>s['x-choices']![0].revision='revision',(s:CapabilitySchema)=>s['x-choices']![0].revision='layerId',(s:CapabilitySchema)=>s['x-choices']!.push({...s['x-choices']![0]}),(s:CapabilitySchema)=>s.properties!.layerId['x-static']=true]){
@@ -41,4 +41,14 @@ it('uses a shared sound ID without inventing a revision guard, and handles its n
  expect(readResourceChoicePage(s,choice,0,view('audio.source.list',{total:1,next:-1,entries:[{...entry,name:'',kind:'tone'}]})).entries[0].name).toBe('');
  const next=applyResourceChoice(s,choice,action.example,page.entries[0]);expect(next).toEqual({...action.example,definition:{...action.example!.definition as object,source:entries[0].id}});expect(choice.revision).toBeUndefined();
  expect(()=>readResourceChoicePage(s,choice,0,view('audio.source.list',{total:5,next:-1,entries}))).toThrow();
+});
+
+it('selects an explicit lookup dependency without copying a library revision into the view guard',()=>{
+ const d=capabilityDefinition('visibility.layer.present')!,s=d.input,choice=resourceChoices(s)[0];
+ expect(choice.lookup).toBe(true);expect(choice.revision).toBeUndefined();
+ expect(applyResourceChoice(s,choice,d.example,entry)).toEqual({...d.example,id:entry.id});
+ for(const mutate of [(c:typeof choice)=>c.id='stateId',(c:typeof choice)=>c.revision='viewStateId',(c:typeof choice)=>c.emptyLabel='None',(c:typeof choice)=>delete c.lookup]){
+  const changed=structuredClone(s);mutate(changed['x-choices']![0]);expect(()=>resourceChoices(changed)).toThrow();
+ }
+ const ordinary=schema();ordinary['x-choices']![0].lookup=true;expect(()=>resourceChoices(ordinary)).toThrow();
 });

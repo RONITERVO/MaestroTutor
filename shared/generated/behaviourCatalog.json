@@ -5146,7 +5146,7 @@
         "tracking.available",
         "manual.released"
       ],
-      "description": "Change the viewer's neutral backdrop opacity (0 reveals passthrough in empty areas, 1 covers it, intermediate values blend it) and independent real-depth occlusion preference. Only change the view when requested by the user. Read world.presentation and pass its exact stateId. The book and authored objects retain their own materials/opacity: this is not an opacity slider for imported surroundings or a passthrough window. Full opacity temporarily makes real depth ineligible to prevent unintended room-shaped holes; a selected realDepth=true becomes eligible again below 1. Eligibility is not evidence of device support, permission, available depth, or alignment. Does not change real-room collisions, create terrain, stop autonomous activity, move tracking/world, share cameras, or save the room. Both stick opt-ins are retained at every opacity; user movement still requires accepted ground and complete-frame clearance. Sticks must return to neutral after changing the presentation. Explicit Virtual/MR controls choose endpoint presets. Recall, focus/tracking loss and restart restore ordinary MR with depth preferred. These live presentation preferences are not saved or undoable; use a fresh observation to reverse a completed action. Replayed receipts never reapply it.",
+      "description": "Change the viewer's neutral backdrop opacity (0 reveals passthrough in empty areas, 1 covers it, intermediate values blend it) and independent real-depth occlusion preference. Only change the view when requested by the user. Read world.presentation and pass its exact stateId. The book and authored objects retain their own materials/opacity: this is not an opacity slider for imported surroundings or a passthrough window. Full opacity temporarily makes real depth ineligible to prevent unintended room-shaped holes; a selected realDepth=true becomes eligible again below 1. Eligibility is not evidence of device support, permission, available depth, or alignment. Does not change real-room collisions, create terrain, stop autonomous activity, move tracking/world, share cameras, or save the room. Both stick opt-ins are retained at every opacity; user movement still requires accepted ground and complete-frame clearance. Sticks must return to neutral after changing the presentation. Explicit Virtual/MR controls choose endpoint presets. The movement tray Stop / MR control, focus/tracking loss and restart restore ordinary MR with depth preferred. Book/tool Recall preserves the view and movement opt-ins. These live presentation preferences are not saved or undoable; use a fresh observation to reverse a completed action. Replayed receipts never reapply it.",
       "example": {
         "backdropOpacity": 0.5,
         "realDepth": true,
@@ -5189,6 +5189,178 @@
           "virtualView",
           "headTracked",
           "focused"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "visibility.layer.present",
+      "version": 1,
+      "label": "Blend a visual layer",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "viewStateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "opacity": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "realDepth": {
+            "type": "boolean"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "id",
+          "stateId",
+          "viewStateId",
+          "opacity",
+          "realDepth",
+          "seconds"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "layerPresentation.v1"
+        ],
+        "x-current": {
+          "fact": "visibility.presentation",
+          "version": 1,
+          "arguments": {
+            "id": "id"
+          },
+          "fields": {
+            "stateId": [
+              "stateId"
+            ],
+            "viewStateId": [
+              "viewStateId"
+            ],
+            "opacity": [
+              "opacity"
+            ],
+            "realDepth": [
+              "realDepth"
+            ]
+          },
+          "guards": [
+            "stateId",
+            "viewStateId"
+          ]
+        },
+        "x-choices": [
+          {
+            "label": "Visual layer",
+            "fact": "visibility.layers",
+            "version": 1,
+            "id": "id",
+            "lookup": true
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "visibility.presentation.current",
+        "tracking.available",
+        "manual.released"
+      ],
+      "description": "Only when the user requests a view change, start a smooth transient fade of a named visual layer. Read visibility.layers to choose its stable ID, then visibility.presentation for that ID and pass both exact stateId and viewStateId. opacity is a 0–1 multiplier of the saved layer opacity, not a replacement: 1 restores its authored visibility. realDepth is another upper bound on the saved layer depth preference and cannot enable globally disabled depth. seconds 0 snaps, up to 30 blends from the current value. The receipt confirms the requested transition started, not that it finished: inspect progress.blending/currentOpacity/effectiveOpacity for progress. Replacing a fade begins at its current value; an identical active request does not restart it. A started fade continues independently of the requesting program; stopping that program does not reverse a completed command. Use a fresh request to change it. Group membership remains live. Saved layer edits/Undo, the movement tray Stop / MR control, tracking/focus loss, disabling the view, temporary-room boundaries and workspace changes reset to authored defaults. Book/tool Recall preserves the current view and movement opt-ins. No room save or Undo entry; no changes to collisions, sound, animation, ongoing actions, positions, camera sharing or the book browser pages. Replayed receipts do not reapply viewing preferences.",
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "stateId": "00000000000000000000000000000000",
+        "viewStateId": "00000000000000000000000000000000",
+        "opacity": 0.5,
+        "realDepth": true,
+        "seconds": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "viewStateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "opacity": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "realDepth": {
+            "type": "boolean"
+          },
+          "progress": {
+            "type": "object",
+            "properties": {
+              "currentOpacity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "effectiveOpacity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "effectiveRealDepth": {
+                "type": "boolean"
+              },
+              "blending": {
+                "type": "boolean"
+              },
+              "remainingSeconds": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 30.0
+              }
+            },
+            "required": [
+              "currentOpacity",
+              "effectiveOpacity",
+              "effectiveRealDepth",
+              "blending",
+              "remainingSeconds"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "stateId",
+          "viewStateId",
+          "opacity",
+          "realDepth",
+          "progress"
         ],
         "additionalProperties": false
       }
@@ -35667,6 +35839,51 @@
       "description": "Current transient visual settings. stateId also changes on manual mode/settings edits, focus/tracking changes and recovery. depthEligible means the view permits depth, not that the device has supplied it. Read physics.environment and object.environment for independent collisions. No read side effects."
     },
     {
+      "id": "visibility.presentation",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "stateId": "text",
+          "viewStateId": "text",
+          "opacity": "number",
+          "realDepth": "boolean",
+          "progress": {
+            "record": {
+              "currentOpacity": "number",
+              "effectiveOpacity": "number",
+              "effectiveRealDepth": "boolean",
+              "blending": "boolean",
+              "remainingSeconds": "number"
+            }
+          }
+        }
+      },
+      "label": "Visual layer presentation",
+      "description": "Transient viewer preferences for one saved layer. opacity is the requested multiplier, progress.currentOpacity is its interpolated value and effectiveOpacity includes the authored default. effectiveRealDepth is only layer eligibility, not proof of device depth. stateId changes on new preferences, resets and saved definition changes, never each blend frame; viewStateId guards tracking/control recovery. Unavailable if the layer or configured view is missing. Reads do not advance a fade or mutate saved contents.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "layerPresentation.v1"
+      ]
+    },
+    {
       "id": "animation.authored",
       "version": 1,
       "type": {
@@ -38282,6 +38499,10 @@
       "sha256": "909fdc7c99153df6259039e3a4c501fd7bd1e79600152ead83500dc7140902de"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/LayerPresentation.cs",
+      "sha256": "071bb4489bb1dbc2c832e632cf9539fff347f685c1c0d5cb5ea6031a86a45e8a"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/MaestroEnvironmentDepth.cginc",
       "sha256": "76deccb0759e9536306d33a624639c342c162ffa5ebdc2952345c86949a3c611"
     },
@@ -38535,11 +38756,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "6a0d031188746654ade8c991634a7f9d9811eec3ee269ad7e5e63213ff451c6f"
+      "sha256": "e2b3a7ab635138aa37ce13435e0ab1df4664d3e8ec80f2342cd59f5df70080e0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "46f409f76729e8b05c6d6dbf2aed274ef914fa5f2a86b4a18febe2ba1ffad5d1"
+      "sha256": "226b314b85c2c3fd542fbec64718e2e6803f8b56320831a3ec5835f650a25343"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -38676,6 +38897,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
       "sha256": "2b705c4b256911517338361267f7ecbbd1721886b5b0aad68974a02be5eba894"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayerPresentationCapability.cs",
+      "sha256": "1be5f5d61c78e081a5fbd2c3069fbb7ce847e24040de9a8c1b925698c66e3b10"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayoutCapability.cs",
@@ -38887,7 +39112,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldPresentationCapability.cs",
-      "sha256": "cacdca7e08faf6603e5911310c4f6760938814570c5dc7a10c6698979176b16b"
+      "sha256": "c62a9606830ae75daaedd68f70bf4c3f248ffe25884695c4ea96a6ea5c7eed4a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
@@ -39131,7 +39356,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "17eb76d4046e3ef8c6716ab6ad7b186460cacb676761c98c0bd86de282207ca1"
+      "sha256": "e97034b6e213779f74374c4a37ac12f6e666b24ba08238a47b675eb4e6602cfd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
@@ -39147,11 +39372,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "efa75e499e96ab73996ff4382d169765677159013c11fbea5ec29e440f213ca6"
+      "sha256": "7c9a7180019d512d254163603ebc91f36fd009c4b161a897b6f6de5cea45f1f4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "d5d7d8531a99ae143f91f7d9c49eec83dc163d4cdf6527623ade38355bf8fbf4"
+      "sha256": "7ebd30d0c9cad95417ff55c6e9d39226b981b289501ec7f1edf9d0e85de484e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -39188,6 +39413,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
       "sha256": "6a9090732e98c3e808d0d1479e9abd1a48b3e78b941c762070fda04ae6502dee"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayerPresentation.cs",
+      "sha256": "ae7d623414d5ba27565fdd2f937c73314d33626e5d884dc41072bb7dc214d935"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
@@ -39295,7 +39524,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
-      "sha256": "8af98b853dceefb75835af5d22a7ab4a391568a3b5afb90e0120bebc397de04d"
+      "sha256": "316b92bd6e0eeaa525d5576ef8ee373843551f97ba249dc60b67580a32dc92f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
@@ -39491,11 +39720,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "5bcf01156cbd6973318c04b2cf374f6b470976b563695e59f29eb6d7267ea898"
+      "sha256": "9b5e65248d1d6ecb92fee28735c944f6b43ec7396e0000734af1d2314839da41"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
-      "sha256": "3e3dd29365a8460edbf6dbfc87abce803463d1e010d5a01f508eee67040887aa"
+      "sha256": "fe0a106b1ef31f39ee7a7d6dc363f12dbc0337512269605a206706a7ac2b2f74"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementPresentation.cs",
@@ -39503,7 +39732,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementTools.cs",
-      "sha256": "f2fa6be65b37bab8ebb27f2c8948aab8cb38a80dc5e196c1ceab3df7f5740345"
+      "sha256": "ced5590cc62f2f31e2703c373bf69436aa9cb5365ce96a94c592a34f7c4b3652"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PalmRecoveryButton.cs",
@@ -39815,7 +40044,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "605abd983c409f37256b6a1b8bce4b3c441546ccc1ad6e68da0bcaba551bf4d9"
+      "sha256": "86ef39b804469e277e989a5df52b99328df34cea60a614551db13239bc93bf8f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

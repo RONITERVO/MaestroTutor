@@ -91,7 +91,8 @@ namespace Maestro.Quest.Interaction
         public void Recover()=>Recover(true);
         void Recover(bool invalidate)
         {
-            bool changed=AvatarEnabled || UserEnabled || view&&view.PresentationChanged;
+            bool layersChanged=editor&&editor.ResetLayerPresentation(invalidate);
+            bool changed=layersChanged || AvatarEnabled || UserEnabled || view&&view.PresentationChanged;
             Interrupt(); AvatarEnabled=UserEnabled=false;
             if (changed) { input?.CancelAll(); view?.Exit(); Status=view&&view.MovementError!=null?view.MovementError:"Movement off — choose controls to enable again"; }
             CurrentModeId(); if(invalidate)modeId=Guid.NewGuid().ToString("N");

@@ -251,6 +251,16 @@ try{
   await page!.waitForFunction(id=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability===id&&r.phase==='completed';},id);
   return page!.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
  };
+ await openNamedAction('Blend a visual layer','visibility.layer.present');
+ await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
+ await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,null]));
+ assert.equal(await page.getByRole('button',{name:'Run action now',exact:true}).isDisabled(),true,'A named selection cannot reuse an unrelated view guard');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs opacity',{exact:true}).fill('0.5');await page.getByLabel('Action inputs seconds',{exact:true}).fill('0.2');
+ const layerPresentation=await runNamedAction('visibility.layer.present');
+ assert.equal(layerPresentation.call.arguments.id,visualLayer.output!.id);assert.equal(layerPresentation.output!.opacity,.5);
+ await writeFile(join(directory,'book-native-layer-presentation.json'),JSON.stringify({boundary:'Named layer lookup, current guard read and transient view request through the original book and native Unity. No headset or real-provider proof.',layerPresentation},null,2));
+ await page.getByRole('region',{name:'Visual layer choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-layer-presentation.png')});
  await openNamedAction('Save environment profile','environment.profile.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Virtual terrain only');
  await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');
