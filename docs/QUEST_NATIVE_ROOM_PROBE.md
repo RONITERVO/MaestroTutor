@@ -709,3 +709,17 @@ The shared reply provider distinguishes the original action from the current
 request to report its result, with at most one reply-only correction. This never
 replays native work. The probe verifies the final visible text against the original
 provider stream using the normal tutor parser, and checks tool fences separately.
+
+
+## Shared appearance authoring (2026-10-08)
+
+The native room journey saves a reusable appearance, assigns it to an existing
+object, changes only that object's local tint, edits shared opacity, observes the
+actual definitions/bindings, undoes those edits and removes the unused definition.
+`appearance-authoring.json` records the real transport replies.
+
+The deterministic book journey discovers `appearance.save` through Action catalog,
+changes name/opacity in the generated form and checks the completed native receipt.
+`book-native-appearance.json` and its screenshot retain that evidence. Reload must
+not dispatch the request again. These are desktop native/client integration checks
+with scripted responses, not live-provider or physical Quest appearance acceptance.

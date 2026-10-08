@@ -1,3 +1,4 @@
+import {programResourceLimit} from './programLimits';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {sha256} from '@noble/hashes/sha2.js';
@@ -19,5 +20,5 @@ export function moduleHash(module:unknown):string {
 }
 /** Wire identity/shape only. Full program validation happens when preparing an import. */
 export function validModuleRecord(value:unknown,hash:string):value is ModuleRecord {
- try {const m=object(value),p=object(m.program);return Object.keys(m).length===4&&m.version===1&&typeof m.name==='string'&&m.name.trim().length>0&&m.name.length<=64&&!/[\u0000-\u001f\u007f-\u009f]/.test(m.name)&&Array.isArray(m.exports)&&m.exports.length>0&&m.exports.length<=16&&m.exports.every(n=>typeof n==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(n))&&new Set(m.exports).size===m.exports.length&&p.version===3&&Array.isArray(p.resources)&&p.resources.length<=16&&p.resources.every(id=>typeof id==='string'&&/^(maestro|book|[a-fA-F0-9]{32})$/.test(id))&&Array.isArray(p.events)&&p.events.length<=16&&p.events.every(e=>{const event=object(e);return Object.keys(event).length===2&&typeof event.name==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(event.name)&&['number','text','boolean'].includes(event.type as string);})&&JSON.stringify(m).length<=24000&&moduleHash(m)===hash;}catch{return false;}
+ try {const m=object(value),p=object(m.program);return Object.keys(m).length===4&&m.version===1&&typeof m.name==='string'&&m.name.trim().length>0&&m.name.length<=64&&!/[\u0000-\u001f\u007f-\u009f]/.test(m.name)&&Array.isArray(m.exports)&&m.exports.length>0&&m.exports.length<=16&&m.exports.every(n=>typeof n==='string'&&/^[a-zA-Z0-9_]{1,32}$/.test(n))&&new Set(m.exports).size===m.exports.length&&p.version===3&&Array.isArray(p.resources)&&p.resources.length<=programResourceLimit&&p.resources.every(id=>typeof id==='string'&&/^(maestro|book|[a-fA-F0-9]{32})$/.test(id))&&Array.isArray(p.events)&&p.events.length<=16&&p.events.every(e=>{const event=object(e);return Object.keys(event).length===2&&typeof event.name==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(event.name)&&['number','text','boolean'].includes(event.type as string);})&&JSON.stringify(m).length<=24000&&moduleHash(m)===hash;}catch{return false;}
 }

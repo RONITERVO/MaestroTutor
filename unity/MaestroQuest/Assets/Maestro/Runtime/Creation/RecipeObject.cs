@@ -15,6 +15,7 @@ namespace Maestro.Quest.Creation
         readonly List<RecipeMaterials.Lease> materials = new();
         readonly List<Renderer> renderers = new();
         Color appliedTint=Color.white;
+        readonly HashSet<string> appearanceParts=new();bool appearanceTintChanged;
         readonly List<Mesh> meshes = new();
         GameObject geometry,highlight;
         string highlightedPart;
@@ -34,6 +35,7 @@ namespace Maestro.Quest.Creation
         public void StopRule() {runtimeLoop=null;Stop();}
         public void Restart() { if(runtimeGate?.Held==true||recipe == null || recipe.tracks.Length == 0) return; CancelParts();suppressedParts.Clear();time=0; interrupted=false; }
         public void Stop() { interrupted=true;CancelParts(); }
+        internal string AppearancePart(Renderer renderer){foreach(var pair in nodes)if(renderer.transform.parent==pair.Value)return pair.Key;return null;}
         public Transform Part(string id) => nodes.TryGetValue(id,out var node) ? node : null;
         public bool Apply(RoomRecipe value)
         {
@@ -81,11 +83,15 @@ namespace Maestro.Quest.Creation
             foreach(float x in new[]{-half.x,half.x})foreach(float y in new[]{-half.y,half.y})paths.Add(new[]{new Vector3(x,y,-half.z),new Vector3(x,y,half.z)});
             var marks=highlight.GetComponent<PencilMarks>();marks.SetPaths(paths,.0015f);marks.SetColor(IllustratedMaterials.Ribbon);
         }
+        internal void ConfigureAppearanceBindings(AppearanceBinding[] bindings) {
+            var next=new HashSet<string>();foreach(var b in bindings)if(b.kind=="part")next.Add(b.partId);
+            if(appearanceParts.SetEquals(next))return;appearanceParts.Clear();appearanceParts.UnionWith(next);appearanceTintChanged=true;
+        }
         public void Tint(Color tint)
         {
-            if(appliedTint.Equals(tint))return;appliedTint=tint;
+            if(appliedTint.Equals(tint)&&!appearanceTintChanged)return;appearanceTintChanged=false;appliedTint=tint;
             for(int i=0;i<materials.Count;i++) {
-                var material=RecipeMaterials.Acquire(recipe.parts[i],tint);renderers[i].sharedMaterial=material.Material;
+                var material=RecipeMaterials.Acquire(recipe.parts[i],appearanceParts.Contains(recipe.parts[i].id)?Color.white:tint);renderers[i].sharedMaterial=material.Material;
                 materials[i].Dispose();materials[i]=material;
             }
         }

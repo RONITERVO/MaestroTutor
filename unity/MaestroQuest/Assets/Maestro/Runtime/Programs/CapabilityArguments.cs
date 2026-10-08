@@ -59,6 +59,11 @@ namespace Maestro.Quest.Programs
                         if(!DrawingSurfaceGeometry.Valid(JsonUtility.FromJson<DrawingSurface>(obj.ToString()))){error=path+" needs a plane or bounded cylindrical/spherical patch";return false;}
                     } else if((string)schema["format"]=="sculptTip") {
                         var p=obj["position"];if((double)p["x"]*(double)p["x"]+(double)p["y"]*(double)p["y"]+(double)p["z"]*(double)p["z"]>100){error="Keep a sculpt tip within ten local metres";return false;}
+                    } else if((string)schema["format"]=="appearanceStyle") {
+                        if(!Maestro.Quest.Creation.AppearanceStyle.Wire(value)){error=path+" needs consistent opacity, cutoff and inherited shading";return false;}
+                    } else if((string)schema["format"]=="appearanceBinding") {
+                        var binding=UnityEngine.JsonUtility.FromJson<Maestro.Quest.Creation.AppearanceBinding>(value.ToString());
+                        if(!binding.Validate(new Maestro.Quest.Creation.RoomObjectData{kind=binding.kind=="part"?Maestro.Quest.Creation.RoomObjectKind.Assembly:Maestro.Quest.Creation.RoomObjectKind.ImportedModel})){error=path+" needs an exact root, part or imported-material address";return false;}
                     } else if((string)schema["format"]=="worldAudioSource") {
                         var tone=obj["tone"];if((double)tone["attack"]+(double)tone["release"]>(double)tone["seconds"]+1e-7){error=path+" needs its attack and release to fit the sound duration";return false;}
                     } else if((string)schema["format"]=="worldAudioEmitter") {

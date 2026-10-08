@@ -1,5 +1,8 @@
 {
   "version": 1,
+  "limits": {
+    "programResources": 66
+  },
   "actions": [
     {
       "id": "animation.play",
@@ -6908,7 +6911,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Capture 1–16 created objects into the existing reusable program library. Give every exact member ID, its current revision and a distinct slot name. Pause physics, recipe playback and animation authoring, finish drawing, and release all members first. Captures current poses and saved geometry, paint, collision/physics, drawing patches/ink/tips and recorded root motion. Imported models retain their exact content hashes; a module file does not bundle model bytes. Include both ends of every hinge; external links are refused. Book/Maestro, structure monitors, running behaviours, buttons and unsaved drafts are not object geometry and are not captured. Objects with sound emitters are currently refused because modules do not yet bundle their source library; export the workspace to preserve them. Nothing moves or starts. The first listed member defines the constructor origin/orientation; its existing scale remains part of the piece. Publishes ordinary editable program source exporting create(position,rotation,scale), returning fresh member IDs in slot order; deleting originals does not invalidate that source. Standard source size, 16-piece and room budgets apply; oversized captures fail explicitly. Model files stay retained while the library references them. Existing module pins never change. A dispatched library write may finish after Stop; inspect its receipt/library instead of retrying uncertainty.",
+      "description": "Capture 1–16 created objects into the existing reusable program library. Give every exact member ID, its current revision and a distinct slot name. Pause physics, recipe playback and animation authoring, finish drawing, and release all members first. Captures current poses and saved geometry, paint, collision/physics, drawing patches/ink/tips and recorded root motion. Imported models retain their exact content hashes; a module file does not bundle model bytes. Include both ends of every hinge; external links are refused. Book/Maestro, structure monitors, running behaviours, buttons and unsaved drafts are not object geometry and are not captured. Objects with appearance bindings are currently refused because modules do not yet bundle the appearance library; export the workspace to preserve them. Objects with sound emitters are currently refused because modules do not yet bundle their source library; export the workspace to preserve them. Nothing moves or starts. The first listed member defines the constructor origin/orientation; its existing scale remains part of the piece. Publishes ordinary editable program source exporting create(position,rotation,scale), returning fresh member IDs in slot order; deleting originals does not invalidate that source. Standard source size, 16-piece and room budgets apply; oversized captures fail explicitly. Model files stay retained while the library references them. Existing module pins never change. A dispatched library write may finish after Stop; inspect its receipt/library instead of retrying uncertainty.",
       "example": {
         "name": "My construction",
         "members": [
@@ -25932,7 +25935,509 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. Saves before completion, one Undo edit."
+      "description": "Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. If a root appearance is bound, updates its explicit local tint override without changing the shared definition or another object; specific part/material bindings still win. Saves before completion, one Undo edit."
+    },
+    {
+      "id": "appearance.save",
+      "version": 1,
+      "label": "Save shared appearance",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{1,80}$",
+            "maxLength": 80
+          },
+          "style": {
+            "type": "object",
+            "properties": {
+              "tint": {
+                "type": "string",
+                "pattern": "^#[a-fA-F0-9]{6}$",
+                "maxLength": 7
+              },
+              "patternMode": {
+                "type": "string",
+                "enum": [
+                  "inherit",
+                  "replace"
+                ]
+              },
+              "pattern": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "solid",
+                      "checker",
+                      "stripes"
+                    ]
+                  },
+                  "plane": {
+                    "type": "string",
+                    "enum": [
+                      "uv",
+                      "xy",
+                      "xz",
+                      "yz"
+                    ]
+                  },
+                  "secondary": {
+                    "type": "string",
+                    "pattern": "^#[a-fA-F0-9]{6}$",
+                    "maxLength": 7
+                  },
+                  "columns": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 32.0
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 32.0
+                  }
+                },
+                "required": [
+                  "kind",
+                  "plane",
+                  "secondary",
+                  "columns",
+                  "rows"
+                ],
+                "additionalProperties": false
+              },
+              "tiling": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 64.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "maximum": 64.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              },
+              "offset": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -64.0,
+                    "maximum": 64.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -64.0,
+                    "maximum": 64.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ],
+                "additionalProperties": false
+              },
+              "renderMode": {
+                "type": "string",
+                "enum": [
+                  "inherit",
+                  "opaque",
+                  "cutout",
+                  "blend"
+                ]
+              },
+              "opacity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "cutoff": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "sidedness": {
+                "type": "string",
+                "enum": [
+                  "inherit",
+                  "front",
+                  "both"
+                ]
+              },
+              "grain": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 1.0
+              },
+              "shading": {
+                "type": "number",
+                "minimum": -1.0,
+                "maximum": 0.3
+              }
+            },
+            "required": [
+              "tint",
+              "patternMode",
+              "pattern",
+              "tiling",
+              "offset",
+              "renderMode",
+              "opacity",
+              "cutoff",
+              "sidedness",
+              "grain",
+              "shading"
+            ],
+            "additionalProperties": false,
+            "format": "appearanceStyle"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 0,
+            "maxItems": 66
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "name",
+          "style",
+          "members"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "appearances.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "appearance.revision.current",
+        "storage.writable"
+      ],
+      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and every page of appearance.members, supplying the exact revision and complete member list (up to the room's 66 objects). Every affected object must be available. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. No unsupported emission, PBR, texture upload or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance.",
+      "example": {
+        "id": "",
+        "revision": 0,
+        "name": "Warm glass",
+        "style": {
+          "tint": "#DDBBAA",
+          "patternMode": "inherit",
+          "renderMode": "blend",
+          "sidedness": "inherit",
+          "pattern": {
+            "kind": "solid",
+            "plane": "uv",
+            "secondary": "#FFFFFF",
+            "columns": 1,
+            "rows": 1
+          },
+          "tiling": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "offset": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "opacity": 0.40000000596046448,
+          "cutoff": 0.0,
+          "grain": -1.0,
+          "shading": -1.0
+        },
+        "members": []
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "appearance.remove",
+      "version": 1,
+      "label": "Remove unused appearance",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "appearances.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "appearance.revision.current",
+        "storage.writable"
+      ],
+      "description": "Remove an unused definition using appearance.definition's exact ID/revision. Refuses while any active or dormant binding refers to it; explicitly unbind those first. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance.",
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.appearance.bind",
+      "version": 1,
+      "label": "Choose object appearance",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "assign",
+              "copy",
+              "remove"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "appearanceRevision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "binding": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "appearanceId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "root",
+                  "part",
+                  "material"
+                ]
+              },
+              "partId": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_]{0,32}$",
+                "maxLength": 32
+              },
+              "modelHash": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{64})$",
+                "maxLength": 64
+              },
+              "materialIndex": {
+                "type": "integer",
+                "minimum": -1.0,
+                "maximum": 1023.0
+              },
+              "tint": {
+                "type": "string",
+                "pattern": "^(|#[a-fA-F0-9]{6})$",
+                "maxLength": 7
+              }
+            },
+            "required": [
+              "version",
+              "appearanceId",
+              "kind",
+              "partId",
+              "modelHash",
+              "materialIndex",
+              "tint"
+            ],
+            "additionalProperties": false,
+            "format": "appearanceBinding"
+          }
+        },
+        "required": [
+          "operation",
+          "target",
+          "revision",
+          "appearanceRevision",
+          "binding"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "appearances.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "appearance.revision.current",
+        "storage.writable"
+      ],
+      "description": "Read object.appearances for exact object revision and saved bindings, object.appearance.targets for supported addresses, and appearance.definition for its current revision. assign reuses a shared definition; copy makes an independent definition and binds it atomically; remove unbinds this exact saved address/appearance even if dormant. Root uses empty partId/modelHash and materialIndex=-1. Part uses an exact recipe partId; material uses exact loaded model hash plus source material index, never display name or traversal order. A part/material binding overrides root completely. A bound recipe part uses the appearance tint as its pigment and ignores whole-object tint; the ordinary recipe colour editor writes that binding local tint. Pattern edits that would be hidden by a replacement pattern refuse with an explanation. Missing/replaced model slots remain dormant until explicitly rebound; assignment refuses unavailable targets. tint='' inherits definition tint; an RGB hex overrides tint for this binding only. Ordinary Paint writes the root binding's local tint without editing the shared definition; assign tint='' restores shared tint. Removing root retains its effective tint as ordinary object paint; other surface values revert to source. copy includes the provided local tint in the independent definition. Bindings do not extend to selection marks or surface-drawing ink. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance.",
+      "example": {
+        "operation": "assign",
+        "target": "maestro",
+        "revision": 1,
+        "appearanceRevision": 1,
+        "binding": {
+          "version": 1,
+          "appearanceId": "00000000000000000000000000000000",
+          "kind": "root",
+          "partId": "",
+          "modelHash": "",
+          "tint": "",
+          "materialIndex": -1
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "appearanceId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "appearanceRevision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "appearanceId",
+          "appearanceRevision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
     },
     {
       "id": "object.delete",
@@ -35980,6 +36485,279 @@
       ]
     },
     {
+      "id": "appearance.library",
+      "version": 1,
+      "type": {
+        "record": {
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "revision": "number",
+                "name": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Appearances",
+      "description": "Reusable saved appearances ordered by stable ID. Three entries per page; advance offset by pageSize until total. Names are display text.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 64.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "appearances.v1"
+      ]
+    },
+    {
+      "id": "appearance.definition",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "source": {
+            "record": {
+              "tint": "text",
+              "patternMode": "text",
+              "pattern": {
+                "record": {
+                  "kind": "text",
+                  "plane": "text",
+                  "secondary": "text",
+                  "columns": "number",
+                  "rows": "number"
+                }
+              },
+              "tiling": {
+                "record": {
+                  "x": "number",
+                  "y": "number"
+                }
+              },
+              "offset": {
+                "record": {
+                  "x": "number",
+                  "y": "number"
+                }
+              }
+            }
+          },
+          "surface": {
+            "record": {
+              "renderMode": "text",
+              "opacity": "number",
+              "cutoff": "number",
+              "sidedness": "text",
+              "grain": "number",
+              "shading": "number"
+            }
+          }
+        }
+      },
+      "label": "Appearance definition",
+      "description": "Read the full supported saved style and current revision. Combine the source and surface fields into style for appearance.save. The name is available from appearance.library. Members are separately paged through appearance.members to fit bounded program values.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "appearances.v1"
+      ]
+    },
+    {
+      "id": "appearance.members",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "members": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Appearance members",
+      "description": "Sixteen exact object IDs per page, including dormant bindings; start offset 0. Before saving a shared change read all pages at the same definition revision. Save checks current complete membership and ownership again.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 66.0
+          }
+        },
+        "required": [
+          "id",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "appearances.v1"
+      ]
+    },
+    {
+      "id": "object.appearances",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "bindings": {
+            "list": {
+              "record": {
+                "appearanceId": "text",
+                "appearanceRevision": "number",
+                "kind": "text",
+                "partId": "text",
+                "modelHash": "text",
+                "materialIndex": "number",
+                "tint": "text",
+                "state": "text"
+              }
+            }
+          },
+          "temporary": "boolean"
+        }
+      },
+      "label": "Object appearances",
+      "description": "Two saved bindings per page, including dormant bindings and explicit local tint overrides. A specific part/material wins over root; root tint is not applied a second time. State describes binding availability, not physical interaction or visibility through other objects.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 33.0
+          }
+        },
+        "required": [
+          "target",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "appearances.v1"
+      ]
+    },
+    {
+      "id": "object.appearance.targets",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "targets": {
+            "list": {
+              "record": {
+                "kind": "text",
+                "partId": "text",
+                "modelHash": "text",
+                "materialIndex": "number",
+                "state": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Appearance targets",
+      "description": "Three stable root/part/import-material addresses per page, in that order. Source material indexes come from the loaded asset, not renderer order. Only state=active can receive a new binding. Pending/unavailable models require a later observation.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1057.0
+          }
+        },
+        "required": [
+          "target",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "appearances.v1"
+      ]
+    },
+    {
       "id": "physics.running",
       "version": 1,
       "type": "boolean",
@@ -36188,7 +36966,7 @@
   "sources": [
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "99ce8eafd33729afa18c658299c55741dded9b16e358c16d44f47665bfa7e59b"
+      "sha256": "c6a82de5e9fff679c3987b9b50748173a5a64c672c3e8ad6fd49bb35c7f4a508"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -36200,7 +36978,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "d2a6eb953f3752dfaae3568a69aee6448c2fc6155c627a4001cc8d805e18c8f7"
+      "sha256": "cb66181bdfebea12f7011b23a71a8c0d8b3eb038c5b3ac66d6f7bce7e66efa40"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
@@ -36208,11 +36986,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "b9eb51c60bcf5697d633ef6b6fea4f1e178988e2ddeebff7f4220046bf2ecd98"
+      "sha256": "6698ddfe5a741e3b31bd0e434b145c66b977e9d1c88ac31a2482027be6f4997d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "004cbe142c18b7aaeebb6f0412372c47d075bd1e7248ecc7a32cc99642950ba5"
+      "sha256": "8c7852b0e0ec0e9107911390ec7b503779b6e745771d7f942f544b21460f6c9a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
@@ -36240,7 +37018,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "a3b62be40639b8efa147e0cbfd5e319c97255ece6af15587e0768e629489337c"
+      "sha256": "2753a93f30b3c7385c7667f4414422f90ae2206b8db7135677fa668857f8edf2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -36248,11 +37026,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "f2151c8d6c786a76837ff85f4c583d22095999557dbc8f64b136747c51fde5cd"
+      "sha256": "ee7a2a145a28daf180b529be404d50134b4216e955de70df800c4b38cd34b6fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectObservation.cs",
-      "sha256": "c8fcad2eef3929a984aba4d91be10906c7ead1ad31109217389cf4bd2b6c3336"
+      "sha256": "2491fb8a77748802a7f99614cb75841d1e41e7af464a8a78057519023cd39cec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryHold.cs",
@@ -36268,11 +37046,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "df874d11d11da66cfa11bec6cbbc894ba42412e85ec404691fd7dec705bd924f"
+      "sha256": "a080cc7c10dc98793e7b3ef3b2d18ee0458a5bf8c1ec47492e6504d14a233017"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "5667de2313bfe6e0abd8017645e2701914d1576e46aab500c82ff9151a320845"
+      "sha256": "d17ab7c353e2a46bafb1109cf1d89561f787db63f61d6ff16aab4150e935fd9f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -36284,7 +37062,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "226852531983b0ecaf80cd35bfd15d8a01818a4c529fd33012c7a27d877176db"
+      "sha256": "9cb784b7bf665b2cca58a708597266fa18c1308257d2e9bf1a5546a6e04dc057"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -36292,7 +37070,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "d007cfb5adcad586aebe31fb382a36a81b9d62f6eacdc77b9b6f6030c31d9205"
+      "sha256": "b5be890e007c2a483d017ebf8a8ad32b7dc09a5b6be0f194fe6f99bdc99cc892"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
@@ -36372,11 +37150,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
-      "sha256": "d74ab39700144c23c7ee4a85d325eea78a1b8df990ee8b6d2c2a16b5148d778c"
+      "sha256": "eb9257113c3fe8a46db43e3ab1c9fa7a75bd3bb4edad9137dde623fc5b5a5219"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
-      "sha256": "cdf86859b2a29e140b7916431cb2b5e13f06e29d5e04b0442aa29aec9c17630c"
+      "sha256": "6a909219d09d4b8356865ae2564edb492df0c1a1298e7dfc2ad21b7e5f6f5d1d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleDocument.cs",
@@ -36392,7 +37170,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/InvocationReceipts.cs",
-      "sha256": "419b50359b5f752c8d7d8ca30ec8c9578d2c088802104462e130834a6129632a"
+      "sha256": "afad9faed7ed9bb8567b85fc443950ed04a0272d02cfea3d606fe0b26a51d8ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleChannelWaits.cs",
@@ -36448,7 +37226,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilModelStyle.cs",
-      "sha256": "164d56697d49914613ebf39bdf2001deab2de83a2d1ead9b3c877a266624c6f8"
+      "sha256": "8421af34418e84517ecd5b13f02b17011f8d46a6d1bd6d9a32a76f96466a6813"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/IllustratedGltfMaterials.cs",
@@ -36472,7 +37250,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "cac455064aefe083f15e965e256cb6798b3982735c079f261b6d547a7455ef47"
+      "sha256": "2a1d500488dd61a7e832a76dec43338460c4919f2fdabd9733ed14c29f3ccd2a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeMaterials.cs",
@@ -36544,7 +37322,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "048ee2f6cd7554d30a376c10106c1ba0cfe6146aeb1a9298b2a1721935e9cd00"
+      "sha256": "8e5b14e2df3217ce0278703c96ecf959c5a67460e4fd4bb6f6b1b6ef41fdba41"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
@@ -36648,7 +37426,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "526f777058cbd0306b214a209c0dd8b2bb0d13a2ff6c08f56c77aa8619e89c1c"
+      "sha256": "80f5dc7f116fa0c43c61d64258d4647af8c26e3c96afebeef20384f5f92c7d00"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionCapture.cs",
+      "sha256": "0aad3a05888c1eb316887a4633ad799113fef3d7462f8650bafe287a29c1f671"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
@@ -36792,11 +37574,27 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
-      "sha256": "78039740a4cee831976dcdbae32a0ae3f4895629bc8dd9c47815a486ffa11c91"
+      "sha256": "8be8002440509909f0617ae86d21d8c14bef602fe315538068ed075e1726ceeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "ad09cd7dceefa5c16078ecb33b25cbbfb4e2e7edcbbc70dfab20442961f839b7"
+      "sha256": "e6dc7a14c9f6d2b6e1e0477f4cf56c521e86fd463681e8bcf6b25aa938857b2e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceMaterials.cs",
+      "sha256": "6f6542047f620a2c70a82fbad54de215c5af20bcabcfa9af8cddb23edd057afa"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
+      "sha256": "5722314b5a9e8028b1d65aa9c0b4926fffef047b856ab5e15cdaf4a46547a72b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceEdits.cs",
+      "sha256": "324e0c6839efb6af694980324599e080103ae3dae70ceb8307905fc00b8db29a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
+      "sha256": "70547cfba0d06cd8302b5b227b1172ff9b577756eb25d4268e02e0ec53407fe0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
@@ -36848,7 +37646,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "4086c9a0d39329733938de9887d0917f6203da77f96099f1010dec0e231a8f73"
+      "sha256": "aaeaffe13a07354b9a60d7bfbb8095a22f2d62d2980ed561296e947f3462f028"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -37136,7 +37934,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "4086c9a0d39329733938de9887d0917f6203da77f96099f1010dec0e231a8f73"
+      "sha256": "aaeaffe13a07354b9a60d7bfbb8095a22f2d62d2980ed561296e947f3462f028"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
@@ -37157,6 +37955,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
       "sha256": "b84498a5ad2416832510318b67f24af74b6c2bf77e62803ddf08198d1b5a6b3a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
+      "sha256": "083d04ca7de1be1f603286c55656c72a0b803a7b160530cb80f86f4cba71c6b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
@@ -37184,7 +37986,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "856b56fbbc943b3f1a8261d7ca4a9717fd5894db380fb7333346c12c62a6657c"
+      "sha256": "bccf2208a3b032d105db01b5af28f7d8ff3b3630e7622fed5985852e9976bb5f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -37196,7 +37998,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CaptureConstructionCapability.cs",
-      "sha256": "2a43bf3df573b5a3fea0c93ecf99fb775532101a416051378be3a645a6d8fe85"
+      "sha256": "41bbac7ddd5fdaf44bb52e1e9477b86a80f9e03a9a022c50093cb19f3d73c04b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
@@ -37360,7 +38162,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "df1ec39462ed48da06b8b4bef603b08a4346482d4e9b498a665e076f9e78730b"
+      "sha256": "0438779909828dfe774887e3a4bd1d5f5db8de3de2e85f51b6853dfed8307e95"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",

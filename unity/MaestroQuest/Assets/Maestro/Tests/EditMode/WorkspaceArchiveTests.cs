@@ -52,6 +52,31 @@ namespace Maestro.Quest.Tests
             var wire=JObject.Parse(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));wire.Remove("world");documents[RoomStorage.FileName]=Bytes(wire.ToString());
             Assert.That(()=>Snapshot(),Throws.Exception);
         }
+        [Test] public void SharedAppearancesAndDormantSlotsSurviveArchiveWithoutLosingLocalOverrides()
+        {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));
+            var baseline=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;
+            var appearance=new RoomAppearance{id=new string('a',32),name="Shared glass",style=new AppearanceStyle{renderMode="blend",opacity=.35f,tiling=new Vector2(2,3)}};
+            room.appearances=new[]{appearance};
+            var maestro=room.objects.Single(x=>x.id=="maestro");
+            maestro.appearanceBindings=new[]{new AppearanceBinding{appearanceId=appearance.id,tint="#223344"},new AppearanceBinding{appearanceId=appearance.id,kind="material",modelHash=new string('e',64),materialIndex=7}};
+            documents[RoomStorage.FileName]=Document(room);
+            var styled=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;Assert.That(styled,Is.Not.EqualTo(baseline));
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)) {
+                var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);
+                Assert.That(JsonUtility.ToJson(restored.appearances.Single()),Is.EqualTo(JsonUtility.ToJson(appearance)));
+                var bindings=restored.objects.Single(x=>x.id=="maestro").appearanceBindings;
+                Assert.That(bindings.Select(x=>JsonUtility.ToJson(x)),Is.EqualTo(maestro.appearanceBindings.Select(x=>JsonUtility.ToJson(x))));
+                Assert.That(bindings[1].modelHash,Is.Not.EqualTo(modelHash),"A dormant binding must not be remapped to the current model");
+            }
+            appearance.style.opacity=.6f;documents[RoomStorage.FileName]=Document(room);
+            Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash,Is.Not.EqualTo(styled));
+            maestro.appearanceBindings[0].appearanceId=new string('b',32);documents[RoomStorage.FileName]=Document(room);
+            Assert.That(()=>Snapshot(),Throws.Exception,"An archive may not lose the definition for a saved binding");
+            maestro.appearanceBindings[0].appearanceId=appearance.id;
+            var wire=JObject.Parse(JsonUtility.ToJson(room));wire["appearances"][0]["style"]["unrecognizedTexture"]="texture.png";documents[RoomStorage.FileName]=Bytes(wire.ToString());
+            Assert.That(()=>Snapshot(),Throws.Exception,"Unsupported saved appearance fields must not silently disappear");
+        }
         [Test] public void StructureBaselinesAndMissingMemberIdsSurvivePortableArchiveRoundTrip()
         {
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.structures=new[]{RoomStructureTests.Structure()};documents[RoomStorage.FileName]=Document(room);

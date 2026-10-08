@@ -1,3 +1,4 @@
+import {programResourceLimit} from './programLimits';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {capabilityDefinition,validCapabilityInvocation,capabilityResources,validateCapabilityOutput,type CapabilityInvocation} from './capabilities';
@@ -27,7 +28,7 @@ function validStorage(v:Record<string,unknown>):boolean {
 function summary(v:unknown,detail=false):v is ExecutionSummary {
  return record(v)&&exact(v,[...keys,...(detail?['call']:[]),...(v.output!==undefined?['output']:[])])&&id(v.id)&&typeof v.capability==='string'&&v.capability.length<=96&&/^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$/.test(v.capability)&&
  typeof v.version==='number'&&Number.isInteger(v.version)&&v.version>=1&&v.version<=1000000&&
- Array.isArray(v.resources)&&v.resources.length<=16&&v.resources.every(x=>x==='maestro'||x==='book'||typeof x==='string'&&/^[a-fA-F0-9]{32}$/.test(x))&&new Set(v.resources).size===v.resources.length&&
+ Array.isArray(v.resources)&&v.resources.length<=programResourceLimit&&v.resources.every(x=>x==='maestro'||x==='book'||typeof x==='string'&&/^[a-fA-F0-9]{32}$/.test(x))&&new Set(v.resources).size===v.resources.length&&
  ['preparing','running','completed','cancelled','failed','interrupted'].includes(v.phase as string)&&typeof v.status==='string'&&v.status.length<=2048&&(v.output===undefined||v.phase==='completed'&&validateCapabilityOutput(v.capability,v.version,v.output)===null);
 }
 function validExecutionLane(v:unknown):v is ExecutionLane {

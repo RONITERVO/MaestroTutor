@@ -23,6 +23,7 @@ namespace Maestro.Quest.Creation
                 if(GetComponent<AnimationWorkshop>()?.ControlsTarget(member.target)==true){error="Finish animation authoring before capturing";return false;}
                 var item=Find(member.target);if(!item.isActiveAndEnabled||item.GetComponent<RigidRoomItem>()?.GeometryReady==false){error="Wait for every construction member to be ready";return false;}
                 objects[i]=Pose(Read(member.target),item.transform);
+                if((objects[i].appearanceBindings?.Length??0)>0){error="Reusable construction modules do not yet bundle appearances. Export the workspace to preserve its appearances.";return false;}
                 if((objects[i].audioEmitters?.Length??0)>0){error="Reusable construction modules do not yet bundle sound sources. Export the workspace to preserve its sounds.";return false;}
                 if(objects[i].recipe?.playing==true){error="Pause recipe animations before capturing their authored geometry";return false;}
             }

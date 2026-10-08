@@ -1,3 +1,4 @@
+import {programResourceLimit} from '../../../shared/programLimits';
 import {linkProgram,compiledProgramName} from './programModules';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -44,7 +45,7 @@ function validateProgram(root:Record<string,unknown>):void {
    for(const value of array(root.state,16)){const v=obj(value);keys(v,'name initial','type memory');if(v.memory!==undefined){need(root.memoryVersion===1&&name(v.name)&&typeof v.memory==='string'&&/^[a-f0-9]{32}$/.test(v.memory)&&!remembered.has(v.memory),'Remembered variables need memoryVersion 1 and distinct stable identities');remembered.add(v.memory as string);}need(compiledProgramName(v.name)&&!state.has(v.name as string),'Invalid or duplicate state name');need(v.type===undefined||root.dataVersion===1,'Explicit value types need dataVersion 1');const t=literal(v.initial,v.type);supported(t);state.set(v.name as string,t);}
    for(const value of array(root.events,16)){const v=obj(value);keys(v,'name type');const t=type(v.type);need(typeof v.name==='string'&&/^user\.[a-zA-Z0-9_]{1,32}$/.test(v.name)&&!events.has(v.name)&&t!=='void'&&typeof t==='string','Invalid or duplicate custom event');events.set(v.name,t as ScalarType);}
   }
-  const resources=new Set<string>();for(const value of array(root.resources,16)){need(target(value)&&!resources.has(value as string),'Invalid or duplicate resource');resources.add(value as string);}
+  const resources=new Set<string>();for(const value of array(root.resources,programResourceLimit)){need(target(value)&&!resources.has(value as string),'Invalid or duplicate resource');resources.add(value as string);}
   const functions=new Map<string,{source:Record<string,unknown>;types:Map<string,ValueType>}>(),calls=new Map<string,Set<string>>();
   for(const value of array(root.functions,16)) {
    const f=obj(value);keys(f,'name returns parameters locals body');const id=text(f.name);need(compiledProgramName(id)&&!functions.has(id),'Invalid or duplicate function name');supported(type(f.returns));array(f.body,128);

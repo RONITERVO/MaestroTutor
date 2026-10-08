@@ -20,7 +20,7 @@ namespace Maestro.Quest.Programs
     /// <summary>Immutable validated program data. No code loading, reflection or evaluation of source strings.</summary>
     public sealed class BehaviourProgram
     {
-        public const int MaximumCharacters=24000,MaximumNodes=128,MaximumFunctions=16;
+        public const int MaximumCharacters=24000,MaximumNodes=128,MaximumFunctions=16,MaximumResources=66;
         public string Source {get;private set;}
         public int Version {get;private set;}
         bool structured,parallel,memory;
@@ -128,7 +128,7 @@ namespace Maestro.Quest.Programs
                     Need(System.Text.RegularExpressions.Regex.IsMatch(name,@"^user\.[a-zA-Z0-9_]{1,32}$")&&type!=ProgramType.Void&&CustomEvents.TryAdd(name,type),"Invalid or duplicate custom event");}
             }
             Entry=Text(root["entry"]);
-            foreach(var item in Array(root["resources"],16)) {string id=Text(item);Need(RuleDocument.IsTarget(id)&&resources.Add(id),"Invalid or duplicate resource");}
+            foreach(var item in Array(root["resources"],MaximumResources)) {string id=Text(item);Need(RuleDocument.IsTarget(id)&&resources.Add(id),"Invalid or duplicate resource");}
             var definitions=Array(root["functions"],MaximumFunctions);Need(definitions.Count>0,"A program needs a function");
             foreach(var token in definitions)
             {

@@ -39,7 +39,7 @@ namespace Maestro.Quest.Programs
             new MoveObjectCapability(),new LayoutCapability(),new GroupTransformCapability(),new ConstructionSelectionCapability(),new ConstructionManipulationCapability(),new ConstructionSnappingCapability(),new StructureSaveCapability(),new StructureResetCapability(),new StructureForgetCapability(),
             new RotateObjectCapability(),
             new ResizeObjectCapability(),
-            new PaintObjectCapability(),
+            new PaintObjectCapability(),new AppearanceSaveCapability(),new AppearanceRemoveCapability(),new AppearanceBindCapability(),
             new DeleteObjectCapability(),
             new CollisionCapability(),new PhysicsSettingsCapability(),new AvatarMovementSettingsCapability(),new AvatarWalkSettingsCapability(),
             new ScanDrawingCapability(),new ScanPlacementCapability(),new SurfacePlacementCapability(),new RoomEnvironmentCapability(),new PhysicsSimulationCapability(),new PhysicsEnvironmentCapability(),new EnvironmentProfileSaveCapability(),new EnvironmentProfileRemoveCapability(),new EnvironmentAssignCapability(),new PhysicsImpulseCapability(),

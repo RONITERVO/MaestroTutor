@@ -46,7 +46,7 @@ namespace Maestro.Quest.Creation
                 if((string)schema?["format"]=="programModule")return token is JObject module&&ProgramModuleLibrary.ValidRecord(module);
                 if(++count>4096||depth>12)return false;
                 if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1,schema?["properties"]?[p.Name] as JObject));
-                if(token is JArray array)return array.Count<=64&&array.All(x=>Bounded(x,depth+1,schema?["items"] as JObject));
+                if(token is JArray array)return array.Count<=((string)schema?["items"]?["x-resource"]=="object"?BehaviourProgram.MaximumResources:64)&&array.All(x=>Bounded(x,depth+1,schema?["items"] as JObject));
                 return token.Type switch {JTokenType.String=>Text(token,128),JTokenType.Integer or JTokenType.Float=>ProgramValue.ValidNumber((double)token),JTokenType.Boolean or JTokenType.Null=>true,_=>false};
             }
             return Bounded(arguments,0,BehaviourCatalog.Action((string)call["id"])?.InputSchema);

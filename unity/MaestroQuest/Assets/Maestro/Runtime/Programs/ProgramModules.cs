@@ -74,7 +74,7 @@ namespace Maestro.Quest.Programs
       Need(!child.ContainsKey("memoryVersion"),"Reusable modules return values to their caller; remembered variables belong to the caller");
       var exports=List(m["exports"],16);Need(exports.Count>0&&exports.All(Plain)&&exports.Select(Text).Distinct().Count()==exports.Count,"Invalid module exports");
       Need(exports.All(n=>List(child["functions"],16).Any(f=>Text(Obj(f)["name"])==Text(n))),"Export must name a local function");
-      Need(List(child["resources"],16).All(r=>List(raw["resources"],16).Any(v=>JToken.DeepEquals(r,v))),"Declare every imported module resource in its caller");
+      Need(List(child["resources"],BehaviourProgram.MaximumResources).All(r=>List(raw["resources"],BehaviourProgram.MaximumResources).Any(v=>JToken.DeepEquals(r,v))),"Declare every imported module resource in its caller");
       Need(!child.ContainsKey("dataVersion")||NumberIs(raw["dataVersion"],1),"Caller must enable imported structured values");
       Need(!child.ContainsKey("parallelVersion")||NumberIs(raw["parallelVersion"],1),"Caller must enable imported parallel calls");
       var linked=Scope(child,depth+1);var signals=Obj(imp["signals"]);var events=List(raw["events"],16).Select(Obj).ToArray();var declared=List(linked["events"],16);

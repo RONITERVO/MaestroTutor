@@ -1,0 +1,70 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Art;
+using Maestro.Quest.Avatar;
+using Maestro.Quest.Imports;
+using Maestro.Quest.Interaction;
+using UnityEngine;
+namespace Maestro.Quest.Creation
+{
+    /// <summary>Presentation of saved bindings. Never edits geometry, collision,
+    /// audio or browser-page materials. Sources and shared variants have separate owners.</summary>
+    internal sealed class RoomAppearanceView:MonoBehaviour
+    {
+        sealed class Rendered {internal Renderer Renderer;internal Material[] Original,Applied;}
+        readonly List<Rendered> rendered=new();
+        readonly List<AppearanceMaterials.Lease> leases=new();
+        RoomObjectKind kind;
+        AppearanceBinding[] bindings=Array.Empty<AppearanceBinding>();
+        Dictionary<string,RoomAppearance> definitions=new();
+        MaestroAvatar avatar;
+        internal void Configure(RoomObjectData value,IEnumerable<RoomAppearance> appearances) {
+            kind=value.kind;bindings=value.appearanceBindings.Select(x=>x.Copy()).ToArray();
+            var used=bindings.Select(x=>x.appearanceId).ToHashSet();definitions=appearances.Where(x=>used.Contains(x.id)).ToDictionary(x=>x.id,x=>x.Copy(),StringComparer.Ordinal);
+            if(!avatar){avatar=GetComponent<MaestroAvatar>();if(avatar)avatar.ModelChanged+=Refresh;}
+            Refresh();
+        }
+        internal void Refresh() {
+            var previous=leases.ToArray();leases.Clear();Restore();
+            try {
+            if(!isActiveAndEnabled||bindings.Length==0)return;
+            var owner=GetComponent<RoomItem>();var recipe=GetComponent<RecipeObject>();
+            var root=bindings.FirstOrDefault(b=>b.kind=="root");
+            foreach(var renderer in GetComponentsInChildren<Renderer>(true)) {
+                if(renderer.GetComponent<Book.BookPageTarget>()||renderer.GetComponentInParent<RoomItem>()!=owner||
+                    renderer.GetComponent<PencilMarks>()&&!(kind==RoomObjectKind.Drawing&&renderer.transform==transform))continue;
+                string part=recipe?recipe.AppearancePart(renderer):null;
+                var model=renderer.GetComponentInParent<ImportedModel>();
+                string hash=model&&model.Ready?model.AssetHash:null;
+                var original=renderer.sharedMaterials;var applied=(Material[])original.Clone();bool changed=false;
+                for(int i=0;i<original.Length;i++) {
+                    var source=original[i];if(!source||source.shader.name!="Maestro/Watercolor")continue;
+                    var binding=root;
+                    if(part!=null)binding=bindings.FirstOrDefault(b=>b.kind=="part"&&b.partId==part)??binding;
+                    if(hash!=null&&int.TryParse(source.GetTag("MaestroMaterialIndex",false,""),out int index))
+                        binding=bindings.FirstOrDefault(b=>b.kind=="material"&&b.modelHash==hash&&b.materialIndex==index)??binding;
+                    if(binding==null||!definitions.TryGetValue(binding.appearanceId,out var definition))continue;
+                    var basePigment=binding.kind=="material"&&model&&model.Ready?model.Instance.GetComponent<PencilModelStyle>()?.ImportedBaseColor(binding.materialIndex):null;
+                    var lease=AppearanceMaterials.Acquire(source,binding.Effective(definition),basePigment);leases.Add(lease);applied[i]=lease.Material;changed=true;
+                }
+                if(changed){rendered.Add(new Rendered{Renderer=renderer,Original=original,Applied=applied});renderer.sharedMaterials=applied;}
+            }
+            } finally {foreach(var lease in previous)lease.Dispose();}
+        }
+        void Restore() {
+            foreach(var entry in rendered)if(entry.Renderer) {
+                var current=entry.Renderer.sharedMaterials;
+                for(int i=0;i<Math.Min(current.Length,entry.Applied.Length);i++)if(current[i]==entry.Applied[i])current[i]=entry.Original[i];
+                entry.Renderer.sharedMaterials=current;
+            }
+            rendered.Clear();
+        }
+        void Clear(){Restore();foreach(var lease in leases)lease.Dispose();leases.Clear();}
+        void OnEnable(){Refresh();}
+        void OnDisable(){Clear();}
+        void OnDestroy(){if(avatar)avatar.ModelChanged-=Refresh;Clear();}
+    }
+}

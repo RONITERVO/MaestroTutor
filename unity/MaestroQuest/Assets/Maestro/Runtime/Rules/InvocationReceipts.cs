@@ -57,7 +57,7 @@ namespace Maestro.Quest.Rules
             (!item.ContainsKey("output")||(string)item["phase"]=="completed"&&Maestro.Quest.Programs.BehaviourCatalog.Action((string)item["capability"]) is var definition&&definition!=null&&
                 (int?)item["version"]==definition.Version&&Maestro.Quest.Programs.CapabilityArguments.Validate(item["output"],definition.OutputSchema,out _))&&Id(item["id"])&&RoomCapabilityCatalog.ValidCall(item["call"] as JObject)
             &&JToken.DeepEquals(item["capability"],item["call"]["id"])&&JToken.DeepEquals(item["version"],item["call"]["version"])
-            &&item["resources"] is JArray resources&&resources.Count<=16
+            &&item["resources"] is JArray resources&&resources.Count<=Maestro.Quest.Programs.BehaviourProgram.MaximumResources
             &&JToken.DeepEquals(new JArray(RoomExecutions.Resources(new JObject {["operation"]="start",["call"]=item["call"].DeepClone()}).OrderBy(x=>x)),new JArray(resources.Values<string>().OrderBy(x=>x)))
             &&item["status"]?.Type==JTokenType.String&&((string)item["status"]).Length<=2048
             &&new[]{"preparing","running","completed","cancelled","failed","interrupted"}.Contains((string)item["phase"]);

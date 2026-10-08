@@ -35,6 +35,7 @@ namespace Maestro.Quest.Imports
         public Animator Humanoid => instance ? instance.GetComponent<Animator>() : null;
         public bool IsHumanoid => Humanoid && Humanoid.avatar && Humanoid.avatar.isHuman && Humanoid.avatar.isValid;
         public string HumanoidIssue { get; private set; }
+        public string AssetHash { get; private set; }
         public string MotionRigHash { get; private set; }
         public string MotionRigIssue { get; private set; }
         public string ClipName(int index) => index >= 0 && index < ClipCount ? ModelLibrary.SafeName(instance.AnimationClips[index].name) : "No embedded clips";
@@ -89,7 +90,7 @@ namespace Maestro.Quest.Imports
                 }
                 else loaded = await GltfUtility.LoadBytesAsync("selected.glb", asset.Bytes, awaitCaller, new IllustratedGltfMaterials());
                 if (!this || destroyed) { loaded.Dispose(); ReleaseBudget(); return; }
-                instance = loaded;
+                instance = loaded;AssetHash=asset.Hash;
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }
                 animationPlayer = instance.GetComponent<Animation>();
                 if (animationPlayer) { animationPlayer.playAutomatically = false; animationPlayer.cullingType = AnimationCullingType.AlwaysAnimate; animationPlayer.Stop(); }

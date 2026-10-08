@@ -18,7 +18,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'extrusionPart'|'sweepPart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'drawingSurface'|'surfaceStrokeSelection'|'containerDefinition'|'containerTransfer'|'heightFieldTransfer'|'materialTransfer'|'materialStore'|'heightFieldDefinition'|'heightFieldSaved'|'heightFieldReset'|'sculptTip'|'worldAudioSource'|'worldAudioEmitter';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'extrusionPart'|'sweepPart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'drawingSurface'|'surfaceStrokeSelection'|'containerDefinition'|'containerTransfer'|'heightFieldTransfer'|'materialTransfer'|'materialStore'|'heightFieldDefinition'|'heightFieldSaved'|'heightFieldReset'|'sculptTip'|'worldAudioSource'|'worldAudioEmitter'|'appearanceStyle'|'appearanceBinding';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -85,6 +85,14 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    if(schema.format==='heightFieldDefinition'||schema.format==='heightFieldSaved'){const p=(value.frame as {position:{x:number;y:number;z:number}}).position,c=value.cells as number;return p.x*p.x+p.y*p.y+p.z*p.z<=100&&[4,8,16].includes(c)&&(schema.format!=='heightFieldSaved'||(value.heights as number[]).length===(c+1)**2&&(value.heights as number[]).every(h=>h<=(value.maxHeight as number)))?null:path+' needs a bounded frame, 4/8/16 cells and matching bounded grid heights';}
    if(schema.format==='sculptTip'){const p=value.position as {x:number;y:number;z:number};return p.x*p.x+p.y*p.y+p.z*p.z<=100?null:path+' needs a sculpt tip within ten local metres';}
    if(schema.format==='materialStore')return (value.amountLitres as number)<=(value.capacityLitres as number)?null:path+' needs contents within capacity';
+   if(schema.format==='appearanceStyle'){
+    const mode=value.renderMode,opacity=value.opacity,cutoff=value.cutoff,grain=value.grain as number,shading=value.shading as number;
+    return (grain===-1||grain>=0)&&(shading===-1||shading>=0)&&
+      (mode==='inherit'||mode==='opaque'?opacity===1&&cutoff===0:mode==='blend'?cutoff===0:true)?null:path+' needs consistent opacity, cutoff and inherited shading';
+   }
+   if(schema.format==='appearanceBinding'){
+    return (value.kind==='root'?value.partId===''&&value.modelHash===''&&value.materialIndex===-1:value.kind==='part'?value.partId!==''&&value.modelHash===''&&value.materialIndex===-1:value.partId===''&&value.modelHash!==''&&(value.materialIndex as number)>=0)?null:path+' needs an exact root, part or imported-material address';
+   }
    if(schema.format==='worldAudioSource'){const tone=value.tone as {attack:number;release:number;seconds:number};return tone.attack+tone.release<=tone.seconds+1e-7?null:path+' needs its attack and release to fit the sound duration';}
    if(schema.format==='worldAudioEmitter'){const p=value.position as {x:number;y:number;z:number},d=value.distance as {minimum:number;maximum:number};return !(value.part&&value.joint)&&p.x*p.x+p.y*p.y+p.z*p.z<=100&&d.minimum<=d.maximum?null:path+' needs one attachment, a bounded offset and ordered distances';}
    if(schema.format==='heightFieldReset')return (value.fillHeight as number)<=(value.definition as {maxHeight:number}).maxHeight?null:path+' needs fillHeight within maxHeight';

@@ -9,9 +9,9 @@ it is not yet a saved assembly/blueprint library or a snapping/joint system.
 Supply 1–16 distinct existing creation IDs and an explicit room-local position,
 unit-quaternion rotation and uniform scale for each. All targets are declared
 schema resources, so the generated book controls, optional source/blocks, ordinary
-programs and the room agent use the same ownership and execution paths. The limit
-matches the current 16 declared program resources; it does not increase the room's
-object, creation-per-run or physics budgets. Arrays currently stay literal: saved
+programs and the room agent use the same ownership and execution paths. Layout
+placement retains its own 16-member bound. Programs may declare up to the generated
+66-resource ceiling; that does not increase layout, creation-per-run or physics budgets. Arrays currently stay literal: saved
 reset programs pin exact existing IDs, rather than silently discovering members
 or acquiring authority over an expanding group.
 

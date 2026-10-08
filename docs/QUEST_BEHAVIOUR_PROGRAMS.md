@@ -73,7 +73,7 @@ explanation when a simple assignment is attempted. Library usage includes progra
 references with the same conservative reference analysis as storage and Undo.
 
 Limits are 16 functions, 8 parameters/16 locals per function, 128 statement nodes,
-512 expression nodes, nesting/call depth 8, 16 reserved targets, 24,000 source
+512 expression nodes, nesting/call depth 8, up to 66 declared targets, 24,000 source
 characters per program and 128,000 across a saved collection. Text values are
 bounded to 128 characters; finite numeric values to magnitude 9,007,199,254,740,991. Action schemas keep their own physical limits. Calls cannot
 recurse. Repeat counts are 0–10,000. The interpreter yields between statements
@@ -477,3 +477,15 @@ rejected without changing valid source. See [scope, event identity and native
 verification](QUEST_EVENT_PROGRAMS.md#visual-state-and-signal-declarations-2026-09-30).
 State/event declaration controls no longer require Source; coordinated incompatible
 changes and shared libraries remain separate work.
+
+
+## Complete-room resource declarations (2026-10-08)
+
+The native catalog publishes `limits.programResources` (currently 66: the book,
+Maestro and 64 creations). Native programs and receipts, web validation, module
+linking and catalog/execution observations use that same ceiling. Individual
+actions retain their own smaller budgets where applicable; this does not raise
+creation, layout, physics or concurrent-run limits. Only resource-ID arrays gain
+this transport allowance. General arrays and structured program values retain
+their existing bounds. Shared appearance edits require exact complete membership
+and current observations before claiming all affected objects.

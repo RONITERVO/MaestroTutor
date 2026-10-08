@@ -185,7 +185,7 @@ namespace Maestro.Quest.Programs
             CalendarSubscription.Fact(),RuntimeDiagnosticFacts.Frames(),RuntimeDiagnosticFacts.Models(),RuntimeDiagnosticFacts.Motions(),RuntimeDiagnosticFacts.Acoustics(),
             new FactDefinition("room.sessionId",ProgramType.Text,"Current room session","Current room session ID, including while using the saved room. Begin and Discard replace this identity. Read scene.temporaryRoom.active to distinguish temporary play from the saved room. Reading this ID does not begin, keep or discard a room.",context=>context.RoomSessionId==null?null:new ProgramValue(context.RoomSessionId)),
             new FactDefinition("maestro.state",ProgramType.Text,"Maestro state","Current observed tutor state: speaking, listening, thinking or idle. Unavailable before a reliable activity snapshot, during audio suspension or when the room runtime is paused.",context=>context.Activity==null?null:new ProgramValue(context.Activity)),
-            RoomEnvironmentCapability.Fact(),RoomToolsCapability.Fact(),RoomToolRecoveryCapability.Fact(),WorldViewpointCapability.Fact(),WorldIdentityFacts.Fact(),WorldGroundFacts.Fact(),ScanDrawingCapability.Fact(),RoomScanFacts.Status(),RoomScanFacts.Page(),RoomScanFacts.Surface(),PhysicsSimulationCapability.Fact(),PhysicsEnvironmentCapability.Fact(),EnvironmentProfileFacts.Binding(),EnvironmentProfileFacts.Profile(),EnvironmentProfileFacts.Profiles(),
+            RoomEnvironmentCapability.Fact(),RoomToolsCapability.Fact(),RoomToolRecoveryCapability.Fact(),WorldViewpointCapability.Fact(),WorldIdentityFacts.Fact(),WorldGroundFacts.Fact(),ScanDrawingCapability.Fact(),RoomScanFacts.Status(),RoomScanFacts.Page(),RoomScanFacts.Surface(),PhysicsSimulationCapability.Fact(),PhysicsEnvironmentCapability.Fact(),EnvironmentProfileFacts.Binding(),EnvironmentProfileFacts.Profile(),EnvironmentProfileFacts.Profiles(),AppearanceFacts.Definitions(),AppearanceFacts.Definition(),AppearanceFacts.Members(),AppearanceFacts.Bindings(),AppearanceFacts.Targets(),
             new FactDefinition("physics.running",ProgramType.Boolean,"Physics running","Whether room physics is currently running. False is an observed value; it is not an unavailable reading.",context=>context.PhysicsRunning.HasValue?new ProgramValue(context.PhysicsRunning.Value):null),
             new FactDefinition("physics.ready",ProgramType.Boolean,"Room surfaces ready","Whether the selected physics environment is ready (aligned scan with real collisions on, accepted virtual ground with them off). This does not start physics or guarantee a particular navigation path.",context=>context.PhysicsReady.HasValue?new ProgramValue(context.PhysicsReady.Value):null),
         });
@@ -233,6 +233,7 @@ namespace Maestro.Quest.Programs
         }
         public static JObject Manifest()=>new JObject {
             ["version"]=1,
+            ["limits"]=new JObject{["programResources"]=BehaviourProgram.MaximumResources},
             ["actions"]=new JArray(Actions.Select(x=>x.ToJson())),
             ["events"]=new JArray(Events.Select(x=>x.ToJson())),
             ["facts"]=new JArray(Facts.Select(x=>x.ToJson())),

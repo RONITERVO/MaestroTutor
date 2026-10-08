@@ -122,7 +122,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.color.set";
         public override string Label=>"Paint object";
-        public override string Description=>"Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. Saves before completion, one Undo edit.";
+        public override string Description=>"Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. If a root appearance is bound, updates its explicit local tint override without changing the shared definition or another object; specific part/material bindings still win. Saves before completion, one Undo edit.";
         public override string Duration=>"instant";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};

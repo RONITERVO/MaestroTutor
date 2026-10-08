@@ -85,7 +85,7 @@ namespace Maestro.Quest.Creation
         {
             error="The target changed; inspect its latest state before retrying.";
             if(request.version==1) return editor&&request.sceneRevision==editor.Revision;
-            if(request.conditions==null || request.conditions.Length>16 || request.conditions.Any(x=>x==null || x.id==null) || request.conditions.Select(x=>x.id).Distinct().Count()!=request.conditions.Length) return false;
+            if(request.conditions==null || request.conditions.Length>Maestro.Quest.Programs.BehaviourProgram.MaximumResources || request.conditions.Any(x=>x==null || x.id==null) || request.conditions.Select(x=>x.id).Distinct().Count()!=request.conditions.Length) return false;
             var aliases=new HashSet<string>();
             foreach(var command in request.commands)
             {
@@ -207,8 +207,8 @@ namespace Maestro.Quest.Creation
                     case "avatarSettings": if(!RoomControls.SetMovement(data,command.movement,out status))return false;break;
                     case "move": data.position=command.position; break;
                     case "resize": data.scale=command.scale; break;
-                    case "paint": if(data.IsBuiltIn) {status="Painting the book or tutor is unavailable";return false;} data.color=command.color;break;
-                    case "recipe": if(data.kind!=RoomObjectKind.Assembly || command.recipe==null) return false; data.recipe=command.recipe.Copy();break;
+                    case "paint": if(data.IsBuiltIn) {status="Painting the book or tutor is unavailable";return false;} if(!RoomEditor.PaintAppearance(data,command.color,out status))return false;break;
+                    case "recipe": if(data.kind!=RoomObjectKind.Assembly || command.recipe==null) return false; if(!editor.ApplyRecipeAppearance(data,command.recipe.Copy(),out status))return false;break;
                     case "delete": if(data.IsBuiltIn) {status="The book and Maestro must remain in the room";return false;} removed.Add(target);changes.Remove(target);continue;
                     default: status="This room action is unavailable"; return false;
                 }
@@ -313,7 +313,7 @@ namespace Maestro.Quest.Creation
             var inspected=editor.Read(lastInspected);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
                 capture=editor.ViewCaptureMetadata,ownership=editor.Ownership.Observe(),temporaryRoom=editor.ObserveTemporaryRoom(),motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),execution=executor.Executions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
-                visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=inspected.recipe},
+                visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=editor.RecipeForEditing(inspected)},
                 constructionSelection=editor.ObserveConstructionSelection(),constructionManipulation=editor.ObserveConstructionManipulation(),selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.ObserveObjects() };
         }

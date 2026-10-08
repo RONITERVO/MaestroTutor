@@ -180,6 +180,18 @@ try{
  const capture=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);assert.equal(capture.capability,'room.view.capture');assert.equal(capture.phase,'completed');
  const pixels=Buffer.from(image.split(',')[1],'base64');const {createHash}=await import('node:crypto');assert.equal(createHash('sha256').update(pixels).digest('hex'),capture.output!.sha256);
  await writeFile(join(directory,'book-native-view.jpg'),pixels);await page.screenshot({path:join(directory,'book-native-snapshot.png')});
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill('Save shared appearance');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Save shared appearance.*appearance.save/}).click();
+ await page.getByLabel('Action inputs name',{exact:true}).fill('Book-created glass');
+ await page.getByLabel('Action inputs style opacity',{exact:true}).fill('0.35');
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='appearance.save'&&r.phase==='completed';});
+ const appearance=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ assert.equal(appearance.call.arguments.name,'Book-created glass');assert.equal((appearance.call.arguments.style as {opacity:number}).opacity,.35);assert.ok(appearance.output?.id);
+ await writeFile(join(directory,'book-native-appearance.json'),JSON.stringify({boundary:'Actual generated book form and native saved receipt, scripted provider elsewhere; no headset/provider proof for appearances.',appearance},null,2));
+ await page.screenshot({path:join(directory,'book-native-appearance.png')});
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);
  const commandCount=requests.size;

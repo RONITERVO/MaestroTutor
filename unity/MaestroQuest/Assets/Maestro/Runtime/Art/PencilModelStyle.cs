@@ -12,6 +12,7 @@ namespace Maestro.Quest.Art
         readonly Dictionary<Material, Color> colors = new();
         readonly Dictionary<int,Material> importedMaterials=new();
         internal Material ImportedMaterial(int index)=>importedMaterials.TryGetValue(index,out var value)?value:null;
+        internal Color? ImportedBaseColor(int index)=>importedMaterials.TryGetValue(index,out var material)&&colors.TryGetValue(material,out var color)?color:null;
         bool applied;
 
         public void Apply()

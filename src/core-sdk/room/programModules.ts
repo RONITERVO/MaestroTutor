@@ -1,3 +1,4 @@
+import {programResourceLimit} from '../../../shared/programLimits';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {moduleHash} from '../../../shared/programModuleIdentity';
@@ -29,7 +30,7 @@ export function linkProgram(source:Record<string,unknown>,validate:(value:Record
     const child=object(m.program);need(child.version===3,'A module needs program version 3');need(child.memoryVersion===undefined,'Reusable modules return values to their caller; remembered variables belong to the caller');
     const exports=list(m.exports,16);need(exports.length>0&&exports.every(plain)&&new Set(exports).size===exports.length,'Invalid module exports');
     need(exports.every(n=>list(child.functions,16).some(f=>object(f).name===n)),'Export must name a local function');
-    need(list(child.resources,16).every(r=>list(raw.resources,16).includes(r)),'Declare every imported module resource in its caller');
+    need(list(child.resources,programResourceLimit).every(r=>list(raw.resources,programResourceLimit).includes(r)),'Declare every imported module resource in its caller');
     need(child.dataVersion===undefined||raw.dataVersion===1,'Caller must enable imported structured values');
     need(child.parallelVersion===undefined||raw.parallelVersion===1,'Caller must enable imported parallel calls');
     const linked=scope(child,depth+1),signals=object(imp.signals),events=list(raw.events,16).map(object);

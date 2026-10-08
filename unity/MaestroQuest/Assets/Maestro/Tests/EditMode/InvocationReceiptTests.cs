@@ -29,6 +29,13 @@ namespace Maestro.Quest.Tests
         static JObject Call()=>new() {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=1}};
         [SetUp] public void Before()=>directory=Path.Combine(Path.GetTempPath(),"MaestroReceipts-"+Guid.NewGuid().ToString("N"));
         [TearDown] public void After() {if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        [Test] public void WholeRoomAppearanceClaimsSurviveReceiptReloadWithoutLosingMembers() {
+            var args=new AppearanceSaveCapability().Example;args["members"]=new JArray(Enumerable.Range(0,66).Select(i=>i.ToString("x32")));
+            var call=new JObject{["id"]="appearance.save",["version"]=1,["arguments"]=args};var receipts=new InvocationReceipts(directory);string id=receipts.NextId;
+            string[] resources=((JArray)args["members"]).Values<string>().ToArray();
+            Assert.That(receipts.Reserve(id,call,resources,out var error),Is.True,error);
+            var loaded=new InvocationReceipts(directory);Assert.That(loaded.Error,Is.Null);Assert.That(((JArray)loaded.Find(id)["resources"]).Values<string>(),Is.EquivalentTo(resources));
+        }
         [Test] public void RestartPreservesCompletedButMarksUnfinishedUncertainWithoutPlayback()
         {
             var receipts=new InvocationReceipts(directory);var actions=new Actions();var scheduler=new RuleScheduler(actions,receipts);

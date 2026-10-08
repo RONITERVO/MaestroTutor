@@ -15,8 +15,8 @@ namespace Maestro.Quest.Creation
             if(ObjectRevision(target)!=revision){error="The recipe changed; inspect its current revision before editing";return false;}
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object before editing its recipe";return false;}
             data=Read(target);if(data.kind!=RoomObjectKind.Assembly){error="Choose an existing recipe object";return false;}
-            if(!RecipeEdits.Apply(data.recipe,patch,out var recipe,out error))return false;
-            data.recipe=recipe;data=Pose(data,Find(target).transform);
+            if(!RecipeEdits.Apply(RecipeForEditing(data),patch,out var recipe,out error)||!ApplyRecipeAppearance(data,recipe,out error))return false;
+            data=Pose(data,Find(target).transform);
             var replacement=data;var candidate=Snapshot();candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();return candidate.Validate(out error);
         }
         internal bool EditRecipe(string target,int revision,JObject patch,out string error)

@@ -142,7 +142,7 @@ namespace Maestro.Quest.Creation
                 var box = (BoxCollider)collider; box.transform.localScale = Vector3.one; box.center = Model.LocalBounds.center; box.size = Model.LocalBounds.size + Vector3.one * .02f;
                 box.GetComponent<Renderer>().enabled = false;
                 bool selected = selection && selection.activeSelf; if (selection) { selection.SetActive(false); Destroy(selection); }
-                BuildSelection(Model.LocalBounds); SetSelected(selected); ApplyColor(tint);
+                BuildSelection(Model.LocalBounds); SetSelected(selected); ApplyColor(tint);GetComponent<RoomAppearanceView>()?.Refresh();
                 geometryBounds = Model.LocalBounds; SetCollisionShape(collisionShape,true);
                 ModelStatus = asset.Inspection.IsAvatar ? "VRM imported as room object" : "Model ready";
                 GetComponent<RigidRoomItem>().SetGeometryReady(true);

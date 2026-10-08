@@ -1,0 +1,134 @@
+{
+  "call": {
+    "id": "object.appearance.bind",
+    "version": 1,
+    "arguments": {
+      "operation": "assign",
+      "target": "d14af852b5784d4180d646d82af010ad",
+      "revision": 6,
+      "appearanceRevision": 7,
+      "binding": {
+        "version": 1,
+        "appearanceId": "ac33f867913d48daab9c6a4779dfe4fd",
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "tint": "",
+        "materialIndex": -1
+      }
+    }
+  },
+  "receipt": {
+    "id": "75c7b273eee64f0e8d2a8b1db1a44464",
+    "capability": "object.appearance.bind",
+    "version": 1,
+    "resources": [
+      "d14af852b5784d4180d646d82af010ad"
+    ],
+    "phase": "completed",
+    "status": "Action completed",
+    "output": {
+      "target": "d14af852b5784d4180d646d82af010ad",
+      "revision": 8,
+      "appearanceId": "ac33f867913d48daab9c6a4779dfe4fd",
+      "appearanceRevision": 7,
+      "temporary": false
+    },
+    "call": {
+      "id": "object.appearance.bind",
+      "version": 1,
+      "arguments": {
+        "operation": "assign",
+        "target": "d14af852b5784d4180d646d82af010ad",
+        "revision": 6,
+        "appearanceRevision": 7,
+        "binding": {
+          "version": 1,
+          "appearanceId": "ac33f867913d48daab9c6a4779dfe4fd",
+          "kind": "root",
+          "partId": "",
+          "modelHash": "",
+          "tint": "",
+          "materialIndex": -1
+        }
+      }
+    }
+  },
+  "definition": {
+    "id": "ac33f867913d48daab9c6a4779dfe4fd",
+    "revision": 7,
+    "source": {
+      "tint": "#DDBBAA",
+      "patternMode": "inherit",
+      "pattern": {
+        "kind": "solid",
+        "plane": "uv",
+        "secondary": "#FFFFFF",
+        "columns": 1,
+        "rows": 1
+      },
+      "tiling": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "offset": {
+        "x": 0.0,
+        "y": 0.0
+      }
+    },
+    "surface": {
+      "renderMode": "blend",
+      "opacity": 0.40000000596046448,
+      "cutoff": 0.0,
+      "sidedness": "inherit",
+      "grain": -1.0,
+      "shading": -1.0
+    }
+  },
+  "bindings": {
+    "target": "d14af852b5784d4180d646d82af010ad",
+    "revision": 8,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 2,
+    "bindings": [
+      {
+        "appearanceId": "ac33f867913d48daab9c6a4779dfe4fd",
+        "appearanceRevision": 7,
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "materialIndex": -1,
+        "tint": "",
+        "state": "active"
+      }
+    ],
+    "temporary": false
+  },
+  "targets": {
+    "target": "d14af852b5784d4180d646d82af010ad",
+    "revision": 8,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 3,
+    "targets": [
+      {
+        "kind": "root",
+        "partId": "",
+        "modelHash": "",
+        "materialIndex": -1,
+        "state": "active"
+      }
+    ]
+  },
+  "members": {
+    "id": "ac33f867913d48daab9c6a4779dfe4fd",
+    "revision": 7,
+    "offset": 0,
+    "total": 1,
+    "pageSize": 16,
+    "members": [
+      "d14af852b5784d4180d646d82af010ad"
+    ]
+  }
+}

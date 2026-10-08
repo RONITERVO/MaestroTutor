@@ -313,6 +313,26 @@ try{
   const profileRemoved=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.remove',version:1,arguments:{id:profileId,revision:(unusedProfile.catalog!.value as {revision:number}).revision}}}}]);
   await writeFile(join(directory,'entity-environment.json'),JSON.stringify({boundary:'Real native shared transport, persisted profile edits, binding facts and Undo. PlayMode separately tests physical motion; no headset or live provider proof.',profileSaved,unbound,profileInitial,profileAssigned,bound,profileBound,profileEdited,profileList,profileUndo,bindingUndo,profileRemoved},null,2));
 
+  const appearanceStyle={tint:'#DDBBAA',patternMode:'inherit',pattern:{kind:'solid',plane:'uv',secondary:'#FFFFFF',columns:1,rows:1},tiling:{x:1,y:1},offset:{x:0,y:0},renderMode:'blend',opacity:.4,cutoff:0,sidedness:'inherit',grain:-1,shading:-1};
+  const appearanceSaved=await execute([{action:'execution',execution:{operation:'start',call:{id:'appearance.save',version:1,arguments:{id:'',revision:0,name:'Shared warm glass',style:appearanceStyle,members:[]}}}}]);
+  const appearanceId=appearanceSaved.execution?.selected?.output?.id;if(typeof appearanceId!=='string')throw new Error('Appearance returned no stable ID');
+  const appearanceRead=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'appearance.definition',version:1,arguments:{id:appearanceId}}}]);
+  const appearanceBindings=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.appearances',version:1,arguments:{target:fieldId,offset:0}}}]);
+  const appearanceInitial=await appearanceRead();
+  const appearanceBound=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.appearance.bind',version:1,arguments:{operation:'assign',target:fieldId,revision:lease.state().objects.find(o=>o.id===fieldId)!.objectRevision,appearanceRevision:(appearanceInitial.catalog!.value as {revision:number}).revision,binding:{version:1,appearanceId,kind:'root',partId:'',modelHash:'',materialIndex:-1,tint:''}}}}}]);
+  const appearanceBeforePaint=await appearanceBindings();
+  const appearancePainted=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.color.set',version:1,arguments:{target:fieldId,red:0,green:0,blue:1}}}}]);
+  const appearanceAfterPaint=await appearanceBindings(),appearanceUnchanged=await appearanceRead();
+  if((appearanceAfterPaint.catalog!.value as {bindings:{tint:string}[]}).bindings[0].tint!=='#0000FF'||appearancePainted.objects.find(o=>o.id===fieldId)!.color.b!==1)throw new Error('Object paint did not update the canonical local appearance');
+  if(JSON.stringify(appearanceInitial.catalog!.value)!==JSON.stringify(appearanceUnchanged.catalog!.value))throw new Error('Object painting changed a shared appearance');
+  const appearanceEdited=await execute([{action:'execution',execution:{operation:'start',call:{id:'appearance.save',version:1,arguments:{id:appearanceId,revision:(appearanceUnchanged.catalog!.value as {revision:number}).revision,name:'Shared warm glass',style:{...appearanceStyle,opacity:.7},members:[fieldId]}}}}]);
+  const appearanceChanged=await appearanceRead();if(Math.abs((appearanceChanged.catalog!.value as {surface:{opacity:number}}).surface.opacity-.7)>.00001)throw new Error('Shared appearance edit was not saved');
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
+  const appearanceRestored=await appearanceBindings();if((appearanceRestored.catalog!.value as {bindings:unknown[]}).bindings.length!==0)throw new Error('Appearance Undo did not restore unbound object');
+  const appearanceUnused=await appearanceRead();
+  const appearanceRemoved=await execute([{action:'execution',execution:{operation:'start',call:{id:'appearance.remove',version:1,arguments:{id:appearanceId,revision:(appearanceUnused.catalog!.value as {revision:number}).revision}}}}]);
+  await writeFile(join(directory,'appearance-authoring.json'),JSON.stringify({boundary:'Real native shared transport, persisted appearances, local paint, facts and Undo; no headset or live-provider proof.',appearanceSaved,appearanceInitial,appearanceBound,appearanceBeforePaint,appearancePainted,appearanceAfterPaint,appearanceUnchanged,appearanceEdited,appearanceChanged,appearanceRestored,appearanceRemoved},null,2));
+
   const fieldSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Sculpt a surface path',offset:0}}]);
   const fieldDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.field.sculpt',version:1}}]);
   const fieldBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field',version:1,arguments:{target:fieldId}}}]);

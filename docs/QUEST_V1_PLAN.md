@@ -4621,3 +4621,62 @@ Matching-source native headless and original-chat/book journeys both passed
 with scripted responses. Android packaging is checked separately; device testing
 remains on hold.
 Evidence: .quest-evidence/spatial-state/appearance-render-*.
+
+### Shared appearance authoring (2026-10-08, desktop verified)
+
+Room format 25 stores up to 64 named, revisioned appearance definitions and up to
+33 bindings per object. Supported source includes inherited imported images/UVs,
+solid/checker/stripe patterns, tint, mapping scale/offset, explicit opaque/cutout/
+blend mode, opacity, cutoff, sidedness and the illustrated shader's grain/shading.
+Image import/generation and unsupported PBR/emission remain later delivery work.
+
+The same catalog exposes appearance.save, appearance.remove and
+object.appearance.bind to generated book forms, programs and the room agent.
+Assignment reuses a definition; copy creates an independent definition and
+assignment in one saved Undo. Definition changes require every currently bound
+object, including dormant references, and current revisions. Nothing partially
+applies when a member is busy or stale. Full-room claims use a generated ceiling
+of 66, with matching native/web program, module, catalog, receipt and object-
+precondition checks. Existing limits on unrelated payload arrays remain bounded.
+
+Bindings address root, exact recipe part, or exact imported-model content hash
+plus source material index. Specific bindings override root. Replaced/missing
+geometry keeps dormant references instead of reinterpreting names or slot order.
+Paged facts expose definitions, members, available addresses and binding state.
+Book page displays, selection marks and surface ink retain their own materials.
+
+Ordinary object Paint, including legacy chat batches, writes an explicit local
+root-binding tint when bound. The recipe part palette reads and writes a bound
+part's local tint through the same editor; global object paint does not recolour
+a specifically bound part or imported slot. Empty local tint inherits the shared
+definition. Editing a source pattern hidden by an appearance replacement refuses
+with an explanation. Source pigments/textures remain explicit inputs; appearance
+is separate from physical material contents, collision policy, acoustics,
+passthrough blending and camera selection.
+
+Immutable rendered variants have leases, are shared for matching source/style,
+and are released when no object uses them. Reconciliation restores original
+renderer slots before selecting new variants, including asynchronous model
+completion. Undo/Redo, save/reload, temporary Keep/Discard and portable workspace
+snapshots retain definitions and bindings. Construction modules currently refuse
+bound appearance capture rather than silently dropping the dependency; bundling
+appearance resources into portable construction modules remains required work.
+
+Final validation passed 923 EditMode and 792 PlayMode tests, with three optional
+private-file skips; 1,318 shared room/headless tests; app/probe TypeScript; lint;
+and generated-catalog provenance. Twenty-three focused appearance/render checks
+cover real imported slots, local paint authority, immutable leases and full-room
+claims. An actual workspace archive round-trip preserves shared definitions,
+local tint and dormant model-slot bindings; invalid/dangling definitions refuse.
+Shared definition edits also invalidate each member's object observation.
+
+The matching-runtime native headless journey passed 534 observations, including
+save/bind/paint/shared edit/Undo/removal. The original-chat/book journey created
+an appearance through its generated form and completed a native receipt without
+replaying it after reload. Its screenshot was inspected. These journeys used
+scripted responses, not live providers or a headset. Evidence is tracked under
+.quest-evidence/spatial-state/appearance-authoring-* and the native-room runs
+95d04bc856e845208fdeadbf232a8c9b and 1f89b27dcc1744cf84a2f55280f3362e.
+This is an authoring increment; it does not complete weather/light, water/medium
+reactions, regional simulation, image-backed texture authoring, or hardware
+acceptance. The device hold remains until fresh owner readiness and a health check.

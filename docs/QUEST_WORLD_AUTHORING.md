@@ -522,3 +522,33 @@ the generated form and native receipts without changing the saved scene revision
 The audited development APK is ready; installation, physical interaction and
 performance acceptance wait for the headset to finish charging. See the
 [package and QA record](QUEST_DEVICE_QA.md#optional-physical-tool-trays--2026-10-06).
+
+## Reusable illustrated appearances
+
+The shared catalog provides these saved authoring operations:
+
+- appearance.save creates or updates a named definition. Shared updates include
+  the exact revision and every object currently using it.
+- object.appearance.bind assigns it, makes an independent copy, or removes an
+  exact binding. A part or imported material slot overrides the root binding.
+- appearance.remove deletes only an unused definition.
+
+Use appearance.library, appearance.definition, appearance.members,
+object.appearances and object.appearance.targets to inspect current values and
+stable addresses. Member/binding pages keep observations within the same bounded
+program-value contract used by all other facts. Imported slots use exact model
+content hashes and source material indices. Dormant bindings are retained and
+reported after model or recipe changes.
+
+Painting a single object sets a local tint override instead of mutating its
+shared definition. The ordinary recipe colour editor likewise edits a bound
+part's local tint. An empty override resumes the shared tint. Unsupported or
+hidden source-pattern edits give an explanation. Book pages and surface ink have
+their own content and are not recoloured by these bindings.
+
+Opacity uses an explicit rendering mode and does not change collision, sound,
+physical material contents or the real-world blend. Procedural patterns and
+inherited imported images/UVs are available; image-backed texture import and
+generation are not yet exposed. Whole-workspace export retains appearances.
+Portable construction modules currently refuse appearance-bound objects until
+their dependencies can be bundled, rather than silently losing their style.
