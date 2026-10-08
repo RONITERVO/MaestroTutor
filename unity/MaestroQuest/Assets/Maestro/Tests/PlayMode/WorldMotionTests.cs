@@ -11,7 +11,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Readers;
 namespace Maestro.Quest.Tests
 {
-    public sealed class WorldMotionTests
+    public sealed partial class WorldMotionTests
     {
         GameObject root,content;RoomPhysicsWorld world;RoomWorldMotion motion;RoomNavigation navigation;
         Rigidbody ball;RigidRoomItem rigid;Transform tracking;float previousDelta;
@@ -72,7 +72,8 @@ namespace Maestro.Quest.Tests
             Assert.That(content.transform.position,Is.EqualTo(at));Assert.That(ball.position,Is.EqualTo(p));Assert.That(ball.linearVelocity,Is.EqualTo(velocity));
             Object.Destroy(joint);yield return null;
             world.SetSurfaces(true,"Physical scan ready");Assert.That(world.SetEnvironment((string)world.ObserveEnvironment()["stateId"],true,out _,out error),Is.True,error);world.StartPhysics();
-            p=ball.position;Assert.That(motion.SetPose(Vector3.right,Quaternion.identity,out error),Is.False);Assert.That(error,Does.Contain("real-room collisions"));Assert.That(ball.position,Is.EqualTo(p));Assert.That(content.transform.position,Is.EqualTo(at));
+            RealSurface(new Vector3(.5f,ball.position.y,0),new Vector3(.01f,1,1));Physics.SyncTransforms();
+            p=ball.position;Assert.That(motion.SetPose(Vector3.right,Quaternion.identity,out error),Is.False);Assert.That(error,Does.Contain("clearance"));Assert.That(ball.position,Is.EqualTo(p));Assert.That(content.transform.position,Is.EqualTo(at));
         }
         [UnityTest]public IEnumerator AuthoredNavigationMovesItsInstanceWithoutRebakingAndTrackingStaysFixed() {
             Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);var build=navigation.BuildRevision;var revision=navigation.SurfaceRevision;var eye=tracking.position;

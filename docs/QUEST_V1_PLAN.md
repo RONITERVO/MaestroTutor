@@ -5,7 +5,14 @@ Status: active implementation. Nothing in this document claims store readiness.
 The current installed development checkpoint is **D85F3CB7**. Headset work is
 paused until the owner confirms cooling and charging; mouth-positioned speech and
 native room acoustics have not yet been installed for physical acceptance.
-The newer **496CE27D / c032eacc** package has local packaging evidence only.
+The latest packaged development checkpoint **9F8A2625 / 1f972b6f** has local
+packaging evidence only; it is not installed and does not contain the later
+appearance, portable-construction, backdrop or mixed-reality movement changes.
+
+Current desktop source supports saved per-object real-room participation and
+swept world movement at any backdrop opacity. See the [current movement contract
+and evidence](#swept-world-travel-in-mixed-reality-2026-10-08). These changes are
+not physical Quest acceptance.
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
@@ -21,8 +28,9 @@ The owner's authored-world clarification adds shared appearance/texture/opacity,
 height-changing terrain, weather, lighting and interactive water to the delivery
 direction. Larger user-built settlements must use bounded simulation and streamed
 detail with persistent identities, rather than making every object permanently
-active. These are accepted requirements, not implemented or device-certified
-features. They extend the spatial-state refactor below; later image-texture import
+active. The bounded increments and outstanding requirements are recorded below;
+this scope is not a claim that every feature is implemented or device-certified.
+They extend the spatial-state refactor below; later image-texture import
 and generation must use the original app's asset/provider flows.
 
 The earlier development checkpoint **D522191F** retained the
@@ -4783,3 +4791,47 @@ reservation. These checks cover desktop Unity, not physical depth or compositor
 pixels. See QUEST_AGENT_RELEASE_COVERAGE.md for the retained failed attempts and
 corrections; evidence is in .quest-evidence/spatial-state/world-presentation-*.
 No new APK was packaged, installed, signed or uploaded.
+
+
+### Swept world travel in mixed reality (2026-10-08)
+
+The next increment lets the user's independently enabled stick and snap-turn
+bindings move the same virtual world at any backdrop opacity. View changes keep
+both movement opt-ins and require neutral input before movement resumes. Recall,
+tracking/focus loss and workspace retirement still disable locomotion. Physical
+head tracking, scanned surfaces, physically bound ink and held bodies stay fixed.
+No collision policy is inferred from opacity, and movement needs accepted authored
+ground rather than an invented flat floor.
+
+During active simulation, world relocation first checks the whole swept frame.
+Each moving collider uses its resolved environment profile: real participants
+need an aligned scan and must remain in its containment; virtual-only participants
+ignore the scan. Fixed physical bodies/controllers remain obstacles. Translation
+uses continuous casts; yaw follows the actual pivot arc in segments of at most two
+degrees. Conservative bounds, a 1-mm resting-contact tolerance, 128-result buffers
+and an 8,192-query ceiling make uncertain or overly crowded transfers refuse
+before mutating anything. Irregular geometry can require more clearance than its
+exact mesh. This is a bounded admission policy, not a general continuous mesh
+solver. Paused physics keeps the existing placement behavior. Normal controller
+walking still waits while the user is gripping/manipulating an item.
+
+Rigid movement of an entirely virtual navigation surface repositions its existing
+map without rebaking. When real and authored sources move relative to one another,
+old paths are removed immediately and rebaking waits for 150 ms and at least two stable frames of world
+placement. Direct/manual/authored traversal continues only through current
+accepted-ground support and body sweeps; following keeps ownership and reports
+that its route is updating, then replans when the map is ready. Losing required
+scan readiness still stops walking. This bounds repeated movement-triggered
+rebuilds but does not provide streamed asynchronous navigation tiles; a final
+room-scale bake is still synchronous and needs physical performance acceptance.
+
+Book inputs, native controls, agent requests and programs use the same existing
+capabilities and resolved profiles. Full desktop verification passes 935 EditMode and 812 PlayMode cases, with three
+optional private-file skips. All 1,489 shared room/headless/Quest tests pass; the
+actual captured controller fixture passes its two shared contract checks. App
+build, lint, probe types, catalog provenance and core boundaries pass. The full
+native journey passes 586 observations (ce50470ace1f45b281a4abbf2ed541b0); the
+original book passes generated movement inputs and reload without replay
+(61054388242a44afb1c396ab27db06f0), with its screenshot inspected.
+Fresh provider journey results are recorded in QUEST_AGENT_RELEASE_COVERAGE.md. Headset acceptance remains on hold pending the
+owner's cooling/charge readiness response. No APK or release change is claimed.

@@ -73,12 +73,12 @@ namespace Maestro.Quest.Tests
             controls.SendMessage("OnApplicationFocus",true);yield return null;Assert.That(view.BackdropOpacity,Is.Zero);
             yield return Present(.75f,false);tracked=false;yield return null;Assert.That(view.BackdropOpacity,Is.Zero);Assert.That(view.RealDepth,Is.True);
         }
-        [UnityTest]public IEnumerator IdenticalPresentationIsInertAndMixedBlendDisablesOnlyUserStick(){
+        [UnityTest]public IEnumerator IdenticalPresentationIsInertAndMixedBlendRetainsUserOptIn(){
             var controls=SharedModes(out var view,out _);TravelGround();world.PausePhysics();
             yield return Present(1,false);yield return ChangeMode("user.enable");
             var before=PresentationFact();yield return Present(1,false);
             Assert.That(JToken.DeepEquals(before,PresentationFact()),Is.True);Assert.That(controls.UserEnabled,Is.True);
-            yield return Present(.5f,false);Assert.That(controls.UserEnabled,Is.False);Assert.That(view.Active,Is.False);
+            yield return Present(.5f,false);Assert.That(controls.UserEnabled,Is.True);Assert.That(view.Active,Is.False);
             controls.SendMessage("OnApplicationPause",true);Assert.That(view.BackdropOpacity,Is.Zero);Assert.That(view.RealDepth,Is.True);
         }
     }

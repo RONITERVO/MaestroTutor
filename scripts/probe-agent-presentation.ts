@@ -21,6 +21,14 @@ export async function runAgentPresentationProof({client,initial,execute,director
  const restored=await fact('world.presentation'),restoredPhysics=await fact('physics.environment');
  assert.equal(restored.backdropOpacity,0);assert.equal(restored.realDepth,true);assert.equal(restored.depthEligible,true);
  assert.equal(restoredPhysics.realCollisions,true);assertSameRoomObjects(initial,read());assert.equal(read().sceneRevision,initial.sceneRevision);
- const result={scenario:'WorldPresentation',phase:'passed',boundary:'Real chat handoff and provider planning/execution against desktop Unity; no real passthrough pixels, device depth or headset acceptance.',changed,physics,restoredJourney,restored,restoredPhysics};
+ const beforeMovement=await fact('controller.mode');
+ const movementJourney=await runHeadlessRoomTurn(client,{text:"I want to use the thumbstick to walk around the virtual world while still seeing my room. Please turn on my movement, but keep this mixed view and leave Maestro's controls and objects alone."});
+ const enabled=await fact('controller.mode'),movingView=await fact('world.presentation');
+ assert.equal(enabled.userEnabled,true);assert.equal(enabled.virtualView,false);assert.equal(enabled.avatarEnabled,beforeMovement.avatarEnabled);
+ assert.equal(movingView.backdropOpacity,0);assert.equal(movingView.realDepth,true);assertSameRoomObjects(initial,read());assert.equal(read().sceneRevision,initial.sceneRevision);
+ const stopJourney=await runHeadlessRoomTurn(client,{text:'Thanks. Please switch my thumbstick movement off again. Keep the room view and everything else as it is.'});
+ const stopped=await fact('controller.mode');assert.equal(stopped.userEnabled,false);assert.equal(stopped.virtualView,false);assert.equal(stopped.avatarEnabled,beforeMovement.avatarEnabled);
+ assertSameRoomObjects(initial,read());assert.equal(read().sceneRevision,initial.sceneRevision);assert.equal((await fact('physics.environment')).realCollisions,true);
+ const result={scenario:'WorldPresentation',phase:'passed',boundary:'Real chat handoff and provider planning/execution against desktop Unity; no real passthrough pixels, device depth or headset acceptance.',changed,physics,restoredJourney,restored,restoredPhysics,movementJourney,enabled,movingView,stopJourney,stopped};
  await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(result,null,2));return result;
 }

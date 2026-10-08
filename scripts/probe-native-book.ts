@@ -239,6 +239,19 @@ try{
  assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),presentationRevision,'View action changed the saved room');
  await writeFile(join(directory,'book-native-presentation.json'),JSON.stringify({boundary:'Actual generated book inputs, native execution and receipt; desktop only.',presentation},null,2));
  await page.screenshot({path:join(directory,'book-native-presentation.png')});
+ // Enabling user locomotion uses the same generated action while MR remains visible.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Search actions',{exact:true}).fill('Change movement');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Change movement or room view.*controller.mode.set/}).click();
+ await page.getByLabel('Action inputs operation',{exact:true}).selectOption('user.enable');await page.getByRole('button',{name:'Load current values',exact:true}).click();
+ await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability==='controller.mode'&&c.available===true;});
+ await page.getByRole('button',{name:'Run action now',exact:true}).click();
+ await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='controller.mode.set'&&r.phase==='completed'&&r.output?.userEnabled===true;});
+ const mixedMovement=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ assert.equal(mixedMovement.output?.virtualView,false);assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),presentationRevision);
+ await writeFile(join(directory,'book-native-mixed-movement.json'),JSON.stringify({boundary:'Generated book opt-in and real native receipt in a partial backdrop. Physical walking is tested separately; no headset proof.',mixedMovement},null,2));
+ await page.screenshot({path:join(directory,'book-native-mixed-movement.png')});
+
 
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);
@@ -246,7 +259,7 @@ try{
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
- const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
+ const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,mixedMovement,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');
 }catch(error){

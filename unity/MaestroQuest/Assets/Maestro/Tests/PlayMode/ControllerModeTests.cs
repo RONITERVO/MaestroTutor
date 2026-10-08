@@ -49,7 +49,7 @@ namespace Maestro.Quest.Tests
             Assert.That(root.transform.position.x,Is.LessThan(-.05f));Assert.That(origin.localPosition,Is.EqualTo(home));var walked=viewer.transform.position;frame.leftStick=Vector2.zero;frame.a=true;yield return null;
             Assert.That(Quaternion.Angle(root.transform.rotation,rotation),Is.EqualTo(30).Within(.1f));Assert.That(Vector3.Distance(viewer.transform.position,walked),Is.LessThan(.001f),"Snap turn pivots around the viewer");
             yield return ChangeMode("view.mixedReality");var mixed=modeActions.Observe().DeepClone();var after=ModeFact();
-            Assert.That(view.Active||controls.UserEnabled||motion.Active||world.Running,Is.False);Assert.That(controls.AvatarEnabled,Is.True,"View selection retains the independent Maestro opt-in");
+            Assert.That(view.Active||motion.Active||world.Running,Is.False);Assert.That(controls.UserEnabled,Is.True);Assert.That(controls.AvatarEnabled,Is.True,"View selection retains the independent Maestro opt-in");
             Assert.That(origin.localPosition,Is.EqualTo(home));Assert.That(Quaternion.Angle(origin.localRotation,rotation),Is.LessThan(.001f));Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.Zero);
             Assert.That(modeRules.Scheduler.RunningCount,Is.Zero,"View transitions must complete, not cancel their own invocation");
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_CONTROLLER_MODES");if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"modes.json"),new JObject {["before"]=before,["enable"]=enable,["virtualView"]=virtualView,["user"]=user,["mixed"]=mixed,["after"]=after}.ToString());}
@@ -82,15 +82,44 @@ namespace Maestro.Quest.Tests
             frame.busy=true;Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out error),Is.False);StringAssert.Contains("Release",error);frame.busy=false;
             using(editor.RuntimeGate.Hold("Review alignment")){Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out _),Is.False);Assert.That(controls.Virtual,Is.False);}
         }
-        [UnityTest] public IEnumerator SharedModesRequireExplicitVirtualViewAndBoundStickAndDoNotResumeAfterPause()
+        [UnityTest] public IEnumerator SharedModesRequireExplicitOptInAndBoundStickInAnyViewAndDoNotResumeAfterPause()
         {
             var controls=SharedModes(out var view,out var origin);TravelGround();
-            Assert.That(modeActions.Execute(ModeRequest("user.enable"),out var error),Is.False);StringAssert.Contains("Virtual view",error);
+            Assert.That(controls.UserEnabled,Is.False);yield return ChangeMode("user.enable");Assert.That(controls.UserEnabled,Is.True);string error;
             var prefs=controls.Preferences;prefs.avatarStick=MovementStick.None;Assert.That(controls.Apply(prefs),Is.True);
             Assert.That(modeActions.Execute(ModeRequest("maestro.enable"),out error),Is.False);StringAssert.Contains("binding",error);
             world.PausePhysics();yield return ChangeMode("view.virtual");yield return ChangeMode("user.enable");frame.leftStick=Vector2.right;yield return new WaitForSeconds(.2f);Assert.That(root.transform.position.x,Is.LessThan(0));Assert.That(origin.position,Is.EqualTo(Vector3.zero));
             controls.SendMessage("OnApplicationPause",true);Assert.That(view.Active||controls.UserEnabled,Is.False);Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero));
             Assert.That(modeActions.Execute(ModeRequest("view.virtual"),out _),Is.False);controls.SendMessage("OnApplicationPause",false);yield return null;Assert.That(controls.UserEnabled||controls.Virtual,Is.False);
+        }
+        [UnityTest]public IEnumerator MixedUserOptInCooperatesWithOtherActionsAndBlendChangesRequireNeutral()
+        {
+            var controls=SharedModes(out var view,out var origin);TravelGround();world.PausePhysics();
+            Assert.That(modeRules.Scheduler.Invoke(new JObject{["id"]="time.wait",["version"]=1,["arguments"]=new JObject{["seconds"]=20}},Time.unscaledTime,out var waiting,out var error),Is.True,error);
+            var eye=viewer.transform.localToWorldMatrix;var start=root.transform.position;frame.leftStick=Vector2.right;
+            yield return ChangeMode("user.enable");yield return new WaitForSeconds(.1f);
+            Assert.That(root.transform.position,Is.EqualTo(start));Assert.That((string)modeRules.Scheduler.Invocation(waiting)["phase"],Is.EqualTo("running"));
+            frame.leftStick=Vector2.zero;yield return null;frame.leftStick=Vector2.right;yield return new WaitForSeconds(.2f);
+            Assert.That(root.transform.position.x,Is.LessThan(start.x-.05f));Assert.That(view.Active,Is.False);Assert.That(viewer.transform.localToWorldMatrix,Is.EqualTo(eye));
+            yield return Present(.5f,true);var blended=root.transform.position;yield return new WaitForSeconds(.1f);
+            Assert.That(controls.UserEnabled,Is.True);Assert.That(root.transform.position,Is.EqualTo(blended),"A held stick must return to neutral after changing view");
+            frame.leftStick=Vector2.zero;yield return null;frame.leftStick=Vector2.right;yield return new WaitForSeconds(.2f);
+            Assert.That(root.transform.position.x,Is.LessThan(blended.x-.05f));Assert.That((string)modeRules.Scheduler.Invocation(waiting)["phase"],Is.EqualTo("running"));
+            controls.Recover();Assert.That(controls.UserEnabled,Is.False);Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero));
+        }
+        [UnityTest]public IEnumerator MixedControllerWalkingRespectsPhysicalWallsAndVirtualOnlyObjectProfiles()
+        {
+            var controls=SharedModes(out var view,out var origin);TravelGround();
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"MR participant",new Vector3(0,1.5f,2),1,Color.blue,out var id,out var error),Is.True,error);
+            var item=editor.Find(id);var collider=item.Grab.colliders[0];
+            var wall=Surface(new Vector3(-.6f,1.5f,2),new Vector3(.05f,3,1));Physics.SyncTransforms();
+            yield return ChangeMode("user.enable");frame.leftStick=Vector2.right;yield return new WaitForSeconds(1);
+            Assert.That(view.Active,Is.False);Assert.That(world.Running,Is.True);Assert.That(root.transform.position.x,Is.LessThan(-.05f));
+            Assert.That(collider.bounds.min.x,Is.GreaterThanOrEqualTo(wall.GetComponent<Collider>().bounds.max.x-.002f));
+            var blocked=root.transform.position;yield return new WaitForSeconds(.15f);Assert.That(root.transform.position,Is.EqualTo(blocked));
+            var binding=item.GetComponent<RoomEnvironmentBinding>()??item.gameObject.AddComponent<RoomEnvironmentBinding>();binding.Apply(world,item,false);
+            frame.leftStick=Vector2.zero;yield return null;frame.leftStick=Vector2.right;yield return new WaitForSeconds(.5f);
+            Assert.That(root.transform.position.x,Is.LessThan(blocked.x-.1f));Assert.That(origin.position,Is.EqualTo(Vector3.zero));Assert.That(world.Running,Is.True);
         }
         [UnityTest] public IEnumerator SameModeIsInertAndHeldTurnNeedsReleaseAfterActivation()
         {

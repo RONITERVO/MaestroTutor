@@ -31,9 +31,8 @@ namespace Maestro.Quest.Interaction
             error=null;
             if(view&&opacity==BackdropOpacity&&realDepth==RealDepth)return true;
             if(!view||!view.SetPresentation(opacity,realDepth)){error="Wait for an active room view and an idle scan";return false;}
-            // MR walking admission is a separate increment. Never keep a stale
-            // locomotion opt-in when the real surroundings become visible.
-            if(!Virtual)UserEnabled=false;
+            // Presentation does not change locomotion permission. Re-centering
+            // the input is still required after a visual transition.
             userGate.Reset();System.Array.Clear(buttonReady,0,buttonReady.Length);
             CurrentModeId();Say($"Backdrop {Mathf.RoundToInt(opacity*100)}% · real occlusion {(realDepth ? "on" : "off")}");
             Changed?.Invoke();return true;

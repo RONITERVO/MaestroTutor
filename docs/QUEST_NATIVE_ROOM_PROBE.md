@@ -769,3 +769,19 @@ object equality and saved-scene revision checks remain exact. The generated-form
 book journey likewise checks the scene revision immediately around the action.
 Final managed and BYOK acceptance, including prior failed attempts, is recorded
 in [the coverage matrix](QUEST_AGENT_RELEASE_COVERAGE.md#catalog-discovery-and-world-presentation--2026-10-08).
+
+
+The same presentation journeys now cover MR movement opt-in. The deterministic
+native run enables user movement at opacity zero, blends/restores the backdrop
+without losing that opt-in, then disables it. Collision policy and Maestro's
+independent opt-in remain unchanged. The original-book generated controller form
+executes user.enable in MR and saves `book-native-mixed-movement.json` and a
+screenshot. Reload must not replay the completed command.
+
+The real WorldPresentation scenario adds two ordinary-language learner turns:
+turn on thumbstick movement while retaining the real-room view, then turn it off.
+Both access modes use the original chat, verifier, room agent and provider adapter.
+These turns establish capability discovery, native state, replies and accounting;
+they do not synthesize controller motion or prove headset comfort. Actual swept
+world transfers and collision-profile differences are covered separately by
+WorldMotionTests and AvatarSpatialTests in the native PlayMode suite.

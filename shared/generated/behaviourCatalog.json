@@ -4408,7 +4408,7 @@
         "head.tracked",
         "destination.clear"
       ],
-      "description": "Explicitly relocate the user's viewpoint to an authored floor position and horizontal heading by placing virtual content around the current physical view. Use only when the user intends to relocate themselves or recenter the world; moving Maestro is a different action. Read world.viewpoint and pass its stateId. (0,0,0), yaw 0 is the fixed authored origin, not a user-defined spawn. Coordinates are currently limited to a 25-metre sphere. This preserves entity poses, ongoing programs, motion, physics velocities, view and movement opt-ins, and physical head/room tracking. It does not align the real room, recall tools, change scale, reset activity, create ground, or navigate a path. Destination clearance is checked; virtual view additionally needs accepted authored ground within the shared slope policy. Read world.ground to inspect support; it does not reserve clearance. Held items, workspace boundaries, tracking loss, crossing physical/virtual connections, active physics with real-room collisions and failed saving refuse the entire operation. Save occurs before native placement; temporary rooms retain a temporary bookmark. Personal navigation creates no geometry Undo or scene revision. Center the user's movement stick after relocation. Completed receipts never repeat movement.",
+      "description": "Explicitly relocate the user's viewpoint to an authored floor position and horizontal heading by placing virtual content around the current physical view. Use only when the user intends to relocate themselves or recenter the world; moving Maestro is a different action. Read world.viewpoint and pass its stateId. (0,0,0), yaw 0 is the fixed authored origin, not a user-defined spawn. Coordinates are currently limited to a 25-metre sphere. This preserves entity poses, ongoing programs, motion, physics velocities, view and movement opt-ins, and physical head/room tracking. It does not align the real room, recall tools, change scale, reset activity, create ground, or navigate a path. Destination clearance is checked; virtual view additionally needs accepted authored ground within the shared slope policy. Read world.ground to inspect support; it does not reserve clearance. Held items, workspace boundaries, tracking loss, crossing physical/virtual connections, blocked or unverifiable physical transfer paths during active physics, and failed saving refuse the entire operation. Swept conservative collider envelopes respect each object's environment profile; irregular shapes can require extra clearance. Real participants must remain inside an aligned room. Virtual-only objects can move through scanned floors and walls. Save occurs before native placement; temporary rooms retain a temporary bookmark. Personal navigation creates no geometry Undo or scene revision. Center the user's movement stick after relocation. Completed receipts never repeat movement.",
       "example": {
         "stateId": "00000000000000000000000000000000",
         "position": {
@@ -5040,7 +5040,7 @@
         "tracking.available",
         "manual.released"
       ],
-      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality endpoint presets. For a partial neutral backdrop or an independent real-depth preference use world.presentation.set. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. It currently requires Virtual view; active physics against real-room colliders refuses world movement until paused or real collisions are disabled. enabling Maestro requires loaded avatar and aligned running room physics. Enabling a stick requires other runs and animation authoring to finish; it does not stop another actor. Disabling a stick and changing view are allowed alongside other runs. View changes preserve world position, objects, physics and autonomous activity, and create no ground. Returning to MR disables only user locomotion; Maestro control is retained. User walking requires accepted authored ground under the complete step, supports slopes up to 25 degrees and steps up to 0.1 metres, and refuses missing ground or excessive ledges. B/Y and palm Recall remain immediate manual recovery. Stick opt-ins are never saved; restart or tracking/focus loss requires explicit reenable. Focus/tracking loss restores the mixed view without rewinding the world. Accepted world viewpoints are persisted separately; this action does not change them. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
+      "description": "Explicit live opt-in only: enable/disable Maestro's stick or the user's separate movement, or switch Virtual/Mixed Reality endpoint presets. For a partial neutral backdrop or an independent real-depth preference use world.presentation.set. Use only when the user requests that movement or view change; entering Virtual hides the real room. Read controller.mode immediately beforehand and pass its exact stateId. Manual changes, settings saves, focus/tracking changes and recovery invalidate it. Enabling never injects movement: sticks must return to neutral first. Your movement moves virtual content while physical tracking stays fixed. Walking and snap turns work at every backdrop opacity. While physics runs, the complete world transfer is checked against physical surfaces and anchored items; each object's resolved environment profile controls scanned-room participation. Conservative collider bounds and yaw-arc sweeps may require extra clearance for irregular shapes; saturated queries and missing alignment refuse without moving anything. Enabling Maestro requires a loaded avatar, aligned running physics and no competing actor. Enabling user movement does not stop autonomous actors. Disabling a stick and changing view are allowed alongside other runs. View changes preserve world position, objects, physics and autonomous activity, and create no ground. View changes retain both movement opt-ins but require inputs to return to neutral. User walking requires accepted authored ground under the complete step, supports slopes up to 25 degrees and steps up to 0.1 metres, and refuses missing ground or excessive ledges. B/Y and palm Recall remain immediate manual recovery. Stick opt-ins are never saved; restart or tracking/focus loss requires explicit reenable. Focus/tracking loss restores the mixed view without rewinding the world. Accepted world viewpoints are persisted separately; this action does not change them. A completed receipt reports that moment, not continued tracking or path readiness; read the fact for current state. Cancelling a completed action does not undo its mode: issue the explicit disable or MR action with a fresh identity. Duplicate receipts never enable again.",
       "example": {
         "operation": "view.virtual",
         "stateId": "00000000000000000000000000000000"
@@ -5138,7 +5138,7 @@
         "tracking.available",
         "manual.released"
       ],
-      "description": "Change the viewer's neutral backdrop opacity (0 reveals passthrough in empty areas, 1 covers it, intermediate values blend it) and independent real-depth occlusion preference. Only change the view when requested by the user. Read world.presentation and pass its exact stateId. The book and authored objects retain their own materials/opacity: this is not an opacity slider for imported surroundings or a passthrough window. Full opacity temporarily makes real depth ineligible to prevent unintended room-shaped holes; a selected realDepth=true becomes eligible again below 1. Eligibility is not evidence of device support, permission, available depth, or alignment. Does not change real-room collisions, create terrain, stop autonomous activity, move tracking/world, share cameras, or save the room. User locomotion is disabled below full opacity until MR walking admission is implemented. Avatar stick opt-in is retained. Explicit Virtual/MR controls choose endpoint presets. Recall, focus/tracking loss and restart restore ordinary MR with depth preferred. These live presentation preferences are not saved or undoable; use a fresh observation to reverse a completed action. Replayed receipts never reapply it.",
+      "description": "Change the viewer's neutral backdrop opacity (0 reveals passthrough in empty areas, 1 covers it, intermediate values blend it) and independent real-depth occlusion preference. Only change the view when requested by the user. Read world.presentation and pass its exact stateId. The book and authored objects retain their own materials/opacity: this is not an opacity slider for imported surroundings or a passthrough window. Full opacity temporarily makes real depth ineligible to prevent unintended room-shaped holes; a selected realDepth=true becomes eligible again below 1. Eligibility is not evidence of device support, permission, available depth, or alignment. Does not change real-room collisions, create terrain, stop autonomous activity, move tracking/world, share cameras, or save the room. Both stick opt-ins are retained at every opacity; user movement still requires accepted ground and complete-frame clearance. Sticks must return to neutral after changing the presentation. Explicit Virtual/MR controls choose endpoint presets. Recall, focus/tracking loss and restart restore ordinary MR with depth preferred. These live presentation preferences are not saved or undoable; use a fresh observation to reverse a completed action. Replayed receipts never reapply it.",
       "example": {
         "backdropOpacity": 0.5,
         "realDepth": true,
@@ -35250,7 +35250,7 @@
         }
       },
       "label": "Controller settings and bindings",
-      "description": "Accepted stick preferences and all four configurable buttons, plus live opt-in flags. storageReady false means the preserved preferences file is unavailable for editing; displayed preferences can be startup fallback defaults. Other runtime holds may also temporarily prevent writes. configurationId binds an edit to this exact accepted configuration/runtime; saves rotate it, rejected writes keep it, and restart issues a new ID. Read again before each edit. programId is an exact saved program ID; available reports readable program presence, not that all targets/assets are currently ready. Snap turns require Virtual view and user movement enabled; this read never enables anything. Settings persist immediately even during temporary room mode. System buttons, B/Y and palm Recall stay reserved."
+      "description": "Accepted stick preferences and all four configurable buttons, plus live opt-in flags. storageReady false means the preserved preferences file is unavailable for editing; displayed preferences can be startup fallback defaults. Other runtime holds may also temporarily prevent writes. configurationId binds an edit to this exact accepted configuration/runtime; saves rotate it, rejected writes keep it, and restart issues a new ID. Read again before each edit. programId is an exact saved program ID; available reports readable program presence, not that all targets/assets are currently ready. Snap turns require user movement enabled and complete-frame clearance at any backdrop opacity; this read never enables anything. Settings persist immediately even during temporary room mode. System buttons, B/Y and palm Recall stay reserved."
     },
     {
       "id": "controller.mode",
@@ -38289,7 +38289,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "a508d8a4bf57a72769798af40d2a83a6139bcead2a81e29843def267966004cd"
+      "sha256": "28404dedd438708e397893802736613c9d1bdeaa0bd20e20fe72d75075ce3324"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
@@ -38317,7 +38317,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "8330c58ef2e3f52540564bfdf681dcc1737b9bd5d34dc5f0545885045c0d0d0b"
+      "sha256": "5bcf01156cbd6973318c04b2cf374f6b470976b563695e59f29eb6d7267ea898"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
@@ -38325,11 +38325,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
-      "sha256": "469f6661ea5e758b7bdb588452dddff2dc3a3e79486ee3f880346df0454f2f6f"
+      "sha256": "3e3dd29365a8460edbf6dbfc87abce803463d1e010d5a01f508eee67040887aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementPresentation.cs",
-      "sha256": "1a3c6774ff0258bd743671c32ae52fc1b815160a3f99c4fd3168533f742b25f1"
+      "sha256": "0ca51d3ddb7eaa14f05d49d677f591116fa2902b48c38eb1543637abe13b8f73"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomPresentation.cs",
@@ -38341,11 +38341,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "6c04a08194292880ae6a539bda701e84f3a57bd2958aba610fc93f1578a40f72"
+      "sha256": "0d0abccfceb8d34f01c0f56e147e8bcb7546e5c502224f594848ce0e34948e07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
-      "sha256": "a800d102758771c75b1826d9549694766d25c08f03e1551f42ce1d76c5b00514"
+      "sha256": "1f4ce7f38f053ceeeab974cb1ce9275cd34a6b1d4972a80202b8613a0ef30eb6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldSweep.cs",
+      "sha256": "ddf906c0adc19f58cdc76888853bf3f88aab520468ef8a1854e8afee19c8a12f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldPath.cs",
+      "sha256": "b27e6e223a7910b161bc903e26e96a49ff6a48f4096c21ca9156ca163a62c1df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceEditHold.cs",
@@ -38385,7 +38393,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "52edde3f691cd55c85e57fbd2b2982dc11b82a6fea1ede100c3a786567d32c03"
+      "sha256": "ddf0c29da576c4cfd7a9b553b6d53df94902092e60b0d7966b74b6e96d8235d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
@@ -38669,11 +38677,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
-      "sha256": "2b23761add0e3dbcbfea3c44d6868214b6d1059ac1832df33f1e9c77b905ecf7"
+      "sha256": "8bed2fc0746906c9097a81ec4d419d8159e5a351e63ad6471baad4ef7e5e1782"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
-      "sha256": "6eda7fd099e3c334217ef3512ef91b23af40a9776beb51f6d5b08eb41f1bb624"
+      "sha256": "596da4706c60f9cf42bdbcc44f7dae4ee4b84ae99a15c58fd31618d6c7e39f3d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",
@@ -38965,11 +38973,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldPresentationCapability.cs",
-      "sha256": "f33c77522340775c669cd978bc3159d3fee2ab7c88b1ac70ab642aa7f663a624"
+      "sha256": "cacdca7e08faf6603e5911310c4f6760938814570c5dc7a10c6698979176b16b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
-      "sha256": "69b1c53bb86d1bf499bf84e2faf878974d177b42bdb394896c63b1cc23d65b23"
+      "sha256": "4d5d92700aeca8193a372ffc56dff0bd411e79a94d657e06b775e343201a1d52"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/ball.json",

@@ -14,7 +14,7 @@ it('carries exact native state identities through independent opt-ins and world-
  expect(native.enable.selected.output).toMatchObject({avatarEnabled:true,userEnabled:false,virtualView:false});
  expect(native.virtualView.selected.output).toMatchObject({avatarEnabled:true,userEnabled:false,virtualView:true});
  expect(native.user.selected.output).toMatchObject({avatarEnabled:true,userEnabled:true,virtualView:true});
- expect(native.after).toMatchObject({avatarEnabled:true,userEnabled:false,virtualView:false});
+ expect(native.after).toMatchObject({avatarEnabled:true,userEnabled:true,virtualView:false});
  expect(capabilityDefinition('controller.mode.set')).toMatchObject({version:2,duration:'instant',channels:[]});
 });
 it('requires explicit supported desired mode, exact state format and native feature support',()=>{

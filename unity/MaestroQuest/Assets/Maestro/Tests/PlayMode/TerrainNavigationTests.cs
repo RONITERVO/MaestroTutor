@@ -74,5 +74,23 @@ namespace Maestro.Quest.Tests
             Assert.That(avatar.transform.position.y,Is.EqualTo(hit.point.y).Within(.04f));
             motion.Stop();
         }
+        [UnityTest]public IEnumerator FollowingKeepsOwnershipAcrossMovingMixedGeometryAndResumesAfterSettling()
+        {
+            Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();
+            var field=Terrain(new Vector3(8,0,0),.2f,out _);navigation.SetVirtualFrame(root.transform);Ready();
+            Assert.That(motion.Begin("moving world follow",AvatarSpatialMode.Follow,out var error),Is.True,error);
+            var build=navigation.BuildRevision;var start=avatar.transform.localPosition;
+            for(int i=1;i<=25;i++) {
+                root.transform.position=Vector3.right*(i*.001f);Physics.SyncTransforms();
+                Assert.That(navigation.Ready&&navigation.PathsPending,Is.True);yield return null;
+                Assert.That(motion.OwnedBy("moving world follow"),Is.True);Assert.That(navigation.BuildRevision,Is.EqualTo(build));
+                Assert.That(avatar.transform.localPosition,Is.EqualTo(start));
+            }
+            Assert.That(motion.Status,Does.Contain("following is still enabled"));
+            yield return new WaitForSecondsRealtime(RoomNavigation.FrameSettleSeconds+.3f);
+            Assert.That(motion.OwnedBy("moving world follow"),Is.True);Assert.That(navigation.PathsPending,Is.False);
+            Assert.That(navigation.BuildRevision,Is.EqualTo(build+1));Assert.That(avatar.transform.position.z,Is.GreaterThan(.05f),motion.Status);
+            motion.Stop();
+        }
     }
 }

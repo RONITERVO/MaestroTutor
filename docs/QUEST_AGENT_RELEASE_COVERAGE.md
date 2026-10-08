@@ -962,3 +962,54 @@ The scripted full native journey passes 574 observations; the generated book
 journey and inspected screenshot verify the same action and reload behavior.
 No new APK or device acceptance is claimed. Cooling/charge readiness and the
 remaining novice, Live, thermal, audio and release gates remain open.
+
+
+## Mixed-reality movement parity — 2026-10-08
+
+WorldPresentation now adds ordinary learner requests to enable thumbstick walking
+while retaining MR, then disable it. No capability IDs, schema arguments or state
+identities are supplied by the learner. The original chat/verifier/agent/provider
+path discovers the same controller capability as the generated book controls.
+
+Managed staging run `139e0f9a51374a8181997f90601bcd66` passes all four action turns:
+backdrop 0.5/depth off, restore MR/depth on, user movement on in MR, then movement
+off. Exact object records, saved scene revision, physical collision policy and
+Maestro's independent opt-in stay unchanged. Tutor/verifier streaming, original
+request/history handoff, native completion, chat replies, provider usage and billing
+gates pass. The four action turns reconcile **437 credits / USD 0.420920** across
+31 usage/charge entries, with no outstanding reservation. This excludes the
+context-only introductory chat. An initial read guessed controller capability v1;
+the agent recovered by searching the catalog and inspecting the actual v2 before
+executing. No wrong-version mutation occurred.
+
+BYOK run `3b22402a958c48a8802c1bdc76a7eca0` passes the same four ordinary-language
+requests through the real Gemini 3.8 Flash adapter. Native state, exact object
+preservation, chat replies and provider usage pass; costs belong to the API-key
+owner, with no managed-credit assertion substituted for BYOK. Neither run reuses
+earlier private learner history, uploaded images, camera frames or speech.
+
+Matching-source native verification passes **935 EditMode and 812 PlayMode cases**,
+with three expected optional private-file skips. Tests cover clear/blocked swept
+translations and yaw arcs, fixed bindings, query saturation, missing alignment,
+per-object real participation, MR controller opt-in, neutral gates, view changes,
+concurrent actors and navigation invalidation/rebuild after movement settles. The
+complete run passes after earlier synthetic fixture corrections and adding the
+two-stable-frame navigation debounce; retained local failure reports are not
+claimed as passes. Mixed-source following waits for a fresh path without losing
+its owner, while direct steps still use current ground/body checks.
+
+The complete native headless journey passes **586 observations** in
+`ce50470ace1f45b281a4abbf2ed541b0`. The original-book run
+`61054388242a44afb1c396ab27db06f0` uses generated action inputs, receives native MR
+movement completion, preserves the saved scene and reloads without replay. Its
+movement screenshot was inspected. These two journeys use scripted responses;
+the real provider run is separate. Shared room/headless/Quest tests pass 1,489
+cases in 152 files, with the refreshed native controller capture checked again.
+Build, lint, probe types, catalog provenance and core boundaries pass.
+
+All current results are desktop evidence. No new APK, headset installation,
+physical movement/comfort/performance acceptance, release signing or upload is
+claimed. Fixed physical tracking and synthetic collision tests do not establish
+headset scan alignment or compositor pixels. Synchronous room-scale navigation
+baking and conservative collider envelopes remain explicit performance/clearance
+limits; streamed navigation and larger worlds remain accepted implementation work.

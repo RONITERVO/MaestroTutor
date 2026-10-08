@@ -400,9 +400,9 @@ namespace Maestro.Quest.Tests
             var foot=avatar.PoseRig.CanonicalBone(PoseJoint.LeftFoot); var footBefore=foot.localRotation;
             yield return new WaitForSeconds(.35f); Assert.That(avatar.transform.position.z,Is.GreaterThan(.1f));
             Assert.That(Quaternion.Angle(footBefore,foot.localRotation),Is.GreaterThan(1)); Assert.That(viewer.transform.position,Is.EqualTo(initial));
-            controls.ToggleUser(); Assert.That(controls.UserEnabled,Is.False,"MR must not translate passthrough");
+            controls.ToggleUser(); Assert.That(controls.UserEnabled,Is.True,"MR enables virtual-world movement without moving passthrough tracking");
             TravelGround(); world.PausePhysics(); controls.ToggleView(); Assert.That(view.Active,Is.True); Assert.That(viewer.GetComponent<Camera>().backgroundColor.a,Is.EqualTo(1));
-            controls.ToggleUser(); frame.leftStick=Vector2.zero; frame.rightStick=Vector2.zero; yield return null;
+            Assert.That(controls.UserEnabled,Is.True); frame.leftStick=Vector2.zero; frame.rightStick=Vector2.zero; yield return null;
             frame.leftStick=Vector2.right; yield return new WaitForSeconds(.3f);
             Assert.That(root.transform.position.x,Is.LessThan(-.1f)); Assert.That(viewer.transform.position,Is.EqualTo(initial)); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(motion.Active,Is.False);
             controls.SwapSticks(); Assert.That(controls.Preferences.userStick,Is.EqualTo(MovementStick.Right));

@@ -87,11 +87,13 @@ namespace Maestro.Quest.Tests
             var actions=editor.GetComponentsInChildren<Maestro.Quest.Rules.RuleToolAction>(true);
             Assert.That(actions.Any(x=>x.AccessibleName=="World origin"),Is.True);
         }
-        [UnityTest]public IEnumerator WorldPlacementRefusesRealPhysicsAndCrossFrameJoint()
+        [UnityTest]public IEnumerator WorldPlacementChecksRealContainmentAndCrossFrameJoint()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;
             physics.SetSurfaces(true,"Accepted room");physics.StartPhysics();Assert.That(physics.Running,Is.True);
-            Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out var error),Is.False);Assert.That(error,Does.Contain("real-room collisions"));Assert.That(physics.Running,Is.True);
+            physics.Contains=point=>false;
+            Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out var error),Is.False);Assert.That(error,Does.Contain("outside"));Assert.That(physics.Running,Is.True);
+            physics.Contains=null;Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out error),Is.True,error);
             physics.PausePhysics();
             var joint=book.gameObject.AddComponent<FixedJoint>();joint.connectedBody=null;
             Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out error),Is.False);Assert.That(error,Does.Contain("connection"));

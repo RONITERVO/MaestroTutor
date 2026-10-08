@@ -7,7 +7,7 @@ using UnityEngine.XR.ARFoundation;
 
 namespace Maestro.Quest.Interaction
 {
-    /// <summary>Virtual-only presentation over a movable content frame; physical tracking is never moved.</summary>
+    /// <summary>Independent presentation over a movable content frame; physical tracking is never moved.</summary>
     public sealed partial class VirtualRoomView : MonoBehaviour
     {
         Transform content,trackingOrigin;
@@ -95,7 +95,7 @@ namespace Maestro.Quest.Interaction
         public bool Move(Vector3 delta)
         {
             MovementError=null;
-            if(!Active||!float.IsFinite(delta.sqrMagnitude)||delta.sqrMagnitude>.01f)return false;
+            if(!CanEnter||!float.IsFinite(delta.sqrMagnitude)||delta.sqrMagnitude>.01f)return false;
             if(!PhysicalView(out var foot,out _)){MovementError="Movement needs a valid tracked physical view";return false;}
             if(!RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(foot))){MovementError="Movement needs a view within supported world coordinates";return false;}
             delta.y=0;if(delta.sqrMagnitude<.00000001f)return true;
@@ -110,7 +110,7 @@ namespace Maestro.Quest.Interaction
         }
         public bool Turn(float degrees)
         {
-            MovementError=null;if(!Active||(degrees!=-30&&degrees!=30))return false;
+            MovementError=null;if(!CanEnter||(degrees!=-30&&degrees!=30))return false;
             if(!ReadViewpoint(out _)){MovementError="Turning needs a view within supported saved-world coordinates";return false;}
             var turn=Quaternion.AngleAxis(-degrees,Vector3.up);var pivot=viewer.transform.position;
             bool moved=motion.SetPose(pivot+turn*(content.position-pivot),turn*content.rotation,out var error);MovementError=error;if(moved)Moved?.Invoke();return moved;

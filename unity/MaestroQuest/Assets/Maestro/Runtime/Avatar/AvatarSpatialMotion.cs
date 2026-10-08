@@ -146,7 +146,7 @@ namespace Maestro.Quest.Avatar
                     }
                     else Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);
                 }
-                else Say("No connected path — try Size, or place Maestro on the same clear floor");
+                else Say(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor");
             }
             else
             {

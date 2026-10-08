@@ -14,6 +14,7 @@ namespace Maestro.Quest.Interaction
     internal sealed class RoomWorldMotion
     {
         readonly Transform content;
+        readonly RoomWorldSweep sweep=new();
         readonly RoomPhysicsWorld world;
         readonly List<Rigidbody> bodies=new();
         readonly List<BodyPose> poses=new();
@@ -41,9 +42,6 @@ namespace Maestro.Quest.Interaction
             prepared=false;
             error="World movement needs an upright, unscaled content frame";
             if(!FrameReady||!RoomRecipe.Finite(position)||!MotionFrame.ValidRotation(rotation)||Vector3.Dot(rotation*Vector3.up,Vector3.up)<.99999f)return false;
-            // Moving active virtual bodies relative to real colliders needs swept
-            // admission for the entire assembly. Never silently teleport through it.
-            if(world&&world.Running&&world.RealCollisions){error="Pause physics or turn off real-room collisions before moving the world";return false;}
             bodies.Clear();poses.Clear();physical.Clear();joints.Clear();content.GetComponentsInChildren(true,bodies);
             foreach(var body in bodies) {
                 var item=body.GetComponent<RoomItem>();var binding=body.GetComponent<IPhysicalRoomBinding>();
@@ -57,6 +55,7 @@ namespace Maestro.Quest.Interaction
                 if(fixedOwn!=fixedOther){error="A connection crosses physical and virtual frames; release it before moving the world";return false;}
             }
             Physics.SyncTransforms();
+            if(!sweep.CanMove(content,world,physical,position,rotation,out error))return false;
             preparedFrame=new RoomFrame(content);
             foreach(var body in bodies)poses.Add(new BodyPose(body,physical[body]));
             preparedPosition=position;preparedRotation=rotation.normalized;prepared=true;

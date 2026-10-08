@@ -26,5 +26,15 @@ export async function probeWorldPresentation(execute:Execute,directory:string){
   assert.deepEqual(await physics(),collision,'Changing presentation changed real-room collision policy');
   steps.push({before:current,receipt:result.execution!.selected,after});
  }
+ const mode=async()=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'controller.mode',version:1}}])).value as {stateId:string;userEnabled:boolean;avatarEnabled:boolean;virtualView:boolean};
+ const beforeMovement=await mode();assert.equal(beforeMovement.virtualView,false);
+ const movement=await finish(await execute([{action:'execution',execution:{operation:'start',call:{id:'controller.mode.set',version:2,arguments:{stateId:beforeMovement.stateId,operation:'user.enable'}}}}]));
+ const enabled=await mode();assert.equal(enabled.userEnabled,true);assert.equal(enabled.virtualView,false);assert.equal(enabled.avatarEnabled,beforeMovement.avatarEnabled);
+ const current=await read();await finish(await execute([{action:'execution',execution:{operation:'start',call:{id:'world.presentation.set',version:1,arguments:{stateId:current.stateId,backdropOpacity:.5,realDepth:true}}}}]));
+ assert.equal((await mode()).userEnabled,true,'Presentation disabled the independent movement opt-in');
+ const view=await read();await finish(await execute([{action:'execution',execution:{operation:'start',call:{id:'world.presentation.set',version:1,arguments:{stateId:view.stateId,backdropOpacity:0,realDepth:true}}}}]));
+ const disabling=await mode();await finish(await execute([{action:'execution',execution:{operation:'start',call:{id:'controller.mode.set',version:2,arguments:{stateId:disabling.stateId,operation:'user.disable'}}}}]));
+ assert.equal((await mode()).userEnabled,false);assert.deepEqual(await physics(),collision);
+ steps.push({beforeMovement,movement:movement.execution!.selected,enabled});
  await writeFile(join(directory,'world-presentation.json'),JSON.stringify({boundary:'Actual native shared transport and view facts; no headset compositor/depth or real-provider proof.',before,collision,steps},null,2));
 }

@@ -102,7 +102,7 @@ namespace Maestro.Quest.Interaction
         {
             if (preferences == null) return;
             CurrentModeId();
-            if (!RuntimeReady()||paused || !focused || !HeadReady || UserEnabled&&!Virtual) { Recover(false); return; }
+            if (!RuntimeReady()||paused || !focused || !HeadReady) { Recover(false); return; }
             var frame=sample();
             if (frame.busy || editor.AnyHeld || rules && rules.AnyButtonHeld) { Interrupt(); return; }
             if (driving && !avatar.OwnedBy(Owner)) { driving=false; avatarGate.Reset(); }
@@ -117,11 +117,11 @@ namespace Maestro.Quest.Interaction
                 if (driving) avatar.ManualDirection(Owner,Direction(avatarAxis));
             }
             else if (driving) { avatar.End(Owner); driving=false; }
-            var userAxis=userGate.Read(frame.Axis(preferences.userStick),UserEnabled && Virtual && frame.Tracked(preferences.userStick),preferences.deadZone);
+            var userAxis=userGate.Read(frame.Axis(preferences.userStick),UserEnabled && frame.Tracked(preferences.userStick),preferences.deadZone);
             if (userAxis.sqrMagnitude > 0 && float.IsFinite(deltaTime) && deltaTime > 0)
             {
                 if (!view.Move(Direction(userAxis)*preferences.userSpeed*Mathf.Min(deltaTime,.05f))) Say(view.MovementError??"Your path is blocked or lacks accepted ground");
-                else Say("Virtual walking — B/Y or palm Recall brings your book and tools back");
+                else Say("World walking — B/Y or palm Recall brings your book and tools back");
             }
             for (int i=0;i<4;i++)
             {
@@ -135,7 +135,7 @@ namespace Maestro.Quest.Interaction
                     // User-authored button actions use exactly the same scheduler as mounted buttons.
                     if (rules && rules.Trigger(binding.sequenceId)) Say("Controller action triggered"); else Say("Action unavailable — assign an existing action");
                 }
-                else if (Virtual && UserEnabled && binding.command != ControllerCommand.None) { if(!view.Turn(binding.command == ControllerCommand.SnapLeft ? -30 : 30)&&view.MovementError!=null)Say(view.MovementError); }
+                else if (UserEnabled && binding.command != ControllerCommand.None) { if(!view.Turn(binding.command == ControllerCommand.SnapLeft ? -30 : 30)&&view.MovementError!=null)Say(view.MovementError); }
             }
         }
         Vector3 Direction(Vector2 axis)

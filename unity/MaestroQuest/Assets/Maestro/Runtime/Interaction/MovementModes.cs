@@ -34,7 +34,7 @@ namespace Maestro.Quest.Interaction
             }
             return false;
         }
-        internal static bool QuietMode(string operation)=>operation=="maestro.enable"||operation=="user.enable";
+        internal static bool QuietMode(string operation)=>operation=="maestro.enable";
         static bool ViewMode(string operation)=>operation=="view.virtual"||operation=="view.mixedReality"||operation=="view.presentation";
         bool CanChangeMode(string operation,bool manual,out string error)
         {
@@ -47,14 +47,14 @@ namespace Maestro.Quest.Interaction
             else if(editor.WriteGate.Frozen)error="Finish the current workspace boundary before changing control modes";
             else if(paused||!focused||!HeadReady)error="Wait for head tracking and focus before changing control modes";
             else if((manual?sample().manipulating:sample().busy)||editor.AnyHeld||rules&&rules.AnyButtonHeld)error="Release held items and controls before changing control modes";
-            else if(!manual&&!ViewMode(operation)&&OtherActor(out error))return false;
+            else if(!manual&&QuietMode(operation)&&OtherActor(out error))return false;
             if(error!=null)return false;
             if(operation=="maestro.enable"){
                 if(preferences.avatarStick==MovementStick.None)error="Choose a Maestro binding first";
                 else if(!avatar)error="Maestro movement is unavailable";
                 else if(!avatar.CanBegin(AvatarSpatialMode.Manual,out error,allowAuthoringTakeover:manual))return false;
             }else if(operation=="user.enable"){
-                if(!Virtual)error="Choose Virtual view before enabling your own movement";
+                if(!view||!view.CanEnter)error="Wait for the tracked world and room scan before enabling your movement";
                 else if(preferences.userStick==MovementStick.None)error="Choose your movement binding first";
             }else if((operation=="view.virtual"||operation=="view.presentation")&&(!view||!view.CanEnter))error="Wait for the room view and scan to be ready before changing view";
             return error==null;
@@ -82,10 +82,10 @@ namespace Maestro.Quest.Interaction
                 if(operation=="view.virtual") {
                     if(!view.Enter()){error="Wait for the room scan to finish before changing view";return false;}
                 } else {
-                    view?.Exit();UserEnabled=false;
+                    view?.Exit();
                 }
                 // Changing the view is not an ownership takeover or a world reset.
-                // User locomotion remains Virtual-only until MR sweep admission lands.
+                // Input must return to neutral after a visual transition; opt-ins survive.
                 userGate.Reset();Array.Clear(buttonReady,0,buttonReady.Length);
                 CurrentModeId();Say(Virtual?"Virtual view — real room hidden; accepted ground supports walking":"Mixed reality — world and its activity retained");
                 Changed?.Invoke();return true;
