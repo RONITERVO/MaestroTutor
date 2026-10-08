@@ -808,3 +808,26 @@ agent path. The persisted layer is distinct from the earlier transient backdrop
 preference. Provider evidence and device limitations belong in the release
 coverage matrix; a desktop semantic pass does not establish headset composition,
 readability or transparency performance.
+
+
+## Catalog-driven named resources (2026-10-08)
+
+The original-book journey now selects a visual layer and appearance by their
+saved names in the generated catalog form, after reading the target's current
+revision. It also creates an environment profile and reusable tone, selects each
+from its paged library, and explicitly assigns them to the learner's ball.
+`book-native-resource-choices.json` records all four selected identities and
+native assignment receipts; the corresponding PNG records the book editor.
+The probe asserts that choosing a collision profile leaves the previous action
+receipt intact until the user presses Run. Attaching the sound never starts it.
+These calls use ordinary catalog facts and actions through the original book
+bridge; the probe does not bypass the form by entering resource IDs.
+
+Shared selector regressions cover duplicate names, unnamed sounds, paging,
+explicit clearing, refresh without silently advancing the chosen revision,
+mismatched/unavailable responses, late replies after draft replacement or close,
+and preserving explicit resource choices as literal program references even
+when they happen to match current bindings. Appearance guard loading uses the
+all-object saved definition fact. List and selection reads do not execute room
+mutations. This is scripted-provider desktop coverage; physical headset input
+and audible source acceptance are separate gates.

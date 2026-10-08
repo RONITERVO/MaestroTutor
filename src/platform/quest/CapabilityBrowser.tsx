@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {ResourceChoiceFields} from './ResourceChoiceFields';
 import {RoomCapturePreview} from '../../shared/components/RoomCapturePreview';
 import {dataTypeLabel} from '../../../shared/programValues';
 import {validateFactArguments} from '../../../shared/behaviourFacts';
@@ -65,9 +66,9 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   (Object.keys(l.mapping.arguments).length===0||state?.capabilities?.includes('factQueries.v1')===true)&&(!l.path.some(p=>typeof p==='number')||state?.capabilities?.includes('indexedInputs.v1')===true));
  const reusable=hasCurrent&&programInputs==='current'&&liveSupported;
  const currentFields=mappedFields.filter(f=>f.guard||(currentChoices[f.path]??(loadedInputs!==null&&JSON.stringify(argumentValue(loadedInputs,f.path))===JSON.stringify(argumentValue(parsedArgs,f.path))))).map(f=>f.path);
- const editActionInputs=(value:unknown)=>{
+ const editActionInputs=(value:unknown,literalFields:string[]=[])=>{
   const choices={...currentChoices};
-  for(const f of mappedFields)if(!f.guard&&JSON.stringify(argumentValue(parsedArgs,f.path))!==JSON.stringify(argumentValue(value,f.path)))choices[f.path]=false;
+  for(const f of mappedFields)if(!f.guard&&(literalFields.includes(f.path)||JSON.stringify(argumentValue(parsedArgs,f.path))!==JSON.stringify(argumentValue(value,f.path))))choices[f.path]=false;
   setCurrentChoices(choices);setArgs(JSON.stringify(value,null,2));setChecked('');setConfirming('');
  };
  const loadCurrent=async()=>{
@@ -137,6 +138,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
      {currentError&&<p>{currentError}</p>}{loaded&&<p role="status">{loaded}</p>}
      {!snapshotReady&&<p>Load current values before checking, running or adding this action.</p>}
     </section>}
+    <ResourceChoiceFields key={definition.id+':'+(state?.session??'')+JSON.stringify(selectedSchema?.['x-choices'])} schema={selectedSchema??definition.input} value={parsedArgs} onChange={editActionInputs} client={client} ready={snapshotReady&&state?.capabilities?.includes('factQueries.v1')===true} session={state?.session??''}/>
     <details open key={definition.id+':fields'}><summary>Edit action fields</summary><CapabilityFields locked={mappedFields.filter(f=>f.guard).map(f=>f.path)} schema={selectedSchema??definition.input} value={parsedArgs} label="Action inputs" objects={state?.objects??[]} onChange={editActionInputs}/></details>
     </fieldset>
     {invalid&&<p className="room-message room-message-warning">{invalid}</p>}

@@ -3231,6 +3231,14 @@
             },
             "x-features": [
               "worldAudio.v1"
+            ],
+            "x-choices": [
+              {
+                "label": "Sound",
+                "fact": "audio.source.list",
+                "version": 1,
+                "id": "definition.source"
+              }
             ]
           },
           {
@@ -27021,6 +27029,30 @@
         "additionalProperties": false,
         "x-features": [
           "appearances.v1"
+        ],
+        "x-current": {
+          "fact": "object.definition",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-choices": [
+          {
+            "label": "Appearance",
+            "fact": "appearance.library",
+            "version": 1,
+            "id": "binding.appearanceId",
+            "revision": "appearanceRevision"
+          }
         ]
       },
       "duration": "instant",
@@ -27318,7 +27350,17 @@
           "guards": [
             "revision"
           ]
-        }
+        },
+        "x-choices": [
+          {
+            "label": "Visual layer",
+            "fact": "visibility.layers",
+            "version": 1,
+            "id": "layerId",
+            "revision": "layerRevision",
+            "emptyLabel": "Normal visibility"
+          }
+        ]
       },
       "duration": "instant",
       "ownership": "exclusiveTargetAndProp",
@@ -29784,7 +29826,17 @@
           "guards": [
             "revision"
           ]
-        }
+        },
+        "x-choices": [
+          {
+            "label": "Collision profile",
+            "fact": "environment.profiles",
+            "version": 1,
+            "id": "profileId",
+            "revision": "profileRevision",
+            "emptyLabel": "Inherit room collisions"
+          }
+        ]
       },
       "duration": "instant",
       "ownership": "exclusiveTargetAndProp",
@@ -38455,11 +38507,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
-      "sha256": "083d04ca7de1be1f603286c55656c72a0b803a7b160530cb80f86f4cba71c6b4"
+      "sha256": "d592fe843f6cd0f71f7b52a4035debf99f7ad306d172224e6661a4de28901d1e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "88a5e8f8ff94d855fa8d6de63c0a64988d5c3eb8b27f910c09bc9574ec993a6e"
+      "sha256": "18232930001f984381dc1e6ae642bc2f353652e9447ae0b39868a6be5c14d3bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
@@ -38487,7 +38539,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "327e90e503b353e3347c006a4f59338c5d61e3163daa29e7be70516306b71f09"
+      "sha256": "46f409f76729e8b05c6d6dbf2aed274ef914fa5f2a86b4a18febe2ba1ffad5d1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -38591,7 +38643,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
-      "sha256": "6502d53c3c3d68fd1ac056a99fdba62dde6cb33ef25e33848c66bd6e13cedad2"
+      "sha256": "b28853935e8b5a1cf500cbb1265d88d88931710dd1c6242d514ccbbbf7295f8c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
@@ -38787,7 +38839,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
-      "sha256": "bcda4bf6baa8da00ff8541643bc2c5f481d32fb288c8019e5432d9eb22de0200"
+      "sha256": "312a1a8bd9ab54f28722c25352585bc49ffafd7f5cbac80011aac1580001dadc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",

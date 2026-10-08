@@ -83,7 +83,35 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(87));
+            Assert.That(count,Is.EqualTo(88));
+        }
+        [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
+        {
+            int count=0;
+            foreach(var action in BehaviourCatalog.Actions)foreach(var schema in action.InputSchema.DescendantsAndSelf().OfType<JObject>()) {
+                if(schema["x-choices"] is not JArray choices)continue;
+                Assert.That(choices.Count,Is.InRange(1,8));var destinations=new System.Collections.Generic.HashSet<string>();
+                foreach(JObject choice in choices) {
+                    count++;var fact=BehaviourCatalog.Fact((string)choice["fact"]);Assert.That(fact,Is.Not.Null,action.Id);
+                    Assert.That((int)choice["version"],Is.EqualTo(fact.Version));
+                    Assert.That(fact.Input["required"].Values<string>(),Is.EqualTo(new[]{"offset"}));
+                    Assert.That((string)fact.Input["properties"]["offset"]["type"],Is.EqualTo("integer"));
+                    Assert.That((int)fact.Input["properties"]["offset"]["maximum"],Is.InRange(1,1024));
+                    var output=fact.ToJson()["type"]["record"];var entries=output["entries"]["list"]["record"];
+                    Assert.That((string)output["total"],Is.EqualTo("number"));
+                    Assert.That((string)entries["id"],Is.EqualTo("text"));Assert.That((string)entries["name"],Is.EqualTo("text"));Assert.That((string)entries["revision"],Is.EqualTo("number"));
+                    Assert.That((string)output["next"]=="number"||((string)output["offset"]=="number"&&(string)output["pageSize"]=="number"),Is.True);
+                    foreach(string name in new[]{"id","revision"}) {
+                        if(choice[name]==null)continue;string path=(string)choice[name];Assert.That(destinations.Add(path),Is.True);
+                        Assert.That(path.Split('.').All(part=>System.Text.RegularExpressions.Regex.IsMatch(part,"^[a-zA-Z0-9_]{1,32}$")&&!new[]{"__proto__","constructor","prototype"}.Contains(part)),Is.True);
+                        var field=CapabilitySchema.Field(schema,path);Assert.That(field,Is.Not.Null);
+                        Assert.That((string)field["type"],Is.EqualTo(name=="id"?"string":"integer"));Assert.That((bool?)field["x-static"],Is.Not.True);
+                        Assert.That(schema["x-current"]?["guards"]?.Values<string>().Contains(path)??false,Is.False);
+                        if(choice["emptyLabel"]!=null)Assert.That(CapabilityArguments.Validate(name=="id"?new JValue(""):new JValue(0),field,out _),Is.True);
+                    }
+                }
+            }
+            Assert.That(count,Is.EqualTo(4));
         }
         static bool AcceptsCurrentType(JObject schema,JToken type,int depth=0){
             if(schema==null||type==null||depth>4||schema["oneOf"]!=null||(bool?)schema["x-static"]==true)return false;

@@ -12,9 +12,13 @@ import {behaviourCatalog} from './behaviourCatalog';
 export interface CurrentInputMapping {
  fact:string;version:number;arguments:Record<string,string>;fields:Record<string,string[]>;guards:string[];
 }
+export interface ResourceChoice {
+ label:string;fact:string;version:number;id:string;revision?:string;emptyLabel?:string;
+}
 export interface CapabilitySchema {
  type:'object'|'array'|'string'|'number'|'integer'|'boolean';
  'x-current'?:CurrentInputMapping;
+ 'x-choices'?:ResourceChoice[];
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;

@@ -4980,19 +4980,68 @@ The native journey passes **603 observations** in
 generated form, captures a layered construction, and reloads without replay.
 The layer-form screenshot was inspected. Both journeys use scripted provider
 responses; real-provider evidence is recorded separately in the coverage matrix.
-The manual forms still expose definition IDs and revisions. A catalog-driven
-named-resource picker is required before release, shared across appearances,
-collision profiles, audio and visibility; it must preserve exact identity and
-revision checks rather than introduce a separate hand-written layer editor.
-Resource-choice metadata belongs beside `x-current` in the native catalog and
-must be validated against the referenced paged fact schemas in both runtimes.
-Selection fills exact identity/revision pairs atomically, shows the saved name,
-and retains an inspectable ID for duplicate names. Explicit refresh invalidates
-old selections; delayed responses may not overwrite a newer user choice.
-Selecting a resource must not run an action, silently overwrite another chosen
-field or turn a stale revision into permission to retry. Programs retain literal
-asset/resource identities unless the user deliberately chooses a dynamic lookup.
+At that checkpoint the manual forms still exposed definition IDs and revisions.
+The named-resource increment below supplies shared selection for appearances,
+collision profiles, audio and visibility.
 
 No APK was packaged or installed for this increment. Full-suite simulation and
 desktop pixels do not establish headset compositor, transparency performance,
 hand/controller comfort or room alignment acceptance.
+
+
+### Named saved resources in the shared catalog
+
+The generated action form now offers named resource choices from native-owned
+`x-choices` metadata beside `x-current`. It covers `object.visibility.assign`,
+`object.environment.assign`, `object.appearance.bind` and the configure variant
+of `object.audioEmitter.edit`. Each choice references an existing bounded paged
+fact and exact literal destination paths at the action/variant root, including
+nested object fields. Both native and shared tests check the metadata against
+the registered fact types and writable reference fields. No new execution API,
+agent-only tool or parallel resource store is introduced.
+
+Users load the object's current guard, then choose a saved definition by name.
+Visibility, collision and appearance selections fill ID/revision pairs together;
+unrelated preferences and the object revision remain unchanged. Appearance guard
+loading reads `object.definition`, covering creations, Maestro and the book.
+Duplicate names display distinct identities; the selected exact ID is inspectable.
+Lists page explicitly. Refresh removes old list options while retaining the
+already chosen exact reference, including its old revision, until the user makes
+another choice. It never refreshes a mutation guard or authorizes an automatic
+retry. Failed, mismatched or delayed replies cannot overwrite a newer draft,
+closed form or different room session. Selecting and browsing never run actions.
+
+A deliberate saved-resource choice remains literal when adding a reusable
+program, even if it equals the currently bound resource. The separate visible
+Read block can still load the object guard at run time. Users may deliberately
+change the program's current-value choices afterward. Sound emitter bindings
+refer to a shared sound ID, as the native contract already specifies; the picker
+does not invent a source revision guard. A future playback captures its source
+revision, while an already playing instance keeps the revision it started with.
+
+The common selector is extensible through additional catalog entries with the
+same bounded library shape. It does not implement arbitrary search, live asset
+imports, transient per-layer interpolation or larger streamed worlds. Those
+remain separate adapters and spatial-state work, with the same shared contracts.
+
+
+Named-resource verification passes **942 EditMode and 828 PlayMode cases**,
+with three expected optional private-file skips, and **1,731 shared room,
+headless, Quest and prompt tests in 170 files**. Focused selector regressions
+were rerun after the final unnamed-resource and explicit-selection refinements.
+Build/type checks, lint, catalog provenance, core boundaries and bundled-asset
+integrity pass. Native run `7d666ea1c408433a9dae7fe4bdf68703` passes **606
+observations**. Final original-book run `da0a822769aa43528f2172ac8837ff43`
+selects all four libraries by name, receives completed native assignment receipts
+and reloads without replay or browser errors. The visible named sound selector
+and layer selector screenshots were inspected. An earlier complete book run
+`279e83a7a4f640b8a1f19c0f34226db4` also passed; the final run improves the
+sound screenshot's scroll position. The initial full PlayMode attempt was stopped
+by an eight-minute focused-test supervisor timeout while still progressing;
+the complete rerun used the appropriate longer window and passed.
+
+These new journeys use scripted provider responses. The earlier real managed
+and BYOK WorldPresentation runs remain separate evidence; this UI/catalog
+increment does not claim a new live-provider or physical-headset pass. No new
+APK, release signing, upload or deployment occurred. Device work remains on
+hold pending the owner's cooldown/charge readiness and a fresh health check.

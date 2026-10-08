@@ -94,6 +94,13 @@ namespace Maestro.Quest.Programs
             schema["x-current"]=new JObject {["fact"]=fact,["version"]=1,["arguments"]=arguments??new JObject(),["fields"]=mappings,["guards"]=new JArray(guard)};
             return schema;
         }
+        /// <summary>A named library choice only fills literal references in a reviewed draft.</summary>
+        public static JObject ResourceChoice(JObject schema,string label,string fact,string id,string revision=null,string emptyLabel=null) {
+            var choice=new JObject {["label"]=label,["fact"]=fact,["version"]=1,["id"]=id};
+            if(revision!=null)choice["revision"]=revision;if(emptyLabel!=null)choice["emptyLabel"]=emptyLabel;
+            if(schema["x-choices"] is not JArray choices){choices=new JArray();schema["x-choices"]=choices;}
+            choices.Add(choice);return schema;
+        }
         public static ProgramDataType OutputType(JObject schema) {
             JToken Shape(JObject field,int depth) {
                 if(field==null||depth>4||field["oneOf"]!=null||(bool?)field["nullable"]==true)throw new ProgramFault("Output has no fixed program type");

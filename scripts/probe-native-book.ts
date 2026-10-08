@@ -205,7 +205,8 @@ try{
  await page.getByRole('button',{name:/Choose object visual layer.*object.visibility.assign/}).click();
  await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
- await page.getByLabel('Action inputs layerId',{exact:true}).fill(String(visualLayer.output!.id));await page.getByLabel('Action inputs layerRevision',{exact:true}).fill(String(visualLayer.output!.revision));
+ await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
+ await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,visualLayer.output!.revision]));
  await page.getByRole('button',{name:'Run action now',exact:true}).click();
  await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='object.visibility.assign'&&r.phase==='completed';});
  const visualBinding=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
@@ -217,10 +218,9 @@ try{
  await page.getByLabel('Search actions',{exact:true}).fill('Choose object appearance');await page.getByRole('button',{name:'Search',exact:true}).click();
  await page.getByRole('button',{name:/Choose object appearance.*object.appearance.bind/}).click();
  await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
- const bindingState=await page.evaluate(()=>window.nativeBookEvidence!().state!);
- await page.getByLabel('Action inputs revision',{exact:true}).fill(String(bindingState.objects.find(o=>o.id===ball.id)!.objectRevision));
- await page.getByLabel('Action inputs appearanceRevision',{exact:true}).fill(String(appearance.output!.revision));
- await page.getByLabel('Action inputs binding appearanceId',{exact:true}).fill(String(appearance.output!.id));
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();
+ await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([appearance.output!.id,appearance.output!.revision]));
  await page.getByRole('button',{name:'Run action now',exact:true}).click();
  await page.waitForFunction(()=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability==='object.appearance.bind'&&r.phase==='completed';});
  const boundAppearance=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
@@ -240,6 +240,43 @@ try{
  const portableCapture=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);assert.equal(typeof portableCapture.output?.hash,'string');
  await writeFile(join(directory,'book-native-construction-resources.json'),JSON.stringify({boundary:'Real generated book forms and native receipts for style assignment and library capture; no provider or headset proof.',appearance,boundAppearance,portableCapture},null,2));
  await page.screenshot({path:join(directory,'book-native-construction-resources.png')});
+ // Saved collision and sound choices use the same catalog-driven selector, with no implicit execution.
+ const openNamedAction=async(label:string,id:string)=>{
+  await page!.getByRole('button',{name:'Back to workshop',exact:true}).click();await page!.getByRole('button',{name:'Action catalog',exact:true}).click();
+  await page!.getByLabel('Search actions',{exact:true}).fill(label);await page!.getByRole('button',{name:'Search',exact:true}).click();
+  await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
+ };
+ const runNamedAction=async(id:string)=>{
+  await page!.getByRole('button',{name:'Run action now',exact:true}).click();
+  await page!.waitForFunction(id=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.capability===id&&r.phase==='completed';},id);
+  return page!.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ };
+ await openNamedAction('Save environment profile','environment.profile.save');
+ await page.getByLabel('Action inputs name',{exact:true}).fill('Virtual terrain only');
+ await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');
+ const collisionProfile=await runNamedAction('environment.profile.save');
+ await openNamedAction('Choose object environment','object.environment.assign');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Load saved collision profile',exact:true}).click();
+ await page.getByLabel('Choose collision profile',{exact:true}).selectOption(JSON.stringify([collisionProfile.output!.id,collisionProfile.output!.revision]));
+ const beforeCollisionChoice=await page.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+ assert.equal(beforeCollisionChoice.capability,'environment.profile.save');
+ const collisionBinding=await runNamedAction('object.environment.assign');
+ assert.equal(collisionBinding.call.arguments.profileId,collisionProfile.output!.id);
+ await openNamedAction('Create or edit a reusable sound','audio.source.edit');
+ await page.getByLabel('Action inputs definition name',{exact:true}).fill('Friendly ball beep');
+ const sound=await runNamedAction('audio.source.edit');
+ await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Load saved sound',exact:true}).click();
+ await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([sound.output!.id,null]));
+ const soundBinding=await runNamedAction('object.audioEmitter.edit');assert.equal((soundBinding.call.arguments.definition as {source:string}).source,sound.output!.id);
+ await writeFile(join(directory,'book-native-resource-choices.json'),JSON.stringify({boundary:'Named resource choices through real book forms and desktop Unity; sound assignment does not play audio. No provider or headset proof.',visualLayer,visualBinding,appearance,boundAppearance,collisionProfile,collisionBinding,sound,soundBinding},null,2));
+ await page.getByRole('region',{name:'Sound choice',exact:true}).scrollIntoViewIfNeeded();
+ await page.screenshot({path:join(directory,'book-native-resource-choices.png')});
  // The user edits the same live presentation schema the agent uses.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();

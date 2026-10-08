@@ -1068,9 +1068,44 @@ Book run `70ae6c7b65ae40409fa271575d4c3715` creates/assigns a layer with the
 generated fields, captures the layered construction and reloads without replay.
 Its form screenshot was inspected. These two journeys use scripted responses.
 
-The generated manual form still exposes resource IDs/revisions. Shared named
-resource selection remains pre-release usability work. No new APK, signing,
-installation, upload or deployment occurred. Device acceptance remains on hold
+At that checkpoint the generated manual form still exposed resource
+IDs/revisions; the named-resource increment below addresses that usability work.
+No new APK, signing, installation, upload or deployment occurred. Device acceptance remains on hold
 for the owner's cooling/charge readiness and a fresh health check. The outstanding
 novice lesson, audio/camera, performance, world streaming and release gates remain
 open; desktop success is not a full Quest v1 release claim.
+
+
+## Named saved-resource choices (2026-10-08)
+
+The optional book editor now shares native `x-choices` metadata for visual
+layers, environment collision profiles, appearances and sound sources. It reads
+existing paged facts, selects exact references without executing, and retains
+explicit resource choices as literal program inputs even when they match the
+current binding. Duplicate names disclose distinct IDs; unnamed sounds remain
+selectable. Refresh discards the displayed list, not the user's chosen exact
+revision; new selection is explicit. Other draft fields and object guards are
+preserved. Appearance guard loading covers Maestro, the book and creations.
+Sound sources remain shared by ID and capture their revision when playback starts.
+
+
+Named-resource verification passes **942 EditMode and 828 PlayMode cases**,
+with three expected optional private-file skips, and **1,731 shared room,
+headless, Quest and prompt tests in 170 files**. Focused selector regressions
+were rerun after the final unnamed-resource and explicit-selection refinements.
+Build/type checks, lint, catalog provenance, core boundaries and bundled-asset
+integrity pass. Native run `7d666ea1c408433a9dae7fe4bdf68703` passes **606
+observations**. Final original-book run `da0a822769aa43528f2172ac8837ff43`
+selects all four libraries by name, receives completed native assignment receipts
+and reloads without replay or browser errors. The visible named sound selector
+and layer selector screenshots were inspected. An earlier complete book run
+`279e83a7a4f640b8a1f19c0f34226db4` also passed; the final run improves the
+sound screenshot's scroll position. The initial full PlayMode attempt was stopped
+by an eight-minute focused-test supervisor timeout while still progressing;
+the complete rerun used the appropriate longer window and passed.
+
+These new journeys use scripted provider responses. The earlier real managed
+and BYOK WorldPresentation runs remain separate evidence; this UI/catalog
+increment does not claim a new live-provider or physical-headset pass. No new
+APK, release signing, upload or deployment occurred. Device work remains on
+hold pending the owner's cooldown/charge readiness and a fresh health check.
