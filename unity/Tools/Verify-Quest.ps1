@@ -178,4 +178,4 @@ Write-Output "Unity checks passed: $($testReport.'test-run'.passed) EditMode and
 
 # Exercise the original two-page chat and editors against a separate real native room.
 # Chrome/Vite are owned by the journey; provider responses are local scripted SSE.
-& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book -SyntheticSound

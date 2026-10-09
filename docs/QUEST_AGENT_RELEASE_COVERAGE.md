@@ -1745,3 +1745,67 @@ billing preflight. The helper now preserves its cause with the project's existin
 billing/room-journey tests pass after that compatibility repair. The successful
 native/provider runtime behavior is unchanged; the exact follow-up commit still
 requires its own release gate.
+
+
+### Imported spatial audio acceptance — 2026-10-09
+
+The shared source/emitter system now accepts bounded private WAV assets through
+`audio.import` (select, inspect, accept, cancel and refresh), with exact content
+identities, off-thread validation/decoding and silent acceptance. The same source
+variant is available to the agent, generated book forms and construction resources.
+Portable workspaces include the original bytes and report missing sound references.
+Saved playback handles and live connections are never restored. Current boundaries
+and unfinished audio adapters are documented in `unity/AUDIO.md`.
+
+Regression evidence currently passes **2,732 shared/web tests in 299 files**,
+**1,012 native EditMode**, **899 native PlayMode**, and the subsequent **16-case
+native PlayMode** boundary/lifecycle subset. Native full-suite skips are the three
+established optional private-asset cases. Android passes **97 tests**, with two
+optional private-archive skips, plus release AAR assembly and lint. The built AAR
+contains the `AudioPicker` keep rule required by JNI reflection. Thirteen portable
+workspace browser fixtures were regenerated from actual native receipts.
+Production TypeScript/build, lint, probe types, catalog provenance, included assets
+and architecture boundaries pass. All ten protected unrelated files are unchanged.
+
+Original-book **ec002e5e5bda4f7dbb68440ecacbba97** passes the existing workflow plus
+synthetic WAV discovery, imported-source variant, named sound selection, spatial
+attachment and native one-second PCM completion. Its screenshot was inspected.
+This run uses the original rendered book and real Unity handlers, with offline
+scripted provider responses and a muted renderer; it does not exercise Android
+selection or establish headset audibility.
+
+Managed **837a00345652449ab07f556846424bd6** passes three ordinary English/Spanish
+chat requests: attach the imported bell silently, play once, then detach while
+retaining the source. Actual native consumption is one second. Tutor, verifier,
+handoff, exact request/history, receipts, final chat and usage checks all pass.
+The three measured turns reconcile **816 credits / USD 0.797831**, excluding the
+introductory chat, with zero reserved credits before and after each turn.
+
+Failed real-provider runs remain evidence, not passes: BYOK
+**58f06ba1f7ba46fa8044d6c55d0c693c** used an old unavailable library result after
+refresh. Refresh now returns one verified entry and continuation immediately,
+while library pages hold two entries within the shared value budget. BYOK
+**dc46971a662b49bbbd7f145e7fd9f819** attached correctly but the driver incorrectly
+passed empty arguments to a no-argument fact; the driver now omits them and checks
+availability before reading values. BYOK **0957ad8f6002488ca27c2e89186a8b3f** sent
+an execution start without its call. Shared bounded pre-dispatch feedback now
+allows correction of that missing call, without guessing fields or replaying prior
+effects. Unknown capabilities, bad arguments and lost native receipts remain hard
+failures. Three additional shared regression cases verify those boundaries.
+
+Other initial failures were retained and corrected: the native equality test lacked
+its manifest environment; workspace fixtures lacked sound counters; worst-case
+quoted metadata exceeded the shared value budget; the new result array lacked its
+explicit minimum size; and two existing full-suite tests needed a fresh synthetic
+tracking sample and an evidence output directory. Contracts were not relaxed.
+The provider and UI checks use only an explicitly synthesized bell saved through
+the real private library; no captured private media is sent to the provider.
+
+Fresh BYOK **41dddf896c26432b99aa4e18a6e02c91** also passes all three requests,
+including one second of native consumption and exact source retention. Client and
+Editor exit 0 in both provider runs. Successful managed and BYOK responses use
+Gemini 3.8 Flash. Final catalog/EditMode again passes 1,012 cases. Deterministic
+native journey **f1430828558d4268b5c102dc26a19df3** passes **703 observations**, with
+client and Editor exit 0. The catalog contains 120 actions, 144 facts, 19 events
+and 490 native source inputs. Exact-head CI results are tracked on PR #248. No physical Quest acceptance, APK signing/upload, cloud deployment or
+Store-readiness claim is made. The existing device cooling/charge hold remains.

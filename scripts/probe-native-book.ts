@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {chromium,type Browser} from 'playwright-core';
 import {createServer,type ViteDevServer} from 'vite';
-import {writeFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {RoomProbeChannel} from '../src/headless/roomTransport';
@@ -374,6 +374,35 @@ try{
  await writeFile(join(directory,'book-native-resource-choices.json'),JSON.stringify({boundary:'Named resource choices through real book forms and desktop Unity; sound assignment does not play audio. No provider or headset proof.',visualLayer,visualBinding,appearance,boundAppearance,collisionProfile,collisionBinding,sound,soundBinding},null,2));
  await page.getByRole('region',{name:'Sound choice',exact:true}).scrollIntoViewIfNeeded();
  await page.screenshot({path:join(directory,'book-native-resource-choices.png')});
+ // Optional explicit synthetic WAV: ordinary book forms discover, bind and play
+ // exact saved bytes. This does not impersonate the Android file chooser.
+ let importedSound:unknown=null;
+ let soundFixture:{hash:string;seconds:number;name:string}|null=null;
+ try{soundFixture=JSON.parse(await readFile(join(directory,'sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+ if(soundFixture){
+  await openNamedAction('Import a sound together','audio.import');await page.getByLabel('Variant',{exact:true}).selectOption('3');
+  const refreshed=await runNamedAction('audio.import');
+  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+  await page.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page.getByLabel('Search facts',{exact:true}).fill('audio.library');await page.getByRole('button',{name:'Search',exact:true}).click();
+  await page.getByRole('button',{name:/Imported sound files.*audio\.library/}).click();await page.getByRole('button',{name:'Read fact',exact:true}).click();
+  await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability==='audio.library'&&c.available===true;});
+  const library=await page.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Sound library missing');return c.value as {ready:boolean;entries:{id:string;name:string;seconds:number}[]};});
+  assert.equal(library.ready,true);const file=library.entries.find(e=>e.id===soundFixture!.hash);assert.ok(file);assert.equal(file.name,soundFixture.name);assert.equal(file.seconds,soundFixture.seconds);
+  await openNamedAction('Create or edit a reusable sound','audio.source.edit');await page.getByLabel('Action inputs definition variant',{exact:true}).selectOption('1');
+  await page.getByLabel('Action inputs definition name',{exact:true}).fill('Imported book bell');await page.getByLabel('Action inputs definition clip assetHash',{exact:true}).fill(file.id);await page.getByLabel('Action inputs definition clip seconds',{exact:true}).fill(String(file.seconds));
+  assert.equal(await page.getByLabel('Action inputs definition tone wave',{exact:true}).count(),0);
+  const clip=await runNamedAction('audio.source.edit');assert.equal((clip.call.arguments.definition as {kind:string}).kind,'clip');
+  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Load saved sound',exact:true}).click();await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([clip.output!.id,null]));
+  await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');await page.getByLabel('Action inputs definition gain',{exact:true}).fill('0');
+  const binding=await runNamedAction('object.audioEmitter.edit');
+  await page.getByRole('region',{name:'Sound choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-imported-sound.png')});
+  await openNamedAction("Play an object's sound",'audio.play');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
+  const played=await runNamedAction('audio.play');assert.equal(played.output?.source,clip.output!.id);assert.ok(Number(played.output?.seconds)>=file.seconds-.0001);
+  importedSound={boundary:'Synthetic WAV, original book forms, native library and PCM completion; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played};
+  await writeFile(join(directory,'book-native-imported-sound.json'),JSON.stringify(importedSound,null,2));
+ }
  // The user edits the same live presentation schema the agent uses.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
@@ -412,7 +441,7 @@ try{
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
- const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,mixedMovement,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
+ const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,importedSound,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,mixedMovement,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');
 }catch(error){

@@ -129,7 +129,7 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.TryReadFact("workspace.archive.selection",1,new JObject {["requestId"]=id},out _),Is.True);
             id=Select(out _);picker.Result["phase"]="failed";picker.Result["error"]=new string('"',2000);imports.Poll();
             Assert.That(runtime.TryReadFact("workspace.archive.selection",1,new JObject {["requestId"]=id},out var value),Is.True);
-            Assert.That((string)JToken.FromObject(value.Value)["error"],Has.Length.EqualTo(96));
+            Assert.That((string)JToken.FromObject(value.Value)["error"],Has.Length.EqualTo(80));
             id=Select(out _);picker.Result["phase"]="failed";picker.Result["error"]=new string('\u2028',100)+new string('\ud800',100);imports.Poll();
             Assert.That(runtime.TryReadFact("workspace.archive.selection",1,new JObject {["requestId"]=id},out value),Is.True,"Untrusted provider text must fit the same program value budget");
         }

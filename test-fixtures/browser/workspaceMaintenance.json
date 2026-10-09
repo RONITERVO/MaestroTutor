@@ -7,14 +7,14 @@
     "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
     "workspace": {
       "selected": {
-        "id": "c142903628cf48e2ab41ab19bfe0d2d7",
+        "id": "2612074e5eec4f929707abf791eba216",
         "capability": "workspace.archive.select",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "38f7df5e8a8c4220a5c025b53c6e9a76"
+          "requestId": "8d36135156ba420191600f4e4bb4c0aa"
         },
         "call": {
           "id": "workspace.archive.select",
@@ -25,18 +25,18 @@
       "running": [],
       "outcomes": [
         {
-          "id": "c142903628cf48e2ab41ab19bfe0d2d7",
+          "id": "2612074e5eec4f929707abf791eba216",
           "capability": "workspace.archive.select",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "38f7df5e8a8c4220a5c025b53c6e9a76"
+            "requestId": "8d36135156ba420191600f4e4bb4c0aa"
           }
         }
       ],
-      "nextRunId": "de553cae3d084b39a84518c69c156ed4",
+      "nextRunId": "b6edac6cd30545b8aa4557fe9d645799",
       "storageError": null,
       "recovery": null
     }
@@ -49,14 +49,14 @@
     "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
     "workspace": {
       "selected": {
-        "id": "c142903628cf48e2ab41ab19bfe0d2d7",
+        "id": "2612074e5eec4f929707abf791eba216",
         "capability": "workspace.archive.select",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "38f7df5e8a8c4220a5c025b53c6e9a76"
+          "requestId": "8d36135156ba420191600f4e4bb4c0aa"
         },
         "call": {
           "id": "workspace.archive.select",
@@ -67,29 +67,29 @@
       "running": [],
       "outcomes": [
         {
-          "id": "c142903628cf48e2ab41ab19bfe0d2d7",
+          "id": "2612074e5eec4f929707abf791eba216",
           "capability": "workspace.archive.select",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "38f7df5e8a8c4220a5c025b53c6e9a76"
+            "requestId": "8d36135156ba420191600f4e4bb4c0aa"
           }
         },
         {
-          "id": "de553cae3d084b39a84518c69c156ed4",
+          "id": "b6edac6cd30545b8aa4557fe9d645799",
           "capability": "workspace.archive.cancel",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "38f7df5e8a8c4220a5c025b53c6e9a76"
+            "requestId": "8d36135156ba420191600f4e4bb4c0aa"
           }
         }
       ],
-      "nextRunId": "9dcdb09911dd486aa2ec1df634cbb2b5",
+      "nextRunId": "09a571e8f8f54ee38f56e3ae854f29c3",
       "storageError": null,
       "recovery": null
     }
@@ -98,12 +98,12 @@
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "af71a81d3c674b93b5df173d9abe9b1f",
+    "nextRunId": "21514135cd614923890870908b877ba7",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "055b27c1b2804d549ac2a2061cbb517a",
+        "id": "703713c88d1446f5863f7d5c12ee8c9a",
         "capability": "workspace.archive.export",
         "version": 1,
         "resources": [],
@@ -111,13 +111,15 @@
         "status": "Action completed",
         "output": {
           "location": "Downloads/Maestro/test.zip",
-          "sizeKiB": 2.453125,
-          "manifestHash": "95d7b62ee0c5e83c9f73546817f73b5ac592c1836c5c460add06997e8a9351c0",
-          "files": 5,
+          "sizeKiB": 3.2548828125,
+          "manifestHash": "3ceb8a443e5f13aa062ec5801d285c8d1baf0524b05a98bd533f6c6942069ab2",
+          "files": 6,
           "models": 0,
+          "sounds": 0,
           "motions": 0,
           "modules": 0,
           "unavailablePrograms": 0,
+          "missingSounds": 0,
           "missingModels": 0,
           "missingMotions": 0,
           "missingControllerPrograms": 0
@@ -131,7 +133,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "055b27c1b2804d549ac2a2061cbb517a",
+          "id": "703713c88d1446f5863f7d5c12ee8c9a",
           "capability": "workspace.archive.export",
           "version": 1,
           "resources": [],
@@ -139,20 +141,22 @@
           "status": "Action completed",
           "output": {
             "location": "Downloads/Maestro/test.zip",
-            "sizeKiB": 2.453125,
-            "manifestHash": "95d7b62ee0c5e83c9f73546817f73b5ac592c1836c5c460add06997e8a9351c0",
-            "files": 5,
+            "sizeKiB": 3.2548828125,
+            "manifestHash": "3ceb8a443e5f13aa062ec5801d285c8d1baf0524b05a98bd533f6c6942069ab2",
+            "files": 6,
             "models": 0,
+            "sounds": 0,
             "motions": 0,
             "modules": 0,
             "unavailablePrograms": 0,
+            "missingSounds": 0,
             "missingModels": 0,
             "missingMotions": 0,
             "missingControllerPrograms": 0
           }
         }
       ],
-      "nextRunId": "6d88d26352b84ffb802cfe3e82f4245d",
+      "nextRunId": "6bb5739c898b4a11bf63dc72ac397b6d",
       "storageError": null,
       "recovery": null
     }

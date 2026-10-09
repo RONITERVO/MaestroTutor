@@ -1,14 +1,16 @@
 {
   "preview": {
-    "requestId": "ccfaa613d3bf4baea2885534421d07bb",
-    "generationId": "63eb736c968c45609cc21b6ce015ff37",
-    "manifestHash": "336b2f320d5b41c0a3fdf84469c62bac827f6f2e0496cfe1c2310888c523c133",
+    "requestId": "789c3200178e442492b7435f5e449c11",
+    "generationId": "07be25d40806419783401089a9621c45",
+    "manifestHash": "355b3592a5672351b50698589e5de6e31493aed1245da21bd251b9ee92e340a0",
     "summary": {
       "files": 5,
       "models": 0,
+      "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,
       "missingControllerPrograms": 0
@@ -19,17 +21,17 @@
     }
   },
   "completed": {
-    "requestId": "ccfaa613d3bf4baea2885534421d07bb",
+    "requestId": "789c3200178e442492b7435f5e449c11",
     "phase": "review",
     "status": "Recovered workspace opened. Complete content review before starting activity.",
     "originHash": "461d61ca77884723c543fd074f3707aebf39c44f1982ef6a3fce0b51a178cc7b",
     "candidateCount": 0,
     "preview": {
-      "generationId": "63eb736c968c45609cc21b6ce015ff37",
-      "manifestHash": "336b2f320d5b41c0a3fdf84469c62bac827f6f2e0496cfe1c2310888c523c133"
+      "generationId": "07be25d40806419783401089a9621c45",
+      "manifestHash": "355b3592a5672351b50698589e5de6e31493aed1245da21bd251b9ee92e340a0"
     },
-    "committedRevision": "0551187031804aed9c67c1c5627ae77b",
-    "evidenceHash": "a04f7ded8041daba9fc84775808e2bb0e278ed86563cb96a385c4e6849eb0921"
+    "committedRevision": "a58e9b7ed7384caeb504d6d42edc16af",
+    "evidenceHash": "bb3440e54ad777b62106c28ec3fff0b11f631e7e4ec751c80601797871add0c3"
   },
   "opening": {
     "selected": null,
@@ -39,63 +41,63 @@
     "storageError": "The selected room is unavailable. Workspace maintenance remains available.",
     "workspace": {
       "selected": {
-        "id": "ccb42bc1094c4e85bc0ababd90879777",
+        "id": "0cdd567201104879b262affa40bf04eb",
         "capability": "workspace.recovery.commit",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "ccfaa613d3bf4baea2885534421d07bb"
+          "requestId": "789c3200178e442492b7435f5e449c11"
         },
         "call": {
           "id": "workspace.recovery.commit",
           "version": 1,
           "arguments": {
-            "requestId": "ccfaa613d3bf4baea2885534421d07bb",
+            "requestId": "789c3200178e442492b7435f5e449c11",
             "originHash": "461d61ca77884723c543fd074f3707aebf39c44f1982ef6a3fce0b51a178cc7b",
-            "generationId": "63eb736c968c45609cc21b6ce015ff37",
-            "manifestHash": "336b2f320d5b41c0a3fdf84469c62bac827f6f2e0496cfe1c2310888c523c133"
+            "generationId": "07be25d40806419783401089a9621c45",
+            "manifestHash": "355b3592a5672351b50698589e5de6e31493aed1245da21bd251b9ee92e340a0"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "22c14a77fa984f64a6cd01af29072625",
+          "id": "377fc8326b194bcb8890028ef840ec5e",
           "capability": "workspace.recovery.inspect",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "ccfaa613d3bf4baea2885534421d07bb"
+            "requestId": "789c3200178e442492b7435f5e449c11"
           }
         },
         {
-          "id": "c4e296e5bbd0433db5cf34a42aea308f",
+          "id": "d8e8e3ede2c241cfb4b8c21a1ad90b56",
           "capability": "workspace.recovery.select",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "ccfaa613d3bf4baea2885534421d07bb"
+            "requestId": "789c3200178e442492b7435f5e449c11"
           }
         },
         {
-          "id": "ccb42bc1094c4e85bc0ababd90879777",
+          "id": "0cdd567201104879b262affa40bf04eb",
           "capability": "workspace.recovery.commit",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "ccfaa613d3bf4baea2885534421d07bb"
+            "requestId": "789c3200178e442492b7435f5e449c11"
           }
         }
       ],
-      "nextRunId": "e040396953d44ea0b34ed1edd1179495",
+      "nextRunId": "0e2979a3dbb54cfebf32533056d70507",
       "storageError": null,
       "recovery": null
     }

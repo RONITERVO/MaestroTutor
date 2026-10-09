@@ -6,9 +6,9 @@ event-driven playback.
 Maestro's mouth is one emitter in that system. The familiar chat continues to own
 providers, account access, generated media and Live conversation.
 
-The current implementation exposes reusable procedural sources, object emitters,
+The current implementation exposes reusable procedural and imported WAV sources, object emitters,
 finite or looping native playback, independent controls and playback events through
-the shared capability catalog. Clip imports and live stream adapters remain pending. Maestro speech still
+the shared capability catalog. Longer media, other codecs and live stream adapters remain pending. Maestro speech still
 uses its existing native speech session, and artifact music still plays in the
 web app. Room reflection output is under development and is not installed by
 `MaestroRoom`. These audio changes have not been accepted on the headset.
@@ -16,8 +16,19 @@ web app. Room reflection output is under development and is not installed by
 ## Current executable slice
 
 - `audio.source.edit` saves/removes a named source, with a generated stable ID,
-  current revision checks and Undo. The current source kind is `tone`: sine,
+  current revision checks and Undo. Source kind `tone` provides sine,
   triangle or seeded noise, a frequency sweep and an attack/release envelope.
+  Kind `clip` references exact imported bytes by SHA-256 and their inspected duration;
+  it never contains a path, URL, credential or PCM buffer. Source facts use version 2
+  and a fixed record with both blocks; only the selected `kind` is executable.
+- `audio.import` uses the shared native file-picker owner. `select` returns before
+  the system chooser takes focus. `audio.import.selection` exposes a checked,
+  unsaved preview. `accept` requires that request ID and exact asset hash, saves
+  the private file, then creates a reusable source with Undo, without playing it.
+  `cancel` abandons an unused preview. `refresh` verifies the library off-thread;
+  its receipt returns the first checked file and `audio.library` pages two files
+  with names, hashes and durations. Pagination stays within shared value budgets.
+  Untrusted file names are bounded display data, never instructions.
 - `object.audioEmitter.edit` attaches a source to an object root, recipe part or
   Maestro joint. Gain, spatial mode, attenuation distances and semantic role are
   saved together. Copying an object keeps its exact source reference but starts
@@ -50,11 +61,30 @@ web app. Room reflection output is under development and is not installed by
   the latest 32 terminal instances are retained. Overflow and expired identities
   fail visibly, so a missed change cannot silently look like successful playback.
 
-Room format 21 stores sources and emitters in the existing journal, temporary-room
-fork and portable workspace. It stores no runtime handle or queued samples.
-Construction modules currently refuse objects with sound emitters instead of
-silently dropping their source dependencies; portable source packaging for those
-modules remains pending.
+Room format 32 stores sources and emitters in the existing journal and temporary-room
+fork; paired snapshots use v31 and portable archives use v30. Construction resource
+bundles preserve their source definitions and remap source IDs together with emitters.
+Asset hashes remain exact. Portable workspaces include the private audio library,
+check payload hashes and WAV metadata, and report missing sound references in export,
+selection, review and recovery receipts. They contain no runtime handles or queued
+samples. A construction module on its own contains references, not embedded audio;
+its destination needs the same library assets or a complete workspace transfer.
+
+The first file adapter accepts ordinary RIFF/WAVE PCM 8/16/24/32-bit or IEEE float32,
+mono/stereo, 8–96 kHz, .03–30 seconds and up to 32 MiB. Extensible/compressed WAV,
+MP3/OGG, longer media and live streams need further adapters. The private library
+holds at most 32 files/128 MiB. Original bytes are preserved; playback deliberately
+downmixes stereo and resamples with an anti-aliasing filter to the existing 24 kHz
+mono transport. It is not a stereo music player. Two cancellable decoding workers
+bound simultaneous input buffers. RIFF sizes, frame alignment, sample format,
+duration and finite float samples are checked before publication and playback.
+
+Selection, checking and an unused preview hold workspace preservation. Cancellation
+or teardown drains readers before releasing their selected file. An accepted file
+write can finish before a later source edit fails or is cancelled; inspect the import
+and refresh the library before retrying. Undo/temporary-room discard removes the
+source edit, not the saved library asset. Import, save, restore and reconnect never
+autoplay. Missing/corrupt payloads and mismatched durations fail visibly.
 
 Current bounds are 32 sources, four emitters per object, 32 emitters per room and
 eight simultaneous world voices in addition to speech. Tone duration is 0.03–30

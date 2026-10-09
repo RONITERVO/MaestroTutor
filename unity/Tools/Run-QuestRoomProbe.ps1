@@ -6,13 +6,15 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','LearnerConversation')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [switch]$SyntheticRoomScan,
+ [switch]$SyntheticSound,
  [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($SyntheticSound -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticSound is an explicit offline Book fixture only.'}
 if($SyntheticRoomScan -and $ProviderScenario -ne 'LearnerConversation'){throw 'SyntheticRoomScan is an explicit LearnerConversation fixture only.'}
 if($ProviderScenario -in @('LiveVisual','ObserverVisual')){
  if([string]::IsNullOrWhiteSpace($SpeechFixture) -or !(Test-Path -LiteralPath $SpeechFixture -PathType Leaf)){throw 'Live provider scenarios require an explicit SpeechFixture JSON file.'}
@@ -23,6 +25,7 @@ if($ProviderScenario){
  if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
  if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
+ if($ProviderScenario -eq 'ImportedAudio'){$Prompt='I imported a sound called Little bell.wav. Could you give the book that little chime, so it comes from the book itself? Attach the imported sound, but do not play it yet. Keep everything else as it is.'}
  if($ProviderScenario -eq 'LiquidContacts'){$Prompt='Please save an editable program called WaterTouch for the existing ContactPool. Save it only, with no buttons or automatic start. When I start it later, it should wait for the first physical water contact change in that pool and remember who touched it in a text state variable called participant, initially empty. Then wait 20 seconds and finish. Do not touch or change any object, create anything, or start physics.'}
  if($ProviderScenario -eq 'WaterTraversal'){$Prompt='Please let Maestro wade through shallow water up to 15 centimetres deep, but keep WaterRobot out of water. Do not move anything or change collisions or physics.'}
  if($ProviderScenario -eq 'LiquidMedium'){$Prompt='Please fill the small pool named MediumPool with exactly one litre of light oil. Make its density 850 kilograms per cubic metre and let it slow things moving through it more than ordinary water. Leave the empty MediumCup alone, do not move either vessel, and keep physics paused.'}
@@ -75,7 +78,7 @@ if($ResumeLearnerRun){
 }
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture

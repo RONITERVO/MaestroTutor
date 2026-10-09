@@ -1,20 +1,22 @@
 {
   "saving": {
-    "requestId": "c3be2936790a4de5afeb7b53fad03d9c",
+    "requestId": "8bf6c1270fe04e98a01716253aedf54e",
     "phase": "completing",
     "status": "Verifying the inspected contents before completing review",
     "workspace": {
-      "generationId": "755c7b3f9af147c7afa58b4d71e57684",
-      "revision": "a4a80a65d73149109e4b5e85f44810fb"
+      "generationId": "8d5e1c95e00a4b5c97ad2601c2ae6eca",
+      "revision": "fc36e431df934f61bb4f2b984f15745b"
     },
-    "manifestHash": "0ba11909f15b6f8931f392ace17b67038e1e907c0ae8c46d4718507a4ff6a6e5",
+    "manifestHash": "4848ceb9bfc2fd6ce344f22e4e9326edffdc5da77710d430a976ec98262b289f",
     "committedRevision": "",
     "summary": {
-      "files": 5,
+      "files": 6,
       "models": 0,
+      "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,
       "missingControllerPrograms": 0
@@ -22,21 +24,23 @@
     "activityHeld": true
   },
   "completed": {
-    "requestId": "c3be2936790a4de5afeb7b53fad03d9c",
+    "requestId": "8bf6c1270fe04e98a01716253aedf54e",
     "phase": "completed",
     "status": "Review completed. Stopped programs and physics stay stopped; start desired activity explicitly.",
     "workspace": {
-      "generationId": "755c7b3f9af147c7afa58b4d71e57684",
-      "revision": "a4a80a65d73149109e4b5e85f44810fb"
+      "generationId": "8d5e1c95e00a4b5c97ad2601c2ae6eca",
+      "revision": "fc36e431df934f61bb4f2b984f15745b"
     },
-    "manifestHash": "0ba11909f15b6f8931f392ace17b67038e1e907c0ae8c46d4718507a4ff6a6e5",
-    "committedRevision": "a555ce289f4a48339ce140127f43a08e",
+    "manifestHash": "4848ceb9bfc2fd6ce344f22e4e9326edffdc5da77710d430a976ec98262b289f",
+    "committedRevision": "3a939f5cd6e1480e8d8fd3b591a9b08c",
     "summary": {
-      "files": 5,
+      "files": 6,
       "models": 0,
+      "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,
       "missingControllerPrograms": 0

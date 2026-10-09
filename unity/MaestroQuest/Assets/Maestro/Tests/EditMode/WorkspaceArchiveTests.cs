@@ -39,6 +39,26 @@ namespace Maestro.Quest.Tests
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
         }
+        [Test] public void ImportedAudioRoundTripsExactBytesAndReportsMissingAssets(){
+            var bytes=WaveAudioTests.File();var hash=ModelLibrary.Hash(bytes);string path="audio/"+hash+".wav";
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));
+            room.audioSources=new[]{new RoomAudioDefinition {id=new string('a',32),kind="clip",assetHash=hash,seconds=.1f,name="Water tap"}};
+            documents[RoomStorage.FileName]=Document(room);var absent=WorkspaceArchive.Fingerprint(Snapshot());Assert.That(absent.Summary.MissingSounds,Is.EqualTo(new[]{hash}));
+            payloads[path]=bytes;documents["audio/"+hash+".txt"]=Bytes("Water tap");
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)){
+                Assert.That(staged.Receipt.Summary.Sounds,Is.EqualTo(1));Assert.That(staged.Receipt.Summary.MissingSounds,Is.Empty);
+                Assert.That(File.ReadAllBytes(Path.Combine(staged.DirectoryPath,path)),Is.EqualTo(bytes));
+                var restored=new RoomStorage(staged.DirectoryPath).Load(out var issue);Assert.That(restored,Is.Not.Null,issue);Assert.That(restored.audioSources[0].assetHash,Is.EqualTo(hash));
+                Assert.That(new AudioLibrary(Path.Combine(staged.DirectoryPath,"audio")).DecodeAsync(hash).GetAwaiter().GetResult().Length,Is.EqualTo(2400));
+            }
+            room.audioSources[0].seconds=.2f;documents[RoomStorage.FileName]=Document(room);Assert.That(()=>Archive(),Throws.Exception,"A saved duration must match its exact bytes");
+            room.audioSources[0].seconds=.1f;documents[RoomStorage.FileName]=Document(room);payloads[path][44]^=1;Assert.That(()=>Archive(),Throws.Exception,"Payload tampering cannot keep the earlier identity");
+        }
+        [Test] public void AudioArchiveRejectsOrphanMetadataAndFutureSourceFields(){
+            documents["audio/"+new string('a',64)+".txt"]=Bytes("Orphan");Assert.That(()=>Snapshot(),Throws.Exception);documents.Remove("audio/"+new string('a',64)+".txt");
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.audioSources=new[]{new RoomAudioDefinition{id=new string('a',32)}};
+            var wire=JObject.Parse(JsonUtility.ToJson(room));wire["audioSources"][0]["streamUrl"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);
+        }
         [Test] public void RegionLightingSurvivesArchiveAndRejectsUnsupportedFields() {
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));var baseline=WorkspaceArchive.Fingerprint(Snapshot()).ManifestHash;
             room.lighting=new(){enabled=true,ambientColor="#123456",sunIntensity=1.5f,azimuth=17};documents[RoomStorage.FileName]=Document(room);

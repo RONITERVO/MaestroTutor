@@ -451,3 +451,13 @@ native journey and original-book generated form exercise the same capability.
 Real movement/geometry checks remain separate native tests; none of these desktop
 runs establishes physical headset performance or swimming support. Run IDs,
 failures and provider accounting belong in QUEST_AGENT_RELEASE_COVERAGE.md.
+
+
+`ImportedAudio` extends fresh managed/BYOK chat coverage to exact private WAV
+assets: discover, attach silently, play once with native consumption evidence,
+and detach while keeping the source. `Book -SyntheticSound` exercises the same
+library/source/emitter contracts through the original rendered forms and a muted
+native playback. These checks use an explicit synthetic asset; they do not claim
+Android file-picker interaction, physical audibility, live-stream support or
+headset acceptance. Setup and evidence boundaries are in
+[QUEST_NATIVE_ROOM_PROBE.md](QUEST_NATIVE_ROOM_PROBE.md).

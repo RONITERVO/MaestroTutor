@@ -21,7 +21,7 @@ namespace Maestro.Quest.Persistence
         internal Action<string> Fault;
         sealed class Outcome {internal JObject Record;internal WorkspaceSelection Committed;internal bool Uncertain;}
         static readonly string[] Fields={"version","requestId","revision","generationId","manifestHash","committedRevision","phase","status","summary"};
-        internal static readonly string[] Counts={"files","models","motions","modules","unavailablePrograms","missingModels","missingMotions","missingControllerPrograms"};
+        internal static readonly string[] Counts={"files","models","sounds","motions","modules","unavailablePrograms","missingSounds","missingModels","missingMotions","missingControllerPrograms"};
         static bool Id(string id)=>id!=null&&System.Text.RegularExpressions.Regex.IsMatch(id,"^[a-f0-9]{32}$");
         internal WorkspaceReview(WorkspaceHost host,string applicationData)
         {
@@ -116,7 +116,7 @@ namespace Maestro.Quest.Persistence
             try{Save(value);}catch(Exception){}
             return new Outcome {Record=value};
         }
-        static JObject Summary(WorkspaceArchiveSummary summary)=>new JObject {["files"]=summary.Files,["models"]=summary.Models,["motions"]=summary.Motions,["modules"]=summary.Modules,["unavailablePrograms"]=summary.UnavailablePrograms,["missingModels"]=summary.MissingModels.Length,["missingMotions"]=summary.MissingMotions.Length,["missingControllerPrograms"]=summary.MissingControllerPrograms.Length};
+        static JObject Summary(WorkspaceArchiveSummary summary)=>new JObject {["files"]=summary.Files,["models"]=summary.Models,["sounds"]=summary.Sounds,["motions"]=summary.Motions,["modules"]=summary.Modules,["unavailablePrograms"]=summary.UnavailablePrograms,["missingSounds"]=summary.MissingSounds.Length,["missingModels"]=summary.MissingModels.Length,["missingMotions"]=summary.MissingMotions.Length,["missingControllerPrograms"]=summary.MissingControllerPrograms.Length};
         async Task<Outcome> Finish(Task<WorkspaceArchiveReceipt> capture,Task saving,JObject value,JObject origin,bool complete,CancellationToken token)
         {
             WorkspaceSelection selected=null;bool unknown=false;

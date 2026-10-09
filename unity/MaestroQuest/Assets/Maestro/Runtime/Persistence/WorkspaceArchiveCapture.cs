@@ -63,12 +63,13 @@ namespace Maestro.Quest.Persistence
             // Preserve only private library files, keeping the portable 256-file bound.
             var modules=rules.Modules.Search("").Where(e=>!e.Included).ToArray();var memory=rules.Memory.Snapshot();
             if(!editor.Models.TryCaptureArchive(out var models))throw new InvalidOperationException("Wait for the model import to finish before exporting.");
-            WorkspaceLibraryCapture motions=null;
+            WorkspaceLibraryCapture motions=null,sounds=null;
             try {
                 if(!editor.Motions.TryCaptureArchive(out motions))throw new InvalidOperationException("Wait for motion import or maintenance before exporting.");
+                if(!editor.Sounds.TryCaptureArchive(out sounds))throw new InvalidOperationException("Wait for sound import or decoding before exporting.");
                 var room=editor.Snapshot();room.version=RoomDocument.CurrentVersion;var behaviours=rules.Snapshot();var preferences=controls.Preferences;var activities=editor.ActivityProfiles.Snapshot();
                 string savedDirectory=editor.SaveDirectory;
-                var definitions=modules.ToDictionary(x=>"program-modules.v1/"+x.Hash+".json",x=>x.ReadDefinition(),StringComparer.Ordinal);var heldMotions=motions;
+                var definitions=modules.ToDictionary(x=>"program-modules.v1/"+x.Hash+".json",x=>x.ReadDefinition(),StringComparer.Ordinal);var heldMotions=motions;var heldSounds=sounds;
                 return Task.Run(()=>{
                     try {
                         using(var pairOwner=RoomSnapshotTransaction.Inspect(savedDirectory)){cancellation.ThrowIfCancellationRequested();}
@@ -77,10 +78,10 @@ namespace Maestro.Quest.Persistence
                         documents.Add(ProgramMemoryStore.FileName,memory.Encode());
                         documents.Add(RoomStorage.FileName,Json(room));documents.Add("behaviours.v2.json",Json(behaviours));documents.Add("controls.v2.json",Json(preferences));documents.Add("avatar-activities.v2.json",Json(activities));
                         foreach(var pair in definitions)documents.Add(pair.Key,utf8.GetBytes(pair.Value.ToString(Formatting.None)));
-                        models.Collect(documents,assets);heldMotions.Collect(documents,assets);return process(new WorkspaceArchiveSnapshot(documents,assets),cancellation);
-                    }finally{heldMotions.Dispose();models.Dispose();}
+                        models.Collect(documents,assets);heldMotions.Collect(documents,assets);heldSounds.Collect(documents,assets);return process(new WorkspaceArchiveSnapshot(documents,assets),cancellation);
+                    }finally{heldSounds.Dispose();heldMotions.Dispose();models.Dispose();}
                 });
-            }catch{motions?.Dispose();models.Dispose();throw;}
+            }catch{sounds?.Dispose();motions?.Dispose();models.Dispose();throw;}
         }
     }
 }

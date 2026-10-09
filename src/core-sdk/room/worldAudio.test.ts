@@ -1,7 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
-import {capabilityDefinition,capabilityResources,validateCapabilityArguments} from '../../../shared/capabilities';
+import {capabilityDefinition,capabilityResources,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
+import {validFactValue} from '../../../shared/behaviourFacts';
 import {behaviourCatalog,behaviourFact} from '../../../shared/behaviourCatalog';
 import {currentInputRequest} from '../../../shared/currentCapabilityInputs';
 
@@ -49,4 +50,28 @@ it('does not represent unimplemented network sources or microphone privilege as 
  (source.definition as Record<string,unknown>).kind='live';expect(validateCapabilityArguments('audio.source.edit',1,source)).not.toBeNull();
  const emitter=capabilityDefinition('object.audioEmitter.edit')!.example!;
  (emitter.definition as Record<string,unknown>).role='conversation';expect(validateCapabilityArguments('object.audioEmitter.edit',1,emitter)).not.toBeNull();
+});
+
+it('shares explicit imported clip identities without URLs or implicit playback',()=>{
+ const definition={name:'Water tap',kind:'clip',clip:{assetHash:'a'.repeat(64),seconds:1}};
+ const call={operation:'save',id:'',revision:0,definition};
+ expect(validateCapabilityArguments('audio.source.edit',1,call)).toBeNull();
+ expect(validateCapabilityArguments('audio.source.edit',1,{...call,definition:{...definition,clip:{...definition.clip,assetHash:'https://example.invalid/water.wav'}}})).not.toBeNull();
+ expect(validateCapabilityArguments('audio.source.edit',1,{...call,definition:{...definition,tone:{}}})).not.toBeNull();
+ for(const operation of ['select','refresh'])expect(validateCapabilityArguments('audio.import',1,{operation})).toBeNull();
+ expect(validateCapabilityArguments('audio.import',1,{operation:'accept',requestId:'a'.repeat(32),assetHash:'b'.repeat(64)})).toBeNull();
+ expect(validateCapabilityArguments('audio.import',1,{operation:'accept',requestId:'a'.repeat(32)})).not.toBeNull();
+ expect(behaviourFact('audio.source.definition')?.version).toBe(2);
+ expect(behaviourFact('audio.library')?.features).toContain('audioClips.v1');
+});
+
+
+it('keeps imported-file discovery within the same bounded book and program values',()=>{
+ const entry={id:'b'.repeat(64),name:'"'.repeat(63),seconds:30,sampleRate:96000,channels:2};
+ const page={ready:true,error:'',total:32,next:2,entries:[entry,entry]};
+ expect(validFactValue('audio.library',page)).toBe(true);
+ const library={...page,next:1,entries:[entry]};
+ const receipt={requestId:'a'.repeat(32),assetHash:'',sourceId:'',revision:0,temporary:false,library};
+ expect(validateCapabilityOutput('audio.import',1,receipt)).toBeNull();
+ expect(validateCapabilityOutput('audio.import',1,{...receipt,library:page})).not.toBeNull();
 });

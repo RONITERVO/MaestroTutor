@@ -3,7 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import {cleanup,fireEvent,render} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
-import {CapabilityFields} from './CapabilityFields';
+import {CapabilityFields,changeCapabilityVariant} from './CapabilityFields';
+import {capabilityDefinition,resolveCapabilitySchema,validateCapabilityArguments} from '../../../shared/capabilities';
 afterEach(cleanup);
 it('shows native float values readably without changing an untouched draft',()=>{
  const onChange=vi.fn();
@@ -19,4 +20,18 @@ it('retains double quantities and exact integer guards rather than rounding all 
  expect((getByLabelText('Quantity') as HTMLInputElement).value).toBe(String(value));
  rerender(<CapabilityFields label="Revision" objects={[]} schema={{type:'integer'}} value={2147483647} onChange={onChange}/>);
  expect((getByLabelText('Revision') as HTMLInputElement).value).toBe('2147483647');expect(onChange).not.toHaveBeenCalled();
+});
+
+it('lets the book switch to an imported clip without retaining the inactive tone recipe',()=>{
+ const action=capabilityDefinition('audio.source.edit')!,call=action.example!;
+ const schema=resolveCapabilitySchema(action.input,call)!.properties!.definition;
+ const draft=changeCapabilityVariant(schema,1,call.definition,[]);
+ expect(draft.kind).toBe('clip');expect(draft.name).toBe('Robot greeting');expect(draft).not.toHaveProperty('tone');
+ draft.clip={assetHash:'b'.repeat(64),seconds:1};
+ expect(validateCapabilityArguments(action.id,action.version,{...call,definition:draft})).toBeNull();
+ const onChange=vi.fn(),screen=render(<CapabilityFields label="Sound" schema={schema} value={draft} objects={[]} onChange={onChange}/>);
+ expect(screen.getByLabelText('Sound clip assetHash')).toBeTruthy();expect(screen.queryByLabelText('Sound tone wave')).toBeNull();
+ fireEvent.change(screen.getByLabelText('Sound clip seconds'),{target:{value:'2'}});
+ expect(onChange).toHaveBeenCalledWith({...draft,clip:{assetHash:'b'.repeat(64),seconds:2}});
+ const tone=changeCapabilityVariant(schema,0,draft,[]);expect(tone.kind).toBe('tone');expect(tone).not.toHaveProperty('clip');
 });

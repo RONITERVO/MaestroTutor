@@ -9,7 +9,7 @@ There is no replacement scene simulation or mock action executor in this journey
 ## Run and evidence
 
 `unity/Tools/Verify-Quest.ps1` runs the full-room headless and live-book journeys
-after EditMode and PlayMode tests. Both development and release package helpers use that verification.
+after EditMode and PlayMode tests, including the explicit synthetic sound in the book journey. Both development and release package helpers use that verification.
 A standalone rerun after verification is available with:
 
 ```powershell
@@ -981,3 +981,30 @@ These desktop checks do not establish physical fingertip, latency or Quest GPU
 acceptance. Both chat and Live room journeys wait for earlier managed billing to
 settle before their measured baseline; an unsettled account fails the bounded
 preflight before new provider work, and all subsequent ledger checks still apply.
+
+
+### Imported spatial sound
+
+`-ProviderScenario ImportedAudio` starts a fresh Unity workspace with an explicitly
+synthetic one-second WAV saved through the real private AudioLibrary. It creates no
+saved sound definition or emitter. Normal English-native/Spanish-target chat asks
+Maestro to attach the imported Little bell.wav to the book silently, then play it
+once, then remove the attachment while retaining the source for reuse. The agent
+must discover the library, use the exact asset hash/duration, and leave unrelated
+objects and programs unchanged. The ordinary tutor, suggestion verifier, delegated
+agent, final chat, replay checks and managed/BYOK accounting remain in the path.
+
+`provider-scenarios.json` records source identity, spatial attachment, retained
+source and actual native PCM consumption. A positive reply alone cannot pass.
+The fixture does not exercise Android selection or prove audible headset output.
+Provider media is a locally synthesized bell; no captured private audio is sent.
+
+`-Journey Book -SyntheticSound` seeds the same labelled WAV for the offline
+original-book journey. The generated forms refresh and inspect the library,
+select the imported-clip source variant, attach it using the saved sound selector,
+and play through Unity's muted renderer. It records
+`book-native-imported-sound.json` and a screenshot. The provider responses in this
+book run remain scripted offline; the two real-provider runs are separate.
+Native selection tests and Android selected-file transport tests cover pause,
+identity, cancellation, stale previews, bounds and cleanup. Physical file selection,
+audibility and performance still require Quest acceptance.

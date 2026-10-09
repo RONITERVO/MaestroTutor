@@ -36,7 +36,10 @@ namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
   Assert.That(workshop.Execute(new RuleRequest{action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit{kind="save",sequence=sequence}}},out var error,out _),Is.True,error);Assert.That(runtime.Trigger(sequence.id),Is.True);
   for(int i=0;i<40&&!runtime.Scheduler.IsListening("object.medium.contact",pool);i++)yield return null;Assert.That(runtime.Scheduler.IsListening("object.medium.contact",pool),Is.True);
   ContactPoint(new Vector3(4,2,0));ContactPoint(new Vector3(4,1.4f,0));
-  for(int i=0;i<40&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="hold");i++)yield return null;
+  // Tracking producers refresh their sample every frame; a slow batch frame must not
+  // turn this scheduler assertion into the separate stale-input timeout test.
+  for(int i=0;i<40&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="hold");i++){ContactPoint(new Vector3(4,1.4f,0));yield return null;}
+  ContactPoint(new Vector3(4,1.4f,0));
   var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.nodeId,Is.EqualTo("hold"));Assert.That(run.state.Single(v=>v.name=="participant").value,Is.EqualTo("input:left"));
   Assert.That(BehaviourCatalog.TryRead("input.medium.contactState",1,new JObject{["side"]="left"},new BehaviourCatalog.FactContext(editor:editor),out var fact),Is.True);Assert.That(((JObject)fact.Value)["bodyId"].Value<string>(),Is.EqualTo(pool));
  }

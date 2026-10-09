@@ -67,6 +67,7 @@ const validColor = (v: unknown) => record(v) && ['r','g','b'].every(k => typeof 
 const vector = (v: unknown) => record(v) && ['x','y','z'].every(k => typeof v[k] === 'number' && Number.isFinite(v[k]) && Math.abs(v[k] as number) <= 25);
 /** Fully validated commands with an invalid standalone batch shape; nothing was dispatched. */
 class RoomBatchShapeError extends Error {}
+class RoomExecutionShapeError extends Error {}
 export function parseRoomCommands(input: unknown): RoomCommand[] {
   if (!record(input) || Object.keys(input).some(k => k !== 'commands') || !Array.isArray(input.commands) || input.commands.length > 8 || JSON.stringify(input).length > 28000) throw new Error('The room plan is invalid or too large.');
   for (const c of input.commands) {
@@ -79,7 +80,11 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
     if (c.partId !== undefined && (typeof c.partId !== 'string' || !/^[a-zA-Z0-9_]{1,32}$/.test(c.partId))) throw new Error('Invalid recipe part.');
     if (Object.prototype.hasOwnProperty.call(roomControlFields,action) && !validRoomControl(c)) throw new Error('Invalid room control.');
     if (action === 'avatarActivities' && !validAvatarActivityRequest(c.activities)) throw new Error('Invalid tutor-state assignment.');
-    if (action === 'execution' && !validExecutionRequest(c.execution)) throw new Error('Invalid action execution request.');
+    if (action === 'execution' && !validExecutionRequest(c.execution)) {
+      if(record(c.execution)&&c.execution.operation==='start'&&!Object.prototype.hasOwnProperty.call(c.execution,'call')&&Object.keys(c.execution).every(k=>['operation','runId','recoveryId'].includes(k)))
+        throw new RoomExecutionShapeError('Invalid action execution request: start requires call={id,version,arguments} for an inspected capability. Optional runId identifies that start; recoveryId belongs only to recover, never start. No part of this rejected plan was dispatched. Submit a complete new plan; no missing field will be guessed.');
+      throw new Error('Invalid action execution request.');
+    }
     if (action === 'catalog' && !validCatalogRequest(c.catalog)) throw new Error('Invalid capability query.');
     if (action === 'motions' && !validMotionQuery(c.motionQuery)) throw new Error('Invalid motion search.');
     if (action === 'rules' && !validRuleRequest(c.rule)) {
@@ -145,8 +150,9 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       // call may correct syntax/validation; transport/receipt errors are not caught.
       // Unsupported actions, oversized envelopes and other command-contract errors
       // remain hard failures. Syntax, rejected behaviour source and the batch shape
-      // of otherwise valid commands can be corrected within the existing budget.
-      if(!(error instanceof SyntaxError)&&!(error instanceof RoomBatchShapeError)&&!(error instanceof Error&&error.message.startsWith('Invalid behaviour request.')))throw error;
+      // of otherwise valid commands, or a start missing its call, can be corrected
+      // within the existing budget. Invalid capability calls still fail closed.
+      if(!(error instanceof SyntaxError)&&!(error instanceof RoomBatchShapeError)&&!(error instanceof RoomExecutionShapeError)&&!(error instanceof Error&&error.message.startsWith('Invalid behaviour request.')))throw error;
       const raw=response.text||'';
       planRejection={message:(error instanceof Error?error.message:'Invalid room plan.').slice(0,1024),response:raw.slice(0,28000),truncated:raw.length>28000};
       continue;

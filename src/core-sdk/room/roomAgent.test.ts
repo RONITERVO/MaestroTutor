@@ -470,6 +470,31 @@ describe('accepted program starts are observed, never replayed by a planner retr
 
 
 describe('bounded local plan correction',()=>{
+ it('corrects a missing execution call without guessing fields, replaying prior effects or creating rejected intent',async()=>{
+  const create:RoomCommand={action:'create',reference:'ball',name:'Ball',kind:'ball'};
+  const malformed={action:'execution',execution:{operation:'start',runId:'c'.repeat(32),recoveryId:'0'.repeat(32)}};
+  const corrected:RoomCommand={action:'execution',execution:{operation:'start',call:{id:'time.wait',version:1,arguments:{seconds:1}}}};
+  const ai=client([[create],[malformed],[corrected],[]].map(commands=>JSON.stringify({commands})));
+  const current={...scene,capabilities:['execution.v1']},execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1})),beforeDispatch=vi.fn(),usage=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},usage,{beforeDispatch});
+  expect(execute.mock.calls.map(c=>c[0])).toEqual([[create],[corrected]]);expect(beforeDispatch).toHaveBeenCalledTimes(2);expect(usage).toHaveBeenCalledTimes(4);expect(result.receipts).toHaveLength(2);
+  const requests:any=ai.models.generateContentStream.mock.calls,feedback=JSON.parse(requests[2][0].contents[0].parts[0].text);
+  expect(feedback.tutorContext.planRejection.message).toContain('start requires call=');expect(feedback.tutorContext.operations).toEqual([{commands:[create],receiptIndex:0}]);
+  expect(feedback.budget).toMatchObject({planningCalls:ROOM_TASK_LIMITS.planningCalls-2,actionBatches:ROOM_TASK_LIMITS.actionBatches-1});
+ });
+ it('bounds repeated missing-call feedback and never dispatches it',async()=>{
+  const ai=client(Array(ROOM_TASK_LIMITS.planningCalls).fill('{"commands":[{"action":"execution","execution":{"operation":"start"}}]}')),execute=vi.fn();
+  const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{});
+  expect(result.budgetExhausted).toBe(true);expect(execute).not.toHaveBeenCalled();expect(ai.models.generateContentStream).toHaveBeenCalledTimes(ROOM_TASK_LIMITS.planningCalls);
+ });
+ it('keeps unknown capabilities and invalid execution arguments as hard failures',async()=>{
+  for(const call of [{id:'unknown.action',version:1,arguments:{}},{id:'time.wait',version:1,arguments:{seconds:-1}}]){
+   const ai=client([JSON.stringify({commands:[{action:'execution',execution:{operation:'start',call}}]})]),execute=vi.fn();
+   await expect(runRoomActionTask(input,{aiClient:ai},{state:()=>scene,valid:()=>true,execute},()=>{})).rejects.toThrow('Invalid action execution request');
+   expect(execute).not.toHaveBeenCalled();expect(ai.models.generateContentStream).toHaveBeenCalledOnce();
+  }
+ });
+
  it('corrects two standalone catalog queries without dispatching a partial batch or replaying a prior effect',async()=>{
   const create:RoomCommand={action:'create',reference:'ball',name:'Ball',kind:'ball'};
   const query=(category:'actions'|'facts'):RoomCommand=>({action:'catalog',catalog:{operation:'search',category,query:'visibility',offset:0}});

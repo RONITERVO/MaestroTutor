@@ -64,6 +64,7 @@ namespace Maestro.Quest.Creation
         public bool UsesMotion(string id) => journal.UsesMotion(id) || savedJournal?.UsesMotion(id)==true || savingSnapshot?.objects.Any(x=>x.walkMotionId==id)==true;
         public bool HistoricalMotion(string id) => journal.HistoricalMotionIds.Contains(id) || savedJournal?.HistoricalMotionIds.Contains(id)==true;
         public bool SavedMotion(string id,out bool uncertain,bool force=false) => storage.RetainsMotion(id,out uncertain,force);
+        public AudioLibrary Sounds {get;private set;}
         public ModelLibrary Models { get; private set; }
         public BundledAvatar IncludedAvatar { get; private set; }
         public MotionLibrary Motions { get; private set; }
@@ -81,6 +82,8 @@ namespace Maestro.Quest.Creation
             bool fresh=!Directory.Exists(directory)||!Directory.EnumerateFileSystemEntries(directory).Any();
             IncludedAvatar=includedAvatar;
             ActivityProfiles=new AvatarActivityProfiles(directory,WriteGate,fresh?includedMotions?.DefaultActivities(includedAvatar?.Hash):null);
+            Sounds=new AudioLibrary(Path.Combine(directory,"audio"),WriteGate);
+            gameObject.AddComponent<AudioImportWorkshop>().Initialize(this);
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate,includedAvatar); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate,includedMotions);
             var loaded = storage.Load(out var message);
             journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));

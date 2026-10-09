@@ -27,7 +27,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator WorldAudioDefinitionsUseSharedFactsUndoAndTemporaryDiscard()
         {
-            string id=WorldSound();WorldEmitter("book",id);Assert.IsTrue(BehaviourCatalog.TryRead("audio.source.definition",1,new JObject {["id"]=id},new BehaviourCatalog.FactContext(editor:editor),out var fact));Assert.AreEqual(id,(string)((JObject)fact.Value)["id"]);
+            string id=WorldSound();WorldEmitter("book",id);Assert.IsTrue(BehaviourCatalog.TryRead("audio.source.definition",2,new JObject {["id"]=id},new BehaviourCatalog.FactContext(editor:editor),out var fact));Assert.AreEqual(id,(string)((JObject)fact.Value)["id"]);
             Assert.IsTrue(BehaviourCatalog.TryRead("object.audioEmitter",1,new JObject {["target"]="book",["emitter"]="sound"},new BehaviourCatalog.FactContext(editor:editor),out fact));Assert.IsTrue((bool)((JObject)fact.Value)["configured"]);
             var definition=editor.ReadAudio(id);definition.name="Edited";int revision=editor.AudioRevision(id);Assert.IsTrue(editor.EditAudio(id,revision,definition,out var error),error);Assert.IsFalse(editor.EditAudio(id,revision,definition,out _));editor.Undo();Assert.AreEqual("Robot greeting",editor.ReadAudio(id).name);
             Assert.IsTrue(editor.BeginTemporaryRoom(out error),error);while(editor.TemporarySavePending)yield return null;string temporary=WorldSound();Assert.AreEqual(2,editor.AudioSources().Length);Assert.IsTrue(editor.DiscardTemporaryRoom(out error),error);Assert.IsNull(editor.ReadAudio(temporary));Assert.AreEqual(id,editor.Read("book").audioEmitters.Single().source);

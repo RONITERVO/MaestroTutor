@@ -9,7 +9,7 @@ namespace Maestro.Quest.Creation
         internal const int SampleRate=24000;
         internal static float[] Render(RoomAudioDefinition source,System.Threading.CancellationToken cancellation=default)
         {
-            if(source==null||!source.Validate(out _))throw new ArgumentException("Invalid tone recipe");
+            if(source==null||source.kind!="tone"||!source.Validate(out _))throw new ArgumentException("Invalid tone recipe");
             int length=(int)Math.Ceiling(source.seconds*SampleRate);var samples=new float[length];
             double phase=0;uint random=(uint)source.seed;
             for(int i=0;i<length;i++) {

@@ -70,6 +70,7 @@ namespace Maestro.Quest.Persistence
                 try{_=WorkspaceArchiveMetadata.Limit(name);}catch(InvalidDataException){continue;}
                 if(name.StartsWith("motions/",StringComparison.Ordinal)&&!motionNames.Contains(name))continue;
                 if(name.StartsWith("models/",StringComparison.Ordinal)&&name.EndsWith(".txt",StringComparison.Ordinal)&&!files.ContainsKey(name.Substring(0,name.Length-4)+".glb"))continue;
+                if(name.StartsWith("audio/",StringComparison.Ordinal)&&name.EndsWith(".txt",StringComparison.Ordinal)&&!files.ContainsKey(name.Substring(0,name.Length-4)+".wav"))continue;
                 if(WorkspaceArchiveMetadata.IsAsset(name)){string source=Path.Combine(data,name.Replace('/',Path.DirectorySeparatorChar));assets.Add(name,()=>{WorkspaceFileInventory.Parents(Path.GetDirectoryName(source));return WorkspaceLibraryCapture.Open(source);});}
                 else documents.Add(name,ReadDocument(name));
             }

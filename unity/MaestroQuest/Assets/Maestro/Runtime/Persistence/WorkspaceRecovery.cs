@@ -103,7 +103,7 @@ namespace Maestro.Quest.Persistence
             catch(Exception ex){Set(value,ex is OperationCanceledException?"cancelled":"failed",ex is InvalidDataException&&ex.Message==WorkspaceGenerationStore.RecoveryCapacityError?WorkspaceGenerationStore.RecoveryCapacityError:"Candidate verification stopped. Original data is preserved; inspect another candidate if needed.");}
             return new Outcome {Record=value,Saved=SaveQuiet(value)};
         }
-        static JObject Summary(WorkspaceArchiveSummary s)=>new() {["files"]=s.Files,["models"]=s.Models,["motions"]=s.Motions,["modules"]=s.Modules,["unavailablePrograms"]=s.UnavailablePrograms,["missingModels"]=s.MissingModels.Length,["missingMotions"]=s.MissingMotions.Length,["missingControllerPrograms"]=s.MissingControllerPrograms.Length};
+        static JObject Summary(WorkspaceArchiveSummary s)=>new() {["files"]=s.Files,["models"]=s.Models,["sounds"]=s.Sounds,["motions"]=s.Motions,["modules"]=s.Modules,["unavailablePrograms"]=s.UnavailablePrograms,["missingSounds"]=s.MissingSounds.Length,["missingModels"]=s.MissingModels.Length,["missingMotions"]=s.MissingMotions.Length,["missingControllerPrograms"]=s.MissingControllerPrograms.Length};
         internal bool CanCommit(JObject args,out string issue)
         {
             issue="Inspect and request this exact prepared recovery before committing it.";

@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Newtonsoft.Json.Linq;
+using Maestro.Quest.Imports;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Saved source data, never a connection, credential or playback handle.</summary>
@@ -12,7 +14,7 @@ namespace Maestro.Quest.Creation
     {
         public const int MaximumSources=32;
         public int version=1;
-        public string id,name="",kind="tone",wave="sine";
+        public string id,name="",kind="tone",wave="sine",assetHash="";
         public float frequency=440,endFrequency=440,seconds=.25f,attack=.01f,release=.04f;
         public int seed=1;
         public RoomAudioDefinition Copy()=>(RoomAudioDefinition)MemberwiseClone();
@@ -20,16 +22,30 @@ namespace Maestro.Quest.Creation
         {
             error="An audio source needs version 1, a stable ID and a readable name";
             if(version!=1||!Guid.TryParseExact(id,"N",out _)||name==null||name.Length>80||name.Any(char.IsControl))return false;
+            if(kind=="clip") {
+                error="An imported clip needs an exact asset hash, its inspected duration and canonical inactive tone fields";
+                if(!ModelLibrary.ValidHash(assetHash)||!Range(seconds,.03f,30)||wave!="sine"||frequency!=440||endFrequency!=440||attack!=.01f||release!=.04f||seed!=1)return false;
+                error=null;return true;
+            }
+            if(!string.IsNullOrEmpty(assetHash)){error="A procedural tone cannot reference an imported clip";return false;}
             error="This audio source requires a supported tone recipe";
             if(kind!="tone"||wave is not ("sine" or "triangle" or "noise"))return false;
             error="Tone duration, frequency or envelope is outside its supported range";
             if(!Range(frequency,20,10000)||!Range(endFrequency,20,10000)||!Range(seconds,.03f,30)||!Range(attack,.005f,2)||!Range(release,.005f,2)||(double)attack+release>seconds+1e-7||seed<1)return false;
             error=null;return true;
         }
+        internal static bool ValidWire(JObject root){
+            if(root["audioSources"]==null)return (int?)root["version"]<21;
+            if(root["audioSources"] is not JArray sources)return false;
+            var fields=new[]{"version","id","name","kind","wave","frequency","endFrequency","seconds","attack","release","seed"};
+            return sources.All(v=>v is JObject obj&&fields.All(obj.ContainsKey)&&obj.Properties().All(p=>fields.Contains(p.Name)||p.Name=="assetHash")&&
+                obj["version"]?.Type==JTokenType.Integer&&((string)obj["kind"]!="clip"||obj["assetHash"]?.Type==JTokenType.String));
+        }
         internal static bool Range(float value,float min,float max)=>float.IsFinite(value)&&value>=min&&value<=max;
         internal static bool ValidateCollection(RoomAudioDefinition[] sources,RoomObjectData[] objects,int version,out string error)
         {
             error="Audio definitions require the current room format";
+            if(version<32&&sources?.Any(s=>s?.kind=="clip")==true)return false;
             if(version<21&&((sources?.Length??0)>0||objects.Any(x=>(x.audioEmitters?.Length??0)>0)))return false;
             error="This room has invalid, duplicate or excessive audio sources";
             if(sources==null||sources.Length>MaximumSources)return false;

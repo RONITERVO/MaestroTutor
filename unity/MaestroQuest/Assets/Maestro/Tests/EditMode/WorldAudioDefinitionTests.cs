@@ -13,6 +13,15 @@ namespace Maestro.Quest.Tests
     {
         static readonly string Sound=new string('b',32),Piece=new string('a',32);
         static RoomDocument Room()=>new(){version=RoomDocument.CurrentVersion,audioSources=new[]{new RoomAudioDefinition {id=Sound,name="Greeting"}},objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro},new RoomObjectData {id=Piece,kind=RoomObjectKind.Block,audioEmitters=new[]{new RoomAudioEmitter {source=Sound}}}}};
+        [Test] public void ClipSchemaAndFixedFactsPreserveOnlyTheChosenSource(){
+            var d=new RoomAudioDefinition{id=Sound,kind="clip",assetHash=new string('c',64),seconds=.5f};Assert.IsTrue(d.Validate(out var error),error);
+            Assert.Throws<ArgumentException>(()=>AudioTone.Render(d));
+            var value=AudioSchema.Encode(d);Assert.IsNull(value["tone"]);Assert.IsTrue(CapabilityArguments.Validate(value,AudioSchema.Source(),out error),error);
+            var decoded=AudioSchema.ReadSource(value);decoded.id=Sound;Assert.AreEqual(JsonUtility.ToJson(d),JsonUtility.ToJson(decoded));
+            var fact=AudioSchema.ObserveSource(d);Assert.IsNotNull(fact["tone"]);Assert.AreEqual(d.assetHash,(string)fact["clip"]["assetHash"]);
+            value["clip"]["assetHash"]="https://example.invalid/sound.wav";Assert.IsFalse(CapabilityArguments.Validate(value,AudioSchema.Source(),out _));
+            d.kind="tone";Assert.IsFalse(d.Validate(out _));d.kind="clip";d.frequency=880;Assert.IsFalse(d.Validate(out _));
+        }
         [Test] public void AudioEditsUndoAndForkKeepStableSourcesAndMonotonicRevisions()
         {
             var journal=new RoomJournal(Room());int first=journal.AudioRevision(Sound);var fork=journal.Fork();var edited=fork.ReadAudio(Sound);edited.name="Other greeting";

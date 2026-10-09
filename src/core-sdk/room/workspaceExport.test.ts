@@ -19,7 +19,7 @@ it('uses one native export capability for humans, agents and programs without ac
  expect(()=>requireRoomCapabilities(edits,{capabilities:[...capabilities,'workspaceArchiveExport.v1']})).not.toThrow();
 });
 it('requires a bounded publication receipt instead of exposing a private capture path',()=>{
- const output={location:'Downloads/Maestro/maestro-workspace-'+ 'a'.repeat(32)+'.zip',sizeKiB:524288,manifestHash:'b'.repeat(64),files:5,models:0,motions:0,modules:0,unavailablePrograms:0,missingModels:0,missingMotions:0,missingControllerPrograms:0};
+ const output={location:'Downloads/Maestro/maestro-workspace-'+ 'a'.repeat(32)+'.zip',sizeKiB:524288,manifestHash:'b'.repeat(64),files:5,models:0,motions:0,sounds:0,modules:0,unavailablePrograms:0,missingModels:0,missingMotions:0,missingSounds:0,missingControllerPrograms:0};
  expect(validateCapabilityOutput(call.id,1,output)).toBeNull();
  for(const value of Object.values(output))expect(()=>checkedDataValue(value,typeof value==='number'?'number':'text')).not.toThrow();
  for(const bad of [{...output,location:'/cache/backup.zip'},{...output,sizeKiB:524289},{...output,manifestHash:''},{...output,privatePath:'/cache/backup.zip'}])expect(validateCapabilityOutput(call.id,1,bad)).not.toBeNull();

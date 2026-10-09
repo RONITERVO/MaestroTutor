@@ -70,7 +70,7 @@ namespace Maestro.Quest.Creation
                 if(!decoded.TryGetValue(v.CacheKey,out var asset)) {
                     PruneDecoded();if(decoded.Count>=MaximumVoices){error="The sound decoder is busy; wait for an earlier preparation to finish";return false;}
                     asset=new Decoded();var cancel=asset.Cancel.Token;var recipe=definition.Copy();
-                    asset.Pending=Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return pcm;},cancel);
+                    asset.Pending=recipe.kind=="clip"?editor.Sounds.DecodeAsync(recipe.assetHash,cancel,recipe.seconds):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return pcm;},cancel);
                     decoded.Add(v.CacheKey,asset);
                 }
                 // A cancelled preparation cannot be revived under the same identity.

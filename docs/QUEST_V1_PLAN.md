@@ -5712,3 +5712,47 @@ billing preflight. The helper now preserves its cause with the project's existin
 billing/room-journey tests pass after that compatibility repair. The successful
 native/provider runtime behavior is unchanged; the exact follow-up commit still
 requires its own release gate.
+
+
+### Imported audio adapter — working implementation, 2026-10-09
+
+The next executable shared-audio adapter adds explicit local WAV selection,
+inspection, acceptance and library discovery through `audio.import`,
+`audio.import.selection` and `audio.library`. Accepted clips use the existing
+source/emitter/playback/event ownership model. Original bytes have exact hashes;
+source definitions and construction resources keep these identities. World archive,
+review and recovery receipts include sound/missing-sound counts. The format boundary
+is room 32 / paired snapshot 31 / portable archive 30. Unsupported/future data stays
+protected; existing files are not rewritten by an import.
+
+Full native regression passes 1,012 EditMode and 899 PlayMode tests, with the
+three established optional private-asset skips. After bounded receipt and lifecycle
+changes, the focused 16 PlayMode cases pass again. The full shared/web suite now
+passes 2,732 tests in 299 files. Android unit tests, release AAR and lint pass,
+including the audio picker's release reflection rule. Thirteen workspace fixtures
+were regenerated from native execution. Imported payload validation, cancellation,
+focus handling, Undo retaining exact files, native PCM output and corrupt-file
+refusal are covered.
+
+Real-provider acceptance exposed a stale library-discovery result and a malformed
+start with no capability call. Refresh now returns a bounded verified entry,
+readiness and continuation, so its completed receipt is immediately useful. The
+shared planner can return narrowly scoped missing-call feedback before intent or
+dispatch, within its existing planning budget. Unsupported calls, invalid arguments
+and lost native receipts remain hard failures. Three regression cases cover prior
+effects, bounded retries and these failure boundaries. Original-book journey
+`ec002e5e5bda4f7dbb68440ecacbba97`, managed `837a00345652449ab07f556846424bd6`
+and BYOK `41dddf896c26432b99aa4e18a6e02c91` pass exact-source discovery, silent
+attachment, one-second native playback and retained source after detaching. The
+book screenshot was inspected. Provider paths include original chat/verifier/handoff,
+final replies and usage/accounting; the book uses offline scripted responses.
+Failed runs remain in local evidence and are explained in the coverage document.
+Final catalog/EditMode again passes 1,012 tests; native integration
+`f1430828558d4268b5c102dc26a19df3` passes 703 observations. Exact-head CI is tracked
+on PR #248.
+
+This is the finite WAV adapter described in `unity/AUDIO.md`, not completion of the
+accepted arbitrary audio/live-source scope. Longer media, other codecs, stereo
+transport, generated-artifact integration, general echo-reference/mixing and physical
+audible acceptance remain. The current device cooling/charge hold is unchanged;
+no new headset installation, signing, upload or cloud deployment is implied.

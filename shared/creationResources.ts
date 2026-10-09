@@ -11,7 +11,7 @@ export interface PrototypeResources {
 }
 interface Definition {id:string;name:string}
 export interface ConstructionResources {
- version:number;appearances:Definition[];audioSources:(Definition&{attack:number;release:number;seconds:number})[];environmentProfiles:Definition[];visibilityLayers?:Definition[];
+ version:number;appearances:Definition[];audioSources:(Definition&{kind:string;assetHash?:string;wave:string;frequency:number;endFrequency:number;attack:number;release:number;seconds:number;seed:number})[];environmentProfiles:Definition[];visibilityLayers?:Definition[];
 }
 const white=(c:Pigment|undefined)=>!!c&&c.r===1&&c.g===1&&c.b===1&&c.a===1;
 export function validPrototypeResources(p:PrototypeResources):boolean {
@@ -37,5 +37,5 @@ export function validConstructionResources(version:number,r:ConstructionResource
   return ids.size===definitions.length&&ids.size===refs.size&&[...refs].every(id=>ids.has(id))&&definitions.every(d=>! /\p{Cc}/u.test(d.name)&&(!named||d.name.trim().length>0));
  };
  return closed(r.appearances,styles.map(b=>b.appearanceId),true)&&closed(r.audioSources,sounds.map(e=>e.source),false)&&closed(r.environmentProfiles,profiles,true)&&closed(r.visibilityLayers??[],layers,true)&&
-  r.audioSources.every(s=>s.attack+s.release<=s.seconds+1e-7)&&r.environmentProfiles.every(p=>profiles.filter(id=>id===p.id).length<=16);
+  r.audioSources.every(s=>s.kind==='clip'?/^[a-f0-9]{64}$/.test(s.assetHash??'')&&s.wave==='sine'&&s.frequency===440&&s.endFrequency===440&&Math.fround(s.attack)===Math.fround(.01)&&Math.fround(s.release)===Math.fround(.04)&&s.seed===1:!s.assetHash&&s.attack+s.release<=s.seconds+1e-7)&&r.environmentProfiles.every(p=>profiles.filter(id=>id===p.id).length<=16);
 }

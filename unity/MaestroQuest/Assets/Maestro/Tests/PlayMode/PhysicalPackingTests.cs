@@ -7,7 +7,7 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
  (string id,HeightFieldView view,SpatialSculpting capture) PackingStage(){var(id,view,capture)=SculptStage();Assert.That(capture.ConfigurePacking(true,.12f,.25,.15f,out var error),Is.True,error);return(id,view,capture);}
  void PackingEvidence(string stage,string source){
-  string output=Environment.GetEnvironmentVariable("MAESTRO_PHYSICAL_PACKING_EVIDENCE");if(string.IsNullOrEmpty(output))return;
+  string output=Environment.GetEnvironmentVariable("MAESTRO_PHYSICAL_PACKING_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
   var camera=new GameObject("Physical packing evidence",typeof(Camera)).GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=.6f;camera.nearClipPlane=.01f;camera.farClipPlane=5;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.16f,.22f,.27f);camera.transform.position=editor.Find(source).transform.position+new Vector3(1,1.2f,-1.3f);camera.transform.LookAt(editor.Find(source).transform.position);
   var render=new RenderTexture(1024,1024,24);var pixels=new Texture2D(1024,1024,TextureFormat.RGB24,false);var prior=RenderTexture.active;try{camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1024,1024),0,0);pixels.Apply();File.WriteAllBytes(Path.Combine(output,"physical-packing-"+stage+".png"),pixels.EncodeToPNG());}finally{RenderTexture.active=prior;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(camera.gameObject);}
  }

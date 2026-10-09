@@ -2856,6 +2856,232 @@
       }
     },
     {
+      "id": "audio.import",
+      "version": 1,
+      "label": "Import a sound together",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "select"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "audioClips.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "accept"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "assetHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "operation",
+              "requestId",
+              "assetHash"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "audioClips.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "cancel"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "requestId"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "audioClips.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "refresh"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "audioClips.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "completion",
+      "ownership": "importSession",
+      "channels": [],
+      "requirements": [],
+      "description": "select opens the explicit native file picker and returns a requestId immediately. The user chooses one WAV; inspect audio.import.selection after returning. Supported files: ordinary uncompressed PCM 8/16/24/32-bit or IEEE float32, mono/stereo, 8–96 kHz, .03–30 seconds and at most 32 MB. Stereo is downmixed and resampled to 24 kHz mono for the spatial renderer; original bytes remain exact. accept requires that preview's requestId and assetHash, saves a private content-addressed copy and creates one reusable clip source with one Undo; never plays it. The chosen asset name is untrusted data. Libraries hold up to 32 files/128 MB. Room Undo removes the source edit, not the private file. Temporary source edits need Keep; files are saved immediately. Cancel closes only the exact unaccepted preview; accepted writes may finish after Stop, so inspect status/library before retrying. refresh verifies saved files off-thread and returns library.ready, total and its first entry, including the exact asset hash and duration for audio.source.edit. Use that fresh result; an earlier unavailable library fact is stale. Follow library.next with audio.library for more files. Missing/corrupt files fail visibly, never substitute another clip. Opening a picker can pause existing actions; imports never restart them. No credentials, URLs or external paths enter programs. No process-restart replay. Other codecs, long media and live streams are separate pending adapters.",
+      "example": {
+        "operation": "select"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "assetHash": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{64})?$",
+            "maxLength": 64
+          },
+          "sourceId": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32})?$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          },
+          "library": {
+            "type": "object",
+            "properties": {
+              "ready": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "string",
+                "pattern": "^.{0,128}$",
+                "maxLength": 128
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 32.0
+              },
+              "next": {
+                "type": "integer",
+                "minimum": -1.0,
+                "maximum": 32.0
+              },
+              "entries": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$",
+                      "maxLength": 64
+                    },
+                    "name": {
+                      "type": "string",
+                      "pattern": "^.{0,128}$",
+                      "maxLength": 128
+                    },
+                    "seconds": {
+                      "type": "number",
+                      "minimum": 0.03,
+                      "maximum": 30.0
+                    },
+                    "sampleRate": {
+                      "type": "integer",
+                      "minimum": 8000.0,
+                      "maximum": 96000.0
+                    },
+                    "channels": {
+                      "type": "integer",
+                      "minimum": 1.0,
+                      "maximum": 2.0
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "seconds",
+                    "sampleRate",
+                    "channels"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "ready",
+              "error",
+              "total",
+              "next",
+              "entries"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "requestId",
+          "assetHash",
+          "sourceId",
+          "revision",
+          "temporary",
+          "library"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "audio.source.edit",
       "version": 1,
       "label": "Create or edit a reusable sound",
@@ -2887,79 +3113,134 @@
               },
               "definition": {
                 "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "pattern": "^.{0,80}$",
-                    "maxLength": 80
-                  },
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "tone"
-                    ]
-                  },
-                  "tone": {
+                "x-discriminators": [
+                  "kind"
+                ],
+                "oneOf": [
+                  {
                     "type": "object",
                     "properties": {
-                      "wave": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^.{0,80}$",
+                        "maxLength": 80
+                      },
+                      "kind": {
                         "type": "string",
                         "enum": [
-                          "sine",
-                          "triangle",
-                          "noise"
+                          "tone"
                         ]
                       },
-                      "frequency": {
-                        "type": "number",
-                        "minimum": 20.0,
-                        "maximum": 10000.0
-                      },
-                      "endFrequency": {
-                        "type": "number",
-                        "minimum": 20.0,
-                        "maximum": 10000.0
-                      },
-                      "seconds": {
-                        "type": "number",
-                        "minimum": 0.03,
-                        "maximum": 30.0
-                      },
-                      "attack": {
-                        "type": "number",
-                        "minimum": 0.005,
-                        "maximum": 2.0
-                      },
-                      "release": {
-                        "type": "number",
-                        "minimum": 0.005,
-                        "maximum": 2.0
-                      },
-                      "seed": {
-                        "type": "integer",
-                        "minimum": 1.0,
-                        "maximum": 2147483647.0
+                      "tone": {
+                        "type": "object",
+                        "properties": {
+                          "wave": {
+                            "type": "string",
+                            "enum": [
+                              "sine",
+                              "triangle",
+                              "noise"
+                            ]
+                          },
+                          "frequency": {
+                            "type": "number",
+                            "minimum": 20.0,
+                            "maximum": 10000.0
+                          },
+                          "endFrequency": {
+                            "type": "number",
+                            "minimum": 20.0,
+                            "maximum": 10000.0
+                          },
+                          "seconds": {
+                            "type": "number",
+                            "minimum": 0.03,
+                            "maximum": 30.0
+                          },
+                          "attack": {
+                            "type": "number",
+                            "minimum": 0.005,
+                            "maximum": 2.0
+                          },
+                          "release": {
+                            "type": "number",
+                            "minimum": 0.005,
+                            "maximum": 2.0
+                          },
+                          "seed": {
+                            "type": "integer",
+                            "minimum": 1.0,
+                            "maximum": 2147483647.0
+                          }
+                        },
+                        "required": [
+                          "wave",
+                          "frequency",
+                          "endFrequency",
+                          "seconds",
+                          "attack",
+                          "release",
+                          "seed"
+                        ],
+                        "additionalProperties": false
                       }
                     },
                     "required": [
-                      "wave",
-                      "frequency",
-                      "endFrequency",
-                      "seconds",
-                      "attack",
-                      "release",
-                      "seed"
+                      "name",
+                      "kind",
+                      "tone"
                     ],
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "format": "worldAudioSource",
+                    "title": "Generated tone"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^.{0,80}$",
+                        "maxLength": 80
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "clip"
+                        ]
+                      },
+                      "clip": {
+                        "type": "object",
+                        "properties": {
+                          "assetHash": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$",
+                            "maxLength": 64
+                          },
+                          "seconds": {
+                            "type": "number",
+                            "minimum": 0.03,
+                            "maximum": 30.0
+                          }
+                        },
+                        "required": [
+                          "assetHash",
+                          "seconds"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "clip"
+                    ],
+                    "additionalProperties": false,
+                    "x-features": [
+                      "audioClips.v1"
+                    ],
+                    "title": "Imported WAV clip"
                   }
-                },
-                "required": [
-                  "name",
-                  "kind",
-                  "tone"
-                ],
-                "additionalProperties": false,
-                "format": "worldAudioSource"
+                ]
               }
             },
             "required": [
@@ -3013,7 +3294,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Current executable source kind is tone: a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. File imports and live stream connections remain pending adapters. To repeat a saved procedural source, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
+      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Source kind tone is a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. Source kind clip references an exact privately imported WAV assetHash and inspected seconds from audio.import. Missing or changed bytes fail playback explicitly; no file is fetched by this action. Live stream connections remain pending adapters. To repeat a saved sound, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
       "example": {
         "operation": "save",
         "id": "",
@@ -3373,7 +3654,7 @@
         "audio.output.ready",
         "audio.voice.available"
       ],
-      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Current sources are procedural mono tones up to 30 seconds. For looping or independently controlled playback use audio.start. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
+      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones or imported PCM/float WAV clips up to 30 seconds. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For looping or independently controlled playback use audio.start. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
       "example": {
         "target": "maestro",
         "emitter": "beep"
@@ -6423,6 +6704,11 @@
             "minimum": 0.0,
             "maximum": 4096.0
           },
+          "missingSounds": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 4096.0
+          },
           "missingModels": {
             "type": "integer",
             "minimum": 0.0,
@@ -6453,6 +6739,7 @@
           "archiveHash",
           "sizeKiB",
           "excludedFiles",
+          "missingSounds",
           "missingModels",
           "missingMotions",
           "missingControllerPrograms",
@@ -7066,6 +7353,11 @@
             "minimum": 0.0,
             "maximum": 32.0
           },
+          "sounds": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          },
           "motions": {
             "type": "integer",
             "minimum": 0.0,
@@ -7077,6 +7369,11 @@
             "maximum": 256.0
           },
           "unavailablePrograms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "missingSounds": {
             "type": "integer",
             "minimum": 0.0,
             "maximum": 1000000.0
@@ -7103,9 +7400,11 @@
           "manifestHash",
           "files",
           "models",
+          "sounds",
           "motions",
           "modules",
           "unavailablePrograms",
+          "missingSounds",
           "missingModels",
           "missingMotions",
           "missingControllerPrograms"
@@ -18936,8 +19235,14 @@
                         "kind": {
                           "type": "string",
                           "enum": [
-                            "tone"
+                            "tone",
+                            "clip"
                           ]
+                        },
+                        "assetHash": {
+                          "type": "string",
+                          "pattern": "^([a-f0-9]{64})?$",
+                          "maxLength": 64
                         },
                         "wave": {
                           "type": "string",
@@ -33733,6 +34038,80 @@
       ]
     },
     {
+      "id": "audio.import.selection",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "error": "text",
+          "preview": {
+            "record": {
+              "assetHash": "text",
+              "name": "text",
+              "seconds": "number",
+              "sampleRate": "number",
+              "channels": "number",
+              "kibibytes": "number"
+            }
+          },
+          "sourceId": "text",
+          "revision": "number"
+        }
+      },
+      "label": "Sound import status",
+      "description": "Inspect the current explicit selection without opening or accepting it. preview is checked but unsaved. completed after accept records sourceId; completed after refresh has empty sourceId. Cancelled or failed acceptance may leave a verified library file. Names are untrusted file data.",
+      "features": [
+        "audioClips.v1"
+      ]
+    },
+    {
+      "id": "audio.library",
+      "version": 1,
+      "type": {
+        "record": {
+          "ready": "boolean",
+          "error": "text",
+          "total": "number",
+          "next": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "name": "text",
+                "seconds": "number",
+                "sampleRate": "number",
+                "channels": "number"
+              }
+            }
+          }
+        }
+      },
+      "label": "Imported sound files",
+      "description": "Read two verified library entries after audio.import refresh. Its completion receipt includes the first entry; continue here at that receipt's library.next offset if needed. id is the exact assetHash for a clip source; use its inspected seconds. next=-1 ends paging. ready=false is unavailable, not an empty library. Reading does not touch file contents or start playback; playback independently verifies bytes again.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "audioClips.v1"
+      ]
+    },
+    {
       "id": "audio.source.list",
       "version": 1,
       "type": {
@@ -33777,7 +34156,7 @@
     },
     {
       "id": "audio.source.definition",
-      "version": 1,
+      "version": 2,
       "type": {
         "record": {
           "id": "text",
@@ -33786,6 +34165,12 @@
             "record": {
               "name": "text",
               "kind": "text",
+              "clip": {
+                "record": {
+                  "assetHash": "text",
+                  "seconds": "number"
+                }
+              },
               "tone": {
                 "record": {
                   "wave": "text",
@@ -33802,7 +34187,7 @@
         }
       },
       "label": "Sound definition",
-      "description": "Read the exact saved source and current edit revision. Active playback may retain an earlier revision. Missing IDs are unavailable, never silently substituted.",
+      "description": "Read the exact saved source and current edit revision. Active playback may retain an earlier revision. Missing IDs are unavailable, never silently substituted. kind selects tone or clip; the other block contains inactive defaults. Pass only the selected block when saving.",
       "input": {
         "type": "object",
         "properties": {
@@ -38256,9 +38641,11 @@
             "record": {
               "files": "number",
               "models": "number",
+              "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
               "missingControllerPrograms": "number"
@@ -38388,9 +38775,11 @@
             "record": {
               "files": "number",
               "models": "number",
+              "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
               "missingControllerPrograms": "number"
@@ -38537,9 +38926,11 @@
             "record": {
               "files": "number",
               "models": "number",
+              "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
               "missingControllerPrograms": "number"
@@ -40597,11 +40988,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "18232930001f984381dc1e6ae642bc2f353652e9447ae0b39868a6be5c14d3bd"
+      "sha256": "e8b5db0afb8b126014907439d288f6b6fde3affb3cd7cd8634caf65ca52410a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
-      "sha256": "2cfb3c56e5c5443899285f17d74e2bb6002ca2edaa5ded367ffac97eceb84791"
+      "sha256": "b8ba3eeabe02f71563d4c15bdf956e21539d524678556dbfdca3085ac063b684"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioImportCapability.cs",
+      "sha256": "7a8b904440967f4637b5d1115d3b65c3af3a12b605df27c46cbcdc581c6abf3f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
@@ -40621,7 +41016,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "e3f2d79fad9cb57f50f16b02cd2f384180d7a5efb6ac2212673b95b59f6e1757"
+      "sha256": "83613eed7996a6f02d9f439123c03f7587dfaf716a27dc5f538d6a05455b0194"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -40697,7 +41092,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
-      "sha256": "d7d08ae1931598f76ab4bb2f1cc3b22bd32e7c3f14f38475a47fbc361ad5caab"
+      "sha256": "fb52fe66333f00cd32bb1788b742f494357351ff6348fd8646442acc5ff2a099"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -40953,7 +41348,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
-      "sha256": "2086149e3b214491ce7998944ee53f5a08e76a3588dee833b48fcc0c028f98df"
+      "sha256": "23958b2e9c12fb0c444cf8f6bc15b2781dfae6eda554b7ba9555ad0d0ed308f8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceHistoryCapabilities.cs",
@@ -40969,7 +41364,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRetentionCapabilities.cs",
-      "sha256": "d184108e11a95b5709ab7886b53d578a0504f0dbb9b8facfad9e2e8ca16dad12"
+      "sha256": "729f35228fbbf4154d9e910aec15ec82eec91dbdd8bc26f0afada7cddc7eac63"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",
@@ -40977,7 +41372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
-      "sha256": "1a8f9aa19660de404afba49f8a7b4f794c9d26af31a0cd5dcc5b0f7c995639b0"
+      "sha256": "f78d6357180fe86587aaabd0e83b90f85237ff2dc2f643557c3ff66a12d1e843"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldGroundFacts.cs",
@@ -41029,7 +41424,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
-      "sha256": "46bcf12c8a3d16cc1e6ebbee706ef640a3d7b593f362e517912a1cd6eed7c007"
+      "sha256": "721c4f9db0cb1d16a3f3754000bb254c474a680e9379ae0e48ef6731ab286817"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
@@ -41237,7 +41632,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
-      "sha256": "bfc1b356d38a96fa72cf0a693f925fffdece164920cea6e52a31419261f4ff63"
+      "sha256": "31f0ddd610a0905c2d3157e8ef58aba2e9ce9856909cce045f43ac0de7371c58"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioEdits.cs",
@@ -41273,11 +41668,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "be547b2c52c1976f8e44ad56e4d3ca1b2e197d999b2dfb2d9b611f83966b5f9f"
+      "sha256": "e37bb66903330109c362a19ff48c76160de015ba8e483bda6c391ed9a2a35de8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "ea903c2c91c7a2009da97472c3157df890d2258eafb0faf11823ee6f626cce66"
+      "sha256": "456d7d2aa6373d16e12fc6f43e9b1bb2922598ceb4d6436d725c8c3cf3d9c2ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -41293,7 +41688,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "ac9afd7ba12f7d3354ec368ab008ee721a756f84234f9161f294fd508cf32d32"
+      "sha256": "9698f895ce67f876e84d0b4064349b8a57a06dec8372c205217c8db0b45abfdb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -41417,7 +41812,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "4f7e4222b88d694d9010b7cfc1fddc3d9bfd8a4298fbe741e4d59d5c8c737d6f"
+      "sha256": "d0ba66f3643185c549cf1b054aa8baf4a1b03167eec244c89b94a2932a02dbe0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -41533,7 +41928,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "8dd757908adb55d9b78f52b02a2862e0130a7d80794d0f2b902135ced730ebb6"
+      "sha256": "8729f79fc0cff08b888ac07b019ad27a931f9323fa1d81449193cdadf4d6a508"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -41546,6 +41941,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AndroidMotionBatchSource.cs",
       "sha256": "7109afc860dd06cfce208ac2476b7d1d182f91b9d7b86f61fa833c67a24b4100"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioImportWorkshop.cs",
+      "sha256": "2dd277d9c73e41f4ecaef3746bd90348cd295daa0289a96d4da5bc2a062f4d54"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.cs",
+      "sha256": "41bd7c7e259669176b6ac58c18c4efd54aec4b059a47301181b3763876d70c1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/BundledAvatar.cs",
@@ -41630,6 +42033,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/NamedHumanoid.cs",
       "sha256": "870f01a3a0543f10093286387af7ad8b57beb4f9c5b82024d8923d8320679342"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/WaveAudio.cs",
+      "sha256": "409da7dc27cd18c9afa4d7a7e4c939dbfdaaf767410c6e437c91c3f10f6805c6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
@@ -41873,7 +42280,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "1ac065b32cba0344ec0dd63628da6f4405f8bc67b4ed4246509f99321802aa97"
+      "sha256": "db61b2adfe43314839a7a409134c8712e0d245fc09c1fb001613aedd62a25d3f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -41885,15 +42292,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "28c29cfbef2e08c1703cbfbac8b0de72133c8a2fe10b85be042d5f2b5b5c60cf"
+      "sha256": "2c968aade96150ea6af896246b448106f8925ad9434e4f8b385484db3c0966f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "cb6c2198859b52ff9f8b2da62ef1ee8e7ca4e9a6b27f61bf7231a3dbc7fb0101"
+      "sha256": "0efb85f0ccff2cae1c84183942ebe1e80d160ab46953bb1508147e8c148c8208"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "49ee8f42c10e913a1284b4aa520a8ec418679ab66483e29e772ce5f2cfd9cf5f"
+      "sha256": "5101a63c079bca6e51266fa61025fdafa4e260b1b11ca53688d89e1345c31813"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -41917,7 +42324,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceExport.cs",
-      "sha256": "9bca9b9f67bdab4a43d7c8cef34f9275b6ec25b47b2eb3e2515b1c164644a4e7"
+      "sha256": "cd548d9a9eb2b45956ec16037f0cda184f95443e26b779df333d7b63b28a7054"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceFileInventory.cs",
@@ -41933,7 +42340,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "3381a4a0d950a6f2145f648dd37e6ea7d7423b68cf807221d541e3f80a3df90c"
+      "sha256": "725507c1cef5a9ad52c1d4fc08ffc187ee0c9fa4e9ab32ec9f7eb8cbe7681963"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
@@ -41957,7 +42364,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceImport.cs",
-      "sha256": "4541471c4775c3c958383407d9a4191e17be40d9999c4c3f9039a26f8828c4d1"
+      "sha256": "7f890d6396552f21329af7a7296d5b1aadef3ad91a607b38f4f089de9889be80"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceLibraryCapture.cs",
@@ -41965,7 +42372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecovery.cs",
-      "sha256": "1e6b9e9e9412442bab01c9db36a803fedfc821569253d64031f90ee9dae278ec"
+      "sha256": "492fe3a79e0607aab02a0bebbb9bbebd45f8ecbb72d8935244e5323b538b940d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryEvidence.cs",
@@ -41977,11 +42384,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRetention.cs",
-      "sha256": "b2537f8ca75417b534612d159c88f388e905519a87b9c42c721c223b39590ca0"
+      "sha256": "604bce487cf77dfc2c397a21cfbc9582b3d4fa304ede5558b6ee3b4a322e1e62"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceReview.cs",
-      "sha256": "10d26cf3cb2e4ecbee40f8aec80966ad85f68284119a235b3390f69a80f455d6"
+      "sha256": "a128b7e5cb94e450e36fe82b85bd19ab9e0e57c2e1152ecc8a2d12de488451be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRuntime.cs",
@@ -42001,7 +42408,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "04a0e0e9ab98f0607832193daca0de526239e3b9d7e14ec40c120ea50ebc3994"
+      "sha256": "ee3745a27f6513b933246a8f0634d4338428251950f007ea28f74fb55bff2cbb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

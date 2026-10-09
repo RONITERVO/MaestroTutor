@@ -1,6 +1,6 @@
 {
   "inspection": {
-    "requestId": "02001736a62e443f916531b18953c986",
+    "requestId": "9c6a86eed9af4819add92411ce408c44",
     "target": "recovery",
     "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
     "evidenceId": "",
@@ -10,10 +10,10 @@
     }
   },
   "reset": {
-    "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+    "requestId": "b352409f0b374dfab57d382b6bc7471f",
     "target": "recovery",
     "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
-    "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+    "evidenceId": "954e91870356423094fe4dd46374af81",
     "summary": {
       "files": 1,
       "sizeKiB": 1
@@ -23,19 +23,19 @@
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "c1979c312a4e43dbb9ec4a54d44a78c9",
+    "nextRunId": "3f17585fb4fc41ab8143b2ea6e90ae5b",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "c4a32781627e4975bf375c0ea5041d17",
+        "id": "890af74aafcf42e8b9078371af1719e6",
         "capability": "workspace.history.inspect",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "02001736a62e443f916531b18953c986",
+          "requestId": "9c6a86eed9af4819add92411ce408c44",
           "target": "recovery",
           "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
           "evidenceId": "",
@@ -55,14 +55,14 @@
       "running": [],
       "outcomes": [
         {
-          "id": "c4a32781627e4975bf375c0ea5041d17",
+          "id": "890af74aafcf42e8b9078371af1719e6",
           "capability": "workspace.history.inspect",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "02001736a62e443f916531b18953c986",
+            "requestId": "9c6a86eed9af4819add92411ce408c44",
             "target": "recovery",
             "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
             "evidenceId": "",
@@ -73,7 +73,7 @@
           }
         }
       ],
-      "nextRunId": "9fbd27bea4f741bea2f9b18ded21e568",
+      "nextRunId": "c74ee3ae0e6344c3b646b0d44ca4f94c",
       "storageError": null,
       "recovery": null
     }
@@ -82,22 +82,22 @@
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "c1979c312a4e43dbb9ec4a54d44a78c9",
+    "nextRunId": "3f17585fb4fc41ab8143b2ea6e90ae5b",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "9fbd27bea4f741bea2f9b18ded21e568",
+        "id": "c74ee3ae0e6344c3b646b0d44ca4f94c",
         "capability": "workspace.history.reset",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+          "requestId": "b352409f0b374dfab57d382b6bc7471f",
           "target": "recovery",
           "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
-          "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+          "evidenceId": "954e91870356423094fe4dd46374af81",
           "summary": {
             "files": 1,
             "sizeKiB": 1
@@ -107,7 +107,7 @@
           "id": "workspace.history.reset",
           "version": 1,
           "arguments": {
-            "inspectionId": "02001736a62e443f916531b18953c986",
+            "inspectionId": "9c6a86eed9af4819add92411ce408c44",
             "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41"
           }
         }
@@ -115,14 +115,14 @@
       "running": [],
       "outcomes": [
         {
-          "id": "c4a32781627e4975bf375c0ea5041d17",
+          "id": "890af74aafcf42e8b9078371af1719e6",
           "capability": "workspace.history.inspect",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "02001736a62e443f916531b18953c986",
+            "requestId": "9c6a86eed9af4819add92411ce408c44",
             "target": "recovery",
             "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
             "evidenceId": "",
@@ -133,17 +133,17 @@
           }
         },
         {
-          "id": "9fbd27bea4f741bea2f9b18ded21e568",
+          "id": "c74ee3ae0e6344c3b646b0d44ca4f94c",
           "capability": "workspace.history.reset",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+            "requestId": "b352409f0b374dfab57d382b6bc7471f",
             "target": "recovery",
             "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
-            "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+            "evidenceId": "954e91870356423094fe4dd46374af81",
             "summary": {
               "files": 1,
               "sizeKiB": 1
@@ -151,18 +151,18 @@
           }
         }
       ],
-      "nextRunId": "42653124e2d042fc8dcb946ebd78713e",
+      "nextRunId": "89debf5a2b024ac58dcce630795a3798",
       "storageError": null,
       "recovery": null
     }
   },
   "status": {
-    "requestId": "eb1bd011c9e64ab09f6a0db882a0c6c1",
+    "requestId": "b352409f0b374dfab57d382b6bc7471f",
     "target": "recovery",
     "phase": "reset",
     "status": "History preserved and tracking reset. Inspect current workspace before continuing.",
     "fingerprint": "a99475c5ac247c8bf2c3ad962dbc278e9728666f3759fa026b9057345e765c41",
-    "evidenceId": "103e3713fb76442eb7cf12a317971d4f",
+    "evidenceId": "954e91870356423094fe4dd46374af81",
     "summary": {
       "files": 1,
       "sizeKiB": 1
