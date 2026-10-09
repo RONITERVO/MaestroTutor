@@ -2118,4 +2118,10 @@ semantic evidence, not removed by the later pass. The broader novice conversatio
 aftersteps/artifact delivery, agent action chain and headset camera performance
 are not covered by this narrow test.
 
+The final parity audit also found and repaired two headless filters that accepted
+only generated-image origin. Two additional managed/BYOK cases now exercise
+JSON-RPC chat dispatch, saved variants, tutor, verifier, agent planning/results
+and original handoff labels together. All 38 tests in the affected headless suites
+pass, along with probe typing and lint.
+
 See [camera contract and limits](QUEST_V1_PLAN.md#virtual-scene-camera-sharing--2026-10-09).

@@ -71,7 +71,7 @@ export const runHeadlessChatTurn = async (
               mimeType: part.mimeType,
               targets: ['chat'],
               source: 'original',
-              ...(part.origin === 'generated' ? { origin: 'generated' as const } : {}),
+              ...((part.origin === 'generated' || part.origin === 'virtual-scene') ? { origin: part.origin } : {}),
               order: index,
             })),
           }

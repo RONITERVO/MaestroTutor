@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { dispatchHeadlessMethod } from './dispatcher';
 import { rm } from 'node:fs/promises';
 import { createHeadlessClient, type HeadlessClient } from './client';
 import { HeadlessRoomAgent, runHeadlessRoomTurn } from './roomJourney';
@@ -48,9 +49,12 @@ async function setup(mode: 'managed' | 'byok' = 'byok') {
 }
 
 describe('headless conversational agent parity (deterministic transport)', () => {
-  it.each([['managed', undefined], ['byok', undefined], ['managed', 'generated'], ['byok', 'generated']] as const)('runs tutor → verifier → journal → native receipt → chat in %s with origin %s', async (mode, origin) => {
+  it.each([['managed', undefined], ['byok', undefined], ['managed', 'generated'], ['byok', 'generated'], ['managed', 'virtual-scene'], ['byok', 'virtual-scene']] as const)('runs tutor → verifier → journal → native receipt → chat in %s with origin %s', async (mode, origin) => {
     const f = await setup(mode);
-    const turn = await runHeadlessChatTurn(f.client, { text: 'Make that ball.', fileParts: [{ fileUri: 'test://drawing', mimeType: 'image/png', ...(origin ? { origin } : {}) }], useGoogleSearch: false });
+    const params = { text: 'Make that ball.', fileParts: [{ fileUri: 'test://drawing', mimeType: 'image/png', ...(origin ? { origin } : {}) }], useGoogleSearch: false };
+    const turn = origin === 'virtual-scene'
+      ? await dispatchHeadlessMethod(f.client, 'chat.turn', params) as Awaited<ReturnType<typeof runHeadlessChatTurn>>
+      : await runHeadlessChatTurn(f.client, params);
     const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id });
     expect(result.decisionSource).toBe('model'); expect(result.toolRequest).toEqual({ tool: 'agent' });
     expect(JSON.stringify(result.toolResult)).not.toMatch(/commands|sceneRevision|test:\/\/drawing/);
@@ -63,10 +67,13 @@ describe('headless conversational agent parity (deterministic transport)', () =>
     expect(JSON.stringify(f.requests[2])).toContain('The ball should be blue.');
     for (const index of [0, 2, 3, 4]) {
       expect(JSON.stringify(f.requests[index]).includes('AI-generated illustration')).toBe(origin === 'generated');
+      expect(JSON.stringify(f.requests[index]).includes('Virtual-scene render')).toBe(origin === 'virtual-scene');
       const files = f.requests[index].contents.flatMap((c: any) => c.parts).filter((p: any) => p.fileData);
       expect(files[0].fileData).toEqual({ fileUri: 'test://drawing', mimeType: 'image/png' });
     }
     expect(turn.userMessage?.uploadedFileVariants?.[0].origin).toBe(origin);
+    expect(JSON.stringify(f.requests[1]).includes('Virtual-scene render')).toBe(origin === 'virtual-scene');
+    expect(record?.handoff.input.currentFileParts?.[0].origin).toBe(origin);
     const message = f.client.state.chats[f.pairId].find(message => message.id === record?.id)!;
     expect(message.translations?.[0]).toEqual({ target: 'Listo.', native: 'Ready.' });
     expect(JSON.stringify(message)).not.toMatch(/commands|sceneRevision|test:\/\/drawing/);
