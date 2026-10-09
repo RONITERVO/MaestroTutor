@@ -19,6 +19,8 @@ namespace Maestro.Quest.Tests
         RoomAcoustics room;
         int previousManagers;
         ManualResetEventSlim gate, entered;
+        AudioConfiguration? restoreAudio;
+        System.Threading.Tasks.Task resetRelease;
         [SetUp] public void SetUp()
         {
             previousManagers = UnityEngine.Object.FindObjectsByType<XRInteractionManager>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length;
@@ -38,10 +40,23 @@ namespace Maestro.Quest.Tests
             double end = Time.realtimeSinceStartupAsDouble + 5;
             while (!next.Ready && Time.realtimeSinceStartupAsDouble < end) yield return null;
             bool released = next.Ready; UnityEngine.Object.Destroy(next.gameObject); yield return null;
+            // Drain the test's delayed gate release even when Reset/assertions fail.
+            // It must never touch a disposed event in a later fixture.
+            while (resetRelease != null && !resetRelease.IsCompleted) yield return null;
+            var releaseFailure = resetRelease?.Exception; resetRelease = null;
+            gate?.Dispose(); gate = null; entered?.Dispose(); entered = null;
+            bool restored = true;
+            if (restoreAudio.HasValue)
+            {
+                var original = restoreAudio.Value; restoreAudio = null;
+                restored = AudioSettings.Reset(original);
+                yield return null;
+            }
+            Assert.IsNull(releaseFailure);
+            Assert.IsTrue(restored, "Restore the test-owned engine audio configuration");
             Assert.IsTrue(released, "Native acoustic ownership was not released");
             Assert.AreEqual(previousManagers, UnityEngine.Object.FindObjectsByType<XRInteractionManager>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length,
                 "Acoustic fixtures must not leave an interaction manager in the next test's room");
-            gate?.Dispose(); gate = null; entered?.Dispose(); entered = null;
         }
         AcousticSurface Wall(Vector3 position, Vector3 size)
         {
@@ -241,6 +256,37 @@ namespace Maestro.Quest.Tests
                 room.FirstMapProgress = null;
                 gate.Dispose(); gate = null; entered.Dispose(); entered = null;
             }
+        }
+        [UnityTest] public IEnumerator ActualAudioResetDuringNativeComputeReopensWithFreshGeometryAndMap()
+        {
+            Box(); var original = AudioSettings.GetConfiguration(); restoreAudio = original;
+            int notifications = 0; AudioSettings.AudioConfigurationChangeHandler changed = _ => notifications++;
+            AudioSettings.OnAudioConfigurationChanged += changed;
+            try
+            {
+                for (int cycle = 0; cycle < 3; cycle++)
+                {
+                    HoldCompute(); Assert.IsTrue(room.RequestMap(new[] { Vector3.zero }));
+                    yield return NativeComputationEntered();
+                    int before = notifications;
+                    // Reset can synchronously drain DSP work. Release the actual native
+                    // callback from a worker so the test cannot strand the engine reset.
+                    var held = gate;
+                    resetRelease = System.Threading.Tasks.Task.Run(() => { Thread.Sleep(100); held.Set(); });
+                    var next = original; next.sampleRate = cycle % 2 == 0 ? (original.sampleRate == 44100 ? 48000 : 44100) : original.sampleRate;
+                    Assert.IsTrue(AudioSettings.Reset(next), "The actual Unity audio reset must run");
+                    double end = Time.realtimeSinceStartupAsDouble + 8;
+                    while ((!resetRelease.IsCompleted || notifications == before || !room.Ready || room.GeometryCount != 6) && Time.realtimeSinceStartupAsDouble < end) yield return null;
+                    Assert.IsTrue(resetRelease.IsCompleted); Assert.IsNull(resetRelease.Exception); resetRelease = null; Assert.Greater(notifications, before);
+                    Assert.IsTrue(room.Ready, room.Issue); Assert.AreEqual(6, room.GeometryCount);
+                    Assert.IsFalse(room.MapComputing); Assert.IsFalse(room.MapReady, "Never install a map from before engine reset");
+                    room.FirstMapProgress = null;
+                    gate.Dispose(); gate = null; entered.Dispose(); entered = null;
+                    Assert.IsTrue(room.RequestMap(new[] { Vector3.zero })); yield return Finish();
+                    Assert.IsTrue(room.MapReady, room.MapIssue);
+                }
+            }
+            finally { gate?.Set(); AudioSettings.OnAudioConfigurationChanged -= changed; }
         }
         [UnityTest] public IEnumerator CooperativeComputeBudgetDiscardsMapAndAllowsAnotherRequest()
         {

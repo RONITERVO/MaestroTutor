@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections;
+using System.Threading;
 using Maestro.Quest.Book;
 using NUnit.Framework;
 using UnityEngine;
@@ -11,7 +12,33 @@ namespace Maestro.Quest.Tests
 {
     public sealed class RoomAudioOutputTests
     {
-        [UnityTest] public IEnumerator OwnedReflectionMixRendersAndStoppingOneVoicePreservesAnother()
+        ManualResetEventSlim computeGate, computeEntered;
+        [UnityTearDown] public IEnumerator CleanupComputation()
+        {
+            if (computeGate == null) yield break;
+            computeGate.Set();
+            var next = new GameObject("Mixer computation cleanup").AddComponent<RoomAcoustics>();
+            double end = Time.realtimeSinceStartupAsDouble + 5;
+            while (!next.Ready && Time.realtimeSinceStartupAsDouble < end) yield return null;
+            bool released = next.Ready; UnityEngine.Object.Destroy(next.gameObject); yield return null;
+            if (released) { computeGate.Dispose(); computeEntered.Dispose(); computeGate = computeEntered = null; }
+            Assert.IsTrue(released, "Retired mixer computation must release the room before the next fixture");
+        }
+        [UnityTest] public IEnumerator RepeatedRoomMixReplacementPreservesNativeMapAndVoiceLifetimes()
+        {
+            // Exercise native DSP, geometry, maps and mixer reload together. A
+            // source-only mock cannot detect a cross-thread native lifetime fault.
+            for (int cycle = 0; cycle < 8; cycle++)
+            {
+                yield return RenderMix(replaceMapDuringSpeech: cycle % 2 == 1);
+                yield return Resources.UnloadUnusedAssets();
+                GC.Collect(); GC.WaitForPendingFinalizers();
+                yield return null;
+            }
+        }
+        [UnityTest] public IEnumerator OwnedReflectionMixRendersAndStoppingOneVoicePreservesAnother() => RenderMix(false);
+        [UnityTest] public IEnumerator MapReplacementDuringMultipleVoicesKeepsDspAlive() => RenderMix(true);
+        IEnumerator RenderMix(bool replaceMapDuringSpeech)
         {
             var root = new GameObject("Owned room audio test");
             var listenerObject = new GameObject("Muted room listener", typeof(AudioListener));
@@ -56,7 +83,27 @@ namespace Maestro.Quest.Tests
                 Assert.IsTrue(first.TryWrite(a, 1, pcm, out var error), error);
                 for (int i = 1; i <= 10; i++) Assert.IsTrue(second.TryWrite(b, i, pcm, out error), error);
                 Assert.IsTrue(first.MicrophoneSuppressed);
-                yield return new WaitForSecondsRealtime(.35f);
+                yield return new WaitForSecondsRealtime(.1f);
+                if (replaceMapDuringSpeech)
+                {
+                    computeGate = new ManualResetEventSlim(false); computeEntered = new ManualResetEventSlim(false);
+                    room.FirstMapProgress = () => { computeEntered.Set(); computeGate.Wait(TimeSpan.FromSeconds(10)); };
+                    Assert.IsTrue(room.RequestMap(new[] { listenerObject.transform.position + Vector3.right * .1f }));
+                    deadline = Time.realtimeSinceStartupAsDouble + 3;
+                    while (!computeEntered.IsSet && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                    Assert.IsTrue(computeEntered.IsSet, "Hold the real native computation while both routed sources exist");
+                    long before = second.Read().playedSamples;
+                    audio.Refresh(); Assert.IsFalse(audio.ReflectionsActive);
+                    probe.Reset(); yield return new WaitForSecondsRealtime(.15f);
+                    Assert.Greater(second.Read().playedSamples, before);
+                    var direct = probe.Read(); Assert.Greater(direct.Left + direct.Right, .00001,
+                        "The listener must continue hearing direct sound while reflections are rebuilt");
+                    computeGate.Set(); deadline = Time.realtimeSinceStartupAsDouble + 8;
+                    while (room.MapComputing && Time.realtimeSinceStartupAsDouble < deadline) { room.Synchronize(); yield return null; }
+                    Assert.IsFalse(room.MapComputing); Assert.IsTrue(room.MapReady, room.MapIssue);
+                    room.FirstMapProgress = null; audio.Refresh(); Assert.IsTrue(audio.ReflectionsActive, audio.Issue);
+                }
+                else yield return new WaitForSecondsRealtime(.25f);
                 first.Stop();
                 Assert.IsTrue(sourceB.isPlaying); Assert.AreEqual(b, second.Read().generation);
                 Assert.IsTrue(first.MicrophoneSuppressed, "Stopping one voice must not discard the shared output tail");
@@ -78,12 +125,14 @@ namespace Maestro.Quest.Tests
             }
             finally
             {
+                computeGate?.Set(); room.FirstMapProgress = null;
                 first.Stop(); second.Stop(); audio.enabled = false;
                 UnityEngine.Object.Destroy(root); UnityEngine.Object.Destroy(listenerObject);
                 for (int i = 0; i < listeners.Length; i++) if (listeners[i]) listeners[i].enabled = enabled[i];
                 AudioListener.volume = volume; AudioListener.pause = paused;
             }
             yield return null;
+            yield return CleanupComputation();
         }
     }
 }

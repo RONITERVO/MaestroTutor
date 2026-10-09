@@ -2505,3 +2505,37 @@ No headset operation,
 package, signing, deployment or Store change is included. Regional streaming and
 other unfinished v1 gates remain open; the last packaged development APK is still
 5899972E / source 5100f612. Installed and private-Alpha builds are unchanged.
+
+
+## Native audio lifetime stress coverage — 2026-10-10
+
+The earlier full-suite crash in `MetaXRAudioUnity.dll` during acoustic-map
+computation remains unresolved. The retained original fault is under
+`.quest-evidence/model-residency/audio-crash-evidence.json`; passing a later run
+does not establish its cause or a repair. This increment changes tests only.
+
+The native fixtures now reset Unity's actual audio engine three times while a
+real map computation is held in its native progress callback. They require the
+configuration notification, cancellation of the old map, fresh geometry and a
+new usable map after each reset. The delayed release is drained and the original
+audio configuration is restored, including when assertions fail.
+
+A real two-voice reflection mix also replaces its map during playback. The test
+checks both played-sample progress and nonzero listener output while reflection
+output is disabled for computation, then verifies the replacement map and mixer.
+Stopping one voice must preserve the other; the finite mix must eventually drain.
+Eight complete room/mixer lifetimes alternate ordinary playback with this map
+replacement, unloading unused assets and collecting managed garbage between them.
+Cleanup retains callback events until the native owner has released its inputs.
+
+All 25 focused native acoustic tests pass. Logs, the XML report and tested source
+hashes are retained under `.quest-evidence/acoustic-lifetime`. The complete native
+suite and exact-head CI results are tracked separately in the PR checkpoint; the
+focused result alone is not the full release gate.
+
+This is Windows Unity 6000.3.24f1 / Meta XR Audio 85.0.0 coverage using real native
+DSP with the final listener silenced by the test fixture. It is not Quest speaker,
+thermal, physical microphone, mixed-audio echo-cancellation or provider acceptance.
+The experimental reflection mixer remains outside the production room until the
+existing Live capture requirements are met. No headset, signing, cloud, Store or
+paid-provider operation is included, and the full v1 goal remains incomplete.

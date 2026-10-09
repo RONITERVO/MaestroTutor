@@ -198,3 +198,19 @@ acceptable fallback.
   emitters, deleted targets, workspace changes, app suspension and device loss.
   Report source/voice budgets, real Quest timing and coverage separately from
   simulated or muted desktop tests.
+
+
+## Native lifecycle regression evidence
+
+The PlayMode acoustic suites exercise actual engine audio resets while a native
+map job owns geometry, map replacement during two-voice mixed playback, and eight
+room/mixer replacement cycles with unused-asset collection. They observe the
+listener signal as well as PCM consumption, and drain retired native ownership
+before disposing callback state. These tests run through the standard
+`unity/Tools/Verify-Quest.ps1` runner.
+
+A prior Windows full-suite crash in `MetaXRAudioUnity.dll` has not been reproduced
+by this focused coverage and has no established cause. Keep it open alongside
+the Quest/Live acceptance gates; do not treat repeated passing desktop tests as a
+runtime fix. Exact evidence and scope are in
+[the release coverage ledger](../docs/QUEST_AGENT_RELEASE_COVERAGE.md#native-audio-lifetime-stress-coverage--2026-10-10).
