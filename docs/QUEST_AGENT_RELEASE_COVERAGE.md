@@ -2024,3 +2024,69 @@ functional acceptance, not a latency or cost improvement claim.
 The physical cooling/charge hold remains. No APK, signing, upload or deployment
 was performed. Unique context growth, serial discovery latency and the remaining
 headset/release gates stay open.
+
+
+### Bounded grouped catalog planning — 2026-10-09
+
+The original app's planner can propose up to four independent catalog reads in
+one response. It validates every command and advertised feature before the first
+read, then dispatches each query separately through the existing native contract.
+Each read has its own durable intent, actual receipt, operation index and query
+budget charge. The 24-query/three-action ceilings are unchanged. Separate reads
+can observe different moments; this is not an atomic world snapshot. Dependent
+queries wait for their actual inputs, and groups cannot contain edits, execution,
+captures, motion searches or rule controls.
+
+Cancellation, a changed session, missing capabilities, failed persistence or a
+lost acknowledgement stop further dispatch. A rejected native query ends its
+group and the next planner receives the acknowledged count and undispatched
+remainder. Grouped reads use fresh native state; mutations retain the original
+planning-time guards. Module inspections still feed exact content-pinned imports.
+The public/native parser continues to reject multi-query native requests.
+
+All 2,764 shared/web tests in 302 files pass, including lifecycle, partial-journal,
+query-budget and stale-mutation regressions; build, lint, probe typing, prompt
+ownership, core boundaries and catalog provenance pass. No C# or bundled native
+resource changed from `605c9554`; its 1,032 EditMode / 908 PlayMode passes remain
+the native baseline, with three optional private-model skips.
+
+BYOK image **06f3d6ec2bf644f792d562da56da3d9f** and managed image
+**406e510b34b24e35a4c590b1e9d1ac73** both pass all three requests, exact prior-task
+continuation, native appearance effects and unrelated-object/page preservation.
+Their grouped proposals contain two to four queries; journals retain 27 and 22
+separate acknowledged catalog operations respectively. Client and Editor exit 0.
+BYOK uses 11/5/5 agent calls with peak agent inputs 44,603/56,460/27,204 tokens.
+Managed uses 11/4/5, with peaks 43,665/52,790/27,368, and reconciles **574 credits /
+USD 0.562490**, with no mismatches or outstanding reservations. These measurements
+exclude introduction and include each measured turn's tutor/verifier billing.
+The preceding managed image run used 860 credits / USD 0.837203. These are observed
+runs, not a controlled performance benchmark: fewer calls did not reduce peak
+context, and wider task latency/cost acceptance remains open.
+
+BYOK composite **5d6c1c5c21cd43e9ad02d40863245ef4** passes exact discovery of the
+five guides and included module, save-only behaviour, both independent events,
+construction geometry/placement/physics/hinges, Undo/Redo identity and no replay.
+Its save/start turns use 5/3 agent calls with peak agent inputs 42,192/28,933 tokens,
+excluding introduction and baseline creation. Two groups (four and three reads)
+produce seven individual acknowledged catalog operations.
+
+Final managed composite **9bdca621e8fb4d7688adf32ae95dd94f** passes the same complete
+native semantics and exact module/guide requirements. Save/start use 6/3 agent
+calls, peaks 42,167/29,043 tokens, and reconcile **245 credits / USD 0.240125** with
+no mismatches or outstanding reservations. The preceding managed composite used
+300 credits / USD 0.291138. Introduction and baseline creation are excluded;
+tutor/verifier calls within the measured turns are included. Its two grouped
+proposals (four and two queries) plus one standalone read produce seven separate
+acknowledged catalog operations. No native assertions or budgets were relaxed.
+
+Retained failed managed attempt
+**129e60b466ef4a73954470e02d6ac33b** inspected the exact module and all five guides
+and saved the program, but its final narration reservation failed: the isolated
+staging wallet was 13 credits short. Its eight acknowledged operations are retained;
+the program was not started. This is not a full acceptance pass and was not a
+planner deadline failure (215,432 ms against 600,000 ms). Replenishment uses the
+existing guarded Stripe test-mode flow and retries use fresh isolated rooms.
+
+The replenishment completed as one `cs_test_` checkout, one purchase ledger entry
+and a 1,000-credit staging grant. No production payment data, manual credit write,
+service configuration, device query, APK, signing, upload or deployment changed.

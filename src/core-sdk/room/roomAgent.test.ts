@@ -495,10 +495,10 @@ describe('bounded local plan correction',()=>{
   }
  });
 
- it('corrects two standalone catalog queries without dispatching a partial batch or replaying a prior effect',async()=>{
+ it('corrects a mixed catalog and object-inspection plan without dispatching a partial batch or replaying a prior effect',async()=>{
   const create:RoomCommand={action:'create',reference:'ball',name:'Ball',kind:'ball'};
   const query=(category:'actions'|'facts'):RoomCommand=>({action:'catalog',catalog:{operation:'search',category,query:'visibility',offset:0}});
-  const first=query('actions'),second=query('facts');
+  const first=query('actions'),second:RoomCommand={action:'inspect',target:'book'};
   const responses=[[create],[first,second],[first],[second],[]].map(commands=>JSON.stringify({commands}));
   const ai=client(responses),current={...scene,capabilities:['catalog.v1','catalogVocabulary.v1']};
   const execute=vi.fn(async(_commands:RoomCommand[])=>({...current,ack:1})),beforeDispatch=vi.fn(),onReceipt=vi.fn(),usage=vi.fn();

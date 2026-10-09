@@ -1,8 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {ROOM_PLANNER_ARGUMENT_GUIDE,roomCaptureImages} from '../../../shared/prompts/room';
+import {ROOM_PLANNER_DISCOVERY_GUIDE} from '../../../shared/prompts/catalog';
 import {decodeRoomPlannerResponse} from './roomPlannerResponse';
-import {ROOM_TASK_LIMITS,remainingRoomTaskBudget} from '../../../shared/roomTaskBudget';
+import {ROOM_TASK_LIMITS,ROOM_DISCOVERY_PLAN_LIMIT,remainingRoomTaskBudget} from '../../../shared/roomTaskBudget';
 import {validRoomCaptureImage,validRoomCaptureMetadata,sameRoomCapture,type RoomCaptureImage,type RoomCaptureMetadata} from '../../../shared/roomViewCapture';
 import type {ConstructionSelection,ConstructionManipulation} from '../../../shared/roomSelection';
 import type {RoomOwnershipView} from '../../../shared/roomOwnership';
@@ -102,6 +103,20 @@ export function parseRoomCommands(input: unknown): RoomCommand[] {
   return input.commands as unknown as RoomCommand[];
 }
 
+
+/** Validate every command before accepting a planner-only group. The public parser
+ * and native transport still require standalone catalog requests. */
+function parseRoomPlan(input:unknown):RoomCommand[] {
+  try {return parseRoomCommands(input);}
+  catch(error) {
+    if(error instanceof RoomBatchShapeError&&record(input)&&Array.isArray(input.commands)&&input.commands.every(c=>c.action==='catalog')) {
+      if(input.commands.length>ROOM_DISCOVERY_PLAN_LIMIT)throw new RoomBatchShapeError(`A discovery plan accepts at most ${ROOM_DISCOVERY_PLAN_LIMIT} independent catalog commands. No query was dispatched.`);
+      return input.commands as RoomCommand[];
+    }
+    throw error;
+  }
+}
+
 export const isRoomQuery=(command:RoomCommand)=>['inspect','motions','catalog'].includes(command.action)||command.action==='execution'&&(command.execution?.operation==='inspect'||command.execution?.operation==='start'&&command.execution.call.id==='room.view.capture')||command.action==='rules'&&['inspect','memory'].includes(command.rule?.action??'');
 export interface RoomTaskControl {
   relatedTask?: RelatedRoomTask;
@@ -131,12 +146,13 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
   const active=()=>{if(control.signal?.aborted||control.isCurrent?.()===false||!lease.valid())throw new DOMException('The room request was interrupted. No further actions will run.','AbortError');};
   const inspectedModules=new Map<string,unknown>();
   let queries=0,actions=0;
+  let discovery:{proposed:RoomCommand[];acknowledged:number;rejected:boolean}|undefined;
   let planRejection:{message:string;response:string;truncated:boolean}|undefined;
   for(let step=0;step<ROOM_TASK_LIMITS.planningCalls;step++) {
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
-    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,operations,...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
-      ...pickGeminiClientSource(options),systemInstruction:roomAgentInstruction(scene.capabilities)+'\n'+ROOM_PLANNER_ARGUMENT_GUIDE,currentFileParts:input.currentFileParts,
+    const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,operations,...(discovery?{discovery}:{}),...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
+      ...pickGeminiClientSource(options),systemInstruction:roomAgentInstruction(scene.capabilities)+'\n'+ROOM_PLANNER_ARGUMENT_GUIDE+'\n'+ROOM_PLANNER_DISCOVERY_GUIDE,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_RESPONSE_SCHEMA},
@@ -144,7 +160,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     });
     onUsage(response);active();
     let commands:RoomCommand[];
-    try { commands=parseRoomCommands(resolveRoomProgramImports(decodeRoomPlannerResponse(response.text||'{}'),[...inspectedModules].map(([hash,definition])=>({hash,definition})))); }
+    try { commands=parseRoomPlan(resolveRoomProgramImports(decodeRoomPlannerResponse(response.text||'{}'),[...inspectedModules].map(([hash,definition])=>({hash,definition})))); }
     catch(error) {
       // This is before durable intent and native dispatch. A new bounded planning
       // call may correct syntax/validation; transport/receipt errors are not caught.
@@ -172,36 +188,51 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     // and used actions must still permit observing their actual outcomes. Refuse
     // an over-budget proposal before the durable intent or any native dispatch.
     const query=commands.every(isRoomQuery);
-    if((query?budget.queryBatches:budget.actionBatches)===0)break;
+    const grouped=commands.length>1&&commands.every(c=>c.action==='catalog');
+    const batches=grouped?commands.map(c=>[c]):[commands];
+    if((query?budget.queryBatches:budget.actionBatches)<batches.length)break;
+    // Refuse any unsupported query before starting the group. Recheck live support
+    // before each dispatch as a session or capability may change between reads.
     requireRoomCapabilities(commands,scene);
-    if(scene.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,scene.execution)}:c);
-    await control.beforeDispatch?.(commands,scene);active();
-    // Preserve the actual dispatch, including reconciled reads and issued run IDs.
-    // A post-action scene alone cannot tell the next planner what was removed.
-    const dispatched=copy(commands);
-    const receipt=await (control.signal
-      ? lease.execute(commands,scene.sceneRevision,scene.objects,control.signal)
-      : lease.execute(commands,scene.sceneRevision,scene.objects));
-    operations.push({commands:dispatched,receiptIndex:receipts.length});
-    receipts.push(copy(receipt));
-    const moduleQuery=commands.length===1&&commands[0].action==='catalog'&&commands[0].catalog?.operation==='inspect'&&commands[0].catalog.category==='modules'?commands[0].catalog:null;
-    const moduleReply=receipt.catalog;
-    if(moduleQuery&&receipt.ok&&moduleReply?.operation==='inspect'&&moduleReply.category==='modules'&&moduleReply.capability===moduleQuery.capability&&moduleReply.definition)
-      inspectedModules.set(moduleReply.capability,copy(moduleReply.definition));
-    if(startKey&&proposedStart&&!query&&receipt.ok)acceptedProgramStarts.set(startKey,{target:proposedStart.target!,revision:proposedStart.revision!,receiptIndex:receipts.length-1,
-      runIds:[...new Set([...(receipt.rules?.running??[]),...(receipt.rules?.outcomes??[])].filter(run=>run.sequenceId===proposedStart.target).map(run=>run.id))]});
-    if(query)queries++;else actions++;
-    // Cancellation may race an acknowledgement. Preserve that evidence before
-    // checking the turn fence; never relabel a completed edit as rolled back.
-    await control.onReceipt?.(copy(receipt));
-    active();
-    const captureCall=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'&&commands[0].execution.call.id==='room.view.capture'?commands[0].execution:null;
-    const completed=receipt.execution?.selected;
-    if(captureCall&&receipt.ok&&completed&&completed.id===captureCall.runId&&completed.phase==='completed'&&typeof completed.output?.captureId==='string'){
-      if(!lease.capture)throw new Error('The room snapshot image channel is unavailable.');
-      const image=await lease.capture(completed.output.captureId,control.signal);active();
-      if(!validRoomCaptureMetadata(completed.output)||!validRoomCaptureImage(image)||!sameRoomCapture(image.capture,completed.output))throw new Error('The room snapshot does not match its completed capture receipt.');
-      snapshots.push(image);await control.onSnapshot?.(copy(image));active();
+    discovery=grouped?{proposed:copy(commands),acknowledged:0,rejected:false}:undefined;
+    for(let batch of batches) {
+      active();const live=lease.state();
+      if(live.session!==scene.session)throw new DOMException('The room session changed. No further commands will run.','AbortError');
+      // Actions retain the state the planner saw; refreshing their revision here
+      // would silently authorize edits against a changed target.
+      const current=grouped?copy(live):scene;
+      requireRoomCapabilities(batch,current);
+      if(current.capabilities?.includes('executionReceipts.v1'))batch=batch.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,current.execution)}:c);
+      await control.beforeDispatch?.(batch,current);active();
+      // Preserve the actual dispatch, including reconciled reads and issued run IDs.
+      // A post-action scene alone cannot tell the next planner what was removed.
+      const dispatched=copy(batch);
+      const receipt=await (control.signal
+        ? lease.execute(batch,current.sceneRevision,current.objects,control.signal)
+        : lease.execute(batch,current.sceneRevision,current.objects));
+      operations.push({commands:dispatched,receiptIndex:receipts.length});
+      receipts.push(copy(receipt));
+      const moduleQuery=batch.length===1&&batch[0].action==='catalog'&&batch[0].catalog?.operation==='inspect'&&batch[0].catalog.category==='modules'?batch[0].catalog:null;
+      const moduleReply=receipt.catalog;
+      if(moduleQuery&&receipt.ok&&moduleReply?.operation==='inspect'&&moduleReply.category==='modules'&&moduleReply.capability===moduleQuery.capability&&moduleReply.definition)
+        inspectedModules.set(moduleReply.capability,copy(moduleReply.definition));
+      if(startKey&&proposedStart&&!query&&receipt.ok)acceptedProgramStarts.set(startKey,{target:proposedStart.target!,revision:proposedStart.revision!,receiptIndex:receipts.length-1,
+        runIds:[...new Set([...(receipt.rules?.running??[]),...(receipt.rules?.outcomes??[])].filter(run=>run.sequenceId===proposedStart.target).map(run=>run.id))]});
+      if(query)queries++;else actions++;
+      // Cancellation may race an acknowledgement. Preserve that evidence before
+      // checking the turn fence; never relabel a completed edit as rolled back.
+      if(discovery&&grouped){discovery.acknowledged++;discovery.rejected=!receipt.ok;}
+      await control.onReceipt?.(copy(receipt));
+      active();
+      const captureCall=batch.length===1&&batch[0].action==='execution'&&batch[0].execution?.operation==='start'&&batch[0].execution.call.id==='room.view.capture'?batch[0].execution:null;
+      const completed=receipt.execution?.selected;
+      if(captureCall&&receipt.ok&&completed&&completed.id===captureCall.runId&&completed.phase==='completed'&&typeof completed.output?.captureId==='string'){
+        if(!lease.capture)throw new Error('The room snapshot image channel is unavailable.');
+        const image=await lease.capture(completed.output.captureId,control.signal);active();
+        if(!validRoomCaptureMetadata(completed.output)||!validRoomCaptureImage(image)||!sameRoomCapture(image.capture,completed.output))throw new Error('The room snapshot does not match its completed capture receipt.');
+        snapshots.push(image);await control.onSnapshot?.(copy(image));active();
+      }
+      if(grouped&&!receipt.ok)break;
     }
   }
   active();return {...(snapshots.length?{snapshots}:{}),operations:copy(operations),receipts,scene:copy(lease.state()),budgetExhausted:true,relatedTask:control.relatedTask};

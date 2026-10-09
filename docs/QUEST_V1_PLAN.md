@@ -5844,3 +5844,17 @@ The measured managed turns reconcile 300 and 860 credits (USD 0.291138 and
 0.837203 respectively), excluding introductions and composite baseline creation.
 This is shared runtime behavior; serial discovery and growing unique context still
 need cost/latency work. Physical Quest acceptance remains open.
+
+
+### Bounded discovery orchestration — 2026-10-09
+
+Independent catalog reads can share one provider planning response while keeping
+individual native validation, receipts, persistence and budget accounting. This
+reduces unnecessary serial model round trips without adding a provider client or
+an alternate world API to Unity. Edits retain their planning-time state guards;
+query groups cannot carry edits, executions or implicit dependencies. All 2,764
+shared/web regressions and both managed/BYOK image and composite journeys pass.
+The managed measured image/composite turns reconcile 574/245 credits, compared
+with 860/300 in the preceding runs; peak context did not decrease. These observed
+runs are not a controlled latency benchmark. Physical/device and wider-world
+streaming work remain open in the release coverage ledger.

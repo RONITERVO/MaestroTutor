@@ -31,6 +31,7 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
   for(const command of commands) {
     const programs:BehaviourProgram[]=command.action==='rules'&&record(command.rule)&&Array.isArray(command.rule.edits)?command.rule.edits.flatMap(edit=>record(edit)&&record(edit.sequence)&&typeof edit.sequence.program==='string'?[JSON.parse(edit.sequence.program) as BehaviourProgram]:[]):[];
     const programFeatures=new Set(programs.flatMap(program=>[...programFeatureRequirements(program)]));
+    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category==='guides'&&!scene.capabilities?.includes('catalogGuides.v1'))throw new Error('Update the native app to read shared guides (catalogGuides.v1).');
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category==='modules'&&!scene.capabilities?.includes('moduleLibrary.v1'))throw new Error('Update the native app to browse reusable modules (moduleLibrary.v1).');
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.category!==undefined&&command.catalog.category!=='modules'&&!scene.capabilities?.includes('catalogVocabulary.v1'))throw new Error('Update the native app to discover events and facts (catalogVocabulary.v1).');
     if(command.action==='catalog'&&record(command.catalog)&&command.catalog.arguments!==undefined&&!scene.capabilities?.includes('factQueries.v1'))throw new Error('Update the native app to read parameterized facts (factQueries.v1).');

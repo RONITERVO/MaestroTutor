@@ -39,6 +39,22 @@ function harness() {
   return { manager, ports, saved, execute, ai, valid, changed, activity };
 }
 describe('shared app-owned room handoff', () => {
+  it.each([false,true])('journals each grouped query separately and retains partial results when the next acknowledgement is lost: %s',async(lost)=>{
+    const h=harness();const queries=['appearance','image','materials'].map(query=>({action:'catalog',catalog:{operation:'search',query,offset:0}}));
+    h.ports.lease=()=>({state:()=>({...scene,capabilities:['catalog.v1']}),valid:()=>true,execute:h.execute});
+    h.ai.models.generateContentStream.mockImplementation(async()=>{const text=JSON.stringify({commands:h.execute.mock.calls.length?[]:queries});return (async function*(){yield {text,candidates:[{content:{role:'model',parts:[{text}]}}]};})();});
+    h.execute.mockImplementation(async()=>{
+      const index=h.execute.mock.calls.length-1,operations=h.saved.get('task-1')!.operations;
+      expect(operations).toHaveLength(index+1);expect(operations[index].commands).toEqual([queries[index]]);expect(operations[index].receipt).toBeUndefined();
+      for(const previous of operations.slice(0,index))expect(previous.receipt?.ok).toBe(true);
+      if(lost&&index===1)throw new Error('Native receipt lost');return {...scene,ack:index+1,status:'Query complete'};
+    });
+    const result=await h.manager.start('a1');
+    expect(result.operations.map(op=>op.commands)).toEqual(queries.slice(0,lost?2:3).map(query=>[query]));
+    expect(result.operations.filter(op=>op.receipt)).toHaveLength(lost?1:3);expect(result.phase).toBe(lost?'interrupted':'completed');
+    await h.manager.start('a1');expect(h.execute).toHaveBeenCalledTimes(lost?2:3);expect(h.ports.run).toHaveBeenCalledOnce();
+  });
+
   it('preserves the exact input snapshot and persists pending intent before native dispatch', async () => {
     const h = harness();
     const source = structuredClone(handoff);
