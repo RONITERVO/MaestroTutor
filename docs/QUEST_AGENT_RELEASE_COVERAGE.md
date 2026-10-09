@@ -2345,3 +2345,39 @@ changed. Refreshing the manifest from the native export resolved it. Evidence is
 in `.quest-evidence/camera-lifecycle` and the named native runs. No new paid
 provider, physical camera, screen-share permission or headset performance result
 is claimed. Installed and private-Alpha versions are unchanged.
+
+
+## Interior ground in multi-level geometry — 2026-10-09
+
+A building may have its floors, walls and roof in one accepted concave mesh.
+The previous support-column query cast from above the whole collider and found
+its roof first. That rejected valid interior airspace, so native navigation could
+not sample an interior floor and dynamic objects could remain suspended there.
+The shared live/batched query now searches beneath the queried point, bounded by
+the existing 0.25 m below-ground allowance and 16 m air column. Actual collision
+triangles remain authoritative; an enclosing box does not fill a hole.
+
+Eight PlayMode regressions reproduce eight failures on the prior implementation
+and pass with the correction. The synthetic fixture has three storeys, a roof and
+a doorway in one mesh, with no substitute floor colliders. Coverage includes
+correct storey sampling/routes, absent stairs, swept passage through a doorway
+versus collision with the wall of that same mesh, two real falling bodies landing
+on different storeys, contact events, holes, vertical bounds, moved/disabled ground,
+and mixed real/virtual participant policies during scan loss and physics pause.
+
+This is a shared ground fix, not a new imported-building authoring feature.
+Source-scale/pivot settings, rigid mesh-collision import, original-book/agent
+geometry controls, regional streaming and Quest acceptance remain open. No store,
+provider, device or package state is changed by the focused regression. Before and
+after logs and reports are retained under `.quest-evidence/interior-ground`.
+
+The final source passes the full **1,041 EditMode and 939 PlayMode** checks,
+with three expected optional private-model skips. Configuration and both suites
+pass the shared engine-diagnostic gate. Full native headless journey
+`56c937130fdb4f1381928c546ad80bec` (707 observations) and original-book journey
+`f7095c1aa6be42e88baf1677ca298fe7` pass native receipts, client/editor exits and
+the same log gate. The book's tool-form capture was inspected and remains readable.
+The generated manifest changes only the edited native source hash; action/fact
+schemas are unchanged. These integrations use scripted replies and claim no new
+paid-provider or hardware acceptance. The last packaged development APK remains
+5899972E / source 5100f612; this increment is verified source only.

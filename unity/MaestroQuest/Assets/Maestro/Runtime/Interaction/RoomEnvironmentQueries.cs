@@ -49,8 +49,17 @@ namespace Maestro.Quest.Interaction {
         internal bool Contains(Vector3 point){
             if(point.x<bounds.min.x||point.x>bounds.max.x||point.z<bounds.min.z||point.z>bounds.max.z)return false;
             if(!collision||!collision.enabled||!collision.gameObject.activeInHierarchy)return false;
-            var ray=new Ray(new Vector3(point.x,bounds.max.y+.1f,point.z),Vector3.down);
-            return collision.Raycast(ray,out var hit,bounds.size.y+.2f)&&hit.normal.y>.1f&&point.y>=hit.point.y-.25f&&point.y<=hit.point.y+16;
+            // Search beneath this point, including the existing small below-ground
+            // allowance. Starting above the entire mesh finds the roof instead of
+            // an interior floor when a building has several storeys in one collider.
+            // Limit the ray to the same supported air column as the result check;
+            // the collider's bounds alone never fill holes or provide support.
+            const float belowGround=.25f,aboveGround=16,skin=.002f;
+            float top=Mathf.Min(point.y+belowGround+skin,bounds.max.y+.1f);
+            float bottom=Mathf.Max(point.y-aboveGround-skin,bounds.min.y-.1f);
+            if(top<=bottom)return false;
+            var ray=new Ray(new Vector3(point.x,top,point.z),Vector3.down);
+            return collision.Raycast(ray,out var hit,top-bottom)&&hit.normal.y>.1f&&point.y>=hit.point.y-belowGround&&point.y<=hit.point.y+aboveGround;
         }
     }
 }

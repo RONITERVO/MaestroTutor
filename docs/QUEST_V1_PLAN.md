@@ -6146,3 +6146,61 @@ editing, Undo and shared resource/window controls with scripted provider replies
 The current production web bundle also builds. No paid-provider behavior changed;
 prior real-provider evidence remains separately scoped. Corrected local package
 provenance is recorded under `.quest-evidence/camera-lifecycle` and on the PR.
+
+
+### Imported surroundings: implementation boundary — 2026-10-09
+
+Keep imported surroundings in the existing model library, object documents and
+shared capability catalog. A building is an authored object with explicit geometry
+settings and an exact asset identity. It must not create a second import, storage,
+program or agent-action system. Source units, placement and the asset's pivot are
+separate from the user's world frame and physical tracking origin.
+
+The next saved component will distinguish ordinary fitted props from source-scale
+surroundings, expose metres per source unit and an explicit pivot choice, and
+provide opt-in rigid mesh collision/walkable geometry. Ordinary imports currently
+fit to 0.35 m and use a whole-model box; this remains an implementation gap, not
+working building support. A concave building must preserve doors and interior air
+instead of replacing them with a convex hull or a filled bounding box.
+
+The first mesh-collision increment will use bounded rigid rest geometry. It must
+reject incompatible dynamic-body, deforming/skinned and embedded-animation
+combinations explicitly before publishing the edit. Unsupported data must never
+silently acquire a different collider. Readiness and any rejection must be visible
+to both the generated book form and the agent. Saved source settings, exact hashes,
+Undo, copies, portable blueprints, archive validation and reload must agree; partial
+loading cannot claim ready geometry or leave a phantom blocking placeholder.
+
+Imported floors must publish through the existing accepted-ground mechanism, so
+navigation, gravity, throws and medium queries use the same geometry. Real-room
+participation remains an independent per-entity policy: an NPC may use the virtual
+floor below the real room while another object still contacts the scanned floor.
+View opacity, windows, textures, occlusion and sound do not implicitly change that
+policy. Arbitrary mesh geometry alone is not a guarantee that a route is walkable:
+body clearance, slope, step, water and reachability checks remain authoritative.
+
+Regional streaming remains a separate unfinished requirement. The present limits
+of four placed imported models, six live model reservations and one bounded active
+region are not the final capacity promised for user-built towns or countries.
+Geometry, textures, active bodies and navigation work need bounded region ownership
+and persistent identities before that scale is claimed.
+
+
+### Interior-floor support prerequisite — 2026-10-09
+
+The shared live/batched simulation bounds now find accepted support underneath
+the queried point within a multi-storey mesh, instead of treating its roof as the
+only floor. Eight native regressions failed on the previous implementation and
+pass after the fix, including real falling-body contacts, interior navigation and
+swept doorway/wall tests. The existing vertical limits, holes and per-entity scan
+policies remain in force. See the [interior-ground evidence](QUEST_AGENT_RELEASE_COVERAGE.md#interior-ground-in-multi-level-geometry--2026-10-09).
+
+This fixes a prerequisite for the imported-surroundings component above. It does
+not expose source-scale building imports, change the saved room format, or replace
+the current development APK. Those integration and device gates remain open.
+
+Final-source verification passes 1,041 EditMode and 939 PlayMode checks (three
+expected optional private-model skips), plus the complete native headless and
+original-book journeys. All native diagnostic gates and source provenance pass.
+Exact run identifiers and the unchanged package boundary are in the coverage
+entry linked above. No new provider calls or device acceptance are claimed.
