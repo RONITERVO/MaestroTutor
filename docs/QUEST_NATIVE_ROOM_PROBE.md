@@ -38,7 +38,12 @@ removes it, and reads native resource diagnostics. It then creates a lathe cup,
 inspects its exact native recipe, edits its outline/subdivisions, reads paged profile
 facts, and verifies Undo of both editing and creation. It retains initial state,
 observations and outcomes in journey.json. verified.json requires both child
-processes and the native terminal receipt to report success. An invalid observation
+processes and the native terminal receipt to report success. The same
+`Assert-QuestUnityLog.ps1` gate used by native verification and Android packaging
+also rejects Unity engine `Script error` diagnostics, even after zero exit codes
+and passing assertions. Missing or empty logs cannot provide acceptance evidence.
+`Test-QuestUnityLog.ps1` exercises this gate locally and in web CI without Unity.
+An invalid observation
 is retained as rejected-state.json before cancellation, so a later native update
 cannot overwrite the diagnostic. The client reports the transport failure instead
 of hiding it behind request cancellation. Failure stops only

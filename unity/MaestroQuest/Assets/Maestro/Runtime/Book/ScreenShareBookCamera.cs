@@ -11,7 +11,7 @@ namespace Maestro.Quest.Book {
         public string SourceId=>BookCameraSession.MixedSource;
         public bool Available=>Application.platform==RuntimePlatform.Android&&browser&&browser.IsReady;
         public void Context(string value){if(context==value)return;context=value;browser.ScreenShareCommand("SetScreenShareContext",value);}
-        public bool Start(out string error){
+        public bool StartCapture(out string error){
             error=null;if(!Available){error="screen-share-unavailable";return false;}
             readyAt=Time.realtimeSinceStartupAsDouble+.25;browser.ScreenShareCommand("StartScreenShare");return true;
         }

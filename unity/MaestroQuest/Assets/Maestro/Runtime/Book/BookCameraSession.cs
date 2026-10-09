@@ -12,7 +12,8 @@ namespace Maestro.Quest.Book {
     internal interface IBookCameraFeed {
         string SourceId {get;}
         bool Available {get;}
-        bool Start(out string error);
+        // Implementations may be MonoBehaviours: avoid Unity's reserved Start message.
+        bool StartCapture(out string error);
         bool Frame(out JObject image,out string error);
         void Stop();
     }
@@ -61,7 +62,7 @@ namespace Maestro.Quest.Book {
             if(!ReferenceEquals(owner,null)&&owner!=editor)failed=true;
             if(requested&&!failed){
                 owner=editor;
-                if(!started){started=true;if(physical&&!device.Start(out error))failed=true;}
+                if(!started){started=true;if(physical&&!device.StartCapture(out error))failed=true;}
                 if(!failed){
                     if(frame!=null&&now-frameAt>2)frame=null;
                     if(frame==null){

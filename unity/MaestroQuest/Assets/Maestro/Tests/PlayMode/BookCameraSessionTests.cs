@@ -33,7 +33,7 @@ namespace Maestro.Quest.Tests {
    public void Context(string value){ContextValue=value;}
    public bool Available=>true;
    internal int Starts,Stops;internal bool Allow;internal Newtonsoft.Json.Linq.JObject Pixels;
-   public bool Start(out string error){Starts++;error=Allow?null:"permission-required";return Allow;}
+   public bool StartCapture(out string error){Starts++;error=Allow?null:"permission-required";return Allow;}
    public bool Frame(out Newtonsoft.Json.Linq.JObject image,out string error){image=Pixels;Pixels=null;error=null;return image!=null;}
    public void Stop(){Stops++;}
   }

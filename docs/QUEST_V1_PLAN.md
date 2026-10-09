@@ -5,9 +5,11 @@ Status: active implementation. Nothing in this document claims store readiness.
 The current installed development checkpoint is **D85F3CB7**. Headset work is
 paused until the owner confirms cooling and charging; mouth-positioned speech and
 native room acoustics have not yet been installed for physical acceptance.
-The packaged development checkpoint **87EE404D / 88379b5c** has local
-packaging evidence only and is not installed. It includes the three camera
-sources and preceding world/appearance changes, but predates chat-image import.
+The preceding packaged development checkpoint **408DF5C9 / 2195cf50** has local
+packaging evidence only and is not installed. It includes all three camera
+sources, chat-image import and editable passthrough windows. Its logs retained a
+Unity camera lifecycle diagnostic; the following source correction and stricter
+verification gate supersede that diagnostic acceptance, not its package bytes.
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -25,7 +27,9 @@ A user-selected virtual-scene camera now feeds the existing chat and Live camera
 paths; see [camera sharing](#virtual-scene-camera-sharing--2026-10-09). Physical
 camera and mixed-view screen sharing also have desktop/provider evidence in the
 later camera entries below; all three sources still need hardware acceptance.
-Imported surroundings and editable passthrough windows remain open.
+Editable passthrough windows now have desktop rendering, original-book and real
+managed/BYOK evidence; see the [window checkpoint](#passthrough-window-desktop-checkpoint--2026-10-09).
+Headset window acceptance, imported surroundings and region streaming remain open.
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
@@ -6109,3 +6113,36 @@ package; no device operation, release key, upload or deployment is included.
 - The renderer uses framebuffer coverage masks in the transparent sort, with opaque depth rejection and explicit virtual-only capture exclusion. Full-opacity surroundings can retain a passthrough underlay for requested windows. A missing headset passthrough subsystem leaves masks dormant rather than pretending desktop output is the physical room.
 - Desktop verification passes 1,041 EditMode checks, the full suite’s 925 passing PlayMode cases and the final ten focused cases that resolve all five initial window failures (three optional private-file skips). The 2,824 web tests, build, lint, probe typing and catalog checks pass. The original-book journey and separate real managed/BYOK creation → half reveal → removal journeys pass. Managed turns reconcile 463 credits / USD 0.450820, excluding introduction, without mismatches or outstanding reservations. Detailed failures and evidence remain in QUEST_AGENT_RELEASE_COVERAGE.md. No hardware acceptance or release candidate is claimed; Quest remains on the existing cooling/charge hold.
 - Still required: stereo/composed headset acceptance with real hands/controllers and unscanned foreground objects, physical/virtual anchor behavior during locomotion and recovery, transparent sorting at oblique views, performance under the window budget, imported surroundings/region streaming, and the remaining v1 release gates. The limits of the current bounded region remain implementation limits rather than the final promise for user-created countries.
+
+
+### Camera lifecycle and diagnostic acceptance — 2026-10-09
+
+The explicit camera feed entry point is now `StartCapture`. Its previous name,
+`Start(out string)`, collided with Unity's parameterless MonoBehaviour message.
+Real prior configuration, interaction, book-probe and Android-build logs contained
+`Script error (HeadsetBookCamera): Start() can not take parameters.` even though
+those processes returned zero. The original logs are retained under
+`.quest-evidence/camera-lifecycle/before-*.log`; earlier passing tests are not
+relabelled as proof of clean scene initialization.
+
+All native verification, full-app integration and Android packaging runners now
+apply one diagnostic gate before accepting their output. Missing/empty logs and
+engine `Script error` lines fail. A platform-independent PowerShell regression in
+CI tests both negative evidence and success. This complements the existing test,
+process-exit, receipt and package checks; it is not a general Unity warning filter.
+
+A real PlayMode component test exercises activation, disable/enable, app
+pause/focus and an explicit unsupported desktop selection. None creates a sensor
+or implicitly resumes capture. Existing source-specific consent, expiring leases
+and provenance remain unchanged. The fresh full run passes 1,041 EditMode and
+931 PlayMode tests with three expected optional private-file skips, and all three
+native logs pass the new gate. Thirty original-app camera tests pass as well.
+Physical sensor, mixed-view composition and device performance remain pending.
+
+Full-scene headless run `1c64fd8a4b144ca5ad21302d2ad378aa` and original-book run
+`ad5ab91ac82647248a33288b384099be` both pass the same diagnostic gate, process
+exits and native receipts. The book run includes original chat handoff, creation,
+editing, Undo and shared resource/window controls with scripted provider replies.
+The current production web bundle also builds. No paid-provider behavior changed;
+prior real-provider evidence remains separately scoped. Corrected local package
+provenance is recorded under `.quest-evidence/camera-lifecycle` and on the PR.

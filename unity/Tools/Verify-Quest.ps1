@@ -91,6 +91,7 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
         }
     } } finally { Stop-QuestBuildHelper }
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $logPath -Tail 50; throw "Unity exited $($process.ExitCode); see $logPath" }
+    & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $logPath
 }
 Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.Configure') 'configure.log'
 $nativeCatalog = Join-Path $logRoot 'behaviour-catalog.json'

@@ -2309,3 +2309,39 @@ runs. Quest stereo/composed view, real hands/controllers/unscanned foreground,
 anchor recovery during locomotion, oblique transparency and sustained window
 budget performance remain pending in QUEST_DEVICE_QA.md. Imported surroundings,
 regional streaming and the wider v1 release gates remain open.
+
+
+## Camera lifecycle and engine-diagnostic gate — 2026-10-09
+
+The real `HeadsetBookCamera` used `Start(out string)`, a name Unity treats as an
+automatic MonoBehaviour callback with an incompatible signature. Prior logs from
+configuration, tests, full-book integration and Android packaging contained this
+engine diagnostic despite successful process exits and test reports. Those logs
+are retained; their old acceptance did not establish clean scene initialization.
+
+The shared camera feed now uses the explicit `StartCapture` entry point. A new
+component test exercises actual Unity activation, disable/enable, pause/focus and
+unsupported desktop selection without creating a sensor or implicitly resuming
+capture. Existing permission, source selection and lease behavior are retained.
+A shared PowerShell gate now rejects missing/empty logs and engine `Script error`
+lines before native verification, integration receipts or packages are accepted.
+CI runs its positive/negative fixtures without requiring Unity. The retained
+real configuration log is also rejected by that gate.
+
+Fresh final-source checks pass:
+
+- 1,041 EditMode and 931 PlayMode tests; three expected optional private-file
+  skips. All three configuration/test logs pass the new diagnostic gate.
+- Thirty original-app camera tests across five files, production web build,
+  native catalog equality/source provenance and the edited PowerShell syntax.
+- Full native headless journey `1c64fd8a4b144ca5ad21302d2ad378aa` and original
+  book journey `ad5ab91ac82647248a33288b384099be`: both process exits, native
+  receipts and engine-diagnostic gates pass. The book screenshot was inspected;
+  fields and results remain readable. These are scripted-provider journeys.
+
+The first verification attempt correctly stopped at catalog provenance drift.
+Review showed only the three changed camera source hashes; no action/fact schema
+changed. Refreshing the manifest from the native export resolved it. Evidence is
+in `.quest-evidence/camera-lifecycle` and the named native runs. No new paid
+provider, physical camera, screen-share permission or headset performance result
+is claimed. Installed and private-Alpha versions are unchanged.

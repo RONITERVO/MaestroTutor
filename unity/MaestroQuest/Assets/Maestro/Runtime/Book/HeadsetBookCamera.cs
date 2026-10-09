@@ -41,7 +41,7 @@ namespace Maestro.Quest.Book {
             }
         }
         static bool CaptureFailure(Exception exception)=>exception is ArgumentException||exception is UnityException||exception is InvalidOperationException||exception is AndroidJavaException;
-        public bool Start(out string error){
+        public bool StartCapture(out string error){
             Stop();error=null;
             try{return StartCamera(out error);}
             catch(Exception exception) when(CaptureFailure(exception)){Stop();error="camera-unavailable";return false;}
