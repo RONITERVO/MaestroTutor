@@ -374,6 +374,7 @@ export const useLiveSessionController = (config: UseLiveSessionControllerConfig)
         const userMessageUpdates = {
           text: userText,
           imageUrl: snapshotData?.base64,
+          imageOrigin: snapshotData?.imageOrigin,
           imageMimeType: snapshotData?.mimeType,
           storageOptimizedImageUrl: snapshotData?.storageOptimizedBase64,
           storageOptimizedImageMimeType: snapshotData?.storageOptimizedMimeType,

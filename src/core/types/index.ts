@@ -43,7 +43,7 @@ export interface ChatMessage {
   imageUrl?: string;
   imageMimeType?: string;
   /** Origin of the displayed image, independent of compression/upload variants. */
-  imageOrigin?: 'generated';
+  imageOrigin?: 'generated' | 'virtual-scene';
   /** Original attachment file name if available (e.g. README.md, app.tsx) */
   attachmentName?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
@@ -98,7 +98,7 @@ export type UploadedAttachmentSource =
 export interface ChatFilePart {
   fileUri: string;
   mimeType: string;
-  origin?: 'generated';
+  origin?: 'generated' | 'virtual-scene';
 }
 
 export interface UploadedAttachmentVariant {
@@ -108,7 +108,7 @@ export interface UploadedAttachmentVariant {
   mimeType: string;
   targets: UploadedAttachmentTarget[];
   source: UploadedAttachmentSource;
-  origin?: 'generated';
+  origin?: 'generated' | 'virtual-scene';
   order?: number;
 }
 

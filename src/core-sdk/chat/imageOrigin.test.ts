@@ -6,7 +6,7 @@ import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from './history
 import { buildCoreLiveSystemInstruction } from './liveContext';
 import { generateGeminiResponse } from '../gemini/generative';
 import { createManagedGeminiClient } from '../managedGeminiClient';
-import { GENERATED_IMAGE_CONTEXT } from '../../../shared/prompts/context';
+import { GENERATED_IMAGE_CONTEXT, VIRTUAL_SCENE_IMAGE_CONTEXT } from '../../../shared/prompts/context';
 
 const image = (id: string, generated: boolean): ChatMessage => ({
   id, role: 'user', timestamp: 1, text: 'Help me set up the room.',
@@ -54,4 +54,16 @@ describe('generated image provenance', () => {
     expect(history[1].fileParts![0]).not.toHaveProperty('origin');
     expect(buildCoreLiveSystemInstruction({ basePrompt: 'Tutor', messages: [generated, unknown] }).split(GENERATED_IMAGE_CONTEXT)).toHaveLength(2);
   });
+});
+
+it.each(['byok', 'managed'])('preserves virtual camera provenance at the %s boundary and in saved Live history', async mode => {
+ const virtual: ChatMessage = { ...image('virtual', false), imageOrigin: 'virtual-scene' };
+ const history = deriveHistoryForApi([JSON.parse(JSON.stringify(virtual))]);
+ const send = vi.fn(async (_request: any) => (async function* () { yield { text: 'Ready' }; })());
+ const aiClient = mode === 'managed' ? createManagedGeminiClient({ generateContentStream: send } as any) : { models: { generateContentStream: send } } as any;
+ await generateGeminiResponse('test', 'Describe this.', history, { aiClient, currentFileParts: [{ fileUri: 'files/virtual-current', mimeType: 'image/jpeg', origin: 'virtual-scene' }] });
+ const parts = send.mock.calls[0][0].contents.flatMap((value: any) => value.parts);
+ expect(parts.filter((part: any) => part.text === VIRTUAL_SCENE_IMAGE_CONTEXT)).toHaveLength(2);
+ delete virtual.uploadedFileVariants;
+ expect(buildCoreLiveSystemInstruction({ basePrompt: 'Tutor', messages: [virtual] })).toContain(VIRTUAL_SCENE_IMAGE_CONTEXT);
 });

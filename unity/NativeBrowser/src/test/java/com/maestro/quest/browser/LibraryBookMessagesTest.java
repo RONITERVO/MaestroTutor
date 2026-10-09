@@ -45,6 +45,12 @@ public class LibraryBookMessagesTest {
         assertNull(LibraryBookMessages.publishScript(state.put("data","abc").put("session","wrong").toString(),"roomCapture"));
         assertNull(LibraryBookMessages.publishScript(state.put("session","a".repeat(32)).put("revision",0).toString(),"roomCapture"));
     }
+    @Test public void cameraFramesRemainBoundedQuotedTopDocumentData() throws Exception {
+        JSONObject state=new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("frame","a".repeat(131072));
+        assertNotNull(LibraryBookMessages.publishScript(state.toString(),"cameraState"));
+        assertNull(LibraryBookMessages.publishScript(state.put("frame","a".repeat(140000)).toString(),"cameraState"));
+        assertNull(LibraryBookMessages.publishScript(state.put("frame","").put("session","bad").toString(),"cameraState"));
+    }
     @Test public void quotesAttributionAsDataAndRejectsInvalidOrExcessiveState() throws Exception {
         JSONObject state = new JSONObject().put("version",1).put("session","a".repeat(32)).put("revision",1).put("attribution","'); alert('source'); //\n\\");
         String script = LibraryBookMessages.publishScript(state.toString());

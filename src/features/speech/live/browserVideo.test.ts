@@ -1,3 +1,5 @@
+import { registerCameraFrameState } from '../../../platform/browser/cameraSources';
+import { VIRTUAL_SCENE_FRAME_LABEL } from '../../../../shared/prompts/context';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 // @vitest-environment jsdom
@@ -13,7 +15,7 @@ beforeEach(() => {
   vi.useFakeTimers(); frames = []; reads = [];
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn() } as any);
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn(), fillRect: vi.fn(), fillText: vi.fn() } as any);
   vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(callback => { frames.push(callback); });
   vi.stubGlobal('FileReader', class {
     result = 'data:image/jpeg;base64,/9gKFP/Z'; onloadend: (() => void) | null = null;
@@ -118,4 +120,17 @@ describe('Live handoff camera provenance', () => {
     if (reason === 'sent') expect(media.frames[0]).toEqual({ mimeType: 'image/jpeg', data: '/9gKFP/Z', atMs: 0, audioOffsetSamples: 1 });
     await h.video.updateVideoInput(null); warn.mockRestore();
   });
+});
+
+it('labels virtual Live pixels, retains their origin for handoff and drops stale asynchronous frames', async () => {
+ const h = setup(), source = stream(); let fresh = true;
+ registerCameraFrameState(source, () => ({ origin: 'virtual-scene', fresh }));
+ const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); h.state.liveInputContextRef.current = input;
+ await h.video.updateVideoInput(source, readyVideo(source));
+ await vi.advanceTimersByTimeAsync(1000); frames[0](new Blob(['virtual'])); reads[0](); await flush();
+ expect(h.sendRealtimeInput).toHaveBeenCalledWith({ video: { data: '/9gKFP/Z', mimeType: 'image/jpeg' } });
+ expect(h.state.canvasRef.current!.getContext('2d')!.fillText).toHaveBeenCalledWith(VIRTUAL_SCENE_FRAME_LABEL, 8, 12, expect.any(Number));
+ await vi.advanceTimersByTimeAsync(1000); frames[1](new Blob(['stale'])); fresh = false; reads[1](); await flush();
+ expect(h.sendRealtimeInput).toHaveBeenCalledOnce(); expect(input.finish().frames[0].origin).toBe('virtual-scene');
+ await h.video.updateVideoInput(null);
 });

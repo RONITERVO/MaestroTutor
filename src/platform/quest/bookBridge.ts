@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { CameraBookClient, type BookCameraRequest } from './cameraBookBridge';
+import { registerCameraSources } from '../browser/cameraSources';
 import { parseBookCommand, type BookCommand, type BookLayout } from './bookModel';
 import { flushSync } from 'react-dom';
 import { sessionActivity } from '../browser/sessionActivity';
@@ -24,16 +26,19 @@ export interface BookSnapshot {
   libraryRevision?: number;
   libraryRequest?: LibraryRequest | null;
   integrityRequest?: QuestIntegrityRequest;
+  camera?: BookCameraRequest;
 }
 
 declare global {
   interface Window {
-    maestroBook?: Readonly<{ speechExchange?: SpeechBookClient['exchange']; integrityResult: (input: unknown) => boolean; snapshot: () => BookSnapshot; roomSnapshot: () => ReturnType<RoomAgentClient['snapshot']>; roomState: (input: unknown) => boolean; roomCapture: (input:unknown)=>boolean; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean; fileExportPoll: () => unknown; fileExportResult: (value:unknown) => boolean; libraryState: (input: unknown) => boolean }>;
+    maestroBook?: Readonly<{ cameraState: (input: unknown) => boolean; speechExchange?: SpeechBookClient['exchange']; integrityResult: (input: unknown) => boolean; snapshot: () => BookSnapshot; roomSnapshot: () => ReturnType<RoomAgentClient['snapshot']>; roomState: (input: unknown) => boolean; roomCapture: (input:unknown)=>boolean; command: (input: unknown) => boolean; lifecycle: (suspended: boolean) => void; lifecycleState: () => ReturnType<typeof sessionActivity.status>; takeFileSelection: () => boolean; fileExportPoll: () => unknown; fileExportResult: (value:unknown) => boolean; libraryState: (input: unknown) => boolean }>;
   }
 }
 
 /** Native polls this top-level document; no JS-to-native object is exposed to iframes. */
 export function installBookBridge(target: Window, readSnapshot: () => BookSnapshot, command: (value: BookCommand) => void, library?: LibraryBookClient, room = new RoomAgentClient()) {
+  const camera = new CameraBookClient();
+  const unregisterCamera = registerCameraSources(camera);
   const speech = new SpeechBookClient();
   const unregisterSpeech = registerBookSpeech(speech);
   const integrity = new QuestIntegrityClient();
@@ -42,9 +47,10 @@ export function installBookBridge(target: Window, readSnapshot: () => BookSnapsh
   const fileExport = createBookFileExport(target);
   const unregisterRoom = registerRoomAgent(room);
   const bridge = Object.freeze({
+    cameraState: camera.receive,
     speechExchange: speech.exchange,
     roomSnapshot: room.snapshot, roomState: room.receive, roomCapture: room.receiveCapture,
-    snapshot: () => ({ ...readSnapshot(), ...library?.snapshot(), ...(integrity.snapshot() ? { integrityRequest: integrity.snapshot() } : {}) }),
+    snapshot: () => ({ ...readSnapshot(), camera: camera.snapshot(), ...library?.snapshot(), ...(integrity.snapshot() ? { integrityRequest: integrity.snapshot() } : {}) }),
     integrityResult: integrity.receive,
     libraryState: (input: unknown) => library?.receive(input) ?? false,
     takeFileSelection: () => fileSelection.take(),
@@ -52,7 +58,7 @@ export function installBookBridge(target: Window, readSnapshot: () => BookSnapsh
     lifecycle(suspended: boolean) {
       if (typeof suspended !== 'boolean') return;
       fileExport.lifecycle(suspended);
-      if (suspended) { speech.suspend(); integrity.cancel(); fileSelection.clear(); library?.suspend(); room.cancel(); }
+      if (suspended) { camera.suspend(); speech.suspend(); integrity.cancel(); fileSelection.clear(); library?.suspend(); room.cancel(); }
       // Commit iframe removal before native pauses JavaScript timers.
       flushSync(() => sessionActivity.setSuspended(suspended));
     },
@@ -65,5 +71,5 @@ export function installBookBridge(target: Window, readSnapshot: () => BookSnapsh
     },
   });
   target.maestroBook = bridge;
-  return () => { unregisterSpeech(); unregisterIntegrity(); unregisterRoom(); fileExport.dispose(); fileSelection.dispose(); if (target.maestroBook === bridge) delete target.maestroBook; };
+  return () => { camera.dispose(); unregisterCamera(); unregisterSpeech(); unregisterIntegrity(); unregisterRoom(); fileExport.dispose(); fileSelection.dispose(); if (target.maestroBook === bridge) delete target.maestroBook; };
 }

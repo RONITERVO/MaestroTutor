@@ -23,6 +23,7 @@ namespace Maestro.Quest.Book
         public int libraryRevision;
         public LibraryBookRequest libraryRequest;
         public QuestIntegrityRequest integrityRequest;
+        public BookCameraRequest camera;
     }
 
     public sealed partial class NativeBookBrowser : FragmentCapture, IBookBrowser
@@ -44,6 +45,8 @@ namespace Maestro.Quest.Book
         }
         QuestIntegrityExchange integrity;
         BookSpeechSession speech;
+        BookCameraSession camera;
+        internal void BindCameraSource(Func<Maestro.Quest.Creation.RoomEditor> read) { camera?.Suspend(); camera=new BookCameraSession(read); }
         float nextSpeechPoll;
         public void BindSpeechOutput(NativeSpeechOutput output)
         {
@@ -111,6 +114,9 @@ namespace Maestro.Quest.Book
             string json = m_NativePlugin.Call<string>("ReadSnapshot");
             Error = m_NativePlugin.Call<string>("ReadError");
             ReadSnapshot(json);
+            camera?.Receive(Snapshot?.camera,Time.realtimeSinceStartupAsDouble);
+            var cameraState=camera?.Poll(Time.realtimeSinceStartupAsDouble);
+            if(cameraState!=null)m_NativePlugin.Call("PublishCameraState",cameraState.ToString(Newtonsoft.Json.Formatting.None));
             integrity.Poll(Snapshot?.integrityRequest,Time.realtimeSinceStartupAsDouble,value=>m_NativePlugin.Call("PublishIntegrityResult",value));
             DeliverLibraryState(true,Snapshot,value=>m_NativePlugin.Call("PublishLibraryState",value));
             var link = m_NativePlugin.Call<string>("TakeExternalLink");
@@ -210,7 +216,7 @@ namespace Maestro.Quest.Book
 
         public void SetSuspended(bool value)
         {
-            if (value) speech?.Suspend();
+            if (value) { speech?.Suspend(); camera?.Suspend(); }
             if (value && pointerHeld) Pointer(0, 0, BrowserPointerPhase.Cancel);
             if (suspended != value) { integrity?.Clear(); Snapshot=null; previousSnapshot=null; }
             suspended = value;
@@ -219,7 +225,7 @@ namespace Maestro.Quest.Book
 #endif
         }
 
-        void OnDisable() { speech?.Suspend(); integrity?.Clear(); }
+        void OnDisable() { camera?.Suspend(); speech?.Suspend(); integrity?.Clear(); }
         void OnApplicationPause(bool paused) { applicationPaused = paused; SetSuspended(applicationPaused || !applicationFocused); }
         void OnApplicationFocus(bool focused) { applicationFocused = focused; SetSuspended(applicationPaused || !applicationFocused); }
     }

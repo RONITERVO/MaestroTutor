@@ -21,7 +21,10 @@ Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
 [temporary layer presentation](#temporary-layer-presentation--2026-10-08).
-Imported surroundings, camera choices and editable passthrough windows remain open.
+A user-selected virtual-scene camera now feeds the existing chat and Live camera
+paths; see [camera sharing](#virtual-scene-camera-sharing--2026-10-09). Physical
+camera and mixed-view sources, imported surroundings and editable passthrough
+windows remain open.
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
@@ -5858,3 +5861,60 @@ The managed measured image/composite turns reconcile 574/245 credits, compared
 with 860/300 in the preceding runs; peak context did not decrease. These observed
 runs are not a controlled latency benchmark. Physical/device and wider-world
 streaming work remain open in the release coverage ledger.
+
+
+## Virtual-scene camera sharing — 2026-10-09
+
+The original camera selector now offers **Virtual scene (no real camera)** when
+the native book advertises an available source. It uses the existing preview,
+snapshot, chat and Live controls. Choosing a source grants no room-edit authority;
+agent snapshot commands remain a separate, bounded capability with their own
+receipts. Native camera pixels never replace that capability's saved snapshot.
+
+The current source renders authored room objects and rule buttons from the
+viewer pose, excluding the book, passthrough and physical surroundings. It is a
+bounded 512×384 JPEG feed, at most once per second, sharing the native snapshot
+render budget. It is not the entire headset compositor, a physical-camera feed,
+or proof of real-room occlusion, contact, geometry or alignment.
+
+One native lease owns one pending image. Acknowledgments, source/document IDs,
+room ownership, increasing liveness pulses, capture time, image hash/shape and
+frame freshness fence delivery. Turning sharing off, cancelling startup, changing
+source, room gates, book suspension or a stalled host stop sharing; old leases
+cannot restart it. Reserved native camera IDs cannot silently select an OS camera.
+
+Image origin follows snapshots into saved chat, attachment variants, compact
+history and delegated Live input. Live sends the same supported video envelope as
+the original app; a narrow source caption above the full image identifies the
+virtual view without cropping it. The delegation snapshot retains those exact
+sent JPEG bytes and structured origin. Physical and mixed-view adapters will use
+this same source interface after their permission, capture and performance gates
+are implemented.
+
+Local evidence is in ignored `.quest-evidence/virtual-camera`. Real Chrome
+exercises the existing React camera manager, canvas/video playback, snapshot
+origin, exact Live handoff bytes, interruption and zero physical-media requests,
+using a recorded native JPEG. Actual native rendering/lifecycle and the Android
+bridge are checked separately; this is not an end-to-end Quest camera acceptance.
+
+Real managed and BYOK text/Live requests used the original Maestro providers,
+English-native/Spanish-target prompt, the Chrome-produced image and locally
+synthesized novice speech. Both successful runs identified the red block and the
+virtual source. Managed billing reconciled 18 credits/USD 0.016987 with zero
+reservations. The first BYOK Live attempt returned only a greeting despite the
+complete input transcript. It remains retained as a failed semantic attempt; a
+repeat passed. Using the shared Live instruction builder produced the same empty-
+history instruction, so that change does not explain or fix the inconsistency.
+Broader conversational response reliability remains a release gate.
+
+Validation: 2,780 web tests in 304 files; 1,032 Unity EditMode and 910 PlayMode
+passes with three expected optional private-model skips; two stronger native
+pixel-payload assertions pass in a focused rerun. Both real native-room and book
+integration probes pass. Android discovers 107 tests: 105 pass, two optional
+private-import fixtures skip. Production web/AAR builds, lint, probe typing,
+prompt ownership, core boundaries and catalog provenance checks pass. The catalog
+change updates native source provenance only; capability definitions are unchanged.
+
+Headset sharing latency, sustained frame-time/thermal cost, offscreen Android
+WebView canvas capture, app interruption and real camera/mixed-view selection
+still need hardware acceptance. The cooling/charging hold remains in effect.

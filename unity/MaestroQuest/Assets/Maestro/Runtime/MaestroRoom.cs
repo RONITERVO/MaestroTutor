@@ -100,6 +100,7 @@ namespace Maestro.Quest
             gameObject.AddComponent<RoomDepthOcclusion>().Initialize(offset.transform,camera.GetComponent<ARCameraManager>(),virtualView);
             var agent=gameObject.AddComponent<RoomAgent>();agent.Initialize(null,browser);
             var workspace=gameObject.AddComponent<Maestro.Quest.Persistence.WorkspaceHost>();
+            browser.BindCameraSource(()=>workspace&&workspace.Current?workspace.Current.Editor:null);
             var includedAvatar=Maestro.Quest.Imports.BundledAvatar.FromApplication();
             var includedMotions=Maestro.Quest.Imports.BundledMotions.FromApplication();
             string workspaceDirectory=Application.persistentDataPath;

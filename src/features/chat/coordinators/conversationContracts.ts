@@ -26,7 +26,7 @@ export interface UseTutorConversationConfig {
   captureSnapshot: (options?: boolean | {
     isForReengagement?: boolean;
     requireReadyFrame?: boolean;
-  }) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
+  }) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string; imageOrigin?: 'virtual-scene' } | null>;
 
   // Speech
   speakMessage: (message: ChatMessage) => void;
@@ -80,7 +80,7 @@ export interface UseTutorConversationReturn {
     passedImageBase64?: string,
     passedImageMimeType?: string,
     messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement',
-    options?: { triggeredByStt?: boolean }
+    options?: { triggeredByStt?: boolean; imageOrigin?: 'virtual-scene' }
   ) => Promise<boolean>;
   handleSendMessageInternalRef: MutableValue<any>;
 

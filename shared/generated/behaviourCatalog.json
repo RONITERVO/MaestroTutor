@@ -41231,6 +41231,10 @@
       "sha256": "0566e4ed681a5cac544d715f19e9270c24017fa59f3f4875f24008d024a5cc20"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCameraSession.cs",
+      "sha256": "c25a307b6e995b0d56d44fa0934ba64171811d30680848f0194368d65e00f0bf"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.Diagnostics.cs",
       "sha256": "cff9f8c717531e4f2a7c17a6ee7a0f3da2198b951428617fd5540e9fc807e9ff"
     },
@@ -41284,7 +41288,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeBookBrowser.cs",
-      "sha256": "94d68e40d00c8bebe6b2cdd806fe3c6c5d4f33d7a76706bf59f56b29ec715aeb"
+      "sha256": "d545c6626a02b557e75844ca278448002460e244ce1e48a14dc6727ed04c542e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeSpeechOutput.cs",
@@ -42228,7 +42232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
-      "sha256": "d4e47082b017aba86172aec33ba1842fbd92d4f0514e5bb67b7c0f23cec40c47"
+      "sha256": "513620b811562654e588ca239e30f9a0b9ffa119ab7fd951fd23425a56563245"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
@@ -42672,7 +42676,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "5b5c6b696d606523a91f56a0551d81fdef5260d85e39ee09d997fc34c26d9e02"
+      "sha256": "0431e3818cca36a72cc3cafb07a0993678a17be7e9041bd2e7970a5f7a8191dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/AndroidWorkspacePicker.cs",

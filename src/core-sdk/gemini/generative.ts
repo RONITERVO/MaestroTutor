@@ -4,7 +4,7 @@ import {validateInlineImages,type InlineImage} from '../../../shared/inlineImage
 // SPDX-License-Identifier: Apache-2.0
 
 import type { ChatFilePart } from '../../core/types';
-import { GENERATED_IMAGE_CONTEXT } from '../../../shared/prompts/context';
+import { imageOriginContext } from '../../../shared/prompts/context';
 import { buildTranslationPrompt } from '../../core/config/prompts';
 import { ThinkingLevel } from '@google/genai';
 import { debugLogService } from '../diagnostics';
@@ -448,7 +448,7 @@ export const generateGeminiResponse = async (
         const fileUri = typeof candidate?.fileUri === 'string' ? candidate.fileUri.trim() : '';
         const mimeType = typeof candidate?.mimeType === 'string' ? candidate.mimeType.trim() : '';
         if (!fileUri || !mimeType) return null;
-        return { fileUri, mimeType, ...(candidate?.origin === 'generated' && mimeType.startsWith('image/') ? { origin: 'generated' as const } : {}) };
+        return { fileUri, mimeType, ...((candidate?.origin === 'generated' || candidate?.origin === 'virtual-scene') && mimeType.startsWith('image/') ? { origin: candidate.origin } : {}) };
       })
       .filter((part): part is ChatFilePart => Boolean(part));
   };
@@ -463,7 +463,7 @@ export const generateGeminiResponse = async (
 
     const historyFileParts = normalizeFileParts(h.fileParts);
     historyFileParts.forEach((part) => {
-      if (part.origin === 'generated') parts.push({ text: GENERATED_IMAGE_CONTEXT });
+      if (imageOriginContext(part.origin)) parts.push({ text: imageOriginContext(part.origin) });
       parts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
     });
 
@@ -480,7 +480,7 @@ export const generateGeminiResponse = async (
   const currentParts: any[] = [{ text: userPrompt }];
   const normalizedCurrentFileParts = normalizeFileParts(currentFileParts);
   normalizedCurrentFileParts.forEach((part) => {
-    if (part.origin === 'generated') currentParts.push({ text: GENERATED_IMAGE_CONTEXT });
+    if (imageOriginContext(part.origin)) currentParts.push({ text: imageOriginContext(part.origin) });
     currentParts.push({ fileData: { fileUri: part.fileUri, mimeType: part.mimeType } });
   });
 
@@ -489,7 +489,7 @@ export const generateGeminiResponse = async (
     currentParts.push({ text: LIVE_INPUT_CONTEXT_INSTRUCTION }, { text: buildLiveInputTiming(media.packets) },
       { inlineData: { mimeType: media.audio!.mimeType, data: media.audio!.data } });
     media.frames.forEach((frame, index) => currentParts.push(
-      { text: buildLiveInputFrameLabel(index, frame.atMs, frame.audioOffsetSamples) },
+      { text: buildLiveInputFrameLabel(index, frame.atMs, frame.audioOffsetSamples) + (frame.origin ? `\n${imageOriginContext(frame.origin)}` : '') },
       { inlineData: { mimeType: frame.mimeType, data: frame.data } },
     ));
   }

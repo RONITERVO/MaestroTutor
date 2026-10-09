@@ -67,3 +67,9 @@ describe('bounded original Live input', () => {
     const media = valid(); corrupt(media); expect(() => validateLiveInputMedia(media)).toThrow('original audio');
   });
 });
+
+it('retains the selected virtual source and rejects invented origins on restore', () => {
+ const input = new LiveInputContext(() => 0); input.recordAudio(audio); input.recordFrame(jpeg, 'virtual-scene');
+ const result = input.finish(); expect(result.frames[0].origin).toBe('virtual-scene'); expect(() => validateLiveInputMedia(result)).not.toThrow();
+ (result.frames[0] as any).origin = 'trusted-real-camera'; expect(() => validateLiveInputMedia(result)).toThrow();
+});

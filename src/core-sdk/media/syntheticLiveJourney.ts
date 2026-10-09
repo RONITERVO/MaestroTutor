@@ -75,9 +75,9 @@ export interface SyntheticLiveJourneyInput {
   requireRealtimeInputPacing?: boolean;
   /** Pace the model's 24 kHz PCM through a real-time headless playback sink. */
   playModelAudioRealtime?: boolean;
-  videoFrames?: Array<{ dataBase64: string; mimeType?: string }>;
+  videoFrames?: Array<{ dataBase64: string; mimeType?: string; origin?: 'virtual-scene' }>;
   /** Camera frames to send once for each corresponding microphone turn. */
-  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string }>>;
+  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string; origin?: 'virtual-scene' }>>;
   thinkingMode?: 'minimal' | 'conversation';
   voiceName?: string;
 }
@@ -386,7 +386,7 @@ export const runSyntheticLiveJourney = async (
       const inferredMimeType = /^data:([^;,]+)(?:;[^,]*)?,/i.exec(frame.dataBase64)?.[1];
       const mimeType = frame.mimeType?.trim() || inferredMimeType || 'image/jpeg';
       session.sendRealtimeInput({ video: { data, mimeType } });
-      if (mimeType === 'image/jpeg') handoffMedia?.recordFrame(data);
+      if (mimeType === 'image/jpeg') handoffMedia?.recordFrame(data, frame.origin);
       else handoffMedia?.invalidate('invalid');
       sentVideoFrameCount += 1;
       runtime.events.emit({

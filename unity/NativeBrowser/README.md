@@ -42,7 +42,7 @@ have been exercised. Real active Live/microphone sessions still need hardware QA
 Microphone requests from the bundled app now ask Android for `RECORD_AUDIO` at
 first use. The library also declares the normal `MODIFY_AUDIO_SETTINGS` permission,
 which Android WebView requires to initialize its WebRTC audio source; it does not
-replace microphone consent. Camera, opaque-frame, remote-origin and unknown-resource requests are
+replace microphone consent. WebRTC camera, opaque-frame, remote-origin and unknown-resource requests are
 denied. Cancellation, navigation, disposal and app interruption invalidate the
 pending browser request. A late Android grant never starts capture automatically.
 If the permission dialog interrupts the app, the notice beside the book asks the
@@ -112,3 +112,20 @@ a current DOM screenshot alone cannot establish that the Unity book is current.
 
 Android documents the renderer callbacks and GL thread in
 [GLSurfaceView.Renderer](https://developer.android.com/reference/android/opengl/GLSurfaceView.Renderer).
+
+
+### Native virtual-scene camera
+
+The bundled top document can select the native **Virtual scene (no real camera)**
+source through the original app camera selector. It uses a bounded, native-polled
+lease and one pending 512×384 JPEG, not `getUserMedia` video permission. Java only
+publishes versioned, session-scoped camera data through origin-checked top-document
+script evaluation (140,000-character bound); artifacts receive no native interface.
+Capture never starts merely because a source is advertised. Suspension, changed
+room ownership and stale request pulses stop it. User re-selection is required
+after interruption. Physical-camera and compositor capture remain unimplemented.
+
+The camera increment passes 107 discovered Android tests (105 passed, two optional
+private-import fixtures skipped), release AAR build and lint. Real Chrome verifies
+canvas/video sharing separately. Android offscreen WebView `captureStream` and
+sustained native capture cost still require Quest testing before release.

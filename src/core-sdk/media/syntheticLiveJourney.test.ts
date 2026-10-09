@@ -63,6 +63,7 @@ describe('synthetic Live journey', () => {
       requireRealtimeInputPacing: true,
       playModelAudioRealtime: true,
       captureInputMedia: true,
+      videoFrames: [{ dataBase64: '/9gKFP/Z', origin: 'virtual-scene' }],
     }, { runtime });
 
     await vi.waitFor(() => expect(ai.live.connect).toHaveBeenCalledOnce());
@@ -71,6 +72,8 @@ describe('synthetic Live journey', () => {
     const result = await journey;
 
     expect(result.liveInputMedia?.complete).toBe(true);
+    expect(result.liveInputMedia?.frames[0]).toMatchObject({ data: '/9gKFP/Z', origin: 'virtual-scene' });
+    expect(sent.find(message => message.video)).toEqual({ video: { data: '/9gKFP/Z', mimeType: 'image/jpeg' } });
     expect(result.liveInputMedia?.audio?.samples).toBe(result.sentSamples);
     expect(result.liveInputMedia?.packets.reduce((n, packet) => n + packet.samples, 0)).toBe(result.sentSamples);
     const expectedPcm = Buffer.concat(sent.filter(message => message.audio).map(message => Buffer.from(message.audio.data, 'base64')));

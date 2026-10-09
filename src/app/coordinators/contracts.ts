@@ -11,7 +11,7 @@ export type SendMessage = (
   image?: string,
   mimeType?: string,
   messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement',
-  options?: { triggeredByStt?: boolean },
+  options?: { triggeredByStt?: boolean; imageOrigin?: 'virtual-scene' },
 ) => Promise<boolean>;
 export interface SpeechRoutingState {
   settings: AppSettings;
@@ -58,7 +58,7 @@ export interface ReengagementPorts {
   stopSilentObserverRef: CurrentValue<() => Promise<void>>;
   settingsRef: CurrentValue<AppSettings>;
   visualContextStreamRef: CurrentValue<{ active: boolean } | null>;
-  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string } | null>;
+  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; imageOrigin?: 'virtual-scene' } | null>;
   handleSendMessageInternal: SendMessage;
   setReplySuggestions: (suggestions: ReplySuggestion[]) => void;
   setLastFetchedSuggestionsFor: (id: string | null) => void;

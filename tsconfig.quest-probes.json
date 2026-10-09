@@ -29,7 +29,9 @@
     "scripts/probe-agent-physics.test.ts",
     "scripts/probe-agent-steering.ts",
     "scripts/probe-agent-steering.test.ts",
-    "scripts/probe-learner-room.ts"
+    "scripts/probe-learner-room.ts",
+    "scripts/probe-quest-camera-provider.ts",
+    "test-fixtures/browser/quest-camera.tsx"
   ],
   "references": []
 }

@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { cameraFrameState, cameraStreamFresh } from '../../../platform/browser/cameraSources';
+import { VIRTUAL_SCENE_FRAME_LABEL } from '../../../../shared/prompts/context';
 import type { LiveSessionData } from './state';
 import { MAX_LIVE_FRAME_DIMENSION } from './types';
 
@@ -128,19 +130,28 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       if (!activeSession || !activeVideo || !activeCanvas) return;
       if (activeVideo.videoWidth === 0) return;
       if (videoFrameInFlightRef.current) return;
+      const stream = activeVideo.srcObject as MediaStream | null;
+      if (!cameraStreamFresh(stream)) return;
+      const origin = cameraFrameState(stream)?.origin;
       const updateVersion = videoUpdateVersionRef.current;
       const isCurrentFrame = () => currentSessionIdRef.current === sessionId && !inputClosedByServerRef.current
         && videoUpdateVersionRef.current === updateVersion
-        && sessionRef.current === activeSession && captureVideoRef.current === activeVideo;
+        && sessionRef.current === activeSession && captureVideoRef.current === activeVideo && activeVideo.srcObject === stream && cameraStreamFresh(stream);
 
       const ctx = activeCanvas.getContext('2d');
       if (!ctx) return;
       const scale = Math.min(1, MAX_LIVE_FRAME_DIMENSION / Math.max(activeVideo.videoWidth, activeVideo.videoHeight));
       activeCanvas.width = Math.max(1, Math.round(activeVideo.videoWidth * scale));
-      activeCanvas.height = Math.max(1, Math.round(activeVideo.videoHeight * scale));
+      const labelHeight = origin === 'virtual-scene' ? 24 : 0;
+      activeCanvas.height = Math.max(1, Math.round(activeVideo.videoHeight * scale)) + labelHeight;
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'medium';
-      ctx.drawImage(activeVideo, 0, 0, activeCanvas.width, activeCanvas.height);
+      ctx.drawImage(activeVideo, 0, labelHeight, activeCanvas.width, activeCanvas.height - labelHeight);
+      if (labelHeight) {
+        ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, activeCanvas.width, labelHeight);
+        ctx.fillStyle = '#ffffff'; ctx.font = '12px sans-serif'; ctx.textBaseline = 'middle';
+        ctx.fillText(VIRTUAL_SCENE_FRAME_LABEL, 8, labelHeight / 2, activeCanvas.width - 16);
+      }
 
       videoFrameInFlightRef.current = true;
       const owner = Symbol('video-frame');
@@ -154,7 +165,7 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
               if (!hasCameraConsent()) return;
               if (speechTurnBoundaryRef.current && !speechTurnBoundaryRef.current.isOpen) return;
               activeSession.sendRealtimeInput({ video: { data: b64, mimeType: 'image/jpeg' } });
-              liveInputContextRef.current?.recordFrame(b64);
+              liveInputContextRef.current?.recordFrame(b64, origin);
             }
           } catch (error) {
             if (isCurrentFrame()) console.warn('Live video frame encoding failed:', error);

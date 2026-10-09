@@ -79,7 +79,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
     passedImageBase64?: string,
     passedImageMimeType?: string,
     messageType: 'user' | 'conversational-reengagement' | 'image-reengagement' = 'user',
-    options?: { triggeredByStt?: boolean }
+    options?: { triggeredByStt?: boolean; imageOrigin?: 'virtual-scene' }
   ): Promise<boolean> => {
     let sendStage = 'send.enter';
     const markSendStage = (stage: string, details?: Record<string, unknown>) => {
@@ -272,6 +272,7 @@ export function createSendCoordinator(ports: SendCoordinatorPorts) {
         messageType,
         shouldGenerateUserImage,
         currentSettingsVal,
+        imageOrigin: options?.imageOrigin,
         triggeredByStt: options?.triggeredByStt === true,
       });
       markSendStage('send.createUserMessage.done', {

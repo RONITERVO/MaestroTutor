@@ -2090,3 +2090,32 @@ existing guarded Stripe test-mode flow and retries use fresh isolated rooms.
 The replenishment completed as one `cs_test_` checkout, one purchase ledger entry
 and a 1,000-credit staging grant. No production payment data, manual credit write,
 service configuration, device query, APK, signing, upload or deployment changed.
+
+
+## Selected virtual-camera provenance — 2026-10-09
+
+The existing book camera controls now route a native virtual-scene source through
+chat and Live. Snapshots/history/attachment variants and delegated Live frames
+retain `virtual-scene` provenance. Live uses a source caption in its video image
+and preserves exactly those bytes for handoff; the managed gateway contract is
+unchanged. Native origin never grants spatial knowledge or room-edit authority.
+
+Camera-source unit tests cover explicit selection, unsupported/reserved source
+IDs, cancellation, stale/malformed/late images, wrong session/request, supersession
+and suspension. Native tests cover real rendering, a separate agent snapshot
+cache, interrupted leases and room gates. Real Chrome covers the React preview,
+canvas capture, snapshot and Live transport, stale-frame shutdown and zero OS
+camera calls with a recorded native JPEG. Android tests/build/lint verify bounded
+origin-checked top-document delivery; no new browser camera permission is granted.
+
+The isolated `scripts/probe-quest-camera-provider.ts` runs real original-app text
+and Live providers with that Chrome-produced image and locally synthesized novice
+speech. Successful managed and BYOK runs recognized both red/rojo and the virtual
+source, returned model audio, preserved frame bytes/origin and passed input/output
+pacing. Managed text plus Live reconciled 18 credits/USD 0.016987 with no mismatch
+or reservation. A preceding BYOK Live greeting-only response is retained as failed
+semantic evidence, not removed by the later pass. The broader novice conversation,
+aftersteps/artifact delivery, agent action chain and headset camera performance
+are not covered by this narrow test.
+
+See [camera contract and limits](QUEST_V1_PLAN.md#virtual-scene-camera-sharing--2026-10-09).

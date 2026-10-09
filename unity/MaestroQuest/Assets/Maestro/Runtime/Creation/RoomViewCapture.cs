@@ -22,6 +22,7 @@ namespace Maestro.Quest.Creation {
             var metadata=ViewCaptureMetadata;if(metadata==null||(string)metadata["captureId"]==acknowledged)return null;
             return new JObject{["version"]=1,["revision"]=1,["session"]=session,["capture"]=metadata,["data"]=viewData};
         }
+        internal bool ViewSourceAvailable=>isActiveAndEnabled&&Viewer&&!Ownership.Suspended&&!RuntimeGate.Held&&!WriteGate.Frozen;
         internal bool CanCaptureView(out string error){
             error="The virtual room view is unavailable";
             if(!isActiveAndEnabled||!Viewer||Ownership.Suspended||RuntimeGate.Held||WriteGate.Frozen)return false;
@@ -30,6 +31,10 @@ namespace Maestro.Quest.Creation {
             error=null;return true;
         }
         internal bool CaptureView(out JObject result,out string error){
+            result=null;if(!CaptureCameraView(out var image,out error))return false;
+            viewData=(string)image["data"];viewMetadata=(JObject)image["capture"];viewExpires=Time.unscaledTime+120;result=(JObject)viewMetadata.DeepClone();return true;
+        }
+        internal bool CaptureCameraView(out JObject result,out string error){
             result=null;if(!CanCaptureView(out error))return false;
             capturingView=true;nextViewCapture=Time.unscaledTime+1;
             GameObject cameraObject=null;RenderTexture target=null;Texture2D pixels=null;var previous=RenderTexture.active;
@@ -59,7 +64,7 @@ namespace Maestro.Quest.Creation {
                 var metadata=new JObject{["captureId"]=Guid.NewGuid().ToString("N"),["sha256"]=hash,["mimeType"]="image/jpeg",["width"]=ViewWidth,["height"]=ViewHeight,
                     ["capturedAt"]=DateTime.UtcNow.ToString("O"),["sceneRevision"]=Revision,["verticalFov"]=60,
                     ["position"]=new JObject{["x"]=position.x,["y"]=position.y,["z"]=position.z},["rotation"]=new JObject{["x"]=rotation.x,["y"]=rotation.y,["z"]=rotation.z,["w"]=rotation.w}};
-                viewData=Convert.ToBase64String(bytes);viewMetadata=metadata;viewExpires=Time.unscaledTime+120;result=(JObject)metadata.DeepClone();return true;
+                result=new JObject{["capture"]=metadata,["data"]=Convert.ToBase64String(bytes)};return true;
             }catch(Exception ex) when(ex is InvalidOperationException||ex is ArgumentException||ex is UnityException){error="Virtual room snapshot failed: "+ex.Message;return false;}
             finally{
                 RenderTexture.active=previous;if(cameraObject){cameraObject.GetComponent<Camera>().targetTexture=null;Destroy(cameraObject);}if(target)RenderTexture.ReleaseTemporary(target);if(pixels)Destroy(pixels);

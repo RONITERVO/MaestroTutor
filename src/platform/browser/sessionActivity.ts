@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { acquireCameraMedia } from './cameraSources';
 /** Browser resource policy. Ordinary web/phone sessions remain active; a native
  * host may suspend and require an explicit user action before media restarts. */
 export class SessionActivity {
@@ -60,4 +61,9 @@ export class SessionActivity {
 }
 
 export const sessionActivity = new SessionActivity();
-export const acquireUserMedia = (constraints: MediaStreamConstraints) => sessionActivity.capture(constraints, value => navigator.mediaDevices.getUserMedia(value));
+export const acquireUserMedia = (constraints: MediaStreamConstraints, signal?: AbortSignal) => sessionActivity.capture(constraints, async value => {
+  if (signal?.aborted) throw new DOMException('Camera selection changed.', 'AbortError');
+  const stream = await acquireCameraMedia(value, signal);
+  if (signal?.aborted) { stream.getTracks().forEach(track => track.stop()); throw new DOMException('Camera selection changed.', 'AbortError'); }
+  return stream;
+});

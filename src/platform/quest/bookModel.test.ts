@@ -49,7 +49,7 @@ describe('native book command boundary', () => {
     const snapshot: BookSnapshot = { version: 1, layout: 'conversation', activity: 'idle', bookmarkMessageId: 'm7', selectedArtifactId: null, historyStart: 0, historyEnd: 8, historyTotal: 20 };
     const commands: unknown[] = [];
     const uninstall = installBookBridge(target, () => snapshot, command => commands.push(command));
-    expect(target.maestroBook!.snapshot()).toEqual(snapshot);
+    expect(target.maestroBook!.snapshot()).toMatchObject({ ...snapshot, camera: { pulse: 1, requestId: '', acknowledged: '' } });
     expect(target.maestroBook!.command({ version: 1, type: 'bookmark.jump' })).toBe(true);
     expect(target.maestroBook!.command({ version: 1, type: 'openFile', path: '/private' })).toBe(false);
     expect(commands).toEqual([{ version: 1, type: 'bookmark.jump' }]);

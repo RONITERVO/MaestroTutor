@@ -10,7 +10,7 @@ import { debugLogService } from '../diagnostics';
 describe('shared provider original Live media', () => {
   it.each(['byok', 'managed'])('sends the same validated audio and frames via %s and redacts diagnostics', async mode => {
     const input = new LiveInputContext(() => 123);
-    input.recordAudio('AAD/fwCA//8='); input.recordFrame('/9gKFP/Z');
+    input.recordAudio('AAD/fwCA//8='); input.recordFrame('/9gKFP/Z', 'virtual-scene');
     const media = input.finish();
     const log = vi.spyOn(debugLogService, 'logRequest');
     const send = vi.fn(async (_request: any) => (async function* () { yield { text: 'Ready' }; })());
@@ -24,6 +24,7 @@ describe('shared provider original Live media', () => {
       { inlineData: { mimeType: 'image/jpeg', data: media.frames[0].data } },
     ]);
     expect(JSON.stringify(request)).toContain('after 4 WAV samples');
+    expect(JSON.stringify(request)).toContain('Virtual-scene render');
     expect(JSON.stringify(log.mock.calls)).not.toContain(media.audio!.data);
     expect(JSON.stringify(log.mock.calls)).not.toContain(media.frames[0].data);
     expect(JSON.stringify(log.mock.calls)).toContain('[REDACTED]'); log.mockRestore();

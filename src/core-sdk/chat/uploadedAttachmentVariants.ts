@@ -62,7 +62,7 @@ const normalizeVariant = (variant: Partial<UploadedAttachmentVariant> | null | u
     mimeType,
     targets: normalizeTargets(variant.targets, mimeType),
     source: variant.source || 'derived',
-    ...(variant.origin === 'generated' ? { origin: 'generated' as const } : {}),
+    ...(['generated', 'virtual-scene'].includes(variant.origin ?? '') ? { origin: variant.origin } : {}),
     order,
   };
 };
@@ -136,8 +136,7 @@ export const selectUploadedAttachmentParts = (
   const parts = variants
     .filter(variant => variant.targets.includes(target))
     .map(variant => ({ fileUri: variant.uri, mimeType: variant.mimeType,
-      ...(variant.mimeType.startsWith('image/') && (variant.origin === 'generated' || message.imageOrigin === 'generated' || message.maestroToolKind === 'image')
-        ? { origin: 'generated' as const } : {}),
+      ...(variant.mimeType.startsWith('image/') && (message.maestroToolKind === 'image' || message.imageOrigin || variant.origin) ? { origin: message.maestroToolKind === 'image' ? 'generated' as const : message.imageOrigin ?? variant.origin } : {}),
     }));
 
   const deduped = new Map<string, ChatFilePart>();
