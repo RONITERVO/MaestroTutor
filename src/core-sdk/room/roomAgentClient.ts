@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { ChatImageSource } from './chatImageSource';
+import { validChatImageRequest } from '../../../shared/chatImages';
 import {validRoomCaptureMetadata,validRoomCaptureImage,sameRoomCapture,type RoomCaptureImage} from '../../../shared/roomViewCapture';
 import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
 import {validRoomOwnership} from '../../../shared/roomOwnership';
@@ -18,6 +20,7 @@ const vector=(v:unknown) => record(v) && ['x','y','z'].every(k=>typeof v[k]==='n
 const integer=(v:unknown,min=0) => typeof v==='number' && Number.isInteger(v) && v>=min && v<=2147483647;
 const id=(v:unknown) => typeof v==='string' && /^[a-f0-9]{32}$/.test(v);
 export class RoomAgentClient {
+  readonly chatImages = new ChatImageSource();
   private value:RoomAgentState|null=null;
   private clientId=crypto.randomUUID().replace(/-/g,'');
   private rejectedSessions=new Set<string>();
@@ -63,6 +66,7 @@ export class RoomAgentClient {
     if(inspection!==undefined && inspection!==null && (!record(inspection)||typeof inspection.id!=='string'||!input.objects.some(o=>o.id===inspection.id)||!integer(inspection.objectRevision,1)||inspection.recipe!==null&&!parseRecipe(inspection.recipe)))return false;
     if(record(inspection)&&inspection.partId!==undefined&&inspection.partId!==null&&inspection.partId!==''&&(typeof inspection.partId!=='string'||!/^[a-zA-Z0-9_]{1,32}$/.test(inspection.partId)))return false;
     if(input.capture!==undefined&&input.capture!==null&&!validRoomCaptureMetadata(input.capture))return false;
+    if(input.chatImage!==undefined&&input.chatImage!==null&&!validChatImageRequest(input.chatImage))return false;
     const next=input as unknown as RoomAgentState;
     if(this.rejectedSessions.has(next.session))return false;
     if(this.value?.session===next.session && next.revision<=this.value.revision) return false;
@@ -84,7 +88,13 @@ export class RoomAgentClient {
     const lease=this.lease();if(!lease)return Promise.reject(new Error('The room is disconnected or another action is pending.'));
     const scene=expected??lease.state();if(scene.session!==lease.state().session)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,scene.objects);
   }
-  snapshot=() => ({clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null});
+  snapshot=() => {
+    const snapshot = {clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null};
+    if (!this.value?.capabilities?.includes('chatImages.v1')) return snapshot;
+    const images = this.chatImages.snapshot(this.value.chatImage);
+    // Keep the same bounded native wire. A large action takes priority for this poll.
+    return JSON.stringify({...snapshot,images}).length <= 32768 ? {...snapshot,images} : snapshot;
+  };
   lease(allowPendingObservation=false):RoomAgentLease|null {
     if(!this.value || Date.now()-this.lastSeen>3000 || (this.pending && !allowPendingObservation)) return null;
     const generation=this.generation,session=this.value.session;

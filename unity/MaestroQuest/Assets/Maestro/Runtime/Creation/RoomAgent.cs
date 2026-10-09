@@ -58,7 +58,7 @@ namespace Maestro.Quest.Creation
         public string workspaceView;
         public RuleView rules;
         public RoomMotionView motions;
-        [NonSerialized] public Newtonsoft.Json.Linq.JObject catalog,execution,capture;
+        [NonSerialized] public Newtonsoft.Json.Linq.JObject catalog,execution,capture,chatImage;
         public string[] capabilities;
         public RoomPhysicsObservation physics;
         public TemporaryRoomView temporaryRoom;
@@ -258,7 +258,7 @@ namespace Maestro.Quest.Creation
         {
             // An editor replacement always invalidates old requests, even if object IDs/revisions
             // happen to match the incoming document. The browser and chat themselves stay alive.
-            if(editor)editor.ClearViewCapture();if(source)source.ClearViewCapture();captureAck=null;
+            if(editor){editor.ClearViewCapture();editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.ClearChat();}if(source)source.ClearViewCapture();captureAck=null;
             editor=source;executor=new RoomAgentExecutor(source,GetComponent<Maestro.Quest.Persistence.WorkspaceHost>());inbox.Reset();revision=0;next=0;
             status=bindingStatus=message;connected=false;ok=source;created=Array.Empty<string>();lastInspected=null;
         }
@@ -273,7 +273,7 @@ namespace Maestro.Quest.Creation
             if(executor==null || !browser) return;
             if(browser.Snapshot==null)
             {
-                if(connected) {if(editor)editor.ClearViewCapture();captureAck=null;inbox.Reset();revision=0;connected=false;created=Array.Empty<string>();status=editor?"Room session reopened":bindingStatus;}
+                if(connected) {if(editor){editor.ClearViewCapture();editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.ClearChat();}captureAck=null;inbox.Reset();revision=0;connected=false;created=Array.Empty<string>();status=editor?"Room session reopened":bindingStatus;}
                 return;
             }
             connected=true;
@@ -294,7 +294,8 @@ namespace Maestro.Quest.Creation
                     var requestJson=raw["request"];
                     var snapshot=JsonUtility.FromJson<RoomAgentSnapshot>(json);
                     string previousSession=inbox.Session;bool accepted=inbox.TryAccept(snapshot,out var request);
-                    if(previousSession!=inbox.Session){if(editor)editor.ClearViewCapture();captureAck=null;}
+                    if(previousSession!=inbox.Session){if(editor){editor.ClearViewCapture();editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.ClearChat();}captureAck=null;}
+                    if(editor&&snapshot!=null&&snapshot.session==inbox.Session)editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.SyncChat(inbox.Session,raw["images"] as Newtonsoft.Json.Linq.JObject);
                     if(snapshot!=null&&snapshot.session==inbox.Session&&Guid.TryParseExact(snapshot.captureAck,"N",out _))captureAck=snapshot.captureAck;
                     if(accepted) {
                         if(RoomControls.ValidWire(requestJson?.ToString() ?? "") && RoomAgentWire.PopulateStructured(request,requestJson as Newtonsoft.Json.Linq.JObject)) ok=executor.Execute(request,out status,out created);
@@ -312,7 +313,7 @@ namespace Maestro.Quest.Creation
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
-                capture=editor.ViewCaptureMetadata,ownership=editor.Ownership.Observe(),temporaryRoom=editor.ObserveTemporaryRoom(),motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),execution=executor.Executions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
+                chatImage=editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.Chat.Request(),capture=editor.ViewCaptureMetadata,ownership=editor.Ownership.Observe(),temporaryRoom=editor.ObserveTemporaryRoom(),motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),execution=executor.Executions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
                 visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=editor.RecipeForEditing(inspected)},
                 constructionSelection=editor.ObserveConstructionSelection(),constructionManipulation=editor.ObserveConstructionManipulation(),selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.ObserveObjects() };

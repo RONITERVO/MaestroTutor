@@ -419,6 +419,37 @@ try{
   await page.getByRole('region',{name:'Appearance choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-imported-image.png')});
   await writeFile(join(directory,'book-native-imported-image.json'),JSON.stringify({boundary:'Synthetic PNG, original book controls and native shared appearance. Android picker and physical Quest visual acceptance are separate.',fixture:imageFixture,refreshed,appearance,bound},null,2));
  }
+ // Chat bytes enter through the original store and the shared client; no native file is preseeded.
+ const chatData=await page.evaluate(()=>window.nativeBookChatImage!());
+ const chatHash=createHash('sha256').update(Buffer.from(chatData.split(',')[1],'base64')).digest('hex');
+ await openNamedAction('Import an image together','image.import');
+ await page.getByLabel('Variant',{exact:true}).selectOption('4');
+ await page.getByRole('button',{name:'Load saved chat image',exact:true}).click();
+ await page.getByLabel('Choose chat image',{exact:true}).selectOption(JSON.stringify([chatHash,null]));
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();
+ await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability==='image.chat.item'&&c.available===true;});
+ const selectedChat=await runNamedAction('image.import');
+ assert.match(String(selectedChat.output?.requestId),/^[a-f0-9]{32}$/);
+ // Transfer and native decode happen asynchronously; inspect the real preview before accepting.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Catalog category',{exact:true}).selectOption('facts');
+ await page.getByLabel('Search facts',{exact:true}).fill('image.import.selection');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Image import status.*image\.import\.selection/}).click();
+ const previewDeadline=Date.now()+10000;let previewReady=false;
+ while(Date.now()<previewDeadline){
+  const fact=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);
+  if(fact?.operation==='inspect'&&fact.category==='facts'&&fact.capability==='image.import.selection'&&fact.available&&fact.value&&typeof fact.value==='object'&&'phase' in fact.value&&fact.value.phase==='preview'){previewReady=true;break;}
+  await page.getByRole('button',{name:'Refresh fact',exact:true}).click();
+  await page.waitForTimeout(100);
+ }
+ assert.equal(previewReady,true,'Native chat-image preview did not become ready');
+ await openNamedAction('Import an image together','image.import');await page.getByLabel('Variant',{exact:true}).selectOption('1');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();
+ await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const acceptedChat=await runNamedAction('image.import');
+ assert.equal(acceptedChat.output?.imageHash,chatHash);assert.match(String(acceptedChat.output?.appearanceId),/^[a-f0-9]{32}$/);
+ await writeFile(join(directory,'book-chat-image.json'),JSON.stringify({boundary:'Synthetic local PNG in the original chat store, actual Chrome controls/transport and native preview/acceptance. No provider or headset capture.',chatHash,selectedChat,acceptedChat},null,2));
+ await page.screenshot({path:join(directory,'book-chat-image.png')});
  // The user edits the same live presentation schema the agent uses.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();

@@ -2181,3 +2181,72 @@ surroundings, the full novice lesson or an actual device permission dialog.
 The full web suite passes 2,811 tests in 305 files. Hardware acceptance remains
 open under the device hold; no new camera evidence replaces the earlier incomplete
 novice lesson or its retained failures.
+
+
+## Chat-generated appearance attachment (2026-10-09)
+
+This extends the existing image-import/appearance capability and original
+provider ownership. Required evidence includes exact chunked bytes, stale
+conversation/room/offer rejection, no import before selection, hash mismatch
+rejection, native preview/acceptance/Undo, generated resource-choice controls,
+browser/headless parity and real managed/BYOK generation followed by binding,
+opacity edits and unbinding while preserving saved content.
+
+The new GeneratedImage native provider scenario creates a picture using the
+original headless image journey and offers actual chat bytes, without preseeding
+the native image library. ImportedImage remains a separate synthetic-file fixture.
+Generation billing is checked separately from agent turns. Journals and failed
+attempts remain evidence in .quest-evidence/chat-images. Hardware acceptance and
+v1 completion are not inferred from desktop/provider checks.
+
+
+The original-book run **0fa2ee6a614a4b16979c18adb6cbb29d** passes the actual
+Chrome/native shared controls, including selecting a named chat picture,
+preview inspection and acceptance. Its pixels and provider replies are explicitly
+synthetic. Separate real original-app image-generation/provider runs pass:
+
+- BYOK **5202cf3afc714bc5be1439a1fe5147aa**: 1,584,613 original PNG bytes,
+  native texture ready, half opacity and removal with retained exact content.
+  The three turns used 13/6/5 agent calls. The retained-file hash was also checked
+  after the completed run; the shared probe now performs that check itself.
+- Managed **ba3a966419994033aebc1891c8ec0077**: 1,496,669 original PNG bytes and
+  the same semantic assertions, including continuation and unchanged object
+  identity, placement, physics and programs. Generation plus the three turns
+  reconcile **827 credits / USD 0.809153**, excluding introduction: generation
+  55, assignment 325, opacity 353, removal 94 credits. Every measured scope has
+  zero reservations and no accounting mismatch. The turns used 13/8/5 agent
+  calls. Two malformed start/recovery proposals during the opacity task were
+  rejected before dispatch; the task then completed. Their trace is retained.
+
+These results establish functionality, not a latency/cost improvement. Peak
+agent prompt tokens were 50,126/62,197/28,517 for BYOK and
+48,363/59,637/28,189 for managed. Existing grouped catalog reads retain separate
+native receipts (29 BYOK and 28 managed query receipts). No completed operation
+was replayed to make the assertions pass.
+
+Local verification passes 2,819 app tests in 306 files, followed by all six
+chat-image source tests after the final optimized-only saved-image case. Native
+verification passes 1,036 EditMode and 922 PlayMode tests (three expected optional
+private-file skips); final catalog/form metadata also passes all 1,036 EditMode
+and nine focused image PlayMode cases. Production build, lint, probe typing,
+prompt ownership, core boundaries and generated-catalog checks pass.
+
+Retained attempts and limits:
+
+- The first native full run's downstream probe refused a mirror made stale by
+  the subsequent named-choice metadata edit. Its native suites had passed;
+  regeneration and the later book/provider runs validate the final metadata.
+- Initial final web/native contract checks caught expected inventory totals
+  needing updates from 94 to 96 current-input variants and five to six lookup
+  choosers. The actual schema checks passed; the inventory expectations were
+  corrected without dropping assertions, and reruns pass.
+- Managed **71e1d937483f4f679bc9f43d52e68d9d** could not reserve image-generation
+  credits in the staging test wallet. It produced no generation usage, charge or
+  reservation and is a failed attempt. Its raw attempt metadata incorrectly
+  labelled `failed: false` for a returned error result; the harness now treats
+  a result without pixels as failed. Two guarded Stripe test-mode checkouts
+  each verified one 1,000-credit grant to the same isolated wallet before the
+  successful fresh run. No real purchase or production billing setting changed.
+
+Private local artifacts stay ignored. No hardware result, permission behavior,
+physical texture quality or sustained frame-time acceptance is inferred here.

@@ -129,6 +129,7 @@ export class HeadlessRoomAgent {
 export async function connectHeadlessRoom(client: HeadlessClient, directory: string) {
   if (client.roomAgent) throw new Error('Disconnect the current room before connecting another.');
   const transport = await HeadlessRoomTransport.connect(directory);
+  transport.setChatSource(() => { const scope = client.state.settings.selectedLanguagePairId || ''; return {scope, messages: client.state.chats[scope] || [], bookmark: client.state.settings.historyBookmarkMessageId}; });
   const agent = new HeadlessRoomAgent(client, () => transport.lease(), () => transport.close(false));
   try { await agent.restore(); client.roomAgent = agent; return { session: transport.lease().state().session, connected: true }; }
   catch (error) { await transport.close(false); throw error; }

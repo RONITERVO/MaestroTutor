@@ -57,3 +57,9 @@ it('uses exact imported image identities without changing independent surface se
  expect(validateCapabilityArguments('image.import',1,{operation:'select',url:'https://example.com/image'})).not.toBeNull();
  expect(validateCapabilityArguments('image.import',1,{operation:'accept',requestId:'a'.repeat(32),imageHash:'b'.repeat(64)})).toBeNull();
 });
+
+it('selects exact current chat-image offers without allowing URLs or bytes in program arguments',()=>{
+ expect(validateCapabilityArguments('image.import',1,{operation:'selectChat',offerSet:'a'.repeat(32),imageHash:'b'.repeat(64)})).toBeNull();
+ for(const extra of [{url:'https://example.com/image'},{data:'AAAA'},{offerSet:'stale'},{imageHash:'../file'}])
+  expect(validateCapabilityArguments('image.import',1,{operation:'selectChat',offerSet:'a'.repeat(32),imageHash:'b'.repeat(64),...extra})).not.toBeNull();
+});

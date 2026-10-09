@@ -24,6 +24,7 @@ import '../../src/app/index.css';
 declare global {interface Window {
  nativeBookCredentials?:()=>Promise<{mode:'byok';apiKey:string}|{mode:'managed';session:ManagedAccessSession;appCheckToken:string}>;
  nativeBookStop?:()=>void;
+ nativeBookChatImage?:()=>string;
  maestroNativeExchange?:(snapshot:ReturnType<RoomAgentClient['snapshot']>)=>Promise<{state?:unknown;capture?:unknown}>;
  nativeBookEvidence?:()=>{state:RoomAgentState|null;errors:string[];messages:ReturnType<typeof useMaestroStore.getState>['messages'];agentWorking:boolean;inputBlocked:boolean};
  nativeBookTask?:(id:string)=>ReturnType<typeof roomTaskStore.get>;
@@ -48,6 +49,13 @@ const pair=store.languagePairs.find(p=>p.targetLanguageCode==='es-ES'&&p.nativeL
 if(!pair)throw new Error('Spanish/English pair missing');
 useMaestroStore.setState({settings:{...initialSettings,selectedLanguagePairId:pair.id,sendWithSnapshotEnabled:false,enableGoogleSearch:false,imageFocusedModeEnabled:false},isSettingsLoaded:true,needsLanguageSelection:false,isLoadingHistory:false});
 store.setMessages(await getChatHistoryDB(pair.id));
+window.nativeBookChatImage=()=>{
+ const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d')!;
+ ctx.fillStyle='#e74835';ctx.fillRect(0,0,64,64);ctx.fillStyle='#ffffff';ctx.fillRect(0,0,32,32);
+ const dataUrl=canvas.toDataURL('image/png');
+ store.addMessage({role:'assistant',text:'Synthetic chat texture fixture.',imageUrl:dataUrl,imageMimeType:'image/png',imageOrigin:'generated',attachmentName:'Chat checker.png'});
+ return dataUrl;
+};
 const errors:string[]=[];let observed:RoomAgentState|null=null,busy=false;
 window.nativeBookEvidence=()=>({state:observed,errors:[...errors],messages:useMaestroStore.getState().messages,agentWorking:selectIsAgentWorking(useMaestroStore.getState()),inputBlocked:selectIsSending(useMaestroStore.getState())});
 window.nativeBookTask=roomTaskStore.get;

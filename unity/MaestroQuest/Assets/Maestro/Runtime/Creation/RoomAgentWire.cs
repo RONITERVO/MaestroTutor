@@ -40,7 +40,7 @@ namespace Maestro.Quest.Creation
             using var output=new System.IO.StringWriter(System.Globalization.CultureInfo.InvariantCulture);
             using var writer=new JsonTextWriter(output) {Formatting=Formatting.None};
             writer.WriteStartObject();foreach(var property in json.Properties())property.WriteTo(writer);
-            WritePayload(writer,"capture",state.capture);WritePayload(writer,"catalog",state.catalog);WritePayload(writer,"execution",state.execution);
+            WritePayload(writer,"chatImage",state.chatImage);WritePayload(writer,"capture",state.capture);WritePayload(writer,"catalog",state.catalog);WritePayload(writer,"execution",state.execution);
             writer.WriteEndObject();writer.Flush();return output.ToString();
         }
         static void WritePayload(JsonWriter writer,string name,JToken value)

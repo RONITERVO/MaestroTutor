@@ -12,6 +12,9 @@ namespace Maestro.Quest.Imports {
     /// inspection and accepted identities cross the shared capability interface.</summary>
     public sealed class ImageImportWorkshop:MonoBehaviour {
         RoomEditor editor;IModelPicker picker;ImageAsset asset;IDisposable lease;CancellationTokenSource cancel;
+        internal readonly ChatImageTransfer Chat=new();
+        bool fromChat;
+        string chatHash="";
         string request="",phase="idle",error="",source="";int revision;bool paused,focused=true,disposed,working;float began,nextPoll;
         ImageLibrary.Entry[] entries=Array.Empty<ImageLibrary.Entry>();bool listed;string listError="";
         internal void Initialize(RoomEditor value){editor=value;
@@ -41,11 +44,34 @@ namespace Maestro.Quest.Imports {
             if(choose){try{if(picker==null||!picker.ReadyToStart)return false;}catch(Exception){return false;}}
             issue=null;return true;
         }
-        void Begin(){lease=editor.WriteGate.Write();cancel=new();request=Guid.NewGuid().ToString("N");error="";source="";revision=0;asset=null;began=Time.realtimeSinceStartup;}
+        void Begin(){fromChat=false;chatHash="";Chat.Stop();lease=editor.WriteGate.Write();cancel=new();request=Guid.NewGuid().ToString("N");error="";source="";revision=0;asset=null;began=Time.realtimeSinceStartup;}
         internal string Select(){
             if(!CanStart(true,out var issue))throw new InvalidOperationException(issue);Begin();phase="selecting";
             try{picker.Start(request);}catch(Exception){Fail("The image chooser could not open. Resume Maestro and try again.");ReleasePicker(request);End();}
             return request;
+        }
+        internal bool CanSelectChat(string set,string hash,out string issue)=>CanStart(false,out issue)&&Chat.CanSelect(set,hash,out issue);
+        internal string SelectChat(string set,string hash){
+            if(!CanSelectChat(set,hash,out var issue))throw new InvalidOperationException(issue);
+            Begin();fromChat=true;chatHash=hash;phase="receiving";Chat.Start(request,set,hash,Time.realtimeSinceStartupAsDouble);return request;
+        }
+        internal void SyncChat(string session,JObject wire){
+            string previous=Chat.OfferSet;
+            try{Chat.Receive(session,wire,Time.realtimeSinceStartupAsDouble);}
+            catch(Exception ex) when(ex is System.IO.InvalidDataException||ex is ArgumentException||ex is InvalidCastException||ex is OverflowException||ex is FormatException){Chat.Clear();}
+            if(fromChat&&previous!=Chat.OfferSet&&lease!=null&&phase!="accepting"&&CanCancel(request,out _))Cancel(request);
+        }
+        internal void ClearChat(){SyncChat(Guid.NewGuid().ToString("N"),null);}
+        async Task PrepareChat(byte[] bytes,string name,string expected,CancellationToken token){
+            working=true;phase="checking";
+            try{
+                var selected=await Task.Run(()=>ImageLibrary.Inspect(name,bytes,token),token);token.ThrowIfCancellationRequested();
+                if(disposed)return;
+                if(selected.Hash!=expected)throw new System.IO.InvalidDataException("The chat image bytes do not match the selected image.");
+                var verified=Art.AppearanceImages.Decode(selected);Art.ArtResources.Release(verified);token.ThrowIfCancellationRequested();asset=selected;phase="preview";
+            }catch(OperationCanceledException){phase="cancelled";asset=null;}
+            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The chat image could not be decoded. Choose a PNG/JPEG within the supported bounds.");}
+            finally{working=false;if(disposed||phase!="preview")End();}
         }
         internal bool CanAccept(string id,string hash,out string issue){
             if(!Ready(out issue))return false;issue="Inspect the exact current image preview before accepting it";
@@ -64,6 +90,13 @@ namespace Maestro.Quest.Imports {
             if(!working){ReleasePicker(request);asset=null;End();}
         }
         void Update(){
+            if(phase=="receiving"){
+                if(!Ready(out _)||Time.realtimeSinceStartup-began>310){Cancel(request);return;}
+                var bytes=Chat.TakeComplete(Time.realtimeSinceStartupAsDouble);
+                if(bytes!=null)_=PrepareChat(bytes,Chat.Name,chatHash,cancel.Token);
+                else if(!string.IsNullOrEmpty(Chat.Error)){Fail(Chat.Error);End();}
+                return;
+            }
             if(phase!="selecting"&&phase!="copying")return;
             if(Time.realtimeSinceStartup-began>310){Cancel(request);return;}
             if(Time.realtimeSinceStartup<nextPoll)return;nextPoll=Time.realtimeSinceStartup+.1f;
@@ -117,11 +150,11 @@ namespace Maestro.Quest.Imports {
         }
         void Fail(string value){phase="failed";error=ImportObservation.Text(value);}
         void ReleasePicker(string id){try{picker?.Release(id);}catch(Exception){error="The selected stream is still closing. Resume Maestro before choosing another.";}}
-        void End(){lease?.Dispose();lease=null;cancel?.Dispose();cancel=null;}
-        void Close(){disposed=true;cancel?.Cancel();if(working)return;ReleasePicker(request);if(lease!=null)phase="cancelled";End();asset=null;}
+        void End(){Chat.Stop();lease?.Dispose();lease=null;cancel?.Dispose();cancel=null;}
+        void Close(){Chat.Clear();disposed=true;cancel?.Cancel();if(working)return;ReleasePicker(request);if(lease!=null)phase="cancelled";End();asset=null;}
         void OnEnable()=>disposed=false;
-        void OnApplicationPause(bool value)=>paused=value;
-        void OnApplicationFocus(bool value)=>focused=value;
+        void OnApplicationPause(bool value){paused=value;if(value)ClearChat();}
+        void OnApplicationFocus(bool value){focused=value;if(!value)ClearChat();}
         void OnDisable()=>Close();
         void OnDestroy()=>Close();
     }

@@ -5,9 +5,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 The current installed development checkpoint is **D85F3CB7**. Headset work is
 paused until the owner confirms cooling and charging; mouth-positioned speech and
 native room acoustics have not yet been installed for physical acceptance.
-The latest packaged development checkpoint **9F8A2625 / 1f972b6f** has local
-packaging evidence only; it is not installed and does not contain the later
-appearance, portable-construction, backdrop or mixed-reality movement changes.
+The packaged development checkpoint **87EE404D / 88379b5c** has local
+packaging evidence only and is not installed. It includes the three camera
+sources and preceding world/appearance changes, but predates chat-image import.
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -23,8 +23,9 @@ users and agents. Transient viewing controls extend that foundation; see
 [temporary layer presentation](#temporary-layer-presentation--2026-10-08).
 A user-selected virtual-scene camera now feeds the existing chat and Live camera
 paths; see [camera sharing](#virtual-scene-camera-sharing--2026-10-09). Physical
-camera and mixed-view sources, imported surroundings and editable passthrough
-windows remain open.
+camera and mixed-view screen sharing also have desktop/provider evidence in the
+later camera entries below; all three sources still need hardware acceptance.
+Imported surroundings and editable passthrough windows remain open.
 
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
@@ -44,8 +45,8 @@ active. The bounded increments and outstanding requirements are recorded below;
 this scope is not a claim that every feature is implemented or device-certified.
 They extend the spatial-state refactor below. Imported PNG/JPEG appearances now
 pass desktop book and managed/BYOK acceptance through the same asset/catalog flow;
-generated-image attachment
-must use the original app's provider ownership. See the [image contract](QUEST_WORLD_AUTHORING.md#imported-images-in-shared-appearances--2026-10-09).
+Chat-image attachment now extends that same import path while preserving the
+original app's provider ownership; its current verification is recorded below. See the [image contract](QUEST_WORLD_AUTHORING.md#imported-images-in-shared-appearances--2026-10-09).
 
 The earlier development checkpoint **D522191F** retained the
 original phone/book controls while isolating their animated icon rendering.
@@ -6040,3 +6041,63 @@ All physical knockdown/reset and new camera assertions passed. The test now wait
 for observed completion with a five-second deadline and keeps its exact stop-node
 assertion. A focused rerun of all camera cases plus that structure case passes
 12 tests. The first failed report is retained alongside subsequent evidence.
+
+
+## Chat images as reusable world appearances — 2026-10-09
+
+The original app remains the sole image-generation/provider owner. Existing local
+PNG/JPEG images from its current conversation can now enter the same native image
+import preview, immutable private library and shared appearances as selected
+files. Original chat artifacts remain visible and reusable.
+
+The browser and headless hosts advertise the newest eight available local images
+after the ordinary history bookmark. The source chooses original in-memory image
+bytes when present, otherwise the stored optimized PNG/JPEG; that actual variant
+gets its own SHA-256 identity. It does not fetch remote URLs, revive excluded
+history, generate a new image, or capture a camera. The generated/physical/virtual
+origin and source-message label accompany discovery as untrusted source metadata.
+No pixels or URLs are program arguments.
+
+image.chat.library pages exact offers. image.chat.item resolves the current
+offer set for one hash. image.import operation selectChat explicitly selects
+the inspected offer set and hash, then the existing image.import.selection
+reports receiving/checking/preview. The existing accept operation creates one
+reusable appearance and one Undo, without binding an object. The normal
+object.appearance.bind action handles that separate edit. Saved images retain
+the existing workspace/archive and rendering-lease behavior.
+
+Human controls use the shared catalog's named resource chooser and current-value
+guards. Accepting a preview also loads the exact request/hash through the
+existing current-value form. Agents, editable programs and humans use those same
+native capabilities. Users can ask to use a picture already made in chat without
+manually exporting it to a file.
+
+The private data transport carries one acknowledged 16 KiB byte interval per
+poll, below the existing 32 KiB native request limit. Large actions take priority
+over an image chunk for that poll. Chunks are never action receipts. Exact offset,
+one active selection, final byte hash, PNG/JPEG structure, dimensions and native
+decode are checked before preview. Advertising alone allocates no native image
+buffer or saved appearance. The existing 16 MiB/2048-pixel limits and bounded
+library/texture budgets remain in force.
+
+Conversation/source-set/room changes, focus loss, cancellation and a 15-second
+transfer stall revoke unaccepted content. Late chunks cannot recreate a selection.
+A 310-second overall transfer deadline bounds a slow maximum-size image. Accepted
+writes retain the existing uncertain-outcome and inspect-before-retry rules.
+Undo removes the appearance edit, not the reusable private file. Source images
+are ephemeral until acceptance; saved programs should use the accepted hash and
+appearance, not rely on an old chat offer still existing.
+
+The desktop checkpoint passes native chunk/ownership and preview/acceptance tests,
+the original-book Chrome/native path and separate real managed/BYOK generated
+image journeys. Evidence is under .quest-evidence/chat-images and summarized in
+QUEST_AGENT_RELEASE_COVERAGE.md. Both agents applied their real generated image,
+changed opacity to one half and removed the binding while retaining the exact
+saved bytes and appearance. Managed generation plus the three measured turns
+reconciled 827 credits / USD 0.809153, excluding the introductory chat, with no
+outstanding reservations. Serial discovery and context growth remain cost/latency
+work, even when functional assertions pass.
+
+Actual Quest comfort, transfer latency, texture memory and sustained performance
+remain hardware acceptance work. This increment prepares a local development
+package; no device operation, release key, upload or deployment is included.

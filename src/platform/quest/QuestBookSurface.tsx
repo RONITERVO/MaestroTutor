@@ -13,6 +13,7 @@ import { RoomAgentClient } from './roomAgentBridge';
 import { useWorkspaceNavigation } from './useWorkspaceNavigation';
 import { RoomWorkspace } from './RoomWorkspace';
 import { LibraryBookView } from './LibraryBookView';
+import { chatImageSources } from '../../core-sdk/room/chatImageSource';
 import { sessionActivity } from '../browser/sessionActivity';
 
 /** One React root, store, IndexedDB, tutor and audio owner for both page textures. */
@@ -47,6 +48,8 @@ export function QuestBookSurface({ children }: React.PropsWithChildren) {
   const [historyAnchor, setHistoryAnchor] = useState<string | null>(null);
   const bookmarkMessageId = useMaestroStore(state => state.settings.historyBookmarkMessageId ?? null);
   const pairId = useMaestroStore(state => state.settings.selectedLanguagePairId);
+  useEffect(() => { void room.chatImages.update(pairId || '', chatImageSources(messages, bookmarkMessageId)); }, [room, pairId, messages, bookmarkMessageId]);
+  useEffect(() => () => { void room.chatImages.update('', []); }, [room]);
   const historyIds = useMemo(() => messages.filter(message => message.role !== 'system_selection').map(message => message.id), [messages]);
   const page = useMemo(() => resolveHistoryPage(historyIds, historyAnchor), [historyIds, historyAnchor]);
   const visibleMessageIds = useMemo(() => new Set(page.ids), [page]);

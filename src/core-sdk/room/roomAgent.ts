@@ -34,6 +34,7 @@ export interface RoomCommand {
   scale?: number; color?: { r: number; g: number; b: number; a: number }; recipe?: unknown;
 }
 export interface RoomAgentState {
+  chatImage?: import('../../../shared/chatImages').ChatImageRequest | null;
   capture?:RoomCaptureMetadata|null;
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;

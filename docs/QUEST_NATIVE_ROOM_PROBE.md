@@ -1032,3 +1032,28 @@ appearance selector. `book-native-imported-image.json` and its screenshot docume
 that path. The book run has scripted provider responses. Real provider tests are
 separate; GPU readback tests cover pixels/orientation/alpha. None establishes
 Android picker interaction, physical Quest visual comfort or frame-time behavior.
+
+
+## Chat-generated image transfer
+
+`-ProviderScenario GeneratedImage` uses a fresh English/Spanish headless profile
+and the original image-generation journey (one generation attempt with the
+configured managed/BYOK test access). It stores the resulting picture in the
+original chat and advertises those exact local bytes through the same transport
+as the book. No image is seeded into the native library for this scenario.
+
+The learner asks to put that picture on the book cover, then make it half
+see-through, then remove the binding while retaining the reusable image and
+appearance. The real agent discovers the catalog, selects the current chat
+image, inspects/accepts the native preview and uses the existing appearance
+capabilities. The driver verifies the final exact hash, native texture readiness,
+continuation relationship, opacity, retained appearance and unchanged object
+placement/physics/programs. Image-generation billing is reconciled separately
+from agent-turn billing; failed attempts retain their evidence.
+
+`-Journey Book` also injects one explicitly synthetic local PNG into the original
+chat store and drives the shared named chooser, current-value guards, preview
+inspection and acceptance in Chrome with the actual Unity runtime. This proves
+the shared manual path without spending provider credits. Both routes remain
+desktop integration evidence; Quest transfer latency, focus/permission behavior,
+visual quality and memory/performance need separate hardware acceptance.

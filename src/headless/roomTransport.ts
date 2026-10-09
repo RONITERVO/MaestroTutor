@@ -3,6 +3,8 @@
 import {readFile,writeFile,rename,stat} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {RoomAgentClient} from '../core-sdk/room/roomAgentClient';
+import {chatImageSources} from '../core-sdk/room/chatImageSource';
+import type {ChatMessage} from '../core/types';
 import type {RoomAgentLease} from '../core-sdk/room/roomAgent';
 
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
@@ -71,6 +73,8 @@ export class RoomProbeChannel {
 /** Explicit local adapter for QuestRoomProbe. No room actions, receipts or provider replies are simulated. */
 export class HeadlessRoomTransport {
  readonly client=new RoomAgentClient();
+ private chatSource?:()=>{scope:string;messages:ChatMessage[];bookmark?:string|null};
+ setChatSource(read:()=>{scope:string;messages:ChatMessage[];bookmark?:string|null}){this.chatSource=read;}
  private stopped=false;
  private pump?:Promise<void>;
  private failure:Error|null=null;
@@ -87,6 +91,7 @@ export class HeadlessRoomTransport {
  }
  private async run(){
   try{while(!this.stopped){
+   if(this.chatSource){const source=this.chatSource();void this.client.chatImages.update(source.scope,chatImageSources(source.messages,source.bookmark));}
    const snapshot=this.client.snapshot(),envelope=await this.channel.exchange(snapshot);
    if(envelope.state){
     const previous=this.client.getSnapshot().state,state=envelope.state;
@@ -101,5 +106,5 @@ export class HeadlessRoomTransport {
  }
  checkHealth(){if(this.failure)throw this.failure;}
  lease():RoomAgentLease{this.checkHealth();const lease=this.client.lease();if(!lease)throw new Error('The native room is unavailable or busy.');return lease;}
- async close(stopNative=true){this.stopped=true;this.client.cancel();await this.pump;if(stopNative)await this.channel.stop();}
+ async close(stopNative=true){this.stopped=true;this.chatSource=undefined;await this.client.chatImages.update('',[]);this.client.cancel();await this.pump;if(stopNative)await this.channel.stop();}
 }

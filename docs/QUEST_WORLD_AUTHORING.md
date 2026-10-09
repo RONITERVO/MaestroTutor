@@ -549,7 +549,7 @@ their own content and are not recoloured by these bindings.
 Opacity uses an explicit rendering mode and does not change collision, sound,
 physical material contents or the real-world blend. Procedural patterns and
 inherited imported images/UVs are available; the following increment adds explicit
-local image import. Original-chat generated-image attachment remains pending. Whole-workspace export retains appearances.
+local image import. Original-chat generated-image attachment uses the shared import path described below. Whole-workspace export retains appearances.
 Portable construction modules currently refuse appearance-bound objects until
 their dependencies can be bundled, rather than silently losing their style.
 
@@ -569,7 +569,7 @@ Accepting a checked preview saves an immutable private file and creates one
 unbound reusable appearance with one Undo. It never changes an object's binding.
 Undo or temporary-room Discard removes the definition edit, not the imported
 file. `object.appearance.bind` assigns it using current object/appearance revisions.
-A later original-chat generated-image attachment must feed this asset pipeline;
+Original-chat generated-image attachment feeds this asset pipeline;
 Unity must not acquire a duplicate image-generation provider or credentials.
 
 The initial adapter accepts static 8-bit PNG and baseline/progressive grayscale
@@ -620,5 +620,33 @@ reusable content. Separate native tests inspect actual GPU pixels for all eight
 orientations, alpha, shared texture ownership, missing-file recovery and archive
 round trips. Android picker ownership, stream bounds and cancellation use the
 same selected-file owner as other imports. Physical Quest picker usability,
-visual comfort, sustained memory/performance, generated-image attachment and
-larger/other formats remain release work.
+visual comfort, sustained memory/performance and larger/other formats remain
+release work. Chat-generated attachment is described below.
+
+
+## Use a chat picture on a world object
+
+Ask Maestro to use a picture from the current chat on an object's surface. Image
+generation stays in the original app. The room agent can discover that image,
+select it for the existing native preview, accept its private copy, and bind the
+resulting shared appearance. Ordinary opacity, UV scale/offset, tint, Undo and
+appearance reuse still apply. Book page display materials remain separate.
+
+In the workshop, **Import an image together**, variant **selectChat**, supplies a
+named **Chat image** chooser. Choose the image, load current values and run the
+selection. Inspect **Image import status** until its preview is ready, then
+choose **accept**, load current values and accept that preview. Use **Choose
+object appearance** to bind the resulting appearance. These controls and the
+agent use the same catalog.
+
+Offers cover the newest eight locally available PNG/JPEG images after the chat's
+history bookmark. They preserve the exact available byte variant; remote-only
+images, oversized images and unsupported encodings need the existing file import
+or a supported export. Changing chat, room or image offers cancels unaccepted
+previews. Accepted images live in the private library and portable workspace;
+they no longer depend on keeping that chat message.
+
+Desktop verification passes through the original book controls and separate real
+managed/BYOK image-generation and agent journeys: apply the generated picture,
+change opacity, remove the binding and retain the exact saved content. Quest
+latency, readability and sustained memory/performance remain separate gates.

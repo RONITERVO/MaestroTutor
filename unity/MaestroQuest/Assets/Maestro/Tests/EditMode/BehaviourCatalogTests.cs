@@ -130,7 +130,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(94));
+            Assert.That(count,Is.EqualTo(96));
         }
         [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
         {
@@ -162,7 +162,7 @@ namespace Maestro.Quest.Tests
                     }
                 }
             }
-            Assert.That(count,Is.EqualTo(5));
+            Assert.That(count,Is.EqualTo(6));
         }
         static bool AcceptsCurrentType(JObject schema,JToken type,int depth=0){
             if(schema==null||type==null||depth>4||schema["oneOf"]!=null||(bool?)schema["x-static"]==true)return false;

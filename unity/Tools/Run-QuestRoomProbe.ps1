@@ -6,7 +6,7 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','LearnerConversation')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [switch]$SyntheticRoomScan,
  [switch]$SyntheticSound,
@@ -27,6 +27,7 @@ if($ProviderScenario){
  if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
  if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
+ if($ProviderScenario -eq 'GeneratedImage'){$Prompt='Could you put the picture you just made in this chat on the outside cover of my book? Keep the pages readable and everything else as it is.'}
  if($ProviderScenario -eq 'ImportedImage'){$Prompt='I imported a picture called Blue tiles.png. Could you put that picture on the outside cover of my book? Keep the pages readable and everything else as it is.'}
  if($ProviderScenario -eq 'ImportedAudio'){$Prompt='I imported a sound called Little bell.wav. Could you give the book that little chime, so it comes from the book itself? Attach the imported sound, but do not play it yet. Keep everything else as it is.'}
  if($ProviderScenario -eq 'LiquidContacts'){$Prompt='Please save an editable program called WaterTouch for the existing ContactPool. Save it only, with no buttons or automatic start. When I start it later, it should wait for the first physical water contact change in that pool and remember who touched it in a text state variable called participant, initially empty. Then wait 20 seconds and finish. Do not touch or change any object, create anything, or start physics.'}
