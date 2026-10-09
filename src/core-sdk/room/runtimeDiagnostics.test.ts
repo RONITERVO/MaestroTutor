@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
 import native from '../../../test-fixtures/browser/runtimeDiagnostics.json';
+import reservations from '../../../test-fixtures/browser/modelReservations.json';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
-import {validFactValue} from '../../../shared/behaviourFacts';
+import {validFactValue,validateFactArguments} from '../../../shared/behaviourFacts';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 import {programFeatureRequirements} from '../../../shared/programFeatures';
 import {parseProgram,type BehaviourProgram} from './programs';
@@ -35,4 +36,16 @@ it('keeps catalog observation read-only and requires the native feature for stor
  const capabilities=['rules.v1','eventPrograms.v1','behaviourPrograms.v3','structuredValues.v1'];
  expect(()=>requireRoomCapabilities(commands,{capabilities})).toThrow('runtimeDiagnostics.v1');
  expect(()=>requireRoomCapabilities(commands,{capabilities:[...capabilities,'runtimeDiagnostics.v1']})).not.toThrow();
+});
+
+it('preserves native model lease ownership and phases through the shared indexed fact',()=>{
+ const id='runtime.modelReservation';
+ for(const value of [reservations.loading,reservations.ready])expect(validFactValue(id,value)).toBe(true);
+ expect(reservations.ready).toEqual({...reservations.loading,state:'ready'});
+ expect(reservations.ready.role).toBe('object');expect(reservations.ready.worldId).toHaveLength(32);expect(reservations.ready.modelHash).toHaveLength(64);
+ expect(behaviourFact(id)?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
+ for(const index of [0,5])expect(validateFactArguments(id,1,{index})).toBeNull();
+ for(const args of [{index:-1},{index:6},{index:0.5},{index:'0'},{index:0,evict:true}])expect(validateFactArguments(id,1,args)).not.toBeNull();
+ expect(validFactValue(id,{...reservations.ready,privatePath:'hidden'})).toBe(false);
+ expect(validFactValue(id,{...reservations.ready,vertices:'unknown'})).toBe(false);
 });

@@ -19,6 +19,7 @@ namespace Maestro.Quest.Creation
         bool primarySelected,constructionSelected;
         internal bool ConstructionMarked=>constructionSelected&&selection&&selection.activeSelf;
         Color tint;
+        ModelReservations.Owner modelOwner;
         Collider originalCollider, chosenCollider;
         ItemCollider collisionShape;
         CollisionGeometry customGeometry;
@@ -35,8 +36,9 @@ namespace Maestro.Quest.Creation
         internal bool AcousticBoundary => acousticBody && !acousticBody.Dynamic
             && acousticItem && acousticItem.Grab && !acousticItem.Grab.isSelected
             && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
-        public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null)
+        public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null, RoomWorldIdentity world = null)
         {
+            if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new ModelReservations.Owner(world,data.id,"object");
             importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
             Bounds bounds;
             Collider collider;
@@ -135,7 +137,9 @@ namespace Maestro.Quest.Creation
             {
                 var asset = await library.ReadAsync(hash); if (!this) return;
                 var root = new GameObject("Imported geometry"); root.transform.SetParent(transform, false);
-                Model = root.AddComponent<ImportedModel>(); await Model.LoadAsync(asset); if (!this) return;
+                Model = root.AddComponent<ImportedModel>();
+                Model.ConfigureResourceOwner(modelOwner);
+                await Model.LoadAsync(asset); if (!this) return;
                 // Only rigid visual meshes: no bounding-box approximation across
                 // holes, no bind-pose avatar skin or decorative pencil overlay.
                 foreach (var filter in Model.Instance.GetComponentsInChildren<MeshFilter>())

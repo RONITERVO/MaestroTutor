@@ -98,7 +98,7 @@ namespace Maestro.Quest.Creation
                 if(!WorldIdentityReady)message=identityError;
             }
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
-            maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro");
+            maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro",WorldIdentity);
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
             Reconcile();
             gameObject.AddComponent<Art.WorldLightingView>().Initialize(this);
@@ -453,7 +453,7 @@ namespace Maestro.Quest.Creation
                 {
                     var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
-                    item = root.AddComponent<CreatedRoomObject>().Build(data, Models,RuntimeGate);
+                    item = root.AddComponent<CreatedRoomObject>().Build(data, Models,RuntimeGate,WorldIdentity);
                     AddIdentity(data.id,item); room.Register(item);
                     created = true;
                 }

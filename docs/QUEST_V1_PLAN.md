@@ -6213,3 +6213,39 @@ expected optional private-model skips), plus the complete native headless and
 original-book journeys. All native diagnostic gates and source provenance pass.
 Exact run identifiers and the unchanged package boundary are in the coverage
 entry linked above. No new provider calls or device acceptance are claimed.
+
+
+### Owned model reservations before regional streaming — 2026-10-09
+
+Imported-model admission now uses explicit runtime leases, with copied source
+costs and the durable world/region/entity owner supplied by the existing object,
+avatar and preview paths. These leases replace the previous anonymous counters;
+they do not change saved object identity, world ownership, object limits or the
+six-live-model limit. Multiple avatar candidates remain distinct leases even when
+they share one authored target. Waiting requests have no reservation until they
+enter the serialized importer. A duplicate request on the same component is
+refused before queuing; it cannot overwrite an earlier instance and lose its
+budget. Disposing an in-flight import marks its lease retiring and retains its
+cost until the importer drains. Failed imports release their lease and can retry
+on the same still-live component; disposed components cannot reload.
+
+The existing runtime.modelBudget fact reads this same ledger. The indexed
+runtime.modelReservation fact exposes a detached bounded observation with the
+runtime lease ID, exact asset hash, owner scope, role, source costs and loading /
+ready / retiring phase. A ready lease proves imported geometry exists, not that
+an avatar candidate is visible or a collision surface is admitted. Indices may
+shift, so consumers use the returned lease ID to distinguish observations; these
+IDs must never replace persistent entity references. Reading does not load,
+unload, cancel or save anything. The original book catalog, agents, headless
+clients and programs consume the same definition, without a separate debug API.
+
+This closes a model-lifecycle prerequisite for regional admission. It does not
+implement automatic eviction, regional activation, offscreen simulation,
+large-world persistence, shared model-instance assets or measured RAM/VRAM usage.
+Images, audio, geometry and navigation still need coordinated regional ownership.
+Do not unload solely because the viewer looks away; held/moving entities, audio
+and active task dependencies must remain relevant. The one-region capacities are
+still implementation limits, not the final town/country authoring promise.
+
+Verification for this increment is recorded in the release coverage ledger. No
+headset installation, release signing, deployment or Store operation is included.

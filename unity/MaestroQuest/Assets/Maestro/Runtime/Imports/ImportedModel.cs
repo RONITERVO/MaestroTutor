@@ -17,10 +17,18 @@ namespace Maestro.Quest.Imports
     {
         static readonly SemaphoreSlim loadQueue = new(1, 1);
         public const int MaximumLiveModels=6,MaximumLiveVertices=500000,MaximumLiveTexturePixels=64*1024*1024,MaximumLiveMorphVertices=8000000;
-        static int liveVertices, livePixels, liveModels, liveMorphVertices;
         // Reservations include previews and in-flight loads; these are source budgets, not measured RAM/VRAM.
-        public static (int Models,int Vertices,int TexturePixels,int MorphVertices) LiveBudget=>(liveModels,liveVertices,livePixels,liveMorphVertices);
-        ModelInspection reservation;
+        public static (int Models,int Vertices,int TexturePixels,int MorphVertices) LiveBudget=>ModelReservations.Budget;
+        ModelReservations.Lease reservation;
+        ModelReservations.Owner resourceOwner=new(null,null,"unscoped");
+        bool loading;
+        internal void ConfigureResourceOwner(Creation.RoomWorldIdentity world,string target,string role)
+            =>ConfigureResourceOwner(new ModelReservations.Owner(world,target,role));
+        internal void ConfigureResourceOwner(ModelReservations.Owner owner)
+        {
+            if(loading||reservation!=null||destroyed)throw new InvalidOperationException("Model resource ownership is fixed before loading");
+            resourceOwner=owner??throw new ArgumentNullException(nameof(owner));
+        }
         RuntimeGltfInstance instance;
         UnityEngine.Avatar generatedAvatar;
         Animation animationPlayer;
@@ -66,7 +74,8 @@ namespace Maestro.Quest.Imports
         public async Task LoadAsync(ModelAsset asset, IAwaitCaller awaitCaller = null)
         {
             if (!this || destroyed) throw new ObjectDisposedException(nameof(ImportedModel));
-            if (reservation != null) throw new InvalidOperationException("Model already loaded");
+            if (loading || reservation != null) throw new InvalidOperationException("Model is already loading or loaded");
+            loading=true;
             await loadQueue.WaitAsync();
             RuntimeGltfInstance loaded = null;
             try
@@ -78,9 +87,7 @@ namespace Maestro.Quest.Imports
                 try { MotionRigHash = awaitCaller is ImmediateCaller ? MotionPack.RigIdentity(asset.Bytes) : await Task.Run(() => MotionPack.RigIdentity(asset.Bytes)); }
                 catch (ModelImportException error) { MotionRigHash = null; MotionRigIssue = error.Message; }
                 if (!this || destroyed) return;
-                if (liveModels >= MaximumLiveModels || liveVertices + info.Vertices > MaximumLiveVertices || livePixels + info.TexturePixels > MaximumLiveTexturePixels || liveMorphVertices + info.MorphVertices > MaximumLiveMorphVertices)
-                    throw new ModelImportException("This room has reached its model memory budget. Erase an imported object before adding another.");
-                reservation = info; liveModels++; liveVertices += info.Vertices; livePixels += info.TexturePixels; liveMorphVertices += info.MorphVertices;
+                reservation = ModelReservations.Reserve(asset,resourceOwner);
                 awaitCaller ??= new RuntimeOnlyAwaitCaller();
                 if (info.IsAvatar)
                 {
@@ -112,10 +119,10 @@ namespace Maestro.Quest.Imports
                 instance.transform.localRotation = objectRotation;
                 instance.transform.localPosition = -(instance.transform.localRotation * bounds.center) * factor;
                 LocalBounds = new Bounds(Vector3.zero, bounds.size * factor);
-                instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();
+                instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();reservation.Mark("ready");
             }
             catch { if (loaded) loaded.Dispose(); instance = null; ArtResources.Release(generatedAvatar); generatedAvatar = null; ReleaseBudget(); throw; }
-            finally { loadQueue.Release(); }
+            finally { loading=false;if(destroyed)ReleaseBudget();loadQueue.Release(); }
         }
         public void FitAsMaestro(float height = 1.7f)
         {
@@ -156,7 +163,7 @@ namespace Maestro.Quest.Imports
             }
             foreach (var pair in initialWeights) if (pair.Key) for (int i = 0; i < pair.Value.Length; i++) pair.Key.SetBlendShapeWeight(i, pair.Value[i]);
         }
-        void ReleaseBudget() { if (reservation == null) return; liveModels--; liveVertices -= reservation.Vertices; livePixels -= reservation.TexturePixels; liveMorphVertices -= reservation.MorphVertices; reservation = null; }
+        void ReleaseBudget() { reservation?.Dispose();reservation=null; }
         void OnApplicationPause(bool value) { if (value) Stop(); }
         void OnApplicationFocus(bool value) { if (!value) Stop(); }
         void OnDisable() => Stop();
@@ -164,7 +171,8 @@ namespace Maestro.Quest.Imports
         // owner must dispose explicitly when abandoning a prepared replacement.
         public void Dispose()
         {
-            if(destroyed)return;destroyed=true;ReleaseBudget();
+            if(destroyed)return;destroyed=true;
+            if(loading)reservation?.Mark("retiring");else ReleaseBudget();
             if(instance)instance.Dispose();instance=null;animationPlayer=null;initialWeights.Clear();
             ArtResources.Release(generatedAvatar);generatedAvatar=null;
         }

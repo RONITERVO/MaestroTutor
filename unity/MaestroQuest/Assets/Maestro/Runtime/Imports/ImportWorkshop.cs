@@ -72,7 +72,7 @@ namespace Maestro.Quest.Imports
         {
             if (!this || disposed) return;
             var root = new GameObject("Model import preview"); root.transform.SetParent(transform, false); root.transform.localPosition = new Vector3(.55f, 1.35f, .65f);
-            preview = root.AddComponent<ImportedModel>();
+            preview = root.AddComponent<ImportedModel>();preview.ConfigureResourceOwner(editor.WorldIdentity,"","preview");
             try { await preview.LoadAsync(asset); }
             catch { if (preview) Destroy(preview.gameObject); preview = null; throw; }
             if (!this || disposed) return;

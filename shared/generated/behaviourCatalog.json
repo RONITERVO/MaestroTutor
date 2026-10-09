@@ -40103,6 +40103,47 @@
       ]
     },
     {
+      "id": "runtime.modelReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text",
+          "modelHash": "text",
+          "state": "text",
+          "vertices": "number",
+          "textureMiPixels": "number",
+          "morphMillionVertices": "number"
+        }
+      },
+      "label": "Imported model reservation",
+      "description": "Read one process-wide model lease by index (0 to runtime.modelBudget.reserved.models minus one). Indices may shift between reads; reservationId is a runtime-only identity, never an authored entity reference. World/region/target identify the owning object or avatar; previews have an empty target, and unscoped desktop imports have empty world/region. role is object, avatar, preview or unscoped. loading reserves before native import; ready means imported geometry exists, not that a candidate is visible or usable as collision; retiring retains costs until an abandoned in-flight importer drains. Avatar replacement can temporarily hold two leases for the same target. Waiting requests that have not acquired the serialized importer have no reservation. Source costs are conservative limits, not measured RAM/VRAM. Reads are detached and never load, cancel, evict or change settings. Regional streaming remains separate.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 5.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "runtime.motionCache",
       "version": 1,
       "type": {
@@ -41908,7 +41949,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/MaestroAvatar.cs",
-      "sha256": "7dbc3387eb493e364bb65f6c4448ce20dd8d45415525c7c3aa907e925bd475c2"
+      "sha256": "46d45c5a879e02cd0144e686b1021c0cce636b66bee66b3072eff2a3eb89fe0c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/PropAttachment.cs",
@@ -42380,7 +42421,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "bb95ff2a40a776eaec8c3144d01e01a38da254879e1f80270a7da1ae558779f0"
+      "sha256": "5b20b10247750495547b09239b82126bcc0de41c6e084d2a2d533b1c02d25ded"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -42584,7 +42625,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "3a6eb09844c58af5aa03ed2abd4015a449daeeaf3fafdf7c5b0069882a41de31"
+      "sha256": "bb6a3bbfaf688dbf021db3c564b2d7466a468463f59ae269415ce404bdb4aafa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -42792,7 +42833,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "43d1105a51d44b84c1ee6989ca47c2bcde7d499742fb457dbde2d92301a5a88b"
+      "sha256": "9755f04d6c5864d26225fe00ffa3c5bdec44cef8496df5bc2544df51e190199b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43132,7 +43173,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",
-      "sha256": "09035fe5e093ecef71ea02fdece6176dbe53026236b9b1bb9ad75bbb13f876bd"
+      "sha256": "54ce7c01a9dda22a37136a8be6087cefb768a1790ddbd9afb94d8c49f9ce0c6a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",
@@ -43140,7 +43181,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "ab7ecd27d75c40b4fa2f230913aa634b5456a7982fe986d6791d2bd5c017e188"
+      "sha256": "f0508b5d7d353fe2e6837224f660313043df48439085fa322be3169e684720ec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
@@ -43157,6 +43198,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibrary.cs",
       "sha256": "b000d19ac7e2961e6ea2c5b3fb2fec2911a4c6ff11b2012e383fb41e15cb3765"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelReservations.cs",
+      "sha256": "eed4abc8ca5495d86f3139806f31a2d06653d2f205d49d8e9c964c1a1b9356f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionBatch.cs",
@@ -43560,7 +43605,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "94d5289db7914cf6583bdba5c12669a1e791c0d8a5f4cd61e4d3d785031e996e"
+      "sha256": "3ad596abce1eb41f68e8b762db602d1bcbae5becdcc25f556a391388123ba01e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

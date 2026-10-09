@@ -2436,3 +2436,72 @@ Quest performance result is claimed. Regional streaming, unrestricted imported
 cities and other unfinished v1 release gates remain open. The last packaged APK
 is still 5899972E / source 5100f612; installed and private-Alpha builds are unchanged.
 Evidence is retained under `.quest-evidence/model-geometry` and the named runs.
+
+
+## Owned model resource reservations — 2026-10-09
+
+Imported geometry now reserves source costs through explicit runtime leases with
+exact model hash and world/region/entity ownership. Object, avatar and preview
+paths share that ledger. Requests still queue through the existing serialized
+importer; a duplicate request on one component is refused before queuing. A
+cancelled in-flight import retains its reservation as retiring until its native
+load drains. Failed loads release before retry, and disposed components cannot
+reload. Runtime lease IDs never replace persistent authored entity references.
+
+The indexed `runtime.modelReservation` fact and existing `runtime.modelBudget`
+read the same native ledger. Values are detached, bounded observations; ready
+means imported geometry exists, not that an avatar candidate is installed or
+that collision geometry is admitted. Reads do not load, unload, cancel or save.
+Current limits and saved formats remain unchanged. This is a prerequisite for
+regional admission, not region streaming, automatic eviction or measured memory.
+
+Five focused native tests pass: concurrent-load rejection and immutable owner,
+in-flight disposal, disposed queued requests, failed-import retry, and real
+preview acceptance into an independently owned saved object. An actual native
+loading/ready fixture validates the web contract and indexed input bounds. Full
+source verification passes **1,046 EditMode and 949 PlayMode** tests, with the
+three expected optional private-file skips. The complete web suite passes
+**2,831 tests in 308 files**, with app/probe typing, production bundle, changed-test
+lint, catalog provenance and core boundaries also passing.
+
+Full native headless run `3f8d7fd6c2ee475ea728398db8d586bc` and original-book run
+`dc16771fbe1648efaea73f2653923bae` pass receipts, client/editor exits and native
+log gates. Headless reads the included avatar's actual lease, asset hash and
+durable world/region/target. The book retains actual imported-geometry forms,
+current-value prefill, save and native readback; its captured form was inspected.
+These integrations use scripted provider responses.
+
+The first complete native attempt crashed in MetaXRAudioUnity.dll during
+`AudioSceneIRComputeCustomPoints`, in the existing reflection-output test, and
+produced no PlayMode report. All 22 isolated acoustic tests and the subsequent
+complete rerun passed without an audio runtime change or excluded test. The
+cause remains unresolved intermittent evidence, not a fixed crash or device
+acceptance. Original crash logs/stack and successful reports are retained under
+`.quest-evidence/model-residency`. An initial web attempt also retained one new
+feature-expectation failure and one existing editor timeout; correcting the
+expectation and running the full web suite with two workers passed.
+
+The first managed journey completed all four real-provider turns, including
+schema discovery and both actual model-lease reads, but the new harness wrongly
+required a current value from the argument-free schema query. Its seven-operation
+inspection journal is retained under run `afff3e3f03cb472c93c8ac1087cf0458`.
+The assertion now distinguishes definition discovery from indexed observations,
+keeps unavailable indexed reads as failures, uses the shared query classifier and
+retains inspection receipts before assertions. That failed harness run is not
+relabelled as a complete pass.
+
+Fresh managed run `699e5add020046abb67bdb949b4a509b` and BYOK run
+`40f671b1da3b457eaad11044ebfc156c` pass all four requests through real
+original-app Gemini calls: geometry setup, removing walkability, restoring the
+fitted model, and inspecting costs. The agent discovers the shared fact, reads
+both actual avatar/object leases and replies in the original chat. Read-only
+classification, exact asset/owner, complete occupied-lease coverage and unchanged
+model budget, geometry, placement, programs, view and collision policy are checked.
+The clean managed run reconciles **458 credits / USD 0.445211** for these four
+requests, excluding introduction and the earlier failed harness attempt, with no
+mismatches or retained reservations.
+
+No headset operation,
+package, signing, deployment or Store change is included. Regional streaming and
+other unfinished v1 gates remain open; the last packaged development APK is still
+5899972E / source 5100f612. Installed and private-Alpha builds are unchanged.

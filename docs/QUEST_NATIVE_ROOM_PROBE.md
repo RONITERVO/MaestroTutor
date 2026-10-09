@@ -1117,3 +1117,18 @@ back. `book-native-model-geometry.json` and `.png` retain the receipt, readback 
 visible controls. All three optional synthetic asset flags are refused with real
 provider scenarios and outside the offline Book journey. The full verification
 script includes these explicit fixtures; the ordinary headless journey does not.
+
+
+The full native headless journey also reads `runtime.modelBudget` and each
+`runtime.modelReservation` through the shared catalog, checks native lease/asset
+identity and validates the included avatar's durable world/region/entity owner.
+`model-reservations.json` preserves these actual observations. These are source
+admission costs and loading phases, not measured memory or streaming acceptance.
+
+`ModelGeometry` also asks, in ordinary language, which imported models currently
+use the model budget and who owns them. The actual delegated task must discover
+and inspect each occupied reservation through the shared catalog. Its journal is
+checked for read-only commands, exact building ownership/asset identity and no
+changes to geometry, placement, room presentation or physics policy. This is the
+same managed/BYOK path as the preceding geometry edits; it does not inject a
+planner response or expose an extra diagnostic tool to the model.

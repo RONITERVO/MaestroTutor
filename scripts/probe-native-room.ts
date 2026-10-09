@@ -255,6 +255,16 @@ try{
   if(undoCreate.objects.some(object=>object.id===target)||undoCreate.objects.length!==initial.objects.length)throw new Error('Native Undo did not remove the created object.');
   const diagnostic=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelBudget',version:1}}]);
   if(!diagnostic.catalog?.available)throw new Error('Native resource diagnostics are unavailable.');
+  const modelUsage=factReply(diagnostic).value as {reserved:{models:number}};
+  const modelReservations:unknown[]=[];
+  for(let index=0;index<modelUsage.reserved.models;index++){
+   const reply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelReservation',version:1,arguments:{index}}}]);
+   const value=factReply(reply).value as {reservationId:string;worldId:string;regionId:string;target:string;role:string;modelHash:string;state:string};
+   if(!value||value.reservationId.length!==32||value.modelHash.length!==64||!['loading','ready','retiring'].includes(value.state))throw new Error('Native model lease observation is missing or malformed.');
+   if(value.role==='avatar'&&(value.target!=='maestro'||value.worldId.length!==32||value.regionId.length!==32))throw new Error('Native avatar model reservation lost its durable world/entity owner.');
+   modelReservations.push(value);
+  }
+  await writeFile(join(directory,'model-reservations.json'),JSON.stringify({boundary:'Actual native model reservations, not measured memory or regional streaming.',budget:factReply(diagnostic).value,leases:modelReservations},null,2));
   const scanLayout=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.scan',version:1}}]);
   const scanValue=factReply(scanLayout).value as {available:boolean;stateId:string;count:number};
   if(scanValue.available||scanValue.stateId!==''||scanValue.count!==0)throw new Error('Desktop scan facts must not invent a physical room.');

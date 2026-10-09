@@ -57,10 +57,12 @@ namespace Maestro.Quest.Avatar
         }
         public void EndUpperBody(string owner) => gestureLayer?.End(owner);
         RoomOwnership ownership;
+        RoomWorldIdentity modelWorld;
         RoomOwnership.Lease ambientLease;
         string ambientOwner;
         BehaviourCatalog.Claim[] ambientClaims;
-        public void ConfigureOwnership(RoomOwnership service,string target) {
+        public void ConfigureOwnership(RoomOwnership service,string target,RoomWorldIdentity world=null) {
+            modelWorld=world?.Copy();
             if(ownership!=null)EndAmbient();ownership=service;ambientOwner="ambient:"+target;
             ambientClaims=new[]{new BehaviourCatalog.Claim(target,"wholeTarget")};
         }
@@ -167,7 +169,7 @@ namespace Maestro.Quest.Avatar
                     var asset=await library.ReadAsync(hash);
                     cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
                     candidateRoot=new GameObject("Custom Maestro");candidateRoot.SetActive(false);candidateRoot.transform.SetParent(transform,false);
-                    candidate=candidateRoot.AddComponent<ImportedModel>();await candidate.LoadAsync(asset);
+                    candidate=candidateRoot.AddComponent<ImportedModel>();candidate.ConfigureResourceOwner(modelWorld,"maestro","avatar");await candidate.LoadAsync(asset);
                     cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
                     candidate.FitAsMaestro();retargeter=candidateRoot.AddComponent<HumanoidRetargeter>();retargeter.Initialize(PoseRig,candidate.Humanoid);
                 }

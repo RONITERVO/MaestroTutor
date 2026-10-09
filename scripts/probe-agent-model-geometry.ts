@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {HeadlessClient} from '../src/headless/client';
-import type {RoomCommand,RoomAgentState} from '../src/core-sdk/room/roomAgent';
+import {isRoomQuery,type RoomCommand,type RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {factReply,assertSamePlacement,type NativeProbeState} from './native-probe-contract';
 import {assertSameRoomObjects} from './agent-provider-contract';
@@ -42,7 +42,25 @@ export async function runAgentModelGeometryProof({client,execute,directory,fixtu
  const solid=await readGeometry(execute,fixture.target);assert.equal(solid.ready,true,solid.reason);assert.deepEqual(solid.settings,{...source.settings,walkable:false});assert.deepEqual(solid.size,source.size);await checkPlacement();
  const restore=await runHeadlessRoomTurn(client,{text:"Please turn that building back into the usual small centred display model, with the ordinary bounding-box collision again. Keep its saved model, its placement and everything else as they were."});
  const restored=await readGeometry(execute,fixture.target);assert.equal(restored.ready,true,restored.reason);assert.deepEqual(restored.settings,before.settings);assert.deepEqual(restored.size,before.size);await checkPlacement();
+ const inspectPrompt="Could you check which imported models are using the app's model budget right now, including any previews or unfinished imports? Please tell me who they belong to and whether they are still loading. Just inspect; don't change, stop or delete anything.";
+ const usageBefore=await readFact(execute,'runtime.modelBudget');
+ const inspection=await runHeadlessRoomTurn(client,{text:inspectPrompt,requireActions:false});
+ const task=(await client.roomAgent!.store.list()).find(value=>value.handoff.input.prompt===inspectPrompt);assert.ok(task,'Resource inspection did not retain its actual agent task');
+ await writeFile(join(directory,'provider-model-reservation-inspection.json'),JSON.stringify({inspection,usageBefore,fixture,operations:task.operations},null,2));
+ const reservations=task.operations.flatMap(operation=>{
+  assert.ok(operation.commands.every(isRoomQuery),'Read-only resource request executed a world-changing action');
+  if(!operation.commands.some(command=>command.action==='catalog'&&command.catalog?.operation==='inspect'&&command.catalog.capability==='runtime.modelReservation'))return [];
+  assert.ok(operation.receipt?.ok);const catalog=operation.receipt.catalog;assert.ok(catalog?.operation==='inspect'&&catalog.category==='facts');
+  // Inspecting a parameterized fact without arguments discovers its schema;
+  // only a subsequent indexed read can be counted as an observed reservation.
+  const request=operation.commands[0].catalog;assert.ok(request?.operation==='inspect');
+  if(!request.arguments){assert.ok(catalog.definition);return [];}
+  assert.ok(catalog.available);return [catalog.value as {reservationId:string;target:string;modelHash:string;role:string;state:string}];
+ });
+ assert.equal(new Set(reservations.map(value=>value.reservationId)).size,(usageBefore.reserved as {models:number}).models,'Agent did not inspect every occupied model lease');
+ assert.ok(reservations.some(value=>value.target===fixture.target&&value.modelHash===fixture.hash&&value.role==='object'&&value.state==='ready'),'Agent did not observe the exact loaded building owner');
+ assert.deepEqual(await readFact(execute,'runtime.modelBudget'),usageBefore);assert.deepEqual(await readGeometry(execute,fixture.target),restored);await checkPlacement();
  const after=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baseline,after);assert.deepEqual(after.rules?.sequences,baseline.rules?.sequences);
- const result={scenario:'ModelGeometry',phase:'passed',boundary:'Real original-app chat and delegated provider against native GLB import, saved settings, readiness and restoration. Original synthetic model; no real headset, file picker, live collision or navigation performance claim.',fixture,policies,before,source,followup,solid,restore,restored,after};
+ const result={scenario:'ModelGeometry',phase:'passed',boundary:'Real original-app chat and delegated provider against native GLB import, saved settings, readiness, restoration and read-only agent inspection of actual scoped model leases. Original synthetic model; no real headset, file picker, live collision or navigation performance claim.',fixture,policies,before,source,followup,solid,restore,restored,inspection,reservations,after};
  await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(result,null,2));return result;
 }
