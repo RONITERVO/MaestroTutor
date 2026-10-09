@@ -1872,3 +1872,58 @@ Physical Quest texture decoding, picker usability, sustained memory/performance
 and visual comfort remain unverified. The device cooling/charge readiness hold
 continues. Generated-image attachment, other/larger formats and professional colour
 management remain unfinished. No APK, signing, upload or deployment is implied.
+
+
+### Lossless room receipt working context — 2026-10-09
+
+Planning and final narration now share a provider-only view that stores large,
+byte-identical receipt fields once. A separate `receiptReuse` table maps each
+original receipt index and field to its exact shared value. Scalars, guards,
+failures and every distinct observation remain available; the current scene is
+still complete. Authored values that resemble references are ordinary data and
+cannot create links. No model-written summary, truncation or semantic merging is
+used. The original request, history/media, command-to-receipt links, prior-task
+uncertainty, accepted starts and full durable journal remain unchanged.
+
+Offline measurement against the preceding managed/BYOK image journals reduced
+receipt JSON by 43–63% across their six tasks, with exact reconstruction of every
+field. This measures receipt characters only, not total tokens or provider cost.
+The static planner instructions still exceed 72,000 characters; unique discoveries,
+conversation and related-task context also remain. Broader discovery latency and
+context scaling are therefore still release work.
+
+The shared/web suite passes 2,746 tests in 300 files. Fidelity cases cover changed
+revisions, removals, null versus absence, ordered data, unknown fields, literal
+reference-shaped content, no input mutation and exact historical command links.
+A task-level regression confirms that only the provider view is compacted; the
+returned result and durable receipt callbacks retain full native data. Initial
+checks caught helper placement outside the prompt catalog and a test-only helper
+outside the configured JavaScript target; both were corrected without loosening
+the architecture or runtime checks. Fresh provider acceptance is recorded below.
+
+The first managed pass **e51bc3c0b7d343b7aa73f155859ad57b** completed all three
+image requests. Its first-task peak was 45,118 prompt tokens, but an actual
+continuation exposed 96,002 tokens because earlier task receipts were still inline.
+The three turns reconciled 998 credits / USD 0.979780, excluding introduction.
+That run established semantic compatibility, not complete context scaling.
+
+Prior-task planning and final task-control narration now use the same exact-value
+projection, with references keyed by the original operation index. Missing receipts
+stay absent and uncertainty stays true. Offline reconstruction of that continuation
+preserved all 17 operations while reducing its prior-task JSON from 186,645 to
+71,005 characters. The image provider scenario now explicitly requests continuation
+and checks the exact prior task identity; it cannot pass that coverage as fresh work.
+
+Final managed **db301d6dc49042d78fd52e45c3c30858** passes all three image requests,
+including the explicit continuation of the exact prior task. First/follow-up/removal
+peak inputs are 45,312 / 54,145 / 32,198 tokens. Usage reconciles **791 credits /
+USD 0.769262**, excluding introduction, with zero reserved credits around every turn.
+Compared with the earlier intermediate continuation's 96,002 tokens, its 54,145
+peak is lower; these are individual variable model runs, not a controlled cost or
+latency benchmark. The initial BYOK **4d55827fe2fd4cffb0e5aed1d39ab3bd** also
+passed before the prior-task fix. Final BYOK **d1c6ceccb98c4562b517d3c698343572** also passes all three requests
+and explicit continuation; its peak inputs are 44,942 / 53,587 / 32,011 tokens.
+Client and Unity exit 0 for both final runs. Exact private image bytes and full
+uncompressed native/prior-task journals were separately verified after completion.
+Build, lint, probe typing and architecture checks pass. Native code and installed
+device state are unchanged by this increment; physical acceptance remains on hold.

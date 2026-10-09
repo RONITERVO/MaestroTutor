@@ -585,3 +585,23 @@ it('pairs acknowledged commands with their receipts after deletion, failure and 
  expect(final.receipts.map((receipt:RoomAgentState)=>receipt.ok)).toEqual([true,false,true]);
  expect(result.operations).toEqual(final.tutorContext.operations);
 });
+
+
+it('shares repeated planning evidence without compacting durable receipts or the returned task result',async()=>{
+ const objects=Array.from({length:12},(_,i)=>({id:`object${i}`,name:`Item ${i}`,kind:'block',position:{x:i,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:false}));
+ let current:RoomAgentState={...scene,objects};
+ const inspect={action:'inspect',target:'object0'};
+ const ai=client([JSON.stringify({commands:[inspect]}),JSON.stringify({commands:[inspect]}),'{"commands":[]}']);
+ const durable:RoomAgentState[]=[];
+ const execute=vi.fn(async()=>current={...current,ack:current.ack+1});
+ const result=await runRoomActionTask(input,{aiClient:ai},{state:()=>current,valid:()=>true,execute},()=>{},
+  {onReceipt:receipt=>{durable.push(receipt);}});
+ const calls=ai.models.generateContentStream.mock.calls as unknown as [{contents:{parts:{text:string}[]}[]}][];
+ const projected=JSON.parse(calls[2][0].contents[0].parts[0].text);
+ expect(projected.scene.objects).toEqual(objects);expect(projected.receipts[0].objects).toBeUndefined();
+ const valueId=projected.receiptReuse.fields['0'].objects;
+ expect(projected.receiptReuse.values[valueId]).toEqual(objects);
+ expect(projected.receiptReuse.fields['1'].objects).toBe(valueId);
+ expect(result.receipts).toEqual(durable);expect(durable.map(r=>r.objects)).toEqual([objects,objects]);
+ expect(result.operations).toEqual([{commands:[inspect],receiptIndex:0},{commands:[inspect],receiptIndex:1}]);
+});

@@ -5789,3 +5789,35 @@ integration `1d92eb93d07c4006b1dc489dec2838be` passes 706 observations. Android 
 generated-image attachment through the original provider, imported surroundings,
 regional streaming and the broader immersion acceptance remain release gates.
 The current device hold remains; this increment makes no APK or deployment change.
+
+
+### Lossless working receipt context — 2026-10-09
+
+The original Maestro planner and result narrator now share exact repeated native
+receipt fields through a provider-only reference table. The current scene, every
+distinct historical observation, exact commands, request/history/media and durable
+journal stay intact. This reduces repeated context without handing provider
+ownership to Unity or weakening native guards. See the [coverage and limits](QUEST_AGENT_RELEASE_COVERAGE.md#lossless-room-receipt-working-context--2026-10-09).
+
+Receipt JSON in the six preceding managed/BYOK image tasks is 43–63% smaller,
+verified offline by reconstructing every field. Static instructions, distinct
+observations and prior conversation still cost context; this is not full bounded
+working-memory or discovery-latency acceptance. Preserve these exact evidence
+boundaries in subsequent optimization rather than silently dropping requirements,
+asset pins, failures or uncertain effects.
+
+Fresh managed testing exposed the same duplication inside prior-task continuations.
+The shared view now also compacts those receipt fields for planning and narration,
+without changing operation order, earlier requests or missing acknowledgements.
+The real-provider image scenario explicitly verifies that continuation path. Static
+instructions and distinct context still require further scaling work.
+
+Final managed run `db301d6dc49042d78fd52e45c3c30858` passes all three image edits
+and explicit prior-task continuation. Its measured turns reconcile 791 credits /
+USD 0.769262, excluding introduction. This validates the shared context behavior;
+it does not close the remaining cost/latency or physical Quest release gates.
+
+Final BYOK `d1c6ceccb98c4562b517d3c698343572` passes the same explicit continuation
+and native effects. Both final runs retain the exact imported file and full native
+journals. All 2,746 shared/web tests, build, lint and probe typing pass. Exact-head
+CI is tracked on PR #248; the current headset cooling/charge hold is unchanged.
