@@ -1809,3 +1809,66 @@ native journey **f1430828558d4268b5c102dc26a19df3** passes **703 observations**,
 client and Editor exit 0. The catalog contains 120 actions, 144 facts, 19 events
 and 490 native source inputs. Exact-head CI results are tracked on PR #248. No physical Quest acceptance, APK signing/upload, cloud deployment or
 Store-readiness claim is made. The existing device cooling/charge hold remains.
+
+
+### Image-backed shared appearances — desktop/provider verified, 2026-10-09
+
+The `image.import` adapter selects and inspects a bounded static PNG/JPEG, saves
+exact private bytes and creates one unbound reusable appearance. Users, programs
+and the agent assign that appearance through the existing shared binding. Root,
+recipe-part and imported-material addresses retain their precedence; book pages
+and drawing overlays keep their display materials. Texture, surface opacity,
+collision participation and sound remain independent. Original-chat generated
+images must later enter the same asset pipeline, with no Unity provider duplicate.
+
+The full shared/web suite passes 2,736 tests in 299 files and the production build
+passes. Full native regression passes 1,031 EditMode and 906 PlayMode tests, with
+three established optional private-model skips. The focused native set also passes
+57 EditMode and nine PlayMode tests. Android
+passes 104 tests with two optional private-archive skips, release AAR and lint.
+GPU readback verifies all eight EXIF orientations and alpha; texture leases,
+missing-file repair, preservation waits, cancellation and archive identity are
+covered. The catalog contains 121 actions, 147 facts, 19 events and 495 source
+inputs. The 1,536 archive entry cap fits all bounded libraries and metadata; its
+512 MiB total remains enforced.
+
+Original-book **8e08939f954745e2ba08032999c4e5f5** passes the existing workflow
+plus image discovery, appearance creation, opacity and book binding. Its control
+screenshot was inspected. Provider responses are scripted for that run; it does
+not establish Android picker behavior or physical Quest visual acceptance.
+
+Failures are retained as evidence. Initial native tests found obsolete appearance
+fact versions and error-length expectations; both were corrected and rerun. Fresh
+native recovery evidence exposed Unity expanding absent construction records into
+empty objects, which the web bridge correctly rejected. Serialization now preserves
+those nulls. Book run **33b031a87ef94b599f2e5ad062762136** found image actions
+missing from advertised runtime features; advertisement and a regression assertion
+now cover that path. The first texture test also caught readiness ahead of material
+refresh; object binding status now stays loading until its renderer catches up.
+
+Managed **09b257d17e2448c2a2a7edd47e794b88** failed semantic acceptance: it found
+the exact image but stopped before creating or binding its appearance, asking for
+permission again. Shared discovery now allows 32 planning calls / 24 read-only
+batches while retaining three action batches. Completion guidance explicitly covers
+necessary reversible setup for an already requested effect; native confirmations,
+missing authority and uncertain earlier effects remain protected. The 87 affected
+shared planner, prompt, bridge and preview tests pass. This increases the maximum
+read cost/time, not mutation allowance. Fresh managed **c98a48c730b349d9a83a70f805d642d6** and BYOK
+**bcdb3707868e416395dd89abb50176dd** subsequently pass all three ordinary-language
+requests using Gemini 3.8 Flash. Client and Unity exit 0 in both runs. The original
+private image bytes remain with the same SHA-256 after removal, and other surface
+preferences remain unchanged. Managed usage reconciles **1,119 credits / USD
+1.097833** for the three measured turns, excluding introduction, with zero reserved
+credits before/after each. The first successful managed turn peaked at **85,929
+prompt tokens**; bounded working-context compaction and discovery latency/cost
+remain release work. Full durable traces, exact definitions/identities, current
+guards and uncertain-effect evidence must survive that optimization.
+
+Final deterministic native journey **1d92eb93d07c4006b1dc489dec2838be** passes **706
+observations**, with client and Editor exit 0. This exercises the shared native
+transport and authored systems without provider calls or headset input.
+
+Physical Quest texture decoding, picker usability, sustained memory/performance
+and visual comfort remain unverified. The device cooling/charge readiness hold
+continues. Generated-image attachment, other/larger formats and professional colour
+management remain unfinished. No APK, signing, upload or deployment is implied.

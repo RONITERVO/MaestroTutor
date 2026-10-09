@@ -1,25 +1,26 @@
 {
   "inspection": {
-    "inspectionId": "e680e31382b445f68a6432255596d78f",
+    "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
     "count": 1,
     "selectionReadable": true
   },
   "entry": {
-    "generationId": "564d3981244040a3ad71e755ed631c6f",
-    "originalManifestHash": "cef0cbbae5d88481d65c79573a1d18735a5c7fba11cb2e81058ec495f23336c4",
+    "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+    "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
     "metadataAvailable": true,
     "role": "inactive",
     "reservation": "unreserved"
   },
   "export": {
-    "generationId": "564d3981244040a3ad71e755ed631c6f",
-    "originalManifestHash": "cef0cbbae5d88481d65c79573a1d18735a5c7fba11cb2e81058ec495f23336c4",
-    "manifestHash": "bc9d785a83479f40377575dfcb24167158a0f0d4b79ac67077d7f1264086ec75",
-    "sourceFingerprint": "272fdc79b57d4004cdec5265914c690f25d75dd71cb3f5e0aadef98c5fd6495e",
-    "location": "Downloads/Maestro/maestro-workspace-4fad2713473a4c07aecc609c092c79db.zip",
-    "archiveHash": "f97366882dccd843c34365f5891e0a1bb364449c4cab880a16e3fc3f5024e88d",
-    "sizeKiB": 3.453125,
+    "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+    "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+    "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+    "sourceFingerprint": "20765bdf0f9f24c8824c6b08d991f9b7d9b76d0046cb8af1b5e5fb68c2618003",
+    "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+    "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc",
+    "sizeKiB": 3.45703125,
     "excludedFiles": 1,
+    "missingImages": 0,
     "missingSounds": 0,
     "missingModels": 0,
     "missingMotions": 0,
@@ -30,19 +31,19 @@
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "1496cb93c27a41769da7b11dc29dad96",
+    "nextRunId": "31be4581c12348f0bded910670423d39",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "e680e31382b445f68a6432255596d78f",
+        "id": "2af24a9b45284750b71aef53e5878d1c",
         "capability": "workspace.retention.inspect",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "inspectionId": "e680e31382b445f68a6432255596d78f",
+          "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
           "count": 1,
           "selectionReadable": true
         },
@@ -55,20 +56,20 @@
       "running": [],
       "outcomes": [
         {
-          "id": "e680e31382b445f68a6432255596d78f",
+          "id": "2af24a9b45284750b71aef53e5878d1c",
           "capability": "workspace.retention.inspect",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "inspectionId": "e680e31382b445f68a6432255596d78f",
+            "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
             "count": 1,
             "selectionReadable": true
           }
         }
       ],
-      "nextRunId": "b4c6678482174f2d94ae724b631e1b22",
+      "nextRunId": "c2972c9a07b542bb952e2217877571b2",
       "storageError": null,
       "recovery": null
     }
@@ -77,26 +78,27 @@
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "1496cb93c27a41769da7b11dc29dad96",
+    "nextRunId": "31be4581c12348f0bded910670423d39",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "b4c6678482174f2d94ae724b631e1b22",
+        "id": "c2972c9a07b542bb952e2217877571b2",
         "capability": "workspace.retention.export",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "generationId": "564d3981244040a3ad71e755ed631c6f",
-          "originalManifestHash": "cef0cbbae5d88481d65c79573a1d18735a5c7fba11cb2e81058ec495f23336c4",
-          "manifestHash": "bc9d785a83479f40377575dfcb24167158a0f0d4b79ac67077d7f1264086ec75",
-          "sourceFingerprint": "272fdc79b57d4004cdec5265914c690f25d75dd71cb3f5e0aadef98c5fd6495e",
-          "location": "Downloads/Maestro/maestro-workspace-4fad2713473a4c07aecc609c092c79db.zip",
-          "archiveHash": "f97366882dccd843c34365f5891e0a1bb364449c4cab880a16e3fc3f5024e88d",
-          "sizeKiB": 3.453125,
+          "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+          "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+          "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+          "sourceFingerprint": "20765bdf0f9f24c8824c6b08d991f9b7d9b76d0046cb8af1b5e5fb68c2618003",
+          "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+          "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc",
+          "sizeKiB": 3.45703125,
           "excludedFiles": 1,
+          "missingImages": 0,
           "missingSounds": 0,
           "missingModels": 0,
           "missingMotions": 0,
@@ -107,43 +109,44 @@
           "id": "workspace.retention.export",
           "version": 1,
           "arguments": {
-            "inspectionId": "e680e31382b445f68a6432255596d78f",
-            "generationId": "564d3981244040a3ad71e755ed631c6f",
-            "originalManifestHash": "cef0cbbae5d88481d65c79573a1d18735a5c7fba11cb2e81058ec495f23336c4"
+            "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+            "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+            "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "e680e31382b445f68a6432255596d78f",
+          "id": "2af24a9b45284750b71aef53e5878d1c",
           "capability": "workspace.retention.inspect",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "inspectionId": "e680e31382b445f68a6432255596d78f",
+            "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
             "count": 1,
             "selectionReadable": true
           }
         },
         {
-          "id": "b4c6678482174f2d94ae724b631e1b22",
+          "id": "c2972c9a07b542bb952e2217877571b2",
           "capability": "workspace.retention.export",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "generationId": "564d3981244040a3ad71e755ed631c6f",
-            "originalManifestHash": "cef0cbbae5d88481d65c79573a1d18735a5c7fba11cb2e81058ec495f23336c4",
-            "manifestHash": "bc9d785a83479f40377575dfcb24167158a0f0d4b79ac67077d7f1264086ec75",
-            "sourceFingerprint": "272fdc79b57d4004cdec5265914c690f25d75dd71cb3f5e0aadef98c5fd6495e",
-            "location": "Downloads/Maestro/maestro-workspace-4fad2713473a4c07aecc609c092c79db.zip",
-            "archiveHash": "f97366882dccd843c34365f5891e0a1bb364449c4cab880a16e3fc3f5024e88d",
-            "sizeKiB": 3.453125,
+            "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+            "originalManifestHash": "d265d8367a339d12aa11da41a8e05ee471289e4f603ad57c8c04653eb1c54262",
+            "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+            "sourceFingerprint": "20765bdf0f9f24c8824c6b08d991f9b7d9b76d0046cb8af1b5e5fb68c2618003",
+            "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+            "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc",
+            "sizeKiB": 3.45703125,
             "excludedFiles": 1,
+            "missingImages": 0,
             "missingSounds": 0,
             "missingModels": 0,
             "missingMotions": 0,
@@ -152,19 +155,19 @@
           }
         }
       ],
-      "nextRunId": "adde8335a09849699b5b710932bb1c64",
+      "nextRunId": "2d0ac6283fdd40a98511ba37236e8642",
       "storageError": null,
       "recovery": null
     }
   },
   "status": {
-    "requestId": "b4c6678482174f2d94ae724b631e1b22",
+    "requestId": "c2972c9a07b542bb952e2217877571b2",
     "phase": "exported",
     "status": "Export is optional. Permanent disposal requires a separate exact preview and confirmation.",
-    "inspectionId": "e680e31382b445f68a6432255596d78f",
-    "generationId": "564d3981244040a3ad71e755ed631c6f",
-    "manifestHash": "bc9d785a83479f40377575dfcb24167158a0f0d4b79ac67077d7f1264086ec75",
-    "location": "Downloads/Maestro/maestro-workspace-4fad2713473a4c07aecc609c092c79db.zip",
-    "archiveHash": "f97366882dccd843c34365f5891e0a1bb364449c4cab880a16e3fc3f5024e88d"
+    "inspectionId": "2af24a9b45284750b71aef53e5878d1c",
+    "generationId": "f6fe9be5235e4895bb64314ccc0f5506",
+    "manifestHash": "970dbcddc25f253eaad03be26c933b58c46dba75e91076911a42d80b4b0d330a",
+    "location": "Downloads/Maestro/maestro-workspace-de6b1015c2064c88983b2919eaf36f14.zip",
+    "archiveHash": "63e1e4b7b5fda6d5d97faffe8828e0713177f1bbd14cdcad56a994641a58a6fc"
   }
 }

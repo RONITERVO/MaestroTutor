@@ -69,7 +69,7 @@ namespace Maestro.Quest.Persistence
                 string location=publisher(archive.Path);
                 if(!ValidLocation(location))throw new IOException("The archive publication result is unavailable; check Downloads/Maestro before exporting again.");
                 var summary=archive.Receipt.Summary;
-                return new JObject {["location"]=location,["sizeKiB"]=bytes/1024d,["manifestHash"]=archive.Receipt.ManifestHash,["files"]=summary.Files,["models"]=summary.Models,["sounds"]=summary.Sounds,["motions"]=summary.Motions,["modules"]=summary.Modules,["unavailablePrograms"]=summary.UnavailablePrograms,["missingSounds"]=summary.MissingSounds.Length,["missingModels"]=summary.MissingModels.Length,["missingMotions"]=summary.MissingMotions.Length,["missingControllerPrograms"]=summary.MissingControllerPrograms.Length};
+                return new JObject {["location"]=location,["sizeKiB"]=bytes/1024d,["manifestHash"]=archive.Receipt.ManifestHash,["files"]=summary.Files,["models"]=summary.Models,["images"]=summary.Images,["sounds"]=summary.Sounds,["motions"]=summary.Motions,["modules"]=summary.Modules,["unavailablePrograms"]=summary.UnavailablePrograms,["missingImages"]=summary.MissingImages.Length,["missingSounds"]=summary.MissingSounds.Length,["missingModels"]=summary.MissingModels.Length,["missingMotions"]=summary.MissingMotions.Length,["missingControllerPrograms"]=summary.MissingControllerPrograms.Length};
             } finally {
                 // Deleting a cache file cannot turn a confirmed Downloads publication into failure.
                 if(archive!=null)try{File.Delete(archive.Path);}catch(IOException){}catch(UnauthorizedAccessException){}

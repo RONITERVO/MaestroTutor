@@ -26,10 +26,10 @@ Imported surroundings, camera choices and editable passthrough windows remain op
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
 See the [shared world audio contract](../unity/AUDIO.md). Native rendering now
-handles procedural world sounds with editable emitters, looping playback,
-independent controls and events alongside the separate Maestro speech renderer.
-Import/stream adapters and continuous-background-audio/Live coexistence remain
-implementation gates.
+handles procedural and imported bounded WAV sounds with editable emitters, looping
+playback, independent controls and events alongside the separate Maestro speech
+renderer. Longer media, additional codecs, generated-artifact attachment, stream
+adapters and continuous-background-audio/Live coexistence remain implementation gates.
 The experimental reflection mixer stays out of the production scene until the
 capture policy handles a mixed scene without indefinitely suppressing the user.
 
@@ -39,8 +39,10 @@ direction. Larger user-built settlements must use bounded simulation and streame
 detail with persistent identities, rather than making every object permanently
 active. The bounded increments and outstanding requirements are recorded below;
 this scope is not a claim that every feature is implemented or device-certified.
-They extend the spatial-state refactor below; later image-texture import
-and generation must use the original app's asset/provider flows.
+They extend the spatial-state refactor below. Imported PNG/JPEG appearances now
+pass desktop book and managed/BYOK acceptance through the same asset/catalog flow;
+generated-image attachment
+must use the original app's provider ownership. See the [image contract](QUEST_WORLD_AUTHORING.md#imported-images-in-shared-appearances--2026-10-09).
 
 The earlier development checkpoint **D522191F** retained the
 original phone/book controls while isolating their animated icon rendering.
@@ -5756,3 +5758,34 @@ accepted arbitrary audio/live-source scope. Longer media, other codecs, stereo
 transport, generated-artifact integration, general echo-reference/mixing and physical
 audible acceptance remain. The current device cooling/charge hold is unchanged;
 no new headset installation, signing, upload or cloud deployment is implied.
+
+
+### Image-backed appearance adapter — desktop/provider verified, 2026-10-09
+
+Local static PNG/JPEG now enters the existing shared appearance system through
+explicit selection, inspection and acceptance. Original bytes have exact private
+identities, references survive portable workspaces, and rendering leases share
+textures with bounded decoded memory. The same definitions support user forms,
+programs and the delegated agent. Book pages keep the original app's materials.
+Image, opacity, physical participation and audio remain independent. Limits and
+ownership are in `QUEST_WORLD_AUTHORING.md`; runtime/transport acceptance is in
+`QUEST_AGENT_RELEASE_COVERAGE.md`.
+
+Managed run `c98a48c730b349d9a83a70f805d642d6` passes applying an exact imported
+image, changing opacity and unbinding while retaining reusable content. The three
+measured turns reconcile 1,119 credits / USD 1.097833, excluding introduction,
+with no outstanding reservations before/after each turn. The first successful
+turn reached 85,929 prompt tokens: bounded working-context compaction and discovery
+latency/cost are release work. Retain the full durable trace, exact definitions,
+identities, current guards and uncertain-effect evidence while removing duplicated
+read snapshots from subsequent planning context; do not solve growth by dropping
+user requirements or allowing unbounded calls. Shared discovery currently permits
+32 planning calls / 24 read batches and three action batches.
+
+The original-book image path and fresh BYOK run
+`bcdb3707868e416395dd89abb50176dd` pass. Full native regression passes 1,031
+EditMode and 906 PlayMode tests, with three optional private-model skips. Native
+integration `1d92eb93d07c4006b1dc489dec2838be` passes 706 observations. Android selection, physical texture performance and comfort,
+generated-image attachment through the original provider, imported surroundings,
+regional streaming and the broader immersion acceptance remain release gates.
+The current device hold remains; this increment makes no APK or deployment change.

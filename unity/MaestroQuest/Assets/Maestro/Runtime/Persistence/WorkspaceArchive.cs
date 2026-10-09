@@ -38,8 +38,8 @@ namespace Maestro.Quest.Persistence
     /// download, activate a restore, migrate data, rebind IDs, or restore execution receipts/room scans.</summary>
     public static class WorkspaceArchive
     {
-        internal const int FormatVersion=30;
-        public const int MaximumEntries=1400,MaximumManifestBytes=512*1024;
+        internal const int FormatVersion=31;
+        public const int MaximumEntries=1536,MaximumManifestBytes=512*1024;
         public const long MaximumArchiveBytes=512L*1024*1024;
         static readonly UTF8Encoding Utf8=new(false,true);
         sealed class Entry {internal string Path,Hash;internal long Bytes;}
@@ -51,15 +51,15 @@ namespace Maestro.Quest.Persistence
             while((count=source.Read(buffer,0,Math.Min(buffer.Length,limit-(int)output.Length+1)))>0){cancellation.ThrowIfCancellationRequested();if(output.Length+count>limit)throw Invalid("Archive entry exceeds its limit.");output.Write(buffer,0,count);}
             cancellation.ThrowIfCancellationRequested();if(output.Length==0)throw Invalid("Empty archive entry.");return output.ToArray();
         }
-        static WorkspaceArchiveSummary CopySummary(WorkspaceArchiveSummary v,long bytes)=>new() {Files=v.Files,Models=v.Models,Sounds=v.Sounds,MissingSounds=(string[])v.MissingSounds.Clone(),Motions=v.Motions,Modules=v.Modules,UnavailablePrograms=v.UnavailablePrograms,MissingModels=(string[])v.MissingModels.Clone(),MissingMotions=(string[])v.MissingMotions.Clone(),MissingControllerPrograms=(string[])v.MissingControllerPrograms.Clone(),Bytes=bytes};
+        static WorkspaceArchiveSummary CopySummary(WorkspaceArchiveSummary v,long bytes)=>new() {Files=v.Files,Models=v.Models,Images=v.Images,MissingImages=(string[])v.MissingImages.Clone(),Sounds=v.Sounds,MissingSounds=(string[])v.MissingSounds.Clone(),Motions=v.Motions,Modules=v.Modules,UnavailablePrograms=v.UnavailablePrograms,MissingModels=(string[])v.MissingModels.Clone(),MissingMotions=(string[])v.MissingMotions.Clone(),MissingControllerPrograms=(string[])v.MissingControllerPrograms.Clone(),Bytes=bytes};
         sealed class Budget
         {
-            internal long Total,Models,Motions,Sounds;
+            internal long Total,Models,Motions,Sounds,Images;
             internal void Add(string path,long bytes)
             {
                 if(bytes<1||bytes>WorkspaceArchiveMetadata.Limit(path))throw Invalid("Archive entry exceeds its limit.");
-                Total=checked(Total+bytes);if(WorkspaceArchiveMetadata.IsSound(path))Sounds+=bytes;if(WorkspaceArchiveMetadata.IsModel(path))Models+=bytes;if(WorkspaceArchiveMetadata.IsMotion(path))Motions+=bytes;
-                if(Sounds>AudioLibrary.MaximumTotalBytes||Total>MaximumArchiveBytes||Models>256L*1024*1024||Motions>MotionLibrary.MaximumDiskBytes)throw Invalid("Workspace archive exceeds its content budget.");
+                Total=checked(Total+bytes);if(WorkspaceArchiveMetadata.IsImage(path))Images+=bytes;if(WorkspaceArchiveMetadata.IsSound(path))Sounds+=bytes;if(WorkspaceArchiveMetadata.IsModel(path))Models+=bytes;if(WorkspaceArchiveMetadata.IsMotion(path))Motions+=bytes;
+                if(Images>ImageLibrary.MaximumTotalBytes||Sounds>AudioLibrary.MaximumTotalBytes||Total>MaximumArchiveBytes||Models>256L*1024*1024||Motions>MotionLibrary.MaximumDiskBytes)throw Invalid("Workspace archive exceeds its content budget.");
             }
         }
         // Leave the caller's stream open. The caller must publish only after this returns and its own

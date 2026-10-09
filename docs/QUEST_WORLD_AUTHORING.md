@@ -548,7 +548,77 @@ their own content and are not recoloured by these bindings.
 
 Opacity uses an explicit rendering mode and does not change collision, sound,
 physical material contents or the real-world blend. Procedural patterns and
-inherited imported images/UVs are available; image-backed texture import and
-generation are not yet exposed. Whole-workspace export retains appearances.
+inherited imported images/UVs are available; the following increment adds explicit
+local image import. Original-chat generated-image attachment remains pending. Whole-workspace export retains appearances.
 Portable construction modules currently refuse appearance-bound objects until
 their dependencies can be bundled, rather than silently losing their style.
+
+## Imported images in shared appearances — 2026-10-09
+
+The image increment extends `AppearanceStyle`, not a separate renderer, scene or
+agent-only texture tool. `patternMode=image` selects an exact private `imageHash`;
+`inherit` keeps source materials and `replace` selects procedural patterns. Those
+two modes require an empty image hash. Appearance tint, UV tiling/offset, surface
+opacity/cutout, collision participation and audio remain independent. Root,
+recipe-part and stable imported-material bindings use their existing precedence.
+Book browser pages and drawing-overlay ink retain their display materials.
+
+`image.import` owns explicit select, inspect, accept, cancel and refresh states.
+The shared generated forms, agent and programs call the same native capability.
+Accepting a checked preview saves an immutable private file and creates one
+unbound reusable appearance with one Undo. It never changes an object's binding.
+Undo or temporary-room Discard removes the definition edit, not the imported
+file. `object.appearance.bind` assigns it using current object/appearance revisions.
+A later original-chat generated-image attachment must feed this asset pipeline;
+Unity must not acquire a duplicate image-generation provider or credentials.
+
+The initial adapter accepts static 8-bit PNG and baseline/progressive grayscale
+or RGB JPEG, up to 16 MiB and 2048 pixels per side. PNG chunk lengths/checksums,
+critical chunks, animation markers, JPEG frame/scan structure and EXIF bounds are
+checked before native decode. PNG/JPEG EXIF orientation is applied exactly once;
+original bytes keep their identity. Pixels are interpreted as sRGB; professional
+ICC/HDR colour management is outside this adapter. Alpha is retained; an opaque
+surface does not become translucent merely because its image contains alpha.
+
+Each workspace owns up to 32 private images / 128 MiB. Rendering shares one
+texture per used hash, with a 64 MiB decoded mipmap budget; one file read/decode
+is dispatched at a time. I/O, hashing and structural inspection run off-thread;
+Unity texture creation/upload stays on the main thread. These are bounded
+implementation limits, not a measured Quest frame-time guarantee. A large decode
+can still stall a frame and requires physical profiling before release.
+Textures use mipmaps, release CPU pixels after upload, and release when their
+last material owner leaves. Material variants hold texture leases through refresh.
+Reads wait during workspace preservation, and cache notifications refresh only
+objects that own the changed image. The idle cache does not allocate each frame.
+Shutdown cancels pending reads; no late worker may install pixels in a new room.
+The native upload behavior follows Unity's
+[LoadImage contract](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/ImageConversion.LoadImage.html)
+and [Apply contract](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Texture2D.Apply.html).
+
+Missing, damaged or over-budget images keep their exact reference and show a
+neutral checker. `image.render` reports unloaded/loading/ready/failed and a
+bounded reason; `object.appearances` reflects pending material refresh too.
+Library refresh retries failed bound images. It does not silently choose another
+file. Successful source storage is distinct from successful pixel loading and
+from human headset acceptance.
+
+Portable archives allow 1,536 entries, enough for all bounded libraries and their
+metadata, within the existing 512 MiB total archive limit.
+Portable archives include original `images/<hash>.image` bytes and bounded name
+metadata, plus image/missing-image counts across export, preview, recovery and
+retention receipts. They capture the complete bounded library because programs
+can compute asset choices later. Literal image references in saved programs and
+modules also contribute to missing-asset reporting. Hash checks and parser checks
+run on export and staging; native decode independently verifies bytes when used.
+Room format 33, paired-snapshot filename 32 and archive format 31 keep incompatible
+older/future data explicit instead of guessing migrations. Original user data is
+preserved by the existing recovery process.
+
+Acceptance must cover both the original book form and real managed/BYOK provider
+requests: choose a saved image, bind it, adjust opacity, unbind while preserving
+reusable content. Separate native tests inspect actual GPU pixels for all eight
+orientations, alpha, shared texture ownership, missing-file recovery and archive
+round trips. Android picker ownership, stream bounds and cancellation use the
+same selected-file owner as other imports. Physical Quest picker usability,
+visual comfort, sustained memory/performance, generated-image attachment and
+larger/other formats remain release work.

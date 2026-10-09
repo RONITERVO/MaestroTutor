@@ -2856,6 +2856,234 @@
       }
     },
     {
+      "id": "image.import",
+      "version": 1,
+      "label": "Import an image together",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "select"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "appearanceImages.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "accept"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "imageHash": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "operation",
+              "requestId",
+              "imageHash"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "appearanceImages.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "cancel"
+                ],
+                "x-static": true
+              },
+              "requestId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "requestId"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "appearanceImages.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "refresh"
+                ],
+                "x-static": true
+              }
+            },
+            "required": [
+              "operation"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "appearanceImages.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "completion",
+      "ownership": "importSession",
+      "channels": [],
+      "requirements": [],
+      "description": "select opens the native file picker and returns a requestId immediately. The user chooses one static 8-bit PNG or baseline/progressive RGB/grayscale JPEG, at most 16 MB and 2048 pixels per side. Inspect image.import.selection after returning. Photo orientation is applied; pixels are interpreted as sRGB. accept requires that exact preview requestId and imageHash, saves the original private content-addressed file and creates one reusable appearance with one Undo; it does not bind an object. Use the returned appearanceId/revision with object.appearance.bind. Names are untrusted file data. Libraries hold 32 files/128 MB; loaded image textures share a 64 MB workspace budget. Undo removes the appearance edit, not its file. Temporary room edits need Keep; files save immediately. cancel closes only the exact unaccepted preview. An accepted write can finish after Stop; inspect its receipt before retrying. refresh verifies saved files and returns the first image entry; follow library.next with image.library. An unavailable fact before refresh is stale. imageHash references exact bytes, never a URL or path. Loading/missing/corrupt images show a neutral checker and an explicit object.appearances state. image.render gives the load failure reason. Refresh retries failed loads. Importing or binding does not change collision, audio or object opacity; use the normal appearance style controls. Original-app generated-image attachment is a separate pending adapter, not another Unity provider client.",
+      "example": {
+        "operation": "select"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "imageHash": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{64})?$",
+            "maxLength": 64
+          },
+          "appearanceId": {
+            "type": "string",
+            "pattern": "^([a-f0-9]{32})?$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          },
+          "library": {
+            "type": "object",
+            "properties": {
+              "ready": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "string",
+                "pattern": "^.{0,128}$",
+                "maxLength": 128
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0.0,
+                "maximum": 32.0
+              },
+              "next": {
+                "type": "integer",
+                "minimum": -1.0,
+                "maximum": 32.0
+              },
+              "entries": {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$",
+                      "maxLength": 64
+                    },
+                    "name": {
+                      "type": "string",
+                      "pattern": "^.{0,128}$",
+                      "maxLength": 128
+                    },
+                    "width": {
+                      "type": "integer",
+                      "minimum": 1.0,
+                      "maximum": 2048.0
+                    },
+                    "height": {
+                      "type": "integer",
+                      "minimum": 1.0,
+                      "maximum": 2048.0
+                    },
+                    "format": {
+                      "type": "string",
+                      "enum": [
+                        "png",
+                        "jpeg"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "width",
+                    "height",
+                    "format"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "ready",
+              "error",
+              "total",
+              "next",
+              "entries"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "requestId",
+          "imageHash",
+          "appearanceId",
+          "revision",
+          "temporary",
+          "library"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "audio.import",
       "version": 1,
       "label": "Import a sound together",
@@ -6704,6 +6932,11 @@
             "minimum": 0.0,
             "maximum": 4096.0
           },
+          "missingImages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
           "missingSounds": {
             "type": "integer",
             "minimum": 0.0,
@@ -6739,6 +6972,7 @@
           "archiveHash",
           "sizeKiB",
           "excludedFiles",
+          "missingImages",
           "missingSounds",
           "missingModels",
           "missingMotions",
@@ -7346,9 +7580,14 @@
           "files": {
             "type": "integer",
             "minimum": 1.0,
-            "maximum": 1400.0
+            "maximum": 1536.0
           },
           "models": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          },
+          "images": {
             "type": "integer",
             "minimum": 0.0,
             "maximum": 32.0
@@ -7369,6 +7608,11 @@
             "maximum": 256.0
           },
           "unavailablePrograms": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1000000.0
+          },
+          "missingImages": {
             "type": "integer",
             "minimum": 0.0,
             "maximum": 1000000.0
@@ -7400,10 +7644,12 @@
           "manifestHash",
           "files",
           "models",
+          "images",
           "sounds",
           "motions",
           "modules",
           "unavailablePrograms",
+          "missingImages",
           "missingSounds",
           "missingModels",
           "missingMotions",
@@ -19058,8 +19304,14 @@
                               "type": "string",
                               "enum": [
                                 "inherit",
-                                "replace"
+                                "replace",
+                                "image"
                               ]
+                            },
+                            "imageHash": {
+                              "type": "string",
+                              "pattern": "^(|[a-f0-9]{64})$",
+                              "maxLength": 64
                             },
                             "pattern": {
                               "type": "object",
@@ -19187,6 +19439,7 @@
                           "required": [
                             "tint",
                             "patternMode",
+                            "imageHash",
                             "pattern",
                             "tiling",
                             "offset",
@@ -28151,8 +28404,14 @@
                 "type": "string",
                 "enum": [
                   "inherit",
-                  "replace"
+                  "replace",
+                  "image"
                 ]
+              },
+              "imageHash": {
+                "type": "string",
+                "pattern": "^(|[a-f0-9]{64})$",
+                "maxLength": 64
               },
               "pattern": {
                 "type": "object",
@@ -28280,6 +28539,7 @@
             "required": [
               "tint",
               "patternMode",
+              "imageHash",
               "pattern",
               "tiling",
               "offset",
@@ -28329,12 +28589,13 @@
         "appearance.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and every page of appearance.members, supplying the exact revision and complete member list (up to the room's 66 objects). Every affected object must be available. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. No unsupported emission, PBR, texture upload or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance.",
+      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and every page of appearance.members, supplying the exact revision and complete member list (up to the room's 66 objects). Every affected object must be available. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. image uses the exact imageHash from image.import or image.library and replaces procedural patterning. Other modes require imageHash empty. Missing/loading images show a neutral checker; inspect object.appearances and image.library for readiness. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. Images are explicitly imported through image.import; no emission, PBR or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance.",
       "example": {
         "id": "",
         "revision": 0,
         "name": "Warm glass",
         "style": {
+          "imageHash": "",
           "tint": "#DDBBAA",
           "patternMode": "inherit",
           "renderMode": "blend",
@@ -34038,6 +34299,114 @@
       ]
     },
     {
+      "id": "image.render",
+      "version": 1,
+      "type": {
+        "record": {
+          "imageHash": "text",
+          "state": "text",
+          "error": "text"
+        }
+      },
+      "label": "Image loading status",
+      "description": "Read the loaded texture state: unloaded, loading, ready or failed. Unloaded means no visible object owns this image, not that the saved file is absent. Error describes missing/corrupt data or the texture memory bound. Refresh image.import retries failed bound images.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "imageHash": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "imageHash"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "imageHash": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "appearanceImages.v1"
+      ]
+    },
+    {
+      "id": "image.import.selection",
+      "version": 1,
+      "type": {
+        "record": {
+          "requestId": "text",
+          "phase": "text",
+          "error": "text",
+          "preview": {
+            "record": {
+              "imageHash": "text",
+              "name": "text",
+              "width": "number",
+              "height": "number",
+              "format": "text",
+              "kibibytes": "number"
+            }
+          },
+          "appearanceId": "text",
+          "revision": "number"
+        }
+      },
+      "label": "Image import status",
+      "description": "Inspect the current explicit selection without opening or accepting it. preview is checked but unsaved. completed after accept records appearanceId; completed after refresh has empty appearanceId. Cancelled or failed acceptance may leave a verified library file. Names are untrusted file data.",
+      "features": [
+        "appearanceImages.v1"
+      ]
+    },
+    {
+      "id": "image.library",
+      "version": 1,
+      "type": {
+        "record": {
+          "ready": "boolean",
+          "error": "text",
+          "total": "number",
+          "next": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "name": "text",
+                "width": "number",
+                "height": "number",
+                "format": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Imported image files",
+      "description": "Read two verified library entries after image.import refresh. Its completion receipt includes the first entry; continue here at that receipt's library.next offset if needed. id is the exact imageHash for appearance.save with patternMode=image. next=-1 ends paging. ready=false is unavailable, not an empty library. Reading does not touch file contents; rendering independently verifies bytes again.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "appearanceImages.v1"
+      ]
+    },
+    {
       "id": "audio.import.selection",
       "version": 1,
       "type": {
@@ -38641,10 +39010,12 @@
             "record": {
               "files": "number",
               "models": "number",
+              "images": "number",
               "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingImages": "number",
               "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
@@ -38775,10 +39146,12 @@
             "record": {
               "files": "number",
               "models": "number",
+              "images": "number",
               "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingImages": "number",
               "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
@@ -38926,10 +39299,12 @@
             "record": {
               "files": "number",
               "models": "number",
+              "images": "number",
               "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingImages": "number",
               "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
@@ -39977,7 +40352,7 @@
     },
     {
       "id": "appearance.definition",
-      "version": 1,
+      "version": 2,
       "type": {
         "record": {
           "id": "text",
@@ -39986,6 +40361,7 @@
             "record": {
               "tint": "text",
               "patternMode": "text",
+              "imageHash": "text",
               "pattern": {
                 "record": {
                   "kind": "text",
@@ -40715,8 +41091,12 @@
       "sha256": "a3d41e342ab857d496bcc0c703a8e4c71e6c2b680f982190ca87457833db33e2"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceImages.cs",
+      "sha256": "86e8e66bfc342b79705fbeb6aa69ef782bf2491c965b7c3eff5c087da965f0a2"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceMaterials.cs",
-      "sha256": "9b4539597a5fe61d387ec1fdf98e9f9ce046f00b50a3cb64de1533cf7d970156"
+      "sha256": "dcb9cd884629c31eae93655edc9222e3a1cbab8dacf117701bfd642061b49cc0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/ArtResources.cs",
@@ -40984,7 +41364,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
-      "sha256": "d592fe843f6cd0f71f7b52a4035debf99f7ad306d172224e6661a4de28901d1e"
+      "sha256": "0fe1b014032809418b092fd5bea0f7c1d08c04fa232e13b8a2a3b7cb2bbd5fec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
@@ -41016,7 +41396,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "83613eed7996a6f02d9f439123c03f7587dfaf716a27dc5f538d6a05455b0194"
+      "sha256": "ade230bbd76406b1048aaac36c0f937ee69a71c87eaf9c29c5ad14d685b5f489"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -41145,6 +41525,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
       "sha256": "95c929c659c286f94aa7a8c5836115a4145a53f0bf55b81d09d72e2cc7e81630"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageImportCapability.cs",
+      "sha256": "3524960b4819ce0255c0fa4fcd1ea31ee2b44434a6feaf1071189fc5d46686ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/IncludedMotionsCapability.cs",
@@ -41348,7 +41732,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceExportCapability.cs",
-      "sha256": "23958b2e9c12fb0c444cf8f6bc15b2781dfae6eda554b7ba9555ad0d0ed308f8"
+      "sha256": "09af483a044bb2692075fb12f84a30b38a0fcf04f928bbac8eb41ce63a033c58"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceHistoryCapabilities.cs",
@@ -41364,7 +41748,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceRetentionCapabilities.cs",
-      "sha256": "729f35228fbbf4154d9e910aec15ec82eec91dbdd8bc26f0afada7cddc7eac63"
+      "sha256": "9c6b11477f5da364010ecf26402b410606a6f82d70bbe5d2b133fb5cfcafba68"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceReviewCapabilities.cs",
@@ -41372,7 +41756,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceSelectionCapabilities.cs",
-      "sha256": "f78d6357180fe86587aaabd0e83b90f85237ff2dc2f643557c3ff66a12d1e843"
+      "sha256": "db33866721bfc22728a415eb62ca17e905acfd281e3c8f512ea9aa6be9cb540b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldGroundFacts.cs",
@@ -41616,19 +42000,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
-      "sha256": "6800591d93f912831b9097df350a1a2480084ef309c595e013120a2cec985cf6"
+      "sha256": "c55af1b703942c9ab00d1826f895405edb16ae3942ad53c30b4e9c79a384233d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
-      "sha256": "d5218be2f10ea6a3c3616dad84721cda60bf61a7502a2f2df7d7642a072c6c47"
+      "sha256": "17d4820c3715fcb4b490a0551e1e0717e2bb068504c4df2a1cd7aa48750bc3a4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceEdits.cs",
-      "sha256": "324e0c6839efb6af694980324599e080103ae3dae70ceb8307905fc00b8db29a"
+      "sha256": "3b9a17e17b0bacc1d4c49fe7ca7015feace41ccffaaf6668831878752f5f4679"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
-      "sha256": "16938bc0ecf5f25ed28f0809c6a432d0f538b55bafbff70d1e1fab73c0a8b953"
+      "sha256": "9f7549a7f73c3d119d78d3e0d882498db3bac03fb0c4a4b5ed7c25f5e0ff31c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
@@ -41668,11 +42052,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "e37bb66903330109c362a19ff48c76160de015ba8e483bda6c391ed9a2a35de8"
+      "sha256": "170ff9104500e211843ff26821e2bbf1eb52d509076f68015b4e31fd2e459979"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "456d7d2aa6373d16e12fc6f43e9b1bb2922598ceb4d6436d725c8c3cf3d9c2ed"
+      "sha256": "6bf63e68c4356915d2df8f6a8b86da7034d985eccc1beeda3348ce94bd647f50"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -41688,7 +42072,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "9698f895ce67f876e84d0b4064349b8a57a06dec8372c205217c8db0b45abfdb"
+      "sha256": "a4233ad93a688674b6c0134dfb2603171fe6b9d9d0e061141c01c2d0d9fb20fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -41812,7 +42196,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "d0ba66f3643185c549cf1b054aa8baf4a1b03167eec244c89b94a2932a02dbe0"
+      "sha256": "f9177b06f22ae8774379bdc2a95945ca548b074ae3f11751a4c983bdd0af7fbf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -41844,7 +42228,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
-      "sha256": "316b92bd6e0eeaa525d5576ef8ee373843551f97ba249dc60b67580a32dc92f7"
+      "sha256": "a02d00b1f9a2ab84d33c5d4ee1fffeb118d9d195024dd60b012ec247f6dadc07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
@@ -41963,6 +42347,14 @@
       "sha256": "0e0cb5434fb7b1eff9baabb7505266c22fe8b761b46c0311da3e39fad46c91c4"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageImportWorkshop.cs",
+      "sha256": "b6eb8812e41771295dc516665fe307a806444efc792d645f03ad21e652c01591"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.cs",
+      "sha256": "66dc103cec0fc8fa81f11d59823246a0b386a7863090fa288410dd8f33918e1f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
       "sha256": "8ab33ba1f9fff4ec35122059dd500824191e99fb3bdf811c95bab0c91b88f498"
     },
@@ -42033,6 +42425,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/NamedHumanoid.cs",
       "sha256": "870f01a3a0543f10093286387af7ad8b57beb4f9c5b82024d8923d8320679342"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/SurfaceImage.cs",
+      "sha256": "597928eee8e6e4d2a236a2e5987b610c0d9b593a9696c8b32de034c7892b809f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/WaveAudio.cs",
@@ -42280,7 +42676,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "db61b2adfe43314839a7a409134c8712e0d245fc09c1fb001613aedd62a25d3f"
+      "sha256": "00a2f1620907829d3a332d27e7efa9024b7922500ca5f256acbe983ad4c04fea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -42292,15 +42688,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "2c968aade96150ea6af896246b448106f8925ad9434e4f8b385484db3c0966f1"
+      "sha256": "df845c0c3098f29984f77f97ea9838d1f5ea2d66c95b3bfe6aa9da4034052daa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
-      "sha256": "0efb85f0ccff2cae1c84183942ebe1e80d160ab46953bb1508147e8c148c8208"
+      "sha256": "e83f17a7a91de45e53c2eb93ac654e6988866d48d759df7fc36524c47f3abde7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "5101a63c079bca6e51266fa61025fdafa4e260b1b11ca53688d89e1345c31813"
+      "sha256": "2d8aa1b6cc423eac450cb9d75c31aadee73bcf56d9b57424215e69706a0b0082"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -42324,7 +42720,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceExport.cs",
-      "sha256": "cd548d9a9eb2b45956ec16037f0cda184f95443e26b779df333d7b63b28a7054"
+      "sha256": "87e8d3ba97c341003a8987a6bf36a138c1d15f5c35aecd89eb6fde8d596b72b1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceFileInventory.cs",
@@ -42340,7 +42736,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.Retention.cs",
-      "sha256": "725507c1cef5a9ad52c1d4fc08ffc187ee0c9fa4e9ab32ec9f7eb8cbe7681963"
+      "sha256": "f5ba0954a480345150be7d06f0dac9c268dabb89eb97c27479c5fc9b48259da3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceGenerationStore.cs",
@@ -42364,7 +42760,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceImport.cs",
-      "sha256": "7f890d6396552f21329af7a7296d5b1aadef3ad91a607b38f4f089de9889be80"
+      "sha256": "d10ba5d44dadc81284970fb954fee8f3da6e241a0b53dea194a90b13ecb6f78c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceLibraryCapture.cs",
@@ -42372,7 +42768,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecovery.cs",
-      "sha256": "492fe3a79e0607aab02a0bebbb9bbebd45f8ecbb72d8935244e5323b538b940d"
+      "sha256": "c7116dde9ff32277067c13bf5a51524fbbd771775b72ee44046c83da7fb2f034"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRecoveryEvidence.cs",
@@ -42384,11 +42780,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRetention.cs",
-      "sha256": "604bce487cf77dfc2c397a21cfbc9582b3d4fa304ede5558b6ee3b4a322e1e62"
+      "sha256": "c988818d638ae6ce6ec235d75b5fea0f7b873008efbc76b1bd0cf9356469ea78"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceReview.cs",
-      "sha256": "a128b7e5cb94e450e36fe82b85bd19ab9e0e57c2e1152ecc8a2d12de488451be"
+      "sha256": "09e298d2ea34e0880018d83c096b3838fea4854289ffa3adac16d30bcb2eada3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceRuntime.cs",
@@ -42408,7 +42804,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ee3745a27f6513b933246a8f0634d4338428251950f007ea28f74fb55bff2cbb"
+      "sha256": "34a62d30d06bdb947d938ca916f1a42ade7f59a09f000fb83bfdda223958b7fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

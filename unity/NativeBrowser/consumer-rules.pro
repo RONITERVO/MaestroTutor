@@ -7,3 +7,5 @@
 -keep class com.maestro.quest.browser.WorkspacePicker { public *; }
 -keep class com.maestro.quest.browser.DocumentPicker { public *; }
 -keep class com.maestro.quest.browser.AudioPicker { public *; }
+
+-keep class com.maestro.quest.browser.ImagePicker { public *; }

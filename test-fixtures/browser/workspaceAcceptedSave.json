@@ -1,21 +1,23 @@
 {
   "saving": {
-    "requestId": "8bf6c1270fe04e98a01716253aedf54e",
+    "requestId": "e0897d2ff6184911ada7ccf6d1c33c79",
     "phase": "completing",
     "status": "Verifying the inspected contents before completing review",
     "workspace": {
-      "generationId": "8d5e1c95e00a4b5c97ad2601c2ae6eca",
-      "revision": "fc36e431df934f61bb4f2b984f15745b"
+      "generationId": "d002e4d3bba8446889287aaa9899ea43",
+      "revision": "6166c2589b7a47a0a04d67b2feda6cf2"
     },
-    "manifestHash": "4848ceb9bfc2fd6ce344f22e4e9326edffdc5da77710d430a976ec98262b289f",
+    "manifestHash": "2ced8952fd5a72d179fbd71b1b3f889b4544b7ad47534cb88905f90030a7dba5",
     "committedRevision": "",
     "summary": {
       "files": 6,
       "models": 0,
+      "images": 0,
       "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingImages": 0,
       "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,
@@ -24,22 +26,24 @@
     "activityHeld": true
   },
   "completed": {
-    "requestId": "8bf6c1270fe04e98a01716253aedf54e",
+    "requestId": "e0897d2ff6184911ada7ccf6d1c33c79",
     "phase": "completed",
     "status": "Review completed. Stopped programs and physics stay stopped; start desired activity explicitly.",
     "workspace": {
-      "generationId": "8d5e1c95e00a4b5c97ad2601c2ae6eca",
-      "revision": "fc36e431df934f61bb4f2b984f15745b"
+      "generationId": "d002e4d3bba8446889287aaa9899ea43",
+      "revision": "6166c2589b7a47a0a04d67b2feda6cf2"
     },
-    "manifestHash": "4848ceb9bfc2fd6ce344f22e4e9326edffdc5da77710d430a976ec98262b289f",
-    "committedRevision": "3a939f5cd6e1480e8d8fd3b591a9b08c",
+    "manifestHash": "2ced8952fd5a72d179fbd71b1b3f889b4544b7ad47534cb88905f90030a7dba5",
+    "committedRevision": "90b3d491b8494aeebaede81a7223e15c",
     "summary": {
       "files": 6,
       "models": 0,
+      "images": 0,
       "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingImages": 0,
       "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,

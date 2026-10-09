@@ -403,6 +403,21 @@ try{
   importedSound={boundary:'Synthetic WAV, original book forms, native library and PCM completion; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played};
   await writeFile(join(directory,'book-native-imported-sound.json'),JSON.stringify(importedSound,null,2));
  }
+ // Optional explicit image fixture follows the original generated forms.
+ let imageFixture:{hash:string;name:string;width:number;height:number}|null=null;
+ try{imageFixture=JSON.parse(await readFile(join(directory,'image-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+ if(imageFixture){
+  await openNamedAction('Import an image together','image.import');await page.getByLabel('Variant',{exact:true}).selectOption('3');const refreshed=await runNamedAction('image.import');
+  const library=refreshed.output!.library as {ready:boolean;entries:{id:string;name:string}[]};assert.equal(library.ready,true);assert.equal(library.entries[0].id,imageFixture.hash);
+  await openNamedAction('Save shared appearance','appearance.save');await page.getByLabel('Action inputs name',{exact:true}).fill('Imported blue tiles');await page.getByLabel('Action inputs style patternMode',{exact:true}).selectOption('image');await page.getByLabel('Action inputs style imageHash',{exact:true}).fill(imageFixture.hash);
+  await page.getByLabel('Action inputs style tint',{exact:true}).fill('#FFFFFF');await page.getByLabel('Action inputs style renderMode',{exact:true}).selectOption('blend');await page.getByLabel('Action inputs style opacity',{exact:true}).fill('0.5');
+  const appearance=await runNamedAction('appearance.save');
+  await openNamedAction('Choose object appearance','object.appearance.bind');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([appearance.output!.id,appearance.output!.revision]));
+  const bound=await runNamedAction('object.appearance.bind');assert.equal(bound.call.arguments.binding && (bound.call.arguments.binding as {appearanceId:string}).appearanceId,appearance.output!.id);
+  await page.getByRole('region',{name:'Appearance choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-imported-image.png')});
+  await writeFile(join(directory,'book-native-imported-image.json'),JSON.stringify({boundary:'Synthetic PNG, original book controls and native shared appearance. Android picker and physical Quest visual acceptance are separate.',fixture:imageFixture,refreshed,appearance,bound},null,2));
+ }
  // The user edits the same live presentation schema the agent uses.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();

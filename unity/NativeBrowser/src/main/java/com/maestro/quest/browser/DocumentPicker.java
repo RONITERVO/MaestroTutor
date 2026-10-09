@@ -49,7 +49,7 @@ public final class DocumentPicker extends Fragment {
     /** Returns synchronously so Unity can finish its opening receipt before focus is lost. */
     public static String Start(Activity activity,String requestId,String kind) {
         synchronized(GATE) {
-            if(!"model".equals(kind)&&!"archive".equals(kind)&&!"audio".equals(kind))throw new IllegalArgumentException("Unknown selected file kind");
+            if(!"model".equals(kind)&&!"archive".equals(kind)&&!"audio".equals(kind)&&!"image".equals(kind))throw new IllegalArgumentException("Unknown selected file kind");
             if(requestId==null||!requestId.matches("[a-f0-9]{32}"))throw new IllegalArgumentException("Invalid file request identity");
             if(current!=null) {
                 if(current.id.equals(requestId)&&current.kind.equals(kind))return requestId;
@@ -57,7 +57,7 @@ public final class DocumentPicker extends Fragment {
             }
             if(retiring!=null)throw new IllegalStateException("Wait for the previous selected stream to close");
             if(activity==null||activity.isFinishing()||activity.isDestroyed())throw new IllegalStateException("Resume Maestro before choosing a file");
-            DocumentPicker picker=new DocumentPicker();picker.id=requestId;picker.kind=kind;picker.maximumBytes="audio".equals(kind)?AudioPicker.MAX_BYTES:"model".equals(kind)?64L*1024*1024:MAX_BYTES;FileSelectionGate.acquire(picker);current=picker;
+            DocumentPicker picker=new DocumentPicker();picker.id=requestId;picker.kind=kind;picker.maximumBytes="image".equals(kind)?ImagePicker.MAX_BYTES:"audio".equals(kind)?AudioPicker.MAX_BYTES:"model".equals(kind)?64L*1024*1024:MAX_BYTES;FileSelectionGate.acquire(picker);current=picker;
             activity.runOnUiThread(()->{
                 synchronized(GATE) {
                     if(current!=picker||picker.closed)return;

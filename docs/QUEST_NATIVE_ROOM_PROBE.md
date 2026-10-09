@@ -1008,3 +1008,27 @@ book run remain scripted offline; the two real-provider runs are separate.
 Native selection tests and Android selected-file transport tests cover pause,
 identity, cancellation, stale previews, bounds and cleanup. Physical file selection,
 audibility and performance still require Quest acceptance.
+
+
+### Imported appearance image
+
+`-ProviderScenario ImportedImage` seeds a fresh, synthetic 64×64 PNG named
+Blue tiles.png through the private ImageLibrary. It creates no saved appearance
+or object binding. Three ordinary English-native/Spanish-target turns ask for
+the picture on the book cover, half opacity, then removal while keeping the saved
+appearance and file. The original tutor, suggestion verifier, delegated agent,
+native receipts, final chat and managed/BYOK accounting remain in the path.
+
+Acceptance checks the exact image hash, native loaded texture, appearance mode,
+half opacity, removed binding, retained definition and unchanged unrelated objects
+and programs. `provider-initial-turn.json` retains the first turn even if a later
+semantic assertion fails; `provider-scenarios.json` records completed assertions.
+Only a synthetic image is used. No selected private picture is sent to a provider.
+
+`-Journey Book -SyntheticImage` adds the same fixture to the offline original-book
+journey; it can be combined with `-SyntheticSound`. Generated forms refresh the
+library, save an image appearance, adjust opacity and bind it using the saved
+appearance selector. `book-native-imported-image.json` and its screenshot document
+that path. The book run has scripted provider responses. Real provider tests are
+separate; GPU readback tests cover pixels/orientation/alpha. None establishes
+Android picker interaction, physical Quest visual comfort or frame-time behavior.

@@ -35,7 +35,7 @@ namespace Maestro.Quest.Creation
                 var old=observed.parts.FirstOrDefault(p=>p.id==binding.partId);var definition=ReadAppearance(binding.appearanceId);
                 if(definition==null){error="The bound appearance is missing";return false;}
                 if(old==null||part.color!=old.color)binding.tint="#"+ColorUtility.ToHtmlStringRGB(part.color);
-                if(old!=null&&definition.style.patternMode=="replace"&&JsonUtility.ToJson(part.pattern)!=JsonUtility.ToJson(old.pattern)){error="This part uses an appearance pattern; edit its appearance or unbind it before editing the source pattern";return false;}
+                if(old!=null&&definition.style.patternMode!="inherit"&&JsonUtility.ToJson(part.pattern)!=JsonUtility.ToJson(old.pattern)){error="This part uses an appearance pattern; edit its appearance or unbind it before editing the source pattern";return false;}
                 part.color=Color.white;
             }
             data.recipe=recipe;return true;
@@ -142,17 +142,24 @@ namespace Maestro.Quest.Creation
         internal JObject ObserveAppearance(string id) {
             var p=ReadAppearance(id);if(p==null)return null;var style=JObject.Parse(JsonUtility.ToJson(p.style));
             JObject Group(params string[] names)=>new(names.Select(n=>new JProperty(n,style[n].DeepClone())));
-            return new JObject{["id"]=id,["revision"]=AppearanceRevision(id),["source"]=Group("tint","patternMode","pattern","tiling","offset"),["surface"]=Group("renderMode","opacity","cutoff","sidedness","grain","shading")};
+            return new JObject{["id"]=id,["revision"]=AppearanceRevision(id),["source"]=Group("tint","patternMode","imageHash","pattern","tiling","offset"),["surface"]=Group("renderMode","opacity","cutoff","sidedness","grain","shading")};
         }
         internal JObject ObserveAppearanceMembers(string id,int offset) {
             if(ReadAppearance(id)==null||offset<0||offset>RoomDocument.MaximumObjects+2)return null;var members=AppearanceMembers(id);
             return new JObject{["id"]=id,["revision"]=AppearanceRevision(id),["offset"]=offset,["total"]=members.Length,["pageSize"]=16,["members"]=new JArray(members.Skip(offset).Take(16))};
         }
+        internal string AppearanceRenderState(string target,AppearanceBinding binding) {
+            var state=AppearanceBindingState(target,binding);if(state!="active")return state;
+            var style=ReadAppearance(binding.appearanceId)?.style;
+            if(style?.patternMode!="image")return state;
+            var loaded=Find(target)?.GetComponent<RoomAppearanceView>()?.ImageState(style.imageHash)??"unavailable";
+            return loaded=="ready"?"active":"image "+loaded;
+        }
         internal JObject ObserveObjectAppearances(string target,int offset) {
             var data=Read(target);if(data==null||offset<0||offset>33)return null;
             return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["offset"]=offset,["total"]=data.appearanceBindings.Length,["pageSize"]=2,
                 ["bindings"]=new JArray(data.appearanceBindings.Skip(offset).Take(2).Select(b=>new JObject{["appearanceId"]=b.appearanceId,["appearanceRevision"]=AppearanceRevision(b.appearanceId),
-                    ["kind"]=b.kind,["partId"]=b.partId,["modelHash"]=b.modelHash,["materialIndex"]=b.materialIndex,["tint"]=b.tint,["state"]=AppearanceBindingState(target,b)})),["temporary"]=TemporaryRoom};
+                    ["kind"]=b.kind,["partId"]=b.partId,["modelHash"]=b.modelHash,["materialIndex"]=b.materialIndex,["tint"]=b.tint,["state"]=AppearanceRenderState(target,b)})),["temporary"]=TemporaryRoom};
         }
     }
 }

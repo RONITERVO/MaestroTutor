@@ -147,10 +147,10 @@ namespace Maestro.Quest.Persistence
         {
             if(id==null||id!=requestId)return null;
             var summary=prepared?.Receipt.Summary;
-            return new JObject {["requestId"]=requestId,["phase"]=phase,["name"]=SafeText(name,80),["error"]=SafeText(releasePending!=null?"Selection cleanup is pending. Resume Maestro before choosing another archive.":error,80),
+            return new JObject {["requestId"]=requestId,["phase"]=phase,["name"]=SafeText(name,48),["error"]=SafeText(releasePending!=null?"Selection cleanup is pending. Resume Maestro before choosing another archive.":error,64),
                 ["generationId"]=prepared?.Id??"",["manifestHash"]=prepared?.Receipt.ManifestHash??"",
-                ["summary"]=new JObject {["files"]=summary?.Files??0,["models"]=summary?.Models??0,["sounds"]=summary?.Sounds??0,["motions"]=summary?.Motions??0,["modules"]=summary?.Modules??0,
-                    ["unavailablePrograms"]=summary?.UnavailablePrograms??0,["missingSounds"]=summary?.MissingSounds.Length??0,["missingModels"]=summary?.MissingModels.Length??0,["missingMotions"]=summary?.MissingMotions.Length??0,["missingControllerPrograms"]=summary?.MissingControllerPrograms.Length??0}};
+                ["summary"]=new JObject {["files"]=summary?.Files??0,["models"]=summary?.Models??0,["images"]=summary?.Images??0,["sounds"]=summary?.Sounds??0,["motions"]=summary?.Motions??0,["modules"]=summary?.Modules??0,
+                    ["unavailablePrograms"]=summary?.UnavailablePrograms??0,["missingImages"]=summary?.MissingImages.Length??0,["missingSounds"]=summary?.MissingSounds.Length??0,["missingModels"]=summary?.MissingModels.Length??0,["missingMotions"]=summary?.MissingMotions.Length??0,["missingControllerPrograms"]=summary?.MissingControllerPrograms.Length??0}};
         }
         internal void Poll()
         {

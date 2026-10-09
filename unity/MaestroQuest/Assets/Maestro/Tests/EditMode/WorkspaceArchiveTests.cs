@@ -24,6 +24,16 @@ namespace Maestro.Quest.Tests
 {
     public sealed class WorkspaceArchiveTests
     {
+        [Test] public void ArchiveEntryBudgetFitsEveryBoundedLibraryIncludingMetadata(){
+            var names=new List<string>(WorkspaceArchiveMetadata.Required){ProgramMemoryStore.FileName};
+            string Hash(int n)=>n.ToString("x64");
+            for(int i=0;i<32;i++){names.Add("models/"+Hash(i)+".glb");names.Add("models/"+Hash(i)+".txt");}
+            for(int i=0;i<AudioLibrary.MaximumFiles;i++){names.Add("audio/"+Hash(i)+".wav");names.Add("audio/"+Hash(i)+".txt");}
+            for(int i=0;i<ImageLibrary.MaximumFiles;i++){names.Add("images/"+Hash(i)+".image");names.Add("images/"+Hash(i)+".txt");}
+            for(int i=0;i<MotionLibrary.MaximumEntries;i++)names.Add("motions/"+Hash(i)+".motion.glb");
+            for(int i=0;i<ProgramModuleLibrary.MaximumEntries;i++)names.Add("program-modules.v1/"+Hash(i)+".json");
+            Assert.That(names.Count,Is.LessThanOrEqualTo(WorkspaceArchive.MaximumEntries));Assert.DoesNotThrow(()=>WorkspaceArchiveMetadata.CheckNames(names));
+        }
         string directory;readonly Dictionary<string,byte[]> documents=new(),payloads=new();
         string modelHash,motionPath,moduleHash,motionId;
         static byte[] Bytes(string text)=>new UTF8Encoding(false,true).GetBytes(text);
@@ -39,6 +49,15 @@ namespace Maestro.Quest.Tests
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
         }
+        [Test] public void ImportedImageRoundTripsExactBytesAndReportsMissingAssets(){
+            var bytes=ImageFiles.Png();string hash=ModelLibrary.Hash(bytes),path="images/"+hash+".image";
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.appearances=new[]{new RoomAppearance{id=new string('a',32),name="Tiles",style=new(){patternMode="image",imageHash=hash,renderMode="blend",opacity=.5f}}};
+            documents[RoomStorage.FileName]=Document(room);Assert.That(WorkspaceArchive.Fingerprint(Snapshot()).Summary.MissingImages,Is.EqualTo(new[]{hash}));
+            payloads[path]=bytes;documents["images/"+hash+".txt"]=Bytes("Tiles");
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)){Assert.AreEqual(1,staged.Receipt.Summary.Images);Assert.IsEmpty(staged.Receipt.Summary.MissingImages);CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(staged.DirectoryPath,path)));var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.IsNotNull(restored,error);Assert.AreEqual(hash,restored.appearances[0].style.imageHash);Assert.AreEqual(.5f,restored.appearances[0].style.opacity);Assert.AreEqual(hash,new ImageLibrary(Path.Combine(staged.DirectoryPath,"images")).ReadAsync(hash).GetAwaiter().GetResult().Hash);}
+            payloads[path][40]^=1;Assert.That(()=>Archive(),Throws.Exception);
+        }
+        [Test] public void ImageArchiveRejectsOrphanMetadataAndFutureStyleFields(){documents["images/"+new string('a',64)+".txt"]=Bytes("Orphan");Assert.That(()=>Snapshot(),Throws.Exception);documents.Remove("images/"+new string('a',64)+".txt");var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.appearances=new[]{new RoomAppearance{id=new string('a',32),name="Tiles"}};var wire=JObject.Parse(JsonUtility.ToJson(room));wire["appearances"][0]["style"]["imageUrl"]="future";documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);}
         [Test] public void ImportedAudioRoundTripsExactBytesAndReportsMissingAssets(){
             var bytes=WaveAudioTests.File();var hash=ModelLibrary.Hash(bytes);string path="audio/"+hash+".wav";
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));

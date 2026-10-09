@@ -91,7 +91,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    if(schema.format==='materialStore')return (value.amountLitres as number)<=(value.capacityLitres as number)?null:path+' needs contents within capacity';
    if(schema.format==='appearanceStyle'){
     const mode=value.renderMode,opacity=value.opacity,cutoff=value.cutoff,grain=value.grain as number,shading=value.shading as number;
-    return (grain===-1||grain>=0)&&(shading===-1||shading>=0)&&
+    return (value.patternMode==='image'?typeof value.imageHash==='string'&&/^[a-f0-9]{64}$/.test(value.imageHash):value.imageHash==='')&&(grain===-1||grain>=0)&&(shading===-1||shading>=0)&&
       (mode==='inherit'||mode==='opaque'?opacity===1&&cutoff===0:mode==='blend'?cutoff===0:true)?null:path+' needs consistent opacity, cutoff and inherited shading';
    }
    if(schema.format==='appearanceBinding'){

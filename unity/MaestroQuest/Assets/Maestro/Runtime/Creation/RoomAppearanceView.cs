@@ -18,6 +18,12 @@ namespace Maestro.Quest.Creation
         readonly List<Rendered> rendered=new();
         readonly List<AppearanceMaterials.Lease> leases=new();
         readonly List<VisibilityMaterials.Lease> visibilityLeases=new();
+        AppearanceImages images;
+        readonly Dictionary<string,AppearanceImages.Lease> imageLeases=new(StringComparer.Ordinal);
+        internal void ConfigureImages(AppearanceImages value){if(images==value)return;if(images)images.Changed-=ImagesChanged;images=value;if(images)images.Changed+=ImagesChanged;refreshPending=true;}
+        void ImagesChanged(string hash){if(imageLeases.ContainsKey(hash))refreshPending=true;}
+        internal string ImageState(string hash){if(!isActiveAndEnabled||!images||!imageLeases.ContainsKey(hash))return "unloaded";var state=images.State(hash);return state=="ready"&&refreshPending?"loading":state;}
+        Texture Image(AppearanceStyle style){if(style.patternMode!="image")return null;if(!images)return null;if(!imageLeases.TryGetValue(style.imageHash,out var lease)){lease=images.Acquire(style.imageHash);imageLeases.Add(style.imageHash,lease);}return lease.Texture;}
         VisibilityState visibility;
         bool refreshPending;
         internal bool PointerVisible=>!isActiveAndEnabled||visibility==null||visibility.Opacity>0;
@@ -41,6 +47,7 @@ namespace Maestro.Quest.Creation
         internal void Refresh() {
             refreshPending=false;
             var previous=leases.ToArray();leases.Clear();
+            var previousImages=imageLeases.Values.ToArray();imageLeases.Clear();
             var previousVisibility=visibilityLeases.ToArray();visibilityLeases.Clear();Restore();
             try {
             if(!isActiveAndEnabled||bindings.Length==0&&visibility==null)return;
@@ -61,7 +68,7 @@ namespace Maestro.Quest.Creation
                         binding=bindings.FirstOrDefault(b=>b.kind=="material"&&b.modelHash==hash&&b.materialIndex==index)??binding;
                     if(appearanceEligible&&binding!=null&&definitions.TryGetValue(binding.appearanceId,out var definition)) {
                         var basePigment=binding.kind=="material"&&model&&model.Ready?model.Instance.GetComponent<PencilModelStyle>()?.ImportedBaseColor(binding.materialIndex):null;
-                        var lease=AppearanceMaterials.Acquire(source,binding.Effective(definition),basePigment);leases.Add(lease);applied[i]=lease.Material;changed=true;
+                        var lease=AppearanceMaterials.Acquire(source,binding.Effective(definition),basePigment,Image(definition.style));leases.Add(lease);applied[i]=lease.Material;changed=true;
                     }
                     if(visibility!=null) {
                         var lease=VisibilityMaterials.Acquire(applied[i],visibility);visibilityLeases.Add(lease);applied[i]=lease.Material;changed=true;
@@ -69,7 +76,7 @@ namespace Maestro.Quest.Creation
                 }
                 if(changed){rendered.Add(new Rendered{Renderer=renderer,Original=original,Applied=applied});renderer.sharedMaterials=applied;}
             }
-            } finally {foreach(var lease in previousVisibility)lease.Dispose();foreach(var lease in previous)lease.Dispose();}
+            } finally {foreach(var lease in previousVisibility)lease.Dispose();foreach(var lease in previous)lease.Dispose();foreach(var lease in previousImages)lease.Dispose();}
         }
         void Restore() {
             foreach(var entry in rendered)if(entry.Renderer) {
@@ -79,9 +86,9 @@ namespace Maestro.Quest.Creation
             }
             rendered.Clear();
         }
-        void Clear(){Restore();foreach(var lease in visibilityLeases)lease.Dispose();visibilityLeases.Clear();foreach(var lease in leases)lease.Dispose();leases.Clear();}
+        void Clear(){Restore();foreach(var lease in visibilityLeases)lease.Dispose();visibilityLeases.Clear();foreach(var lease in leases)lease.Dispose();leases.Clear();foreach(var lease in imageLeases.Values)lease.Dispose();imageLeases.Clear();}
         void OnEnable(){Refresh();}
         void OnDisable(){Clear();}
-        void OnDestroy(){if(avatar)avatar.ModelChanged-=Refresh;Clear();}
+        void OnDestroy(){if(images)images.Changed-=ImagesChanged;if(avatar)avatar.ModelChanged-=Refresh;Clear();}
     }
 }

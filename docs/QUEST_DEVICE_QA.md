@@ -3725,3 +3725,25 @@ private-file skips), 186 shared editor/catalog tests and both native-room and
 original-book integrations. The new headless audio journey confirms actual PCM
 consumption, same-instance controls, discovery and delivery of the pause event
 to a running saved program. It used no real AI provider or headset.
+
+
+Imported image acceptance remains pending (2026-10-09). The current source accepts
+bounded static PNG/JPEG through the shared native picker/appearance pipeline;
+installed APK D85F3CB7 predates it. After the existing cooling/charge readiness
+hold is released and a new development build is verified, cover:
+
+- Select/cancel a PNG and an EXIF-rotated JPEG through Quest's actual file chooser;
+  resume from its focus change, inspect and accept the exact preview.
+- Apply the saved image to a book cover, a recipe part and an imported material.
+  Check orientation, colour, alpha/cutout and half opacity. Browser pages and
+  drawing ink must stay readable and retain their own materials.
+- Use normal chat with both managed and BYOK, then the generated forms; verify
+  Undo/unbinding retains the private image and appearance for reuse.
+- Measure decode/upload stalls and peak memory using multiple maximum-size images,
+  release unused bindings, retry a memory-bound load, and replace the workspace.
+  Check the explicit missing/corrupt state and exact-image reimport recovery.
+- Export/restore a workspace with those images, confirm exact identities, then
+  check visuals and stability across pause/resume and a sustained room session.
+
+Desktop limits are not physical performance acceptance. No new APK installation,
+signature, upload or cloud deployment is recorded by this checkpoint.

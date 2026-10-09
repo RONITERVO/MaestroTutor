@@ -13,6 +13,7 @@ namespace Maestro.Quest.Creation
     /// expiring URL or texture payload belongs in this document.</summary>
     [Serializable] public sealed class AppearanceStyle
     {
+        public string imageHash="";
         public string tint="#FFFFFF",patternMode="inherit",renderMode="inherit",sidedness="inherit";
         public RecipePattern pattern=new();
         public Vector2 tiling=Vector2.one,offset=Vector2.zero;
@@ -21,7 +22,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error) {
             error="Choose a supported appearance with finite colour, mapping and surface settings";
             if(!ColorUtility.TryParseHtmlString(tint,out var color)||tint==null||tint.Length!=7||tint[0]!='#'||color.a!=1||
-                patternMode is not ("inherit" or "replace")||pattern==null||!pattern.Valid()||
+                patternMode is not ("inherit" or "replace" or "image")||(patternMode=="image"?!ModelLibrary.ValidHash(imageHash):imageHash!="")||pattern==null||!pattern.Valid()||
                 !Finite(tiling)||tiling.x<.01f||tiling.y<.01f||tiling.x>64||tiling.y>64||!Finite(offset)||Mathf.Abs(offset.x)>64||Mathf.Abs(offset.y)>64||
                 sidedness is not ("inherit" or "front" or "both")||
                 !float.IsFinite(grain)||grain!=-1&&(grain<0||grain>1)||!float.IsFinite(shading)||shading!=-1&&(shading<0||shading>.3f))return false;
@@ -31,8 +32,8 @@ namespace Maestro.Quest.Creation
         }
         static bool Finite(Vector2 v)=>float.IsFinite(v.x)&&float.IsFinite(v.y);
         internal static bool Wire(JToken token) {
-            if(token is not JObject a||!Exact(a,"tint","patternMode","pattern","tiling","offset","renderMode","opacity","cutoff","sidedness","grain","shading"))return false;
-            if(new[]{"tint","patternMode","renderMode","sidedness"}.Any(k=>a[k]?.Type!=JTokenType.String)||
+            if(token is not JObject a||!Exact(a,"tint","patternMode","imageHash","pattern","tiling","offset","renderMode","opacity","cutoff","sidedness","grain","shading"))return false;
+            if(new[]{"tint","patternMode","imageHash","renderMode","sidedness"}.Any(k=>a[k]?.Type!=JTokenType.String)||
                 new[]{"opacity","cutoff","grain","shading"}.Any(k=>!Number(a[k]))||!Vector(a["tiling"])||!Vector(a["offset"]))return false;
             if(a["pattern"] is not JObject p||!Exact(p,"kind","plane","secondary","columns","rows")||
                 new[]{"kind","plane","secondary"}.Any(k=>p[k]?.Type!=JTokenType.String)||p["columns"]?.Type!=JTokenType.Integer||p["rows"]?.Type!=JTokenType.Integer)return false;

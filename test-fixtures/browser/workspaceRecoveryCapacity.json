@@ -1,28 +1,28 @@
 {
   "inventories": [
     {
-      "inspectionId": "a98e15bba23e4a419fc91ca2c3a3d865",
+      "inspectionId": "3214a980a0354d1e9501fd8a9cea86e0",
       "count": 65,
       "selectionReadable": true
     },
     {
-      "inspectionId": "8d4e3fdf96a346979215995847ed30e6",
+      "inspectionId": "40a5e8e608c4457c80c397e893813ef1",
       "count": 64,
       "selectionReadable": true
     }
   ],
   "completed": {
-    "requestId": "b2cc099dcd664e1fbe007cb0091005e5",
+    "requestId": "60e08da8b053407e8905f8efdb8ee78f",
     "phase": "review",
     "status": "Recovered workspace opened. Complete content review before starting activity.",
     "originHash": "f9eae93527707b3f287416cd5a8e24909d5d2686e7e855bf87cff6318bf0be75",
     "candidateCount": 64,
     "preview": {
-      "generationId": "481526b240a44a2d9b0bdaea41cc8d79",
-      "manifestHash": "375470175d2e9919116e018e83018362e2f78176ab9fc5eab343bd9645821c44"
+      "generationId": "c0486a2d96744c83a1ed3266576a9178",
+      "manifestHash": "d898015030033a04bca2f9383cb1a1f41d5dccc8c857f8db76adb73690ba1e19"
     },
-    "committedRevision": "81af86b893c444628562170bf233e130",
-    "evidenceHash": "00da1b67e98c9f77a7ec127fe0530993cbb59af73dfe2718f4e0cc098e11b197"
+    "committedRevision": "99f9377da3a0405baf085a9652d3f396",
+    "evidenceHash": "b03ff7b03a9148d5f0e1000e18f93e52a29e15697b01d88d42078e2acfc89916"
   },
   "reviewRequired": false
 }

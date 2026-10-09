@@ -20,7 +20,7 @@ namespace Maestro.Quest.Persistence
     /// Recovery never executes actions, and unexpected file identities preserve all evidence.</summary>
     internal static class RoomSnapshotTransaction
     {
-        internal const string FileName="room-snapshot.v31.json";
+        internal const string FileName="room-snapshot.v32.json";
         internal const int RoomLimit=4*1024*1024,JournalLimit=16*1024*1024;
         static readonly string[] Names={RoomStorage.FileName,ProgramMemoryStore.FileName};
         static readonly int[] Limits={RoomLimit,ProgramMemoryDocument.MaximumBytes};

@@ -29,7 +29,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Read(target).color,Is.EqualTo(Color.white));Assert.That(AppearanceBlockMaterial().GetFloat("_SurfaceOpacity"),Is.EqualTo(.4f));
             Assert.That(new RoomStorage(directory).Load(out error).objects.Single(x=>x.id==target).appearanceBindings[0].appearanceId,Is.EqualTo(id),error);
             var context=new BehaviourCatalog.FactContext(editor:editor);
-            Assert.That(AppearanceFacts.Definition().TryRead(context,1,new JObject{["id"]=id},out _),Is.True);
+            Assert.That(AppearanceFacts.Definition().TryRead(context,2,new JObject{["id"]=id},out _),Is.True);
             Assert.That(AppearanceFacts.Definitions().TryRead(context,1,new JObject{["offset"]=0},out _),Is.True);
             Assert.That(AppearanceFacts.Members().TryRead(context,1,new JObject{["id"]=id,["offset"]=0},out _),Is.True);
             Assert.That(AppearanceFacts.Bindings().TryRead(context,1,new JObject{["target"]=target,["offset"]=0},out _),Is.True);
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests
             var definition=editor.ReadAppearance(id);definition.name=new string('W',80);definition.style.patternMode="replace";definition.style.pattern.kind="stripes";definition.style.pattern.columns=32;definition.style.pattern.rows=32;
             definition.style.tiling=new Vector2(64,64);definition.style.offset=new Vector2(-64,-64);definition.style.grain=1;definition.style.shading=.3f;
             Assert.That(editor.EditAppearance(definition,id,editor.AppearanceRevision(id),new[]{target},out error),Is.True,error);
-            Assert.That(AppearanceFacts.Definition().TryRead(context,1,new JObject{["id"]=id},out _),Is.True);
+            Assert.That(AppearanceFacts.Definition().TryRead(context,2,new JObject{["id"]=id},out _),Is.True);
             editor.Undo();
             editor.Undo();Assert.That(editor.Read(target).appearanceBindings,Is.Empty);Assert.That(AppearanceBlockMaterial().GetFloat("_SurfaceOpacity"),Is.EqualTo(1));
             editor.Redo();Assert.That(AppearanceBlockMaterial().GetFloat("_SurfaceOpacity"),Is.EqualTo(.4f));yield return null;

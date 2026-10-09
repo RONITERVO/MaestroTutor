@@ -1,13 +1,13 @@
 {
   "receipt": {
-    "id": "b32d8463cc6e477ab9b02304910ffbfd",
+    "id": "86cefc5ae47745d4a5ce229609a0060b",
     "capability": "workspace.archive.select",
     "version": 1,
     "resources": [],
     "phase": "completed",
     "status": "Action completed",
     "output": {
-      "requestId": "ef039707436845ce8151102096a97db0"
+      "requestId": "08578213445c4bfca21595fcf96d02cd"
     },
     "call": {
       "id": "workspace.archive.select",
@@ -34,10 +34,12 @@
             "record": {
               "files": "number",
               "models": "number",
+              "images": "number",
               "sounds": "number",
               "motions": "number",
               "modules": "number",
               "unavailablePrograms": "number",
+              "missingImages": "number",
               "missingSounds": "number",
               "missingModels": "number",
               "missingMotions": "number",
@@ -73,23 +75,25 @@
     "status": "Current fact value. Reading does not change the room.",
     "category": "facts",
     "arguments": {
-      "requestId": "ef039707436845ce8151102096a97db0"
+      "requestId": "08578213445c4bfca21595fcf96d02cd"
     },
     "available": true,
     "value": {
-      "requestId": "ef039707436845ce8151102096a97db0",
+      "requestId": "08578213445c4bfca21595fcf96d02cd",
       "phase": "prepared",
       "name": "My workspace.zip",
       "error": "",
-      "generationId": "bb56ea1a1dcb415b9493ff49664a14c5",
-      "manifestHash": "219247b4d39cb0bf69ef5e8858df676976976e46d76473073763d8e7986adb71",
+      "generationId": "48017c7e25944319ad2927576f70a997",
+      "manifestHash": "edbbadffe72297d09d93c26e10772c258f9ffd5c8e543f3a4196337cf4c4810e",
       "summary": {
         "files": 6,
         "models": 0,
+        "images": 0,
         "sounds": 0,
         "motions": 0,
         "modules": 0,
         "unavailablePrograms": 0,
+        "missingImages": 0,
         "missingSounds": 0,
         "missingModels": 0,
         "missingMotions": 0,

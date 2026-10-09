@@ -46,3 +46,14 @@ it('claims every object in a shared edit and keeps native/web program, receipt a
  const {call:ignored,...brief}=summary;void ignored;
  expect(validExecutionView({selected:summary,running:[],outcomes:[brief]})).toBe(true);
 });
+
+it('uses exact imported image identities without changing independent surface semantics',()=>{
+ const save=capabilityDefinition('appearance.save')!.example as {style:Record<string,unknown>};
+ const style={...save.style,patternMode:'image',imageHash:'a'.repeat(64)};
+ expect(validateCapabilityArguments('appearance.save',1,{...save,style})).toBeNull();
+ for(const imageHash of ['', '../private', 'https://example.com/image', 'A'.repeat(64)])expect(validateCapabilityArguments('appearance.save',1,{...save,style:{...style,imageHash}})).not.toBeNull();
+ for(const patternMode of ['inherit','replace'])expect(validateCapabilityArguments('appearance.save',1,{...save,style:{...style,patternMode}})).not.toBeNull();
+ expect(validateCapabilityArguments('image.import',1,{operation:'select'})).toBeNull();
+ expect(validateCapabilityArguments('image.import',1,{operation:'select',url:'https://example.com/image'})).not.toBeNull();
+ expect(validateCapabilityArguments('image.import',1,{operation:'accept',requestId:'a'.repeat(32),imageHash:'b'.repeat(64)})).toBeNull();
+});

@@ -1,21 +1,23 @@
 {
   "prepared": {
-    "requestId": "97be7a6b01cd40e494069de2fbd3fb88",
+    "requestId": "1976a5019f334cfbb265ad75b8fbe5f5",
     "phase": "prepared",
     "status": "Inspect these exact contents and missing-reference counts before completing review.",
     "workspace": {
-      "generationId": "2d41888b09d84580804f6ded57fae070",
-      "revision": "f051389a707f431ea90e52f63778d315"
+      "generationId": "3fed28309de849cfa8c5036c028c1342",
+      "revision": "29fa10d21d164b2eb9ed0f0d1ac8f307"
     },
-    "manifestHash": "3d1d340a86dbe97316489029a078db07e4c22f596bc6785b584cef247c533b06",
+    "manifestHash": "2dcdb4dd8ebb902a57244f7f980d3086e655e6d775faeac9db8e3faf1ae62c33",
     "committedRevision": "",
     "summary": {
       "files": 6,
       "models": 0,
+      "images": 0,
       "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingImages": 0,
       "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,
@@ -24,22 +26,24 @@
     "activityHeld": true
   },
   "completed": {
-    "requestId": "97be7a6b01cd40e494069de2fbd3fb88",
+    "requestId": "1976a5019f334cfbb265ad75b8fbe5f5",
     "phase": "completed",
     "status": "Review completed. Stopped programs and physics stay stopped; start desired activity explicitly.",
     "workspace": {
-      "generationId": "2d41888b09d84580804f6ded57fae070",
-      "revision": "f051389a707f431ea90e52f63778d315"
+      "generationId": "3fed28309de849cfa8c5036c028c1342",
+      "revision": "29fa10d21d164b2eb9ed0f0d1ac8f307"
     },
-    "manifestHash": "3d1d340a86dbe97316489029a078db07e4c22f596bc6785b584cef247c533b06",
-    "committedRevision": "cbab8926a7d84f0b89fe6d841fc26bb4",
+    "manifestHash": "2dcdb4dd8ebb902a57244f7f980d3086e655e6d775faeac9db8e3faf1ae62c33",
+    "committedRevision": "038ae927f19a4c2e9d9c80211d989baf",
     "summary": {
       "files": 6,
       "models": 0,
+      "images": 0,
       "sounds": 0,
       "motions": 0,
       "modules": 0,
       "unavailablePrograms": 0,
+      "missingImages": 0,
       "missingSounds": 0,
       "missingModels": 0,
       "missingMotions": 0,
@@ -48,102 +52,102 @@
     "activityHeld": false
   },
   "current": {
-    "revision": "cbab8926a7d84f0b89fe6d841fc26bb4",
-    "generationId": "2d41888b09d84580804f6ded57fae070",
+    "revision": "038ae927f19a4c2e9d9c80211d989baf",
+    "generationId": "3fed28309de849cfa8c5036c028c1342",
     "available": true,
     "reviewRequired": false,
     "changing": false,
-    "activationRequestId": "55cbfc1d47e6454e825fe2f9e89adb8d",
-    "reviewRequestId": "97be7a6b01cd40e494069de2fbd3fb88",
+    "activationRequestId": "f200a598ecec4283b0c7664401f78b57",
+    "reviewRequestId": "1976a5019f334cfbb265ad75b8fbe5f5",
     "error": ""
   },
   "execution": {
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "fb748d34315948908c8b6d4454c58655",
+    "nextRunId": "5944b8ffb8704e629b33a6b1e353cca8",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "40f1f8c769e646d9982034a5ee35666d",
+        "id": "42248c4465974e54a40ea7232e76112b",
         "capability": "workspace.review.complete",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "97be7a6b01cd40e494069de2fbd3fb88"
+          "requestId": "1976a5019f334cfbb265ad75b8fbe5f5"
         },
         "call": {
           "id": "workspace.review.complete",
           "version": 1,
           "arguments": {
-            "requestId": "97be7a6b01cd40e494069de2fbd3fb88",
-            "manifestHash": "3d1d340a86dbe97316489029a078db07e4c22f596bc6785b584cef247c533b06",
-            "expectedRevision": "f051389a707f431ea90e52f63778d315"
+            "requestId": "1976a5019f334cfbb265ad75b8fbe5f5",
+            "manifestHash": "2dcdb4dd8ebb902a57244f7f980d3086e655e6d775faeac9db8e3faf1ae62c33",
+            "expectedRevision": "29fa10d21d164b2eb9ed0f0d1ac8f307"
           }
         }
       },
       "running": [],
       "outcomes": [
         {
-          "id": "355a60d1cad94ba78e101cc61283fb87",
+          "id": "6aa36a3767d04aea8c55122f13b29c44",
           "capability": "workspace.archive.select",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "0537bc7e12984ff9a853a573f3f25407"
+            "requestId": "4de6c86426484c0ab718a03721c895bc"
           }
         },
         {
-          "id": "95ad2ff792e2480ab5d38551bf9567fe",
+          "id": "a013e3b375434b7db7e799a812bb0e75",
           "capability": "workspace.archive.activate",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "55cbfc1d47e6454e825fe2f9e89adb8d"
+            "requestId": "f200a598ecec4283b0c7664401f78b57"
           }
         },
         {
-          "id": "426b820a0fab448a93a24b9f57d12fea",
+          "id": "616179ae94094c14847f912aaec048d4",
           "capability": "workspace.review.prepare",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "dbde1bea09e14cd8a0e56bee1d3868a5"
+            "requestId": "e88b4ccd3a8f4ca08b6f416fa21bfd41"
           }
         },
         {
-          "id": "f5b28be257874b8ea673d4f86ae97195",
+          "id": "44dd0df3679f4da087f951b583137bb1",
           "capability": "workspace.review.prepare",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "97be7a6b01cd40e494069de2fbd3fb88"
+            "requestId": "1976a5019f334cfbb265ad75b8fbe5f5"
           }
         },
         {
-          "id": "40f1f8c769e646d9982034a5ee35666d",
+          "id": "42248c4465974e54a40ea7232e76112b",
           "capability": "workspace.review.complete",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "97be7a6b01cd40e494069de2fbd3fb88"
+            "requestId": "1976a5019f334cfbb265ad75b8fbe5f5"
           }
         }
       ],
-      "nextRunId": "9b903481045f44438153c4020cece91e",
+      "nextRunId": "b989ae364b764802a4e35bb29a06fb16",
       "storageError": null,
       "recovery": null
     }

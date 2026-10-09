@@ -20,8 +20,8 @@ it('shares exact selection/cancellation requests without accepting paths or acti
 it('reads a bounded preview through the ordinary fact vocabulary and refuses private path fields',()=>{
  const id='workspace.archive.selection';expect(behaviourFact(id)).toMatchObject({features:['factQueries.v1']});
  expect(validateFactArguments(id,1,{requestId})).toBeNull();expect(validateFactArguments(id,1,{requestId,path:'/cache/one'})).not.toBeNull();
- const summary={files:1400,models:32,motions:1024,sounds:32,modules:256,unavailablePrograms:32,missingModels:32,missingMotions:1024,missingSounds:32,missingControllerPrograms:4};
- const value={requestId,phase:'prepared',name:'"'.repeat(80),error:'"'.repeat(80),generationId:'b'.repeat(32),manifestHash:'c'.repeat(64),summary};
+ const summary={files:1536,models:32,motions:1024,sounds:32,images:32,modules:256,unavailablePrograms:32,missingModels:32,missingMotions:1024,missingSounds:32,missingImages:32,missingControllerPrograms:4};
+ const value={requestId,phase:'prepared',name:'"'.repeat(48),error:'"'.repeat(64),generationId:'b'.repeat(32),manifestHash:'c'.repeat(64),summary};
  expect(validFactValue(id,value)).toBe(true);expect(validFactValue(id,{...value,path:'/cache/private'})).toBe(false);
  expect(validFactValue(id,{...value,summary:{...summary,files:Number.MAX_SAFE_INTEGER+1}})).toBe(false);
 });

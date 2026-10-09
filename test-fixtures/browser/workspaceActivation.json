@@ -1,55 +1,55 @@
 {
   "current": {
-    "revision": "b69c34e780e94929ae867557305d8e76",
-    "generationId": "b100c305f6bf4cbb8d62177abb2b6b4a",
+    "revision": "d43cb41df32740028177be89043e8bcc",
+    "generationId": "91f877ad2d874724a51f82e46618d19d",
     "available": true,
     "reviewRequired": true,
     "changing": false,
-    "activationRequestId": "79bd3f9f1e054420868e868d82aa8520",
+    "activationRequestId": "4337000eeff74ea4ab38100366243fcf",
     "reviewRequestId": "",
     "error": ""
   },
   "activation": {
-    "requestId": "79bd3f9f1e054420868e868d82aa8520",
-    "selectionRequestId": "2ecbbf4828af457d971564994513a7c8",
+    "requestId": "4337000eeff74ea4ab38100366243fcf",
+    "selectionRequestId": "f6d3bc90515647dcbeb6d3f5b5763e08",
     "originRevision": "initial",
-    "committedRevision": "b69c34e780e94929ae867557305d8e76",
+    "committedRevision": "d43cb41df32740028177be89043e8bcc",
     "phase": "review",
     "status": "Imported workspace opened. Review its contents before starting activity.",
     "preview": {
-      "generationId": "b100c305f6bf4cbb8d62177abb2b6b4a",
-      "manifestHash": "e5a311b9ffdeb66c8971cd63ca7ac7ee9f6eceeef47ab15dfc347f05e04c989e"
+      "generationId": "91f877ad2d874724a51f82e46618d19d",
+      "manifestHash": "17145049e932bc8e1a4992cd79425f7bfb9055f20a46cb986a6819562252fb48"
     },
     "retained": {
-      "generationId": "b7430099d15d4db5aa389749efac9ef8",
-      "manifestHash": "b950401b0b74b98c8bdd9b6c187774c090b7d38d67f0a7d6734cef74e4cea62c"
+      "generationId": "7bbda16edd214c3a99fc997f2077b113",
+      "manifestHash": "366f8abc6d5b4eda47d04462ded360a13a538541541186780519665d1402b34b"
     }
   },
   "execution": {
     "selected": null,
     "running": [],
     "outcomes": [],
-    "nextRunId": "a98294cf0325460f8330b9b2016b4654",
+    "nextRunId": "4381ea000003478d824925d412375e68",
     "storageError": null,
     "recovery": null,
     "workspace": {
       "selected": {
-        "id": "c66a493b3e0e4f388a9179a18169ba2a",
+        "id": "d2bb0085f99d4cdcb4c484ab06d6e1ff",
         "capability": "workspace.archive.activate",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "requestId": "79bd3f9f1e054420868e868d82aa8520"
+          "requestId": "4337000eeff74ea4ab38100366243fcf"
         },
         "call": {
           "id": "workspace.archive.activate",
           "version": 1,
           "arguments": {
-            "selectionRequestId": "2ecbbf4828af457d971564994513a7c8",
-            "generationId": "b100c305f6bf4cbb8d62177abb2b6b4a",
-            "manifestHash": "e5a311b9ffdeb66c8971cd63ca7ac7ee9f6eceeef47ab15dfc347f05e04c989e",
+            "selectionRequestId": "f6d3bc90515647dcbeb6d3f5b5763e08",
+            "generationId": "91f877ad2d874724a51f82e46618d19d",
+            "manifestHash": "17145049e932bc8e1a4992cd79425f7bfb9055f20a46cb986a6819562252fb48",
             "expectedRevision": "initial"
           }
         }
@@ -57,29 +57,29 @@
       "running": [],
       "outcomes": [
         {
-          "id": "2ba9bd91e4a24ae4b821923a1ac93976",
+          "id": "8c2afa86feac436486a756e2f6c50ee5",
           "capability": "workspace.archive.select",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "2ecbbf4828af457d971564994513a7c8"
+            "requestId": "f6d3bc90515647dcbeb6d3f5b5763e08"
           }
         },
         {
-          "id": "c66a493b3e0e4f388a9179a18169ba2a",
+          "id": "d2bb0085f99d4cdcb4c484ab06d6e1ff",
           "capability": "workspace.archive.activate",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "requestId": "79bd3f9f1e054420868e868d82aa8520"
+            "requestId": "4337000eeff74ea4ab38100366243fcf"
           }
         }
       ],
-      "nextRunId": "d8e0e2b00bab49f1a16e787c415ab7fd",
+      "nextRunId": "6f482c9bcaa84098a1eb61a43d425f9b",
       "storageError": null,
       "recovery": null
     }

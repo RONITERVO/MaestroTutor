@@ -15,9 +15,9 @@ namespace Maestro.Quest.Art
         {
             Entry entry;
             internal Material Material=>entry?.Material;
-            internal Lease(string key,Material source,AppearanceStyle style,Color? basePigment) {
+            internal Lease(string key,Material source,AppearanceStyle style,Color? basePigment,Texture image) {
                 if(!entries.TryGetValue(key,out entry)) {
-                    entry=new Entry{Key=key,Material=Create(source,style,basePigment)};entries.Add(key,entry);
+                    entry=new Entry{Key=key,Material=Create(source,style,basePigment,image)};entries.Add(key,entry);
                 }
                 entry.Owners++;
             }
@@ -25,23 +25,24 @@ namespace Maestro.Quest.Art
         }
         static readonly Dictionary<string,Entry> entries=new(StringComparer.Ordinal);
         internal static int LiveVariants=>entries.Count;
-        internal static Lease Acquire(Material source,AppearanceStyle style,Color? basePigment=null) {
+        internal static Lease Acquire(Material source,AppearanceStyle style,Color? basePigment=null,Texture image=null) {
             if(!source||source.shader.name!="Maestro/Watercolor")throw new ArgumentException("An illustrated source material is required");
             if(style==null||!style.Validate(out _))throw new ArgumentException("A supported appearance is required");
-            return new Lease(Key(source,style,basePigment),source,style,basePigment);
+            return new Lease(Key(source,style,basePigment,image),source,style,basePigment,image);
         }
-        static string Key(Material source,AppearanceStyle style,Color? basePigment) {
+        static string Key(Material source,AppearanceStyle style,Color? basePigment,Texture image) {
             var b=IllustratedMaterialKey.Source(source);
             if(basePigment.HasValue){b.Append("|base");var c=basePigment.Value;IllustratedMaterialKey.Vector(b,new Vector4(c.r,c.g,c.b,c.a));}
-            return b.Append('|').Append(JsonUtility.ToJson(style)).ToString();
+            return b.Append('|').Append(image?image.GetInstanceID():0).Append('|').Append(JsonUtility.ToJson(style)).ToString();
         }
-        static Material Create(Material source,AppearanceStyle style,Color? basePigment) {
+        static Material Create(Material source,AppearanceStyle style,Color? basePigment,Texture image) {
             var value=new Material(source){name="Shared appearance",enableInstancing=true};
             ColorUtility.TryParseHtmlString(style.tint,out var tint);value.color=(basePigment??source.color)*tint;value.SetColor("_PatternColor",source.GetColor("_PatternColor")*tint);
             if(style.patternMode=="replace") {
                 value.mainTexture=null;style.pattern.Apply(value,"box");
                 value.SetVector("_PatternCoordinates",source.GetVector("_PatternCoordinates"));value.SetColor("_PatternColor",style.pattern.Color*tint);
             }
+            if(style.patternMode=="image") {value.mainTexture=image;new RecipePattern().Apply(value,"box");}
             var baseScale=source.mainTextureScale;
             value.mainTextureScale=Vector2.Scale(baseScale,style.tiling);value.mainTextureOffset=source.mainTextureOffset+Vector2.Scale(baseScale,style.offset);
             var inherited=IllustratedSurface.Imported(source,source.color);
