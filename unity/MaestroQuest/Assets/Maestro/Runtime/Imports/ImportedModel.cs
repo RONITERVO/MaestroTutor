@@ -13,7 +13,7 @@ using UnityEngine;
 namespace Maestro.Quest.Imports
 {
     /// <summary>One owned imported instance. Playback never starts from a file or saved room.</summary>
-    public sealed class ImportedModel : MonoBehaviour, IDisposable
+    public sealed partial class ImportedModel : MonoBehaviour, IDisposable
     {
         static readonly SemaphoreSlim loadQueue = new(1, 1);
         public const int MaximumLiveModels=6,MaximumLiveVertices=500000,MaximumLiveTexturePixels=64*1024*1024,MaximumLiveMorphVertices=8000000;
@@ -42,12 +42,12 @@ namespace Maestro.Quest.Imports
         public float ClipDuration(int index) => index >= 0 && index < ClipCount ? instance.AnimationClips[index].length : 0;
         public bool SampleClip(int index, float time, bool loop)
         {
-            if (index < 0 || index >= ClipCount || !float.IsFinite(time) || time < 0 || ClipDuration(index) <= 0) return false;
+            if (geometryFrozen || index < 0 || index >= ClipCount || !float.IsFinite(time) || time < 0 || ClipDuration(index) <= 0) return false;
             return Sample(instance.AnimationClips[index],time,loop);
         }
         public bool SampleMotion(MotionLibrary.Lease motion,float time,bool loop)
         {
-            if (motion == null || !motion.Clip || motion.RigHash != MotionRigHash || !float.IsFinite(time) || time < 0 || motion.Clip.length <= 0) return false;
+            if (geometryFrozen || motion == null || !motion.Clip || motion.RigHash != MotionRigHash || !float.IsFinite(time) || time < 0 || motion.Clip.length <= 0) return false;
             return Sample(motion.Clip,time,loop);
         }
         bool Sample(AnimationClip clip,float time,bool loop)
@@ -108,7 +108,8 @@ namespace Maestro.Quest.Imports
                 if (!float.IsFinite(size) || size < .00001f || size > 10000) throw new ModelImportException("The model has invalid dimensions. Apply transforms and export it again.");
                 float factor = .35f / size;
                 instance.transform.SetParent(transform, false); instance.transform.localScale = Vector3.one * factor;
-                instance.transform.localRotation = info.IsAvatar ? Quaternion.Euler(0,180,0) : Quaternion.identity;
+                objectRotation = info.IsAvatar ? Quaternion.Euler(0,180,0) : Quaternion.identity;
+                instance.transform.localRotation = objectRotation;
                 instance.transform.localPosition = -(instance.transform.localRotation * bounds.center) * factor;
                 LocalBounds = new Bounds(Vector3.zero, bounds.size * factor);
                 instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();
@@ -138,6 +139,7 @@ namespace Maestro.Quest.Imports
         }
         public void Play(int index, bool loop)
         {
+            if(geometryFrozen)return;
             Stop(); if (!animationPlayer || index < 0 || index >= ClipCount) return;
             var clip = instance.AnimationClips[index]; var state = animationPlayer[clip.name];
             if (state == null) return;

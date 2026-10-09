@@ -24,6 +24,7 @@ namespace Maestro.Quest.Programs
             if(string.IsNullOrEmpty(hash)||context.Editor.Read(id).modelHash!=hash||!model||!model.Ready||
                 avatar&&(avatar.ModelBusy||avatar.ModelHash!=hash)||index<0||index>=model.ClipCount||model.ClipDuration(index)<=0)
             {error="Choose a clip from the target's current loaded model using Motion";return false;}
+            if(model.PlaybackIssue!=null){error=model.PlaybackIssue;return false;}
             if((float)arguments["seconds"]==0&&model.ClipDuration(index)>30) {error="Choose an explicit duration for clips longer than 30 seconds";return false;}
             return true;
         }

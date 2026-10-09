@@ -503,6 +503,29 @@ try{
  const windowRemoved=await runNamedAction('object.window.edit');assert.equal(windowRemoved.call.arguments.operation,'remove');
  await writeFile(join(directory,'book-native-window.json'),JSON.stringify({boundary:'Actual original book generated forms, native plane/mask save/removal and revision guards. Desktop only; mask rendering is disabled without headset passthrough.',windowPlane,windowSaved,windowRemoved},null,2));
 
+ // Model settings are edited through the same generated form and native guard used by agents.
+ const modelFixture=await readFile(join(directory,'model-fixture.json'),'utf8').then(text=>JSON.parse(text) as {target:string;hash:string}).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
+ if(modelFixture){
+  await openNamedAction('Set imported model geometry','object.model.geometry.set');
+  await page.getByLabel('Action inputs target',{exact:true}).selectOption(modelFixture.target);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('Action inputs settings scaleMode',{exact:true}).inputValue(),'fitted');
+  await page.getByLabel('Action inputs settings scaleMode',{exact:true}).selectOption('source');
+  await page.getByLabel('Action inputs settings pivot',{exact:true}).selectOption('source');
+  await page.getByLabel('Action inputs settings meshCollision',{exact:true}).selectOption('true');
+  await page.getByLabel('Action inputs settings walkable',{exact:true}).selectOption('true');
+  const modelGeometry=await runNamedAction('object.model.geometry.set');
+  assert.equal(modelGeometry.output?.target,modelFixture.target);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  const modelFact=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);
+  assert.ok(modelFact?.operation==='inspect'&&modelFact.category==='facts'&&modelFact.capability==='object.model.geometry');
+  const geometry=modelFact.value as {ready:boolean;modelHash:string;settings:{meshCollision:boolean;walkable:boolean};size:{x:number}};
+  assert.equal(geometry.ready,true);assert.equal(geometry.modelHash,modelFixture.hash);assert.equal(geometry.settings.meshCollision,true);assert.equal(geometry.settings.walkable,true);assert.ok(Math.abs(geometry.size.x-6)<.001);
+  await page.getByRole('heading',{name:'Set imported model geometry',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(directory,'book-native-model-geometry.png')});
+  await writeFile(join(directory,'book-native-model-geometry.json'),JSON.stringify({boundary:'Original book generated form, current-value prefill, actual native GLB scale/rigid geometry save and readiness readback. Scripted provider elsewhere; no headset claim.',modelFixture,modelGeometry,modelFact},null,2));
+ }
+
  // Guides follow the same native search/inspect path without changing the room.
  const guideRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();

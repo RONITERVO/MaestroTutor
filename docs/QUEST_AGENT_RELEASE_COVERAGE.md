@@ -2381,3 +2381,58 @@ The generated manifest changes only the edited native source hash; action/fact
 schemas are unchanged. These integrations use scripted replies and claim no new
 paid-provider or hardware acceptance. The last packaged development APK remains
 5899972E / source 5100f612; this increment is verified source only.
+
+
+## Saved imported-model geometry — 2026-10-09
+
+Imported objects now retain explicit fitted/source scale, metres per source unit,
+and center/base/source pivot settings. Opt-in exact rigid mesh collision preserves
+doorways and interiors; a separate walkable flag publishes those same colliders to
+accepted-ground queries. Root placement, real-room collision participation, view
+layers, appearance and sound remain independent. The same revision-guarded
+`object.model.geometry.set` action and typed `object.model.geometry` fact serve the
+original book, agents and programs. Room format 35 and prototype format 5 preserve
+settings alongside other components and exact model hashes.
+
+This is bounded rigid rest geometry: fixed bodies, no custom collision recipe or
+recorded root animation, no skins/blend shapes, at most 32 meshes and 50,000
+triangles, and a 12.5 m largest local dimension before the owning object scale.
+Embedded/library playback and recording are refused while mesh mode is active.
+Edits require paused physics, a loaded unheld model and available ownership.
+Preparation failures never substitute bounds collision; loading/failed geometry
+has no blocking placeholder. Ordinary fitted props retain their existing default.
+
+All **1,046 EditMode and 944 PlayMode** tests pass, with three expected optional
+private-model skips. Ten added cases cover strict wire/storage/snapshot/prototype
+validation, future-format preservation, exact scale/pivot transforms, playback
+fences, independent copies, stale revisions, competing edits, failed saves and
+Undo. A real imported GLB contains a floor, roof and doorway in one mesh: rays
+pass through the opening, hit its wall, find its interior floor, and a real PhysX
+body rests inside below the roof. Existing multi-storey navigation tests also pass.
+
+Full native headless run `369db15e136d4d5488b51eff37a65c28` and original-book run
+`0c1a8ef317744cfd80806303a2f87284` pass. The added model-book run
+`9d33187c726c4cca82d24cbccb5928f1` uses the actual generated form, current-value
+prefill, native saved receipt and geometry readback; its capture was inspected.
+The full verifier now includes the explicit synthetic model in its Book journey.
+All configuration, suite and integration engine-diagnostic gates pass. The complete
+web suite passes **2,829 tests in 308 files**, with app/probe typing, production
+bundle, changed-test lint, catalog provenance and core-boundary checks passing.
+
+Managed real-provider run `d132c6640af74628a82cb235baad644e` passes source-scale
+building setup, removing walkability while retaining collision, and restoration
+to the small fitted display model. Exact model identity and dimensions, per-step
+position/rotation/root scale, unrelated objects, presentation and real-room
+collision/physics choices are checked. Its three requests reconcile 354 credits /
+USD 0.342795, excluding introduction, without mismatches or retained reservations.
+The matching BYOK run `3982d7cf235243a4b7e73016dcf559ad` also passes all three
+requests, including the same per-step placement and policy assertions. Both use
+real original-app `gemini-3.8-flash` requests and explicit synthetic context, with
+no provider substitution or direct native action bypass.
+
+These are source and desktop/provider checks. The original synthetic GLB is not
+shipped content. No physical file-picker, headset stereo, collision comfort or
+Quest performance result is claimed. Regional streaming, unrestricted imported
+cities and other unfinished v1 release gates remain open. The last packaged APK
+is still 5899972E / source 5100f612; installed and private-Alpha builds are unchanged.
+Evidence is retained under `.quest-evidence/model-geometry` and the named runs.

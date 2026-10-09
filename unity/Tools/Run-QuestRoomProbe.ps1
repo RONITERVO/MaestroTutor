@@ -6,15 +6,17 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','PassthroughWindow','LearnerConversation')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','ModelGeometry','PassthroughWindow','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [switch]$SyntheticRoomScan,
  [switch]$SyntheticSound,
  [switch]$SyntheticImage,
+ [switch]$SyntheticModel,
  [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($SyntheticModel -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticModel is an explicit offline Book fixture only.'}
 if($SyntheticImage -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticImage is an explicit offline Book fixture only.'}
 if($SyntheticSound -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticSound is an explicit offline Book fixture only.'}
 if($SyntheticRoomScan -and $ProviderScenario -ne 'LearnerConversation'){throw 'SyntheticRoomScan is an explicit LearnerConversation fixture only.'}
@@ -27,6 +29,7 @@ if($ProviderScenario){
  if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
  if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
+ if($ProviderScenario -eq 'ModelGeometry'){$Prompt='The imported building is tiny. Please use its original metre scale and original origin, make it fixed with collision that preserves its doorway and interior, and let its floors be walkable. Keep its existing position, rotation and object scale. Leave the other objects, room view and real-room collision policies alone, and keep physics paused.'}
  if($ProviderScenario -eq 'PassthroughWindow'){$Prompt='Please prepare a little freestanding picture frame called RoomWindow, with a rectangular opening that fully reveals my real room when I use my Quest later. Leave its centre open, with no solid picture behind it. I know I am testing without the headset right now; save it ready for later. Keep the overall room view and physics as they are.'}
  if($ProviderScenario -eq 'GeneratedImage'){$Prompt='Could you put the picture you just made in this chat on the outside cover of my book? Keep the pages readable and everything else as it is.'}
  if($ProviderScenario -eq 'ImportedImage'){$Prompt='I imported a picture called Blue tiles.png. Could you put that picture on the outside cover of my book? Keep the pages readable and everything else as it is.'}
@@ -83,7 +86,7 @@ if($ResumeLearnerRun){
 }
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_IMAGE=$(if($ProviderScenario -eq 'ImportedImage' -or $SyntheticImage){'1'}else{''});MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_MODEL=$(if($ProviderScenario -eq 'ModelGeometry' -or $SyntheticModel){Join-Path $repoRoot 'test-fixtures/models/room-building.glb'}else{''});MAESTRO_ROOM_PROBE_IMAGE=$(if($ProviderScenario -eq 'ImportedImage' -or $SyntheticImage){'1'}else{''});MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture

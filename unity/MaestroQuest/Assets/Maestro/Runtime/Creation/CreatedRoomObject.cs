@@ -37,6 +37,7 @@ namespace Maestro.Quest.Creation
             && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null)
         {
+            importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
             Bounds bounds;
             Collider collider;
             if(ScanDrawingAnchor.Has(data)) {
@@ -73,7 +74,7 @@ namespace Maestro.Quest.Creation
             var rigid = gameObject.AddComponent<RigidRoomItem>(); rigid.Initialize(item);
             acousticItem = item; acousticBody = rigid;
             collider.gameObject.layer = RoomPhysicsLayers.Item;
-            if (data.kind == RoomObjectKind.ImportedModel) rigid.SetGeometryReady(false);
+            if (importedObject) { rigid.SetGeometryReady(false);SetCollisionShape(data.collisionShape,true); }
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
             ApplyCollision(data.collision);SetCollisionShape(data.collisionShape);
             return item;
@@ -110,9 +111,11 @@ namespace Maestro.Quest.Creation
             pendingCollider=false;item.Grab.enabled=false;
             foreach(var old in item.Grab.colliders)if(old)old.enabled=false;
             if(chosenCollider&&chosenCollider!=originalCollider)ArtResources.Release(chosenCollider);
-            chosenCollider=null;customGeometry?.SetActive(false);
+            chosenCollider=null;customGeometry?.SetActive(false);importedCollision?.SetActive(false);
             Collider[] active;
-            if(shape==ItemCollider.Automatic&&customGeometry!=null){customGeometry.SetActive(true);active=customGeometry.Colliders;}
+            if(importedObject&&!modelGeometryReady)active=System.Array.Empty<Collider>();
+            else if(shape==ItemCollider.Automatic&&importedCollision!=null){importedCollision.SetActive(true);active=importedCollision.Colliders;}
+            else if(shape==ItemCollider.Automatic&&customGeometry!=null){customGeometry.SetActive(true);active=customGeometry.Colliders;}
             else {
                 if(shape==ItemCollider.Automatic)chosenCollider=originalCollider;
                 else if(shape==ItemCollider.Sphere){var sphere=gameObject.AddComponent<SphereCollider>();sphere.center=geometryBounds.center;sphere.radius=Mathf.Max(geometryBounds.extents.x,Mathf.Max(geometryBounds.extents.y,geometryBounds.extents.z));chosenCollider=sphere;}
@@ -121,7 +124,7 @@ namespace Maestro.Quest.Creation
             }
             var field=GetComponent<HeightFieldView>();if(field&&field.Collision&&field.Collision.gameObject.activeSelf)active=active.Append(field.Collision).ToArray();
             foreach(var collider in active){collider.gameObject.layer=RoomPhysicsLayers.Item;collider.enabled=true;collider.sharedMaterial=originalCollider.sharedMaterial;}
-            item.Grab.colliders.Clear();item.Grab.colliders.AddRange(active);item.Grab.enabled=true;
+            item.Grab.colliders.Clear();item.Grab.colliders.AddRange(active);item.Grab.enabled=active.Length>0;
             var body=GetComponent<Rigidbody>();body.ResetCenterOfMass();body.ResetInertiaTensor();
         }
 
@@ -139,15 +142,9 @@ namespace Maestro.Quest.Creation
                     if (filter.GetComponent<MeshRenderer>() is { } renderer && !filter.GetComponent<PencilMarks>() &&
                         !renderer.sharedMaterials.Any(material => material && material.HasProperty("_AlphaCutoff") && material.GetFloat("_AlphaCutoff") > 0))
                         Book.AcousticSurface.Attach(filter.gameObject, filter.sharedMesh);
-                var box = (BoxCollider)collider; box.transform.localScale = Vector3.one; box.center = Model.LocalBounds.center; box.size = Model.LocalBounds.size + Vector3.one * .02f;
-                box.GetComponent<Renderer>().enabled = false;
-                bool selected = selection && selection.activeSelf; if (selection) { selection.SetActive(false); Destroy(selection); }
-                BuildSelection(Model.LocalBounds); SetSelected(selected); ApplyColor(tint);GetComponent<RoomAppearanceView>()?.Refresh();
-                geometryBounds = Model.LocalBounds; SetCollisionShape(collisionShape,true);
-                ModelStatus = asset.Inspection.IsAvatar ? "VRM imported as room object" : "Model ready";
-                GetComponent<RigidRoomItem>().SetGeometryReady(true);
+                ApplyModelGeometry(requestedModelGeometry);
             }
-            catch (System.Exception error) { if (this) ModelStatus = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again."; }
+            catch (System.Exception error) { if (this) {ModelStatus = ModelGeometryIssue = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again.";modelGeometryReady=false;SetCollisionShape(collisionShape,true);} }
         }
         public void ApplyColor(Color color) { tint = color; GetComponent<HeightFieldView>()?.Tint(color); if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
         public void SetSelection(bool primary,bool member){primarySelected=primary;constructionSelected=member;SetSelected(primary||member);}
@@ -163,7 +160,7 @@ namespace Maestro.Quest.Creation
             var outline = selection.GetComponent<PencilMarks>(); outline.SetPaths(paths,.001f); outline.SetColor(IllustratedMaterials.Ribbon);
             selection.SetActive(false);
         }
-        void OnDestroy() {customGeometry?.Dispose();ArtResources.Release(pigment);}
+        void OnDestroy() {preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
         void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

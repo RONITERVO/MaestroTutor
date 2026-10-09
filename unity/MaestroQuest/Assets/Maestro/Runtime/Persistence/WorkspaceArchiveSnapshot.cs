@@ -98,7 +98,7 @@ namespace Maestro.Quest.Persistence
         {
             var bytes=documents[path];var json=Json(bytes,Limit(path));
             if(json.Count!=fields.Length||fields.Any(x=>!json.ContainsKey(x))||json["version"]?.Type!=JTokenType.Integer||(int)json["version"]!=DocumentVersion(path))throw new InvalidDataException("Unsupported workspace document: "+path);
-            if(path==RoomStorage.FileName&&(!RoomViewpoint.ValidWire(json)||!RoomWorldIdentity.ValidWire(json)||!RoomEnvironmentProfile.ValidWire(json)||!RoomAppearance.ValidWire(json)||!RoomVisibilityLayer.ValidWire(json)||!RoomLighting.ValidWire(json)||!RoomWorldTime.ValidWire(json)||!RoomWeather.ValidWire(json)||!RoomAudioDefinition.ValidWire(json)||!RoomWindow.ValidWire(json)))throw new InvalidDataException("Invalid workspace viewpoint or world identity.");
+            if(path==RoomStorage.FileName&&(!RoomViewpoint.ValidWire(json)||!RoomWorldIdentity.ValidWire(json)||!RoomEnvironmentProfile.ValidWire(json)||!RoomAppearance.ValidWire(json)||!RoomVisibilityLayer.ValidWire(json)||!RoomLighting.ValidWire(json)||!RoomWorldTime.ValidWire(json)||!RoomWeather.ValidWire(json)||!RoomAudioDefinition.ValidWire(json)||!RoomWindow.ValidWire(json)||!RoomModelGeometry.ValidWire(json)))throw new InvalidDataException("Invalid workspace viewpoint or world identity.");
             return JsonUtility.FromJson<T>(Utf8.GetString(bytes));
         }
         internal static WorkspaceArchiveMetadata Read(Dictionary<string,byte[]> documents,IEnumerable<string> assetNames)

@@ -122,6 +122,7 @@ namespace Maestro.Quest.Imports
             if(runtimeGate?.Held==true){Say(runtimeGate.Reason);return;}
             if (libraryMode) { _ = PlayLibraryAsync(); return; }
             var target = Target; if (!target || !target.Ready || target.ClipCount == 0) { Say("Choose an imported model or Maestro with animation clips"); return; }
+            if(target.PlaybackIssue!=null){Say(target.PlaybackIssue);return;}
             if (editor.AnyHeld) { Say("Release the object before previewing its clip"); return; }
             if (!HasPreview && editor.SelectedId == "maestro")
             {

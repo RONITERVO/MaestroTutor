@@ -130,7 +130,7 @@ namespace Maestro.Quest.Tests
                 }
                 foreach(var guard in (JArray)mapping["guards"])Assert.That(mapping["fields"][(string)guard],Is.Not.Null);
             }
-            Assert.That(count,Is.EqualTo(98));
+            Assert.That(count,Is.EqualTo(99));
         }
         [Test] public void ResourceChoicesReferencePagedFactsAndWritableIdentityPairs()
         {

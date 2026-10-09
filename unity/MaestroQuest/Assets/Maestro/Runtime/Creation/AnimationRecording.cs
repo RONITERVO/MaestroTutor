@@ -39,6 +39,7 @@ namespace Maestro.Quest.Creation
             if(!editor||editor.RuntimeGate.Held){error=editor?editor.RuntimeGate.Reason:"The room editor is unavailable";return false;}
             if(!editor.CanSaveRoom||editor.WriteGate.Frozen){error="The room is unavailable for saving";return false;}
             var item=editor.Find(id);if(!item||editor.ObjectRevision(id)!=revision){error="The object changed; inspect its current revision";return false;}
+            if(editor.Read(id)?.modelGeometry?.meshCollision==true){error="Disable rigid mesh collision before recording object movement";return false;}
             if(item.PoseLocked){error="Scanned ink layers cannot record object movement";return false;}
             if(editor.AnyHeld||avatar&&avatar.PoseRig&&avatar.PoseRig.IsHolding){error="Release the object or joint before recording";return false;}
             if(controlling&&targetId!=id){error="Stop the other object's animation controls first";return false;}

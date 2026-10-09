@@ -9,7 +9,7 @@ type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface extends SurfaceGeometry {version:number;id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype extends PrototypeResources {
- physics:{mode:string};heightFields?:unknown[];sculptTips?:{part:string;enabled:boolean}[];
+ physics:{mode:string;shape?:string};collision?:{shapes:unknown[]};modelGeometry?:{version:number;scaleMode:string;metresPerUnit:number;pivot:string;meshCollision:boolean;walkable:boolean};heightFields?:unknown[];sculptTips?:{part:string;enabled:boolean}[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string;color?:{r:number;g:number;b:number;a:number}}[]};points?:V[];radius?:number};
  windows?:{version:number;id:string;surface:string;shape:string;reveal:number}[];
  snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{enabled:boolean;version:number;mode?:string;part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
@@ -19,6 +19,13 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
  const p=value as unknown as CreationPrototype,g=p.geometry;
  if(!validPrototypeResources(p)||g.recipe?.playing||(p.heightFields?.length??0)>0&&p.physics.mode!=='fixed')return false;
  if(g.kind==='drawing'&&(!hasLength(g.points!)||g.points!.some(v=>length2(v)>100)))return false;
+ const model=p.modelGeometry;
+ if(model){
+  const defaults=model.version===1&&model.scaleMode==='fitted'&&model.metresPerUnit===1&&model.pivot==='center'&&!model.meshCollision&&!model.walkable;
+  if(model.version!==1||!['fitted','source'].includes(model.scaleMode)||!['center','base','source'].includes(model.pivot)||!Number.isFinite(model.metresPerUnit)||model.metresPerUnit<.001||model.metresPerUnit>100||model.scaleMode==='fitted'&&model.metresPerUnit!==1||model.walkable&&!model.meshCollision)return false;
+  if(!defaults&&(p.version!==5||g.kind!=='model'))return false;
+  if(model.meshCollision&&(p.physics.mode!=='fixed'||p.physics.shape!=='automatic'||(p.collision?.shapes.length??0)>0||p.motion))return false;
+ }
  const part=(name:string)=>name===''||!!g.recipe?.parts.some(x=>x.id===name);
  if(new Set(p.surfaces.map(s=>s.id)).size!==p.surfaces.length)return false;
  let points=g.points?.length??0;
@@ -29,7 +36,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
   }
  }
  const windows=p.windows??[];
- if(windows.length>4||windows.length>0&&p.version!==4||new Set(windows.map(w=>w.id)).size!==windows.length||new Set(windows.map(w=>w.surface)).size!==windows.length||windows.some(w=>w.version!==1||! /^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(w.id)||!['rectangle','ellipse'].includes(w.shape)||!Number.isFinite(w.reveal)||w.reveal<0||w.reveal>1||!p.surfaces.some(s=>s.id===w.surface&&(s.shape??'plane')==='plane')))return false;
+ if(windows.length>4||windows.length>0&&p.version!==4&&p.version!==5||new Set(windows.map(w=>w.id)).size!==windows.length||new Set(windows.map(w=>w.surface)).size!==windows.length||windows.some(w=>w.version!==1||! /^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(w.id)||!['rectangle','ellipse'].includes(w.shape)||!Number.isFinite(w.reveal)||w.reveal<0||w.reveal>1||!p.surfaces.some(s=>s.id===w.surface&&(s.shape??'plane')==='plane')))return false;
  if(p.snapPoints&&(new Set(p.snapPoints.map(s=>s.id)).size!==p.snapPoints.length||p.snapPoints.some(s=>length2(s.frame.position)>100)))return false;
  if(points>32768||p.drawingTips.some(t=>!part(t.part)||length2(t.position)>100||!['draw','erase'].includes(t.mode??'draw')||t.version!==((t.mode??'draw')==='erase'?2:1)))return false;
  if(p.sculptTips?.some(t=>!part(t.part))||p.sculptTips?.some(t=>t.enabled)&&p.drawingTips.some(t=>t.enabled))return false;

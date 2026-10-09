@@ -20,7 +20,7 @@ namespace Maestro.Quest.Programs
         internal static JObject Schema() {
             var fields=(JObject)new CreateRecipeCapability().InputSchema["properties"];
             var tip=(JObject)DrawingTipCapability.DefinitionSchema()["properties"];tip["version"]=Number(1,2,true);
-            var common=new JObject {["version"]=Number(1,4,true),["waterTraversal"]=WaterTraversalCapability.SettingsSchema(true),["color"]=Color(),["appearanceBindings"]=CreationResourcesSchema.Bindings(),["audioEmitters"]=CreationResourcesSchema.Emitters(),["environmentProfile"]=CreationResourcesSchema.Featured(Text("^(|[a-f0-9]{32})$",32)),["visibilityLayer"]=VisibilityLayerCapability.Featured(VisibilityLayerCapability.LayerId(true)),["physics"]=fields["physics"].DeepClone(),
+            var common=new JObject {["version"]=Number(1,5,true),["modelGeometry"]=ModelGeometryCapability.SettingsSchema(),["waterTraversal"]=WaterTraversalCapability.SettingsSchema(true),["color"]=Color(),["appearanceBindings"]=CreationResourcesSchema.Bindings(),["audioEmitters"]=CreationResourcesSchema.Emitters(),["environmentProfile"]=CreationResourcesSchema.Featured(Text("^(|[a-f0-9]{32})$",32)),["visibilityLayer"]=VisibilityLayerCapability.Featured(VisibilityLayerCapability.LayerId(true)),["physics"]=fields["physics"].DeepClone(),
                 ["collision"]=fields["collision"].DeepClone(),["surfaces"]=List(Surface(),0,4),["windows"]=Windows(),["drawingTips"]=List(Object(tip,"mode"),0,1),["snapPoints"]=List(SnapPointCapability.SavedSchema(),0,64),["containers"]=List(ContainerCapability.SavedSchema(),0,1),["heightFields"]=List(HeightFieldCapability.SavedSchema(),0,1),["sculptTips"]=List(SculptTipCapability.SavedSchema(),0,1),["materialStores"]=List(MaterialStoreCapability.SavedSchema(),0,1),
                 ["motion"]=Object(new JObject {["loop"]=new JObject {["type"]="boolean"},["frames"]=List(Object(new JObject {
                     ["time"]=Number(0,30),["position"]=Point(500.001),["rotation"]=Vector(true),["scale"]=Number(.024999,40.00001)}),1,301)})};
@@ -33,7 +33,7 @@ namespace Maestro.Quest.Programs
                 var variant=Object(p);variant["title"]=kind;variants.Add(variant);
             }
             common["geometry"]=new JObject {["type"]="object",["oneOf"]=variants,["x-discriminators"]=new JArray("kind")};
-            var schema=Object(common,"windows","waterTraversal","appearanceBindings","audioEmitters","environmentProfile","visibilityLayer","collision","motion","snapPoints","containers","heightFields","sculptTips","materialStores");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
+            var schema=Object(common,"modelGeometry","windows","waterTraversal","appearanceBindings","audioEmitters","environmentProfile","visibilityLayer","collision","motion","snapPoints","containers","heightFields","sculptTips","materialStores");schema["format"]="creationPrototype";schema["x-features"]=new JArray(Feature);return schema;
         }
         // JsonUtility emits all default fields, including fields belonging to other variants.
         // Public source includes only fields belonging to its explicit kind.
@@ -47,6 +47,7 @@ namespace Maestro.Quest.Programs
             value["geometry"]=geometry;
             foreach(var surface in ((JArray)value["surfaces"]).OfType<JObject>())if((int)surface["version"]==1){surface.Remove("shape");surface.Remove("curvatureRadius");}
             foreach(var tip in ((JArray)value["drawingTips"]).OfType<JObject>())if((int)tip["version"]==1)tip.Remove("mode");
+            if(prototype.modelGeometry.Default)value.Remove("modelGeometry");
             if(prototype.windows.Length==0)value.Remove("windows");
             if(prototype.waterTraversal.Default)value.Remove("waterTraversal");
             if(prototype.appearanceBindings.Length==0)value.Remove("appearanceBindings");

@@ -9,7 +9,7 @@ There is no replacement scene simulation or mock action executor in this journey
 ## Run and evidence
 
 `unity/Tools/Verify-Quest.ps1` runs the full-room headless and live-book journeys
-after EditMode and PlayMode tests, including the explicit synthetic sound in the book journey. Both development and release package helpers use that verification.
+after EditMode and PlayMode tests, including explicit synthetic sound, image and model assets in the book journey. Both development and release package helpers use that verification.
 A standalone rerun after verification is available with:
 
 ```powershell
@@ -1086,3 +1086,34 @@ front opaque/translucent objects, erased background, overlap, ellipse edges and
 both sampled eye offsets. Physical anchor tests use fixed world coordinates like
 the SDK, including immediate world-movement preservation and subsequent frames.
 These checks do not replace hardware stereo, real occlusion or performance QA.
+
+
+## Imported-model geometry parity
+
+`-ProviderScenario ModelGeometry` runs fresh original-app English/Spanish chat
+and delegated tasks against one original synthetic building imported through
+`ModelLibrary` and the real asynchronous object-loading path. It asks for source
+metre scale and source pivot, fixed exact rigid collision and walkable floors;
+then removes walkability while retaining collision, and restores the usual small
+centred display model. Every step checks native settings, readiness, exact asset
+identity and dimensions. Object position, rotation and scale, unrelated objects,
+room presentation, real-collision policy and physics running state must remain
+unchanged. It supports the configured managed and BYOK harness routes; normal
+provider usage is charged through the original app.
+
+The fixture is `test-fixtures/models/room-building.glb`, original Apache-2.0
+geometry with a floor, roof and actual doorway in one mesh. The helper receives
+that explicit fixture only for the selected scenario. It never opens a user's
+models or previous workspace. This checks model authoring and provider behavior,
+not a physical file picker, headset rendering, real scan or Quest performance.
+Native PlayMode tests separately verify doorway rays, interior support, real
+PhysX floor contact, incompatible models, ownership, stale revisions, save failure,
+Undo and independent copies.
+
+`-Journey Book -SyntheticSound -SyntheticImage -SyntheticModel` adds the building
+to the offline original-book journey. The actual generated form loads its current
+settings, saves source-scale rigid walkable geometry, and reads the native fact
+back. `book-native-model-geometry.json` and `.png` retain the receipt, readback and
+visible controls. All three optional synthetic asset flags are refused with real
+provider scenarios and outside the offline Book journey. The full verification
+script includes these explicit fixtures; the ordinary headless journey does not.

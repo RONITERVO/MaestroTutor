@@ -6156,20 +6156,29 @@ settings and an exact asset identity. It must not create a second import, storag
 program or agent-action system. Source units, placement and the asset's pivot are
 separate from the user's world frame and physical tracking origin.
 
-The next saved component will distinguish ordinary fitted props from source-scale
-surroundings, expose metres per source unit and an explicit pivot choice, and
-provide opt-in rigid mesh collision/walkable geometry. Ordinary imports currently
-fit to 0.35 m and use a whole-model box; this remains an implementation gap, not
-working building support. A concave building must preserve doors and interior air
-instead of replacing them with a convex hull or a filled bounding box.
+The saved `modelGeometry` component now distinguishes ordinary fitted props from
+source-scale surroundings, exposes metres per source unit and an explicit
+center/base/source pivot, and provides opt-in rigid mesh collision and walkable
+geometry. The default remains a 0.35 m fitted prop with ordinary bounds collision.
+Exact rigid mesh collision preserves doors and interior air. The shared
+`object.model.geometry.set` action and `object.model.geometry` fact expose the same
+settings and current revision to the book, agent and saved programs.
 
-The first mesh-collision increment will use bounded rigid rest geometry. It must
-reject incompatible dynamic-body, deforming/skinned and embedded-animation
-combinations explicitly before publishing the edit. Unsupported data must never
-silently acquire a different collider. Readiness and any rejection must be visible
-to both the generated book form and the agent. Saved source settings, exact hashes,
-Undo, copies, portable blueprints, archive validation and reload must agree; partial
-loading cannot claim ready geometry or leave a phantom blocking placeholder.
+This increment uses bounded rigid rest geometry: at most 32 meshes and 50,000
+triangles per object, and a 12.5 m largest local dimension before the separately
+saved object scale. Mesh mode requires fixed physics, automatic collision shape,
+no custom collision recipe and no recorded root movement. Skins/blend shapes are
+refused; embedded/library animation and recording are refused while mesh mode is
+active. Geometry edits require a loaded model, paused physics, current revision
+and available ownership. Colliders are prepared inactive before the saved edit;
+failed preparation never substitutes an enclosing box. Load/preparation readiness
+is observable. A loading or failed model has no blocking placeholder collider.
+
+Room format 35 and portable prototype format 5 retain these settings alongside
+ordinary windows, appearances, sound and collision profiles. Copies retain the
+exact model hash and independent settings. Undo and archive/snapshot validation
+use the same component. Hardware and performance acceptance remain separate from
+native functional and provider checks recorded in the release coverage document.
 
 Imported floors must publish through the existing accepted-ground mechanism, so
 navigation, gravity, throws and medium queries use the same geometry. Real-room

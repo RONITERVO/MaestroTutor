@@ -14829,7 +14829,55 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 4.0
+                                  "maximum": 5.0
+                                },
+                                "modelGeometry": {
+                                  "type": "object",
+                                  "properties": {
+                                    "scaleMode": {
+                                      "type": "string",
+                                      "enum": [
+                                        "fitted",
+                                        "source"
+                                      ]
+                                    },
+                                    "metresPerUnit": {
+                                      "type": "number",
+                                      "minimum": 0.001,
+                                      "maximum": 100.0
+                                    },
+                                    "pivot": {
+                                      "type": "string",
+                                      "enum": [
+                                        "center",
+                                        "base",
+                                        "source"
+                                      ]
+                                    },
+                                    "meshCollision": {
+                                      "type": "boolean"
+                                    },
+                                    "walkable": {
+                                      "type": "boolean"
+                                    },
+                                    "version": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 1.0
+                                    }
+                                  },
+                                  "required": [
+                                    "scaleMode",
+                                    "metresPerUnit",
+                                    "pivot",
+                                    "meshCollision",
+                                    "walkable",
+                                    "version"
+                                  ],
+                                  "additionalProperties": false,
+                                  "x-features": [
+                                    "modelGeometry.v1"
+                                  ]
                                 },
                                 "waterTraversal": {
                                   "type": "object",
@@ -25385,6 +25433,145 @@
           "target",
           "revision",
           "window"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.model.geometry.set",
+      "version": 1,
+      "label": "Set imported model geometry",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "scaleMode": {
+                "type": "string",
+                "enum": [
+                  "fitted",
+                  "source"
+                ]
+              },
+              "metresPerUnit": {
+                "type": "number",
+                "minimum": 0.001,
+                "maximum": 100.0
+              },
+              "pivot": {
+                "type": "string",
+                "enum": [
+                  "center",
+                  "base",
+                  "source"
+                ]
+              },
+              "meshCollision": {
+                "type": "boolean"
+              },
+              "walkable": {
+                "type": "boolean"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "scaleMode",
+              "metresPerUnit",
+              "pivot",
+              "meshCollision",
+              "walkable",
+              "version"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "modelGeometry.v1"
+            ]
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "settings"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.model.geometry",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "settings": [
+              "settings"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "model.loaded",
+        "storage.writable"
+      ],
+      "description": "Set the scale, pivot and collision geometry of an imported room object. Read object.model.geometry for its current settings, exact model hash, source dimensions, local dimensions and revision. Pause physics and stop animation first. fitted keeps the usual 0.35m largest dimension and requires metresPerUnit=1; source uses explicit metres per source unit (glTF is normally metres). center centers geometry, base puts its bottom at the object origin, and source retains its imported origin. Object placement/rotation/scale and separately authored components remain unchanged. Local geometry is limited to 12.5m before the object scale, and a source pivot may be at most 12.5m from its centre. meshCollision preserves exact rigid mesh holes/interiors, at most 32 meshes and 50,000 triangles; it requires fixed physics, automatic shape, no custom collision recipe and no recorded root motion. Skins/blend shapes are refused. Embedded/library playback is disabled while rigid mesh collision is enabled. walkable additionally publishes these colliders as accepted ground; slope, step, body clearance and water policies still apply. Turning mesh collision off restores the ordinary bounds/custom-shape path. Real-room participation, visibility, sound and camera sharing remain independent. One saved edit and Undo, retained by copies/blueprints/archives. These are bounded active-region settings, not streamed-world support.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "settings": {
+          "version": 1,
+          "scaleMode": "source",
+          "metresPerUnit": 1,
+          "pivot": "base",
+          "meshCollision": true,
+          "walkable": true
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "target",
+          "revision"
         ],
         "additionalProperties": false
       }
@@ -37185,6 +37372,67 @@
       ]
     },
     {
+      "id": "object.model.geometry",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "modelHash": "text",
+          "settings": {
+            "record": {
+              "version": "number",
+              "scaleMode": "text",
+              "metresPerUnit": "number",
+              "pivot": "text",
+              "meshCollision": "boolean",
+              "walkable": "boolean"
+            }
+          },
+          "ready": "boolean",
+          "reason": "text",
+          "sourceSize": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "size": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          }
+        }
+      },
+      "label": "Imported model geometry",
+      "description": "Saved model settings and actual load/preparation readiness. sourceSize is in source units; size is local metres before the owning object's scale. ready does not certify a walking route or headset performance. Null for non-model objects. Read the current revision before editing.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "modelGeometry.v1"
+      ]
+    },
+    {
       "id": "object.surfaces",
       "version": 1,
       "type": {
@@ -41856,7 +42104,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "484586c41d0a0ba4e279159dfe83c64ce8c1be229509d9b9fd30a214f6cf2ec8"
+      "sha256": "a000f56c4182d3faa6ee83100821fbea002b808e42eea3f10810ad209c751ebc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -41928,7 +42176,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "52d04ac65cd481e404c9d54d0ae2a044a0708aa1c6c68687ea158e9932f6333d"
+      "sha256": "6290da95c6d49855b60dd1035727ca92d911c9029b538f4e779ad7462c9425a7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -41960,7 +42208,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",
-      "sha256": "637029de8b1b9f9a8018dd43561a435470d8c3ccfaf7b05cf097e5f345c38f7b"
+      "sha256": "3ad5bef569449f223dc3426b537f2967310003903677c01bdde5c4412eedf9b1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
@@ -42012,7 +42260,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
-      "sha256": "201d2d9de494d6308386d4cffca6f104d7bd1450dbec8ccd43021f9adad3b9bf"
+      "sha256": "921c8e4fe06cdbe6d3e87d11c7d3efa21efe86177a2a330476e9ef1e5acffeae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialPackToolCapability.cs",
@@ -42037,6 +42285,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumFacts.cs",
       "sha256": "c42d03aca1981fc6efe00ff51030b08fabddbd51401004d3a54ca77fe44c870e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelGeometryCapability.cs",
+      "sha256": "4131f04dae7193b1f2754018dbb4aca2e8d067ffc7c8ed8eb39f079ad2223864"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
@@ -42260,7 +42512,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
-      "sha256": "7f12801237d7d89814e496ac68bf06279ebded2e8c87c801b52698afc9296c23"
+      "sha256": "0cc8db1ff16e32c977f1d705516f122a51d706cbfffcf8d03048ebf74804c8a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
@@ -42327,8 +42579,12 @@
       "sha256": "503ccfa43be3d4b348c8787f7f61ccc2f9dd2ddcc3c04cd58b104b850e2d9b52"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
+      "sha256": "2646dc2f4eb6c40d2c5872100cea8520c1cf0b7c1fdfbfabc6c839e6ac1a07e2"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "aaeaffe13a07354b9a60d7bfbb8095a22f2d62d2980ed561296e947f3462f028"
+      "sha256": "3a6eb09844c58af5aa03ed2abd4015a449daeeaf3fafdf7c5b0069882a41de31"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -42336,7 +42592,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "acc321c5ff2e0694161a7aa932ee3b54375566aeab5c0f70badb921ca4707efc"
+      "sha256": "79f1ae5e83c85b2a3d19306be97db1d3032bd200a9944633991966c9fa910151"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -42516,11 +42772,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "d9775e45b38e77c125edf9d8a42ecf1e38f01dd5f80d93cac4df05fc42ac61cc"
+      "sha256": "31cd71eb316b942d1ca8eba3a93fb8b492a77d6a8d2201ba1f44a25b365b9c62"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "25a495dbfdef3b4bd77462318134c0c54dd7a878848b82d89774110190128a1c"
+      "sha256": "4c02f73de454aea9c147f4131640e7f741b505d4a0974e480ad5ad06bc4c35c0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -42536,7 +42792,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "830c1f0ab0722eae577fdbd410c11a1d6358d0ed8a93394ad9f7c6b21efe6e0c"
+      "sha256": "43d1105a51d44b84c1ee6989ca47c2bcde7d499742fb457dbde2d92301a5a88b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -42615,6 +42871,14 @@
       "sha256": "5fc1c35959f4acce129bf80bae55944b56449ec4d8f3a913dac345ebe7ce6b06"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelGeometry.cs",
+      "sha256": "20863d5f46bc8cef623741a36546ab362fd0356ac8b36f3e22201bd78ac00cd7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelGeometryEdits.cs",
+      "sha256": "8e570447c96caeaee565e25702e3d21b15f08bc1011afa26e1922bcdd6596b5e"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotion.cs",
       "sha256": "0a726ef5047966aafacd84e579ee243f2a25c72f9641e3783be430ad2984b950"
     },
@@ -42664,7 +42928,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "fbdd3bbcf2a66efee807af77fee7b57758212b6d8b72991c909514a8b460700d"
+      "sha256": "74b114f5b04a3b1838650665511d5f856fa4209dc1a3b63edf0888e24d6d7f63"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -42868,11 +43132,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",
-      "sha256": "c12ebae541c5ea36f19566186927df1f5b0f8dd4a7c022d666107847e20f4ad6"
+      "sha256": "09035fe5e093ecef71ea02fdece6176dbe53026236b9b1bb9ad75bbb13f876bd"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",
+      "sha256": "077a45e20e72c42359011f9c539700c2e8cf14e9a279891628569b800acabcb7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "cb66181bdfebea12f7011b23a71a8c0d8b3eb038c5b3ac66d6f7bce7e66efa40"
+      "sha256": "ab7ecd27d75c40b4fa2f230913aa634b5456a7982fe986d6791d2bd5c017e188"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
+      "sha256": "c3f55794d135c08b479eb3bf5d455a33feb946340757c2b2ae284a5b0aa01fb3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LocalMotionBatchSource.cs",
@@ -43160,7 +43432,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "d877a4ae098ecf77d16bd3e8bfe9d04db8287d6fcac63323bb9ad9c0104c241e"
+      "sha256": "f8039538537ffdee0eb2e6c381ccdd5ab4c0da20d731ddcc872dd0acb50a0b8d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -43180,7 +43452,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "172b55d0ce2b1fb41ea5aedf923b49674b491b2cbcfe5f4e5a3acf1f1a3db0fd"
+      "sha256": "88258050f44adde7755e6e61b7e68b79b33251dc33028f9b4fcafe7d8307fe87"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -43288,7 +43560,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "34690821726ac92b36ff8541f4e7336730dfa33c24897cde5244298ef706c1af"
+      "sha256": "94d5289db7914cf6583bdba5c12669a1e791c0d8a5f4cd61e4d3d785031e996e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -476,6 +476,7 @@ namespace Maestro.Quest.Creation
                 var field=ApplyHeightFields(item,data.heightFields);
                 var sculpt=item.GetComponent<SculptTipView>();if(!sculpt&&(data.sculptTips?.Length??0)>0)sculpt=item.gameObject.AddComponent<SculptTipView>();if(sculpt)sculpt.Apply(this,data.id,data.sculptTips);
                 var materialContents=item.GetComponent<MaterialToolContentsView>();if(!materialContents&&data.sculptTips?.Any(t=>t.IsMaterial)==true)materialContents=item.gameObject.AddComponent<MaterialToolContentsView>();if(materialContents)materialContents.Apply(data.sculptTips?.FirstOrDefault(),data.materialStores?.FirstOrDefault());
+                item.GetComponent<CreatedRoomObject>()?.ApplyModelGeometry(data.modelGeometry);
                 item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape,field!=null);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);

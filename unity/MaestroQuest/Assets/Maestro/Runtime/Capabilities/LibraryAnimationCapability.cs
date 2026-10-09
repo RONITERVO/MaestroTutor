@@ -26,6 +26,7 @@ namespace Maestro.Quest.Programs
             if(motion==null) {error="This saved motion is missing; choose one using Motion";return false;}
             if(!model||!model.Ready||string.IsNullOrEmpty(model.MotionRigHash)||motion.rigHash!=model.MotionRigHash)
             {error="This saved motion needs a compatible loaded model and rest pose";return false;}
+            if(model.PlaybackIssue!=null){error=model.PlaybackIssue;return false;}
             if((float)arguments["seconds"]==0&&motion.duration>30) {error="Choose an explicit duration for motions longer than 30 seconds";return false;}
             return true;
         }
