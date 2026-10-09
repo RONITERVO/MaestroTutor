@@ -46,7 +46,7 @@ namespace Maestro.Quest.Book
         QuestIntegrityExchange integrity;
         BookSpeechSession speech;
         BookCameraSession camera;
-        internal void BindCameraSource(Func<Maestro.Quest.Creation.RoomEditor> read) { camera?.Suspend(); camera=new BookCameraSession(read); }
+        internal void BindCameraSource(Func<Maestro.Quest.Creation.RoomEditor> read,IBookCameraFeed device=null) { camera?.Suspend(); camera=new BookCameraSession(read,device); }
         float nextSpeechPoll;
         public void BindSpeechOutput(NativeSpeechOutput output)
         {

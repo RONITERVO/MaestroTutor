@@ -8,7 +8,7 @@ import { sessionActivity } from '../../src/platform/browser/sessionActivity';
 import { createBrowserLiveVideo } from '../../src/features/speech/live/browserVideo';
 import { createLiveSessionState } from '../../src/features/speech/live/state';
 import { LiveInputContext } from '../../src/core-sdk/media/liveInputContext';
-const t = (key: string) => key;
+const t = (key: string, values?: Record<string, unknown>) => `${key}${values?.details ? `: ${values.details}` : ''}`;
 useMaestroStore.getState().updateSetting('selectedCameraId', null);
 useMaestroStore.getState().updateSetting('sendWithSnapshotEnabled', false);
 installBookBridge(window, () => ({ version: 1, layout: 'conversation', activity: 'idle', bookmarkMessageId: null, selectedArtifactId: null, historyStart: 0, historyEnd: 0, historyTotal: 0 }), () => {});

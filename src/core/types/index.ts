@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import type { ImageOrigin } from '../../../shared/imageOrigin';
 
 /**
  * The persisted layout box for a message's rich attachment.
@@ -43,7 +44,7 @@ export interface ChatMessage {
   imageUrl?: string;
   imageMimeType?: string;
   /** Origin of the displayed image, independent of compression/upload variants. */
-  imageOrigin?: 'generated' | 'virtual-scene';
+  imageOrigin?: ImageOrigin;
   /** Original attachment file name if available (e.g. README.md, app.tsx) */
   attachmentName?: string;
   /** Optimized (lower res) image for local storage to reduce DB size */
@@ -98,7 +99,7 @@ export type UploadedAttachmentSource =
 export interface ChatFilePart {
   fileUri: string;
   mimeType: string;
-  origin?: 'generated' | 'virtual-scene';
+  origin?: ImageOrigin;
 }
 
 export interface UploadedAttachmentVariant {
@@ -108,7 +109,7 @@ export interface UploadedAttachmentVariant {
   mimeType: string;
   targets: UploadedAttachmentTarget[];
   source: UploadedAttachmentSource;
-  origin?: 'generated' | 'virtual-scene';
+  origin?: ImageOrigin;
   order?: number;
 }
 

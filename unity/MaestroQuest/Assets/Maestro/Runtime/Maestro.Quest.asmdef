@@ -2,6 +2,7 @@
   "name": "Maestro.Quest",
   "rootNamespace": "Maestro.Quest",
   "references": [
+    "Unity.Collections",
     "Meta.XR.Audio",
     "Oculus.VR",
     "Meta.XR.EnvironmentDepth",

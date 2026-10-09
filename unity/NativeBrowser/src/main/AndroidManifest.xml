@@ -3,6 +3,8 @@
   <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <!-- Android WebView requires this normal permission to initialize WebRTC audio. -->
   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+  <!-- Native, explicitly selected passthrough camera; WebRTC video stays denied. -->
+  <uses-permission android:name="horizonos.permission.HEADSET_CAMERA" />
   <application>
     <meta-data android:name="unityplayer.SkipPermissionsDialog" android:value="true" />
     <provider android:name="com.maestro.quest.browser.SelectedFileProvider"

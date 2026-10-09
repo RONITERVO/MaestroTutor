@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../../shared/imageOrigin';
 import { cameraSourceProvider, onCameraSourcesChanged, isNativeCameraId, cameraFrameState, cameraStreamFresh } from '../../../platform/browser/cameraSources';
 import { acquireUserMedia } from '../../../platform/browser/sessionActivity';
 /**
@@ -57,7 +58,7 @@ export interface UseCameraManagerReturn {
     mimeType: string;
     storageOptimizedBase64: string;
     storageOptimizedMimeType: string;
-    imageOrigin?: 'virtual-scene';
+    imageOrigin?: CameraImageOrigin;
   } | null>;
   /** Fetch available cameras */
   fetchAvailableCameras: () => Promise<void>;
@@ -258,7 +259,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
         stream.getVideoTracks().forEach(track => track.addEventListener?.('ended', () => {
           if (cancelled || visualContextStreamRef.current !== stream) return;
           stopVisualContextStream();
-          setVisualContextCameraError('Camera sharing stopped. Choose the camera again to resume.');
+          setVisualContextCameraError('Camera sharing stopped. Turn the camera off and select it again to resume.');
         }, { once: true }));
         visualContextStreamRef.current = stream;
         setLiveVideoStream(stream);
@@ -383,7 +384,7 @@ export const useCameraManager = (config: UseCameraManagerConfig): UseCameraManag
     mimeType: string;
     storageOptimizedBase64: string;
     storageOptimizedMimeType: string;
-    imageOrigin?: 'virtual-scene';
+    imageOrigin?: CameraImageOrigin;
   } | null> => {
     const isForReengagement = typeof options === 'boolean'
       ? options

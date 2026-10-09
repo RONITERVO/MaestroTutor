@@ -6,7 +6,7 @@ import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from './history
 import { buildCoreLiveSystemInstruction } from './liveContext';
 import { generateGeminiResponse } from '../gemini/generative';
 import { createManagedGeminiClient } from '../managedGeminiClient';
-import { GENERATED_IMAGE_CONTEXT, VIRTUAL_SCENE_IMAGE_CONTEXT } from '../../../shared/prompts/context';
+import { GENERATED_IMAGE_CONTEXT, VIRTUAL_SCENE_IMAGE_CONTEXT, HEADSET_CAMERA_IMAGE_CONTEXT } from '../../../shared/prompts/context';
 
 const image = (id: string, generated: boolean): ChatMessage => ({
   id, role: 'user', timestamp: 1, text: 'Help me set up the room.',
@@ -66,4 +66,15 @@ it.each(['byok', 'managed'])('preserves virtual camera provenance at the %s boun
  expect(parts.filter((part: any) => part.text === VIRTUAL_SCENE_IMAGE_CONTEXT)).toHaveLength(2);
  delete virtual.uploadedFileVariants;
  expect(buildCoreLiveSystemInstruction({ basePrompt: 'Tutor', messages: [virtual] })).toContain(VIRTUAL_SCENE_IMAGE_CONTEXT);
+});
+
+it.each(['byok', 'managed'])('labels physical camera images through %s without claiming virtual visibility', async mode => {
+ const source: ChatMessage = { ...image('headset', false), imageOrigin: 'headset-camera' };
+ const send = vi.fn(async (_request: any) => (async function* () { yield { text: 'Ready' }; })());
+ const aiClient = mode === 'managed' ? createManagedGeminiClient({ generateContentStream: send } as any) : { models: { generateContentStream: send } } as any;
+ await generateGeminiResponse('test', 'Describe this.', deriveHistoryForApi([source]), { aiClient });
+ const serialized = JSON.stringify(send.mock.calls[0][0]);
+ expect(serialized).toContain(HEADSET_CAMERA_IMAGE_CONTEXT); expect(serialized).not.toContain(VIRTUAL_SCENE_IMAGE_CONTEXT);
+ delete source.uploadedFileVariants;
+ expect(buildCoreLiveSystemInstruction({ basePrompt: 'Tutor', messages: [source] })).toContain(HEADSET_CAMERA_IMAGE_CONTEXT);
 });

@@ -1,5 +1,6 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { isImageOrigin } from '../../shared/imageOrigin';
 
 import { composeMaestroSystemInstruction } from '../core/config/prompts';
 import { getGeminiModels } from '../core-sdk/modelRegistry';
@@ -71,7 +72,7 @@ export const runHeadlessChatTurn = async (
               mimeType: part.mimeType,
               targets: ['chat'],
               source: 'original',
-              ...((part.origin === 'generated' || part.origin === 'virtual-scene') ? { origin: part.origin } : {}),
+              ...(isImageOrigin(part.origin) ? { origin: part.origin } : {}),
               order: index,
             })),
           }

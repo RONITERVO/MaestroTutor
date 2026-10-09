@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../../shared/imageOrigin';
 import type { ConversationDiagnostics } from './conversationContracts';
 import type { AppSettings, RecordedUtterance } from '../../../core/types';
 import type { UseTutorConversationConfig, UseTutorConversationReturn, MutableValue } from './conversationContracts';
@@ -32,7 +33,7 @@ export function createUserMessageCoordinator(ports: UserMessagePorts) {
     shouldGenerateUserImage: boolean;
     currentSettingsVal: AppSettings;
     triggeredByStt?: boolean;
-    imageOrigin?: 'virtual-scene';
+    imageOrigin?: CameraImageOrigin;
   }) => {
     let userMessageId: string | null = null;
     let userMessageText = params.text;

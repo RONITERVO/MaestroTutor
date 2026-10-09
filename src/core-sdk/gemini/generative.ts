@@ -1,7 +1,8 @@
-import {validateInlineImages,type InlineImage} from '../../../shared/inlineImages';
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { isImageOrigin } from '../../../shared/imageOrigin';
+import {validateInlineImages,type InlineImage} from '../../../shared/inlineImages';
 
 import type { ChatFilePart } from '../../core/types';
 import { imageOriginContext } from '../../../shared/prompts/context';
@@ -448,7 +449,7 @@ export const generateGeminiResponse = async (
         const fileUri = typeof candidate?.fileUri === 'string' ? candidate.fileUri.trim() : '';
         const mimeType = typeof candidate?.mimeType === 'string' ? candidate.mimeType.trim() : '';
         if (!fileUri || !mimeType) return null;
-        return { fileUri, mimeType, ...((candidate?.origin === 'generated' || candidate?.origin === 'virtual-scene') && mimeType.startsWith('image/') ? { origin: candidate.origin } : {}) };
+        return { fileUri, mimeType, ...(isImageOrigin(candidate?.origin) && mimeType.startsWith('image/') ? { origin: candidate.origin } : {}) };
       })
       .filter((part): part is ChatFilePart => Boolean(part));
   };

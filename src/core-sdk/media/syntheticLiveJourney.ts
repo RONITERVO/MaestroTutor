@@ -1,5 +1,6 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../shared/imageOrigin';
 
 import { LiveInputContext } from './liveInputContext';
 import { SYNTHETIC_LIVE_FALLBACK_INSTRUCTION } from '../../core/config/prompts';
@@ -75,9 +76,9 @@ export interface SyntheticLiveJourneyInput {
   requireRealtimeInputPacing?: boolean;
   /** Pace the model's 24 kHz PCM through a real-time headless playback sink. */
   playModelAudioRealtime?: boolean;
-  videoFrames?: Array<{ dataBase64: string; mimeType?: string; origin?: 'virtual-scene' }>;
+  videoFrames?: Array<{ dataBase64: string; mimeType?: string; origin?: CameraImageOrigin }>;
   /** Camera frames to send once for each corresponding microphone turn. */
-  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string; origin?: 'virtual-scene' }>>;
+  videoFramesByTurn?: Array<Array<{ dataBase64: string; mimeType?: string; origin?: CameraImageOrigin }>>;
   thinkingMode?: 'minimal' | 'conversation';
   voiceName?: string;
 }

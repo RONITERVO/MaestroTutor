@@ -68,8 +68,8 @@ describe('bounded original Live input', () => {
   });
 });
 
-it('retains the selected virtual source and rejects invented origins on restore', () => {
- const input = new LiveInputContext(() => 0); input.recordAudio(audio); input.recordFrame(jpeg, 'virtual-scene');
- const result = input.finish(); expect(result.frames[0].origin).toBe('virtual-scene'); expect(() => validateLiveInputMedia(result)).not.toThrow();
+it.each(['virtual-scene', 'headset-camera'] as const)('retains %s source and rejects invented origins on restore', origin => {
+ const input = new LiveInputContext(() => 0); input.recordAudio(audio); input.recordFrame(jpeg, origin);
+ const result = input.finish(); expect(result.frames[0].origin).toBe(origin); expect(() => validateLiveInputMedia(result)).not.toThrow();
  (result.frames[0] as any).origin = 'trusted-real-camera'; expect(() => validateLiveInputMedia(result)).toThrow();
 });

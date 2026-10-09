@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../shared/imageOrigin';
 import type { AppSettings, LanguagePair, ReplySuggestion } from '../../core/types';
 import type { GeminiLiveSttTurnComplete } from '../../features/speech';
 import type { LiveSessionState } from '../../store/slices/liveSessionSlice';
@@ -11,7 +12,7 @@ export type SendMessage = (
   image?: string,
   mimeType?: string,
   messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement',
-  options?: { triggeredByStt?: boolean; imageOrigin?: 'virtual-scene' },
+  options?: { triggeredByStt?: boolean; imageOrigin?: CameraImageOrigin },
 ) => Promise<boolean>;
 export interface SpeechRoutingState {
   settings: AppSettings;
@@ -58,7 +59,7 @@ export interface ReengagementPorts {
   stopSilentObserverRef: CurrentValue<() => Promise<void>>;
   settingsRef: CurrentValue<AppSettings>;
   visualContextStreamRef: CurrentValue<{ active: boolean } | null>;
-  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; imageOrigin?: 'virtual-scene' } | null>;
+  captureSnapshot: (isForReengagement?: boolean) => Promise<{ base64: string; mimeType: string; imageOrigin?: CameraImageOrigin } | null>;
   handleSendMessageInternal: SendMessage;
   setReplySuggestions: (suggestions: ReplySuggestion[]) => void;
   setLastFetchedSuggestionsFor: (id: string | null) => void;

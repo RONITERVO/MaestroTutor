@@ -123,7 +123,12 @@ publishes versioned, session-scoped camera data through origin-checked top-docum
 script evaluation (140,000-character bound); artifacts receive no native interface.
 Capture never starts merely because a source is advertised. Suspension, changed
 room ownership and stale request pulses stop it. User re-selection is required
-after interruption. Physical-camera and compositor capture remain unimplemented.
+after interruption. The separate **Headset camera (real surroundings)** adapter
+uses this same transport with explicit `horizonos.permission.HEADSET_CAMERA`
+consent. Its sensor frames preserve aspect ratio up to 512 pixels on the longest
+edge and 96 KiB, at most once per second. A permission result alone never starts
+capture. WebRTC video remains denied; compositor capture remains unimplemented.
+Physical capture and sharing still need Quest hardware acceptance.
 
 The camera increment passes 107 discovered Android tests (105 passed, two optional
 private-import fixtures skipped), release AAR build and lint. Real Chrome verifies

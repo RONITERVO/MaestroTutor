@@ -1,7 +1,7 @@
-import { registerCameraFrameState } from '../../../platform/browser/cameraSources';
-import { VIRTUAL_SCENE_FRAME_LABEL } from '../../../../shared/prompts/context';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { registerCameraFrameState } from '../../../platform/browser/cameraSources';
+import { cameraFrameLabel } from '../../../../shared/prompts/context';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
@@ -122,15 +122,15 @@ describe('Live handoff camera provenance', () => {
   });
 });
 
-it('labels virtual Live pixels, retains their origin for handoff and drops stale asynchronous frames', async () => {
+it.each(['virtual-scene', 'headset-camera'] as const)('labels %s Live pixels and drops stale asynchronous frames', async origin => {
  const h = setup(), source = stream(); let fresh = true;
- registerCameraFrameState(source, () => ({ origin: 'virtual-scene', fresh }));
+ registerCameraFrameState(source, () => ({ origin, fresh }));
  const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); h.state.liveInputContextRef.current = input;
  await h.video.updateVideoInput(source, readyVideo(source));
  await vi.advanceTimersByTimeAsync(1000); frames[0](new Blob(['virtual'])); reads[0](); await flush();
  expect(h.sendRealtimeInput).toHaveBeenCalledWith({ video: { data: '/9gKFP/Z', mimeType: 'image/jpeg' } });
- expect(h.state.canvasRef.current!.getContext('2d')!.fillText).toHaveBeenCalledWith(VIRTUAL_SCENE_FRAME_LABEL, 8, 12, expect.any(Number));
+ expect(h.state.canvasRef.current!.getContext('2d')!.fillText).toHaveBeenCalledWith(cameraFrameLabel(origin), 8, 12, expect.any(Number));
  await vi.advanceTimersByTimeAsync(1000); frames[1](new Blob(['stale'])); fresh = false; reads[1](); await flush();
- expect(h.sendRealtimeInput).toHaveBeenCalledOnce(); expect(input.finish().frames[0].origin).toBe('virtual-scene');
+ expect(h.sendRealtimeInput).toHaveBeenCalledOnce(); expect(input.finish().frames[0].origin).toBe(origin);
  await h.video.updateVideoInput(null);
 });

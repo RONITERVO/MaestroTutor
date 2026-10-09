@@ -1,10 +1,11 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../shared/imageOrigin';
 import type { CameraDevice } from '../../core/types';
 
 export const VIRTUAL_SCENE_CAMERA_ID = 'maestro-camera:virtual-scene';
 export const isNativeCameraId = (id: string | null | undefined) => Boolean(id?.startsWith('maestro-camera:'));
-export interface CameraFrameState { origin: 'virtual-scene'; fresh: boolean }
+export interface CameraFrameState { origin: CameraImageOrigin; fresh: boolean }
 export interface CameraSourceProvider {
   devices(): CameraDevice[];
   acquire(id: string, signal?: AbortSignal): Promise<MediaStream>;

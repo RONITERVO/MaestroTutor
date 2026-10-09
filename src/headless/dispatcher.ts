@@ -1,5 +1,6 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { isImageOrigin } from '../../shared/imageOrigin';
 import type {
   BackendAiContentReportRequest,
 } from '../core/contracts/backend';
@@ -236,7 +237,7 @@ export const dispatchHeadlessMethod = async (
             return {
               fileUri: requiredString(part, 'fileUri'),
               mimeType: requiredString(part, 'mimeType'),
-              ...((part.origin === 'generated' || part.origin === 'virtual-scene') ? { origin: part.origin } : {}),
+              ...(isImageOrigin(part.origin) ? { origin: part.origin } : {}),
             };
           })
           : undefined,

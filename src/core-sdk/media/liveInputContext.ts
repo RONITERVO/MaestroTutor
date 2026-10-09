@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { isCameraImageOrigin } from '../../../shared/imageOrigin';
+import type { CameraImageOrigin } from '../../../shared/imageOrigin';
 import { pcmToWav } from './audioProcessing';
 
 // App limits per delegated turn, not provider upload limits.
@@ -12,7 +14,7 @@ export interface LiveInputMedia {
   audio?: { mimeType: 'audio/wav'; data: string; sampleRate: 16000; samples: number };
   /** Client delivery times. WAV concatenates sent packets without adding silence. */
   packets: Array<{ atMs: number; sampleOffset: number; samples: number }>;
-  frames: Array<{ mimeType: 'image/jpeg'; data: string; atMs: number; audioOffsetSamples: number; origin?: 'virtual-scene' }>;
+  frames: Array<{ mimeType: 'image/jpeg'; data: string; atMs: number; audioOffsetSamples: number; origin?: CameraImageOrigin }>;
 }
 export const missingLiveInput = (): LiveInputMedia => ({ version: 1, complete: false, issue: 'missing', packets: [], frames: [] });
 export class LiveInputContextError extends Error {
@@ -75,10 +77,10 @@ export class LiveInputContext {
       this.chunks.push(bytes); this.samples += bytes.length / 2; this.bytes += bytes.length;
     } catch { this.invalidate('invalid'); }
   }
-  recordFrame(data: string, origin?: 'virtual-scene'): void {
+  recordFrame(data: string, origin?: CameraImageOrigin): void {
     if (this.sealed || this.issue) return;
     try {
-      if (origin !== undefined && origin !== 'virtual-scene') return this.invalidate('invalid');
+      if (origin !== undefined && !isCameraImageOrigin(origin)) return this.invalidate('invalid');
       const bytes = decode(data, LIVE_INPUT_LIMITS.bytes);
       if (!jpeg(bytes)) return this.invalidate('invalid');
       if (this.bytes + bytes.length > LIVE_INPUT_LIMITS.bytes || this.frames.length >= LIVE_INPUT_LIMITS.frames) return this.invalidate('limit');
@@ -134,7 +136,7 @@ export function validateLiveInputMedia(media: LiveInputMedia): void {
   let previousOffset = 0;
   for (const frame of media.frames) {
     if (!shape(frame, ['mimeType', 'data', 'atMs', 'audioOffsetSamples', 'origin']) || frame.mimeType !== 'image/jpeg' || !integer(frame.atMs) || frame.atMs < time
-        || (frame.origin !== undefined && frame.origin !== 'virtual-scene') || !integer(frame.audioOffsetSamples) || frame.audioOffsetSamples < previousOffset || frame.audioOffsetSamples > samples) return invalid();
+        || (frame.origin !== undefined && !isCameraImageOrigin(frame.origin)) || !integer(frame.audioOffsetSamples) || frame.audioOffsetSamples < previousOffset || frame.audioOffsetSamples > samples) return invalid();
     const image = decode(frame.data, LIVE_INPUT_LIMITS.bytes - total);
     if (!jpeg(image)) return invalid();
     total += image.length; time = frame.atMs; previousOffset = frame.audioOffsetSamples;

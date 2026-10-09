@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { cameraFrameState, cameraStreamFresh } from '../../../platform/browser/cameraSources';
-import { VIRTUAL_SCENE_FRAME_LABEL } from '../../../../shared/prompts/context';
+import { cameraFrameLabel } from '../../../../shared/prompts/context';
 import type { LiveSessionData } from './state';
 import { MAX_LIVE_FRAME_DIMENSION } from './types';
 
@@ -142,7 +142,8 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       if (!ctx) return;
       const scale = Math.min(1, MAX_LIVE_FRAME_DIMENSION / Math.max(activeVideo.videoWidth, activeVideo.videoHeight));
       activeCanvas.width = Math.max(1, Math.round(activeVideo.videoWidth * scale));
-      const labelHeight = origin === 'virtual-scene' ? 24 : 0;
+      const label = cameraFrameLabel(origin);
+      const labelHeight = label ? 24 : 0;
       activeCanvas.height = Math.max(1, Math.round(activeVideo.videoHeight * scale)) + labelHeight;
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'medium';
@@ -150,7 +151,7 @@ export function createBrowserLiveVideo(state: Pick<LiveSessionData,
       if (labelHeight) {
         ctx.fillStyle = '#111827'; ctx.fillRect(0, 0, activeCanvas.width, labelHeight);
         ctx.fillStyle = '#ffffff'; ctx.font = '12px sans-serif'; ctx.textBaseline = 'middle';
-        ctx.fillText(VIRTUAL_SCENE_FRAME_LABEL, 8, labelHeight / 2, activeCanvas.width - 16);
+        ctx.fillText(label, 8, labelHeight / 2, activeCanvas.width - 16);
       }
 
       videoFrameInFlightRef.current = true;

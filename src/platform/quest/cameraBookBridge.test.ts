@@ -9,8 +9,8 @@ import { sessionActivity } from '../browser/sessionActivity';
 let client: CameraBookClient, clock: number, revision: number, draw: ReturnType<typeof vi.fn>;
 let decodes: Array<(image: HTMLImageElement) => void>;
 const image = () => ({ width: 512, height: 384 }) as HTMLImageElement;
-const publish = (extra: Record<string, unknown> = {}) => client.receive({ version: 1, session: client.snapshot().session, host: 'a'.repeat(32), revision: ++revision, available: true, status: 'ready', ...extra });
-const frame = (capturedAt = new Date().toISOString()) => ({ capture: { ...native.capture, capturedAt }, data: native.data });
+const publish = (extra: Record<string, unknown> = {}) => client.receive({ version: 1, session: client.snapshot().session, host: 'a'.repeat(32), revision: ++revision, sources: ['maestro-camera:virtual-scene'], sourceId: 'maestro-camera:virtual-scene', status: 'ready', ...extra });
+const frame = (capturedAt = new Date().toISOString()) => ({ sourceId: 'maestro-camera:virtual-scene', capture: { ...native.capture, capturedAt }, data: native.data });
 beforeEach(() => {
  vi.useFakeTimers(); clock = 100; revision = 0; decodes = []; draw = vi.fn(); sessionActivity.resume();
  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: draw, clearRect: vi.fn() } as any);
@@ -38,7 +38,7 @@ it.each(['session', 'request', 'stale', 'hash'])('rejects %s frames and bounds m
  if (reason === 'request') value.requestId = 'b'.repeat(32);
  if (reason === 'stale') value.frame.capture.capturedAt = new Date(Date.now() - 5000).toISOString();
  if (reason === 'hash') value.frame.data = 'bad';
- publish(value); expect(decodes).toHaveLength(0); clock += 3100; await vi.advanceTimersByTimeAsync(200); await rejected;
+ publish(value); expect(decodes).toHaveLength(0); clock += 10100; await vi.advanceTimersByTimeAsync(200); await rejected;
 });
 it('never revives a stream from a late decode after suspension', async () => {
  publish(); const pending = client.acquire(VIRTUAL_SCENE_CAMERA_ID); const rejected = expect(pending).rejects.toThrow('stopped');
@@ -55,4 +55,22 @@ it('expires displayed frames even when the native host continues sending ready m
  const ended = vi.fn(); stream.getVideoTracks()[0].addEventListener('ended', ended);
  clock += 2100; publish(); expect(cameraFrameState(stream)?.fresh).toBe(false);
  clock += 1001; publish(); await vi.advanceTimersByTimeAsync(200); expect(ended).toHaveBeenCalledOnce(); expect(stream.active).toBe(false);
+});
+
+it('keeps physical and virtual sources distinct and requires re-selection after permission', async () => {
+ const physical = 'maestro-camera:headset-camera';
+ publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical] });
+ expect(client.devices().map(device => device.deviceId)).toEqual([VIRTUAL_SCENE_CAMERA_ID, physical]);
+ const denied = client.acquire(physical); const rejected = expect(denied).rejects.toThrow('Allow headset camera');
+ const previous = client.snapshot().requestId;
+ publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: physical, requestId: previous, status: 'failed', error: 'permission-required' }); await rejected;
+ expect(client.snapshot().requestId).toBe('');
+ const acquired = client.acquire(physical); const requestId = client.snapshot().requestId;
+ publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: VIRTUAL_SCENE_CAMERA_ID, requestId, frame: frame() }); expect(decodes).toHaveLength(0);
+ const captured = frame();
+ publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: physical, requestId,
+  frame: { sourceId: physical, capture: { captureId: captured.capture.captureId, capturedAt: captured.capture.capturedAt, sha256: captured.capture.sha256, mimeType: 'image/jpeg', width: 512, height: 384 }, data: captured.data } });
+ decodes[0](image()); const stream = await acquired;
+ expect(cameraFrameState(stream)?.origin).toBe('headset-camera'); expect(client.snapshot().sourceId).toBe(physical);
+ client.suspend(); expect(stream.active).toBe(false);
 });

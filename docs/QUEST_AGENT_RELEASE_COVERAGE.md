@@ -2125,3 +2125,35 @@ and original handoff labels together. All 38 tests in the affected headless suit
 pass, along with probe typing and lint.
 
 See [camera contract and limits](QUEST_V1_PLAN.md#virtual-scene-camera-sharing--2026-10-09).
+
+
+## Physical-camera transport parity — 2026-10-09
+
+The selected headset-camera adapter joins the same preview/snapshot/chat/Live
+path as the virtual camera. Shared origin validation now includes generated,
+virtual-scene and physical headset-camera images. Deterministic managed/BYOK
+cases cover JSON-RPC dispatch, tutor, verifier, agent planning, receipts, final
+chat and persisted image origin together. Browser Live tests check both camera
+captions, exact sent-frame provenance and discarded stale callbacks.
+
+Native tests cover permission failure followed by a late grant (no restart), a
+fresh selected lease, source changes, room gates and malformed source IDs.
+Physical-camera frames carry their actual JPEG dimensions/hash without invented
+virtual pose metadata. Real Chrome verifies a square synthetic fixture through
+React, canvas/video, snapshots and Live, including permission re-selection. This
+is transport evidence only: no physical sensor or paid provider was exercised by
+that synthetic fixture. The shared provider paths retain their earlier real
+managed/BYOK camera evidence, not a new physical-camera acceptance claim.
+
+Actual Quest camera permission/return, frame orientation/color, source switching,
+sharing latency and sustained performance remain open under the device hold.
+The combined mixed-reality headset view is a separate unfinished source.
+
+Validation for this increment: the full web suite passes 2,798 tests in 305 files;
+three additional physical Live-provenance cases pass with all 34 tests in their
+affected suites. Unity passes 1,032 EditMode and 918 PlayMode tests (three expected
+optional private-model skips), plus ten focused camera tests on the final source.
+Android discovers 107 tests: 105 pass and two optional private-import fixtures
+skip; release AAR build and lint pass. Final production web build, lint, probe
+typing, prompt ownership, core boundaries and catalog provenance checks pass.
+The catalog definitions are unchanged; only native source provenance updates.

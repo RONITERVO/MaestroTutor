@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
+import { isImageOrigin } from '../../../shared/imageOrigin';
 import type {
   ChatMessage,
   ChatFilePart,
@@ -62,7 +63,7 @@ const normalizeVariant = (variant: Partial<UploadedAttachmentVariant> | null | u
     mimeType,
     targets: normalizeTargets(variant.targets, mimeType),
     source: variant.source || 'derived',
-    ...(['generated', 'virtual-scene'].includes(variant.origin ?? '') ? { origin: variant.origin } : {}),
+    ...(isImageOrigin(variant.origin) ? { origin: variant.origin } : {}),
     order,
   };
 };

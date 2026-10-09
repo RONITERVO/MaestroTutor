@@ -5918,3 +5918,53 @@ change updates native source provenance only; capability definitions are unchang
 Headset sharing latency, sustained frame-time/thermal cost, offscreen Android
 WebView canvas capture, app interruption and real camera/mixed-view selection
 still need hardware acceptance. The cooling/charging hold remains in effect.
+
+
+## Separate physical headset camera — 2026-10-09
+
+The shared camera selector also has **Headset camera (real surroundings)** on
+supported devices. Unity supplies a forward-facing Meta passthrough-camera image;
+the original web app still owns preview, snapshots, chat, Live and providers. This
+is separate from the virtual-scene source and from any future combined headset
+view. It does not include authored virtual objects or the book interface.
+
+Selecting the source is the only sensor-start path. It requests the narrow
+`horizonos.permission.HEADSET_CAMERA` permission; ordinary WebRTC video remains
+denied. The permission result cannot revive the failed request. After a prompt or
+interruption, resume the book, turn the camera off and select it again. The source
+requires passthrough to be enabled and does not alter saved world presentation.
+Room gates, source changes, cancellation, stale leases and focus loss stop the
+sensor and discard pending pixels. The sensor component is deactivated and removed
+so Meta's internal pause/resume behavior cannot restart an abandoned capture.
+
+The adapter asynchronously reads GPU pixels, preserves the actual sensor aspect
+ratio (including square frames), limits output to 512 pixels on the longest edge,
+96 KiB JPEG and one image per second, and keeps only one unacknowledged frame.
+It shares the existing camera lease and top-document transport. It does not write
+camera pixels into native world saves or fabricate a virtual-camera pose.
+`headset-camera` provenance survives saved chat, uploaded variants, compact
+history, JSON-RPC/headless turns, verifier input and delegated agent context. Live
+adds a source caption above the complete image and retains the exact sent bytes.
+The provider context explicitly distinguishes physical imagery from native facts,
+scan alignment, virtual-object contact and completed actions.
+
+Local evidence is in `.quest-evidence/headset-camera`. Chrome uses a clearly
+synthetic square sensor-shaped fixture to verify physical-source transport,
+permission re-selection, aspect ratio, source switching and exact Live handoff.
+That fixture is not physical capture or real-provider evidence. The prior isolated
+managed/BYOK virtual-camera runs remain separate evidence; actual physical sensor
+orientation/color, prompt/return behavior, WebView sharing, latency and sustained
+Quest cost still require headset acceptance. Combined mixed-view capture remains
+open. No headset operation, release-key use, upload or deployment is part of this
+increment.
+
+Reference: [Meta passthrough camera documentation](https://developers.meta.com/vr/documentation/unity/unity-pca-documentation/).
+
+Validation for this increment: the full web suite passes 2,798 tests in 305 files;
+three additional physical Live-provenance cases pass with all 34 tests in their
+affected suites. Unity passes 1,032 EditMode and 918 PlayMode tests (three expected
+optional private-model skips), plus ten focused camera tests on the final source.
+Android discovers 107 tests: 105 pass and two optional private-import fixtures
+skip; release AAR build and lint pass. Final production web build, lint, probe
+typing, prompt ownership, core boundaries and catalog provenance checks pass.
+The catalog definitions are unchanged; only native source provenance updates.
