@@ -46,7 +46,20 @@ namespace Maestro.Quest.Book
         QuestIntegrityExchange integrity;
         BookSpeechSession speech;
         BookCameraSession camera;
-        internal void BindCameraSource(Func<Maestro.Quest.Creation.RoomEditor> read,IBookCameraFeed device=null) { camera?.Suspend(); camera=new BookCameraSession(read,device); }
+        internal void BindCameraSource(Func<Maestro.Quest.Creation.RoomEditor> read,IBookCameraFeed device=null) { camera?.Close(); camera=new BookCameraSession(read,device,new ScreenShareBookCamera(this)); }
+        internal void ScreenShareCommand(string method,string context=null)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if(IsReady) { if(context==null)m_NativePlugin.Call(method);else m_NativePlugin.Call(method,context); }
+#endif
+        }
+        internal string ReadScreenShare()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if(IsReady&&!suspended)return m_NativePlugin.Call<string>("ReadScreenShare");
+#endif
+            return "{}";
+        }
         float nextSpeechPoll;
         public void BindSpeechOutput(NativeSpeechOutput output)
         {
@@ -225,7 +238,7 @@ namespace Maestro.Quest.Book
 #endif
         }
 
-        void OnDisable() { camera?.Suspend(); speech?.Suspend(); integrity?.Clear(); }
+        void OnDisable() { camera?.Close(); speech?.Suspend(); integrity?.Clear(); }
         void OnApplicationPause(bool paused) { applicationPaused = paused; SetSuspended(applicationPaused || !applicationFocused); }
         void OnApplicationFocus(bool focused) { applicationFocused = focused; SetSuspended(applicationPaused || !applicationFocused); }
     }

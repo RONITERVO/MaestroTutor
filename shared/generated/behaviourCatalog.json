@@ -41232,7 +41232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCameraSession.cs",
-      "sha256": "3b259867cd0a14d4dfd6e9c7cc09b6924f32659a21b2bbee0d16a9f3ad2ae9be"
+      "sha256": "04c4e7a3a0cbb4797d6cfab8db0a760062efe41e3081dc78aa618dc99afd3e82"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.Diagnostics.cs",
@@ -41292,7 +41292,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeBookBrowser.cs",
-      "sha256": "d7ef19e844cea01c70cb08e194688461322fbefd53dd803b592c089c380027b6"
+      "sha256": "7018d371ca02ea82d44f1db9496fa75a39a132ae561ecf48c593634ae7f4466f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeSpeechOutput.cs",
@@ -41337,6 +41337,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioTap.cs",
       "sha256": "4422ea366ca2776a6e1503e97787c05cb2e7c45733b16fa5f2390abee3d54a18"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/ScreenShareBookCamera.cs",
+      "sha256": "cb101f75a51c5978de4333e6d6f080ae804ae335e281f78e8203790d6f3633cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechOcclusion.cs",

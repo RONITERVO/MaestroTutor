@@ -16,11 +16,13 @@ namespace Maestro.Quest.Book {
         bool Frame(out JObject image,out string error);
         void Stop();
     }
+    internal interface IBookCameraContextFeed { void Context(string value); }
     /// <summary>One selected source, one expiring lease and one unacknowledged image.</summary>
     internal sealed class BookCameraSession {
-        internal const string VirtualSource="maestro-camera:virtual-scene",HeadsetSource="maestro-camera:headset-camera";
+        internal const string VirtualSource="maestro-camera:virtual-scene",HeadsetSource="maestro-camera:headset-camera",MixedSource="maestro-camera:mixed-view";
         readonly Func<RoomEditor> read;
-        readonly IBookCameraFeed device;
+        readonly IBookCameraFeed[] devices;
+        IBookCameraFeed Device(string id)=>Array.Find(devices,feed=>feed!=null&&feed.SourceId==id);
         readonly string host=Guid.NewGuid().ToString("N");
         string session,requestId="",sourceId="",blockedId="",error;
         long pulse,revision;
@@ -28,12 +30,12 @@ namespace Maestro.Quest.Book {
         JObject frame;
         RoomEditor owner;
         bool started;
-        internal BookCameraSession(Func<RoomEditor> read,IBookCameraFeed device=null){this.read=read;this.device=device;}
+        internal BookCameraSession(Func<RoomEditor> read,params IBookCameraFeed[] devices){this.read=read;this.devices=devices??Array.Empty<IBookCameraFeed>();}
         static bool Token(string value)=>value!=null&&Regex.IsMatch(value,"\\A[a-f0-9]{32}\\z");
-        void Release(){device?.Stop();started=false;frame=null;owner=null;}
+        void Release(){foreach(var device in devices)device?.Stop();started=false;frame=null;owner=null;}
         internal void Receive(BookCameraRequest value,double now){
             if(value==null||!Token(value.session)||value.pulse<1||value.requestId==null||value.acknowledged==null||
-                (value.requestId.Length>0&&(!Token(value.requestId)||(value.sourceId!=VirtualSource&&(device==null||value.sourceId!=device.SourceId))))||
+                (value.requestId.Length>0&&(!Token(value.requestId)||(value.sourceId!=VirtualSource&&Device(value.sourceId)==null)))||
                 (value.acknowledged.Length>0&&!Token(value.acknowledged))){Suspend();return;}
             if(session!=value.session){Suspend();session=value.session;pulse=0;blockedId="";}
             if(value.pulse<=pulse)return;
@@ -42,12 +44,18 @@ namespace Maestro.Quest.Book {
             else if(requestId.Length>0&&sourceId!=value.sourceId){Suspend();return;}
             if(frame!=null&&(string)frame["capture"]["captureId"]==value.acknowledged)frame=null;
         }
+        internal void Close(){Suspend();foreach(var feed in devices)if(feed is IBookCameraContextFeed contextual)contextual.Context("");}
         internal void Suspend(){if(requestId.Length>0)blockedId=requestId;Release();seen=double.NegativeInfinity;}
         internal JObject Poll(double now){
             if(session==null)return null;
             if(now-seen>2)Suspend();
             var editor=read();bool available=editor&&editor.ViewSourceAvailable;
-            var sources=new JArray();if(available){sources.Add(VirtualSource);if(device?.Available==true)sources.Add(device.SourceId);}
+            var sources=new JArray();if(available)sources.Add(VirtualSource);
+            foreach(var feed in devices){
+                if(feed is IBookCameraContextFeed contextual)contextual.Context(available&&(sourceId==feed.SourceId||string.IsNullOrEmpty(sourceId))?session+":"+editor.GetInstanceID():"");
+                if(available&&feed?.Available==true)sources.Add(feed.SourceId);
+            }
+            var device=Device(sourceId);
             bool requested=requestId.Length>0,physical=device!=null&&sourceId==device.SourceId;
             bool failed=requested&&(requestId==blockedId||!available||now-seen>2||(physical&&device.Available!=true));
             if(!ReferenceEquals(owner,null)&&owner!=editor)failed=true;

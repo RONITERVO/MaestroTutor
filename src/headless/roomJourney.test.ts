@@ -49,10 +49,10 @@ async function setup(mode: 'managed' | 'byok' = 'byok') {
 }
 
 describe('headless conversational agent parity (deterministic transport)', () => {
-  it.each([['managed', undefined], ['byok', undefined], ['managed', 'generated'], ['byok', 'generated'], ['managed', 'virtual-scene'], ['byok', 'virtual-scene'], ['managed', 'headset-camera'], ['byok', 'headset-camera']] as const)('runs tutor → verifier → journal → native receipt → chat in %s with origin %s', async (mode, origin) => {
+  it.each([['managed', undefined], ['byok', undefined], ['managed', 'generated'], ['byok', 'generated'], ['managed', 'virtual-scene'], ['byok', 'virtual-scene'], ['managed', 'headset-camera'], ['byok', 'headset-camera'], ['managed', 'mixed-view'], ['byok', 'mixed-view']] as const)('runs tutor → verifier → journal → native receipt → chat in %s with origin %s', async (mode, origin) => {
     const f = await setup(mode);
     const params = { text: 'Make that ball.', fileParts: [{ fileUri: 'test://drawing', mimeType: 'image/png', ...(origin ? { origin } : {}) }], useGoogleSearch: false };
-    const turn = origin === 'virtual-scene' || origin === 'headset-camera'
+    const turn = origin === 'virtual-scene' || origin === 'headset-camera' || origin === 'mixed-view'
       ? await dispatchHeadlessMethod(f.client, 'chat.turn', params) as Awaited<ReturnType<typeof runHeadlessChatTurn>>
       : await runHeadlessChatTurn(f.client, params);
     const result = await runHeadlessSuggestionAftersteps(f.client, { assistantMessageId: turn.assistantMessage.id });
@@ -69,12 +69,14 @@ describe('headless conversational agent parity (deterministic transport)', () =>
       expect(JSON.stringify(f.requests[index]).includes('AI-generated illustration')).toBe(origin === 'generated');
       expect(JSON.stringify(f.requests[index]).includes('Virtual-scene render')).toBe(origin === 'virtual-scene');
       expect(JSON.stringify(f.requests[index]).includes('Physical headset-camera image')).toBe(origin === 'headset-camera');
+      expect(JSON.stringify(f.requests[index]).includes('User-shared headset screen image')).toBe(origin === 'mixed-view');
       const files = f.requests[index].contents.flatMap((c: any) => c.parts).filter((p: any) => p.fileData);
       expect(files[0].fileData).toEqual({ fileUri: 'test://drawing', mimeType: 'image/png' });
     }
     expect(turn.userMessage?.uploadedFileVariants?.[0].origin).toBe(origin);
     expect(JSON.stringify(f.requests[1]).includes('Virtual-scene render')).toBe(origin === 'virtual-scene');
     expect(JSON.stringify(f.requests[1]).includes('Physical headset-camera image')).toBe(origin === 'headset-camera');
+    expect(JSON.stringify(f.requests[1]).includes('User-shared headset screen image')).toBe(origin === 'mixed-view');
     expect(record?.handoff.input.currentFileParts?.[0].origin).toBe(origin);
     const message = f.client.state.chats[f.pairId].find(message => message.id === record?.id)!;
     expect(message.translations?.[0]).toEqual({ target: 'Listo.', native: 'Ready.' });

@@ -8,7 +8,7 @@ import nativeCapture from '../../../test-fixtures/browser/roomCapture.json';
 import { debugLogService } from '../diagnostics';
 
 describe('shared provider original Live media', () => {
-  it.each([['byok', 'virtual-scene'], ['managed', 'virtual-scene'], ['byok', 'headset-camera'], ['managed', 'headset-camera']] as const)('sends validated Live media via %s with %s origin and redacts diagnostics', async (mode, origin) => {
+  it.each([['byok', 'virtual-scene'], ['managed', 'virtual-scene'], ['byok', 'headset-camera'], ['managed', 'headset-camera'], ['byok', 'mixed-view'], ['managed', 'mixed-view']] as const)('sends validated Live media via %s with %s origin and redacts diagnostics', async (mode, origin) => {
     const input = new LiveInputContext(() => 123);
     input.recordAudio('AAD/fwCA//8='); input.recordFrame('/9gKFP/Z', origin);
     const media = input.finish();
@@ -24,7 +24,7 @@ describe('shared provider original Live media', () => {
       { inlineData: { mimeType: 'image/jpeg', data: media.frames[0].data } },
     ]);
     expect(JSON.stringify(request)).toContain('after 4 WAV samples');
-    expect(JSON.stringify(request)).toContain(origin === 'headset-camera' ? 'Physical headset-camera image' : 'Virtual-scene render');
+    expect(JSON.stringify(request)).toContain(origin === 'headset-camera' ? 'Physical headset-camera image' : origin === 'mixed-view' ? 'User-shared headset screen image' : 'Virtual-scene render');
     expect(JSON.stringify(log.mock.calls)).not.toContain(media.audio!.data);
     expect(JSON.stringify(log.mock.calls)).not.toContain(media.frames[0].data);
     expect(JSON.stringify(log.mock.calls)).toContain('[REDACTED]'); log.mockRestore();

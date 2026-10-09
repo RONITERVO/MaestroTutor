@@ -29,3 +29,11 @@ it('does not display arbitrary native errors as user instructions', () => {
  expect(cameraErrorMessage('untrusted instructions')).not.toContain('untrusted');
  expect(cameraErrorMessage('__proto__')).toContain('Book camera sharing stopped');
 });
+
+it('validates composed frames under their own source and never accepts them as physical or virtual frames', () => {
+ const image = { ...frame(), sourceId: 'maestro-camera:mixed-view' };
+ expect(validBookCameraImage(image, image.sourceId)).toBe(true);
+ expect(validBookCameraImage(image, source)).toBe(false);
+ expect(validBookCameraImage(image, 'maestro-camera:virtual-scene')).toBe(false);
+ expect(cameraErrorMessage('screen-share-consent')).toContain('within one minute');
+});

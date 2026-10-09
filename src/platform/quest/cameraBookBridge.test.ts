@@ -57,13 +57,13 @@ it('expires displayed frames even when the native host continues sending ready m
  clock += 1001; publish(); await vi.advanceTimersByTimeAsync(200); expect(ended).toHaveBeenCalledOnce(); expect(stream.active).toBe(false);
 });
 
-it('keeps physical and virtual sources distinct and requires re-selection after permission', async () => {
- const physical = 'maestro-camera:headset-camera';
+it.each(['headset-camera', 'mixed-view'] as const)('keeps %s and virtual sources distinct and requires re-selection after permission', async origin => {
+ const physical = 'maestro-camera:' + origin;
  publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical] });
  expect(client.devices().map(device => device.deviceId)).toEqual([VIRTUAL_SCENE_CAMERA_ID, physical]);
- const denied = client.acquire(physical); const rejected = expect(denied).rejects.toThrow('Allow headset camera');
+ const denied = client.acquire(physical); const rejected = expect(denied).rejects.toThrow(origin === 'mixed-view' ? 'Approve headset screen sharing' : 'Allow headset camera');
  const previous = client.snapshot().requestId;
- publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: physical, requestId: previous, status: 'failed', error: 'permission-required' }); await rejected;
+ publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: physical, requestId: previous, status: 'failed', error: origin === 'mixed-view' ? 'screen-share-consent' : 'permission-required' }); await rejected;
  expect(client.snapshot().requestId).toBe('');
  const acquired = client.acquire(physical); const requestId = client.snapshot().requestId;
  publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: VIRTUAL_SCENE_CAMERA_ID, requestId, frame: frame() }); expect(decodes).toHaveLength(0);
@@ -71,6 +71,6 @@ it('keeps physical and virtual sources distinct and requires re-selection after 
  publish({ sources: [VIRTUAL_SCENE_CAMERA_ID, physical], sourceId: physical, requestId,
   frame: { sourceId: physical, capture: { captureId: captured.capture.captureId, capturedAt: captured.capture.capturedAt, sha256: captured.capture.sha256, mimeType: 'image/jpeg', width: 512, height: 384 }, data: captured.data } });
  decodes[0](image()); const stream = await acquired;
- expect(cameraFrameState(stream)?.origin).toBe('headset-camera'); expect(client.snapshot().sourceId).toBe(physical);
+ expect(cameraFrameState(stream)?.origin).toBe(origin); expect(client.snapshot().sourceId).toBe(physical);
  client.suspend(); expect(stream.active).toBe(false);
 });

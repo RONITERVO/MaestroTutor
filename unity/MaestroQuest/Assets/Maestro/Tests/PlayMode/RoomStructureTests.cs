@@ -115,8 +115,13 @@ namespace Maestro.Quest.Tests
             foreach(var p in baseline.placements) {var item=editor.Find(p.target);Assert.That(Vector3.Distance(item.transform.localPosition,p.position),Is.LessThan(.001f));Assert.That(item.GetComponent<Rigidbody>().linearVelocity,Is.EqualTo(Vector3.zero));}
             Assert.That(physics.Running,Is.True);for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"Rebuilt top brick: "+editor.Find(ids[4]).transform.localPosition+"; reset ball: "+editor.Find(ballId).transform.localPosition);
             Assert.That(WatchValue("phase"),Is.EqualTo("waitingForDisturbance"));Assert.That(WatchValue("cycles"),Is.EqualTo("1"));Capture("rebuilt");
-            var changed=editor.ReadStructure(watched);changed.name="Changed definition";Assert.That(editor.SaveStructure(changed,editor.StructureRevision(watched),out var changedError),Is.True,changedError);yield return new WaitForSeconds(.5f);
-            Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(runtime.Scheduler.Outcomes.Last().nodeId,Is.EqualTo("stop_disturbed"));Capture("changed");
+            var changed=editor.ReadStructure(watched);changed.name="Changed definition";Assert.That(editor.SaveStructure(changed,editor.StructureRevision(watched),out var changedError),Is.True,changedError);
+            // The watch includes a stability interval and frame-budgeted program
+            // steps. Wait for its observable completion, not half a second that
+            // can elapse in one slow editor frame before the steps are serviced.
+            float stoppedBy=Time.realtimeSinceStartup+5;
+            while(runtime.Scheduler.RunningCount>0&&Time.realtimeSinceStartup<stoppedBy)yield return null;
+            Assert.That(runtime.Scheduler.RunningCount,Is.Zero,runtime.Scheduler.LastError);Assert.That(runtime.Scheduler.Outcomes.Last().nodeId,Is.EqualTo("stop_disturbed"));Capture("changed");
 
         }
     }

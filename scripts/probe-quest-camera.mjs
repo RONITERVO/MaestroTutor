@@ -24,15 +24,17 @@ try {
  await page.goto(url); await page.waitForFunction(() => Boolean(window.maestroBook && window.cameraFixture));
  await page.evaluate(({ native, sensorFixture }) => {
    const cameraSession = window.maestroBook.snapshot().camera.session; let revision = 0, frame = 0;
-   window.nativeCameraPaused = false; window.fixtureCameraPermission = false; window.nativeFrameCount = 0;
+   window.nativeCameraPaused = false; window.fixtureCameraPermission = false; window.fixtureScreenShareConsent = false; window.nativeFrameCount = 0;
    window.nativeCameraTimer = setInterval(() => {
      if (window.nativeCameraPaused) return;
      const request = window.maestroBook.snapshot().camera;
-     const payload = { version: 1, session: cameraSession, host: 'a'.repeat(32), revision: ++revision, sources: ['maestro-camera:virtual-scene', 'maestro-camera:headset-camera'], sourceId: request.sourceId, status: request.requestId ? 'streaming' : 'ready', requestId: request.requestId };
+     const payload = { version: 1, session: cameraSession, host: 'a'.repeat(32), revision: ++revision, sources: ['maestro-camera:virtual-scene', 'maestro-camera:headset-camera', 'maestro-camera:mixed-view'], sourceId: request.sourceId, status: request.requestId ? 'streaming' : 'ready', requestId: request.requestId };
      const physical = request.sourceId === 'maestro-camera:headset-camera';
+     const mixed = request.sourceId === 'maestro-camera:mixed-view';
      if (request.requestId && physical && !window.fixtureCameraPermission) { payload.status = 'failed'; payload.error = 'permission-required'; }
+     else if(request.requestId && mixed && !window.fixtureScreenShareConsent) { payload.status = 'failed'; payload.error = 'screen-share-consent'; }
      else if (request.requestId && revision % 5 === 0) {
-       const selected = physical ? sensorFixture : native;
+       const selected = physical || mixed ? sensorFixture : native;
        payload.frame = { sourceId: request.sourceId, capture: { ...selected.capture, captureId: (++frame).toString(16).padStart(32, '0'), capturedAt: new Date().toISOString() }, data: selected.data }; window.nativeFrameCount++;
      }
      window.maestroBook.cameraState(payload);
@@ -71,11 +73,24 @@ try {
  assert.equal(physicalHandoff.frames[0].origin, 'headset-camera'); assert.equal(physicalHandoff.frames[0].data, physicalLive.video.data);
  await writeFile(resolve(output, 'synthetic-headset-live.jpg'), Buffer.from(physicalLive.video.data, 'base64'));
  const size = await sharp(Buffer.from(physicalLive.video.data, 'base64')).metadata(); assert.equal(size.width, 512); assert.equal(size.height, 536);
+ // Third source uses synthetic compositor-shaped pixels, not a captured real room.
+ await page.locator('[data-source="maestro-camera:mixed-view"]').click();
+ await page.waitForFunction(() => window.cameraFixture.visualContextCameraError?.includes('Approve headset screen sharing'));
+ const beforeConsent = await page.evaluate(() => { window.fixtureScreenShareConsent = true; return window.nativeFrameCount; });
+ await page.waitForTimeout(1200); assert.equal(await page.evaluate(() => window.nativeFrameCount), beforeConsent);
+ await page.locator('#off').click(); await page.locator('[data-source="maestro-camera:mixed-view"]').click();
+ await page.waitForFunction(() => window.cameraFixture.liveVideoStream?.active);
+ const mixedSnapshot = await page.evaluate(() => window.cameraFixture.captureSnapshot(false)); assert.equal(mixedSnapshot.imageOrigin, 'mixed-view');
+ await page.evaluate(() => window.startFixtureLive()); await page.waitForFunction(() => window.liveInputs.length > 0);
+ const mixedLive = await page.evaluate(() => window.liveInputs[0]);
+ const mixedHandoff = await page.evaluate(() => window.stopFixtureLive());
+ assert.equal(mixedHandoff.frames[0].origin, 'mixed-view'); assert.equal(mixedHandoff.frames[0].data, mixedLive.video.data);
+ await writeFile(resolve(output, 'synthetic-mixed-live.jpg'), Buffer.from(mixedLive.video.data, 'base64'));
  await page.evaluate(() => window.maestroBook.lifecycle(true)); await page.waitForFunction(() => !window.cameraFixture.liveVideoStream);
  assert.equal(await page.evaluate(() => window.maestroBook.snapshot().camera.requestId), '');
  await page.screenshot({ path: resolve(output, 'camera-after-suspend.png') });
  await page.evaluate(() => clearInterval(window.nativeCameraTimer));
  assert.equal(await page.evaluate(() => window.physicalMediaRequests), 0);
- assert.deepEqual(errors, []); await writeFile(resolve(output, 'chrome.json'), JSON.stringify({ passed: true, source: 'recorded native JPEG through real Chrome canvas/video', liveHandoffOrigin: handoff.frames[0].origin, noPhysicalCameraRequest: true, interruption: true, firstFrameWidth: 512, physicalTransport: { input: "Synthetic square fixture; no physical sensor or provider exercised", aspectPreserved: true, permissionRequiresReselection: true, liveHandoffOrigin: physicalHandoff.frames[0].origin }, errors }, null, 2));
+ assert.deepEqual(errors, []); await writeFile(resolve(output, 'chrome.json'), JSON.stringify({ passed: true, source: 'recorded native JPEG through real Chrome canvas/video', liveHandoffOrigin: handoff.frames[0].origin, noPhysicalCameraRequest: true, interruption: true, firstFrameWidth: 512, mixedTransport: { input: "Synthetic fixture; no Quest compositor or provider exercised", consentDoesNotAutoStart: true, liveHandoffOrigin: mixedHandoff.frames[0].origin, exactLiveBytes: true }, physicalTransport: { input: "Synthetic square fixture; no physical sensor or provider exercised", aspectPreserved: true, permissionRequiresReselection: true, liveHandoffOrigin: physicalHandoff.frames[0].origin }, errors }, null, 2));
  console.log('Chrome camera passed: native selection, real video preview, snapshot origin, labeled Live frame, exact handoff bytes, stale-frame stop and suspend.');
 } finally { await browser?.close(); await server?.close(); }

@@ -7,6 +7,7 @@ import type { CameraImageOrigin } from './imageOrigin';
 export const BOOK_CAMERA_SOURCES = [
   { deviceId: 'maestro-camera:virtual-scene', label: 'Virtual scene (no real camera)', origin: 'virtual-scene' },
   { deviceId: 'maestro-camera:headset-camera', label: 'Headset camera (real surroundings)', origin: 'headset-camera' },
+  { deviceId: 'maestro-camera:mixed-view', label: 'My mixed-reality view (screen sharing)', origin: 'mixed-view' },
 ] as const;
 export const bookCameraSource = (id: unknown) => BOOK_CAMERA_SOURCES.find(source => source.deviceId === id);
 export interface BookCameraImage {
@@ -35,6 +36,9 @@ export function validBookCameraImage(input: unknown, sourceId: string): input is
   } catch { return false; }
 }
 const cameraErrors: Readonly<Record<string, string>> = {
+  'screen-share-consent': 'Approve headset screen sharing, then resume the book, turn the camera off and select My mixed-reality view again within one minute.',
+  'screen-share-denied': 'Screen sharing was not approved. Turn the camera off and select My mixed-reality view to try again.',
+  'screen-share-unavailable': 'Headset screen sharing stopped. Stop other casting or capture apps, then turn the camera off and select My mixed-reality view again.',
   'permission-required': 'Allow headset camera access, then resume the book, turn the camera off and select it again.',
   'passthrough-required': 'Show some of your real surroundings, then turn the camera off and select the headset camera again.',
   'camera-unavailable': 'The headset camera is unavailable. Stop other camera apps, then turn the camera off and select it again.',

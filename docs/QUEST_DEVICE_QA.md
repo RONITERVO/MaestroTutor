@@ -3747,3 +3747,29 @@ hold is released and a new development build is verified, cover:
 
 Desktop limits are not physical performance acceptance. No new APK installation,
 signature, upload or cloud deployment is recorded by this checkpoint.
+
+Camera-source acceptance remains pending (2026-10-09). Virtual-only, physical
+headset camera and composed screen sharing now share the original camera selector,
+preview, snapshots and Live. After the existing device hold is released:
+
+- Select each source deliberately; verify its actual field of view, orientation,
+  colour and aspect, and whether real surroundings, virtual objects and the book
+  interface are included. Record omitted compositor layers rather than assuming
+  the shared-screen view matches everything seen through the lenses.
+- For physical permission and screen-share consent, test both deny and allow.
+  Return to the book, turn camera off, and reselect. An unused screen-share grant
+  must work only once, within one minute in the same room/document; returning or
+  receiving a late grant alone must not start sharing.
+- Stop through the camera control and Android sharing notification. Change source,
+  room and app focus; lock/sleep the headset and stop/restart another capture tool.
+  Stale frames must disappear and interrupted capture must require a fresh selection.
+- Compare the user's preview, sent snapshot and Live interpretation with managed
+  and BYOK. Audio-only Live must work with cameras off. Confirm sharing has no
+  unintended playback-audio capture.
+- Measure sustained CPU/GPU frame time, latency, memory and thermal cost while
+  sharing each source alongside speech, animated actors and active physics.
+
+Desktop service, browser and provider evidence is recorded in
+[the release coverage](QUEST_AGENT_RELEASE_COVERAGE.md#mixed-view-screen-sharing-parity--2026-10-09).
+It does not establish that Quest compositor capture or WebView canvas playback
+works on the installed version.

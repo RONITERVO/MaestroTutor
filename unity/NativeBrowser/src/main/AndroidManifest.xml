@@ -5,7 +5,11 @@
   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
   <!-- Native, explicitly selected passthrough camera; WebRTC video stays denied. -->
   <uses-permission android:name="horizonos.permission.HEADSET_CAMERA" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
   <application>
+    <service android:name="com.maestro.quest.browser.ScreenShareService"
+      android:exported="false" android:foregroundServiceType="mediaProjection" android:stopWithTask="true" />
     <meta-data android:name="unityplayer.SkipPermissionsDialog" android:value="true" />
     <provider android:name="com.maestro.quest.browser.SelectedFileProvider"
       android:authorities="${applicationId}.maestro.selected" android:exported="false" android:grantUriPermissions="false" />

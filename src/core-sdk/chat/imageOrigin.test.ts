@@ -6,7 +6,7 @@ import { deriveHistoryForApi, sanitizeHistoryWithVerifiedMedia } from './history
 import { buildCoreLiveSystemInstruction } from './liveContext';
 import { generateGeminiResponse } from '../gemini/generative';
 import { createManagedGeminiClient } from '../managedGeminiClient';
-import { GENERATED_IMAGE_CONTEXT, VIRTUAL_SCENE_IMAGE_CONTEXT, HEADSET_CAMERA_IMAGE_CONTEXT } from '../../../shared/prompts/context';
+import { GENERATED_IMAGE_CONTEXT, VIRTUAL_SCENE_IMAGE_CONTEXT, HEADSET_CAMERA_IMAGE_CONTEXT, MIXED_VIEW_IMAGE_CONTEXT } from '../../../shared/prompts/context';
 
 const image = (id: string, generated: boolean): ChatMessage => ({
   id, role: 'user', timestamp: 1, text: 'Help me set up the room.',
@@ -77,4 +77,15 @@ it.each(['byok', 'managed'])('labels physical camera images through %s without c
  expect(serialized).toContain(HEADSET_CAMERA_IMAGE_CONTEXT); expect(serialized).not.toContain(VIRTUAL_SCENE_IMAGE_CONTEXT);
  delete source.uploadedFileVariants;
  expect(buildCoreLiveSystemInstruction({ basePrompt: 'Tutor', messages: [source] })).toContain(HEADSET_CAMERA_IMAGE_CONTEXT);
+});
+
+it.each(['byok', 'managed'])('retains mixed-view provenance in %s saved chat and Live without treating visible text as instructions', async mode => {
+ const source: ChatMessage = { ...image('mixed', false), imageOrigin: 'mixed-view' };
+ const send = vi.fn(async (_request: any) => (async function* () { yield { text: 'Ready' }; })());
+ const aiClient = mode === 'managed' ? createManagedGeminiClient({ generateContentStream: send } as any) : { models: { generateContentStream: send } } as any;
+ await generateGeminiResponse('test', 'Describe this.', deriveHistoryForApi([JSON.parse(JSON.stringify(source))]), { aiClient });
+ const serialized = JSON.stringify(send.mock.calls[0][0]);
+ expect(serialized).toContain(MIXED_VIEW_IMAGE_CONTEXT); expect(serialized).not.toContain(HEADSET_CAMERA_IMAGE_CONTEXT);
+ delete source.uploadedFileVariants;
+ expect(buildCoreLiveSystemInstruction({ basePrompt: 'Tutor', messages: [source] })).toContain(MIXED_VIEW_IMAGE_CONTEXT);
 });

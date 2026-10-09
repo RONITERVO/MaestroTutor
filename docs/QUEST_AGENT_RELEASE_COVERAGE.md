@@ -2157,3 +2157,27 @@ Android discovers 107 tests: 105 pass and two optional private-import fixtures
 skip; release AAR build and lint pass. Final production web build, lint, probe
 typing, prompt ownership, core boundaries and catalog provenance checks pass.
 The catalog definitions are unchanged; only native source provenance updates.
+
+## Mixed-view screen-sharing parity — 2026-10-09
+
+The third source uses the existing camera interface with `mixed-view` provenance.
+Managed/BYOK deterministic cases cover saved chat/history, headless dispatch,
+tutor/verifier/agent handoff, exact receipts and Live input bytes. Real Chrome
+covers source switching and an explicit fresh selection after screen-share
+consent. Android tests cover consumed/expired/denied grants, room/document change,
+cancellation before service startup, foreground-service declaration, stopped
+leases and padded/cropped RGBA conversion. Native camera tests keep all three
+sources distinct and prevent old leases or room ownership from reviving capture.
+
+Real managed/BYOK text and Live runs through `probe-quest-camera-provider.ts`
+both recognized the green/verde background and shared-screen source. Input was
+explicitly synthetic, passed through Chrome and captioned as a shared headset
+view; speech was synthesized locally. The exact sent frame and origin survived
+Live handoff; input pacing, model audio and playback checks passed. Managed
+billing reconciled 22 credits/USD 0.021424, two usage/charge entries and zero
+reservations. This narrow test does not exercise Quest's compositor, physical
+surroundings, the full novice lesson or an actual device permission dialog.
+
+The full web suite passes 2,811 tests in 305 files. Hardware acceptance remains
+open under the device hold; no new camera evidence replaces the earlier incomplete
+novice lesson or its retained failures.

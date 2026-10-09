@@ -122,7 +122,7 @@ describe('Live handoff camera provenance', () => {
   });
 });
 
-it.each(['virtual-scene', 'headset-camera'] as const)('labels %s Live pixels and drops stale asynchronous frames', async origin => {
+it.each(['virtual-scene', 'headset-camera', 'mixed-view'] as const)('labels %s Live pixels and drops stale asynchronous frames', async origin => {
  const h = setup(), source = stream(); let fresh = true;
  registerCameraFrameState(source, () => ({ origin, fresh }));
  const input = new LiveInputContext(() => 0); input.recordAudio('AAA='); h.state.liveInputContextRef.current = input;

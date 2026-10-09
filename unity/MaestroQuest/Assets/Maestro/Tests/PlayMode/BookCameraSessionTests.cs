@@ -27,8 +27,10 @@ namespace Maestro.Quest.Tests {
    request.pulse++;camera.Receive(request,1.4);Assert.That((string)camera.Poll(1.4)["status"],Is.EqualTo("failed"));
    Object.Destroy(viewer);yield return null;
   }
-  sealed class CameraFeedFixture:IBookCameraFeed {
-   public string SourceId=>BookCameraSession.HeadsetSource;
+  sealed class CameraFeedFixture:IBookCameraFeed,IBookCameraContextFeed {
+   internal string Id=BookCameraSession.HeadsetSource,ContextValue;
+   public string SourceId=>Id;
+   public void Context(string value){ContextValue=value;}
    public bool Available=>true;
    internal int Starts,Stops;internal bool Allow;internal Newtonsoft.Json.Linq.JObject Pixels;
    public bool Start(out string error){Starts++;error=Allow?null:"permission-required";return Allow;}
@@ -74,6 +76,21 @@ namespace Maestro.Quest.Tests {
   [TestCase(1280,960,512,384)] [TestCase(1280,1280,512,512)] [TestCase(320,240,320,240)]
   public void HeadsetCameraPreservesSensorAspectRatio(int width,int height,int expectedWidth,int expectedHeight){
    Assert.That(HeadsetBookCamera.OutputSize(width,height),Is.EqualTo(new Vector2Int(expectedWidth,expectedHeight)));
+  }
+
+  [UnityTest] public IEnumerator BookCameraMultipleSourcesKeepConsentRoomBoundAndNeverStartTogether(){
+   var viewer=new GameObject("Camera viewer");viewer.transform.SetParent(root.transform,false);root.GetComponent<RoomInteraction>().Viewer=viewer.transform;
+   var physical=new CameraFeedFixture{Allow=true};var mixed=new CameraFeedFixture{Allow=true,Id=BookCameraSession.MixedSource};
+   var camera=new BookCameraSession(()=>editor,physical,mixed);
+   var request=new BookCameraRequest{session=new string('a',32),requestId=new string('b',32),sourceId=BookCameraSession.MixedSource,acknowledged="",pulse=1};
+   camera.Receive(request,1);Assert.That(((Newtonsoft.Json.Linq.JArray)camera.Poll(1)["sources"]).Count,Is.EqualTo(3));
+   Assert.That(mixed.Starts,Is.EqualTo(1));Assert.That(physical.Starts,Is.Zero);
+   Assert.That(mixed.ContextValue,Does.StartWith(request.session+":"));Assert.That(physical.ContextValue,Is.Empty);
+   camera.Suspend();request.pulse++;camera.Receive(request,1.1);Assert.That((string)camera.Poll(1.1)["status"],Is.EqualTo("failed"));Assert.That(mixed.Starts,Is.EqualTo(1));
+   request.requestId=new string('c',32);request.sourceId=BookCameraSession.HeadsetSource;request.pulse++;camera.Receive(request,1.2);camera.Poll(1.2);
+   Assert.That(mixed.ContextValue,Is.Empty);Assert.That(physical.Starts,Is.EqualTo(1));Assert.That(mixed.Starts,Is.EqualTo(1));
+   camera.Close();Assert.That(physical.ContextValue,Is.Empty);Assert.That(mixed.ContextValue,Is.Empty);
+   Object.Destroy(viewer);yield return null;
   }
 
  }

@@ -48,7 +48,10 @@ public final class BookWebView extends OffscreenBrowser {
     private int lifecycleEpoch;
     private BookRequests requests, permissionOwner, pickerOwner;
     private BookExports exports;
-    private static final int MICROPHONE_REQUEST = 4701, FILE_REQUEST = 4702;
+    private volatile BookScreenShare screenShare;
+    private BookScreenShare projectionOwner;
+    private final java.util.concurrent.atomic.AtomicLong screenShareEpoch=new java.util.concurrent.atomic.AtomicLong();
+    private static final int MICROPHONE_REQUEST = 4701, FILE_REQUEST = 4702, SCREEN_SHARE_REQUEST = 4703;
     private final Handler lifecycleHandler = new Handler(Looper.getMainLooper());
 
     private static boolean isAppOrigin(Uri uri) {
@@ -59,19 +62,31 @@ public final class BookWebView extends OffscreenBrowser {
         externalLink = "";
         if (requests != null) requests.close();
         final WebView owner = web;
+        screenShareEpoch.incrementAndGet();
+        if(screenShare!=null) screenShare.close();
+        screenShare=new BookScreenShare(new BookScreenShare.Host() {
+            public boolean active() { return !disposed && !suspended && web==owner && web!=null && isAppOrigin(Uri.parse(web.getUrl()==null?"":web.getUrl())); }
+            public void prompt() {
+                if(permissionOwner!=null || pickerOwner!=null || projectionOwner!=null) throw new IllegalStateException("A native dialog is already open");
+                projectionOwner=screenShare;
+                try { startActivityForResult(UnityPlayer.currentActivity.getSystemService(android.media.projection.MediaProjectionManager.class).createScreenCaptureIntent(),SCREEN_SHARE_REQUEST); }
+                catch(RuntimeException failure) { projectionOwner=null; throw failure; }
+            }
+            public BookScreenShare.Capture capture(Intent consent) { return ScreenShareService.start(UnityPlayer.currentActivity,consent); }
+        },android.os.SystemClock::elapsedRealtime);
         resetExports();
         requests = new BookRequests(new BookRequests.Host() {
             public Activity activity() { return UnityPlayer.currentActivity; }
             public boolean active() { return !disposed && !suspended && web == owner && web != null && isAppOrigin(Uri.parse(web.getUrl() == null ? "" : web.getUrl())); }
             public Object document() { return web; }
             public void askMicrophone() {
-                if (permissionOwner != null || pickerOwner != null) throw new IllegalStateException("A native dialog is already open");
+                if (permissionOwner != null || pickerOwner != null || projectionOwner != null) throw new IllegalStateException("A native dialog is already open");
                 permissionOwner = requests;
                 try { requestPermissions(new String[] { Manifest.permission.RECORD_AUDIO },MICROPHONE_REQUEST); }
                 catch (RuntimeException failure) { permissionOwner = null; throw failure; }
             }
             public void pickFiles(Intent intent) {
-                if (pickerOwner != null || permissionOwner != null) throw new IllegalStateException("A native dialog is already open");
+                if (pickerOwner != null || permissionOwner != null || projectionOwner != null) throw new IllegalStateException("A native dialog is already open");
                 pickerOwner = requests;
                 try { startActivityForResult(intent,FILE_REQUEST); }
                 catch (RuntimeException failure) { pickerOwner = null; throw failure; }
@@ -100,6 +115,7 @@ public final class BookWebView extends OffscreenBrowser {
 
     @Override public void onActivityResult(int code,int result,Intent data) {
         super.onActivityResult(code,result,data);
+        if (code == SCREEN_SHARE_REQUEST) { BookScreenShare owner=projectionOwner; projectionOwner=null; if(owner!=null) owner.result(result,data); }
         if (code == FILE_REQUEST) { BookRequests owner = pickerOwner; pickerOwner = null; if (owner != null) owner.fileResult(result,data); }
     }
 
@@ -170,6 +186,7 @@ public final class BookWebView extends OffscreenBrowser {
                 }
                 @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
                     speech.invalidate();
+                    if(screenShare!=null) { screenShare.close(); screenShare=null; }
                     error = "The book browser stopped. Reopen the book to recover your saved conversation.";
                     mInitialized = false;
                     if (requests != null) { requests.close(); requests = null; }
@@ -197,6 +214,8 @@ public final class BookWebView extends OffscreenBrowser {
     }
 
     private void destroyWebView() {
+        screenShareEpoch.incrementAndGet();
+        if(screenShare!=null) { screenShare.close(); screenShare=null; }
         speech.invalidate();
         if (exports != null) { exports.close(); exports = null; }
         if (requests != null) { requests.close(); requests = null; }
@@ -316,7 +335,20 @@ public final class BookWebView extends OffscreenBrowser {
         });
     }
 
+    public void SetScreenShareContext(String context) {
+        if(context==null || context.length()>80) return;
+        UnityPlayer.currentActivity.runOnUiThread(() -> { if(!disposed && screenShare!=null) screenShare.context(context); });
+    }
+    public void StartScreenShare() {
+        long command=screenShareEpoch.incrementAndGet();
+        UnityPlayer.currentActivity.runOnUiThread(() -> { if(command==screenShareEpoch.get() && !disposed && screenShare!=null) screenShare.start(); });
+    }
+    public String ReadScreenShare() { BookScreenShare owner=screenShare; return owner==null?"{}":owner.read(); }
+    public void StopScreenShare() { screenShareEpoch.incrementAndGet(); BookScreenShare owner=screenShare; if(owner!=null) owner.stopCapture(); }
+    @Override public void onPause() { StopScreenShare(); super.onPause(); }
+
     public void SetSuspended(boolean value) {
+        if(value) StopScreenShare();
         speech.invalidate();
         snapshots.suspend(value); roomSnapshots.suspend(value);
         if (value) externalLink = "";

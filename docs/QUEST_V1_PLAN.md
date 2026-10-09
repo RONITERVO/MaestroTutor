@@ -5968,3 +5968,75 @@ Android discovers 107 tests: 105 pass and two optional private-import fixtures
 skip; release AAR build and lint pass. Final production web build, lint, probe
 typing, prompt ownership, core boundaries and catalog provenance checks pass.
 The catalog definitions are unchanged; only native source provenance updates.
+
+## Explicit headset screen-sharing source — 2026-10-09
+
+The original book camera selector now has three distinct sources: virtual scene,
+forward physical headset camera, and **My mixed-reality view (screen sharing)**.
+The third adapter uses Android MediaProjection for a user-requested screen share.
+It does not silently substitute the physical camera or add another provider stack.
+The compositor decides which real, virtual and interface layers are captured;
+the name is not a guarantee that every layer or the full physical field of view
+is present. Actual Quest output remains a device acceptance gate.
+
+System consent alone starts no capture. The system dialog can pause the book, so
+an unused approval remains valid in memory for at most one minute in the same
+document and room. After returning, the user resumes the book, turns the camera
+off and selects this source again. That fresh selection consumes the approval
+once, including when service startup fails. An interruption stops active capture;
+resuming cannot reuse its token. Selecting another source, changing room/document,
+closing the owner or an expired approval invalidates unused consent. The brief
+unused approval has no images and cannot start automatically.
+
+The non-exported foreground service supplies a visible sharing notification and
+Stop action. It captures video only; existing microphone/Live audio consent and
+routing remain separate. The service releases projection, display, image reader
+and worker on shutdown or projection revocation, bounds startup and host liveness,
+and stores only the latest frame. The native book still owns the outer lease,
+room gates and acknowledgment. Queued starts are invalidated by cancellation.
+Meta's optional developer projection components remain excluded from the APK.
+
+Images preserve the capture surface aspect ratio with a longest edge of 512,
+at most one encoded JPEG per second and 96 KiB per image. Pixel conversion honors
+row stride and crop bounds. Quest writes its compositor directly to the supplied
+surface, so the implementation does not assume Android display resizing controls
+Quest's output. It adds no full-rate frame stream to durable room state.
+
+The shared `mixed-view` origin survives saved chat, compact history, uploaded
+variants, headless/delegated requests and Live. A caption above the complete image
+identifies shared-screen content, and agent handoff retains exactly the JPEG sent
+to Live. Visible interface text is scene content, not an instruction; images do
+not replace native facts or action receipts.
+
+Local evidence: `.quest-evidence/mixed-camera`. The real Chrome check uses
+explicitly synthetic square pixels for physical/mixed-source transport and a
+recorded native JPEG for the virtual source. Real managed/BYOK text and Live
+checks use the synthetic screen-sharing image and locally synthesized beginner
+speech. Both identified green/verde and the shared-screen source, preserved exact
+Live input bytes and passed pacing/audio checks. Managed billing reconciled
+22 credits/USD 0.021424 with two usage/charge entries and no reservations. These
+are provider and transport checks, not real-camera or compositor acceptance.
+
+The full web suite passes 2,811 tests in 305 files. Production web build, lint,
+probe typing, prompt ownership, core boundaries and catalog provenance checks
+pass. Android discovers 130 tests: 128 pass and two optional private-import
+fixtures skip. Its AAR build and lint pass (six existing warnings, no errors).
+Native capability definitions are unchanged; only source provenance is updated.
+The local privacy-policy source now describes these selected camera flows; it has
+not been deployed.
+
+Still required on Quest: consent/return/re-selection, actual captured layers and
+orientation/color/aspect, WebView preview and Live, system notification Stop,
+interruptions and capture-tool conflicts, sustained frame time and thermal cost.
+The existing headset cooling/charge hold remains in effect. No deployment,
+release-key use or upload is included in this increment.
+
+References: [Meta MediaProjection](https://developers.meta.com/vr/documentation/native/native-media-projection/),
+[Android MediaProjection lifecycle](https://developer.android.com/media/grow/media-projection).
+
+The first full native run retained one failed existing structure-watch test:
+its fixed half-second wait ended before the frame-budgeted program had stopped.
+All physical knockdown/reset and new camera assertions passed. The test now waits
+for observed completion with a five-second deadline and keeps its exact stop-node
+assertion. A focused rerun of all camera cases plus that structure case passes
+12 tests. The first failed report is retained alongside subsequent evidence.
