@@ -34,7 +34,11 @@ namespace Maestro.Quest.Creation
             var result=journal.ObserveObjects();var frame=Frame;
             foreach(var value in result) {
                 var item=Find(value.id);if(!item)continue;
-                if(frame.Valid)value.position=frame.PointToRoom(item.transform.position);
+                // Share the exact authored-frame read used by placement facts and saves.
+                // An unnecessary world-point round trip made unchanged objects
+                // appear to move by floating-point noise after Undo.
+                if(frame.Valid)value.position=frame.Read(item.transform,out var position,out _,out _)
+                    ?position:frame.PointToRoom(item.transform.position);
                 value.held=item.Grab&&item.Grab.isSelected;
                 value.simulating=item.GetComponent<RigidRoomItem>()?.Simulating??false;
                 value.animated=item.GetComponent<RecipeObject>()?.IsPlaying??false;

@@ -49,7 +49,7 @@ if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','Eve
 const transport=await HeadlessRoomTransport.connect(directory,120000);
 const observations:unknown[]=[];
 try{
- const lease=transport.lease();const initial=structuredClone(lease.state());
+ const lease=transport.lease();let initial=structuredClone(lease.state());
  const execute=async<const C extends RoomCommand[]>(commands:C):Promise<NativeProbeState<C>>=>{
   const state=lease.state();const result=await lease.execute(commands,state.sceneRevision,state.objects);observations.push(structuredClone(result));
   if(!result.ok){
@@ -106,6 +106,13 @@ try{
    const contextTurn=await runHeadlessChatTurn(client,{text:['WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage'].includes(providerScenario||'')?"Hello! I am learning Spanish. I will try the room view controls next, but please do not change anything yet.":(['EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering'].includes(providerScenario||''))?"For this test, my test object is a blue ball named ParityBall, half the diameter of the room's standard ball. Remember that; do not create anything yet.":spoken?"For this test, 'my test object' means one ball named ParityBall, exactly half the diameter of the room's standard ball. I will choose its colour in my next request. Remember that; do not make anything yet.":"For this test, 'my test object' means one small blue ball named ParityBall. Remember that for my next request; do not make anything yet.",useGoogleSearch:false});
    const contextAftersteps=await runHeadlessSuggestionAftersteps(client,{assistantMessageId:contextTurn.assistantMessage.id});
    if(contextAftersteps.toolRequest?.tool==='agent'||lease.state().sceneRevision!==initial.sceneRevision||agent.usage.length)throw new Error('Context-only chat unexpectedly started room work.');
+   // The transport handshake can precede the authored-to-render-frame round trip.
+   // Compare effects to a real native reading immediately before the first user
+   // action, retaining startup evidence; do not weaken exact object assertions.
+   const startup=initial;
+   initial=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.environment',version:1}}]);
+   await writeFile(join(directory,'provider-baseline.json'),JSON.stringify({startup,beforeRequest:initial},null,2));
+
    const presentationBaseline=providerScenario==='WorldPresentation'
     ?await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.environment',version:1}}])
     :initial;

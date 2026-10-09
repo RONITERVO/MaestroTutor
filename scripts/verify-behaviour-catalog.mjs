@@ -1,9 +1,11 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {execFileSync} from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 const root=new URL('../',import.meta.url);
+execFileSync(process.execPath,['--import','tsx',fileURLToPath(new URL('scripts/generate-room-guides.ts',root))],{stdio:'inherit',cwd:fileURLToPath(root)});
 const manifest=JSON.parse(await readFile(new URL('shared/generated/behaviourCatalog.json',root),'utf8'));
 // Keep this scope identical to QuestBehaviourCatalog.Export. Adding a native
 // helper must invalidate old provenance without anyone editing another list.
@@ -19,7 +21,7 @@ async function discover(directory,accept) {
 }
 const sources=[
  ...await discover('Runtime',name=>/\.(cs|shader|cginc|hlsl|asmdef|asmref)$/i.test(name)),
- 'Resources/MaestroRoomAudio.mixer',
+ 'Resources/MaestroRoomAudio.mixer','Resources/RoomGuides.json',
  ...await discover('Resources/Creation/Templates',name=>/\.json$/i.test(name)),
  ...await discover('Resources/Programs/Modules',name=>/\.json$/i.test(name)),
 ].sort().map(path=>nativePrefix+path);

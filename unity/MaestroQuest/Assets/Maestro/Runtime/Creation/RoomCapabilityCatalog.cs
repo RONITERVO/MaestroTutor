@@ -24,7 +24,7 @@ namespace Maestro.Quest.Creation
         static bool Id(JToken value)=>Text(value,96)&&Regex.IsMatch((string)value,@"^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)+$");
         static bool QueryKeys(JObject value,params string[] keys) {
             if(!value.ContainsKey("category"))return Exact(value,keys);
-            return value["category"]?.Type==JTokenType.String&&new[]{"actions","events","facts","modules"}.Contains((string)value["category"])&&Exact(value,keys.Concat(new[]{"category"}).ToArray());
+            return value["category"]?.Type==JTokenType.String&&new[]{"actions","events","facts","modules","guides"}.Contains((string)value["category"])&&Exact(value,keys.Concat(new[]{"category"}).ToArray());
         }
         public static bool ValidRequest(JObject value)
         {
@@ -63,6 +63,7 @@ namespace Maestro.Quest.Creation
         // Descriptions are native vocabulary data. Search pages never expand every
         // schema into the observation or agent prompt.
         static Entry[] Entries(string category)=>category switch {
+            "guides"=>RoomGuideCatalog.Definitions.Select(x=>new Entry {Id=(string)x["id"],Version=(int)x["version"],Label=(string)x["label"],Search=(string)x["id"]+" "+(string)x["label"]+" "+(string)x["description"],Definition=()=>(JObject)x.DeepClone()}).ToArray(),
             "events"=>BehaviourCatalog.Events.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.Id+" "+x.Label+" "+x.Description,Definition=x.ToJson}).ToArray(),
             "facts"=>BehaviourCatalog.Facts.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.Id+" "+x.Label+" "+x.Description+" "+x.Type,Definition=x.ToJson}).ToArray(),
             _=>BehaviourCatalog.Actions.Select(x=>new Entry {Id=x.Id,Version=x.Version,Label=x.Label,Search=x.SearchText,Definition=x.ToJson}).ToArray()
@@ -77,7 +78,7 @@ namespace Maestro.Quest.Creation
             return 3;
         }
         static readonly System.Collections.Generic.Dictionary<string,Entry[]> vocabulary=new() {
-            ["actions"]=Entries("actions"),["events"]=Entries("events"),["facts"]=Entries("facts")
+            ["actions"]=Entries("actions"),["events"]=Entries("events"),["facts"]=Entries("facts"),["guides"]=Entries("guides")
         };
         JObject Scoped(JObject result) {if(request["category"]!=null)result["category"]=request["category"].DeepClone();return result;}
         JObject Cache(JObject value) {cached=(JObject)value.DeepClone();return value;}
@@ -127,7 +128,7 @@ namespace Maestro.Quest.Creation
             if(operation=="inspect") {
                 var entry=vocabulary[category].FirstOrDefault(x=>x.Id==(string)request["capability"]&&x.Version==(int)request["version"]);
                 var result=Scoped(new JObject {["operation"]=operation,["capability"]=request["capability"].DeepClone(),["version"]=request["version"].DeepClone(),
-                    ["definition"]=entry!=null?entry.Definition():JValue.CreateNull(),["status"]=entry==null?"Unknown "+category+" entry or unsupported version":category=="actions"?"Action definition. Check concrete arguments before running it.":"Event definition. Inspecting does not subscribe or start a behaviour."});
+                    ["definition"]=entry!=null?entry.Definition():JValue.CreateNull(),["status"]=entry==null?"Unknown "+category+" entry or unsupported version":category=="actions"?"Action definition. Check concrete arguments before running it.":category=="guides"?"Bundled reference. Reading never enables features, edits or runs anything.":"Event definition. Inspecting does not subscribe or start a behaviour."});
                 inspected=entry;Cache(result);
                 return category=="facts"?ReadFact(result,entry):result;
             }

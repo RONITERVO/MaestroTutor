@@ -22,6 +22,40 @@ namespace Maestro.Quest.Tests
             editor.Find(id).transform.SetParent(group,true);return group;
         }
         static void FrameNear(Vector3 actual,Vector3 expected)=>Assert.That(Vector3.Distance(actual,expected),Is.LessThan(.0001f));
+        [UnityTest] public IEnumerator HistoryRestoresAffectedPosesWithoutReapplyingUnrelatedBookPlacement()
+        {
+            string id=LayoutObject(new Vector3(.4f,1.2f,.7f));var initial=editor.Read(id).position;
+            FrameGroup("book");var book=editor.Find("book");var saved=JsonUtility.ToJson(editor.Read("book"));
+            book.transform.position+=new Vector3(.1234567f,.0234567f,.0345678f);
+            var live=book.transform.localToWorldMatrix;var observed=editor.ObserveObjects().Single(x=>x.id=="book").position;
+            Assert.That(editor.MoveObject(id,initial+Vector3.right,out var error),Is.True,error);
+            for(int cycle=0;cycle<3;cycle++){
+                editor.Undo();Assert.That(editor.Find(id).transform.localPosition,Is.EqualTo(initial));
+                Assert.That(book.transform.localToWorldMatrix,Is.EqualTo(live));
+                Assert.That(editor.ObserveObjects().Single(x=>x.id=="book").position,Is.EqualTo(observed));
+                editor.Redo();Assert.That(editor.Find(id).transform.localPosition,Is.EqualTo(initial+Vector3.right));
+                Assert.That(book.transform.localToWorldMatrix,Is.EqualTo(live));
+            }
+            Assert.That(JsonUtility.ToJson(editor.Read("book")),Is.EqualTo(saved),"Unrelated saved placement must also remain intact");
+            yield return null;
+        }
+        [UnityTest] public IEnumerator ObjectListSharesLivePlacementPrecisionAcrossRootChangesAndUndo()
+        {
+            var initial=new Vector3(.1234567f,1.234567f,.7654321f);
+            string id=LayoutObject(initial);var item=editor.Find(id);
+            Vector3 Observed()=>editor.ObserveObjects().Single(x=>x.id==id).position;
+            root.transform.SetPositionAndRotation(new Vector3(7,0,-4),Quaternion.Euler(0,63,0));
+            Assert.That(Observed(),Is.EqualTo(initial),"Direct child positions must not round-trip through world coordinates");
+            var live=new Vector3(.4567891f,1.345678f,.654321f);item.transform.localPosition=live;
+            Assert.That(Observed(),Is.EqualTo(live),"Observations must read live motion, not the saved journal");
+            Assert.That(editor.Read(id).position,Is.EqualTo(initial));
+            editor.RememberPlacement(id);Assert.That(editor.MoveObject(id,initial,out var error),Is.True,error);
+            editor.Undo();Assert.That(Observed(),Is.EqualTo(live));editor.Redo();Assert.That(Observed(),Is.EqualTo(initial));
+            FrameGroup(id);item.transform.position=editor.transform.TransformPoint(live);
+            Assert.That(editor.Frame.Read(item.transform,out var nested,out _,out _),Is.True);
+            Assert.That(Observed(),Is.EqualTo(nested),"Nested objects must use the same sampled frame as placement facts");
+            yield return null;
+        }
         [UnityTest] public IEnumerator RoomFrameSharedLayoutObservationUndoAndDiskAgreeForNestedObjects()
         {
             string id=LayoutObject(new Vector3(.4f,1.2f,.7f));var group=FrameGroup(id);var item=editor.Find(id);

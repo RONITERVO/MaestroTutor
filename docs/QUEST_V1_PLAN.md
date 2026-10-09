@@ -5821,3 +5821,26 @@ Final BYOK `d1c6ceccb98c4562b517d3c698343572` passes the same explicit continuat
 and native effects. Both final runs retain the exact imported file and full native
 journals. All 2,746 shared/web tests, build, lint and probe typing pass. Exact-head
 CI is tracked on PR #248; the current headset cooling/charge hold is unchanged.
+
+
+### Shared reference discovery — 2026-10-09
+
+Programming and motion references now use the same native read-only catalog for
+people and agents, with one canonical source and generated-resource drift checks.
+The original app selects compact instructions only when the runtime advertises
+guide support; installed older builds retain their full reference. This reduces
+the fixed instructions by 35.7% in characters while preserving core authority and
+receipt rules. Complex tasks still pay for relevant discovery, so real-provider
+latency and costs remain part of acceptance rather than being inferred from size.
+See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md#shared-discoverable-room-guides--2026-10-09).
+Headset acceptance and the remaining immersion/release gates stay open.
+
+The final native suite for reference discovery passes 1,032 EditMode and 908
+PlayMode tests (three optional private-model skips). Real composite acceptance
+found and corrected unrelated pose restoration during Undo: history now restores
+only its affected object poses. Native/book integration and the BYOK composite
+pass, as do the final managed composite and three-turn image/continuation journeys.
+The measured managed turns reconcile 300 and 860 credits (USD 0.291138 and
+0.837203 respectively), excluding introductions and composite baseline creation.
+This is shared runtime behavior; serial discovery and growing unique context still
+need cost/latency work. Physical Quest acceptance remains open.

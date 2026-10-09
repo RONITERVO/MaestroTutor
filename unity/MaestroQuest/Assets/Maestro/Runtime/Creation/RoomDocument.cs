@@ -365,16 +365,22 @@ namespace Maestro.Quest.Creation
             undo.Add(change); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); return true;
         }
 
-        public bool Undo()
+        public bool Undo() => Undo(out _);
+        internal bool Undo(out HashSet<string> changedObjects)
         {
+            changedObjects=null;
             if (!CanUndo) return false;
             var change = undo[undo.Count - 1]; undo.RemoveAt(undo.Count - 1);
+            changedObjects=change.Before.Concat(change.After).Select(item=>item.id).ToHashSet();
             Set(change.After, change.Before);SetStructures(change.AfterStructures,change.BeforeStructures);SetAudio(change.AfterAudio,change.BeforeAudio);SetEnvironments(change.AfterEnvironments,change.BeforeEnvironments);SetAppearances(change.AfterAppearances,change.BeforeAppearances);SetVisibility(change.AfterVisibility,change.BeforeVisibility);SetLighting(change.BeforeLighting);SetWorldTime(change.BeforeWorldTime);SetWeather(change.BeforeWeather); redo.Add(change); return true;
         }
-        public bool Redo()
+        public bool Redo() => Redo(out _);
+        internal bool Redo(out HashSet<string> changedObjects)
         {
+            changedObjects=null;
             if (!CanRedo) return false;
             var change = redo[redo.Count - 1]; redo.RemoveAt(redo.Count - 1);
+            changedObjects=change.Before.Concat(change.After).Select(item=>item.id).ToHashSet();
             Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting);SetWorldTime(change.AfterWorldTime);SetWeather(change.AfterWeather); undo.Add(change); return true;
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)

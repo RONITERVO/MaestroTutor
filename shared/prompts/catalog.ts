@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 export const catalogRequestSchema={type:'object',properties:{
- operation:{type:'string',enum:['search','inspect','check']},category:{type:'string',enum:['actions','events','facts','modules']},query:{type:'string',maxLength:80},offset:{type:'integer',minimum:0,maximum:1000000},
+ operation:{type:'string',enum:['search','inspect','check']},category:{type:'string',enum:['actions','events','facts','modules','guides']},query:{type:'string',maxLength:80},offset:{type:'integer',minimum:0,maximum:1000000},
  arguments:{type:'object',additionalProperties:true},capability:{type:'string'},version:{type:'integer',minimum:1,maximum:1000000},
  call:{type:'object',properties:{id:{type:'string'},version:{type:'integer',minimum:1,maximum:1000000},arguments:{type:'object',additionalProperties:true}},required:['id','version','arguments'],additionalProperties:false}
 },required:['operation'],additionalProperties:false};

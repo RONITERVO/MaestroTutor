@@ -1927,3 +1927,100 @@ Client and Unity exit 0 for both final runs. Exact private image bytes and full
 uncompressed native/prior-task journals were separately verified after completion.
 Build, lint, probe typing and architecture checks pass. Native code and installed
 device state are unchanged by this increment; physical acceptance remains on hold.
+
+
+### Shared discoverable room guides — 2026-10-09
+
+The original app selects shorter planner instructions when the native scene
+advertises `catalogGuides.v1`. Ten versioned programming and motion references
+use read-only catalog search/inspect with `category:"guides"`. The book's optional
+Guides category exposes the same native definitions and prerequisite links.
+Reading cannot author or execute an action. Reference text has one canonical
+source in `shared/prompts`, a generated Unity resource, exact web validation,
+detached native receipts and CI generation/provenance checks.
+
+Core authority, original input, receipt, revision, placement and completion rules
+remain always loaded. Older installed runtimes retain byte-identical complete
+instructions. Guides grant no permission or feature availability. Program creation
+must inspect the relevant grammar and prerequisites rather than guess syntax;
+exact guide observations already in the task can be reused.
+
+Fixed instructions decrease from 71,958 to 46,245 characters (35.7%). This is not
+a token, cost or latency benchmark: complex work makes discovery calls and adds
+needed references into context. Full journals retain every native observation.
+
+Real composite testing also found two native pose issues. Object-list observations
+now use the live authored-frame reader used by placement facts and saving, which
+preserves exact direct-child values without replacing motion with saved positions.
+Undo/Redo now restores poses only for objects changed by that history entry while
+continuing the existing full saved-component reconciliation. An unrelated nested
+Book keeps its live position and unchanged saved data through three Undo/Redo
+cycles. Exact effect assertions remain strict. The harness records a fresh native
+pre-request reading beside the startup snapshot.
+
+**Verification:** all **2,750 shared/web tests in 301 files**, build, lint, probe
+typing, prompt ownership, core boundaries and catalog provenance pass. Final native
+verification passes **1,032 EditMode and 908 PlayMode tests**, with three optional
+private-model skips. The catalog has 121 actions, 147 facts, 19 events and 497
+native/resource provenance inputs.
+
+Final native **749a689e28a840729151b3168a14ab8e** passes 702 observations.
+Original-book **b85fb8e7e552453b94cae1773892f592** passes its forms/chat/native
+journey and exact guide/prerequisite inspection with no authored scene change.
+The screenshot was inspected: reference text wraps within the existing inspector.
+Client and Editor exit 0. These use real Unity Editor; the book provider is
+scripted, and neither proves Android or physical Quest acceptance.
+
+Final BYOK composite **006bc3b132954525ace12aba6a86ea34** passes discovery of all
+five required exact guides and the pinned included module, save-only behavior,
+two independent native event waits, both constructions, geometry, placement,
+physics/hinges, Undo/Redo identities and no post-completion replay. Save/start
+measurements use 11/3 agent planning/reply calls, with peak agent inputs
+41,930/28,739 tokens; introduction
+and baseline creation are excluded from those measurements. Earlier BYOK image
+**c82f2ac59a3a4492a78fe5b4aeef9ddb** passes all three image requests and exact prior-task
+continuation (before the subsequent native history fix), with peaks
+40,470/51,356/27,062 tokens. No managed billing applies to BYOK.
+
+Final managed composite **fbaf2930aab742f7a2f99b205afae9cd** passes the same complete
+semantics, including Undo/Redo. Save/start uses 10/3 agent calls with peak agent
+inputs 41,844/28,708 tokens. These measured turns, including their tutor/verifier
+calls, reconcile **300 credits / USD 0.291138** with no mismatches or outstanding
+reservations. Introduction and baseline creation are excluded.
+
+Final managed image **448591484e1042bdb8e016144d1c5a52** passes assignment,
+half-transparency and removal, retaining the exact private image, readable pages
+and unrelated objects. Explicit prior-task continuation is verified. Its 44 native
+observations and client/Editor exits confirm the final native source. Initial,
+continuation and removal use 22/8/6 agent calls with peak agent inputs
+40,412/51,946/26,809 tokens. These three measured turns, including their
+tutor/verifier calls, reconcile **860 credits / USD 0.837203**, excluding the
+introduction, with no mismatches or outstanding reservations. This is successful
+functional acceptance, not a latency or cost improvement claim.
+
+**Retained failed attempts:**
+
+- An early managed launch was refused by the mirror ownership guard while the
+  bundled book verification still ran; no provider task started.
+- Composite **388e476c4f0640e3a74a18240683abae** compared against startup before
+  the Book frame settled. **54efcf8802654ccd867b231ad6531c19** then rejected a
+  malformed targetless inspection in the new harness read; the harness now uses
+  the existing `physics.environment` fact.
+- Composites **bba02052a17243a9ab6dd0fb46fe3d89** and
+  **c44990bda2e24d6b96c3ca8e61107721** completed discovery and both constructions
+  but failed the exact unrelated-Book comparison at Undo. The first observation
+  correction alone was insufficient for the real Book hierarchy; the history
+  correction above resolved that path without relaxing assertions.
+- Managed image **029da24dde1a48fd866016d818a271f4** completed its initial
+  assignment, then failed a continuation reservation for insufficient test credits.
+  It is not a full acceptance pass. Two guarded Stripe test-mode checkouts each
+  produced one reconciled 1,000-credit webhook grant for the isolated staging
+  wallet. The adapter now selects the observed Card control once, including its
+  zero-layout-size variant, rather than toggling it while fields load. Existing
+  HTTPS/host, test-session and test-card guards remain enforced; five focused
+  safety/billing tests and both real test-mode grants pass. No production payment
+  data, credit rules or deployed service configuration changed.
+
+The physical cooling/charge hold remains. No APK, signing, upload or deployment
+was performed. Unique context growth, serial discovery latency and the remaining
+headset/release gates stay open.

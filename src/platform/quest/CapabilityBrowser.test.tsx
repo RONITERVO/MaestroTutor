@@ -1004,3 +1004,23 @@ it('does not partially fill a failed multi-object read or accept its late result
  fireEvent.click(screen.getByRole('button',{name:'Load current values'}));await receive(fact(0));expectQuery(1);const changed={...before,members:[...members].reverse()};fireEvent.change(screen.getByLabelText('Action arguments'),{target:{value:JSON.stringify(changed)}});await receive(fact(1));expect(args()).toEqual(changed);expect(client.snapshot().request).toBeNull();
  fireEvent.change(screen.getByLabelText('Action inputs members 1 target'),{target:{value:members[0].target}});expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);act(()=>client.cancel());
 });
+
+import {ROOM_GUIDES} from '../../../shared/prompts/roomguides';
+it('lets the human read the same exact guide and prerequisites without authoring or running an action',async()=>{
+ const {client,screen,receive}=setup(true,['catalogGuides.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'guides'}});
+ fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'search',category:'guides',query:'',offset:0}}]);
+ const guide=ROOM_GUIDES.find(g=>g.id==='guide.program.events')!;
+ await receive({operation:'search',category:'guides',query:'',offset:0,pageSize:6,total:1,entries:[{id:guide.id,version:1,label:guide.label}],status:'Found guide'});
+ fireEvent.click(screen.getByRole('button',{name:/Events and persistent state/}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'guides',capability:guide.id,version:1}}]);
+ await receive({operation:'inspect',category:'guides',capability:guide.id,version:1,definition:guide,status:'Reference only'});
+ expect(screen.getByRole('region',{name:'Guide reference'}).textContent).toContain(guide.body);
+ expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();
+ expect(screen.queryByRole('button',{name:'Add first block to draft'})).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Read guide.program.basic'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'guides',capability:'guide.program.basic',version:1}}]);
+ act(()=>client.cancel());
+});

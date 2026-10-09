@@ -13,6 +13,33 @@ namespace Maestro.Quest.Tests
 {
     public sealed class BehaviourCatalogTests
     {
+        [Test] public void GuidesAreSharedDetachedVersionedAndReadOnlyWithoutARoom()
+        {
+            Assert.That(RoomGuideCatalog.Available,Is.True);
+            var expected=(JArray)JObject.Parse(Resources.Load<TextAsset>("RoomGuides").text)["guides"];
+            Assert.That(expected.Count,Is.EqualTo(10));
+            var catalog=new RoomCapabilityCatalog(null);
+            JObject Query(string operation,string capability="",int version=1,int offset=0) {
+                var query=operation=="search"?new JObject {["operation"]=operation,["category"]="guides",["query"]="",["offset"]=offset}:new JObject {["operation"]=operation,["category"]="guides",["capability"]=capability,["version"]=version};
+                Assert.That(catalog.Execute(query,out var error),Is.True,error);return catalog.Observe();
+            }
+            var pages=new[]{Query("search"),Query("search",offset:6)};
+            Assert.That(pages.SelectMany(p=>p["entries"]).Select(e=>(string)e["id"]),Is.EqualTo(expected.Select(e=>(string)e["id"]).OrderBy(id=>id,StringComparer.Ordinal)));
+            Assert.That(pages.SelectMany(p=>p["entries"]).All(e=>((JObject)e).Count==3),Is.True,"Search must not expand all guides");
+            foreach(var guide in expected) {
+                var observation=Query("inspect",(string)guide["id"],(int)guide["version"]);
+                Assert.That(JToken.DeepEquals(observation["definition"],guide),Is.True);
+                observation["definition"]["body"]="Mutated";
+                Assert.That(JToken.DeepEquals(catalog.Observe()["definition"],guide),Is.True);
+                Assert.That(Query("inspect",(string)guide["id"],2)["definition"].Type,Is.EqualTo(JTokenType.Null));
+            }
+            var copies=RoomGuideCatalog.Definitions;copies[0]["body"]="Mutated";
+            Assert.That(JToken.DeepEquals(new JArray(RoomGuideCatalog.Definitions),expected),Is.True);
+            Assert.That(RoomCapabilityCatalog.ValidRequest(JObject.Parse("{\"operation\":\"inspect\",\"category\":\"guides\",\"capability\":\"guide.program.basic\",\"version\":1,\"arguments\":{}}")),Is.False);
+            Assert.That(BehaviourCatalog.Action("guide.program.basic"),Is.Null,"Reference is never an executable capability");
+            Directory.CreateDirectory("Logs");
+            File.WriteAllText("Logs/room-guide-observation.json",Query("inspect","guide.program.basic").ToString());
+        }
         [Test] public void ScopedCatalogQueriesAreStrictPagedDetachedAndReadOnlyWithoutARoom()
         {
             var catalog=new RoomCapabilityCatalog(null);

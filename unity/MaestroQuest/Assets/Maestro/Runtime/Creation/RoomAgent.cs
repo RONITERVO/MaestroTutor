@@ -306,7 +306,7 @@ namespace Maestro.Quest.Creation
         public RoomAgentState Observe()
         {
             if(!editor)return new RoomAgentState {session=inbox.Session,revision=++revision,sceneRevision=1,ack=inbox.Ack,ok=ok,status=status,created=created,
-                objects=Array.Empty<RoomAgentObject>(),capabilities=RoomControls.WorkspaceCapabilities(GetComponent<Maestro.Quest.Persistence.WorkspaceHost>()).Concat(new[]{"catalog.v1","catalogVocabulary.v1"}).Distinct().ToArray(),execution=executor?.Executions.Observe(),visible=executor?.WorkspaceVisible==true,
+                objects=Array.Empty<RoomAgentObject>(),capabilities=RoomControls.WorkspaceCapabilities(GetComponent<Maestro.Quest.Persistence.WorkspaceHost>()).Concat(new[]{"catalog.v1","catalogVocabulary.v1"}).Concat(RoomGuideCatalog.Available?new[]{"catalogGuides.v1"}:Array.Empty<string>()).Distinct().ToArray(),execution=executor?.Executions.Observe(),visible=executor?.WorkspaceVisible==true,
                 workspaceView="objects",catalog=executor?.Catalog.Observe()};
             if(executor.WorkspaceVisible && editor.SelectedId!=null) lastInspected=editor.SelectedId;
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;

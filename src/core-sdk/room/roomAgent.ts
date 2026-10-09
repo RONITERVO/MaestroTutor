@@ -21,7 +21,7 @@ import { parseRecipe, type RoomRecipe } from './recipe';
 import { generateGeminiResponse } from '../gemini/generative';
 import { pickGeminiClientSource } from '../gemini/clientSource';
 import { runTutorTextTurn, type TutorTextTurnInput, type TutorTextTurnOptions } from '../chat/tutorTextTurn';
-import { buildRoomAgentPrompt, buildRoomResultInstruction, ROOM_AGENT_INSTRUCTION, ROOM_AGENT_RESPONSE_SCHEMA } from '../../../shared/prompts';
+import { buildRoomAgentPrompt, buildRoomResultInstruction, roomAgentInstruction, ROOM_AGENT_RESPONSE_SCHEMA } from '../../../shared/prompts';
 
 export interface RoomCommand {
   action: 'create' | 'move' | 'resize' | 'paint' | 'recipe' | 'delete' | 'undo' | 'redo' | 'inspect' | 'workspace' | 'play' | 'stop' | 'rules' | 'motions' | 'catalog' | 'execution' | 'avatarActivities' | keyof typeof roomControlFields;
@@ -136,7 +136,7 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
     active();await control.beforePlan?.();active();
     const scene=copy(lease.state()),budget=remainingRoomTaskBudget(step,queries,actions);
     const response=await generateGeminiResponse(input.model,buildRoomAgentPrompt(input.prompt,scene,receipts,{systemInstruction:input.systemInstruction,nativeLanguageCode:input.nativeLanguageCode,relatedTask:control.relatedTask,operations,...(planRejection?{planRejection}:{}),...(acceptedProgramStarts.size?{acceptedProgramStarts:[...acceptedProgramStarts.values()]}:{})},budget),input.history,{
-      ...pickGeminiClientSource(options),systemInstruction:ROOM_AGENT_INSTRUCTION+'\n'+ROOM_PLANNER_ARGUMENT_GUIDE,currentFileParts:input.currentFileParts,
+      ...pickGeminiClientSource(options),systemInstruction:roomAgentInstruction(scene.capabilities)+'\n'+ROOM_PLANNER_ARGUMENT_GUIDE,currentFileParts:input.currentFileParts,
       currentImages:[...(input.currentImages??[]),...roomCaptureImages(snapshots)],
       ...(input.liveInputMedia ? {liveInputMedia:input.liveInputMedia} : {}),
       configOverrides:{responseMimeType:'application/json',responseJsonSchema:ROOM_AGENT_RESPONSE_SCHEMA},

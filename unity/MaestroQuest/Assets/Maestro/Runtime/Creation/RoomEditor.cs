@@ -326,8 +326,8 @@ namespace Maestro.Quest.Creation
             Editing?.Invoke(); if(DeleteObject(selected,out var error)) { selected = null; UpdateSelection(); } else SetStatus(error);
         }
 
-        public void Undo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo()) { Reconcile(); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
-        public void Redo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo()) { Reconcile(); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
+        public void Undo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo(out var changed)) { Reconcile(poseChanges:changed); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
+        public void Redo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo(out var changed)) { Reconcile(poseChanges:changed); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
         internal bool DrawingInProgress=>(GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke))||SculptingInProgress;
         internal bool PutPencilAwayForPose(out string error)
         {
@@ -435,7 +435,7 @@ namespace Maestro.Quest.Creation
             SetStatus("Release the object before editing"); return true;
         }
 
-        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true)
+        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null)
         {
             applying = true;
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
@@ -457,7 +457,10 @@ namespace Maestro.Quest.Creation
                     AddIdentity(data.id,item); room.Register(item);
                     created = true;
                 }
-                if (!item.Grab.isSelected && (created || changed == null || (applyChangedPose && changed.Contains(data.id)))) ApplyPose(item,data);
+                // Undo/Redo reconfigure the full document, but only the objects in
+                // that history entry own a pose restoration. Unrelated live poses
+                // may differ legitimately from their last saved placement.
+                if (!item.Grab.isSelected && (created || ((poseChanges==null || poseChanges.Contains(data.id)) && (changed == null || (applyChangedPose && changed.Contains(data.id)))))) ApplyPose(item,data);
                 var environment=item.GetComponent<RoomEnvironmentBinding>()??item.gameObject.AddComponent<RoomEnvironmentBinding>();
                 item.WaterTraversal=RoomWaterTraversal.Effective(data);
                 environment.Apply(PhysicsWorld,item,string.IsNullOrEmpty(data.environmentProfile)?true:journal.ReadEnvironment(data.environmentProfile).realCollisions);

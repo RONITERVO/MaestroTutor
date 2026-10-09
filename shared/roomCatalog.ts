@@ -1,3 +1,4 @@
+import {roomGuide,type RoomGuide} from './prompts/roomguides';
 import {programResourceLimit} from './programLimits';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -7,13 +8,13 @@ import {behaviourEvent,type BehaviourEventDefinition} from './behaviourEvents';
 import {behaviourFact,type BehaviourFactDefinition} from './behaviourCatalog';
 import {validFactValue,validateFactArguments} from './behaviourFacts';
 import {validProgramNumber,type DataValue} from './programValues';
-export type CatalogCategory='actions'|'events'|'facts'|'modules';
+export type CatalogCategory='actions'|'events'|'facts'|'modules'|'guides';
 export type CatalogRequest={operation:'search';query:string;offset:number;category?:CatalogCategory}|{operation:'inspect';capability:string;version:number;category?:CatalogCategory;arguments?:Record<string,unknown>}|{operation:'check';call:CapabilityInvocation};
 type LibraryState={revision:number;ready:boolean;pending:boolean};
 type Inspection={operation:'inspect';capability:string;version:number};
 export type CatalogView=(
  {operation:'search';query:string;offset:number;pageSize:number;total:number;entries:{id:string;version:number;label:string}[];category?:CatalogCategory;revision?:number;ready?:boolean;pending?:boolean}|
- Inspection&({category?:'actions';definition:CapabilityDefinition|null}|{category:'events';definition:BehaviourEventDefinition|null}|{category:'facts';definition:BehaviourFactDefinition|null;available:boolean;value:DataValue|null;arguments?:Record<string,unknown>}|{category:'modules';definition:ModuleRecord|null;included?:boolean}&LibraryState)|
+ Inspection&({category?:'actions';definition:CapabilityDefinition|null}|{category:'guides';definition:RoomGuide|null}|{category:'events';definition:BehaviourEventDefinition|null}|{category:'facts';definition:BehaviourFactDefinition|null;available:boolean;value:DataValue|null;arguments?:Record<string,unknown>}|{category:'modules';definition:ModuleRecord|null;included?:boolean}&LibraryState)|
  {operation:'check';call:CapabilityInvocation;valid:boolean;available:boolean;occupied:boolean;resources:string[]}
 )&{status:string};
 const record=(v:unknown):v is Record<string,unknown>=>v!==null&&typeof v==='object'&&!Array.isArray(v);
@@ -36,7 +37,7 @@ export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
  };return bounded(v.arguments,0,capabilityDefinition(v.id as string)?.input);
 };
 const queryKeys=(v:Record<string,unknown>,keys:string[])=>Object.prototype.hasOwnProperty.call(v,'category')?
- typeof v.category==='string'&&['actions','events','facts','modules'].includes(v.category)&&exact(v,[...keys,'category']):exact(v,keys);
+ typeof v.category==='string'&&['actions','events','facts','modules','guides'].includes(v.category)&&exact(v,[...keys,'category']):exact(v,keys);
 export function validCatalogRequest(v:unknown):v is CatalogRequest {
  if(!record(v))return false;
  if(v.operation==='search')return queryKeys(v,['operation','query','offset'])&&text(v.query,80)&&integer(v.offset);
@@ -61,7 +62,7 @@ export function validCatalogView(v:unknown):v is CatalogView {
  if(v.operation==='inspect'){
   const keys=['operation','capability','version','definition','status',...(v.category==='facts'?['available','value',...(Object.prototype.hasOwnProperty.call(v,'arguments')?['arguments']:[])]:[])];
   if(!queryKeys(v,keys)||!id(v.capability)||!integer(v.version,1))return false;
-  const known=v.category==='events'?behaviourEvent(v.capability as string):v.category==='facts'?behaviourFact(v.capability as string):capabilityDefinition(v.capability as string);
+  const known=v.category==='guides'?roomGuide(v.capability as string):v.category==='events'?behaviourEvent(v.capability as string):v.category==='facts'?behaviourFact(v.capability as string):capabilityDefinition(v.capability as string);
   // Native and its bundled web client must agree on the exact requested category
   // and version. Reading an unavailable fact must never manufacture false/zero.
   if(v.definition!==null&&(!known||known.version!==v.version||!equal(v.definition,known)))return false;

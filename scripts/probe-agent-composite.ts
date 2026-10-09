@@ -9,6 +9,7 @@ import type { RoomAgentState, RoomCommand } from '../src/core-sdk/room/roomAgent
 import { parseProgram, type BehaviourProgram, type ProgramNode } from '../src/core-sdk/room/programs';
 import type { RuleSequence } from '../src/core-sdk/room/rules';
 import type { ProgramModule } from '../shared/programSyntax';
+import { roomGuide } from '../shared/prompts/roomguides';
 import { moduleHash } from '../shared/programModuleIdentity';
 import { parseRecipe } from '../src/core-sdk/room/recipe';
 import { factReply, placementReply } from './native-probe-contract';
@@ -98,6 +99,16 @@ export async function runAgentCompositeProof(input: { client: HeadlessClient; be
       && catalog?.operation === 'inspect' && catalog.category === 'modules' && catalog.included && isDeepStrictEqual(catalog.definition, module);
   });
   if (!discovered) throw new Error('Agent did not inspect the exact included module before saving its pin.');
+  if(before.capabilities?.includes('catalogGuides.v1')){
+    const required=['guide.program.basic','guide.program.events','guide.program.parallel','guide.program.structured','guide.program.modules'];
+    const inspected=journal!.operations.slice(0,saveIndex).flatMap(op=>{
+      const guide=op.receipt?.catalog;
+      return guide?.operation==='inspect'&&guide.category==='guides'&&isDeepStrictEqual(guide.definition,roomGuide(guide.capability))?[guide.capability]:[];
+    });
+    if(required.some(id=>!inspected.includes(id)))throw new Error('Composite program skipped a required shared guide before authoring: '+required.filter(id=>!inspected.includes(id)).join(', '));
+    evidence.guides={required,inspected};await save();
+  }
+
   const wait = async (label: string, accepts: (state: RoomAgentState) => boolean) => {
     const deadline = Date.now() + 15_000; let last: RoomAgentState;
     do { last = await inspect(); if (accepts(last)) return capture(label, last); await new Promise(resolve => setTimeout(resolve, 100)); } while (Date.now() < deadline);

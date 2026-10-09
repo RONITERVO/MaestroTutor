@@ -7,6 +7,7 @@ import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {RoomProbeChannel} from '../src/headless/roomTransport';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
+import {roomGuide} from '../shared/prompts/roomguides';
 import {ROOM_TASK_LIMITS} from '../shared/roomTaskBudget';
 const directory=process.argv[2];if(!directory)throw new Error('Supply the fresh, explicitly started native probe directory.');
 const channel=await RoomProbeChannel.connect(directory,120000);
@@ -448,6 +449,25 @@ try{
  assert.equal(mixedMovement.output?.virtualView,false);assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),presentationRevision);
  await writeFile(join(directory,'book-native-mixed-movement.json'),JSON.stringify({boundary:'Generated book opt-in and real native receipt in a partial backdrop. Physical walking is tested separately; no headset proof.',mixedMovement},null,2));
  await page.screenshot({path:join(directory,'book-native-mixed-movement.png')});
+
+
+ // Guides follow the same native search/inspect path without changing the room.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Catalog category',{exact:true}).selectOption('guides');
+ await page.getByLabel('Search guides',{exact:true}).fill('guide.program.events');await page.getByRole('button',{name:'Search',exact:true}).click();
+ await page.getByRole('button',{name:/Events and persistent state.*guide.program.events/}).click();
+ await page.getByRole('region',{name:'Guide reference',exact:true}).waitFor();
+ const guide=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);
+ assert.ok(guide?.operation==='inspect'&&guide.category==='guides');
+ assert.deepEqual(guide.definition,roomGuide('guide.program.events'));
+ assert.equal(await page.getByRole('button',{name:'Run action now',exact:true}).count(),0);
+ await page.getByRole('button',{name:'Read guide.program.basic',exact:true}).click();
+ await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='guides'&&c.capability==='guide.program.basic';});
+ const prerequisite=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);
+ assert.ok(prerequisite?.operation==='inspect'&&prerequisite.category==='guides');assert.deepEqual(prerequisite.definition,roomGuide('guide.program.basic'));
+ assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),presentationRevision);
+ await page.screenshot({path:join(directory,'book-native-guides.png')});
+ await writeFile(join(directory,'book-native-guides.json'),JSON.stringify({boundary:'Original book guide controls with actual native search and inspect. No provider or physical-headset claim.',guide,prerequisite},null,2));
 
 
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();

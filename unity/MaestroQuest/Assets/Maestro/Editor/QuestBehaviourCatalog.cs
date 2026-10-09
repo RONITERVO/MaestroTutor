@@ -23,7 +23,7 @@ namespace Maestro.Quest.Editor
             var extensions=new[]{".cs",".shader",".cginc",".hlsl",".asmdef",".asmref"};
             var sources=Directory.GetFiles("Assets/Maestro/Runtime","*",SearchOption.AllDirectories)
                 .Where(path=>extensions.Contains(Path.GetExtension(path),StringComparer.OrdinalIgnoreCase))
-                .Concat(new[]{"Assets/Maestro/Resources/MaestroRoomAudio.mixer"})
+                .Concat(new[]{"Assets/Maestro/Resources/MaestroRoomAudio.mixer","Assets/Maestro/Resources/RoomGuides.json"})
                 .Concat(Directory.GetFiles("Assets/Maestro/Resources/Creation/Templates","*",SearchOption.AllDirectories).Where(path=>string.Equals(Path.GetExtension(path),".json",StringComparison.OrdinalIgnoreCase)))
                 .Concat(Directory.GetFiles("Assets/Maestro/Resources/Programs/Modules","*",SearchOption.AllDirectories).Where(path=>string.Equals(Path.GetExtension(path),".json",StringComparison.OrdinalIgnoreCase)))
                 .Select(path=>path.Replace("\\","/").Substring("Assets/Maestro/".Length))
