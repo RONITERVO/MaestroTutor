@@ -3773,3 +3773,31 @@ Desktop service, browser and provider evidence is recorded in
 [the release coverage](QUEST_AGENT_RELEASE_COVERAGE.md#mixed-view-screen-sharing-parity--2026-10-09).
 It does not establish that Quest compositor capture or WebView canvas playback
 works on the installed version.
+
+
+## Passthrough-window acceptance (pending)
+
+Use a development package containing `passthroughWindows.v1`; do not infer its
+presence from an older installed build. Save an opening on a plane of an authored
+frame, then one on a scanned wall's exact surface layer. No ink is required.
+
+- Compare reveal 0, 0.5 and 1 against full virtual backdrop, partial backdrop and
+  normal passthrough. Check both eyes, ellipse edges, reverse-side views, nearby
+  geometry and oblique angles. Windows must not reveal through nearer opaque
+  virtual objects; inspect transparent foreground/overlap sorting separately.
+- Compare new real objects, hands and controllers in front of the opening and its
+  frame. Record actual results for real-depth enabled/disabled and full-backdrop
+  settings; plane-mask depth alone is not the physical depth of those objects.
+- Move/turn the virtual world. The authored frame moves with it; the scanned-wall
+  opening remains at its exact physical anchor. Lose tracking, reload, switch the
+  scanned room and restore the original anchor; hidden content must not jump to
+  another wall. Check Undo and explicit rebind.
+- Take a virtual-only snapshot and a deliberately shared composed view. The first
+  must omit the masks and contain no physical pixels; compare the latter with the
+  actual headset display. Opening creation alone must not start camera sharing.
+- Exercise app focus, sleep/wake, passthrough stop/restart, final-window removal and
+  visibility-layer fade. Measure sustained frame time and memory with the current
+  16-window bound, active physics, animated actors, speech and camera sharing.
+
+Desktop evidence is recorded in `QUEST_AGENT_RELEASE_COVERAGE.md`; it establishes
+source and rendering behavior in the test environment, not physical acceptance.

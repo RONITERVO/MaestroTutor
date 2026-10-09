@@ -2250,3 +2250,62 @@ Retained attempts and limits:
 
 Private local artifacts stay ignored. No hardware result, permission behavior,
 physical texture quality or sustained frame-time acceptance is inferred here.
+
+
+## Passthrough-window desktop parity — 2026-10-09
+
+The shared plane/surface system now owns saved rectangular/elliptical openings,
+with independent reveal, physical/virtual anchoring and unchanged collision or
+camera-sharing policies. Original-book forms, programs and the agent use the same
+catalog, exact identities and native revision guards. This checkpoint covers the
+following desktop evidence; it does not establish hardware acceptance.
+
+- Native: 1,041 EditMode pass. The first full PlayMode run had 925 passes, five
+  new-window failures and three expected optional private-file skips. After the
+  corrections below, all ten affected window/capture PlayMode cases pass. The
+  combined coverage is 930 passing unique PlayMode cases; this is not described
+  as a fresh full-suite run of the final source.
+- GPU RGBA readback passes partial reveal, opaque/translucent foreground,
+  translucent background removal, overlap, ellipse edges, reverse views and
+  two sampled eye positions. Virtual-only capture explicitly excludes masks.
+  Physical-anchor tests cover immediate virtual-world movement, later frames,
+  wrong room, missing anchor and exact recovery.
+- Web: 2,824 tests in 307 files pass. Final window/current-input contracts pass
+  all 16 cases after the native fact correction. Build, lint, probe typing,
+  generated-catalog equality/source, prompt ownership and core boundaries pass.
+- Original book **a4a61d72f8554e519fe18d32a62578ae** passes the complete
+  Chrome/native journey, including plane creation, half-reveal elliptical opening,
+  removal and reload without action replay. Provider replies are scripted here.
+- Real BYOK **ec587d8399404fda8c1d9f7546727510** and managed
+  **34bd62627f7b4dbc9c783cd192f3a5ac** pass three ordinary chat requests: create
+  a freestanding open frame with full reveal; set half reveal; remove only the
+  opening while retaining the frame and surface. No creation is seeded. Exact
+  saved identities and geometry, unrelated objects, physics and room presentation
+  are checked. Desktop `renderingReady` stays false, and repeated handoff does not
+  replay effects or spend again. Neither run has a failed native receipt.
+- Managed billing for these three turns reconciles **463 credits / USD 0.450820**,
+  excluding introduction: 262/120/81 credits, no mismatches or outstanding
+  reservations. Planning calls are 8/2/3 BYOK and 10/2/3 managed. Peak planning
+  prompt sizes are 38,536/44,083/26,705 and 43,487/48,683/26,460 respectively.
+  These are functionality/cost observations, not a latency improvement claim.
+
+Retained failures and repairs:
+
+- Missing AR subsystem assembly references and a room-format filename mismatch
+  were corrected. The filename/version relationship now has regression coverage.
+- Unity forbids native material-block creation from a MonoBehaviour field
+  initializer; initialization is now lazy on the main thread. This caused the
+  five new-window failures in the first full interaction run.
+- The first anchor test fixture returned virtual-frame coordinates after moving
+  the world. The corrected fixture behaves like the SDK’s fixed physical anchors;
+  immediate and subsequent-frame preservation both pass.
+- Book run **cbcd436bf8b447f08e66192e4ce3916e** exposed a real empty-list fact
+  bug before an object had any windows. The fact now uses its declared structured
+  type. Fresh-object and last-window-removal tests pass, as does the complete book
+  rerun. This failure was not treated as a successful manual journey.
+
+Private evidence is retained under `.quest-evidence/windows` and the named native
+runs. Quest stereo/composed view, real hands/controllers/unscanned foreground,
+anchor recovery during locomotion, oblique transparency and sustained window
+budget performance remain pending in QUEST_DEVICE_QA.md. Imported surroundings,
+regional streaming and the wider v1 release gates remain open.

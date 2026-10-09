@@ -140,6 +140,11 @@ namespace Maestro.Quest.Editor
             // A Resources material keeps the dynamically used shader in player builds.
             const string pigmentPath = "Assets/Maestro/Resources/PencilPalette.mat";
             if (!AssetDatabase.LoadAssetAtPath<Material>(pigmentPath)) AssetDatabase.CreateAsset(IllustratedMaterials.Create(IllustratedMaterials.Paper), pigmentPath);
+            const string windowPath="Assets/Maestro/Resources/PassthroughWindow.mat";
+            if(!AssetDatabase.LoadAssetAtPath<Material>(windowPath)){
+                var shader=Shader.Find("Maestro/PassthroughWindow");if(!shader)throw new InvalidOperationException("Missing passthrough window shader");
+                AssetDatabase.CreateAsset(new Material(shader){enableInstancing=true},windowPath);
+            }
             // Runtime glTF decoding uses these before applying the shared pencil material.
             foreach (var shaderName in new[] { "Standard", "UniGLTF/UniUnlit" })
             {

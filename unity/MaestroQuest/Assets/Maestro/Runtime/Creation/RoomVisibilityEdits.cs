@@ -60,6 +60,8 @@ namespace Maestro.Quest.Creation
             }
         }
         void ApplyVisibility(RoomObjectData data,RoomItem item,RoomDocument document) {
+            var windows=item.GetComponent<RoomWindowView>();if(!windows&&data.windows.Length>0)windows=item.gameObject.AddComponent<RoomWindowView>();if(windows)windows.Apply(data,GetComponentInParent<VirtualRoomView>());
+            windows?.ConfigureVisibility(data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);
             var view=item.GetComponent<RoomAppearanceView>();
             if(!view&&(data.appearanceBindings.Length>0||data.visibilityLayer!=""))view=item.gameObject.AddComponent<RoomAppearanceView>();
             if(view){view.ConfigureImages(ImageTextures);view.ConfigureLayer(data,document.appearances,data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);}

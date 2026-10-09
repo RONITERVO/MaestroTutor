@@ -15,6 +15,7 @@
     "Unity.XR.Interaction.Toolkit",
     "Unity.XR.Hands",
     "Unity.XR.ARFoundation",
+    "Unity.XR.ARSubsystems",
     "TLab.Capture",
     "UniGLTF",
     "UniGLTF.Utils",

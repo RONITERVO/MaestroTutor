@@ -16,7 +16,7 @@ export interface ConstructionResources {
 const white=(c:Pigment|undefined)=>!!c&&c.r===1&&c.g===1&&c.b===1&&c.a===1;
 export function validPrototypeResources(p:PrototypeResources):boolean {
  const styles=p.appearanceBindings??[],sounds=p.audioEmitters??[],parts=p.geometry.recipe?.parts??[];
- if((styles.length||sounds.length||p.environmentProfile)&&p.version!==2&&p.version!==3||p.visibilityLayer&&p.version!==3||p.version===3&&!p.visibilityLayer)return false;
+ if((styles.length||sounds.length||p.environmentProfile)&&p.version!==2&&p.version!==3&&p.version!==4||p.visibilityLayer&&p.version!==3&&p.version!==4||p.version===3&&!p.visibilityLayer)return false;
  const keys=styles.map(b=>b.kind==='root'?'root':b.kind==='part'?'part:'+b.partId:'material:'+b.modelHash+':'+b.materialIndex);
  if(new Set(keys).size!==keys.length||new Set(sounds.map(e=>e.id)).size!==sounds.length)return false;
  for(const b of styles){

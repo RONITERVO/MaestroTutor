@@ -11,6 +11,7 @@ interface Surface extends SurfaceGeometry {version:number;id:string;part:string;
 export interface CreationPrototype extends PrototypeResources {
  physics:{mode:string};heightFields?:unknown[];sculptTips?:{part:string;enabled:boolean}[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string;color?:{r:number;g:number;b:number;a:number}}[]};points?:V[];radius?:number};
+ windows?:{version:number;id:string;surface:string;shape:string;reveal:number}[];
  snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{enabled:boolean;version:number;mode?:string;part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
 }
 const hasLength=(p:V[])=>p.some(v=>(v.x-p[0].x)**2+(v.y-p[0].y)**2+(v.z-p[0].z)**2>.000001);
@@ -27,6 +28,8 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
    if(!hasLength(ink.points)||ink.points.some(v=>length2(v)>100||Math.abs(v.z)>.000001||Math.abs(v.x)+ink.radius>s.width*.5+.000001||Math.abs(v.y)+ink.radius>s.height*.5+.000001))return false;
   }
  }
+ const windows=p.windows??[];
+ if(windows.length>4||windows.length>0&&p.version!==4||new Set(windows.map(w=>w.id)).size!==windows.length||new Set(windows.map(w=>w.surface)).size!==windows.length||windows.some(w=>w.version!==1||! /^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(w.id)||!['rectangle','ellipse'].includes(w.shape)||!Number.isFinite(w.reveal)||w.reveal<0||w.reveal>1||!p.surfaces.some(s=>s.id===w.surface&&(s.shape??'plane')==='plane')))return false;
  if(p.snapPoints&&(new Set(p.snapPoints.map(s=>s.id)).size!==p.snapPoints.length||p.snapPoints.some(s=>length2(s.frame.position)>100)))return false;
  if(points>32768||p.drawingTips.some(t=>!part(t.part)||length2(t.position)>100||!['draw','erase'].includes(t.mode??'draw')||t.version!==((t.mode??'draw')==='erase'?2:1)))return false;
  if(p.sculptTips?.some(t=>!part(t.part))||p.sculptTips?.some(t=>t.enabled)&&p.drawingTips.some(t=>t.enabled))return false;

@@ -6101,3 +6101,11 @@ work, even when functional assertions pass.
 Actual Quest comfort, transfer latency, texture memory and sustained performance
 remain hardware acceptance work. This increment prepares a local development
 package; no device operation, release key, upload or deployment is included.
+
+
+### Passthrough-window desktop checkpoint — 2026-10-09
+
+- Added bounded saved window components on the existing plane/surface system, with a shared catalog action/fact and original-book generated form. Physical hosts reuse exact scanned drawing-layer anchors; ordinary hosts remain virtual objects. Window reveal is independent of material opacity, collision policy and camera sharing. Room format 34 / portable prototype format 4 retain the component and refuse silently lost references.
+- The renderer uses framebuffer coverage masks in the transparent sort, with opaque depth rejection and explicit virtual-only capture exclusion. Full-opacity surroundings can retain a passthrough underlay for requested windows. A missing headset passthrough subsystem leaves masks dormant rather than pretending desktop output is the physical room.
+- Desktop verification passes 1,041 EditMode checks, the full suite’s 925 passing PlayMode cases and the final ten focused cases that resolve all five initial window failures (three optional private-file skips). The 2,824 web tests, build, lint, probe typing and catalog checks pass. The original-book journey and separate real managed/BYOK creation → half reveal → removal journeys pass. Managed turns reconcile 463 credits / USD 0.450820, excluding introduction, without mismatches or outstanding reservations. Detailed failures and evidence remain in QUEST_AGENT_RELEASE_COVERAGE.md. No hardware acceptance or release candidate is claimed; Quest remains on the existing cooling/charge hold.
+- Still required: stereo/composed headset acceptance with real hands/controllers and unscanned foreground objects, physical/virtual anchor behavior during locomotion and recovery, transparent sorting at oblique views, performance under the window budget, imported surroundings/region streaming, and the remaining v1 release gates. The limits of the current bounded region remain implementation limits rather than the final promise for user-created countries.

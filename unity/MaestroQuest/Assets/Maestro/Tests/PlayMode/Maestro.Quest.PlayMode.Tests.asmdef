@@ -5,6 +5,8 @@
     "Meta.XR.Audio",
     "Maestro.Quest",
     "Unity.XR.Interaction.Toolkit",
+    "Unity.XR.ARFoundation",
+    "Unity.XR.ARSubsystems",
     "Maestro.Quest.TestFixtures",
     "UniGLTF",
     "UniGLTF.Utils",

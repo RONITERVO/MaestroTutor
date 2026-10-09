@@ -43,7 +43,7 @@ namespace Maestro.Quest.Creation {
                 var book=Find("book");var selected=new HashSet<Renderer>();
                 foreach(var item in objects.Where(pair=>pair.Key!="book").Select(pair=>pair.Value).Where(item=>item))
                     foreach(var renderer in item.GetComponentsInChildren<Renderer>())
-                        if(renderer&&renderer.enabled&&renderer.gameObject.activeInHierarchy&&(!book||!renderer.transform.IsChildOf(book.transform)))selected.Add(renderer);
+                        if(renderer&&!RoomWindowView.IsMask(renderer)&&renderer.enabled&&renderer.gameObject.activeInHierarchy&&(!book||!renderer.transform.IsChildOf(book.transform)))selected.Add(renderer);
                 var rules=GetComponent<Maestro.Quest.Rules.RoomRules>();if(rules)foreach(var renderer in rules.ViewButtonRenderers)selected.Add(renderer);
                 if(selected.Count>1024)throw new InvalidOperationException("This view has too many renderers to capture");
                 // The temporary layer is private to this synchronous render. Never include an unrelated renderer.

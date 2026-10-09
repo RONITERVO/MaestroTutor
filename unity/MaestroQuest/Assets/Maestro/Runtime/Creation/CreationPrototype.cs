@@ -31,6 +31,7 @@ namespace Maestro.Quest.Creation
         public ObjectPhysicsSettings physics;
         public RoomRecipe recipe;
         public CollisionRecipe collision;
+        public RoomWindow[] windows=Array.Empty<RoomWindow>();
         public DrawingSurface[] surfaces=Array.Empty<DrawingSurface>();
         public DrawingTip[] drawingTips=Array.Empty<DrawingTip>();
         public RoomSnapPoint[] snapPoints=Array.Empty<RoomSnapPoint>();
@@ -47,7 +48,7 @@ namespace Maestro.Quest.Creation
             "drawing"=>RoomObjectKind.Drawing,"model"=>RoomObjectKind.ImportedModel,"recipe"=>RoomObjectKind.Assembly,_=>null};
         internal RoomObjectData Instantiate(string name,Vector3 position,Quaternion rotation,float scale) {
             var data=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=Kind(kind).Value,position=position,rotation=rotation,scale=scale,
-                waterTraversal=waterTraversal.Copy(),appearanceBindings=appearanceBindings.Select(b=>b.Copy()).ToArray(),audioEmitters=audioEmitters.Select(e=>e.Copy()).ToArray(),environmentProfile=environmentProfile,visibilityLayer=visibilityLayer,color=color,recipe=recipe?.Copy(),collision=collision?.Copy(),surfaces=surfaces.Select(s=>s.Copy()).ToArray(),drawingTips=drawingTips.Select(t=>t.Copy()).ToArray(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),
+                waterTraversal=waterTraversal.Copy(),appearanceBindings=appearanceBindings.Select(b=>b.Copy()).ToArray(),audioEmitters=audioEmitters.Select(e=>e.Copy()).ToArray(),environmentProfile=environmentProfile,visibilityLayer=visibilityLayer,color=color,recipe=recipe?.Copy(),collision=collision?.Copy(),windows=windows.Select(w=>w.Copy()).ToArray(),surfaces=surfaces.Select(s=>s.Copy()).ToArray(),drawingTips=drawingTips.Select(t=>t.Copy()).ToArray(),snapPoints=snapPoints?.Select(p=>p.Copy()).ToArray()??Array.Empty<RoomSnapPoint>(),
                 heightFields=heightFields?.Select(f=>f.Copy()).ToArray()??Array.Empty<RoomHeightField>(),sculptTips=sculptTips?.Select(t=>t.Copy()).ToArray()??Array.Empty<SculptTip>(),materialStores=materialStores?.Select(s=>s.Copy()).ToArray()??Array.Empty<RoomMaterialStore>(),containers=containers?.Select(c=>c.Copy()).ToArray()??Array.Empty<RoomContainer>(),points=points?.ToArray(),radius=radius,modelHash=modelHash};
             RoomControls.SetPhysics(data,physics,out _);
             if(motion!=null)data.motion=new RoomMotion {loop=motion.loop,frames=motion.frames.Select(f=>new MotionFrame {
@@ -60,6 +61,7 @@ namespace Maestro.Quest.Creation
             // Unity creates default serializable reference objects for absent fields.
             result.recipe=result.kind=="recipe"?result.recipe:null;result.points=result.kind=="drawing"?result.points:null;
             result.modelHash=result.kind=="model"?result.modelHash:null;
+            if(!value.ContainsKey("windows"))result.windows=Array.Empty<RoomWindow>();
             if(!value.ContainsKey("waterTraversal"))result.waterTraversal=new();
             if(!value.ContainsKey("collision"))result.collision=null;if(!value.ContainsKey("motion"))result.motion=null;
             if(!value.ContainsKey("appearanceBindings"))result.appearanceBindings=Array.Empty<AppearanceBinding>();
@@ -69,12 +71,12 @@ namespace Maestro.Quest.Creation
             return result;
         }
         public bool Validate(out string error) {
-            error="Provide a version-1, version-2 or version-3 creation prototype with idle geometry, valid components and local motion";
-            if(waterTraversal==null||!waterTraversal.Valid||version is not (1 or 2 or 3)||visibilityLayer==null||version<3&&visibilityLayer!=""||version==3&&visibilityLayer==""||appearanceBindings==null||audioEmitters==null||environmentProfile==null||appearanceBindings.Any(b=>b==null)||audioEmitters.Any(e=>e==null)||version==1&&HasResources||Kind(kind)==null||!RoomControls.ValidPhysics(physics)||surfaces==null||drawingTips==null||surfaces.Any(s=>s==null)||drawingTips.Any(t=>t==null)||
+            error="Provide a version-1, version-2, version-3 or version-4 creation prototype with idle geometry, valid components and local motion";
+            if(waterTraversal==null||!waterTraversal.Valid||version is not (1 or 2 or 3 or 4)||windows==null||version<4&&windows.Length>0||visibilityLayer==null||version<3&&visibilityLayer!=""||version==3&&visibilityLayer==""||appearanceBindings==null||audioEmitters==null||environmentProfile==null||appearanceBindings.Any(b=>b==null)||audioEmitters.Any(e=>e==null)||version==1&&HasResources||Kind(kind)==null||!RoomControls.ValidPhysics(physics)||surfaces==null||drawingTips==null||surfaces.Any(s=>s==null)||drawingTips.Any(t=>t==null)||
                 recipe?.playing==true||motion!=null&&!motion.Valid)return false;
             if(recipe!=null&&!recipe.Validate(out error)||collision!=null&&!collision.Validate(out error))return false;
-            var shallow=new RoomObjectData {kind=Kind(kind).Value,recipe=recipe,surfaces=surfaces,drawingTips=drawingTips,snapPoints=snapPoints,containers=containers,heightFields=heightFields,sculptTips=sculptTips,materialStores=materialStores};
-            if(!DrawingSurface.ValidateCollection(shallow,out error)||!DrawingTip.ValidateCollection(shallow,out error)||!RoomSnapPoint.ValidateCollection(shallow,out error)||!RoomContainer.ValidateCollection(shallow,out error)||!RoomHeightField.ValidateCollection(shallow,out error)||!SculptTip.ValidateCollection(shallow,out error)||!RoomMaterialStore.ValidateCollection(shallow,out error))return false;
+            var shallow=new RoomObjectData {kind=Kind(kind).Value,recipe=recipe,windows=windows,surfaces=surfaces,drawingTips=drawingTips,snapPoints=snapPoints,containers=containers,heightFields=heightFields,sculptTips=sculptTips,materialStores=materialStores};
+            if(!RoomWindow.ValidateCollection(shallow,out error)||!DrawingSurface.ValidateCollection(shallow,out error)||!DrawingTip.ValidateCollection(shallow,out error)||!RoomSnapPoint.ValidateCollection(shallow,out error)||!RoomContainer.ValidateCollection(shallow,out error)||!RoomHeightField.ValidateCollection(shallow,out error)||!SculptTip.ValidateCollection(shallow,out error)||!RoomMaterialStore.ValidateCollection(shallow,out error))return false;
             var data=Instantiate("Prototype",Vector3.zero,Quaternion.identity,1);data.motion=null;
             // Local component shape is checked here; the containing blueprint must
             // close every definition reference before it can create anything.
@@ -88,8 +90,8 @@ namespace Maestro.Quest.Creation
         internal static CreationPrototype Capture(RoomObjectData data) {
             if(data==null||data.IsBuiltIn)throw new ArgumentException("Choose a created object");
             var copy=data.Copy();var q=Quaternion.Inverse(copy.rotation);
-            return new CreationPrototype {version=copy.visibilityLayer!=""?3:CreationResources.Uses(copy)?2:1,appearanceBindings=copy.appearanceBindings,audioEmitters=copy.audioEmitters,environmentProfile=copy.environmentProfile,visibilityLayer=copy.visibilityLayer,kind=copy.kind switch {RoomObjectKind.ImportedModel=>"model",RoomObjectKind.Assembly=>"recipe",_=>copy.kind.ToString().ToLowerInvariant()},
-                waterTraversal=copy.waterTraversal.Copy(),color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,heightFields=copy.heightFields,sculptTips=copy.sculptTips,materialStores=copy.materialStores,
+            return new CreationPrototype {version=copy.windows.Length>0?4:copy.visibilityLayer!=""?3:CreationResources.Uses(copy)?2:1,appearanceBindings=copy.appearanceBindings,audioEmitters=copy.audioEmitters,environmentProfile=copy.environmentProfile,visibilityLayer=copy.visibilityLayer,kind=copy.kind switch {RoomObjectKind.ImportedModel=>"model",RoomObjectKind.Assembly=>"recipe",_=>copy.kind.ToString().ToLowerInvariant()},
+                waterTraversal=copy.waterTraversal.Copy(),color=copy.color,physics=RoomControls.Physics(copy),recipe=copy.recipe,collision=copy.collision,windows=copy.windows,surfaces=copy.surfaces,drawingTips=copy.drawingTips,snapPoints=copy.snapPoints,containers=copy.containers,heightFields=copy.heightFields,sculptTips=copy.sculptTips,materialStores=copy.materialStores,
                 points=copy.points,radius=copy.radius,modelHash=copy.modelHash,motion=copy.motion==null?null:new PrototypeMotion {loop=copy.motion.loop,frames=copy.motion.frames.Select(f=>new PrototypeFrame {
                     time=f.time,position=q*(f.position-copy.position)/copy.scale,rotation=(q*f.rotation).normalized,scale=f.scale/copy.scale}).ToArray()}};
         }

@@ -1057,3 +1057,27 @@ inspection and acceptance in Chrome with the actual Unity runtime. This proves
 the shared manual path without spending provider credits. Both routes remain
 desktop integration evidence; Quest transfer latency, focus/permission behavior,
 visual quality and memory/performance need separate hardware acceptance.
+
+
+## Passthrough openings on shared planes
+
+`-ProviderScenario PassthroughWindow` uses the original managed/BYOK chat and
+agent with a fresh English/Spanish profile. The learner asks for an open picture
+frame with a full-reveal opening, then half reveal, then removal of the opening
+while keeping the frame and its surface. No native creation is seeded. The agent
+must discover and use the ordinary creation, plane and window capabilities.
+
+The probe checks exact native window/surface identities, reveal values, removal,
+retained geometry, and unchanged unrelated objects, physics and presentation.
+Desktop `renderingReady` must remain false. `journey.json` retains the first-turn
+provider/billing evidence; `provider-scenarios.json` retains the subsequent turns
+and native semantic assertions. Duplicate handoff cannot replay effects or spend.
+
+The deterministic `-Journey Book` path configures a plane, saves an elliptical
+half-reveal opening and removes it through the original generated forms. It saves
+`book-native-window.json` and its screenshot. This uses scripted provider replies;
+real provider acceptance is separate. Native GPU tests verify RGBA composition,
+front opaque/translucent objects, erased background, overlap, ellipse edges and
+both sampled eye offsets. Physical anchor tests use fixed world coordinates like
+the SDK, including immediate world-movement preservation and subsequent frames.
+These checks do not replace hardware stereo, real occlusion or performance QA.

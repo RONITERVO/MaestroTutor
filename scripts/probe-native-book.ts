@@ -482,7 +482,29 @@ try{
  await page.screenshot({path:join(directory,'book-native-mixed-movement.png')});
 
 
+ // Passthrough masks are ordinary shared surface components in generated book forms.
+ await openNamedAction('Edit a drawing surface','object.surface.edit');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByLabel('Action inputs surface',{exact:true}).fill('WindowPlane');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const windowPlane=await runNamedAction('object.surface.edit');
+ await openNamedAction('Edit a passthrough opening','object.window.edit');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByLabel('Action inputs surface',{exact:true}).fill('WindowPlane');
+ await page.getByLabel('Action inputs reveal',{exact:true}).fill('0.5');
+ await page.getByLabel('Action inputs shape',{exact:true}).selectOption('ellipse');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const windowSaved=await runNamedAction('object.window.edit');assert.equal(windowSaved.call.arguments.reveal,.5);assert.equal(windowSaved.call.arguments.shape,'ellipse');
+ await page.screenshot({path:join(directory,'book-native-window.png')});
+ await page.getByLabel('Variant',{exact:true}).selectOption('1');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByLabel('Action inputs window',{exact:true}).fill('Window');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const windowRemoved=await runNamedAction('object.window.edit');assert.equal(windowRemoved.call.arguments.operation,'remove');
+ await writeFile(join(directory,'book-native-window.json'),JSON.stringify({boundary:'Actual original book generated forms, native plane/mask save/removal and revision guards. Desktop only; mask rendering is disabled without headset passthrough.',windowPlane,windowSaved,windowRemoved},null,2));
+
  // Guides follow the same native search/inspect path without changing the room.
+ const guideRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  await page.getByLabel('Catalog category',{exact:true}).selectOption('guides');
  await page.getByLabel('Search guides',{exact:true}).fill('guide.program.events');await page.getByRole('button',{name:'Search',exact:true}).click();
@@ -496,7 +518,7 @@ try{
  await page.waitForFunction(()=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='guides'&&c.capability==='guide.program.basic';});
  const prerequisite=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);
  assert.ok(prerequisite?.operation==='inspect'&&prerequisite.category==='guides');assert.deepEqual(prerequisite.definition,roomGuide('guide.program.basic'));
- assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),presentationRevision);
+ assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),guideRevision);
  await page.screenshot({path:join(directory,'book-native-guides.png')});
  await writeFile(join(directory,'book-native-guides.json'),JSON.stringify({boundary:'Original book guide controls with actual native search and inspect. No provider or physical-headset claim.',guide,prerequisite},null,2));
 

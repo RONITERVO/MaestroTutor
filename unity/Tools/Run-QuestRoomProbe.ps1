@@ -6,7 +6,7 @@ param(
  [Parameter(Mandatory)][string]$BuildMirror,
  [string]$Prompt,
  [string]$Profile = 'quest-probe',
- [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','LearnerConversation')][string]$ProviderScenario,
+ [ValidateSet('ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','PassthroughWindow','LearnerConversation')][string]$ProviderScenario,
  [string]$SpeechFixture,
  [switch]$SyntheticRoomScan,
  [switch]$SyntheticSound,
@@ -27,6 +27,7 @@ if($ProviderScenario){
  if(![string]::IsNullOrWhiteSpace($Prompt)){throw 'ProviderScenario cannot be combined with Prompt.'}
  if($Journey -eq 'Book' -and $ProviderScenario -ne 'ContextCreateEdit'){throw 'The real-provider book supports ContextCreateEdit only.'}
  $Prompt='Please create my test object now. Use the definition I gave in the previous message.'
+ if($ProviderScenario -eq 'PassthroughWindow'){$Prompt='Please prepare a little freestanding picture frame called RoomWindow, with a rectangular opening that fully reveals my real room when I use my Quest later. Leave its centre open, with no solid picture behind it. I know I am testing without the headset right now; save it ready for later. Keep the overall room view and physics as they are.'}
  if($ProviderScenario -eq 'GeneratedImage'){$Prompt='Could you put the picture you just made in this chat on the outside cover of my book? Keep the pages readable and everything else as it is.'}
  if($ProviderScenario -eq 'ImportedImage'){$Prompt='I imported a picture called Blue tiles.png. Could you put that picture on the outside cover of my book? Keep the pages readable and everything else as it is.'}
  if($ProviderScenario -eq 'ImportedAudio'){$Prompt='I imported a sound called Little bell.wav. Could you give the book that little chime, so it comes from the book itself? Attach the imported sound, but do not play it yet. Keep everything else as it is.'}

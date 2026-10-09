@@ -1,11 +1,20 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Collections.Generic;
+using Maestro.Quest.Creation;
 using UnityEngine;
 namespace Maestro.Quest.Interaction
 {
     public sealed partial class VirtualRoomView
     {
+        readonly HashSet<RoomWindowView> windowRequests=new();
+        internal bool WindowRenderingReady=>isActiveAndEnabled&&passthrough&&passthrough.enabled&&passthrough.subsystem?.running==true;
+        internal int WindowRequests=>windowRequests.Count;
+        internal void SetWindowRequest(RoomWindowView source,bool requested){
+            bool changed=requested?windowRequests.Add(source):windowRequests.Remove(source);
+            if(changed&&presentationOwned&&passthrough)passthrough.enabled=passthroughWasEnabled&&(BackdropOpacity<1||windowRequests.Count>0);
+        }
         Color homeBackground;
         CameraClearFlags homeFlags;
         bool passthroughWasEnabled, presentationOwned;
@@ -27,7 +36,7 @@ namespace Maestro.Quest.Interaction
                 passthroughWasEnabled=passthrough&&passthrough.enabled;presentationOwned=true;
             }
             BackdropOpacity=opacity;RealDepth=realDepth;
-            if(passthrough)passthrough.enabled=passthroughWasEnabled&&opacity<1;
+            if(passthrough)passthrough.enabled=passthroughWasEnabled&&(opacity<1||windowRequests.Count>0);
             // Meta OpenXR's camera subsystem premultiplies clear RGB by alpha.
             // This fades only the neutral backdrop: authored surfaces and the book
             // keep their independently configured materials and opacity.

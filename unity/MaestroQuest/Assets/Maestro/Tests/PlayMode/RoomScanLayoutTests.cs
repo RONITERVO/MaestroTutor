@@ -16,8 +16,8 @@ namespace Maestro.Quest.Tests
     {
         sealed class LayoutSource:IRoomLayoutSource
         {
-            public string RoomId=Guid.NewGuid().ToString("N");public ScannedSurface[] Entries=Array.Empty<ScannedSurface>();public int Omitted,Reads;public bool Available=true,Throw;
-            public bool TryRead(Transform frame,out string roomId,out ScannedSurface[] entries,out int omitted,out string reason){Reads++;if(Throw)throw new IOException("SDK read failed");roomId=RoomId;entries=Entries;omitted=Omitted;reason=Available?null:"No current Meta room is loaded";return Available;}
+            public string RoomId=Guid.NewGuid().ToString("N");public ScannedSurface[] Entries=Array.Empty<ScannedSurface>();public int Omitted,Reads;public bool Available=true,Throw,WorldCoordinates;
+            public bool TryRead(Transform frame,out string roomId,out ScannedSurface[] entries,out int omitted,out string reason){Reads++;if(Throw)throw new IOException("SDK read failed");roomId=RoomId;entries=WorldCoordinates?Entries.Select(source=>{var entry=source.Copy();entry.Position=frame.InverseTransformPoint(source.Position);entry.Rotation=Quaternion.Inverse(frame.rotation)*source.Rotation;return entry;}).ToArray():Entries;omitted=Omitted;reason=Available?null:"No current Meta room is loaded";return Available;}
         }
         static ScannedSurface LayoutEntry(int id)=>new(){Id=id.ToString("x32"),Label=id%2==0?"FLOOR":"WALL_FACE",Position=new Vector3(id*.125f,1.234567f,-.1234567f),Rotation=Quaternion.Euler(13,19,27),Plane=new Rect(-1,-.5f,2,1),Volume=id%2==0?new Bounds(new Vector3(.1f,.2f,-.3f),new Vector3(2,1,.2f)):null};
         IEnumerator LoadedLayout(ScannedRoom scan,SceneSource platform,LayoutSource layoutSource)
