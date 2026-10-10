@@ -18,6 +18,19 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,CollisionGeometry> collisions=new();
         readonly Dictionary<string,HeightFieldGeometry> fields=new();
         readonly Dictionary<string,RecipeVisual> recipes=new();
+        readonly Dictionary<string,PreparedImportedModel> models=new();
+        internal void EnlistModel(PreparedImportedModel model,RoomJournal.PreparedEdit edit)
+        {
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");
+            RoomObjectData data=null;foreach(var item in edit.Snapshot().objects)if(item.id==model.Target){data=item;break;}
+            model.Validate(data);models.Add(model.Target,model);resources.Add(model);
+        }
+        internal PreparedImportedModel TakeModel(RoomObjectData data)
+        {
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");
+            if(!models.TryGetValue(data.id,out var model))return null;model.Validate(data);
+            models.Remove(data.id);resources.Remove(model);return model;
+        }
         bool ended;
         internal CollisionGeometry TakeCollision(string target,CollisionRecipe source)
         {
@@ -72,6 +85,6 @@ namespace Maestro.Quest.Creation
                 return prepared;
             }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();collisions.Clear();fields.Clear();recipes.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();}
     }
 }

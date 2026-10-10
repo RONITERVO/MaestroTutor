@@ -6494,7 +6494,50 @@ Native checks cover queue overflow, prompt cancellation, stable ownership, retry
 and never-active candidates alongside existing import and avatar-replacement tests.
 An actual native queued/loading/ready observation is a shared web-contract fixture.
 
-This closes an admission gap in the existing model loader. It does not make room
-source acceptance wait for a new model's readiness, reserve every presentation
-resource, or implement regional streaming. Those activation/transaction boundaries,
+This closes an admission gap in the existing model loader. Explicit import
+acceptance now prepares geometry as described below; authored copies and restores
+still acknowledge durable references independently of asynchronous residency.
+This does not reserve every presentation resource or implement regional streaming. Those activation/transaction boundaries,
 coordinated regional admission and the existing release gates remain open.
+
+
+### Prepared object import acceptance — 2026-10-10
+
+The shared manual/agent import workshop now prepares the native object before
+saving its placement. A hidden candidate owns the exact model, fitted geometry,
+optional rigid collision and acoustic components, with an immutable world/region/
+entity owner. The existing source budget covers queued, loading and ready stages.
+Transfer validates the target, model hash and geometry settings and happens once
+through the existing room-edit preparation owner. Completion now exposes usable
+geometry and interaction handles, rather than a saved placeholder still loading.
+
+Budget refusal, import/geometry failure, cancellation or failed persistence disposes
+the candidate and retains the preview for an explicit retry. A verified private
+library copy may remain, as before. Queued work cancels promptly; already-running
+native work drains under its retiring lease without holding the authored edit.
+Room pauses are latched as interruptions, including a hold released before the
+next frame. Release cannot restart placement. Preparation also checks workspace,
+temporary-session, runtime, hand and authoring state before accepting anything.
+
+The final journal candidate is captured after asynchronous preparation so unrelated
+accepted room changes are retained. Saved placement remains one Undo operation;
+receipt replay cannot add another object. Existing copy/restore/Redo behavior still
+preserves durable asset references independently of residency, without promising
+ready geometry. This distinction is required for later regional streaming.
+
+Hidden imported models explicitly dispose their pencil meshes/materials: Unity
+may omit OnDestroy for a component that was never active. The same idempotent
+cleanup covers abandoned avatar candidates and regular imported objects.
+
+Eight native checks cover refusal, queued cancellation, never-active cleanup,
+failed-save retry, agent completion with concurrent edits/receipt replay/Undo,
+brief pause, exact single-use transfer and invalid geometry. Three failures were
+reproduced on `648159b3`; the brief-pause failure was reproduced separately before
+adding the interruption latch. Complete evidence is in the release coverage ledger.
+
+This is native model preparation for explicit object import acceptance, not global
+admission or all-resource rollback. Selection outlines and final presentation
+bindings still allocate during reconciliation; generic source copies and restores
+remain asynchronous. Regional loading, aggregate budgets, provider/headset checks
+and release gates remain open. No save-format migration or additional AI API is
+introduced.

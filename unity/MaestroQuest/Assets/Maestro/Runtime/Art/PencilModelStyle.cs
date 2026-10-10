@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Maestro.Quest.Art
 {
     /// <summary>Shared pigment and graphite treatment for supplied and imported models.</summary>
-    public sealed class PencilModelStyle : MonoBehaviour
+    public sealed class PencilModelStyle : MonoBehaviour, System.IDisposable
     {
         readonly List<Object> owned = new();
         readonly Dictionary<Material, Color> colors = new();
@@ -76,6 +76,7 @@ namespace Maestro.Quest.Art
 
         public void Tint(Color color) { foreach (var pair in colors) if (pair.Key) pair.Key.color = pair.Value * color; }
 
-        void OnDestroy() { foreach (var item in owned) ArtResources.Release(item); }
+        public void Dispose() { foreach (var item in owned) ArtResources.Release(item);owned.Clear();colors.Clear();importedMaterials.Clear(); }
+        void OnDestroy()=>Dispose();
     }
 }

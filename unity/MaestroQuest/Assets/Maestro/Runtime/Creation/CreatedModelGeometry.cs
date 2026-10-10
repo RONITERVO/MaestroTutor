@@ -17,6 +17,7 @@ namespace Maestro.Quest.Creation
             internal readonly RoomModelGeometry Settings;
             ImportedCollisionGeometry collision;
             internal ModelGeometryPreparation(CreatedRoomObject owner,RoomModelGeometry settings){this.owner=owner;Settings=settings.Copy();if(settings.meshCollision)collision=new ImportedCollisionGeometry(owner.Model,settings.walkable,owner.collisionOwner);}
+            internal ModelGeometryPreparation(CreatedRoomObject owner,RoomModelGeometry settings,ImportedCollisionGeometry admitted){this.owner=owner;Settings=settings.Copy();collision=admitted;}
             internal ImportedCollisionGeometry Take(){var value=collision;collision=null;return value;}
             public void Dispose(){collision?.Dispose();collision=null;if(owner&&owner.preparedGeometry==this)owner.preparedGeometry=null;}
         }

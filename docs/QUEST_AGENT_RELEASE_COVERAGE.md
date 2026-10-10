@@ -2833,3 +2833,30 @@ This does not establish all-resource transactionality, world streaming, physical
 Quest behavior or paid-provider acceptance. Existing HTTP 402, headset cooling/charge,
 experimental acoustic-map crash and release gates remain unchanged. No install,
 signing, deployment, upload or Store operation belongs to this increment.
+
+
+### Prepared imported-object acceptance
+
+`PreparedImportTests` reproduces three native failures against `648159b3`: import
+acceptance could report success with a full model budget, could finish while its
+native geometry remained queued, and never-active pencil styles leaked their
+cloned mesh/material. All three pass with prepared native ownership and explicit
+style disposal. A separate same-frame pause case failed with state-only polling;
+its interruption now stays cancelled after the hold is released.
+
+The eight native cases also cover failed persistence with preview retention and
+retry, actual agent completion with usable colliders, concurrent room edits,
+receipt replay, one-step Undo/Redo, exact source transfer once, and invalid geometry
+cleanup. The 20-case focused group includes existing manual preview acceptance,
+shared picker/receipt behavior, model queue and native residency coverage.
+
+Baseline, intermediate, final focused, complete native/headless/book and exact-commit
+CI results are retained in `.quest-evidence/model-activation/verification.json`.
+Full acceptance requires terminal exits and diagnostic gates, not just a written
+report. No new physical Quest or paid-provider acceptance is claimed.
+
+Explicit import acceptance now promises a usable object; saved source copies and
+restores still preserve references independently of native readiness. Global
+resource admission, other presentation allocations, regions/streaming and remaining
+v1 requirements are not completed by this increment. Existing HTTP 402, headset
+cooling/charge, experimental acoustic-map crash and release gates remain unchanged.

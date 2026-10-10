@@ -249,11 +249,12 @@ namespace Maestro.Quest.Creation
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
-        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null) {
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,PreparedImportedModel modelPreparation=null) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             if(!journal.Prepare(replacements,removals,out var edit,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather))return false;
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null)return false;
+                if(modelPreparation!=null)native.EnlistModel(modelPreparation,edit);
                 if(!TemporaryRoom) {
                     CompleteSave(wait:true);
                     if(!edit.Current(journal)){error="The room changed before saving; inspect it before retrying";return false;}

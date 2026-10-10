@@ -81,7 +81,13 @@ namespace Maestro.Quest.Creation
             acousticItem = item; acousticBody = rigid;
             collider.gameObject.layer = RoomPhysicsLayers.Item;
             if (importedObject) { rigid.SetGeometryReady(false);SetCollisionShape(data.collisionShape,true); }
-            if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
+            if (data.kind == RoomObjectKind.ImportedModel) {
+                using var candidate=preparation?.TakeModel(data);
+                if(candidate!=null){
+                    candidate.Adopt(transform,out var loaded,out var collision);Model=loaded;
+                    using var geometry=preparedGeometry=new ModelGeometryPreparation(this,data.modelGeometry,collision);ApplyModelGeometry(data.modelGeometry);
+                } else if(library!=null) LoadModel(data.modelHash,library,collider);
+            }
             ApplyCollision(data.collision,preparation);SetCollisionShape(data.collisionShape);
             return item;
         }
@@ -147,12 +153,7 @@ namespace Maestro.Quest.Creation
                 Model = root.AddComponent<ImportedModel>();
                 Model.ConfigureResourceOwner(modelOwner);
                 await Model.LoadAsync(asset); if (!this) return;
-                // Only rigid visual meshes: no bounding-box approximation across
-                // holes, no bind-pose avatar skin or decorative pencil overlay.
-                foreach (var filter in Model.Instance.GetComponentsInChildren<MeshFilter>())
-                    if (filter.GetComponent<MeshRenderer>() is { } renderer && !filter.GetComponent<PencilMarks>() &&
-                        !renderer.sharedMaterials.Any(material => material && material.HasProperty("_AlphaCutoff") && material.GetFloat("_AlphaCutoff") > 0))
-                        Book.AcousticSurface.Attach(filter.gameObject, filter.sharedMesh);
+                Model.AttachObjectAcoustics();
                 ApplyModelGeometry(requestedModelGeometry);
             }
             catch (System.Exception error) { if (this) {ModelStatus = ModelGeometryIssue = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again.";modelGeometryReady=false;SetCollisionShape(collisionShape,true);} }

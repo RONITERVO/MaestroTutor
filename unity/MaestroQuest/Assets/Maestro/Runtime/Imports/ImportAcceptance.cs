@@ -57,7 +57,7 @@ namespace Maestro.Quest.Imports
                     if((destination is "object" or "maestro") && (editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording)))
                         throw new ModelImportException("Room interaction changed while importing. Finish the active edit, then retry this preview.");
                     if(destination=="object"){
-                        if(!editor.CreateImportedModel(asset.Hash,out objectId,out var error))throw new ModelImportException(error);
+                        objectId=await editor.CreateImportedModelAsync(asset.Hash,token);
                         editor.Select(editor.Find(objectId));
                     }else if(destination=="maestro"){
                         if(!editor.BeginMaestroModel(asset.Hash,revision,token,out var loading,out var error))throw new ModelImportException(error);

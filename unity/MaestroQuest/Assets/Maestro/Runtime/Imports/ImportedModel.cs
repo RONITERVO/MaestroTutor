@@ -104,7 +104,7 @@ namespace Maestro.Quest.Imports
                     loaded = avatar.GetComponent<RuntimeGltfInstance>();
                 }
                 else loaded = await GltfUtility.LoadBytesAsync("selected.glb", asset.Bytes, awaitCaller, new IllustratedGltfMaterials());
-                if (!this || destroyed) { loaded.Dispose(); ReleaseBudget(); return; }
+                if (!this || destroyed) { DisposeInstance(loaded); ReleaseBudget(); return; }
                 instance = loaded;AssetHash=asset.Hash;
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }
                 animationPlayer = instance.GetComponent<Animation>();
@@ -130,7 +130,7 @@ namespace Maestro.Quest.Imports
                 instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();reservation.Mark("ready");
             }
             catch (OperationCanceledException) when (destroyed&&!enteredImporter) { ReleaseBudget(); }
-            catch { if (loaded) loaded.Dispose(); instance = null; ArtResources.Release(generatedAvatar); generatedAvatar = null; ReleaseBudget(); throw; }
+            catch { if (loaded) DisposeInstance(loaded); instance = null; ArtResources.Release(generatedAvatar); generatedAvatar = null; ReleaseBudget(); throw; }
             finally {
                 waitingForImporter?.Dispose();waitingForImporter=null;loading=false;
                 if(destroyed||!this)ReleaseBudget();
@@ -176,6 +176,15 @@ namespace Maestro.Quest.Imports
             }
             foreach (var pair in initialWeights) if (pair.Key) for (int i = 0; i < pair.Value.Length; i++) pair.Key.SetBlendShapeWeight(i, pair.Value[i]);
         }
+        internal void AttachObjectAcoustics()
+        {
+            // Only rigid visual meshes: not skins, cutouts or pencil overlays.
+            foreach(var filter in instance.GetComponentsInChildren<MeshFilter>(true))
+                if(filter.GetComponent<MeshRenderer>() is { } renderer&&!filter.GetComponent<PencilMarks>()&&
+                    !renderer.sharedMaterials.Any(material=>material&&material.HasProperty("_AlphaCutoff")&&material.GetFloat("_AlphaCutoff")>0))
+                    Book.AcousticSurface.Attach(filter.gameObject,filter.sharedMesh);
+        }
+        static void DisposeInstance(RuntimeGltfInstance value){if(!value)return;value.GetComponent<PencilModelStyle>()?.Dispose();value.Dispose();}
         void ReleaseBudget() { reservation?.Dispose();reservation=null; }
         void OnApplicationPause(bool value) { if (value) Stop(); }
         void OnApplicationFocus(bool value) { if (!value) Stop(); }
@@ -191,7 +200,7 @@ namespace Maestro.Quest.Imports
                 // different object's slow native import.
                 waitingForImporter.Cancel();ReleaseBudget();
             } else if(loading)reservation?.Mark("retiring");else ReleaseBudget();
-            if(instance)instance.Dispose();instance=null;animationPlayer=null;initialWeights.Clear();
+            if(instance)DisposeInstance(instance);instance=null;animationPlayer=null;initialWeights.Clear();
             ArtResources.Release(generatedAvatar);generatedAvatar=null;
         }
         void OnDestroy()=>Dispose();
