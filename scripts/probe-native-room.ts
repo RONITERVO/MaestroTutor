@@ -272,6 +272,12 @@ try{
   const emptyImage=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.imageReservation',version:1,arguments:{index:0}}}]);
   if(emptyImage.catalog?.available!==false||lease.state().sceneRevision!==imagesBefore)throw new Error('Empty image observation must be unavailable and read-only.');
   await writeFile(join(directory,'image-reservations.json'),JSON.stringify({boundary:'Actual empty workspace image cache, not process memory or regional streaming.',budget:imageUsage,empty:factReply(emptyImage)},null,2));
+  const audioBudget=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioBudget',version:1}}]);
+  const audioUsage=factReply(audioBudget).value as {sources:number;owners:number;retiring:number;reservedPcmBytes:number;readyPcmBytes:number};
+  if(!audioBudget.catalog?.available||audioUsage.sources!==0||audioUsage.owners!==0||audioUsage.retiring!==0||audioUsage.reservedPcmBytes!==0||audioUsage.readyPcmBytes!==0)throw new Error('Fresh workspace retained room audio resources.');
+  const emptyAudio=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioReservation',version:1,arguments:{index:0}}}]);
+  if(emptyAudio.catalog?.available!==false||lease.state().sceneRevision!==imagesBefore)throw new Error('Empty audio observation must be unavailable and read-only.');
+  await writeFile(join(directory,'audio-reservations-empty.json'),JSON.stringify({boundary:'Actual empty shared room PCM ledger, not measured process memory or streaming.',budget:audioUsage,empty:factReply(emptyAudio)},null,2));
   const scanLayout=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.scan',version:1}}]);
   const scanValue=factReply(scanLayout).value as {available:boolean;stateId:string;count:number};
   if(scanValue.available||scanValue.stateId!==''||scanValue.count!==0)throw new Error('Desktop scan facts must not invent a physical room.');
@@ -1100,6 +1106,13 @@ try{
   const startSample=started.execution?.selected?.output as SoundSample|undefined;
   if(started.execution?.selected?.phase!=='completed'||!startSample?.identity.instance||startSample.playback.lifetime!=='room'||startSample.playback.seconds<=0)throw new Error('Independent sound was not handed off after native consumption');
   const soundInstance=startSample.identity.instance;
+  const ownershipRevision=lease.state().sceneRevision;
+  const soundReservation=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioReservation',version:1,arguments:{index:0}}}]);
+  const reservation=factReply(soundReservation).value as {reservationId:string;sourceId:string;state:string;owners:number;readyPcmBytes:number};
+  if(reservation.sourceId!==soundId||reservation.state!=='ready'||reservation.owners!==1||reservation.readyPcmBytes<=0)throw new Error('Native playing sound lost its decoded source reservation');
+  const soundOwnership=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioOwner',version:1,arguments:{reservationId:reservation.reservationId,index:0}}}]);
+  const owner=factReply(soundOwnership).value as {instanceId:string;worldId:string;regionId:string;target:string;role:string;sourceId:string};
+  if(owner.instanceId!==soundInstance||owner.worldId.length!==32||owner.regionId.length!==32||owner.target!=='book'||owner.role!=='audio'||owner.sourceId!==soundId||lease.state().sceneRevision!==ownershipRevision)throw new Error('Audio owner observation changed the room or lost native identity');
   const readSound=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.instance',version:1,arguments:{target:'book',instance:soundInstance}}}]);
   const activeSounds=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.instances',version:1}}]);
   if(!(activeSounds.catalog?.value as {entries:{instance:string}[]}).entries.some(v=>v.instance===soundInstance))throw new Error('Room sound discovery lost the handed-off instance');
@@ -1126,12 +1139,17 @@ try{
   if((soundContinued.catalog!.value as SoundSample).playback.seconds<=.3)throw new Error('Loop did not continue beyond its finite source duration');
   const soundStopped=await controlSound('stop'),soundTerminal=await readSound();
   if((soundTerminal.catalog!.value as SoundSample).playback.phase!=='stopped')throw new Error('Sound stop did not retain its terminal receipt');
+  const releasedAudio=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioBudget',version:1}}]);
+  const releasedUsage=factReply(releasedAudio).value as {sources:number;owners:number;reservedPcmBytes:number;readyPcmBytes:number};
+  if(releasedUsage.sources!==0||releasedUsage.owners!==0||releasedUsage.reservedPcmBytes!==0||releasedUsage.readyPcmBytes!==0)throw new Error('Stopped sound retained PCM or admission');
+  const staleAudioOwner=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioOwner',version:1,arguments:{reservationId:reservation.reservationId,index:0}}}]);
+  if(staleAudioOwner.catalog?.available!==false)throw new Error('Released sound ownership remained available');
   await execute([{action:'rules',rule:{action:'stop',target:soundWatchId}}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:soundWatchId}]}}]);
   const removed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:lease.state().objects.find(o=>o.id==='book')!.objectRevision,emitter:'probeSound'}}}}]);
   const sourceRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.definition',version:2,arguments:{id:soundId}}}]);
   const cleaned=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]);
-  await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
+  await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,soundReservation,soundOwnership,releasedAudio,staleAudioOwner,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
  }
  const gripBefore=lease.state();
  const gripSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure construction grip snapping',offset:0}}]);

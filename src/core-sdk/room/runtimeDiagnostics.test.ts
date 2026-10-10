@@ -4,6 +4,7 @@ import {expect,it} from 'vitest';
 import native from '../../../test-fixtures/browser/runtimeDiagnostics.json';
 import reservations from '../../../test-fixtures/browser/modelReservations.json';
 import images from '../../../test-fixtures/browser/imageReservations.json';
+import audio from '../../../test-fixtures/browser/audioReservations.json';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validFactValue,validateFactArguments} from '../../../shared/behaviourFacts';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
@@ -72,4 +73,30 @@ it('preserves shared image residency and distinct immutable binding owners from 
  expect(validFactValue('runtime.imageBudget',{...images.budget,textureBytes:'unknown'})).toBe(false);
  expect(validFactValue('runtime.imageReservation',{...images.ready,privatePath:'hidden'})).toBe(false);
  expect(validFactValue('runtime.imageOwner',{...images.owners[0],leaseId:123})).toBe(false);
+});
+
+it('preserves actual shared PCM ownership without counting each voice as a separate buffer',()=>{
+ expect(validFactValue('runtime.audioBudget',audio.budget)).toBe(true);
+ expect(validFactValue('runtime.audioReservation',audio.ready)).toBe(true);
+ expect(audio.budget).toMatchObject({sources:1,owners:2,retiring:0,readyPcmBytes:240000,reservedPcmBytes:240008,sourceLimit:8,ownerLimit:8,pcmByteLimit:11520064});
+ expect(audio.ready).toMatchObject({kind:'tone',assetHash:'',state:'ready',owners:2,readyPcmBytes:audio.budget.readyPcmBytes});
+ expect(new Set(audio.owners.map(owner=>owner.instanceId)).size).toBe(2);
+ expect(new Set(audio.owners.map(owner=>owner.target)).size).toBe(2);
+ for(const owner of audio.owners){
+  expect(validFactValue('runtime.audioOwner',owner)).toBe(true);
+  expect(owner).toMatchObject({reservationId:audio.ready.reservationId,worldId:audio.ready.worldId,regionId:audio.ready.regionId,sourceId:audio.ready.sourceId,role:'audio',emitter:'sound'});
+  expect(owner.sourceRevision).toBeGreaterThan(0);
+ }
+ expect(behaviourFact('runtime.audioBudget')?.features).toEqual(['runtimeDiagnostics.v1']);
+ for(const id of ['runtime.audioReservation','runtime.audioOwner'])expect(behaviourFact(id)?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
+ for(const index of [0,7]){
+  expect(validateFactArguments('runtime.audioReservation',1,{index})).toBeNull();
+  expect(validateFactArguments('runtime.audioOwner',1,{reservationId:audio.ready.reservationId,index})).toBeNull();
+ }
+ for(const index of [-1,8,.5,'0'])expect(validateFactArguments('runtime.audioReservation',1,{index})).not.toBeNull();
+ for(const args of [{reservationId:'old',index:0},{reservationId:audio.ready.reservationId,index:8},{reservationId:audio.ready.reservationId,index:0,stop:true}])expect(validateFactArguments('runtime.audioOwner',1,args)).not.toBeNull();
+ expect(validFactValue('runtime.audioBudget',{...audio.budget,readyPcmBytes:'unknown'})).toBe(false);
+ expect(validFactValue('runtime.audioReservation',{...audio.ready,privatePath:'hidden'})).toBe(false);
+ expect(validFactValue('runtime.audioOwner',{...audio.owners[0],sourceRevision:'unknown'})).toBe(false);
+ expect(behaviourFact('runtime.audioBudget')?.description).toContain('not measured');
 });

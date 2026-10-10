@@ -4044,7 +4044,7 @@
         "audio.output.ready",
         "audio.voice.available"
       ],
-      "description": "Start an independently controlled room sound. Explicit lifetime='room' transfers playback to the current room only when native PCM consumption is confirmed; the result returns the exact instance and current control revision. The program then continues without waiting for the sound to end. loop=true repeats the captured source, including its envelope, until explicitly stopped or its room/emitter becomes unavailable. loop=false ends after the finite source. Stopping the starting action before handoff cancels its preparation; stopping that task after a successful handoff does not retract the room-owned sound. Use audio.control with this exact instance to pause, resume, set gain or stop. Read audio.instance or await audio.instance.changed for later outcomes; a successful start does not mean completed playback. Never use repeated starts as a loop. One active instance per emitter, eight per room, with no silent replacement. Emitter edits/deletion, room replacement, focus loss and audio-device reset cancel playback; restore does not restart it. Only the executable procedural source adapter is currently supported; imported clips and live adapters are still pending.",
+      "description": "Start an independently controlled room sound. Explicit lifetime='room' transfers playback to the current room only when native PCM consumption is confirmed; the result returns the exact instance and current control revision. The program then continues without waiting for the sound to end. loop=true repeats the captured source, including its envelope, until explicitly stopped or its room/emitter becomes unavailable. loop=false ends after the finite source. Stopping the starting action before handoff cancels its preparation; stopping that task after a successful handoff does not retract the room-owned sound. Use audio.control with this exact instance to pause, resume, set gain or stop. Read audio.instance or await audio.instance.changed for later outcomes; a successful start does not mean completed playback. Never use repeated starts as a loop. One active instance per emitter, eight shared world voices across active and retiring workspaces, with no silent replacement. Emitter edits/deletion, room replacement, focus loss and audio-device reset cancel playback; restore does not restart it. Procedural tones and imported PCM/float WAV clips use the same bounded native transport. Live-source adapters remain pending. Decoding sources keep shared admission until cancelled work drains; runtime.audioBudget, runtime.audioReservation and runtime.audioOwner expose these resources without controlling playback.",
       "example": {
         "target": "maestro",
         "emitter": "beep",
@@ -40244,6 +40244,116 @@
       ]
     },
     {
+      "id": "runtime.audioBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "sources": "number",
+          "owners": "number",
+          "retiring": "number",
+          "reservedPcmBytes": "number",
+          "readyPcmBytes": "number",
+          "sourceLimit": "number",
+          "ownerLimit": "number",
+          "pcmByteLimit": "number"
+        }
+      },
+      "label": "Shared room audio budget",
+      "description": "Process-wide admission for procedural and imported room-sound decoders and their voice owners, including older workspaces whose cancelled tasks are still draining. Owners share a decoded source inside one workspace when its exact saved definition matches. reservedPcmBytes budgets mono 24 kHz signed-16 PCM from declared duration plus four samples for rounding/tolerance; readyPcmBytes counts actual decoded samples once per source. These are not measured or peak memory and exclude file bytes, decoder/tone scratch arrays, voice ring buffers, Unity carriers, speech/Live/browser audio and native DSP. Eight sources and eight owners are shared across workspaces. Retiring work keeps source/PCM admission until it drains, with no active voice owners. No inspection starts, stops, pauses or unloads audio.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.audioReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "sourceId": "text",
+          "kind": "text",
+          "assetHash": "text",
+          "definitionHash": "text",
+          "state": "text",
+          "owners": "number",
+          "reservedPcmBytes": "number",
+          "readyPcmBytes": "number"
+        }
+      },
+      "label": "Room sound reservation",
+      "description": "Read one shared room-sound buffer by index zero to runtime.audioBudget.sources minus one. Indices may shift; reservationId identifies only this runtime allocation. World/region and exact source ID/definitionHash describe the copied source; assetHash is empty for tones. State is loading, ready, failed or retiring. ready confirms decoded samples, not audible playback. Multiple owners share its PCM cost. A stopped final owner retires the source; pending work remains admitted until its task finishes even if its workspace is gone. Use runtime.audioOwner for active instance holders. Reads are detached and never trigger decoding, eviction, replay or persistence. This is not regional streaming.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 7.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.audioOwner",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "instanceId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text",
+          "emitter": "text",
+          "sourceId": "text",
+          "sourceRevision": "number"
+        }
+      },
+      "label": "Room sound owner",
+      "description": "Read one active holder of an exact runtime.audioReservation.reservationId, by index zero to its owners minus one. instanceId is the actual audio.instance identity; its phase, lifetime, progress and controls remain in audio.instance. World/region/target, emitter, role audio and source revision are copied ownership, never a saved replacement for entity references. Several voices can share one buffer and each can stop independently. Retiring entries have zero owners. A released reservation ID stays unavailable; reloading creates a new ID. Reading cannot make an offscreen sound eligible for removal or change its playback.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 7.0
+          }
+        },
+        "required": [
+          "reservationId",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "reservationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "runtime.motionCache",
       "version": 1,
       "type": {
@@ -42229,7 +42339,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
-      "sha256": "aa998e09f85259dd5463b8505de905edbb467332ef299b423a3971e872820839"
+      "sha256": "9d9923765f02c35a9637e388f099c156d4eea79db00297b533b4f13776c5a132"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
@@ -42521,7 +42631,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "19a64bdf773ce13306d5add085754ea2ee7423aab06858feb88288a17e11b766"
+      "sha256": "d525ad7c387462ffd3d3e5d7b8caf3830aa6359eab0716e187fa1580f1339623"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -42662,6 +42772,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
       "sha256": "dfa7970dd31d7d88f4e637ee68dd6a37b186dd43b5ce6aacbcb7c250738dadf6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
+      "sha256": "aed8756f1c06b56d3bcaba4a44d04490949b8a4faec3a9c7636a64ea6b21a018"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
@@ -43057,7 +43171,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
-      "sha256": "13da4ac82b491571d4f0ee74c0e919d3598ff91480d7822381a09c086b3e7600"
+      "sha256": "a41c769878d2c31e991c323896b99b08dacc8675debf6af0bcb546142b20a3a8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -43201,7 +43315,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "8729f79fc0cff08b888ac07b019ad27a931f9323fa1d81449193cdadf4d6a508"
+      "sha256": "ccebb010ec7d90b2792be0f0298b3ecc8395eecbc53cd0e2d92bbe7a7a862982"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -43305,7 +43419,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelReservations.cs",
-      "sha256": "754830799a464ba35323ff2f1cfd3470b8d035b76f885f0f5ad197506970c248"
+      "sha256": "d3725e15520368f8f2dc06227c6daa04f357bdfe5f0f8beca6423eac2badfefe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionBatch.cs",
@@ -43709,7 +43823,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6acf8d41243f414b970f3bf95291d10e8d8cc328c671156e23e9e53503e5d88d"
+      "sha256": "ef90e7da1bbab1cd7d866aa37afd7dfb6accf6119135342bc35f99f887384370"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

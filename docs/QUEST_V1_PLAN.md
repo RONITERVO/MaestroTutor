@@ -6277,3 +6277,34 @@ still need coordinated activation before user-built towns/countries can be
 claimed. Visibility, real-room collision participation and resource retention
 remain separate decisions. See the release coverage ledger for actual native,
 book and real-provider evidence and remaining hardware gates.
+
+
+### Owned room-audio admission before regional streaming — 2026-10-10
+
+Room sounds now use the same immutable world/region/entity owner value as model
+and appearance resources. Each playing or preparing instance owns a lease. Voices
+with the same saved source definition inside one workspace share decoded PCM;
+stopping one voice cannot retire another voice's buffer. Stopping the last owner
+releases its renderer and instance buffers immediately. An unfinished decoder
+keeps process-wide admission until cancellation has drained, independently of the
+old component or workspace. Disabled components no longer depend on another
+frame to clear their decoded cache; bounded terminal playback history keeps only
+receipt data, not the producer or decoded samples.
+
+Eight source reservations and eight active owners are enforced across workspaces
+before preparation starts. Reserved duration-based PCM and actual ready PCM are
+observed separately; source files, decode scratch, rings, carriers, native DSP and
+Maestro speech/Live are outside these numbers. `runtime.audioBudget`,
+`runtime.audioReservation` and `runtime.audioOwner` expose the same native ledger
+to book forms, headless clients, agents and programs. Runtime instance IDs connect
+to existing playback controls; allocation IDs are never saved entity references.
+Reads cannot start, stop or evict sounds. Source definitions and private WAVs
+remain available after playback resources are released.
+
+This closes an audio-lifetime prerequisite. It does not implement regional
+streaming, distance-based voice arbitration, live-source adapters or automatic
+resumption. A sound being out of view is not permission to unload it. Geometry,
+navigation, active task dependencies and cross-region persistence still need
+coordinated admission; the present bounded region remains the runtime limit.
+The earlier intermittent native acoustic-map crash is a separate unresolved
+issue. Full verification and provider/hardware limits are in the coverage ledger.

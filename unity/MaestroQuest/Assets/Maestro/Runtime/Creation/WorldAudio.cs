@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
@@ -15,9 +14,8 @@ namespace Maestro.Quest.Creation
     [DefaultExecutionOrder(260)]
     public sealed partial class WorldAudio:MonoBehaviour
     {
-        internal const int MaximumVoices=8;
-        sealed class Decoded {internal Task<short[]> Pending;internal readonly CancellationTokenSource Cancel=new();internal int References;}
-        readonly Dictionary<string,Decoded> decoded=new(StringComparer.Ordinal);
+        internal const int MaximumVoices=AudioReservations.MaximumOwners;
+        readonly Dictionary<string,AudioReservations.Entry> decoded=new(StringComparer.Ordinal);
         readonly Dictionary<string,Instance> instances=new(StringComparer.Ordinal);
         RoomEditor editor;
         bool paused,focused=true;
@@ -39,7 +37,8 @@ namespace Maestro.Quest.Creation
             internal SpeechPcmStream Stream;
             internal SpeechPcmFilter Filter;
             internal short[] Samples;
-            internal readonly short[] Producer=new short[SpeechPcmStream.MaxChunk];
+            internal AudioReservations.Lease Resource;
+            internal short[] Producer=new short[SpeechPcmStream.MaxChunk];
             internal bool Complete,Closed;
             internal double Cursor;
             internal bool Loop,Paused,RoomOwned;
@@ -53,7 +52,7 @@ namespace Maestro.Quest.Creation
             error="Room audio is paused or unavailable";
             if(!editor||!editor.isActiveAndEnabled||!isActiveAndEnabled||paused||!focused||editor.RuntimeGate.Held)return false;
             error="The room audio voice budget is full; stop or wait for another sound";
-            PruneDecoded();if(instances.Count>=MaximumVoices)return false;
+            PruneDecoded();if(instances.Count>=MaximumVoices||!AudioReservations.VoiceAvailable)return false;
             error=null;return true;
         }
         internal bool Begin(string target,string emitter,out Instance voice,out string error,bool loop=false)
@@ -67,20 +66,15 @@ namespace Maestro.Quest.Creation
             if(!definition.Validate(out error)||!Anchor(item,config,out _,out _,out error))return false;
             var v=new Instance {Id=Guid.NewGuid().ToString("N"),Target=target,Emitter=emitter,Source=definition.id,SourceRevision=editor.AudioRevision(definition.id),ObjectRevision=editor.ObjectRevision(target),ProgressAt=Time.realtimeSinceStartupAsDouble,Session=editor.TemporarySessionId,Item=item,Attachment=config.Copy(),Definition=JsonUtility.ToJson(config),CacheKey=JsonUtility.ToJson(definition),Loop=loop,Gain=config.gain};
             try {
-                if(!decoded.TryGetValue(v.CacheKey,out var asset)) {
-                    PruneDecoded();if(decoded.Count>=MaximumVoices){error="The sound decoder is busy; wait for an earlier preparation to finish";return false;}
-                    asset=new Decoded();var cancel=asset.Cancel.Token;var recipe=definition.Copy();
-                    asset.Pending=recipe.kind=="clip"?editor.Sounds.DecodeAsync(recipe.assetHash,cancel,recipe.seconds):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return pcm;},cancel);
-                    decoded.Add(v.CacheKey,asset);
-                }
-                // A cancelled preparation cannot be revived under the same identity.
-                if(asset.Cancel.IsCancellationRequested){error="The earlier sound preparation is stopping; try again when it finishes";return false;}
-                asset.References++;instances.Add(v.Id,v);Note(v);voice=v;error=null;return true;
+                decoded.TryGetValue(v.CacheKey,out var cached);var recipe=definition.Copy();
+                v.Resource=AudioReservations.Acquire(cached,recipe,new RoomResourceOwner(editor.WorldIdentity,target,"audio"),v.Id,emitter,v.SourceRevision,
+                    cancel=>recipe.kind=="clip"?editor.Sounds.DecodeAsync(recipe.assetHash,cancel,recipe.seconds):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return pcm;},cancel));
+                decoded[v.CacheKey]=v.Resource.Resource;instances.Add(v.Id,v);Note(v);voice=v;error=null;return true;
             } catch(Exception e){Close(v,e.Message);error="Could not prepare room sound: "+e.Message;return false;}
         }
         void PruneDecoded()
         {
-            foreach(var pair in decoded.Where(p=>p.Value.References==0&&p.Value.Pending.IsCompleted).ToArray()){_=pair.Value.Pending.Exception;pair.Value.Cancel.Dispose();decoded.Remove(pair.Key);}
+            foreach(var pair in decoded.Where(p=>p.Value.Retiring).ToArray())decoded.Remove(pair.Key);
         }
         bool OpenRenderer(Instance v)
         {
@@ -156,13 +150,14 @@ namespace Maestro.Quest.Creation
             if(v.Closed)return;if(v.Stream!=null)v.Cursor=v.Stream.Read(AudioSettings.dspTime).Played/(double)AudioTone.SampleRate;
             v.Closed=true;v.Error=error;v.Phase=phase??(v.Complete?"completed":"failed");Note(v);v.Stream?.Close();v.Filter?.Stop();
             if(v.Output){v.Output.Stop();v.Output.clip=null;Destroy(v.Output.gameObject);}if(v.Carrier)Destroy(v.Carrier);
-            if(instances.ContainsKey(v.Id)&&decoded.TryGetValue(v.CacheKey,out var asset)&&--asset.References==0)asset.Cancel.Cancel();
-            v.Samples=null;v.Stream=null;v.Filter=null;v.Output=null;v.Carrier=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
+            var resource=v.Resource?.Resource;v.Resource?.Dispose();v.Resource=null;
+            if(resource!=null&&resource.Retiring&&decoded.TryGetValue(v.CacheKey,out var cached)&&ReferenceEquals(resource,cached))decoded.Remove(v.CacheKey);
+            v.Samples=null;v.Producer=null;v.Stream=null;v.Filter=null;v.Output=null;v.Carrier=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
         }
         void CloseAll(string reason){foreach(var voice in instances.Values.ToArray())Cancel(voice,reason);}
         void LateUpdate(){foreach(var voice in instances.Values.ToArray())Tick(voice);PruneDecoded();}
         void OnEnable()=>AudioSettings.OnAudioConfigurationChanged+=AudioChanged;
-        void OnDisable(){AudioSettings.OnAudioConfigurationChanged-=AudioChanged;CloseAll("Room audio was disabled");}
+        void OnDisable(){AudioSettings.OnAudioConfigurationChanged-=AudioChanged;CloseAll("Room audio was disabled");decoded.Clear();}
         void AudioChanged(bool _)=>CloseAll("The audio device changed; start the sound again");
         void OnApplicationPause(bool value){paused=value;if(value)CloseAll("Room audio was suspended");}
         void OnApplicationFocus(bool value){focused=value;if(!value)CloseAll("Room audio lost focus");}

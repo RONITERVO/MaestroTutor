@@ -34,7 +34,7 @@ namespace Maestro.Quest.Imports
         }
         internal static Lease Reserve(ModelAsset asset,RoomResourceOwner owner)
         {
-            if(owner==null||owner.Role=="appearance")throw new ArgumentException("Invalid model resource owner");
+            if(owner==null||owner.Role is ("appearance" or "audio"))throw new ArgumentException("Invalid model resource owner");
             lock(gate){
                 var used=Budget;var info=asset.Inspection;
                 if(used.Models>=ImportedModel.MaximumLiveModels||used.Vertices+(long)info.Vertices>ImportedModel.MaximumLiveVertices||

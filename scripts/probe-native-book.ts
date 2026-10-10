@@ -377,6 +377,15 @@ try{
  await page.screenshot({path:join(directory,'book-native-resource-choices.png')});
  // Optional explicit synthetic WAV: ordinary book forms discover, bind and play
  // exact saved bytes. This does not impersonate the Android file chooser.
+ const readResourceFact=async(id:string,label:string,args:Record<string,string>={})=>{
+  await page!.getByRole('button',{name:'Back to workshop',exact:true}).click();await page!.getByRole('button',{name:'Action catalog',exact:true}).click();
+  await page!.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page!.getByLabel('Search facts',{exact:true}).fill(id);await page!.getByRole('button',{name:'Search',exact:true}).click();
+  await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
+  for(const [name,value] of Object.entries(args))await page!.getByLabel('Fact inputs '+name,{exact:true}).fill(value);
+  if(Object.keys(args).length)await page!.getByRole('button',{name:'Read fact',exact:true}).click();
+  await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
+  return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Resource fact missing');return c.value as Record<string,string|number>;});
+ };
  let importedSound:unknown=null;
  let soundFixture:{hash:string;seconds:number;name:string}|null=null;
  try{soundFixture=JSON.parse(await readFile(join(directory,'sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
@@ -401,7 +410,25 @@ try{
   await page.getByRole('region',{name:'Sound choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-imported-sound.png')});
   await openNamedAction("Play an object's sound",'audio.play');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
   const played=await runNamedAction('audio.play');assert.equal(played.output?.source,clip.output!.id);assert.ok(Number(played.output?.seconds)>=file.seconds-.0001);
-  importedSound={boundary:'Synthetic WAV, original book forms, native library and PCM completion; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played};
+  await openNamedAction('Start independent room sound','audio.start');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
+  await page.getByLabel('Action inputs loop',{exact:true}).check();const started=await runNamedAction('audio.start');
+  const instance=(started.output!.identity as {instance:string}).instance;assert.match(instance,/^[a-f0-9]{32}$/);
+  const observationRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+  const reservation=await readResourceFact('runtime.audioReservation','Room sound reservation',{index:'0'});
+  const budget=await readResourceFact('runtime.audioBudget','Shared room audio budget');
+  const owner=await readResourceFact('runtime.audioOwner','Room sound owner',{reservationId:String(reservation.reservationId),index:'0'});
+  assert.equal(reservation.sourceId,clip.output!.id);assert.equal(reservation.assetHash,file.id);assert.equal(reservation.kind,'clip');assert.equal(reservation.state,'ready');
+  assert.equal(budget.sources,1);assert.equal(budget.owners,1);assert.equal(budget.readyPcmBytes,48000);assert.equal(reservation.readyPcmBytes,budget.readyPcmBytes);
+  assert.equal(owner.instanceId,instance);assert.equal(owner.target,'book');assert.equal(owner.role,'audio');assert.equal(owner.sourceId,clip.output!.id);
+  assert.match(String(owner.worldId),/^[a-f0-9]{32}$/);assert.match(String(owner.regionId),/^[a-f0-9]{32}$/);
+  assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),observationRevision,'Audio observations must not change the room');
+  await page.getByRole('heading',{name:'Room sound owner',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-audio-residency.png')});
+  await openNamedAction('Control a room sound','audio.control');await page.getByLabel('Variant',{exact:true}).selectOption('2');
+  await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs instance',{exact:true}).fill(instance);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  const stopped=await runNamedAction('audio.control');assert.equal((stopped.output!.playback as {phase:string}).phase,'stopped');
+  const released=await readResourceFact('runtime.audioBudget','Shared room audio budget');assert.equal(released.sources,0);assert.equal(released.owners,0);assert.equal(released.readyPcmBytes,0);assert.equal(released.reservedPcmBytes,0);
+  importedSound={boundary:'Synthetic WAV, original book forms, native decoder and PCM consumption, read-only resource ownership, exact-instance stop and final release; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played,started,budget,reservation,owner,stopped,released};
   await writeFile(join(directory,'book-native-imported-sound.json'),JSON.stringify(importedSound,null,2));
  }
  // Optional explicit image fixture follows the original generated forms.
@@ -456,22 +483,14 @@ try{
  await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([acceptedChat.output!.appearanceId,acceptedChat.output!.revision]));
  const chatBinding=await runNamedAction('object.appearance.bind');
  const imageObservationRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
- const readImageFact=async(id:string,label:string,args:Record<string,string>={})=>{
-  await page!.getByRole('button',{name:'Back to workshop',exact:true}).click();await page!.getByRole('button',{name:'Action catalog',exact:true}).click();
-  await page!.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page!.getByLabel('Search facts',{exact:true}).fill(id);await page!.getByRole('button',{name:'Search',exact:true}).click();
-  await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
-  for(const [name,value] of Object.entries(args))await page!.getByLabel('Fact inputs '+name,{exact:true}).fill(value);
-  if(Object.keys(args).length)await page!.getByRole('button',{name:'Read fact',exact:true}).click();
-  await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
-  return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Image fact missing');return c.value as Record<string,string|number>;});
- };
- let imageReservation=await readImageFact('runtime.imageReservation','Shared appearance image reservation',{index:'0'});
+
+ let imageReservation=await readResourceFact('runtime.imageReservation','Shared appearance image reservation',{index:'0'});
  const imageReadyDeadline=Date.now()+10000;
- while(imageReservation.state==='loading'&&Date.now()<imageReadyDeadline){await page.waitForTimeout(100);imageReservation=await readImageFact('runtime.imageReservation','Shared appearance image reservation',{index:'0'});}
+ while(imageReservation.state==='loading'&&Date.now()<imageReadyDeadline){await page.waitForTimeout(100);imageReservation=await readResourceFact('runtime.imageReservation','Shared appearance image reservation',{index:'0'});}
  assert.equal(imageReservation.imageHash,chatHash);assert.equal(imageReservation.state,'ready');assert.equal(imageReservation.owners,1);
- const imageBudget=await readImageFact('runtime.imageBudget','Current room appearance image budget');
+ const imageBudget=await readResourceFact('runtime.imageBudget','Current room appearance image budget');
  assert.equal(imageBudget.entries,1);assert.equal(imageBudget.owners,1);assert.equal(imageBudget.textureBytes,imageReservation.textureBytes);assert.ok(Number(imageBudget.textureBytes)>0);
- const imageOwner=await readImageFact('runtime.imageOwner','Appearance image owner',{reservationId:String(imageReservation.reservationId),index:'0'});
+ const imageOwner=await readResourceFact('runtime.imageOwner','Appearance image owner',{reservationId:String(imageReservation.reservationId),index:'0'});
  assert.equal(imageOwner.target,'book');assert.equal(imageOwner.role,'appearance');assert.equal(imageOwner.imageHash,chatHash);assert.match(String(imageOwner.worldId),/^[a-f0-9]{32}$/);assert.match(String(imageOwner.regionId),/^[a-f0-9]{32}$/);
  assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),imageObservationRevision,'Fact forms must not change the world');
  await writeFile(join(directory,'book-image-residency.json'),JSON.stringify({boundary:'Actual Chrome book forms and native shared image cache. Runtime ownership is not visibility or streaming permission; no provider or physical headset claim.',chatBinding,imageBudget,imageReservation,imageOwner},null,2));

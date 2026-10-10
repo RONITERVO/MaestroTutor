@@ -1155,3 +1155,30 @@ and reusable appearance. Other useful chat outputs remain allowed.
 These observations concern the active workspace's appearance cache. They are
 not measured process RAM/VRAM, visibility tests, automatic eviction or region
 streaming. Physical Quest rendering and performance remain separate acceptance.
+
+
+## Room-audio ownership parity
+
+The ordinary headless journey checks an empty shared audio ledger, then observes
+its actual procedural loop's reservation and owner, linked to the native playback
+instance. Exact-instance stop must release PCM/admission and make the old owner
+unavailable while preserving its terminal playback receipt.
+
+The original-book journey with `-SyntheticSound` additionally loops its imported
+WAV using generated `audio.start` controls, reads the source, cost and book owner
+through generated fact forms, stops that exact instance through `audio.control`,
+and verifies zero remaining PCM/admission. The native source is muted for this
+synthetic desktop check. `book-native-imported-sound.json` retains the complete
+sequence and `book-audio-residency.png` shows the visible owner readback. This
+proves actual native decoding/consumption and shared controls, not audibility or
+headset capture.
+
+`ImportedAudio` extends its real managed/BYOK journey with a natural request to
+repeat the imported chime, followed by read-only inspection of which object owns
+its loaded sound and the decoded cost. The task must discover the actual source
+reservation and exact voice owner through the shared catalog. The actual journal
+is written to `provider-audio-reservation-inspection.json` before assertions;
+query-only commands, unchanged source and budget, and final release after a
+natural stop/remove request are required. Other helpful chat outputs are allowed.
+This scenario is prepared but its new ownership inspection still needs fresh
+provider acceptance after the current upstream billing block is resolved.

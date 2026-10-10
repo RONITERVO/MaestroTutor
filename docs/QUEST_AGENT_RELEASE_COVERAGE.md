@@ -2590,3 +2590,43 @@ and packaged versions are unchanged. Coordinated regional activation, audio and
 geometry/navigation ownership, cross-region persistence and the broader v1
 release gates remain incomplete. The earlier intermittent native audio crash
 also remains unresolved; this image change does not claim a repair.
+
+
+## Shared room-audio ownership and retirement — 2026-10-10
+
+A retained-buffer regression was reproduced before the fix: disabling the real
+WorldAudio component left one completed decoded source in its cache, without a
+future Update to prune it. The same unchanged regression now passes. Room sounds
+hold explicit immutable world/region/entity leases and share PCM only for the
+same exact definition within their workspace. Closing a voice releases renderer,
+producer, PCM and lease references; terminal history remains data-only. Last-owner
+cancellation keeps source/PCM admission until unfinished preparation drains even
+when the original component is gone. New work cannot bypass that admission by
+replacing the workspace. No active sound is silently stolen to make capacity.
+
+The shared catalog now exposes bounded audio budget, reservation and owner facts.
+Actual instance IDs connect observations to existing playback controls. PCM costs
+count shared decoded samples once and exclude source files, scratch arrays,
+rings/carriers, speech/Live/browser paths and native DSP. They are not process
+memory measurements. The `audio.start` description also corrects an outdated
+claim that imported WAV playback was unsupported.
+
+Fifteen focused native checks pass, including five new regressions covering
+component disable, real shared PCM/owners, retiring admission across replacement,
+actual private-library read cancellation on component destruction, failed/oversized
+decodes and stale owner IDs. A fixture emitted by those real native voices is
+checked by shared web validation. The full native/headless/book run and exact-head
+CI are recorded in `.quest-evidence/audio-residency/verification.json` and the PR
+checkpoint; focused checks alone do not establish those broader results.
+
+The ordinary headless and original-book journeys now inspect actual playing
+sources and owners, then require final buffer/admission release after stopping.
+The imported-audio real-provider journey is extended with natural-language loop,
+read-only ownership inspection and stop/remove requests. This new provider path
+has not run: both routes previously returned Gemini HTTP 402 for depleted project
+credits, and no further paid calls are made until the user restores billing.
+Scripted book responses and local receipts do not replace that provider gate.
+
+No headset, signing, deployment, upload or Store operation is included. Regional
+streaming and the wider v1 release remain incomplete. This PCM-lifetime change
+does not claim to repair the earlier intermittent Meta native acoustic-map crash.
