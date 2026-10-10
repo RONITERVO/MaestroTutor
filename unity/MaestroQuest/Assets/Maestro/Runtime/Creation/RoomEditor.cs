@@ -448,7 +448,7 @@ namespace Maestro.Quest.Creation
             item.GrabStarted-=GrabStarted;item.GrabFinished-=GrabFinished;
             var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted;
         }
-        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null, RoomEditPreparation preparation = null, HashSet<string> activating = null, List<GameObject> activationRoots = null, Transform activationParent = null)
+        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null, RoomEditPreparation preparation = null)
         {
             applying = true;
             try {
@@ -460,11 +460,11 @@ namespace Maestro.Quest.Creation
                 if(item){item.gameObject.SetActive(false);Destroy(item.gameObject);}
             }
             SynchronizeVisibility(document);
-            if(activating==null)regionModels.Clear();
+            regionModels.Clear();
             int slot = 0;
             foreach (var data in document.objects)
             {
-                if(activating!=null&&!activating.Contains(data.id)||NativeEntityDormant(data.id)&&activating?.Contains(data.id)!=true)continue;
+                if(NativeEntityDormant(data.id))continue;
                 bool created = false;
                 if (!objects.TryGetValue(data.id,out var item)||!item)
                 {
@@ -473,8 +473,7 @@ namespace Maestro.Quest.Creation
                     // an accepted edit. World-owned book/avatar instances belong to
                     // their host and must never become ordinary creation prefabs.
                     if(data.IsBuiltIn)continue;
-                    var root = new GameObject(data.kind.ToString()); root.transform.SetParent(activationParent?activationParent:transform,false);
-                    if(activating!=null)activationRoots.Add(root);
+                    var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
                     item = root.AddComponent<CreatedRoomObject>().BuildPrepared(data, Models,RuntimeGate,WorldIdentity,preparation);
                     AddIdentity(data.id,item); room.Register(item);
@@ -484,42 +483,15 @@ namespace Maestro.Quest.Creation
                 // Undo/Redo reconfigure the full document, but only the objects in
                 // that history entry own a pose restoration. Unrelated live poses
                 // may differ legitimately from their last saved placement.
-                if (!item.Grab.isSelected && (created || ((poseChanges==null || poseChanges.Contains(data.id)) && (changed == null || (applyChangedPose && changed.Contains(data.id)))))) ApplyPose(item,activating!=null?NativeActivationPose(data):data);
-                var environment=item.GetComponent<RoomEnvironmentBinding>()??item.gameObject.AddComponent<RoomEnvironmentBinding>();
-                item.WaterTraversal=RoomWaterTraversal.Effective(data);
-                environment.Apply(PhysicsWorld,item,string.IsNullOrEmpty(data.environmentProfile)?true:journal.ReadEnvironment(data.environmentProfile).realCollisions);
-                if(created || changed==null || changed.Contains(data.id)) {
-                item.GetComponent<RecipeObject>()?.ConfigureAppearanceBindings(data.appearanceBindings);
-                item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe,preparation);
-                item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
-                item.GetComponent<CreatedRoomObject>()?.ApplyScanLayer(data);
-                var surfaces=item.GetComponent<DrawingSurfaceView>();if(!surfaces&&(data.surfaces?.Length??0)>0)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();if(surfaces)surfaces.Apply(data.surfaces);
-                if(ScanDrawingAnchor.Has(data)){var layer=item.GetComponent<ScannedDrawingView>()??item.gameObject.AddComponent<ScannedDrawingView>();layer.Apply(this,data);}
-                var tip=item.GetComponent<DrawingTipView>();if(!tip&&(data.drawingTips?.Length??0)>0)tip=item.gameObject.AddComponent<DrawingTipView>();if(tip)tip.Apply(this,data.id,data.drawingTips);
-                var liquid=item.GetComponent<ContainerFillView>();if(!liquid&&(data.containers?.Length??0)>0)liquid=item.gameObject.AddComponent<ContainerFillView>();if(liquid)liquid.Apply(data.containers);
-                var field=ApplyHeightFields(data.id,item,data.heightFields,preparation);
-                var sculpt=item.GetComponent<SculptTipView>();if(!sculpt&&(data.sculptTips?.Length??0)>0)sculpt=item.gameObject.AddComponent<SculptTipView>();if(sculpt)sculpt.Apply(this,data.id,data.sculptTips);
-                var materialContents=item.GetComponent<MaterialToolContentsView>();if(!materialContents&&data.sculptTips?.Any(t=>t.IsMaterial)==true)materialContents=item.gameObject.AddComponent<MaterialToolContentsView>();if(materialContents)materialContents.Apply(data.sculptTips?.FirstOrDefault(),data.materialStores?.FirstOrDefault());
-                item.GetComponent<CreatedRoomObject>()?.ApplyModelGeometry(data.modelGeometry);
-                item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision,preparation);
-                item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape,field!=null);
-                item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
-                item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);
-                var avatar = item.GetComponent<MaestroAvatar>(); if (avatar) { avatar.ConfigureActivityProfiles(ActivityProfiles,Motions); avatar.SetWalkReference(data.walkClip-1,data.walkMotionId,Motions); _ = avatar.SetModel(data.modelHash,Models); }
-                }
-                if (!data.IsBuiltIn)
-                {
-                    item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);
-                    item.GetComponent<CreatedRoomObject>().ApplyColor(data.appearanceBindings.Any(b=>b.kind=="root")?Color.white:data.color); slot++;
-                }
-                ApplyVisibility(data,item,document);
-                if(activating!=null)RestoreNativeRecipe(data,item);
+                if (!item.Grab.isSelected && (created || ((poseChanges==null || poseChanges.Contains(data.id)) && (changed == null || (applyChangedPose && changed.Contains(data.id)))))) ApplyPose(item,data);
+                ConfigureNativeObject(data,item,document,preparation,created||changed==null||changed.Contains(data.id),slot);
+                if(!data.IsBuiltIn)slot++;
             }
             // Resolve links only after every member and its current pose/collider exists.
-            foreach(var data in document.objects){if(activating!=null&&!activating.Contains(data.id))continue;var item=Find(data.id);if(!item)continue;var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge){hinge.Apply(this,data.connections);if(activating!=null)RestoreNativeConnection(data,hinge);}}
-            if(activating==null)Liquids?.Synchronize(document);
+            foreach(var data in document.objects){var item=Find(data.id);if(!item)continue;var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge){hinge.Apply(this,data.connections);}}
+            Liquids?.Synchronize(document);
             } finally { applying = false; }
-            if(activating==null){RefreshRegionCollision(); UpdateSelection();}
+            RefreshRegionCollision(); UpdateSelection();
         }
 
         void ApplyPose(RoomItem item, RoomObjectData data)

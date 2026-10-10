@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Maestro.Quest.Imports;
 using UnityEngine;
 namespace Maestro.Quest.Creation
@@ -74,10 +75,10 @@ namespace Maestro.Quest.Creation
                 return prepared;
             }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
         }
-        internal static RoomEditPreparation PrepareNative(RoomEditor editor,RoomObjectData[] values)
+        internal static async Task<RoomEditPreparation> PrepareNativeAsync(RoomEditor editor,RoomObjectData[] values,RoomPreparationBudget budget)
         {
             var result=new RoomEditPreparation();
-            try{foreach(var data in values)result.PrepareGeometry(editor,data,null);return result;}
+            try{foreach(var data in values){await budget.Step();result.PrepareGeometry(editor,data,null);}return result;}
             catch{result.Dispose();throw;}
         }
         void PrepareGeometry(RoomEditor editor,RoomObjectData data,RoomObjectData before)

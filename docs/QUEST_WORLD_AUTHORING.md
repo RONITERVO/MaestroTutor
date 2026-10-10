@@ -696,3 +696,10 @@ The shared `world.region.retention` fact accepts an authored area ID, or empty `
 `object.presence` distinguishes an entity missing from the saved world from saved content whose native instance is unavailable, inactive or active. Read `object.definition` for its saved placement and revision. Drawings, surfaces, collision recipes, recorded animation frames and procedural parts/keys can also be inspected without a live object. Reads do not repair or load it. Active presence alone does not guarantee imported geometry, textures, sound or physics readiness.
 
 The shared object list keeps unavailable saved entities and labels its coordinates with `positionSource: saved` or `live`; use this instead of treating saved placement as observed motion. Shared actions with explicit native dependencies can prepare intentionally dormant objects before their ordinary native checks; the receipt reports loading, failure or completion. An unexpectedly lost instance is still unavailable rather than silently treated as dormant. Combined facts that include playback or effective runtime collision state remain unavailable if their native instance is absent. The whole-world runtime can rebuild an unexpectedly lost creation during an accepted edit or Undo while retaining its ID and content. Intentional retirement is currently an internal, tested mechanism; automatic area unloading remains disabled.
+
+During internal area loading, unfinished objects stay invisible and unavailable
+for picking until the complete connected group is prepared. Cancelling or editing
+its saved input prevents the old group from appearing and permits a fresh retry.
+Loading restores saved/cached placement and stopped animation state; it does not
+start physics. Preparation now yields between batches across frames, but this
+does not enable automatic area streaming or increase the current world limits.

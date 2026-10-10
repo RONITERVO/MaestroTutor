@@ -134,7 +134,8 @@ namespace Maestro.Quest.Tests
         {
             var asset=ModelLibrary.Inspect("candidate.glb",ModelFixture.Create());var data=new RoomObjectData{id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.ImportedModel,modelHash=asset.Hash};
             var budget=ImportedModel.LiveBudget;var load=PreparedImportedModel.Load(asset,data,editor.WorldIdentity,CancellationToken.None,()=>true);yield return new WaitUntil(()=>load.IsCompleted);Assert.That(load.Exception,Is.Null);
-            var preparation=RoomEditPreparation.PrepareNative(editor,new[]{data});preparation.EnlistModel(load.Result,data);
+            var prepare=RoomEditPreparation.PrepareNativeAsync(editor,new[]{data},new RoomPreparationBudget(()=>{}));yield return new WaitUntil(()=>prepare.IsCompleted);Assert.That(prepare.Exception,Is.Null);
+            var preparation=prepare.Result;preparation.EnlistModel(load.Result,data);
             var candidate=new GameObject("Never-active native area candidate");candidate.SetActive(false);candidate.transform.SetParent(root.transform,false);
             var view=candidate.AddComponent<CreatedRoomObject>();var item=view.BuildPrepared(data,editor.Models,editor.RuntimeGate,editor.WorldIdentity,preparation);
             var binding=candidate.AddComponent<RoomEnvironmentBinding>();binding.Apply(physics,item,true);var rigid=candidate.GetComponent<RigidRoomItem>();rigid.Configure(physics,data.physics,data.mass);

@@ -118,7 +118,8 @@ namespace Maestro.Quest.Creation
             string error;
             var entries=targets.ToDictionary(id=>id,id=>dormantNative[id],StringComparer.Ordinal);
             var source=journal;int revision=Revision,generation=nativeGeneration;
-            var values=targets.Select(Read).ToArray();
+            var document=journal.Snapshot();var activating=targets.ToHashSet(StringComparer.Ordinal);
+            var values=document.objects.Where(data=>activating.Contains(data.id)).ToArray();
             using var cancel=CancellationTokenSource.CreateLinkedTokenSource(cancellation);nativeActivation=cancel;
             using var write=WriteGate.TryWrite(out error);if(write==null){nativeActivation=null;return error;}
             var roots=new List<GameObject>();RoomEditPreparation prepared=null;GameObject staging=null;
@@ -132,22 +133,37 @@ namespace Maestro.Quest.Creation
                 // distinct. Existing reservation ledgers remain charged while an
                 // importer/decoder drains; new admissions obey those same budgets.
                 while(entries.Values.Any(entry=>entry.RetiringRoot)){Check();await Task.Yield();}
-                Check();prepared=RoomEditPreparation.PrepareNative(this,values);
+                Check();var budget=new RoomPreparationBudget(Check);prepared=await RoomEditPreparation.PrepareNativeAsync(this,values,budget);
                 foreach(var data in values.Where(data=>data.kind==RoomObjectKind.ImportedModel)){
                     var asset=await Models.ReadAsync(data.modelHash);Check();
                     var model=await PreparedImportedModel.Load(asset,data,WorldIdentity,cancel.Token,Current);
                     try{Check();prepared.EnlistModel(model,data);}catch{model.Dispose();throw;}
                 }
-                Check();var activating=targets.ToHashSet(StringComparer.Ordinal);
-                // Publish only after every required imported model and synchronous
-                // geometry candidate is ready. Reuse the ordinary native assembly.
+                Check();SynchronizeVisibility(document);
                 staging=new GameObject("Preparing authored area");staging.SetActive(false);staging.transform.SetParent(transform,false);
-                Reconcile(activating,preparation:prepared,activating:activating,activationRoots:roots,activationParent:staging.transform);
+                var candidates=new Dictionary<string,Maestro.Quest.Interaction.RoomItem>(StringComparer.Ordinal);int slot=0;
+                foreach(var data in values){
+                    await budget.Step();
+                    var root=new GameObject(data.kind.ToString());root.transform.SetParent(staging.transform,false);roots.Add(root);
+                    var item=root.AddComponent<CreatedRoomObject>().BuildPrepared(data,Models,RuntimeGate,WorldIdentity,prepared);
+                    ApplyPose(item,NativeActivationPose(data));ConfigureNativeObject(data,item,document,prepared,true,slot++);RestoreNativeRecipe(data,item);
+                    candidates.Add(data.id,item);
+                }
                 Check();
-                // The inactive staging parent also contains views which deliberately
-                // change activeSelf (for example a scanned drawing surface).
-                // Keep each view's chosen visibility when publishing the complete set.
-                foreach(var root in roots)if(root)root.transform.SetParent(transform,false);
+                // Refresh physical bindings after preparation's frame boundaries.
+                // The complete set stays hidden and absent from both registries.
+                foreach(var item in candidates.Values)item.GetComponent<ScannedDrawingView>()?.Sync();
+                Check();applying=true;
+                try{
+                    // No awaits after publication begins. All IDs exist before
+                    // any connection resolves a peer or any root becomes active.
+                    foreach(var data in values){var item=candidates[data.id];AddIdentity(data.id,item);room.Register(item);if(data.kind==RoomObjectKind.ImportedModel)regionModels[data.id]=item.GetComponent<CreatedRoomObject>();}
+                    foreach(var data in values){var item=candidates[data.id];var hinge=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>();if(!hinge&&data.connections.Length>0)hinge=item.gameObject.AddComponent<Maestro.Quest.Interaction.RoomConnectionView>();if(hinge){hinge.Apply(this,data.connections);RestoreNativeConnection(data,hinge);}}
+                    Check();
+                    // Keep component-local visibility, including missing-anchor ink.
+                    foreach(var root in roots)if(root)root.transform.SetParent(transform,false);
+                    Check();
+                }finally{applying=false;}
                 Liquids?.Synchronize(journal.Snapshot());
                 foreach(var id in targets)dormantNative.Remove(id);
             }

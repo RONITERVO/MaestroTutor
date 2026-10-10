@@ -351,3 +351,13 @@ physical placement request that caused the load. Scan changes, lifecycle changes
 explicit physics controls and an actual running-to-paused transition still
 invalidate the scanned-room token. This distinction does not start physics or
 relax missing-geometry admission.
+
+Native acquisition may span several Unity frames while geometry and object
+components are prepared privately. The receipt stays in preparation and no
+partial group enters normal object lookup or picking. Publication registers the
+whole identity/connection group without yielding; the original invocation then
+performs its full native checks. Cancellation or changed saved input releases
+private resources and does not execute the requested effect. This uses the same
+component configuration as normal edits and does not introduce another runtime
+for agents. Its cooperative batch budget does not guarantee a frame-time ceiling
+for an individual mesh upload or activation callback.

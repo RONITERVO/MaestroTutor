@@ -6661,7 +6661,7 @@ The scheduler now acquires those entities before native preflight and effect exe
 
 An acquisition restores the existing area/connection closure using the canonical journal and transactional native candidates. Only the acquiring scheduler run can authorize this activation, and only when no other run or queued work is present. Other actions cannot slip into the preparation interval. Already-resident actions retain their existing concurrency. Resource ownership, current model hashes, saved revisions and normal action channels remain authoritative; acquisition is not a second program runtime or an alternate agent tool. Failed loading is visible and retryable without replacing saved content.
 
-Automatic unloading remains disabled. These are internal admission primitives exercised by offline native tests. Observation/audibility demand, per-frame geometry preparation budgets, ground/water/navigation/swept-support dependencies, regional collision admission, scalable capacities and physical/provider acceptance are still required before distant areas can stream automatically. Whole-world simulation still refuses while any authored area is dormant. No larger capacity, automatic distant simulation, Quest installation or release acceptance follows from this increment.
+Automatic unloading remains disabled. These are internal admission primitives exercised by offline native tests. Observation/audibility demand, finer-grained geometry/upload work within the cooperative preparation budget, ground/water/navigation/swept-support dependencies, regional collision admission, scalable capacities and physical/provider acceptance are still required before distant areas can stream automatically. Whole-world simulation still refuses while any authored area is dormant. No larger capacity, automatic distant simulation, Quest installation or release acceptance follows from this increment.
 
 A completed load retains its journal identity, revision and native generation through final effect admission, including any subsequent channel wait. A new edit or a replacement journal (even at the same revision) between load completion and the next scheduler frame fails the pending action without changing the newer state. Native integration regressions exercise a newer edit, a temporary-room journal boundary, and an editor disable/re-enable at an unchanged revision.
 
@@ -6689,7 +6689,7 @@ changes and transitions that stop running physics still invalidate pending
 placement. No saved token is silently refreshed to force a request through.
 
 This completes the current explicit authoring-dependency audit, not automatic
-streaming. New modules must declare and test their native dependencies. Frame
+streaming. New modules must declare and test their native dependencies. Finer-grained frame
 budgets, observer/audibility/swept demand, ground/water/navigation support,
 regional physics admission, concurrent acquisition ownership and scalable capacity
 remain required before enabling automatic unloading. Device/provider and release
@@ -6701,3 +6701,33 @@ map readiness, followed by an access violation in MetaXRAudioUnity.dll. The fail
 run is retained with the verification evidence. Production reflection routing
 remains disabled; a successful isolated test or rerun is not a resolution of that
 SDK lifetime issue.
+
+### Private native preparation across frames — 2026-10-11
+
+Action-owned area activation now cooperatively slices geometry preparation and
+native object assembly across Unity frames. A shared budget yields before the
+next unit after four units or two milliseconds in a frame. Each individual
+constructor, mesh upload and activation callback remains indivisible: this is a
+batch budget, not a two-millisecond frame-time guarantee. Model preparation keeps
+its existing asynchronous importer and native resource reservations.
+
+Candidates stay beneath an inactive parent and outside the editor identity and
+interaction registries while work yields. Ordinary reconciliation and candidate
+preparation use the same component-configuration path. After final input and
+physical-binding checks, the complete group's identities and connections are
+registered and its roots published without another await. Missing-anchor drawing
+visibility remains component-owned. Publication does not restart physics or
+replay a stopped animation. Cached idle placement and broken connection state
+retain their existing canonical-input checks.
+
+Cancellation, a brief runtime hold, an editor lifecycle boundary or a newer saved
+edit discards private candidates. Explicit resource release covers never-active
+meshes, imported resources and physics subscriptions; task failure waits for
+owned native roots to retire before allowing retry. Shared action input guards
+remain in force after acquisition and through effect admission.
+
+Automatic observation-driven streaming remains disabled. Chunking individual
+large geometry/uploads and activation work, observer/audibility/swept demand,
+regional terrain/water/navigation dependencies, regional collision admission,
+concurrent acquisition ownership and scalable capacities still need integration.
+Quest frame-time measurements and real-provider acceptance remain outstanding.
