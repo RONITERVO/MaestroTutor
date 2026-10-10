@@ -2741,8 +2741,33 @@ candidate it later accepts, instead of separately rebuilding it for the journal.
 Baseline failures, focused results and final complete native/headless/book and
 exact-head CI results are retained in `.quest-evidence/edit-transactions/`.
 Terminal process exit and existing diagnostic gates are required for acceptance.
-The shared native preparation currently handles changed geometry on loaded
-imported models; new-model activation and other resource preallocation remain
+The shared native preparation handles changed geometry on loaded imported
+models and now terrain/compound geometry (below); new-model activation and other resource preallocation remain
 open, as do coordinated regional budgets and streaming. No new provider calls,
 headset operations, signing, deployment or Store changes belong to this increment.
 Existing Gemini HTTP 402 and headset cooling/charge limits still apply.
+
+
+### Detached terrain/compound admission preparation
+
+`GeometryPreparationTests` covers native allocations before failed persistence,
+unchanged accepted source/meshes on refusal, deferred candidate cleanup, separate
+accepted terrain meshes, collider/navigation/acoustic publication, new-entity
+reservations and cancellation, exact-source transfer, one-step composite Undo/Redo,
+and cleanup when a later imported member refuses the complete edit. Four checks
+failed against source `898315c5`, then passed unchanged after the fix. Existing
+ownership tests now require separate terrain leases instead of in-place mutation;
+failed compound saves retain an inactive retiring candidate until destruction.
+
+The existing falling-ball terrain test explicitly observes the old collider's
+destruction after an accepted sculpt, then verifies painting and removal using
+the current surface. Its optional native render is saved with focused evidence.
+The complete native, headless, book and exact-head CI acceptance records are in
+`.quest-evidence/geometry-preparation/verification.json`; an in-progress or failed
+record must not be treated as a complete pass. This is actual desktop native
+geometry plus original-book integration, not new headset or paid-provider evidence.
+
+Global resource admission, regional streaming, new model activation and remaining
+resource kinds stay open. Existing managed/BYOK HTTP 402, headset cooling/charge,
+experimental acoustic-map crash and release gates remain unchanged. This increment
+does not install, sign, deploy, upload or publish a release.

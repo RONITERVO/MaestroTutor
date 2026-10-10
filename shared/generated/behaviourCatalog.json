@@ -42854,7 +42854,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionGeometry.cs",
-      "sha256": "c350716a40a4e5377aa20c507136b60ff27291739244fe22dc07a46a3530031e"
+      "sha256": "f997ecb3ed8b6f940428cfa33cf458dc540218eae8ca1b8838ef6adc0063358e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
@@ -42906,7 +42906,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "ec2c04828d2bd2852fa3a6e2c6ac4d30ef255a9e871a30ad469512063979b904"
+      "sha256": "4abc2c50bc03373f755182328f71a50774fb14a45b11b47825a10f2fd3fcb5cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -42949,12 +42949,16 @@
       "sha256": "a2b203c4bccaec45a613c0efde0d090a26e64be3b186772b2bc77d0b5814c847"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
+      "sha256": "41be50de8a04b329d0650143fd6b8ca1b3975214b47fc2acc81923bd45bc7fca"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldTransfer.cs",
       "sha256": "4a21a0fa3fffbd93045cdc12c712144ce9b2241d8994c6113a68ac93a099fa6f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "3b920738a803a8ccf0a6b1e0933b65e50594fdfe870600d9214c4db93ac14aa7"
+      "sha256": "0e3583acf8ec0ee7c8eddc62d04191b56a9c6efc99cefc9e628b4984bd77f4ec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
@@ -43110,7 +43114,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "67d35f950367960b9f0fb2fe9b3374b214618db19bcb40191d78852b0027b42e"
+      "sha256": "106efd59f0c73afdaee4d51b56192917d99ede4e4896e586e299e4884d3b268d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -43118,7 +43122,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "2cd67106d42caaded9c766f1d7159d7e1f39f18408f5b986771ecf5db2fabc53"
+      "sha256": "f20b608a3a63091d17e64d3d309e994a579923f9ac7beab4b2d045d895c250de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43158,7 +43162,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldEdits.cs",
-      "sha256": "869ac712b3b6128512013e186ba99d268facb38e167907cbb62fa68c27435d59"
+      "sha256": "545b42d232dfaf5f798f71d4b1dd79918e2f4724c59579f0e5163ba61d6a4d96"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",

@@ -37,6 +37,9 @@ namespace Maestro.Quest.Creation
             && acousticItem && acousticItem.Grab && !acousticItem.Grab.isSelected
             && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null, RoomWorldIdentity world = null)
+            =>BuildCore(data,library,runtimeGate,world,null);
+        internal RoomItem BuildPrepared(RoomObjectData data,ModelLibrary library,RoomRuntimeGate runtimeGate,RoomWorldIdentity world,RoomEditPreparation preparation)=>BuildCore(data,library,runtimeGate,world,preparation);
+        RoomItem BuildCore(RoomObjectData data,ModelLibrary library,RoomRuntimeGate runtimeGate,RoomWorldIdentity world,RoomEditPreparation preparation)
         {
             collisionOwner=new RoomResourceOwner(world,data.id,"collision");
             if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new RoomResourceOwner(world,data.id,"object");
@@ -79,7 +82,7 @@ namespace Maestro.Quest.Creation
             collider.gameObject.layer = RoomPhysicsLayers.Item;
             if (importedObject) { rigid.SetGeometryReady(false);SetCollisionShape(data.collisionShape,true); }
             if (data.kind == RoomObjectKind.ImportedModel && library != null) LoadModel(data.modelHash, library, collider);
-            ApplyCollision(data.collision);SetCollisionShape(data.collisionShape);
+            ApplyCollision(data.collision,preparation);SetCollisionShape(data.collisionShape);
             return item;
         }
         internal void ApplyScanLayer(RoomObjectData data) {
@@ -96,12 +99,14 @@ namespace Maestro.Quest.Creation
             bool selected=selection && selection.activeSelf; if(selection) { selection.SetActive(false); Destroy(selection); }
             BuildSelection(geometryBounds); SetSelected(selected); SetCollisionShape(collisionShape,true);
         }
-        public void ApplyCollision(CollisionRecipe source)
+        public void ApplyCollision(CollisionRecipe source)=>ApplyCollision(source,null);
+        internal void ApplyCollision(CollisionRecipe source,RoomEditPreparation preparation)
         {
             string encoded=source==null||source.shapes.Length==0?null:JsonUtility.ToJson(source);
             if(encoded==collisionEncoded)return;
             // Build a detached replacement before unregistering the previous handles.
-            var candidate=encoded==null?null:new CollisionGeometry(source,transform,collisionOwner);
+            var candidate=encoded==null?null:preparation?.TakeCollision(collisionOwner.Target,source)??new CollisionGeometry(source,null,collisionOwner);
+            candidate?.Attach(transform);
             var old=customGeometry;customGeometry=candidate;collisionEncoded=encoded;
             SetCollisionShape(collisionShape,true);old?.Dispose();
         }

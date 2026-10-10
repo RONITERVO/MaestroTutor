@@ -14,10 +14,13 @@ namespace Maestro.Quest.Creation
         readonly CollisionResources.Lease resource;
         readonly List<Mesh> meshes=new();
         readonly List<Collider> colliders=new();
+        internal readonly string Encoded;
+        internal void Attach(Transform parent){if(!root)throw new InvalidOperationException("Collision preparation has ended");root.transform.SetParent(parent,false);}
         public Collider[] Colliders=>colliders.ToArray();
         public void SetActive(bool value){if(root)root.SetActive(value);}
         public CollisionGeometry(CollisionRecipe recipe,Transform parent,RoomResourceOwner owner=null) {
             if(recipe==null||!recipe.Validate(out _))throw new ArgumentException("Invalid collision recipe");
+            Encoded=JsonUtility.ToJson(recipe);
             resource=CollisionResources.Begin(owner??new RoomResourceOwner(null,null,"unscoped"),"compound",CollisionResources.Cost.Recipe(recipe));
             try{root=new GameObject("Editable collision shapes");root.SetActive(false);root.transform.SetParent(parent,false);
             foreach(var s in recipe.shapes){

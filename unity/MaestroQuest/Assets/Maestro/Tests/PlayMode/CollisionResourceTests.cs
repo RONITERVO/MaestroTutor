@@ -68,8 +68,9 @@ namespace Maestro.Quest.Tests
             Assert.IsTrue(JToken.DeepEquals(initial,CollisionOwners(id).Single(o=>(string)o["kind"]=="terrain")));
             var accepted=preview.Copy();accepted.cells=8;accepted.heights=Enumerable.Repeat(.04f,81).ToArray();
             Assert.IsTrue(editor.EditHeightField(id,editor.ObjectRevision(id),accepted,out var error),error);
-            var changed=CollisionOwners(id).Single(o=>(string)o["kind"]=="terrain");Assert.AreEqual((string)initial["leaseId"],(string)changed["leaseId"]);Assert.AreEqual(194,(int)changed["sourceTriangles"]);
+            var changed=CollisionOwners(id).Single(o=>(string)o["kind"]=="terrain"&&(string)o["phase"]=="ready");Assert.AreNotEqual((string)initial["leaseId"],(string)changed["leaseId"]);Assert.AreEqual(194,(int)changed["sourceTriangles"]);
             Assert.AreEqual(((MeshCollider)view.Collision).sharedMesh.triangles.Length/3,(int)changed["sourceTriangles"]);
+            Assert.AreEqual("retiring",(string)CollisionOwners(id).Single(o=>(string)o["leaseId"]==(string)initial["leaseId"])["phase"]);yield return null;
             var invalid=accepted.Copy();invalid.cells=3;Assert.Throws<ArgumentException>(()=>view.Apply(new[]{invalid}));Assert.AreEqual(8,view.Accepted.cells);Assert.IsTrue(JToken.DeepEquals(changed,CollisionOwners(id).Single(o=>(string)o["kind"]=="terrain")));
             Assert.IsTrue(editor.EditHeightField(id,editor.ObjectRevision(id),null,out error),error);Assert.AreEqual("retiring",(string)CollisionOwners(id).Single(o=>(string)o["kind"]=="terrain")["phase"]);
             yield return null;Assert.IsEmpty(CollisionOwners(id).Where(o=>(string)o["kind"]=="terrain"));
@@ -87,12 +88,12 @@ namespace Maestro.Quest.Tests
             Assert.IsTrue(editor.TryFlush(out error),error);Assert.AreEqual(4,new RoomStorage(directory).Load(out _).objects.Single(o=>o.id==id).collision.shapes.Length);
             current["worldId"]="changed copy";Assert.AreEqual(editor.WorldIdentity.worldId,(string)CollisionOwners(id).Single()["worldId"]);
         }
-        [UnityTest] public IEnumerator CollisionResourcesFailedCompoundSaveCreatesNoGeometryLease()
+        [UnityTest] public IEnumerator CollisionResourcesFailedCompoundSaveRetiresPreparedGeometryWithoutPublishing()
         {
             root.AddComponent<RuntimeDiagnostics>();string id=editor.Identity(block);string before=JsonUtility.ToJson(editor.Read(id));var prior=CollisionFact("runtime.collisionResources");
             string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
             try{Assert.IsFalse(editor.EditCollision(id,editor.ObjectRevision(id),ResourceRecipe(),out _));}finally{Directory.Delete(pending);}
-            Assert.AreEqual(before,JsonUtility.ToJson(editor.Read(id)));Assert.IsTrue(JToken.DeepEquals(prior,CollisionFact("runtime.collisionResources")));yield return null;
+            Assert.AreEqual(before,JsonUtility.ToJson(editor.Read(id)));var abandoned=CollisionOwners(id).Single();Assert.AreEqual("retiring",(string)abandoned["phase"]);Assert.AreEqual(0,(int)abandoned["activeColliders"]);yield return null;Assert.IsTrue(JToken.DeepEquals(prior,CollisionFact("runtime.collisionResources")));
         }
         [UnityTest] public IEnumerator CollisionResourcesImportedSaveFailureDrainsOnlyPreparedCandidateAndKeepsAcceptedModel()
         {

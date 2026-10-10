@@ -6343,8 +6343,9 @@ world, region and entity identity when its geometry is created. Prepared or
 disabled geometry remains retained; replacing a collider keeps old and new leases
 separate until Unity actually destroys the old components. Hierarchy destruction
 also retires dead metadata, and releasing geometry does not remove saved objects,
-source model files or Undo history. Terrain updates change the accepted source
-cost on the same lease; temporary visual sculpt previews are excluded.
+source model files or Undo history. Terrain updates now replace the accepted
+mesh with a separate prepared lease, as described below; temporary visual sculpt
+previews remain excluded.
 
 The shared `runtime.collisionResources` and `runtime.collisionResource` facts
 expose retained source collider/triangle counts and active collider counts through
@@ -6354,10 +6355,10 @@ capacity limits; default bounds, book/avatar proxies, scans and navigation maps
 have separate ownership and are outside this ledger. Disabled allocation is not
 free allocation, and an enabled collider alone does not prove physical contact.
 
-Coordinated admission is deliberately the next transaction-layer change. Current
-compound/terrain edits persist source before reconciliation allocates geometry,
-and Undo/Redo reconcile accepted history. New capacity rejection must therefore
-be prepared before saving or advancing history, including bulk edits and Undo;
+At the ownership baseline, compound/terrain allocation happened after saving or
+advancing history. The prepared edit and detached geometry changes below move
+that work before acceptance. New capacity rejection must use this same boundary,
+including bulk edits and Undo;
 adding a constructor-only limit would leave partially applied saved changes.
 This ownership increment introduces no such limit, automatic eviction or regional
 streaming. The existing bounded world, per-entity real-room participation and
@@ -6391,9 +6392,44 @@ stale state and history previews. Broad native/app results are in the coverage
 ledger and per-run evidence.
 
 This is the transaction boundary required for further admission work. Compound
-and terrain source limits still use document validation; their heavy allocations
-still occur during reconciliation. New model instances retain their explicit
+and terrain source limits still use document validation, and their geometry is
+now prepared at this boundary as described below. New model instances retain their explicit
 asynchronous loading/readiness path. This increment does not implement regional
 activation, coordinated memory/cost budgets, preallocation of every scene resource
 or rollback of arbitrary native allocation failures after publication. Those
 remaining requirements stay part of v1; the existing bounded world is unchanged.
+
+
+### Detached terrain and compound geometry preparation — 2026-10-10
+
+Saved, manual/mixed and Undo/Redo edits now prepare changed compound colliders
+and height-field geometry before source acceptance. A candidate has copied
+world/region/entity ownership and an inactive detached hierarchy; a new entity
+can reserve its geometry before any runtime component is published. Transfer
+requires the same target and encoded source, removes the candidate from the
+preparation owner, and leaves the accepted view responsible for disposal.
+Cancelled preparations and failed saves release all untaken candidates.
+
+Terrain no longer detaches and refills its accepted mesh in place. Each accepted
+edit swaps in a separately constructed mesh/collider/material and retires the
+old geometry. Old and new source costs overlap until actual Unity destruction.
+Preparation creates inactive navigation and acoustic components with no room
+parent; only adoption attaches/activates them. Retired surfaces are detached so
+appearance traversal cannot pick them up while destruction is pending. Accepted
+bounds still control waking nearby sleeping bodies; visual sculpt previews
+remain independent and never replace accepted collision geometry.
+
+Four regressions were reproduced against the previous runtime and passed
+unchanged after this change. Additional checks cover exact-source transfer,
+new-entity publication and one-step Undo/Redo, and disposing a composite candidate
+when a later imported-model member refuses preparation. The native support test
+also checks that sculpting lower wakes a settled ball, replacement destroys the
+old collider, and painting/removal use the new mesh and material.
+
+This prepares authored terrain/compound collision alongside loaded imported
+geometry. It is not a global memory budget, measured PhysX cooking cost, regional
+streaming or an all-resource rollback mechanism. Existing world loading and new
+asynchronous model activation still need coordinated admission. Visual recipe
+meshes, drawing surfaces, image/audio resources and other allocations retain
+their existing owners; they are not all preallocated by this transaction. The
+single bounded room, device/provider gates and remaining v1 requirements remain.

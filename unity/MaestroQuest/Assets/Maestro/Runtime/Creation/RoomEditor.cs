@@ -260,7 +260,7 @@ namespace Maestro.Quest.Creation
                     if(!storage.Save(edit.Snapshot(),out error))return false;
                 }
                 if(!edit.Accept(journal,out error))return false;
-                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose);
+                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose,preparation:native);
                 MarkDirty();SetStatus(message);if(!TemporaryRoom){dirty=false;lastSaveError=null;}return true;
             }
         }
@@ -320,7 +320,7 @@ namespace Maestro.Quest.Creation
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return;}
                 if(!edit.Accept(journal,out error)){SetStatus(error);return;}
-                Reconcile(poseChanges:edit.ChangedObjects);MarkDirty();SetStatus(reverse?"Undone":"Redone");
+                Reconcile(poseChanges:edit.ChangedObjects,preparation:native);MarkDirty();SetStatus(reverse?"Undone":"Redone");
             }
         }
         internal bool DrawingInProgress=>(GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke))||SculptingInProgress;
@@ -376,7 +376,7 @@ namespace Maestro.Quest.Creation
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return false;}
                 if(!edit.Accept(journal,out error)){SetStatus(error);return false;}
-                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose??!placement);MarkDirty();SetStatus(success);return true;
+                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose??!placement,preparation:native);MarkDirty();SetStatus(success);return true;
             }
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
@@ -434,7 +434,7 @@ namespace Maestro.Quest.Creation
             SetStatus("Release the object before editing"); return true;
         }
 
-        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null)
+        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null, RoomEditPreparation preparation = null)
         {
             applying = true;
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
@@ -452,7 +452,7 @@ namespace Maestro.Quest.Creation
                 {
                     var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
-                    item = root.AddComponent<CreatedRoomObject>().Build(data, Models,RuntimeGate,WorldIdentity);
+                    item = root.AddComponent<CreatedRoomObject>().BuildPrepared(data, Models,RuntimeGate,WorldIdentity,preparation);
                     AddIdentity(data.id,item); room.Register(item);
                     created = true;
                 }
@@ -472,11 +472,11 @@ namespace Maestro.Quest.Creation
                 if(ScanDrawingAnchor.Has(data)){var layer=item.GetComponent<ScannedDrawingView>()??item.gameObject.AddComponent<ScannedDrawingView>();layer.Apply(this,data);}
                 var tip=item.GetComponent<DrawingTipView>();if(!tip&&(data.drawingTips?.Length??0)>0)tip=item.gameObject.AddComponent<DrawingTipView>();if(tip)tip.Apply(this,data.id,data.drawingTips);
                 var liquid=item.GetComponent<ContainerFillView>();if(!liquid&&(data.containers?.Length??0)>0)liquid=item.gameObject.AddComponent<ContainerFillView>();if(liquid)liquid.Apply(data.containers);
-                var field=ApplyHeightFields(data.id,item,data.heightFields);
+                var field=ApplyHeightFields(data.id,item,data.heightFields,preparation);
                 var sculpt=item.GetComponent<SculptTipView>();if(!sculpt&&(data.sculptTips?.Length??0)>0)sculpt=item.gameObject.AddComponent<SculptTipView>();if(sculpt)sculpt.Apply(this,data.id,data.sculptTips);
                 var materialContents=item.GetComponent<MaterialToolContentsView>();if(!materialContents&&data.sculptTips?.Any(t=>t.IsMaterial)==true)materialContents=item.gameObject.AddComponent<MaterialToolContentsView>();if(materialContents)materialContents.Apply(data.sculptTips?.FirstOrDefault(),data.materialStores?.FirstOrDefault());
                 item.GetComponent<CreatedRoomObject>()?.ApplyModelGeometry(data.modelGeometry);
-                item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision);
+                item.GetComponent<CreatedRoomObject>()?.ApplyCollision(data.collision,preparation);
                 item.GetComponent<CreatedRoomObject>()?.SetCollisionShape(data.collisionShape,field!=null);
                 item.GetComponent<RigidRoomItem>()?.Configure(PhysicsWorld,data.physics,data.mass);
                 item.GetComponent<MaestroAvatar>()?.SetSavedPose(data.joints);

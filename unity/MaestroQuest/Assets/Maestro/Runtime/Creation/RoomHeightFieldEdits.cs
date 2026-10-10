@@ -6,12 +6,12 @@ using UnityEngine;
 using Maestro.Quest.Interaction;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
-        HeightFieldView ApplyHeightFields(string target,RoomItem owner,RoomHeightField[] fields){
+        HeightFieldView ApplyHeightFields(string target,RoomItem owner,RoomHeightField[] fields,RoomEditPreparation preparation=null){
             var view=owner.GetComponent<HeightFieldView>();
             if(!view&&(fields?.Length??0)>0){view=owner.gameObject.AddComponent<HeightFieldView>();view.ConfigureResourceOwner(new RoomResourceOwner(WorldIdentity,target,"collision"));}
             if(!view)return null;
             bool hadSurface=view.Collision;var area=view.WorldBounds;
-            if(!view.Apply(fields))return view;
+            if(!view.Apply(fields,preparation))return view;
             if(view.Collision){if(hadSurface)area.Encapsulate(view.WorldBounds);else area=view.WorldBounds;}
             // Replacing static mesh geometry does not wake sleeping contacts in
             // PhysX. Wake nearby free bodies once, only after the edit is accepted.
