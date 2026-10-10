@@ -1,5 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Reflection;
+using System.Threading;
 using Maestro.Quest.Book;
 using NUnit.Framework;
 
@@ -7,6 +10,28 @@ namespace Maestro.Quest.Tests
 {
     public sealed class AcousticOutputMonitorTests
     {
+        [Test] public void CurrentReadSamplesTimeAfterConcurrentAudioObservation()
+        {
+            double now=5.1;
+            var monitor=new AcousticOutputMonitor(()=>now);monitor.Arm(5);
+            // Hold the real observation lock until the reader is waiting for it.
+            // A clock sampled before this lock would be older than the callback.
+            var sync=typeof(AcousticOutputMonitor).GetField("sync",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(monitor);
+            using var started=new ManualResetEventSlim(false);
+            (bool Suppressed,bool Failed) result=default;Exception failure=null;
+            var reader=new Thread(()=>{started.Set();try{result=monitor.ReadCurrent(.05);}catch(Exception error){failure=error;}}){IsBackground=true};
+            bool entered,waiting;
+            lock(sync){
+                reader.Start();entered=started.Wait(TimeSpan.FromSeconds(3));
+                waiting=SpinWait.SpinUntil(()=>(reader.ThreadState&ThreadState.WaitSleepJoin)!=0,3000);
+                now=5.3;monitor.Observe(new[]{.1f,.1f},2,48000,now);
+            }
+            Assert.IsTrue(reader.Join(3000),"Reader must finish after the audio callback releases its lock");
+            Assert.IsTrue(entered);Assert.IsTrue(waiting);Assert.IsNull(failure);
+            Assert.AreEqual((true,false),result,"A healthy newer callback must not be mistaken for a backwards clock");
+            now=5.6;monitor.Observe(new float[2],2,48000,now);Assert.AreEqual((false,false),monitor.ReadCurrent(.05));
+            now=7.2;Assert.AreEqual((true,true),monitor.ReadCurrent(.05),"Real DSP stalls must still stop capture");
+        }
         [Test] public void ActivityAndDeviceTailAreSeparateFromPcmCompletion()
         {
             var monitor = new AcousticOutputMonitor();

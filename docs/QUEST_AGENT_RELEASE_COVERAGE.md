@@ -2660,3 +2660,26 @@ Regional geometry admission, tiled navigation, active dependency retention and
 cross-region persistence remain unfinished. This navigation fix does not resolve
 the intermittent Meta native acoustic-map crash or establish Quest performance.
 No installation, signing, deployment, upload or Store action is included.
+
+
+### Audio clock ordering discovered during navigation verification
+
+The first broad navigation run reported a speech counter reset in
+`OwnedReflectionMixRendersAndStoppingOneVoicePreservesAnother` (48,000 samples
+expected; zero returned). The failed native report remains evidence. Inspection
+identified a separate, reproducible monitor race: sampling the read clock before
+taking the observation lock can place it earlier than a newly accepted audio
+callback, incorrectly reporting a backwards clock and stopping healthy output.
+
+A controlled two-thread check against the actual C# monitor reproduces the false
+failure with the old ordering and passes with clock sampling inside that lock.
+The Unity regression also verifies healthy quiet recovery and refusal on a real
+DSP stall. Both production monitor properties use the same current-time entry;
+the existing stall, quiet and device-tail thresholds are unchanged. The original
+native mixer assertion remains intact. This repairs the demonstrated ordering
+bug; it does not prove that every observed counter reset has this cause.
+
+The experimental reflection mixer remains outside production room setup pending
+Live capture/AEC and device acceptance. This managed monitor change does not
+claim to fix the earlier MetaXRAudioUnity.dll acoustic-map crash. Full rerun and
+focused native results are recorded with the navigation-lifetime evidence.

@@ -15,6 +15,8 @@ namespace Maestro.Quest.Book
         // residue. This is a digital activity threshold, not an acoustic SPL.
         const float ActivityThreshold = .0001f;
         readonly object sync = new();
+        readonly Func<double> readClock;
+        internal AcousticOutputMonitor(Func<double> clock = null) => readClock = clock ?? (() => Now);
         bool armed, observed, valid;
         double armedAt, blockAt, activeUntil;
         internal static double Now => (double)Stopwatch.GetTimestamp() / Stopwatch.Frequency;
@@ -46,18 +48,21 @@ namespace Maestro.Quest.Book
                 if (active) activeUntil = Math.Max(activeUntil, now + (double)data.Length / channels / rate);
             }
         }
+        // Sample the clock under the observation lock. A callback arriving after
+        // caller-side clock sampling is newer data, not a backwards clock.
+        internal (bool Suppressed, bool Failed) ReadCurrent(double deviceTail)
+        { lock(sync) return ReadLocked(readClock(),deviceTail); }
         internal (bool Suppressed, bool Failed) Read(double now, double deviceTail)
+        { lock(sync) return ReadLocked(now,deviceTail); }
+        (bool Suppressed, bool Failed) ReadLocked(double now,double deviceTail)
         {
-            lock (sync)
-            {
-                if (!armed) return (false, false);
-                bool clock = double.IsFinite(now) && now >= armedAt && (!observed || now >= blockAt);
-                double last = observed ? Math.Max(armedAt, blockAt) : armedAt;
-                bool fresh = clock && observed && valid && now - blockAt <= FreshSeconds;
-                bool failed = !clock || now - last > FailureSeconds;
-                bool tail = !double.IsFinite(deviceTail) || deviceTail < 0 || deviceTail > 2;
-                return (!fresh || tail || now < activeUntil + QuietSeconds + deviceTail, failed || tail);
-            }
+            if (!armed) return (false, false);
+            bool clock = double.IsFinite(now) && now >= armedAt && (!observed || now >= blockAt);
+            double last = observed ? Math.Max(armedAt, blockAt) : armedAt;
+            bool fresh = clock && observed && valid && now - blockAt <= FreshSeconds;
+            bool failed = !clock || now - last > FailureSeconds;
+            bool tail = !double.IsFinite(deviceTail) || deviceTail < 0 || deviceTail > 2;
+            return (!fresh || tail || now < activeUntil + QuietSeconds + deviceTail, failed || tail);
         }
     }
 }

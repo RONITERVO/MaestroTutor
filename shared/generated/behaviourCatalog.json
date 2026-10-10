@@ -42167,7 +42167,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticOutputMonitor.cs",
-      "sha256": "b8617921c90738e1926cc5d58065b1b3bb7efa4f28f233a1eabb5d9255319d06"
+      "sha256": "e6e9fc7721fa79fd5f90e6dee80ef2616dfae3b7b45f5cec5001c1184956c004"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticSurface.cs",
@@ -42275,7 +42275,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioOutput.cs",
-      "sha256": "0d7ca8704eab1409811deb765ec97260403256d1f6d9b310fab1665bbb7bd725"
+      "sha256": "a5bde51ccb2f39858c9a48363fe5796159ee2e08fe2f7c45d0a8d37d1f7e2bc8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioTap.cs",

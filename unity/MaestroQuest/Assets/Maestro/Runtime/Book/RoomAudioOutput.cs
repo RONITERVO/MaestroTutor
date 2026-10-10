@@ -26,8 +26,8 @@ namespace Maestro.Quest.Book
         internal string Issue { get; private set; }
         internal bool ReflectionsActive { get; private set; }
         internal bool Routed => owner == this && routed && isActiveAndEnabled && !paused && focused;
-        internal bool MicrophoneSuppressed => monitor.Read(AcousticOutputMonitor.Now, DeviceTail).Suppressed;
-        internal bool MonitorFailed => monitor.Read(AcousticOutputMonitor.Now, DeviceTail).Failed;
+        internal bool MicrophoneSuppressed => monitor.ReadCurrent(DeviceTail).Suppressed;
+        internal bool MonitorFailed => monitor.ReadCurrent(DeviceTail).Failed;
         internal static double DeviceTail
         {
             get { AudioSettings.GetDSPBufferSize(out var length, out var count); return .02 + (double)length * Math.Max(1, count) / Math.Max(8000, AudioSettings.outputSampleRate); }
