@@ -37,16 +37,20 @@ namespace Maestro.Quest.Rules
         {
             readonly CancellationTokenSource cancellation=new();
             readonly Task<string> pending;
+            readonly Func<bool> inputCurrent;
             bool disposed;
             internal NativeDemand(CapabilityContext context,string[] targets,Func<bool> admission)
             {
+                inputCurrent=context.Editor?context.Editor.CaptureNativeActionInput():null;
                 pending=context.Editor?context.Editor.AcquireNativeEntities(targets,admission,cancellation.Token):Task.FromResult("The room is unavailable");
             }
             internal override RuleActionState State(out string error)
             {
                 error=null;if(!pending.IsCompleted)return RuleActionState.Preparing;
                 if(pending.IsCanceled||pending.IsFaulted){error="Required objects could not be loaded";_ = pending.Exception;return RuleActionState.Failed;}
-                error=pending.Result;return error==null?RuleActionState.Ready:RuleActionState.Failed;
+                error=pending.Result;
+                if(error==null&&inputCurrent?.Invoke()!=true)error="Required objects changed before the action could start; inspect their latest state and retry";
+                return error==null?RuleActionState.Ready:RuleActionState.Failed;
             }
             public override void Dispose()
             {

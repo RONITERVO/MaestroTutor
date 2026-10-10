@@ -44,10 +44,17 @@ namespace Maestro.Quest.Creation
             foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray())dormantNative.Remove(id);
         }
         internal bool NativeActivationPending=>nativeActivation!=null;
+        // Task completion is not effect admission: another Unity callback can edit
+        // or replace the journal before the scheduler's next frame.
+        internal Func<bool> CaptureNativeActionInput()
+        {
+            var source=journal;int revision=Revision,generation=nativeGeneration;
+            return ()=>this&&isActiveAndEnabled&&ReferenceEquals(journal,source)&&Revision==revision&&nativeGeneration==generation;
+        }
         bool NativeTransitionAvailable(out string error,Func<bool> actionAdmission=null)
         {
             if(!CanEditStructures(out error))return false;
-            error="Wait for the room's current interaction or action to finish before changing native area residency";
+            error="Wait for the room's current interaction or action to finish before loading or unloading objects";
             if(!isActiveAndEnabled||applying||AnyHeld||DrawingMode||nativeActivation!=null||(actionAdmission!=null?!actionAdmission():GetComponent<RoomRules>()?.Scheduler?.HasOtherWork("")==true))return false;
             error=null;return true;
         }

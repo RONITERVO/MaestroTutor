@@ -43758,7 +43758,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "1bb70f9b4d7940d7efabae7120568bfba7f9f110cf02900d78368ddf069b8e0b"
+      "sha256": "aa9485138cfb64795cd726aa912f8bca812175dd67b967bceee29c683dabd6d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -44566,7 +44566,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEntityAcquisition.cs",
-      "sha256": "52b6b718d7bd6131096445a21377ac55e54d124457f6be2e4ff9105721f7b78a"
+      "sha256": "cabf434231e79ab193b358ada204f7838d9d1389b32bac63202a8ca3b971abc2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEntityDemandScheduler.cs",
@@ -44590,7 +44590,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "d38d494e5727e902d8ee3f7229a3ec4f1541f7ce9593ced77a5c6ea20b58fa46"
+      "sha256": "fb3c506c7295ec4be23ce420b0a1d73ea39bb43d4ac19c884c5f682238716a4e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleStorage.cs",

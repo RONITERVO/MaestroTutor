@@ -164,3 +164,5 @@ cleanup after physical release. Existing walking/upper-body, recording/prop,
 recipe and real-input tests also pass. Prior Chrome screenshots and exact-save
 evidence cover the unchanged book UI; this extraction changes native execution.
 Headset and real-provider acceptance remain unverified.
+
+A completed load retains its journal identity, revision and native generation through final effect admission, including any subsequent channel wait. A new edit or a replacement journal (even at the same revision) between load completion and the next scheduler frame fails the pending action without changing the newer state. Native integration regressions exercise a newer edit, a temporary-room journal boundary, and an editor disable/re-enable at an unchanged revision.

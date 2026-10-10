@@ -196,8 +196,9 @@ namespace Maestro.Quest.Rules
             if(!run.AcquisitionChecked&&actions is IRuleEntityAcquisition acquisition){
                 run.AcquisitionChecked=true;run.Acquiring=true;run.AcquisitionDeadline=now+30;
                 run.EntityDemand=acquisition.Acquire(run.Active,()=>run.Acquiring&&running.Contains(run)&&!suspended&&!HasOtherWork(run.Id));
-                if(!PollEntityDemand(run,now))return running.Contains(run);
             }
+            // Recheck after a possible channel wait as well as after loading.
+            if(run.AcquisitionChecked&&!PollEntityDemand(run,now))return running.Contains(run);
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
             run.Claims=claims;
             if(!Reserve(run,run.Claims))return false;

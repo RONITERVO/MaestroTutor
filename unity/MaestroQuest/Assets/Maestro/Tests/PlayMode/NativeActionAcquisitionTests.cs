@@ -7,6 +7,7 @@ using System.Threading;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
 using Maestro.Quest.Programs;
+using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -22,6 +23,51 @@ namespace Maestro.Quest.Tests
             var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt?["phase"],Is.EqualTo(phase),receipt?.ToString());
         }
         JObject NativeMove(string target)=>ObjectEditCall("object.position.set",target,("x",.6f),("y",1.2f),("z",.8f));
+        IEnumerator NativeActionLoadedBeforeTick(string id)
+        {
+            float deadline=Time.realtimeSinceStartup+12;
+            while(editor.NativeActivationPending&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(editor.NativeActivationPending,Is.False);Assert.That(editor.Find(id).isActiveAndEnabled,Is.True);
+        }
+        [UnityTest] public IEnumerator NativeActionPostLoadEditCannotBeOverwrittenOnTheNextSchedulerFrame()
+        {
+            string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);
+            var scheduler=new RuleScheduler(new RoomRuleActions(editor,animations));
+            try{
+                Assert.That(scheduler.Invoke(NativeMove(id),Time.unscaledTime,out var run,out error),Is.True,error);
+                yield return NativeActionLoadedBeforeTick(id);Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("preparing"));
+                var changed=editor.Read(id);changed.position+=Vector3.left*.2f;
+                Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out error),Is.True,error);int revision=editor.Revision;
+                scheduler.Tick(Time.unscaledTime);
+                Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("failed"));Assert.That((string)scheduler.Invocation(run)["status"],Does.Contain("changed before"));
+                Assert.That(editor.Read(id).position,Is.EqualTo(changed.position));Assert.That(editor.Revision,Is.EqualTo(revision));
+            }finally{scheduler.StopAll();}
+        }
+        [UnityTest] public IEnumerator NativeActionPostLoadTemporaryRoomBoundaryCannotReceiveTheOldAction()
+        {
+            yield return WaitForModuleLibrary();string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);
+            var scheduler=new RuleScheduler(new RoomRuleActions(editor,animations));
+            try{
+                Assert.That(scheduler.Invoke(NativeMove(id),Time.unscaledTime,out var run,out error),Is.True,error);yield return NativeActionLoadedBeforeTick(id);
+                int revision=editor.Revision;var position=editor.Read(id).position;
+                Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);Assert.That(editor.Revision,Is.GreaterThan(revision));
+                scheduler.Tick(Time.unscaledTime);
+                Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("failed"));Assert.That((string)scheduler.Invocation(run)["status"],Does.Contain("changed before"));Assert.That(editor.Read(id).position,Is.EqualTo(position));
+                while(editor.TemporarySavePending)yield return null;
+            }finally{scheduler.StopAll();}
+        }
+        [UnityTest] public IEnumerator NativeActionPostLoadEditorRestartIsStaleAtTheSameRevision()
+        {
+            string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);
+            var scheduler=new RuleScheduler(new RoomRuleActions(editor,animations));
+            try{
+                Assert.That(scheduler.Invoke(NativeMove(id),Time.unscaledTime,out var run,out error),Is.True,error);yield return NativeActionLoadedBeforeTick(id);
+                int revision=editor.Revision;var position=editor.Read(id).position;
+                editor.enabled=false;editor.enabled=true;Assert.That(editor.Revision,Is.EqualTo(revision));
+                scheduler.Tick(Time.unscaledTime);
+                Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("failed"));Assert.That((string)scheduler.Invocation(run)["status"],Does.Contain("changed before"));Assert.That(editor.Read(id).position,Is.EqualTo(position));
+            }finally{scheduler.StopAll();}
+        }
         [UnityTest] public IEnumerator NativeActionAgentInvocationLoadsBeforeItsInstantEffectAndKeepsOneUndo()
         {
             string id=editor.Identity(block),area=NativeAreaFor(id);var saved=editor.Read(id);int revision=editor.ObjectRevision(id);
