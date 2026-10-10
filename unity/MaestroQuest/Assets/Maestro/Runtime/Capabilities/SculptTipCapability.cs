@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class SculptTipCapability:CapabilityModule {
+    internal sealed class SculptTipCapability:NativeTargetCapability {
         internal const string Feature="physicalSculpting.v1",MaterialFeature="physicalMaterialTools.v1";
         public override string Id=>"object.sculptTip.edit";
         public override string Label=>"Configure an object's sculpt tip";

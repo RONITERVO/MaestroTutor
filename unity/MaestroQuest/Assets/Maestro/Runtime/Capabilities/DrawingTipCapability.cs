@@ -8,7 +8,7 @@ using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class DrawingTipCapability:CapabilityModule
+    internal sealed class DrawingTipCapability:NativeTargetCapability
     {
         internal const string Feature="drawingTips.v1",EraseFeature="drawingErasers.v1";
         public override string Id=>"object.drawingTip.edit";

@@ -37,7 +37,7 @@ namespace Maestro.Quest.Programs
             public override JObject Result=>result??new JObject();
         }
     }
-    internal sealed class AvatarModelCapability:CapabilityModule
+    internal sealed class AvatarModelCapability:NativeTargetCapability
     {
         public override string Id=>"avatar.model.select";
         public override string Label=>"Choose Maestro avatar";

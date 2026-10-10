@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class ConnectionCapability:CapabilityModule {
+    internal sealed class ConnectionCapability:NativeResourceInputsCapability {
         internal const string Feature="physicalConnections.v1",SliderFeature="physicalSliders.v1";
         public override string Id=>"object.connection.edit";
         public override string Label=>"Connect physical pieces";

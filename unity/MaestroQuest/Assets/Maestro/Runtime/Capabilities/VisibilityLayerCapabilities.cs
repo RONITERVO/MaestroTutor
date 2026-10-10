@@ -25,6 +25,7 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class VisibilityLayerSaveCapability:VisibilityLayerCapability
     {
+        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"visibility.layer.save";
         public override string Label=>"Save visual layer";
         public override string Description=>"Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to 66). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object."+Rules;
@@ -59,6 +60,7 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class VisibilityAssignCapability:VisibilityLayerCapability
     {
+        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"object.visibility.assign";
         public override string Label=>"Choose object visual layer";
         public override string Description=>"Assign a saved visual layer to Maestro, the book frame or a creation. Read object.visibility for the current object revision and visibility.layer for the selected layer revision. Empty layerId with layerRevision 0 restores full visibility and inherited depth. Assignment affects that object and its visual children, excluding independent room objects and book browser pages. It leaves simulation and physical participation unchanged."+Rules;

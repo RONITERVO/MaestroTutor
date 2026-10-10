@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal abstract class SpatialSettingsCapability:CapabilityModule
+    internal abstract class SpatialSettingsCapability:NativeTargetCapability
     {
         public override string Duration=>"instant";
         // Returning an already-owned target is not a creation (including after a full batch).

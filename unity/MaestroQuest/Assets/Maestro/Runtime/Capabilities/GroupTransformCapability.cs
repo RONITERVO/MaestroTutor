@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class GroupTransformCapability:CapabilityModule {
+    internal sealed class GroupTransformCapability:NativeResourceInputsCapability {
         internal const string Feature="groupTransforms.v1";
         public override string Id=>"object.layout.transform";
         public override string Label=>"Move, turn or resize a construction";

@@ -319,3 +319,35 @@ object ID to one-off receipts and version-3 program locals. Human blocks and the
 agent use the same result binding, with native authority checks, room Undo and
 no duplicate creation on receipt replay. See [contract and boundaries](QUEST_CREATION_RESULTS.md).
 This does not complete all creation/import capabilities or Quest/store acceptance.
+
+
+## Native dependencies for authored-object actions
+
+A module's `NativeEntities` declaration names the native instances needed before
+its ordinary `CanRun` and `Start` checks. It is independent of channel ownership:
+a transfer needs both endpoints, a copy needs its source, and a structure capture
+needs every member's current native placement. Use `NativeTargetCapability` for
+one explicit target. Opt into `NativeResourceInputsCapability` only when every
+object-valued input in the versioned schema is a native dependency. Variant-specific
+operations and saved-only references must override this explicitly. Typed wrappers
+forward the selected handler's declaration; they must not infer loading from a
+field named `target`, which can also be a number in a joint drive.
+
+Authoring coverage includes component/geometry edits, drawing tools, surface
+placement, construction transforms/snapping/capture/selection, liquid/material
+transfers, structure reset, and bindings to appearance, environment and visibility
+profiles. Saving an unbound definition, forgetting a structure and hiding a
+construction handle do not load unrelated objects. Facts remain read-only.
+
+Acquisition establishes native instance presence, not interactive visibility.
+Ordinary motion still requires an active object. The existing component editor,
+scanned-ink rebind and shared delete paths can work with an inactive native
+instance when their own validation allows it. That lets an absent physical anchor
+hide ink without making its repair or deletion inaccessible to the agent.
+
+Physical room setup and authored collision readiness have separate notifications.
+Loading an authored instance updates physics admission without invalidating the
+physical placement request that caused the load. Scan changes, lifecycle changes,
+explicit physics controls and an actual running-to-paused transition still
+invalidate the scanned-room token. This distinction does not start physics or
+relax missing-geometry admission.

@@ -68,8 +68,8 @@ namespace Maestro.Quest.Interaction
             RefreshCollisionAdmission();
             bool ready=AnySimulationReady;
             if(ready==observedReady)return;
-            if(!ready)Running=false;
-            Status=Running?"Physics on — grip to pick up, release to throw":IdleStatus;Notify();
+            bool wasRunning=Running;if(!ready)Running=false;
+            Status=Running?"Physics on — grip to pick up, release to throw":IdleStatus;Notify(setupChanged:wasRunning!=Running);
         }
     }
 }

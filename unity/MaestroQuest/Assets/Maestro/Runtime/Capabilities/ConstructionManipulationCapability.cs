@@ -8,6 +8,7 @@ using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
     internal sealed class ConstructionManipulationCapability:CapabilityModule {
         internal const string Feature="constructionManipulation.v1";
+        internal override IEnumerable<string> NativeEntities(JObject args)=>(bool)args["visible"]?CapabilityArguments.Resources(args,InputSchema):System.Array.Empty<string>();
         public override string Id=>"room.selection.manipulate";
         public override string Label=>"Show or hide the construction move handle";
         public override string Duration=>"instant";

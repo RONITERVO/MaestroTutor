@@ -9,7 +9,7 @@ using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class LayoutCapability:CapabilityModule
+    internal sealed class LayoutCapability:NativeResourceInputsCapability
     {
         internal const string Feature="layoutEdits.v1";
         public override string Id=>"object.layout.apply";

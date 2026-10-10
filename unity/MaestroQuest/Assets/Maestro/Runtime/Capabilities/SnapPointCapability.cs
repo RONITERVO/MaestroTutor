@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class SnapPointCapability:CapabilityModule {
+    internal sealed class SnapPointCapability:NativeTargetCapability {
         internal const string Feature="snapPoints.v1";
         public override string Id=>"object.snapPoint.edit";
         public override string Label=>"Edit a snap point";

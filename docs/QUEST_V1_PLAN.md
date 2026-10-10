@@ -6664,3 +6664,40 @@ An acquisition restores the existing area/connection closure using the canonical
 Automatic unloading remains disabled. These are internal admission primitives exercised by offline native tests. Observation/audibility demand, per-frame geometry preparation budgets, ground/water/navigation/swept-support dependencies, regional collision admission, scalable capacities and physical/provider acceptance are still required before distant areas can stream automatically. Whole-world simulation still refuses while any authored area is dormant. No larger capacity, automatic distant simulation, Quest installation or release acceptance follows from this increment.
 
 A completed load retains its journal identity, revision and native generation through final effect admission, including any subsequent channel wait. A new edit or a replacement journal (even at the same revision) between load completion and the next scheduler frame fails the pending action without changing the newer state. Native integration regressions exercise a newer edit, a temporary-room journal boundary, and an editor disable/re-enable at an unchanged revision.
+
+
+### Native authoring dependencies — 2026-10-11
+
+The native-module audit now extends action-owned loading to authoring operations:
+copying, animation authoring, collision/geometry and component edits, physical
+surface placement, drawing tools, construction capture/transforms/selection,
+liquid/material transfers, structure reset, and appearance/environment/visibility
+bindings. Object-valued schema references can supply the dependency list only for
+explicitly opted-in modules. Fresh creation and saved-only operations retain
+empty lists; hiding a construction handle remains available without loading it.
+
+Native acquisition distinguishes an existing inactive instance from a missing
+instance. It preserves each handler's active-state requirements rather than
+forcing every edit through interactive visibility. This also restores shared
+user/agent deletion parity for scanned ink hidden by a missing physical anchor.
+
+An integration regression exposed physical placement cancelling its own request
+when restored authored geometry changed whole-world collision admission. The
+physics service now reports that readiness separately from scanned-room setup.
+Both physics observers and admission tokens still update; actual physical-room
+changes and transitions that stop running physics still invalidate pending
+placement. No saved token is silently refreshed to force a request through.
+
+This completes the current explicit authoring-dependency audit, not automatic
+streaming. New modules must declare and test their native dependencies. Frame
+budgets, observer/audibility/swept demand, ground/water/navigation support,
+regional physics admission, concurrent acquisition ownership and scalable capacity
+remain required before enabling automatic unloading. Device/provider and release
+acceptance remain outstanding.
+
+The first full verification attempt for this increment reproduced the documented
+intermittent acoustic-map issue: the unchanged native audio stress test missed
+map readiness, followed by an access violation in MetaXRAudioUnity.dll. The failed
+run is retained with the verification evidence. Production reflection routing
+remains disabled; a successful isolated test or rerun is not a resolution of that
+SDK lifetime issue.

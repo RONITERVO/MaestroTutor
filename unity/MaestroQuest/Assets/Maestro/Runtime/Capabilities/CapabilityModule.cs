@@ -44,6 +44,12 @@ namespace Maestro.Quest.Programs
     {
         internal override IEnumerable<string> NativeEntities(JObject arguments)=>new[]{(string)arguments["target"]};
     }
+    // Opt in only when every object-valued input is needed as a native instance.
+    // Saved-only references and cleanup variants keep explicit declarations instead.
+    internal abstract class NativeResourceInputsCapability : CapabilityModule
+    {
+        internal override IEnumerable<string> NativeEntities(JObject arguments)=>CapabilityArguments.Resources(arguments,InputSchema);
+    }
     /// <summary>Validated named call. Mutable caller JSON can never change the authorized effect.</summary>
     public sealed class CapabilityCall
     {
@@ -70,9 +76,9 @@ namespace Maestro.Quest.Programs
         public WorkspaceExport ArchiveExport=>Workspace?Workspace.Export:Editor?Editor.GetComponent<WorkspaceExport>():null;
         public CapabilityContext(RoomEditor editor,AnimationWorkshop workshop) {this.editor=editor;this.workshop=workshop;Workspace=editor?editor.GetComponentInParent<WorkspaceHost>():null;}
         public CapabilityContext(WorkspaceHost workspace){Workspace=workspace;followsWorkspace=true;}
-        public bool Target(JObject arguments,out RoomItem item,out string error,bool allowSpatial=false,bool allowUpperBody=false) {
+        public bool Target(JObject arguments,out RoomItem item,out string error,bool allowSpatial=false,bool allowUpperBody=false,bool allowInactive=false) {
             item=null;error="The room is unavailable";
-            if(!Editor||!Editor.TryGetLiveObject((string)arguments["target"],out item,out error))return false;
+            if(!Editor||!(allowInactive?Editor.TryGetNativeObject((string)arguments["target"],out item,out error):Editor.TryGetLiveObject((string)arguments["target"],out item,out error)))return false;
             if(item.Grab.isSelected||Workshop&&Workshop.ControlsTarget((string)arguments["target"])) {error="Release the target and stop authoring before running its rule";return false;}
             var tutor=item.GetComponent<MaestroAvatar>();
             if(tutor&&tutor.ModelBusy) {error="Wait for Maestro to finish loading";return false;}

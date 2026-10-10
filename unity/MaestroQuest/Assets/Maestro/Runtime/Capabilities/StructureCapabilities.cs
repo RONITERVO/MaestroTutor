@@ -24,6 +24,7 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class StructureSaveCapability:StructureCapability
     {
+        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"structure.save";
         public override string Label=>"Save a structure";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
@@ -64,6 +65,7 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class StructureResetCapability:StructureCapability
     {
+        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"structure.reset";
         public override string Label=>"Reset a structure";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};

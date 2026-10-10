@@ -11,7 +11,7 @@ using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class SurfacePlacementCapability:CapabilityModule
+    internal sealed class SurfacePlacementCapability:NativeTargetCapability
     {
         public override string Id=>"object.surface.place";
         public override string Label=>"Place on a detected surface";

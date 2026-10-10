@@ -94,7 +94,9 @@ namespace Maestro.Quest.Creation
         {
             loading=false;error="A required saved object is missing";var graph=ReadRetention();
             if(graph==null||targets.Any(id=>!graph.Contains(id)))return false;
-            foreach(var id in targets)if(!NativeEntityDormant(id)&&!TryGetLiveObject(id,out _,out error))return false;
+            // Acquisition proves instance presence. Each module decides whether an
+            // inactive instance can be repaired, edited or removed by its action.
+            foreach(var id in targets)if(!NativeEntityDormant(id)&&!TryGetNativeObject(id,out _,out error))return false;
             loading=graph.Closure(targets).Any(NativeEntityDormant);
             error=null;return !loading||NativeTransitionAvailable(out error);
         }

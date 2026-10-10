@@ -11,7 +11,7 @@ using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
     // Named authoring edits operate on the same saved motion as the physical frame tools.
-    internal sealed class AnimationAuthoringCapability:CapabilityModule
+    internal sealed class AnimationAuthoringCapability:NativeTargetCapability
     {
         public override string Id=>"animation.author";
         public override string Label=>"Edit pose or recorded motion";

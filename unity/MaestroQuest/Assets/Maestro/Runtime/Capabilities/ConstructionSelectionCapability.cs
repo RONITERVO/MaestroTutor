@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class ConstructionSelectionCapability:CapabilityModule {
+    internal sealed class ConstructionSelectionCapability:NativeResourceInputsCapability {
         internal const string Feature="constructionSelection.v1";
         public override string Id=>"room.selection.set";
         public override string Label=>"Choose construction pieces";

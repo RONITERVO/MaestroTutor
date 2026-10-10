@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class HeightFieldCapability:CapabilityModule {
+    internal sealed class HeightFieldCapability:NativeTargetCapability {
         internal const string Feature="heightFields.v1";
         public override string Id=>"object.field.edit";
         public override string Label=>"Configure or reset a sculptable surface";
@@ -29,7 +29,7 @@ namespace Maestro.Quest.Programs {
         internal static BehaviourCatalog.FactDefinition Fact()=>new("object.field",OutputType(Object(new JObject{["revision"]=Revision(),["configured"]=new JObject{["type"]="boolean"},["definition"]=DefinitionSchema(),["count"]=Number(0,289,true),["minimum"]=Number(0,.5),["maximum"]=Number(0,.5),["volumeLitres"]=Number(0,8000)})),"Sculptable surface","Saved field geometry, local geometric volume, height range and current object revision. Missing fields return inert editable defaults with configured=false/count=0. Exact heights are paged through object.field.samples. Volume is in unscaled local litres; prop scale does not rewrite heights. Read-only; no reset or simulation.",Object(new JObject{["target"]=DrawingData.Target()}),new JObject{["target"]=new string('0',32)},(c,a)=>{var d=c.Editor?c.Editor.Read((string)a["target"]):null;if(d==null||d.IsBuiltIn)return null;var f=d.heightFields?.FirstOrDefault();return ProgramValue.Literal(new JObject{["revision"]=c.Editor.ObjectRevision(d.id),["configured"]=f!=null,["definition"]=Definition(f??new RoomHeightField()),["count"]=f?.heights.Length??0,["minimum"]=f?.heights.Min()??0,["maximum"]=f?.heights.Max()??0,["volumeLitres"]=f?.VolumeLitres??0});},features:new[]{Feature});
         internal static BehaviourCatalog.FactDefinition Samples(){var type=OutputType(Object(new JObject{["revision"]=Revision(),["offset"]=Number(0,289,true),["count"]=Number(25,289,true),["heights"]=List(Number(0,.5),0,16)}));return new("object.field.samples",type,"Exact surface heights","Read at most 16 saved grid-vertex heights in row-major order, X first then Z, in local metres along frame +Y. Matching revision required. Offset equal to count returns an empty page; later offsets, missing fields or stale revisions are unavailable. Read all pages to reconstruct the exact source; this never sculpts or advances a revision.",Object(new JObject{["target"]=DrawingData.Target(),["revision"]=Revision(),["offset"]=Number(0,289,true)}),new JObject{["target"]=new string('0',32),["revision"]=1,["offset"]=0},(c,a)=>{string id=(string)a["target"];int offset=(int)a["offset"];var f=c.Editor&&c.Editor.ObjectRevision(id)==(int)a["revision"]?c.Editor.Read(id)?.heightFields?.FirstOrDefault():null;if(f==null||offset>f.heights.Length)return null;return ProgramValue.Literal(new JObject{["revision"]=(int)a["revision"],["offset"]=offset,["count"]=f.heights.Length,["heights"]=new JArray(f.heights.Skip(offset).Take(16))},type);},features:new[]{Feature});}
     }
-    internal sealed class SculptFieldCapability:CapabilityModule {
+    internal sealed class SculptFieldCapability:NativeTargetCapability {
         public override string Id=>"object.field.sculpt";
         public override string Label=>"Sculpt a surface path";
         public override string Duration=>"instant";

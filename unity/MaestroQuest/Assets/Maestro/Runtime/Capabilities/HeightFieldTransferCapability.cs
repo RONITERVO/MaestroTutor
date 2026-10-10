@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class HeightFieldTransferCapability:CapabilityModule {
+    internal sealed class HeightFieldTransferCapability:NativeResourceInputsCapability {
         internal const string Feature="heightFieldTransfer.v1";
         public override string Id=>"object.field.transfer";
         public override string Label=>"Transfer surface volume";

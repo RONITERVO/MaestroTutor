@@ -25,6 +25,7 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class EnvironmentProfileSaveCapability:EnvironmentProfileCapability
     {
+        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"environment.profile.save";
         public override string Label=>"Save environment profile";
         public override string Description=>"Create or edit one of up to 16 reusable environment profiles, each shared by at most 16 objects. Empty id and revision 0 create a new stable ID. Otherwise read environment.profile and supply its exact revision and every bound member. realCollisions=false lets those objects use virtual terrain below or beyond the real floor/walls. realCollisions=true inherits the global real-room switch. Read environment.profiles to find definitions. Saving does not assign new members; use object.environment.assign."+Rules;
@@ -59,6 +60,7 @@ namespace Maestro.Quest.Programs
     }
     internal sealed class EnvironmentAssignCapability:EnvironmentProfileCapability
     {
+        internal override IEnumerable<string> NativeEntities(JObject args)=>CapabilityArguments.Resources(args,InputSchema);
         public override string Id=>"object.environment.assign";
         public override string Label=>"Choose object environment";
         public override string Description=>"Assign a saved environment profile to the book, Maestro or a creation, including all its assembly/import child colliders. Read object.environment for target revision and environment.profile for selected profile revision. An empty profileId with profileRevision 0 explicitly restores inherited real-room participation. One object's assignment does not edit the reusable profile or other members. It does not start physics or walking."+Rules;

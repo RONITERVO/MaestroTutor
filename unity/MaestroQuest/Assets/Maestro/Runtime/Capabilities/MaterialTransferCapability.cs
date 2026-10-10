@@ -5,7 +5,7 @@ using Maestro.Quest.Creation;
 using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class MaterialTransferCapability:CapabilityModule {
+    internal sealed class MaterialTransferCapability:NativeResourceInputsCapability {
         internal const string Feature="materialTransfer.v1";
         public override string Id=>"object.material.transfer";
         public override string Label=>"Transfer carried or surface material";

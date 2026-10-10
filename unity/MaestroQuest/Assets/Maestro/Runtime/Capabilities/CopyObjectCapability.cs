@@ -6,7 +6,7 @@ using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
     // Private provider of the public object.create kind=copy; no legacy enum entry.
-    internal sealed class CopyObjectCapability:CapabilityModule
+    internal sealed class CopyObjectCapability:NativeTargetCapability
     {
         public override string Id=>"object.create.copy";
         public override string Label=>"Copy an existing creation";

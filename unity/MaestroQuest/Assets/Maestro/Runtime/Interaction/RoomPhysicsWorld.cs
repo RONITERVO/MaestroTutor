@@ -14,11 +14,13 @@ namespace Maestro.Quest.Interaction
         public bool Running { get; private set; }
         public string Status { get; private set; } = "Load or scan your room to use gravity";
         public event Action Changed;
+        // Authored native readiness changes physics admission, not the physical scan.
+        internal event Action SetupChanged;
         public Func<Vector3, bool> Contains;
         bool paused,focused=true;
         string stateId=Guid.NewGuid().ToString("N");
         bool Active=>!paused&&focused&&isActiveAndEnabled;
-        void Notify(){observedReady=AnySimulationReady;stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
+        void Notify(bool setupChanged=true){observedReady=AnySimulationReady;stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();if(setupChanged)SetupChanged?.Invoke();}
         string IdleStatus=>CollisionAdmissionIssue??(AnySimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Add accepted virtual ground before starting physics");
         RoomRuntimeGate runtimeGate;
         internal bool RuntimeHeld=>runtimeGate?.Held==true;

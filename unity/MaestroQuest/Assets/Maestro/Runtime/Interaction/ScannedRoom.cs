@@ -36,7 +36,7 @@ namespace Maestro.Quest.Interaction
         float nextCheck;
         public void Initialize(RoomPhysicsWorld physics)
         {
-            world = physics; world.Changed+=WorldChanged;
+            world = physics; world.SetupChanged+=WorldChanged;
 #if UNITY_ANDROID && !UNITY_EDITOR
             var sceneRoot = new GameObject("Scanned environment"); sceneRoot.SetActive(false); sceneRoot.transform.SetParent(transform,false);
             mruk = sceneRoot.AddComponent<MRUK>();
@@ -114,7 +114,7 @@ namespace Maestro.Quest.Interaction
         void OnDestroy()
         {
             CancelRequest("Room setup cancelled because the room closed");
-            if(world)world.Changed-=WorldChanged;
+            if(world)world.SetupChanged-=WorldChanged;
             SetCurrentRoom(null);
             tracked?.Dispose();
             if (mruk) { mruk.RoomUpdatedEvent.RemoveListener(RoomChanged); mruk.RoomRemovedEvent.RemoveListener(RoomChanged); mruk.SceneLoadedEvent.RemoveListener(SceneLoaded); }

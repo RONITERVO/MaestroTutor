@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class ScanDrawingCapability:CapabilityModule
+    internal sealed class ScanDrawingCapability:NativeResourceInputsCapability
     {
         internal const string Feature="scanDrawingLayers.v1";
         public override string Id=>"drawing.layer.edit";

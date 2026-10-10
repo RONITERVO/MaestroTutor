@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class ScanPlacementCapability:CapabilityModule
+    internal sealed class ScanPlacementCapability:NativeTargetCapability
     {
         internal const string Feature="scanPlacement.v1";
         public override string Id=>"object.scan.place";

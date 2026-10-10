@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class MaterialStoreCapability:CapabilityModule {
+    internal sealed class MaterialStoreCapability:NativeTargetCapability {
         internal const string Feature="materialStores.v1";
         public override string Id=>"object.material.edit";
         public override string Label=>"Configure a measured material store";
@@ -26,7 +26,7 @@ namespace Maestro.Quest.Programs {
         public override bool Start(CapabilityContext c,string run,JObject a,out CapabilityOperation operation,out string error){operation=null;if(!c.Editor.EditMaterialStore((string)a["target"],(int)a["revision"],Read(a),out error))return false;operation=new CompletedCapability();return true;}
         internal static BehaviourCatalog.FactDefinition Fact()=>new("object.material",OutputType(Object(new JObject{["revision"]=Revision(),["configured"]=new JObject{["type"]="boolean"},["definition"]=DefinitionSchema()})),"Measured carried material","Saved logical local litres, capacity, material identity and colour. Quantity stays unchanged on resize and does not set mass or infer geometry. Missing stores return inert editable defaults with configured=false. Reading never creates material or starts simulation.",Object(new JObject{["target"]=DrawingData.Target()}),new JObject{["target"]=new string('0',32)},(c,a)=>{var d=c.Editor?c.Editor.Read((string)a["target"]):null;if(d==null||d.IsBuiltIn)return null;var s=d.materialStores?.FirstOrDefault();return ProgramValue.Literal(new JObject{["revision"]=c.Editor.ObjectRevision(d.id),["configured"]=s!=null,["definition"]=Definition(s??new RoomMaterialStore())});},features:new[]{Feature});
     }
-    internal sealed class PackMaterialCapability:CapabilityModule {
+    internal sealed class PackMaterialCapability:NativeResourceInputsCapability {
         internal const string Feature="materialPacking.v1";
         public override string Id=>"object.material.pack";
         public override string Label=>"Pack surface material into a ball";

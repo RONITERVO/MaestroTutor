@@ -51,6 +51,16 @@ namespace Maestro.Quest.Tests
             var rebind=LayerArgs("rebind",id);rebind["x"]=-.2;Assert.That(modeActions.Execute(SettingsRequest("drawing.layer.edit",rebind),out var error),Is.True,error);Assert.That((bool)InkFact(id)["visible"],Is.True);Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));editor.Undo();Assert.That((bool)InkFact(id)["visible"],Is.False);Assert.That(editor.Read(id).scanAnchors[0].roomId,Is.EqualTo(originalRoom));source.RoomId=originalRoom;yield return null;yield return null;Assert.That(view.Visible,Is.True,"Editor must recover an inactive layer without another edit");
             source.Entries[0].Plane=new Rect(-.05f,-.05f,.1f,.1f);yield return null;Assert.That((bool)InkFact(id)["visible"],Is.False);Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));Assert.That(editor.DeleteObject(id,out error),Is.True,error);Assert.That(editor.Read(id),Is.Null);editor.Undo();Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));yield return null;
         }
+        [UnityTest] public IEnumerator HiddenScannedInkCanBeDeletedThroughTheSharedActionAndUndone()
+        {
+            var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);
+            string id=MakeLayer(out _);InkAdd(id);var saved=editor.Read(id).Copy();source.Entries=Array.Empty<ScannedSurface>();yield return null;
+            Assert.That(editor.Find(id).gameObject.activeSelf,Is.False);Assert.That(editor.NativeEntityDormant(id),Is.False);
+            Assert.That(modeActions.Execute(SettingsRequest("object.delete",new JObject{["target"]=id}),out var error),Is.True,error);
+            Assert.That(editor.Read(id),Is.Null);editor.Undo();Assert.That(editor.Read(id).scanAnchors[0].roomId,Is.EqualTo(saved.scanAnchors[0].roomId));
+            Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));yield return null;
+            Assert.That(editor.Find(id).gameObject.activeSelf,Is.False,"Undo retains the exact missing anchor rather than inventing visibility");
+        }
         [UnityTest] public IEnumerator AnchorLossRetainsPhysicalInkAndRecoveryRequiresMatchingBinding()
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);string id=MakeLayer(out _);var item=editor.Find(id);var patch=item.GetComponent<DrawingSurfaceView>().Surface("Canvas");var pencil=root.AddComponent<SpatialDrawing>();pencil.Editor=editor;Assert.That(editor.ConfigureDrawing("surface",Color.white,.003f,out var error),Is.True,error);

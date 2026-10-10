@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class WindowCapability:CapabilityModule
+    internal sealed class WindowCapability:NativeTargetCapability
     {
         internal const string Feature="passthroughWindows.v1";
         public override string Id=>"object.window.edit";

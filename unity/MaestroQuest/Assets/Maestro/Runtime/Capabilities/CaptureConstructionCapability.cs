@@ -9,7 +9,7 @@ using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class CaptureConstructionCapability:CapabilityModule
+    internal sealed class CaptureConstructionCapability:NativeResourceInputsCapability
     {
         internal const string Feature="constructionCapture.v1";
         public override string Id=>"program.module.captureConstruction";

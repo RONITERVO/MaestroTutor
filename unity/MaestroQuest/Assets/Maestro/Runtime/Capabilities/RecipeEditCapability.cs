@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class RecipeEditCapability:CapabilityModule
+    internal sealed class RecipeEditCapability:NativeTargetCapability
     {
         public override string Id=>"object.recipe.edit";
         public override string Label=>"Edit recipe parts and animation";

@@ -9,7 +9,7 @@ using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class DrawingSurfaceCapability:CapabilityModule
+    internal sealed class DrawingSurfaceCapability:NativeTargetCapability
     {
         internal const string Feature="drawingSurfaces.v1";
         public override string Id=>"object.surface.edit";

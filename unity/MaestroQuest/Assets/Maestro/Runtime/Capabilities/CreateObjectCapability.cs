@@ -32,6 +32,7 @@ namespace Maestro.Quest.Programs
         public override string Duration=>"instant";
         public override string Ownership=>"kindChannels";
         public override IReadOnlyList<string> Channels=>Kinds.SelectMany(k=>k.Provider.Channels).Distinct().ToArray();
+        internal override IEnumerable<string> NativeEntities(JObject args){var kind=Selected(args);return kind.Provider.NativeEntities(kind.Adapter.Native(args));}
         public override BehaviourCatalog.Claim[] Claims(JObject args){var kind=Selected(args);return kind.Provider.Claims(kind.Adapter.Native(args));}
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","kind.valid"};
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Creation kind",["oneOf"]=new JArray(Kinds.Select(k=>k.Schema)),["x-discriminators"]=new JArray("kind")};

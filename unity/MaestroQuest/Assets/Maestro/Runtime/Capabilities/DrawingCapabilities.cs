@@ -35,7 +35,7 @@ namespace Maestro.Quest.Programs
             operation=new CompletedCapability(new JObject {["objectId"]=id});return true;
         }
     }
-    internal sealed class DrawingEditCapability:CapabilityModule
+    internal sealed class DrawingEditCapability:NativeTargetCapability
     {
         public override string Id=>"object.drawing.edit";
         public override string Label=>"Edit a pencil stroke";

@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class SnapConstructionCapability:CapabilityModule {
+    internal sealed class SnapConstructionCapability:NativeResourceInputsCapability {
         public override string Id=>"object.layout.snap";
         public override string Label=>"Snap a construction to a point";
         public override string Duration=>"instant";

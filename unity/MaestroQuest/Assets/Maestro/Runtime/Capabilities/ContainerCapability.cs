@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
-    internal sealed class ContainerCapability:CapabilityModule {
+    internal sealed class ContainerCapability:NativeTargetCapability {
         internal const string Feature="containers.v1",RectangularFeature="rectangularContainers.v1";
         public override string Id=>"object.container.edit";
         public override string Label=>"Configure or fill a liquid container";
@@ -33,7 +33,7 @@ namespace Maestro.Quest.Programs {
         static JObject FactSchema(){var schema=DefinitionSchema();schema["properties"]["rectangle"]["nullable"]=false;((JArray)schema["required"]).Add("rectangle");((JArray)schema["required"]).Add("fluid");return schema;}
         internal static BehaviourCatalog.FactDefinition Fact()=>new("object.container",OutputType(Object(new JObject{["revision"]=Revision(),["configured"]=new JObject{["type"]="boolean"},["definition"]=FactSchema()})),"Liquid container and contents","Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Both rectangle dimensions are zero for a cylinder; positive dimensions replace radius for a rectangular cavity. Amount/capacity use millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",Object(new JObject{["target"]=DrawingData.Target()}),new JObject{["target"]=new string('0',32)},(c,a)=>{var d=c.Editor?c.Editor.Read((string)a["target"]):null;if(d==null||d.IsBuiltIn)return null;var container=d.containers?.FirstOrDefault();return ProgramValue.Literal(new JObject{["revision"]=c.Editor.ObjectRevision(d.id),["configured"]=container!=null,["definition"]=Definition(container??new RoomContainer(),true)});},features:new[]{Feature});
     }
-    internal sealed class ContainerTransferCapability:CapabilityModule {
+    internal sealed class ContainerTransferCapability:NativeResourceInputsCapability {
         public override string Id=>"object.container.transfer";
         public override string Label=>"Transfer a measured amount of liquid";
         public override string Duration=>"instant";

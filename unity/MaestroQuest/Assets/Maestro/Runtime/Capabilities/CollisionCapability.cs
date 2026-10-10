@@ -8,7 +8,7 @@ using UnityEngine;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class CollisionCapability:CapabilityModule
+    internal sealed class CollisionCapability:NativeTargetCapability
     {
         public override string Id=>"object.collision.edit";
         public override string Label=>"Edit collision shapes";
