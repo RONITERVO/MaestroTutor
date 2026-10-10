@@ -101,6 +101,7 @@ namespace Maestro.Quest.Creation
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro",WorldIdentity);
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
             Reconcile();
+            PhysicsWorld?.ConfigureCollisionAdmission(this,RegionCollisionIssue);
             gameObject.AddComponent<Art.WorldLightingView>().Initialize(this);
             gameObject.AddComponent<Art.WorldRainView>().Initialize(this);
             room.RecoveryEditor=this;
@@ -445,6 +446,7 @@ namespace Maestro.Quest.Creation
                 item.gameObject.SetActive(false); Destroy(item.gameObject);
             }
             SynchronizeVisibility(document);
+            regionModels.Clear();
             int slot = 0;
             foreach (var data in document.objects)
             {
@@ -457,6 +459,7 @@ namespace Maestro.Quest.Creation
                     AddIdentity(data.id,item); room.Register(item);
                     created = true;
                 }
+                if(data.kind==RoomObjectKind.ImportedModel)regionModels[data.id]=item.GetComponent<CreatedRoomObject>();
                 // Undo/Redo reconfigure the full document, but only the objects in
                 // that history entry own a pose restoration. Unrelated live poses
                 // may differ legitimately from their last saved placement.
@@ -493,7 +496,7 @@ namespace Maestro.Quest.Creation
             // Resolve links only after every member and its current pose/collider exists.
             foreach(var data in document.objects){var item=Find(data.id);var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge)hinge.Apply(this,data.connections);}
             Liquids?.Synchronize(document);
-            applying = false; UpdateSelection();
+            applying = false; RefreshRegionCollision(); UpdateSelection();
         }
 
         void ApplyPose(RoomItem item, RoomObjectData data)
@@ -668,7 +671,8 @@ namespace Maestro.Quest.Creation
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
-        void OnDisable(){worldTimeTickReady=false;ResetLayerPresentation(true);}
+        void OnEnable(){RefreshRegionCollision();}
+        void OnDisable(){worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ClearViewCapture();FinishLiquidPour(out _);

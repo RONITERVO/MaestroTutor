@@ -6541,3 +6541,38 @@ bindings still allocate during reconciliation; generic source copies and restore
 remain asynchronous. Regional loading, aggregate budgets, provider/headset checks
 and release gates remain open. No save-format migration or additional AI API is
 introduced.
+
+
+### Collision admission before regional activation — 2026-10-10
+
+The current authored region now binds collision readiness to its own RoomEditor.
+Accepted imported objects must have their actual native geometry available before
+physics or traversal can use the region. A ready scan or a different accepted
+floor cannot stand in for a queued, missing, failed, disabled or disposed model.
+The refusal identifies the saved target. Raw scan/ground observations remain
+separate from effective simulation readiness; the existing shared physics facts
+and controls expose the same gate to people, agents and programs.
+
+Losing required geometry pauses physics and invalidates its simulation intent.
+Moving bodies stop and navigation loses its accepted map. Loading completion,
+removing a failed reference, or re-enabling an owner does not silently restart
+physics or replay throw velocity. Read-only observations and capability preflight
+do not perform this transition themselves. The native lifecycle applies it; fresh
+manual or shared Start is still required. Unaccepted previews and prepared imports
+are outside the accepted region roster, so they cannot pause existing activity.
+An already prepared model transfers into that roster without a loading pause.
+
+This is admission for imported collision in the existing single bounded region.
+It is not an all-resource transaction, general region authoring, spatial streaming,
+cross-region dependency tracking, larger coordinate support or offscreen catch-up.
+Those remain required. Future activation must evaluate this same dependency rule
+per relevant region, retaining moving/held actors, ground, audible sources and
+active-task dependencies rather than globally pausing unrelated loaded regions.
+Do not turn today’s one-region pause into the final multi-region policy. Saved
+copies/restores continue to preserve exact asset references independently of their
+runtime readiness. No saved format, collision participation profile, visibility,
+audio policy, installed APK, provider or release setting changes here.
+
+The initial native regressions prove that both a queued import and an unavailable
+saved model previously allowed physics against an aligned scan. See the release
+coverage ledger for the regression runs and subsequent complete verification.

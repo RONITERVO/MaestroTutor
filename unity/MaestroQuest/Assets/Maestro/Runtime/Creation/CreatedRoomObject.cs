@@ -156,7 +156,7 @@ namespace Maestro.Quest.Creation
                 Model.AttachObjectAcoustics();
                 ApplyModelGeometry(requestedModelGeometry);
             }
-            catch (System.Exception error) { if (this) {ModelStatus = ModelGeometryIssue = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again.";modelGeometryReady=false;SetCollisionShape(collisionShape,true);} }
+            catch (System.Exception error) { if (this) {ModelStatus = ModelGeometryIssue = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again.";modelGeometryReady=false;SetCollisionShape(collisionShape,true);GetComponentInParent<RoomEditor>()?.RefreshRegionCollision();} }
         }
         public void ApplyColor(Color color) { tint = color; GetComponent<HeightFieldView>()?.Tint(color); if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
         public void SetSelection(bool primary,bool member){primarySelected=primary;constructionSelected=member;SetSelected(primary||member);}

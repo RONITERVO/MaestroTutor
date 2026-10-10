@@ -16,11 +16,11 @@ namespace Maestro.Quest.Interaction
         internal void RegisterEnvironment(RoomEnvironmentBinding value)=>environments.Add(value);
         internal void UnregisterEnvironment(RoomEnvironmentBinding value)=>environments.Remove(value);
         internal bool IncludesRealRoom(RoomItem item)=>RealCollisions&&(!item||!item.TryGetComponent<RoomEnvironmentBinding>(out var binding)||binding.RealCollisions);
-        internal bool EnvironmentReady(RoomItem item)=>IncludesRealRoom(item)?SurfacesReady:AuthoredReady();
+        internal bool EnvironmentReady(RoomItem item)=>CollisionReady&&(IncludesRealRoom(item)?SurfacesReady:AuthoredReady());
         internal bool AnySimulationReady {
-            get {if(SimulationReady)return true;foreach(var binding in environments)if(binding&&binding.isActiveAndEnabled&&!binding.RealCollisions)return AuthoredReady();return false;}
+            get {if(!CollisionReady)return false;if(SimulationReady)return true;foreach(var binding in environments)if(binding&&binding.isActiveAndEnabled&&!binding.RealCollisions)return AuthoredReady();return false;}
         }
-        public bool SimulationReady => RealCollisions ? SurfacesReady : AuthoredReady();
+        public bool SimulationReady => CollisionReady&&(RealCollisions ? SurfacesReady : AuthoredReady());
         internal int CollisionMask(int mask,RoomItem item=null) => IncludesRealRoom(item) ? mask : mask & ~(1<<RoomPhysicsLayers.Scanned);
         bool GatherGround()=>GatherGround(ground);
         internal bool GatherGround(List<RoomWalkableSurface> destination) {
@@ -36,7 +36,7 @@ namespace Maestro.Quest.Interaction
         }
         internal bool ContainsSimulation(Vector3 point,RoomItem item=null)=>ContainsEnvironment(point,IncludesRealRoom(item));
         internal bool ContainsEnvironment(Vector3 point,bool real) {
-            if(!float.IsFinite(point.sqrMagnitude))return false;
+            if(!CollisionReady||!float.IsFinite(point.sqrMagnitude))return false;
             if(real)return SurfacesReady&&(Contains==null||Contains(point));
             if(!GatherGround())return false;
             // Until streamed region bounds exist, simulation is bounded to actual
@@ -65,6 +65,7 @@ namespace Maestro.Quest.Interaction
         }
         void Update() {
             Creation.CollisionResources.Collect();
+            RefreshCollisionAdmission();
             bool ready=AnySimulationReady;
             if(ready==observedReady)return;
             if(!ready)Running=false;

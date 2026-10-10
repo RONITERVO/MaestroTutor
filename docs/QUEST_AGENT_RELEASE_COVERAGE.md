@@ -2860,3 +2860,33 @@ restores still preserve references independently of native readiness. Global
 resource admission, other presentation allocations, regions/streaming and remaining
 v1 requirements are not completed by this increment. Existing HTTP 402, headset
 cooling/charge, experimental acoustic-map crash and release gates remain unchanged.
+
+
+### Imported collision admission for the current region — 2026-10-10
+
+Source baseline: `a9f8b6f0`. Both new native regressions failed on that baseline:
+a queued model and a missing saved model left physics running against an otherwise
+ready scan. The unchanged cases passed after binding physics and traversal to the
+accepted region’s imported geometry. Evidence: `.quest-evidence/region-admission/red`
+and `first-green` (baseline 0/2 passed, fixed 2/2 passed; editor exits 2 and 0).
+
+Six focused cases then passed, including prepared imports, disabled owners, actual
+rigid-body freezing and navigation-map retirement. The final related run passed
+22 cases, including seven admission scenarios, virtual-only ground, brief owner
+disable, shared readiness facts and existing model/physics coverage. The first
+expanded run had one test-fixture error: an argument-free fact was called with an
+empty object instead of null. Correcting the fixture resolved that failure; it
+was not an application fix. A later status-string cache avoids repeated allocation
+for the same refusal. Review also found that the initial broad reconciliation guard
+could freeze a ready dynamic body during ordinary painting. A separate regression
+reproduced that failure; the guard now checks actual model dependencies instead.
+The first complete run was deliberately stopped for this correction, not accepted
+as completed verification. The final related suite passes 23 cases, including all eight admission scenarios;
+the complete run covers the final source separately.
+
+Local catalog/core/probe checks and 60 shared physics/book-form tests passed.
+Complete native/headless/book and exact-commit CI results are recorded under
+`.quest-evidence/region-admission/verification.json` as they finish. No real-provider
+or headset result is implied: existing billing and device holds remain. Multiple
+regions, dependency-based streaming and the wider v1 release requirements remain
+unfinished; this checkpoint does not claim city-scale runtime capacity.

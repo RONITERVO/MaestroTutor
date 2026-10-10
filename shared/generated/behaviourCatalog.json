@@ -31856,7 +31856,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room; this action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
+      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room with every accepted imported object’s collision geometry ready. Pending, failed or lost imported geometry pauses this bounded authored region, even when its scan remains aligned; finishing the load never silently resumes physics. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
       "example": {
         "operation": "start",
         "stateId": "00000000000000000000000000000000"
@@ -41162,7 +41162,7 @@
         }
       },
       "label": "Room physics state",
-      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes selected-ground/lifecycle prerequisites, not permission to act, alignment approval, all-object geometry readiness or workspace admission. ready is selected environment readiness; read physics.environment for separate scan/virtual observations, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes selected-ground, imported-collision and lifecycle prerequisites, not permission to act, alignment approval or complete resource admission. ready requires selected ground and ready imported collision in the current authored region; read physics.environment for separate scan/virtual observations, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
     },
     {
       "id": "physics.environment",
@@ -41178,7 +41178,7 @@
         }
       },
       "label": "Physics environment",
-      "description": "Read the separate physical scan, authored ground and default-scope simulation readiness. Individual profile admission is reported by object.environment; physics.simulation reports whether any accepted environment can run. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
+      "description": "Read the separate physical scan, authored ground and default-scope simulation readiness. ready additionally requires the accepted region’s imported collision geometry; scanReady and authoredReady remain separate raw ground observations. Individual profile admission is reported by object.environment; physics.simulation reports whether any accepted environment can run. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
     },
     {
       "id": "object.environment",
@@ -42626,11 +42626,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsEnvironmentCapability.cs",
-      "sha256": "a5fc206153654ea4748314e5ad682b63120a7db5b0324d8b70da2aec440e7931"
+      "sha256": "b9504f6d86a3dfc65120a62ac4bc77a6d2ab74db9f01a4d8b65a57df5c97d95d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
-      "sha256": "39c9ef7a5cec37af4038fe451d87cc31d1c671dc21cf9cbbd2dccddda11150bb"
+      "sha256": "8b62b54b3c2e5948dfdc2d35b4ee16d3b6d5e5b2b81c0f11763630ff4b0b0fbd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
@@ -42902,11 +42902,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
-      "sha256": "aa80b039d0ee0584b463f5973da3763d7ec1ef4201ec0bab1a17abaaafe185cd"
+      "sha256": "0358c561ab34bd5d43c5acce0781e49acede93204f6b6bb7e8ed484c54c929dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "2375ddeef7ada452e3a0fcd3709853a44749920f3cf05a948b28f01dbfc0f524"
+      "sha256": "850263cbab591baa2e31bb4604206e6b7d1b9d9b8d3aabcc883fccc390ce50aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -43130,7 +43130,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "d281eb3da61e8be187f746ae8a4fadea17f67420096d0e74214f04d0ec464fae"
+      "sha256": "cde7b0b0354e49385ef7f895c41c4cac34cb4215155a306a24dfb200eaefaceb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43259,6 +43259,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
       "sha256": "8be8002440509909f0617ae86d21d8c14bef602fe315538068ed075e1726ceeb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
+      "sha256": "ef573a2e258ed11c356c256388903653dc5849e2f82183b8c2ca8ef42f0d5d9f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -43621,6 +43625,10 @@
       "sha256": "c05721fdf015db50f6f1d0326018e5e29a9101243b2cc64c348bd0540737ab28"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionAdmission.cs",
+      "sha256": "f9bbd2b6abd0871c736b98d566a5101f17bc71a4a6e4f58c08d43ddfb517ce66"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionVolume.cs",
       "sha256": "af1b641347db3abb6ab44c9be970ace25cdb8f4918dd4363e7e743f5c96a94c5"
     },
@@ -43678,7 +43686,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "2ee3f7b38e0cc4aa08134b94304f19c87dbe4e52ddeb87140d25d629853df8ab"
+      "sha256": "bf0e0ad88e89545904819e13b033e7b03829d35ac756b8dacd7709a572a414bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPointerHit.cs",
@@ -43698,7 +43706,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "bf7bd32e51fc7e2e9f3908a7cc07df57959068d1a42cc7d589e77d02287abda5"
+      "sha256": "70f9bfe4f2c487cc709cf5fd66d4a56bae43415e484dcf2afe971a1d29461142"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",

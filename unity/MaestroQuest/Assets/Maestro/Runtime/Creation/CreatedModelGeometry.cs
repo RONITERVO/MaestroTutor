@@ -56,11 +56,13 @@ namespace Maestro.Quest.Creation
                 SetCollisionShape(collisionShape,true);old?.Dispose();
                 GetComponent<RigidRoomItem>().SetGeometryReady(true);ModelStatus="Model ready";
                 ApplyColor(tint);GetComponent<RoomAppearanceView>()?.Refresh();
+                GetComponentInParent<RoomEditor>()?.RefreshRegionCollision();
             }
             catch(System.Exception error)
             {
                 candidate?.Dispose();modelGeometryReady=false;ModelGeometryIssue=error is ModelImportException?error.Message:"Imported collision geometry could not be prepared";
                 ModelStatus=ModelGeometryIssue;SetCollisionShape(collisionShape,true);GetComponent<RigidRoomItem>().SetGeometryReady(false);
+                GetComponentInParent<RoomEditor>()?.RefreshRegionCollision();
             }
         }
     }

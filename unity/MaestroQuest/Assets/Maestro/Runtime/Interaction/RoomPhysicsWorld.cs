@@ -19,7 +19,7 @@ namespace Maestro.Quest.Interaction
         string stateId=Guid.NewGuid().ToString("N");
         bool Active=>!paused&&focused&&isActiveAndEnabled;
         void Notify(){observedReady=AnySimulationReady;stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();}
-        string IdleStatus=>AnySimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Add accepted virtual ground before starting physics";
+        string IdleStatus=>CollisionAdmissionIssue??(AnySimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Add accepted virtual ground before starting physics");
         RoomRuntimeGate runtimeGate;
         internal bool RuntimeHeld=>runtimeGate?.Held==true;
         internal string RuntimeHoldReason=>runtimeGate?.Reason;
@@ -38,11 +38,13 @@ namespace Maestro.Quest.Interaction
             error=null;
             if(running&&runtimeGate?.Held==true)error=runtimeGate.Reason;
             else if(running&&!Active)error="Return to the active room before starting physics";
+            else if(running&&!CollisionReady)error=CollisionAdmissionIssue;
             else if(running&&!AnySimulationReady)error=RealCollisions?"Load the room scan and check its alignment first":"Add accepted virtual ground before starting physics";
             return error==null;
         }
         public bool SetRunning(bool running,out string status)
         {
+            RefreshCollisionAdmission();
             if(!CanRun(running,out status)){Status=status;Notify();return false;}
             Running=running;Status=running?"Physics on — grip to pick up, release to throw":IdleStatus;
             status=Status;Notify();return true;
@@ -56,7 +58,7 @@ namespace Maestro.Quest.Interaction
         internal bool CanSetSimulation(string expected,bool running,out string error)
         {
             error="Room physics changed; read physics.simulation again before changing it";
-            return expected==stateId&&CanRun(running,out error);
+            return CollisionAdmissionIssue==observedCollisionIssue&&expected==stateId&&CanRun(running,out error);
         }
         internal bool SetSimulation(string expected,bool running,out JObject result,out string error)
         {
@@ -66,7 +68,7 @@ namespace Maestro.Quest.Interaction
             if(Running!=running&&!SetRunning(running,out error))return false;
             result=ObserveSimulation();return true;
         }
-        internal bool EnvironmentActive=>runtimeGate?.Held!=true&&Active;
+        internal bool EnvironmentActive=>runtimeGate?.Held!=true&&Active&&CollisionReady;
         internal bool SimulationActive=>EnvironmentActive&&Running;
         public bool CanSimulate(Vector3 position,RoomItem item=null) => SimulationActive&&ContainsSimulation(position,item);
         void OnApplicationPause(bool value) { paused=value;if (paused) PausePhysics();else Notify(); }
