@@ -15,6 +15,10 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  const state=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.regions',version:1,arguments:{offset:0}}}]);
  const target=state.objects.find(o=>/^[a-fA-F0-9]{32}$/.test(o.id))!.id;
  const before=await fact('object.region',{target}),definition=await fact('object.definition',{target});
+ const presence=await fact('object.presence',{target});assert.equal(presence.state,'active');assert.equal(presence.saved,true);assert.equal(presence.nativeInstance,true);assert.equal(presence.active,true);assert.equal(presence.revision,definition.revision);
+ const observed=state.objects.find(o=>o.id===target)!;assert.equal(observed.runtimeState,'active');assert.equal(observed.positionSource,'live');
+ const missing=await fact('object.presence',{target:'0'.repeat(32)});assert.equal(missing.state,'missing');assert.equal(missing.saved,false);assert.equal(missing.revision,0);
+
  const saved=await invoke('world.region.save',{id:'',revision:0,name:'Learner garden',members:[]});const id=String(saved.output!.id);
  const assigned=await invoke('object.region.assign',{target,revision:before.revision,regionId:id,regionRevision:saved.output!.revision});
  const bound=await fact('object.region',{target}),members=await fact('world.region.members',{id,offset:0});
@@ -26,5 +30,5 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  await execute([{action:'undo'}]);assert.equal((await fact('world.region',{id})).name,'Learner garden');
  await execute([{action:'undo'}]);assert.equal((await fact('object.region',{target})).regionId,before.regionId);
  const empty=await fact('world.region',{id});const removed=await invoke('world.region.remove',{id,revision:empty.revision});
- await writeFile(join(directory,'world-regions.json'),JSON.stringify({boundary:'Actual shared native transport, saved authored areas, assignment, rename and Undo. No region streaming, enlarged capacity, provider or headset claim.',before,saved,assigned,bound,members,retention,renamed,named,removed},null,2));
+ await writeFile(join(directory,'world-regions.json'),JSON.stringify({boundary:'Actual shared native transport, saved authored areas, assignment, rename and Undo. No region streaming, enlarged capacity, provider or headset claim.',before,presence,missing,observed,saved,assigned,bound,members,retention,renamed,named,removed},null,2));
 }

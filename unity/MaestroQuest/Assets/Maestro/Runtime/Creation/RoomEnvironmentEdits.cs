@@ -72,7 +72,7 @@ namespace Maestro.Quest.Creation
             return CommitPersisted(new[]{data},Array.Empty<string>(),"Object environment saved",false,out error);
         }
         internal JObject ObserveEnvironmentBinding(string target) {
-            var data=Read(target);var item=Find(target);if(data==null||!item)return null;
+            var data=Read(target);if(data==null||!TryGetLiveObject(target,out var item,out _))return null;
             string id=data.environmentProfile??"";bool requested=ReadEnvironment(id)?.realCollisions??true;var world=PhysicsWorld;
             return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["profileId"]=id,["profileRevision"]=EnvironmentRevision(id),
                 ["realCollisions"]=requested,["state"]=new JObject{["effectiveRealCollisions"]=world&&world.IncludesRealRoom(item),

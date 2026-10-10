@@ -35612,7 +35612,44 @@
         }
       },
       "label": "Saved object definition",
-      "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+      "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "object.presence",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "saved": "boolean",
+          "nativeInstance": "boolean",
+          "active": "boolean",
+          "state": "text"
+        }
+      },
+      "label": "Object saved and native presence",
+      "description": "Distinguish saved existence from the native room instance without loading or changing anything. state is missing (no saved entity), unavailable (saved entity without a native instance), inactive (native instance disabled), or active. revision is the canonical saved revision, zero when missing. Active does not prove geometry, images, audio, navigation or physics readiness; use the relevant component facts. Saved definition, collision, drawing, surface and recorded-animation reads do not require a native instance. Live position, playback and interaction require an active instance. This reports current native presence, not implemented regional streaming or permission to unload.",
       "input": {
         "type": "object",
         "properties": {
@@ -42837,7 +42874,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
-      "sha256": "4ac07724d368f0fbfdb981617583e2da403aedcd528b23ff858f964fa0f3396d"
+      "sha256": "9fc058e83c675112f8b709da347c120d8d4f79b6ef2d62b5ff09994e5e0f4e54"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
@@ -42885,7 +42922,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "5723226c1503bf8806464af5121bce8562861b65cb2de686b7d3930f0b3ac2e7"
+      "sha256": "602424860a7e6c0f2e2ba41442c549aaa1fbda9d00f58df7c0c292abdbbf9ade"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
@@ -42909,7 +42946,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
-      "sha256": "79b43625d16854fdf0ca4245657eb28a9c8cd7ed41fd46f5379349fcc870dc69"
+      "sha256": "17bde65311d6f364b6a1ff5f2816695a5cd728e23c9e7938028483e3f4981125"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConnectionCapability.cs",
@@ -42969,7 +43006,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
-      "sha256": "7c4de79fbe806c3e3d5ea6962d2b5b2c2cb534bc562df0c5752f877b35c41aea"
+      "sha256": "8d6625ed49df0c34d678cd291ee82826bd3e99e4105b837cfb36da172ca28295"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
@@ -42981,7 +43018,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceFacts.cs",
-      "sha256": "6a41f37a4789c7c90d7a6bd2bcc17fc498b16ef3cb6f068fa2157195292fdc73"
+      "sha256": "b32ecd704b9303ab23406c44145df215f46d757b373dd1a9e65fd3484ff22e90"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingTipCapability.cs",
@@ -43121,7 +43158,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
-      "sha256": "8e6cae6de1fd96558f30978d8cb3015a5b70bb70fcf99649a9245932a0621d52"
+      "sha256": "05b339eebfb393b4320f5e971ef10e273e63ae3afe3062dc369391f4ae282fb2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
@@ -43525,7 +43562,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "714a332784cbb868a3ae8aaefabeebf7c799d811f81215667b433081a07a6e1e"
+      "sha256": "a9288e4221af1653767653b002f3067e62deaddd2b562b9b7a0ae79013fb5ff1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -43537,7 +43574,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceEdits.cs",
-      "sha256": "3b9a17e17b0bacc1d4c49fe7ca7015feace41ccffaaf6668831878752f5f4679"
+      "sha256": "0c568951dd27ef8e53d3c14f3edaf4d164b758ea1ec26a08e6d243f7fabbaa94"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
@@ -43597,7 +43634,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "40ac21756601830a7ea50af719efb7e842b06f7eeb400e4549b7e9970f1854b2"
+      "sha256": "40ce5a71a259a54ca55231a6ef254d6319e7d921fab1c85e523ccb20347d331b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -43605,11 +43642,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "bfd0d947e104d21b2d7db43e8047fa7dcda2459c39d96f353703b5c4c5fe5171"
+      "sha256": "22fc32b8a869b3b1c61ee0bef843b4547df86bf69192f7ce3ccc4b76aa749fb6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
-      "sha256": "97799bcedead623def150bbf2be015c314b3448ce5cba6bd900f16e0d4c5f7ba"
+      "sha256": "f2a74a94ef2a969235fa0844a8cc0c0b549476f52d1694998d160f441dc28006"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
@@ -43717,7 +43754,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectObservation.cs",
-      "sha256": "6cfbf13a96f6e448956317abf9cb5b0a66f984a1760b86855fceaa36b456805b"
+      "sha256": "827755e4f40a5c76c9a20950d09b706147082fe8617984483622e17fea561560"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectPresence.cs",
+      "sha256": "076adde7bf0402f2be6bee578e397b393c1fcd4f40ad8825beb7341e92acdac1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -44413,7 +44454,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "1fc29214d57ffa7fbfa604dfb3308fbdab32fc66ccec4752628be5eeb8c61ac9"
+      "sha256": "8a3895d6b17a796d37898dbb7897635dc4c35c0995ca0b511df8e9ce3bc8486c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -44437,7 +44478,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",
-      "sha256": "f1343166c8d560c4ea997c6e6c12659b74f71deaac194abfa57955c11abbe80c"
+      "sha256": "d7f3a8c54f324ddf7b1029de26f998b870397eed7cfdaf1b05b4e259b1f87014"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/PhysicsMotionSubscription.cs",

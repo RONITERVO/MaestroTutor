@@ -59,8 +59,11 @@ namespace Maestro.Quest.Creation
             try {
                 var changed=edit.ChangedObjects;
                 foreach(var data in edit.Snapshot().objects) {
-                    if(!changed.Contains(data.id))continue;
-                    var before=editor.Read(data.id);var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
+                    // Reconciliation can rebuild a lost creation. Admit its geometry before
+                    // accepting history, even when the accepted edit targets a peer.
+                    bool missing=!editor.Find(data.id)&&!data.IsBuiltIn;
+                    if(!changed.Contains(data.id)&&!missing)continue;
+                    var before=missing?null:editor.Read(data.id);var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
                     if(data.kind==RoomObjectKind.Assembly&&JsonUtility.ToJson(before?.recipe)!=JsonUtility.ToJson(data.recipe)){
                         var candidate=new RecipeVisual(data.recipe,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));prepared.resources.Add(candidate);prepared.recipes.Add(data.id,candidate);
                     }

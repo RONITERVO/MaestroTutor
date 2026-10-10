@@ -1182,3 +1182,9 @@ query-only commands, unchanged source and budget, and final release after a
 natural stop/remove request are required. Other helpful chat outputs are allowed.
 This scenario is prepared but its new ownership inspection still needs fresh
 provider acceptance after the current upstream billing block is resolved.
+
+### Saved/native presence coverage
+
+The headless world-area journey reads `object.presence` for a real creation and an unknown ID, checks canonical revisions, and verifies live coordinate-source metadata on the ordinary object list. The book journey opens the generated fact form, reads the world-owned book's actual native presence and writes `book-native-object-presence.json` plus its screenshot. Both use the same native catalog; neither injects lifecycle state.
+
+PlayMode lifecycle regressions separately deactivate and destroy native instances, then verify canonical reads, live-operation refusal, unchanged saved revisions, exact motion/recipe keys, accepted-edit recovery, deletion/Undo and host-owned book/Maestro handling. The existing missing-room-anchor regression additionally verifies that an intentionally hidden drawing can be repaired or deleted. Shared client tests reject contradictory metadata and preserve older observations without fabricating a presence state. Lossless receipt-context tests preserve presence changes in agent history. This is local native and shared-client evidence, not a paid-provider, headset or regional-streaming acceptance claim.

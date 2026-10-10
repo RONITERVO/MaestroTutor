@@ -26,6 +26,11 @@ const receipts=Array.from({length:24},(_,i)=>({session:'session',ack:i+1,sceneRe
  catalog:{operation:'inspect',definition},execution:{selected:{id:'run1',phase:i<15?'running':'completed',output:i<15?null:{accepted:0}}}}));
 
 describe('lossless room receipt working context',()=>{
+ it('preserves saved entities across active, inactive and unavailable native observations',()=>{
+  const states=['active','inactive','unavailable','active'].map((runtimeState,index)=>({ack:index+1,objects:objects.map(object=>({...object,runtimeState,positionSource:runtimeState==='active'?'live':'saved'}))}));
+  const view=roomReceiptContext([...states,...states]);expect(restore(view)).toEqual([...states,...states]);
+ });
+
  it('preserves every receipt while substantially reducing repeated native snapshots',()=>{
   const original=structuredClone(receipts),view=roomReceiptContext(receipts);
   expect(restore(view)).toEqual(original);expect(receipts).toEqual(original);

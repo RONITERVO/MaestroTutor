@@ -56,7 +56,7 @@ namespace Maestro.Quest.Creation
         internal RoomFrame Frame => new(transform);
         public string SelectedId => selected;
         public RoomItem Find(string id) => id != null && objects.TryGetValue(id,out var value) ? value : null;
-        public RoomObjectData Read(string id) => journal.Read(id);
+        public RoomObjectData Read(string id) => journal?.Read(id);
         public bool AnyHeld => objects.Values.Any(item => item && item.Grab && item.Grab.isSelected);
         public RoomDocument Snapshot() => journal.Snapshot();
         public int ObjectRevision(string id) => journal.ObjectRevision(id);
@@ -223,8 +223,11 @@ namespace Maestro.Quest.Creation
             if(Liquids?.Owns(id)==true){error="Finish pouring or pause room physics before editing this container";return false;}
             if(GetComponent<SpatialSculpting>()?.OwnsMaterial(id)==true){error="Finish or discard the material gesture before editing its carrier";return false;}
             if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
-            var data=Read(id);var item=Find(id);
-            if(data==null||!item){error="This object was removed; inspect the room first";return false;}
+            var data=Read(id);
+            // Authoring may repair intentionally inactive objects (for example a
+            // scanned drawing whose anchor is missing). Only live actions need
+            // active presence; existing native authoring state is sufficient here.
+            if(!TryGetNativeObject(id,out var item,out error))return false;
             if(ScanDrawingAnchor.Has(data)&&!allowScanLayer){error="Use the scanned layer controls to change its anchor, or edit its Canvas ink";return false;}
             if(creationOnly&&data.IsBuiltIn){error="Choose a user-created object";return false;}
             if(item.Grab.isSelected){error="Release this object before editing it";return false;}
@@ -436,14 +439,23 @@ namespace Maestro.Quest.Creation
             SetStatus("Release the object before editing"); return true;
         }
 
+        void DetachNativeIdentity(string id,RoomItem item)
+        {
+            room.Unregister(item);objects.Remove(id);
+            if(!ReferenceEquals(item,null))identities.Remove(item);
+            if(handOwners.Remove(id,out var held))held.Dispose();
+            if(!item)return;
+            item.GrabStarted-=GrabStarted;item.GrabFinished-=GrabFinished;
+            var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted;
+        }
         void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null, RoomEditPreparation preparation = null)
         {
             applying = true;
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
             foreach (var id in objects.Keys.Where(id => !ids.Contains(id)).ToArray())
             {
-                var item = objects[id]; room.Unregister(item); identities.Remove(item); objects.Remove(id);
-                item.gameObject.SetActive(false); Destroy(item.gameObject);
+                var item = objects[id];DetachNativeIdentity(id,item);
+                if(item){item.gameObject.SetActive(false);Destroy(item.gameObject);}
             }
             SynchronizeVisibility(document);
             regionModels.Clear();
@@ -451,8 +463,13 @@ namespace Maestro.Quest.Creation
             foreach (var data in document.objects)
             {
                 bool created = false;
-                if (!objects.TryGetValue(data.id,out var item))
+                if (!objects.TryGetValue(data.id,out var item)||!item)
                 {
+                    if(objects.ContainsKey(data.id))DetachNativeIdentity(data.id,item);
+                    // A lost creation can be rematerialized from canonical data during
+                    // an accepted edit. World-owned book/avatar instances belong to
+                    // their host and must never become ordinary creation prefabs.
+                    if(data.IsBuiltIn)continue;
                     var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
                     item = root.AddComponent<CreatedRoomObject>().BuildPrepared(data, Models,RuntimeGate,WorldIdentity,preparation);
@@ -494,7 +511,7 @@ namespace Maestro.Quest.Creation
                 ApplyVisibility(data,item,document);
             }
             // Resolve links only after every member and its current pose/collider exists.
-            foreach(var data in document.objects){var item=Find(data.id);var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge)hinge.Apply(this,data.connections);}
+            foreach(var data in document.objects){var item=Find(data.id);if(!item)continue;var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge)hinge.Apply(this,data.connections);}
             Liquids?.Synchronize(document);
             applying = false; RefreshRegionCollision(); UpdateSelection();
         }

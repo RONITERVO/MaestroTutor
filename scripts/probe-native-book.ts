@@ -404,6 +404,11 @@ try{
  assert.equal(areaRetention.memberCount,1);assert.equal(areaRetention.residentCount,1);assert.equal(areaRetention.unloadingSupported,false);
  await page.screenshot({path:join(directory,'book-native-region-retention.png')});
  await writeFile(join(directory,'book-native-region-retention.json'),JSON.stringify({boundary:'Original book fact form and actual native area dependency report; no unloading or provider claim.',areaRetention},null,2));
+
+ const bookPresence=await readResourceFact('object.presence','Object saved and native presence');
+ assert.equal(bookPresence.target,'book');assert.equal(bookPresence.state,'active');assert.equal(bookPresence.saved,true);assert.equal(bookPresence.nativeInstance,true);assert.equal(bookPresence.active,true);
+ await page.screenshot({path:join(directory,'book-native-object-presence.png')});
+ await writeFile(join(directory,'book-native-object-presence.json'),JSON.stringify({boundary:'Original book fact form and actual native book presence; no regional loading, provider or headset claim.',bookPresence},null,2));
  let importedSound:unknown=null;
  let soundFixture:{hash:string;seconds:number;name:string}|null=null;
  try{soundFixture=JSON.parse(await readFile(join(directory,'sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}

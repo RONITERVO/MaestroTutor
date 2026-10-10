@@ -690,3 +690,9 @@ and retention are tracked separately in the v1 plan.
 The shared `world.region.retention` fact accepts an authored area ID, or empty `id` for home creations. It reports saved members, active native objects, retained members, missing connection peers and aggregate retention reasons. A sound retains its emitter while preparing, playing or paused; manual/action channel ownership and enabled connections also carry retention across area boundaries. The report is ephemeral and does not edit the world.
 
 `unloadingSupported: false` means these diagnostics are groundwork for regional loading. They do not authorize releasing an area. All creations currently remain in the bounded whole-world runtime, and running physics conservatively retains the collision environment. A missing runtime object is reported as unavailable while its saved entity remains intact.
+
+### Saved content versus a loaded object
+
+`object.presence` distinguishes an entity missing from the saved world from saved content whose native instance is unavailable, inactive or active. Read `object.definition` for its saved placement and revision. Drawings, surfaces, collision recipes, recorded animation frames and procedural parts/keys can also be inspected without a live object. Reads do not repair or load it. Active presence alone does not guarantee imported geometry, textures, sound or physics readiness.
+
+The shared object list keeps unavailable saved entities and labels its coordinates with `positionSource: saved` or `live`; use this instead of treating saved placement as observed motion. Live operations refuse unavailable targets. Combined facts that include playback or effective runtime collision state remain unavailable if their native instance is absent. The current whole-world runtime can rebuild an unexpectedly lost creation during an accepted edit or Undo while retaining its ID and content. Intentional area unloading is not implemented.

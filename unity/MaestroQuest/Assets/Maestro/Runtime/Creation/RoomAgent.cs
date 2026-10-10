@@ -38,7 +38,7 @@ namespace Maestro.Quest.Creation
     [Serializable] public sealed class RoomAgentSnapshot { public string clientId,session,captureAck; public RoomAgentRequest request; }
     [Serializable] public sealed class RoomAgentObject
     {
-        public string id,name,kind;
+        public string id,name,kind,runtimeState,positionSource;
         public int objectRevision;
         public Vector3 position;
         public float scale;
@@ -150,7 +150,7 @@ namespace Maestro.Quest.Creation
             if(commands.Length==1 && commands[0]?.action=="inspect")
             {
                 RulesFocused=false;
-                var target=editor.Find(commands[0].target); if(!target) {status="The target no longer exists";return false;}
+                if(!editor.TryGetLiveObject(commands[0].target,out var target,out status))return false;
                 string partId=commands[0].partId;var geometry=target.GetComponent<RecipeObject>();
                 if(!string.IsNullOrEmpty(partId) && (!geometry || !geometry.Part(partId))) {status="That recipe part no longer exists";return false;}
                 foreach(var recipeObject in editor.GetComponentsInChildren<RecipeObject>())recipeObject.Highlight(null);

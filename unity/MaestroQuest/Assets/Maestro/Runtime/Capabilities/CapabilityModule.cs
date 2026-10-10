@@ -64,8 +64,8 @@ namespace Maestro.Quest.Programs
         public CapabilityContext(RoomEditor editor,AnimationWorkshop workshop) {this.editor=editor;this.workshop=workshop;Workspace=editor?editor.GetComponentInParent<WorkspaceHost>():null;}
         public CapabilityContext(WorkspaceHost workspace){Workspace=workspace;followsWorkspace=true;}
         public bool Target(JObject arguments,out RoomItem item,out string error,bool allowSpatial=false,bool allowUpperBody=false) {
-            item=Editor?Editor.Find((string)arguments["target"]):null;error=null;
-            if(!item) {error="An action target was removed; choose another target";return false;}
+            item=null;error="The room is unavailable";
+            if(!Editor||!Editor.TryGetLiveObject((string)arguments["target"],out item,out error))return false;
             if(item.Grab.isSelected||Workshop&&Workshop.ControlsTarget((string)arguments["target"])) {error="Release the target and stop authoring before running its rule";return false;}
             var tutor=item.GetComponent<MaestroAvatar>();
             if(tutor&&tutor.ModelBusy) {error="Wait for Maestro to finish loading";return false;}

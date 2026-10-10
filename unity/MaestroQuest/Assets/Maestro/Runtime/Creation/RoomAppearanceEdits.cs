@@ -70,7 +70,8 @@ namespace Maestro.Quest.Creation
         }
         internal string AppearanceBindingState(string target,AppearanceBinding binding) {
             var data=Read(target);var item=Find(target);
-            if(data==null||!item)return "missing object";
+            if(data==null)return "missing object";
+            if(!item||!item.isActiveAndEnabled)return "native instance unavailable";
             if(ScanDrawingAnchor.Has(data))return "use scanned-layer ink controls";
             if(binding.kind=="part"&&!data.recipe.parts.Any(p=>p.id==binding.partId))return "missing part";
             var avatar=item.GetComponent<MaestroAvatar>();
