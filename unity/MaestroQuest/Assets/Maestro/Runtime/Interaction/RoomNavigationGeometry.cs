@@ -32,9 +32,13 @@ namespace Maestro.Quest.Interaction
         internal Bounds Bounds { get; private set; }
         internal Vector3 Position { get; private set; }
         internal Quaternion Rotation { get; private set; }
+        internal void Clear()
+        {
+            colliders.Clear();entries.Clear();sources.Clear();Ground.Clear();Bounds=default;Position=default;Rotation=Quaternion.identity;
+        }
         internal bool Capture(Transform owner,bool includeScan=true,Transform coordinates=null)
         {
-            colliders.Clear(); entries.Clear(); sources.Clear(); Ground.Clear(); Bounds=default;
+            Clear();
             if(!owner)return false;
             if(!coordinates)coordinates=owner;
             var frame=new Creation.RoomFrame(coordinates);

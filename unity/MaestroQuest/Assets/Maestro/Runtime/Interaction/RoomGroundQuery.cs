@@ -12,7 +12,7 @@ namespace Maestro.Quest.Interaction
         static readonly float MinimumNormal=Mathf.Cos(MaximumSlope*Mathf.Deg2Rad);
         static readonly float Gradient=Mathf.Tan(MaximumSlope*Mathf.Deg2Rad);
         readonly List<Collider> discovered=new(),surfaces=new();
-        internal void Clear()=>surfaces.Clear();
+        internal void Clear(){surfaces.Clear();discovered.Clear();}
         internal void Add(Collider collision)=>surfaces.Add(collision);
         internal bool Contains(Collider collision)=>surfaces.Contains(collision);
         internal static bool Accepted(Collider collision,bool includeScan,out RoomWalkableSurface surface)

@@ -10,6 +10,7 @@ namespace Maestro.Quest.Interaction
     {
         enum Clearance { Clear, Ground, Blocked }
         internal Collider Blocker {get;private set;}
+        internal void Clear(){Blocker=null;Array.Clear(hits,0,hits.Length);Array.Clear(overlaps,0,overlaps.Length);}
         readonly RaycastHit[] hits=new RaycastHit[64];
         readonly Collider[] overlaps=new Collider[64];
         Clearance Include(Collider collider,RoomGroundQuery ground,Func<Collider,bool> obstacle,Clearance state)

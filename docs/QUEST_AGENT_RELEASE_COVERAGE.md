@@ -2630,3 +2630,33 @@ Scripted book responses and local receipts do not replace that provider gate.
 No headset, signing, deployment, upload or Store operation is included. Regional
 streaming and the wider v1 release remain incomplete. This PCM-lifetime change
 does not claim to repair the earlier intermittent Meta native acoustic-map crash.
+
+
+## Navigation map and geometry retirement — 2026-10-10
+
+Six new native regressions all failed against the previous runtime: a disabled
+navigator retained its installed global map and still accepted movement; pausing
+physics left the map installed until another query; missing ground retained old
+mesh sources; a disabled actor could still route; and rebinding retained the old
+world's subscription and map. The same six tests now pass. They inspect actual
+Unity NavMesh queries, accepted geometry and world events, including re-enabling,
+physics restart and destruction of the bound Maestro actor.
+
+An inactive context now retires the map, agent settings, accepted/candidate
+geometry, ground discovery, obstacle query buffers and route callbacks. Explicit
+world binding preserves the distinction between an intentionally actorless query
+and an actor that disappeared. Moving-frame rebuilds retain only their fresh
+candidate so direct traversal can continue while path construction settles.
+No collision policy, surface acceptance or water traversal requirement is bypassed.
+
+Focused RED and passing reports, source hashes and complete verification results
+are retained in `.quest-evidence/navigation-lifetime/verification.json`. Broader
+native, headless, original-book and exact-head CI results are recorded there only
+after their terminal processes and diagnostic gates finish. This increment adds
+no model responses or paid calls; existing Gemini HTTP 402 blocks managed/BYOK
+acceptance until billing is restored. Headset cooling/charge hold remains in force.
+
+Regional geometry admission, tiled navigation, active dependency retention and
+cross-region persistence remain unfinished. This navigation fix does not resolve
+the intermittent Meta native acoustic-map crash or establish Quest performance.
+No installation, signing, deployment, upload or Store action is included.

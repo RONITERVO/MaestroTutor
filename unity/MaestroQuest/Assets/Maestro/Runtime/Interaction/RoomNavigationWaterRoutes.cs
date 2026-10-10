@@ -10,7 +10,8 @@ namespace Maestro.Quest.Interaction {
         uint routeGeometry;string routeMode;float routeDepth;Func<Collider,bool> followObstacle,routeObstacle;
         internal bool FollowRoutePending=>routeSearch?.Pending==true;
         internal string FollowRouteStatus {get;private set;}
-        internal void CancelFollowRoute(){routeSearch=null;FollowRouteStatus=null;}
+        internal void CancelFollowRoute(){routeSearch=null;FollowRouteStatus=null;followObstacle=null;}
+        void ReleaseFollowRoute(){CancelFollowRoute();routeScratch?.ClearCorners();routeScratch=null;routeObstacle=null;routeMode=null;routeDepth=0;routeGeometry=0;}
         bool RouteObstacle(Collider c)=>!CurrentGround.Contains(c)&&followObstacle(c);
         bool RouteSegment(Vector3 from,Vector3 to,out string liquid,out Vector3 foot,bool checkBody=true){
             liquid=null;foot=from;
@@ -48,9 +49,9 @@ namespace Maestro.Quest.Interaction {
         internal bool FollowRoute(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3[] points){
             points=Array.Empty<Vector3>();WaterBlocker=null;TraversalBlocker=null;
             if(obstacle==null||!Ready||PathsPending){CancelFollowRoute();FollowRouteStatus="Waiting for accepted walking surfaces";return false;}
-            followObstacle=obstacle;
             if(routeSearch!=null&&(routeGeometry!=SurfaceRevision||routeMode!=actor?.WaterTraversal.mode||routeDepth!=(actor?.WaterTraversal.maxDepthMetres??0)||
                 (routeSearch.From-from).sqrMagnitude>.01f||(routeSearch.To-to).sqrMagnitude>.04f))CancelFollowRoute();
+            followObstacle=obstacle;
             if(routeSearch==null){
                 if(!SampleInstalled(from,.25f,out var start)||!SampleInstalled(to,.5f,out var end)){FollowRouteStatus="No supported walking destination is available";return false;}
                 // Keep ordinary following incremental: a distant prop must not freeze the

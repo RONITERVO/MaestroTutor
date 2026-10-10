@@ -6308,3 +6308,28 @@ navigation, active task dependencies and cross-region persistence still need
 coordinated admission; the present bounded region remains the runtime limit.
 The earlier intermittent native acoustic-map crash is a separate unresolved
 issue. Full verification and provider/hardware limits are in the coverage ledger.
+
+
+### Navigation retirement before regional activation — 2026-10-10
+
+An installed walking map now belongs to an active physics world and, when bound,
+a live enabled actor in that world. Disabling navigation removes its global
+NavMesh instance immediately, releases captured geometry and routes, and requires
+an explicit prepare after re-enabling. Physics suspension, missing ground and
+world replacement also retire obsolete maps. Rebinding detaches the old world's
+event subscription. Destroying a bound actor cannot silently turn its navigator
+into an actorless query with different real-room participation.
+
+Full retirement drops both accepted and candidate mesh/collider references,
+ground discovery, query buffers and route callbacks. Rebuilding keeps only the
+fresh candidate until it is accepted; moving-world direct traversal retains that
+candidate while the route map waits for the frame to settle. The existing
+per-entity scanned-room policy, slope/step checks, water rules and authored
+terrain remain the same source of movement constraints.
+
+Six native regressions were first reproduced against the previous runtime and
+now pass unchanged. The coverage ledger records complete native/headless/book
+verification separately. This establishes reliable retirement, not geometry cost
+admission, asynchronous navigation tiles or automatic regional streaming. Those
+requirements, active cross-region dependencies and physical Quest acceptance
+remain open. No saved-world migration, device or release operation is included.

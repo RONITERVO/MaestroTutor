@@ -20,7 +20,7 @@ namespace Maestro.Quest.Interaction
         float radius, height;
         NavMeshQueryFilter Filter => new() { agentTypeID = agentType, areaMask = NavMesh.AllAreas };
         RoomNavigationGeometry accepted=new(), candidate=new();
-        bool configured,observedFrame;
+        bool configured,observedFrame,actorBound;
         Matrix4x4 lastFrame;
         float frameChangedAt;
         int frameChangedOn;
@@ -47,13 +47,25 @@ namespace Maestro.Quest.Interaction
         Vector3 installedPosition;
         Quaternion installedRotation;
         public bool Ready => configured && RefreshGeometry(out _);
-        public void Initialize(RoomPhysicsWorld value) { world = value; world.Changed += RoomChanged; }
-        void RoomChanged() { if (!world.EnvironmentReady(actor)) Clear(); }
+        // A bound actor that was destroyed is not an intentionally actorless query.
+        bool ActorAvailable=>!actorBound||actor&&actor.isActiveAndEnabled&&world&&actor.transform.IsChildOf(world.transform);
+        bool ContextAvailable=>isActiveAndEnabled&&world&&world.SimulationActive&&ActorAvailable&&world.EnvironmentReady(actor);
+        public void Initialize(RoomPhysicsWorld value)
+        {
+            if(world==value)return;
+            if(world)world.Changed-=RoomChanged;
+            ResetBinding();world=value;
+            if(world&&isActiveAndEnabled)world.Changed+=RoomChanged;
+        }
+        void RoomChanged() { if (!ContextAvailable) Clear(); }
         public bool Prepare(float bodyRadius, float bodyHeight, out string error,RoomItem target=null)
         {
             error = null;
-            if(actor!=target){Clear();actor=target;}
-            if (!world || !world.Running || !world.EnvironmentReady(actor)) { error = "Prepare the selected ground and Start physics before walking"; return false; }
+            if(!isActiveAndEnabled){Clear();error="Room navigation is disabled; return to the active world";return false;}
+            bool bound=!ReferenceEquals(target,null);
+            if(!ReferenceEquals(actor,target)||actorBound!=bound){Clear();actor=target;actorBound=bound;}
+            if(!ActorAvailable){Clear();error="The walking actor is unavailable in this world";return false;}
+            if(!ContextAvailable){Clear();error="Prepare the selected ground and Start physics before walking";return false;}
             if(!float.IsFinite(bodyRadius)||!float.IsFinite(bodyHeight)||bodyRadius<=0||bodyHeight<bodyRadius*2) { error="Choose a valid walking body";return false; }
             if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
             radius=bodyRadius;height=bodyHeight;configured=true;
@@ -62,7 +74,7 @@ namespace Maestro.Quest.Interaction
         bool RefreshGeometry(out string error)
         {
             error="Room navigation needs active physics and accepted surfaces";
-            if(!world||!world.Running||!world.EnvironmentReady(actor)){Clear();return false;}
+            if(!ContextAvailable){Clear();return false;}
             bool frameMoved=false;
             if(virtualFrame) {
                 var frame=world.transform.worldToLocalMatrix*virtualFrame.localToWorldMatrix;
@@ -73,17 +85,17 @@ namespace Maestro.Quest.Interaction
             Physics.SyncTransforms();
             if(!candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             if(data&&installed.valid&&candidate.Same(accepted)){
-                Install(candidate.Position,candidate.Rotation);error=null;return installed.valid;
+                Install(candidate.Position,candidate.Rotation);candidate.Clear();error=null;return installed.valid;
             }
             if(PathsPending||data&&frameMoved) {
                 // Retire the old route immediately. Direct traversal still uses
                 // the freshly captured accepted colliders and swept body checks.
-                Clear();PathsPending=true;
+                ReleaseMap();PathsPending=true;
                 if(Time.frameCount-frameChangedOn<2||Time.unscaledTime-frameChangedAt<FrameSettleSeconds){error=null;return true;}
             }
             // A mesh edit or root move must never reuse a stale route. Build from
             // exactly the collider geometry captured for this accepted revision.
-            Clear();
+            ReleaseMap();
             var bounds=candidate.Bounds;bounds.Expand(.2f);
             var settings = NavMesh.CreateSettings(); agentType = settings.agentTypeID;
             settings.agentRadius = radius + .025f; settings.agentHeight = height;
@@ -94,8 +106,10 @@ namespace Maestro.Quest.Interaction
             if (!data) { Clear(); error = "No walking area could be built from the accepted surfaces"; return false; }
             Install(candidate.Position,candidate.Rotation); BuildRevision++;
             (accepted,candidate)=(candidate,accepted);
+            candidate.Clear();
             error=installed.valid?null:"The accepted walking area could not be installed";
-            return installed.valid;
+            if(!installed.valid){Clear();return false;}
+            return true;
         }
         void Install(Vector3 position,Quaternion rotation)
         {
@@ -145,7 +159,9 @@ namespace Maestro.Quest.Interaction
         }
         internal bool ClearAuthoredStep(Vector3 from,Vector3 to,float extraHeight,Func<Collider,bool> obstacle)
         {
-            WaterBlocker=null;int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
+            WaterBlocker=null;TraversalBlocker=null;
+            if(!Ready||obstacle==null)return false;
+            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
             bool clear=groundMotor.ClearExact(from,to,radius,height+extraHeight,mask,obstacle);TraversalBlocker=clear?null:groundMotor.Blocker;
             return clear&&WaterStep(from,to,height);
         }
@@ -157,14 +173,20 @@ namespace Maestro.Quest.Interaction
             for(int i=1;i<corners.Length;i++)if(!WaterStep(corners[i-1],corners[i],height))return false;
             return true;
         }
-        void Clear()
+        // Rebuilding keeps only the fresh candidate. Full retirement also drops
+        // candidate discovery, ground, obstacle and route references immediately.
+        void ReleaseMap()
         {
-            PathsPending=false;CancelFollowRoute();
-            if (installed.valid) { installed.Remove(); SurfaceRevision++; }
-            ArtResources.Release(data); data = null;
-            if (agentType != -1) NavMesh.RemoveSettings(agentType);
-            agentType = -1;
+            PathsPending=false;ReleaseFollowRoute();groundMotor.Clear();TraversalBlocker=null;WaterBlocker=null;
+            if(installed.valid){installed.Remove();SurfaceRevision++;}installed=default;
+            ArtResources.Release(data);data=null;accepted.Clear();
+            if(agentType!=-1)NavMesh.RemoveSettings(agentType);agentType=-1;
         }
-        void OnDestroy() { if (world) world.Changed -= RoomChanged; Clear(); }
+        void Clear(){ReleaseMap();candidate.Clear();observedFrame=false;}
+        void ResetBinding(){Clear();configured=false;actor=null;actorBound=false;}
+        void LateUpdate(){if((data||PathsPending)&&!ContextAvailable)Clear();}
+        void OnEnable(){if(world)world.Changed+=RoomChanged;}
+        void OnDisable(){if(world)world.Changed-=RoomChanged;ResetBinding();}
+        void OnDestroy(){if(world)world.Changed-=RoomChanged;ResetBinding();world=null;virtualFrame=null;}
     }
 }
