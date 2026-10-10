@@ -395,7 +395,7 @@ try{
   await page!.getByRole('button',{name:'Back to workshop',exact:true}).click();await page!.getByRole('button',{name:'Action catalog',exact:true}).click();
   await page!.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page!.getByLabel('Search facts',{exact:true}).fill(id);await page!.getByRole('button',{name:'Search',exact:true}).click();
   await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
-  for(const [name,value] of Object.entries(args))await page!.getByLabel('Fact inputs '+name,{exact:true}).fill(value);
+  for(const [name,value] of Object.entries(args)){const field=page!.getByLabel('Fact inputs '+name,{exact:true});if(await field.evaluate(element=>element.tagName==='SELECT'))await field.selectOption(value);else await field.fill(value);}
   if(Object.keys(args).length)await page!.getByRole('button',{name:'Read fact',exact:true}).click();
   await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
   return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Resource fact missing');return c.value as Record<string,string|number>;});
@@ -405,7 +405,7 @@ try{
  await page.screenshot({path:join(directory,'book-native-region-retention.png')});
  await writeFile(join(directory,'book-native-region-retention.json'),JSON.stringify({boundary:'Original book fact form and actual native area dependency report; no unloading or provider claim.',areaRetention},null,2));
 
- const bookPresence=await readResourceFact('object.presence','Object saved and native presence');
+ const bookPresence=await readResourceFact('object.presence','Object saved and native presence',{target:'book'});
  assert.equal(bookPresence.target,'book');assert.equal(bookPresence.state,'active');assert.equal(bookPresence.saved,true);assert.equal(bookPresence.nativeInstance,true);assert.equal(bookPresence.active,true);
  await page.screenshot({path:join(directory,'book-native-object-presence.png')});
  await writeFile(join(directory,'book-native-object-presence.json'),JSON.stringify({boundary:'Original book fact form and actual native book presence; no regional loading, provider or headset claim.',bookPresence},null,2));
