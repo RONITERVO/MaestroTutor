@@ -411,7 +411,7 @@ try{
   await openNamedAction("Play an object's sound",'audio.play');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
   const played=await runNamedAction('audio.play');assert.equal(played.output?.source,clip.output!.id);assert.ok(Number(played.output?.seconds)>=file.seconds-.0001);
   await openNamedAction('Start independent room sound','audio.start');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
-  await page.getByLabel('Action inputs loop',{exact:true}).check();const started=await runNamedAction('audio.start');
+  await page.getByLabel('Action inputs loop',{exact:true}).selectOption('true');const started=await runNamedAction('audio.start');
   const instance=(started.output!.identity as {instance:string}).instance;assert.match(instance,/^[a-f0-9]{32}$/);
   const observationRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
   const reservation=await readResourceFact('runtime.audioReservation','Room sound reservation',{index:'0'});
