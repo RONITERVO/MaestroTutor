@@ -2779,3 +2779,28 @@ Global resource admission, regional streaming, new model activation and remainin
 resource kinds stay open. Existing managed/BYOK HTTP 402, headset cooling/charge,
 experimental acoustic-map crash and release gates remain unchanged. This increment
 does not install, sign, deploy, upload or publish a release.
+
+
+### Procedural recipe acceptance and ownership
+
+Three `RecipePreparation` regressions fail against `c4c4c8ea` and pass unchanged
+with detached procedural construction: a new entity reserves its invisible
+hierarchy before acceptance, a failed save retires only its candidate while the
+accepted parts/paint/playback survive, and a later invalid imported-model member
+releases the earlier recipe candidate without publishing either source edit.
+
+Additional native checks verify exact-source transfer once, ownership surviving
+preparation disposal after transfer, custom mesh destruction, shared base paint
+survival, and compound-recipe creation with saved pose/source plus Undo/Redo.
+Existing recipe, custom-shape, appearance, per-part animation and shared-material
+render tests check the surrounding behavior. Actual baseline, focused, complete
+Unity, native headless/book and exact-commit CI evidence are retained in
+`.quest-evidence/recipe-preparation/verification.json`; only completed receipts
+with clean terminal exits and diagnostic gates count as acceptance.
+
+This adds recipe hierarchies/meshes/base materials to edit preparation. It does
+not prove all-resource rollback, global budget admission, regional streaming,
+initial asynchronous model readiness, physical Quest behavior or paid-provider
+acceptance. Existing HTTP 402, headset cooling/charge, independent native acoustic
+crash and Store/release gates remain unchanged; no device or release operation
+belongs to this increment.

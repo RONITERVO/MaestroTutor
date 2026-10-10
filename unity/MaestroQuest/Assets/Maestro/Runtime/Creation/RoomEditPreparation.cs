@@ -17,6 +17,7 @@ namespace Maestro.Quest.Creation
         readonly List<IDisposable> resources=new();
         readonly Dictionary<string,CollisionGeometry> collisions=new();
         readonly Dictionary<string,HeightFieldGeometry> fields=new();
+        readonly Dictionary<string,RecipeVisual> recipes=new();
         bool ended;
         internal CollisionGeometry TakeCollision(string target,CollisionRecipe source)
         {
@@ -32,6 +33,13 @@ namespace Maestro.Quest.Creation
             if(candidate.Encoded!=JsonUtility.ToJson(source))throw new InvalidOperationException("Height source changed after preparation");
             fields.Remove(target);resources.Remove(candidate);return candidate;
         }
+        internal RecipeVisual TakeRecipe(string target,RoomRecipe source)
+        {
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");
+            if(!recipes.TryGetValue(target,out var candidate))return null;
+            if(candidate.Encoded!=JsonUtility.ToJson(source))throw new InvalidOperationException("Recipe source changed after preparation");
+            recipes.Remove(target);resources.Remove(candidate);return candidate;
+        }
         internal static RoomEditPreparation TryCreate(RoomEditor editor,RoomJournal.PreparedEdit edit,out string error)
         {
             var prepared=new RoomEditPreparation();error=null;
@@ -40,6 +48,9 @@ namespace Maestro.Quest.Creation
                 foreach(var data in edit.Snapshot().objects) {
                     if(!changed.Contains(data.id))continue;
                     var before=editor.Read(data.id);var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
+                    if(data.kind==RoomObjectKind.Assembly&&JsonUtility.ToJson(before?.recipe)!=JsonUtility.ToJson(data.recipe)){
+                        var candidate=new RecipeVisual(data.recipe,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));prepared.resources.Add(candidate);prepared.recipes.Add(data.id,candidate);
+                    }
                     if((data.collision?.shapes.Length??0)>0&&JsonUtility.ToJson(before?.collision)!=JsonUtility.ToJson(data.collision)){
                         var candidate=new CollisionGeometry(data.collision,null,owner);prepared.resources.Add(candidate);prepared.collisions.Add(data.id,candidate);
                     }
@@ -61,6 +72,6 @@ namespace Maestro.Quest.Creation
                 return prepared;
             }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();collisions.Clear();fields.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();collisions.Clear();fields.Clear();recipes.Clear();}
     }
 }

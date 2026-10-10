@@ -465,7 +465,7 @@ namespace Maestro.Quest.Creation
                 environment.Apply(PhysicsWorld,item,string.IsNullOrEmpty(data.environmentProfile)?true:journal.ReadEnvironment(data.environmentProfile).realCollisions);
                 if(created || changed==null || changed.Contains(data.id)) {
                 item.GetComponent<RecipeObject>()?.ConfigureAppearanceBindings(data.appearanceBindings);
-                item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe);
+                item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe,preparation);
                 item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
                 item.GetComponent<CreatedRoomObject>()?.ApplyScanLayer(data);
                 var surfaces=item.GetComponent<DrawingSurfaceView>();if(!surfaces&&(data.surfaces?.Length??0)>0)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();if(surfaces)surfaces.Apply(data.surfaces);

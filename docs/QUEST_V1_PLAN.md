@@ -6432,7 +6432,41 @@ also pass without changing the existing reconciliation order.
 This prepares authored terrain/compound collision alongside loaded imported
 geometry. It is not a global memory budget, measured PhysX cooking cost, regional
 streaming or an all-resource rollback mechanism. Existing world loading and new
-asynchronous model activation still need coordinated admission. Visual recipe
-meshes, drawing surfaces, image/audio resources and other allocations retain
+asynchronous model activation still need coordinated admission. Procedural recipe geometry now joins this preparation boundary as described
+below. Drawing surfaces, image/audio resources and other allocations retain
 their existing owners; they are not all preallocated by this transaction. The
 single bounded room, device/provider gates and remaining v1 requirements remain.
+
+
+### Detached procedural recipe preparation — 2026-10-10
+
+Procedural assemblies now construct their complete part hierarchy, custom meshes,
+base paint leases and acoustic components under an inactive detached root before
+saved, manual/mixed or Undo/Redo edits are accepted. A new entity needs no live
+component for this preparation. The candidate owns copied source and stable
+world/region/entity identity; transfer requires the same target and encoded recipe.
+Cancellation or a later refused member disposes every untaken candidate.
+
+`RecipeObject` adopts the prepared hierarchy, part handles, rest rotations and
+bounds only after construction succeeds. It then stops replaced playback and
+retires the old hierarchy, instead of destroying accepted parts before building
+new ones. Retired roots detach before deferred destruction so appearance scans
+cannot rediscover their renderers. Custom meshes are owned per instance; base
+paint remains shared through the existing immutable material leases. Disposing
+one candidate cannot destroy another object's shared paint. Accepted tint and
+appearance bindings, animation rules and exact saved recipes retain their shared
+paths. Initial/direct recipe creation uses the same detached builder.
+
+Native tests cover preparation before a failed save, new-entity cancellation,
+later mixed-edit refusal, exact-source/single-use transfer, custom-mesh ownership,
+shared material survival, compound-recipe creation and durable Undo/Redo. The
+three timing/lifetime regressions were observed against `c4c4c8ea` before the fix.
+Complete verification is recorded in the release coverage ledger and local
+per-run receipts; focused passes alone are not full acceptance.
+
+This is resource preparation, not a new world-size or memory limit. Model loading,
+drawing and other presentation resources still need coordinated activation;
+final appearance overrides and selection outlines are not preallocated here.
+Regional streaming, global budgets, cross-region dependencies and the remaining
+provider/headset/release gates remain part of v1. No runtime code execution or
+new provider API is introduced.

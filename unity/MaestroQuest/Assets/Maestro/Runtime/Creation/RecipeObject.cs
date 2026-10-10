@@ -10,14 +10,15 @@ namespace Maestro.Quest.Creation
     /// <summary>Native evaluation of saved recipes, shared by manual and agent edits.</summary>
     public sealed partial class RecipeObject : MonoBehaviour
     {
-        readonly Dictionary<string,Transform> nodes = new();
-        readonly Dictionary<string,Quaternion> rest = new();
-        readonly List<RecipeMaterials.Lease> materials = new();
-        readonly List<Renderer> renderers = new();
+        Dictionary<string,Transform> nodes = new();
+        Dictionary<string,Quaternion> rest = new();
+        List<RecipeMaterials.Lease> materials = new();
+        List<Renderer> renderers = new();
         Color appliedTint=Color.white;
         readonly HashSet<string> appearanceParts=new();bool appearanceTintChanged;
-        readonly List<Mesh> meshes = new();
-        GameObject geometry,highlight;
+        RecipeVisual visual;
+        RoomResourceOwner resourceOwner=new(null,null,"unscoped");
+        GameObject highlight;
         string highlightedPart;
         RoomRecipe recipe;
         string encoded;
@@ -37,39 +38,23 @@ namespace Maestro.Quest.Creation
         public void Stop() { interrupted=true;CancelParts(); }
         internal string AppearancePart(Renderer renderer){foreach(var pair in nodes)if(renderer.transform.parent==pair.Value)return pair.Key;return null;}
         public Transform Part(string id) => nodes.TryGetValue(id,out var node) ? node : null;
-        public bool Apply(RoomRecipe value)
+        internal void ConfigureResourceOwner(RoomResourceOwner owner)
         {
-            if (value == null || !value.Validate(out _)) return false;
-            string json = JsonUtility.ToJson(value); if (encoded == json) return false;
-            CancelParts();suppressedParts.Clear();encoded = json; recipe = value.Copy(); time = 0; interrupted = runtimeGate?.Held==true; runtimeLoop=null;
-            if (geometry) { geometry.SetActive(false); ArtResources.Release(geometry); }
-            foreach (var material in materials) material.Dispose();
-            foreach (var mesh in meshes) ArtResources.Release(mesh);meshes.Clear();
-            nodes.Clear(); rest.Clear(); materials.Clear(); renderers.Clear(); appliedTint=Color.white;
-            geometry = new GameObject("Recipe geometry"); geometry.transform.SetParent(transform,false);
-            Bounds bounds = default; bool first = true;
-            foreach (var part in recipe.parts)
-            {
-                var node = new GameObject(part.id).transform;
-                node.SetParent(string.IsNullOrEmpty(part.parent) ? geometry.transform : nodes[part.parent],false);
-                node.SetLocalPositionAndRotation(part.position,part.rotation); nodes.Add(part.id,node); rest.Add(part.id,part.rotation);
-                GameObject shape;
-                if(RecipeGeometry.Custom(part.shape)) {shape=new GameObject(part.shape,typeof(MeshFilter),typeof(MeshRenderer));var mesh=RecipeGeometry.Build(part);meshes.Add(mesh);shape.GetComponent<MeshFilter>().sharedMesh=mesh;}
-                else shape=GameObject.CreatePrimitive(part.shape == "sphere" ? PrimitiveType.Sphere : part.shape == "cylinder" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
-                shape.transform.SetParent(node,false); shape.transform.localScale = Vector3.Scale(part.size,part.shape == "cylinder" ? new Vector3(1,.5f,1) : Vector3.one);
-                // One stable proxy collider belongs to the complete grabbable assembly.
-                var collider = shape.GetComponent<Collider>(); if(collider){collider.enabled = false; ArtResources.Release(collider);}
-                var material=RecipeMaterials.Acquire(part,Color.white);var renderer=shape.GetComponent<Renderer>();
-                materials.Add(material);renderers.Add(renderer);renderer.sharedMaterial=material.Material;
-                Book.AcousticSurface.Attach(shape, shape.GetComponent<MeshFilter>().sharedMesh);
-                for (int i=0;i<8;i++)
-                {
-                    var corner = new Vector3((i&1)==0 ? -.5f : .5f,(i&2)==0 ? -.5f : .5f,(i&4)==0 ? -.5f : .5f);
-                    var point = transform.InverseTransformPoint(node.TransformPoint(Vector3.Scale(part.size,corner)));
-                    if (first) { bounds = new Bounds(point,Vector3.zero); first=false; } else bounds.Encapsulate(point);
-                }
-            }
-            LocalBounds=bounds; Highlight(highlightedPart); return true;
+            if(visual!=null)throw new System.InvalidOperationException("Recipe ownership is fixed before construction");
+            resourceOwner=owner??throw new System.ArgumentNullException(nameof(owner));
+        }
+        public bool Apply(RoomRecipe value)=>Apply(value,null,resourceOwner.Target);
+        internal bool Apply(RoomRecipe value,RoomEditPreparation preparation,string target)
+        {
+            if(value==null||!value.Validate(out _))return false;
+            string json=JsonUtility.ToJson(value);if(encoded==json)return false;
+            var candidate=preparation?.TakeRecipe(target,value)??new RecipeVisual(value,resourceOwner);
+            // Construction and source copying have finished before stopping any
+            // accepted playback, changing part handles or retiring old resources.
+            CancelParts();suppressedParts.Clear();var old=visual;old?.SetActive(false);
+            visual=candidate;encoded=json;recipe=candidate.Source;time=0;interrupted=runtimeGate?.Held==true;runtimeLoop=null;
+            nodes=candidate.Nodes;rest=candidate.Rest;materials=candidate.Materials;renderers=candidate.Renderers;appliedTint=Color.white;
+            candidate.Attach(transform);LocalBounds=candidate.LocalBounds;old?.Dispose();Highlight(highlightedPart);return true;
         }
         public void Highlight(string partId)
         {
@@ -107,6 +92,6 @@ namespace Maestro.Quest.Creation
         void OnApplicationPause(bool paused) { if (paused) Stop(); }
         void OnApplicationFocus(bool focused) { if (!focused) Stop(); }
         void OnDisable() {Stop();}
-        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; foreach (var material in materials) material.Dispose();foreach(var mesh in meshes)ArtResources.Release(mesh); }
+        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; visual?.Dispose();visual=null; }
     }
 }

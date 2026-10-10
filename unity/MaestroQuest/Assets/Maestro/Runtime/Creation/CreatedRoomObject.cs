@@ -52,7 +52,7 @@ namespace Maestro.Quest.Creation
             }
             else if (data.kind == RoomObjectKind.Assembly)
             {
-                recipe=gameObject.AddComponent<RecipeObject>(); recipe.ConfigureRuntime(runtimeGate);recipe.Apply(data.recipe); bounds=recipe.LocalBounds;
+                recipe=gameObject.AddComponent<RecipeObject>(); recipe.ConfigureRuntime(runtimeGate);recipe.ConfigureResourceOwner(new RoomResourceOwner(world,data.id,"object"));recipe.Apply(data.recipe,preparation,data.id); bounds=recipe.LocalBounds;
                 var box=gameObject.AddComponent<BoxCollider>(); box.center=bounds.center; box.size=bounds.size; collider=box;
             }
             else if (data.kind == RoomObjectKind.Drawing)
@@ -90,9 +90,10 @@ namespace Maestro.Quest.Creation
             geometryBounds=new Bounds(Vector3.zero,size);((BoxCollider)originalCollider).size=size;
             bool selected=selection&&selection.activeSelf;if(selection){selection.SetActive(false);Destroy(selection);}BuildSelection(geometryBounds);SetSelected(selected);
         }
-        public void ApplyRecipe(RoomRecipe value)
+        public void ApplyRecipe(RoomRecipe value)=>ApplyRecipe(value,null);
+        internal void ApplyRecipe(RoomRecipe value,RoomEditPreparation preparation)
         {
-            if (!recipe || !recipe.Apply(value)) return;
+            if (!recipe || !recipe.Apply(value,preparation,collisionOwner.Target)) return;
             recipe.Tint(tint);
             geometryBounds=recipe.LocalBounds;
             var box=(BoxCollider)originalCollider; box.center=geometryBounds.center; box.size=geometryBounds.size;

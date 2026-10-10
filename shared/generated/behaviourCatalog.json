@@ -42906,7 +42906,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "4abc2c50bc03373f755182328f71a50774fb14a45b11b47825a10f2fd3fcb5cf"
+      "sha256": "b4aa34073b9867154799f002f1b9221321da42687ae48a001ad0d7bf457071ee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -43018,7 +43018,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "2a1d500488dd61a7e832a76dec43338460c4919f2fdabd9733ed14c29f3ccd2a"
+      "sha256": "d427dc71f4193a29ea47767a4ee678de72708038e5319d390c7311dfa8eb0bab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeOutline.cs",
@@ -43039,6 +43039,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeTemplates.cs",
       "sha256": "8dc7f6e3e992f1454c0632d3a38fd0677e7ec55b573e01d60bb2b00c60bac391"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeVisual.cs",
+      "sha256": "fd58dfb28cffeeb66f95714fbe4ea7f6bb4e48a72c3128fd73c317970f3de9e3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
@@ -43114,7 +43118,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "106efd59f0c73afdaee4d51b56192917d99ede4e4896e586e299e4884d3b268d"
+      "sha256": "05d0d5a68e88ef7c0780943ceb9b9763444ab626c832bd6c4bb6ad790ca2c1f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -43122,7 +43126,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "f20b608a3a63091d17e64d3d309e994a579923f9ac7beab4b2d045d895c250de"
+      "sha256": "68ca4ba711cc48d47020375c31c4a8a1908b2b2f0cc55cf7764c97f158652ba9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
