@@ -40144,6 +40144,106 @@
       ]
     },
     {
+      "id": "runtime.imageBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "entries": "number",
+          "owners": "number",
+          "textureBytes": "number",
+          "entryLimit": "number",
+          "ownerLimitPerImage": "number",
+          "textureByteLimit": "number"
+        }
+      },
+      "label": "Current room appearance image budget",
+      "description": "Current workspace appearance-image cache and its enforced limits. Multiple object leases share one decoded texture for an exact image hash. entries includes loading and failed bindings; owners counts leases, including a brief old/new overlap during refresh. textureBytes is a conservative RGBA-plus-mipmap estimate for ready textures, not measured RAM/VRAM or peak memory. It excludes file reads, decode scratch space, previews, imported-model textures, book/browser images and other workspaces. Reading never decodes, retries, evicts or changes anything.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.imageReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "imageHash": "text",
+          "state": "text",
+          "owners": "number",
+          "textureBytes": "number"
+        }
+      },
+      "label": "Shared appearance image reservation",
+      "description": "Read one current-workspace image cache entry by index (zero to runtime.imageBudget.entries minus one). Indices may shift. reservationId identifies this runtime entry until its last lease is released; reloading the same hash gets a new ID. state is loading, ready or failed. Loading/failed entries report zero textureBytes; ready reports one shared conservative texture estimate, never multiplied by owners. Ready means decoded pixels exist, not that every renderer has refreshed. Use runtime.imageOwner with the returned reservationId to inspect holders. Reads are detached and do not load, retry, evict or persist. Regional activation remains separate.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 127.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.imageOwner",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "leaseId": "text",
+          "imageHash": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text"
+        }
+      },
+      "label": "Appearance image owner",
+      "description": "Read one lease of the exact runtime.imageReservation.reservationId, by index zero to its owners minus one. Indices and leaseId can change on a renderer refresh; these are runtime identities, not saved entity references. World/region/target are copied authored ownership; role is appearance, or unscoped for native fixtures with no authored owner. The owning object can be offscreen: this is resource retention, not visibility or permission to unload. A released reservation ID is unavailable and never redirects to a newer load. Texture costs are counted once by runtime.imageReservation, not per holder. This current-workspace read does not change anything.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 131.0
+          }
+        },
+        "required": [
+          "reservationId",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "reservationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "runtime.motionCache",
       "version": 1,
       "type": {
@@ -41825,7 +41925,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceImages.cs",
-      "sha256": "86e8e66bfc342b79705fbeb6aa69ef782bf2491c965b7c3eff5c087da965f0a2"
+      "sha256": "e4feee9d6ad189491230def08fca198d77156600d02b4ca44d2fdb936b97b5ea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceMaterials.cs",
@@ -42421,7 +42521,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "5b20b10247750495547b09239b82126bcc0de41c6e084d2a2d533b1c02d25ded"
+      "sha256": "19a64bdf773ce13306d5add085754ea2ee7423aab06858feb88288a17e11b766"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -42625,7 +42725,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "bb6a3bbfaf688dbf021db3c564b2d7466a468463f59ae269415ce404bdb4aafa"
+      "sha256": "bd7b622c7ae05d02cfe21538fd6e89b4ab7a6debe21e6fc363b29a98a02f2755"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -42773,7 +42873,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceView.cs",
-      "sha256": "9f7549a7f73c3d119d78d3e0d882498db3bac03fb0c4a4b5ed7c25f5e0ff31c1"
+      "sha256": "5205d455e2a7b9665c8d8038427d8b21195845ccc6ed37613cd207e2dab409fa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
@@ -42956,6 +43056,10 @@
       "sha256": "8be8002440509909f0617ae86d21d8c14bef602fe315538068ed075e1726ceeb"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
+      "sha256": "13da4ac82b491571d4f0ee74c0e919d3598ff91480d7822381a09c086b3e7600"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
       "sha256": "fae607ee6898f4173ebe6cbf14f769177ef73fc057c84a4a7186a8b726df0b07"
     },
@@ -43001,7 +43105,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
-      "sha256": "4775323f8f1def68b7808c1ec3b8f979f33ee6bc9c21a35d4b7a507b44a15625"
+      "sha256": "1d40fefb277173ea67cf415d78e6482f3bdf3abb09eb8f01d5d34131f700177d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
@@ -43181,7 +43285,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "f0508b5d7d353fe2e6837224f660313043df48439085fa322be3169e684720ec"
+      "sha256": "1128086f3d7afab6912d170fa9f5fa71286dd59fb86a5d8e7befdcb44a277535"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
@@ -43201,7 +43305,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelReservations.cs",
-      "sha256": "eed4abc8ca5495d86f3139806f31a2d06653d2f205d49d8e9c964c1a1b9356f1"
+      "sha256": "754830799a464ba35323ff2f1cfd3470b8d035b76f885f0f5ad197506970c248"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionBatch.cs",
@@ -43605,7 +43709,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "3ad596abce1eb41f68e8b762db602d1bcbae5becdcc25f556a391388123ba01e"
+      "sha256": "6acf8d41243f414b970f3bf95291d10e8d8cc328c671156e23e9e53503e5d88d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

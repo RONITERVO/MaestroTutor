@@ -1132,3 +1132,26 @@ checked for read-only commands, exact building ownership/asset identity and no
 changes to geometry, placement, room presentation or physics policy. This is the
 same managed/BYOK path as the preceding geometry edits; it does not inject a
 planner response or expose an extra diagnostic tool to the model.
+
+
+## Appearance-image ownership parity
+
+The ordinary headless journey reads the fresh workspace's empty image budget and
+verifies that index zero is unavailable without changing the scene. The original
+book journey binds the accepted chat image, then reads the image reservation,
+budget and exact book owner using only generated catalog forms. It retains
+`book-image-residency.json` and a capture of the visible owner readback.
+
+`GeneratedImage` and `ImportedImage` now include a natural-language, read-only
+request to explain which objects use the picture and its texture cost. The real
+managed/BYOK delegated task must discover both the shared image entry and its
+actual holder, keeping the appearance and budget unchanged. Definition discovery
+is distinct from indexed value reads; every executed room command must be a
+query. `provider-image-reservation-inspection.json` retains the actual journal
+before semantic assertions, including a failed assertion. Unbinding then has to
+release the final texture lease while retaining the exact private image bytes
+and reusable appearance. Other useful chat outputs remain allowed.
+
+These observations concern the active workspace's appearance cache. They are
+not measured process RAM/VRAM, visibility tests, automatic eviction or region
+streaming. Physical Quest rendering and performance remain separate acceptance.

@@ -3,6 +3,7 @@
 import {expect,it} from 'vitest';
 import native from '../../../test-fixtures/browser/runtimeDiagnostics.json';
 import reservations from '../../../test-fixtures/browser/modelReservations.json';
+import images from '../../../test-fixtures/browser/imageReservations.json';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validFactValue,validateFactArguments} from '../../../shared/behaviourFacts';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
@@ -48,4 +49,27 @@ it('preserves native model lease ownership and phases through the shared indexed
  for(const args of [{index:-1},{index:6},{index:0.5},{index:'0'},{index:0,evict:true}])expect(validateFactArguments(id,1,args)).not.toBeNull();
  expect(validFactValue(id,{...reservations.ready,privatePath:'hidden'})).toBe(false);
  expect(validFactValue(id,{...reservations.ready,vertices:'unknown'})).toBe(false);
+});
+
+it('preserves shared image residency and distinct immutable binding owners from Unity',()=>{
+ expect(validFactValue('runtime.imageBudget',images.budget)).toBe(true);
+ for(const value of [images.loading,images.ready])expect(validFactValue('runtime.imageReservation',value)).toBe(true);
+ expect(images.ready).toEqual({...images.loading,state:'ready',textureBytes:28});
+ expect(images.budget).toMatchObject({entries:1,owners:2,textureBytes:28,entryLimit:128,ownerLimitPerImage:132,textureByteLimit:67108864});
+ expect(new Set(images.owners.map(owner=>owner.leaseId)).size).toBe(2);
+ expect(new Set(images.owners.map(owner=>owner.target)).size).toBe(2);
+ for(const owner of images.owners){
+  expect(validFactValue('runtime.imageOwner',owner)).toBe(true);
+  expect(owner).toMatchObject({reservationId:images.ready.reservationId,imageHash:images.ready.imageHash,worldId:images.owners[0].worldId,regionId:images.owners[0].regionId,role:'appearance'});
+  expect(owner.worldId).toHaveLength(32);expect(owner.regionId).toHaveLength(32);
+ }
+ expect(behaviourFact('runtime.imageBudget')?.features).toEqual(['runtimeDiagnostics.v1']);
+ for(const id of ['runtime.imageReservation','runtime.imageOwner'])expect(behaviourFact(id)?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
+ for(const index of [0,127])expect(validateFactArguments('runtime.imageReservation',1,{index})).toBeNull();
+ for(const index of [-1,128,.5,'0'])expect(validateFactArguments('runtime.imageReservation',1,{index})).not.toBeNull();
+ for(const index of [0,131])expect(validateFactArguments('runtime.imageOwner',1,{reservationId:images.ready.reservationId,index})).toBeNull();
+ for(const args of [{reservationId:'old',index:0},{reservationId:images.ready.reservationId,index:132},{reservationId:images.ready.reservationId,index:0,release:true}])expect(validateFactArguments('runtime.imageOwner',1,args)).not.toBeNull();
+ expect(validFactValue('runtime.imageBudget',{...images.budget,textureBytes:'unknown'})).toBe(false);
+ expect(validFactValue('runtime.imageReservation',{...images.ready,privatePath:'hidden'})).toBe(false);
+ expect(validFactValue('runtime.imageOwner',{...images.owners[0],leaseId:123})).toBe(false);
 });

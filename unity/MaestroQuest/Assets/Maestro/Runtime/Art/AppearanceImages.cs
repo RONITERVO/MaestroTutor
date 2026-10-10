@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Creation;
+using Newtonsoft.Json.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Imports;
@@ -12,13 +15,18 @@ namespace Maestro.Quest.Art {
     /// never upload into a replaced workspace. Zero-owner entries release immediately.</summary>
     internal sealed class AppearanceImages:MonoBehaviour {
         internal const long MaximumResidentBytes=64L*1024*1024;
-        internal sealed class Entry {internal string Hash,State="loading",Error="";internal int Owners;internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task<ImageAsset> Read;}
+        // A refresh briefly holds old and replacement bindings together. These
+        // limits bound observations without confusing owners with texture copies.
+        internal const int MaximumEntries=RoomAppearance.MaximumDefinitions*2,MaximumOwnersPerImage=(RoomDocument.MaximumObjects+2)*2;
+        internal sealed class Entry {internal readonly string Id=Guid.NewGuid().ToString("N");internal string Hash,State="loading",Error="";internal readonly List<Lease> Owners=new();internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task<ImageAsset> Read;}
         internal sealed class Lease:IDisposable {
             AppearanceImages owner;Entry entry;
-            internal Texture Texture=>entry?.Texture?entry.Texture:owner?owner.Placeholder:null;
-            internal string State=>entry?.State??"released";
-            internal Lease(AppearanceImages owner,Entry entry){this.owner=owner;this.entry=entry;entry.Owners++;}
-            public void Dispose(){if(entry==null)return;var old=entry;entry=null;if(owner)owner.Release(old);owner=null;}
+            internal readonly string Id=Guid.NewGuid().ToString("N");
+            internal readonly RoomResourceOwner Scope;
+            internal Texture Texture=>owner&&!owner.closed&&entry!=null?(entry.Texture?entry.Texture:owner.Placeholder):null;
+            internal string State=>owner&&!owner.closed&&entry!=null?entry.State:"released";
+            internal Lease(AppearanceImages owner,Entry entry,RoomResourceOwner scope){this.owner=owner;this.entry=entry;Scope=scope;entry.Owners.Add(this);}
+            public void Dispose(){if(entry==null)return;var old=entry;entry=null;if(owner&&!owner.closed)owner.Release(old,this);owner=null;}
         }
         readonly Dictionary<string,Entry> entries=new(StringComparer.Ordinal);
         ImageLibrary library;Texture2D placeholder;bool closed;long resident;
@@ -27,9 +35,28 @@ namespace Maestro.Quest.Art {
         internal long ResidentBytes=>resident;
         internal void Initialize(ImageLibrary value){library=value;closed=false;}
         Texture2D Placeholder {get {if(!placeholder){placeholder=new Texture2D(2,2,TextureFormat.RGBA32,false,false){name="Image pending or unavailable",filterMode=FilterMode.Point};placeholder.SetPixels32(new[]{new Color32(170,170,170,255),new Color32(90,90,90,255),new Color32(90,90,90,255),new Color32(170,170,170,255)});placeholder.Apply(false,true);}return placeholder;}}
-        internal Lease Acquire(string hash){
+        internal Lease Acquire(string hash,RoomResourceOwner scope=null){
             if(closed||library==null||!ModelLibrary.ValidHash(hash))throw new InvalidOperationException("The image library is unavailable.");
-            if(!entries.TryGetValue(hash,out var entry)){entry=new Entry{Hash=hash};entries.Add(hash,entry);}return new Lease(this,entry);
+            scope??=new RoomResourceOwner(null,null,"unscoped");
+            if(scope.Role is not ("appearance" or "unscoped"))throw new ArgumentException("Invalid appearance image owner");
+            if(!entries.TryGetValue(hash,out var entry)){
+                if(entries.Count>=MaximumEntries)throw new InvalidOperationException("The appearance image entry budget is full.");
+                entry=new Entry{Hash=hash};entries.Add(hash,entry);
+            }
+            if(entry.Owners.Count>=MaximumOwnersPerImage)throw new InvalidOperationException("The appearance image owner budget is full.");
+            return new Lease(this,entry,scope);
+        }
+        internal JObject ObserveBudget()=>new(){["entries"]=entries.Count,["owners"]=entries.Values.Sum(e=>e.Owners.Count),["textureBytes"]=resident,
+            ["entryLimit"]=MaximumEntries,["ownerLimitPerImage"]=MaximumOwnersPerImage,["textureByteLimit"]=MaximumResidentBytes};
+        internal JObject ObserveReservation(int index){
+            if(closed||index<0||index>=entries.Count)return null;
+            var e=entries.Values.OrderBy(e=>e.Hash,StringComparer.Ordinal).ElementAt(index);
+            return new JObject{["reservationId"]=e.Id,["imageHash"]=e.Hash,["state"]=e.State,["owners"]=e.Owners.Count,["textureBytes"]=e.Bytes};
+        }
+        internal JObject ObserveOwner(string reservationId,int index){
+            if(closed||index<0)return null;var e=entries.Values.FirstOrDefault(e=>e.Id==reservationId);
+            if(e==null||index>=e.Owners.Count)return null;var lease=e.Owners[index];var scope=lease.Scope;
+            return new JObject{["reservationId"]=e.Id,["leaseId"]=lease.Id,["imageHash"]=e.Hash,["worldId"]=scope.World,["regionId"]=scope.Region,["target"]=scope.Target,["role"]=scope.Role};
         }
         void StartRead(Entry e){e.Read=library.ReadAsync(e.Hash,e.Cancel.Token);_=Observe(e.Read);}
         static async Task Observe(Task task){try{await task;}catch(Exception){}}
@@ -61,7 +88,7 @@ namespace Maestro.Quest.Art {
                 result=new Texture2D(w,h,TextureFormat.RGBA32,true,false){name="Imported appearance image",filterMode=FilterMode.Trilinear,wrapMode=TextureWrapMode.Repeat,anisoLevel=1};result.SetPixels32(pixels);result.Apply(true,true);return result;
             }catch{if(result)ArtResources.Release(result);throw;}finally{if(decoded)ArtResources.Release(decoded);}
         }
-        void Release(Entry e){if(--e.Owners!=0)return;entries.Remove(e.Hash);e.Cancel.Cancel();e.Cancel.Dispose();resident-=e.Bytes;if(e.Texture)ArtResources.Release(e.Texture);}
-        void OnDestroy(){closed=true;foreach(var e in entries.Values){e.Cancel.Cancel();e.Cancel.Dispose();if(e.Texture)ArtResources.Release(e.Texture);}entries.Clear();resident=0;if(placeholder)ArtResources.Release(placeholder);Changed=null;}
+        void Release(Entry e,Lease lease){if(!e.Owners.Remove(lease)||e.Owners.Count!=0)return;entries.Remove(e.Hash);e.Cancel.Cancel();e.Cancel.Dispose();resident-=e.Bytes;if(e.Texture)ArtResources.Release(e.Texture);}
+        void OnDestroy(){closed=true;foreach(var e in entries.Values){e.Cancel.Cancel();e.Cancel.Dispose();e.Owners.Clear();if(e.Texture)ArtResources.Release(e.Texture);}entries.Clear();resident=0;if(placeholder)ArtResources.Release(placeholder);Changed=null;}
     }
 }

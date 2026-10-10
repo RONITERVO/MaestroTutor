@@ -265,6 +265,13 @@ try{
    modelReservations.push(value);
   }
   await writeFile(join(directory,'model-reservations.json'),JSON.stringify({boundary:'Actual native model reservations, not measured memory or regional streaming.',budget:factReply(diagnostic).value,leases:modelReservations},null,2));
+  const imagesBefore=lease.state().sceneRevision;
+  const imageBudget=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.imageBudget',version:1}}]);
+  const imageUsage=factReply(imageBudget).value as {entries:number;owners:number;textureBytes:number};
+  if(!imageBudget.catalog?.available||imageUsage.entries!==0||imageUsage.owners!==0||imageUsage.textureBytes!==0)throw new Error('Fresh native workspace must have an empty appearance texture cache.');
+  const emptyImage=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.imageReservation',version:1,arguments:{index:0}}}]);
+  if(emptyImage.catalog?.available!==false||lease.state().sceneRevision!==imagesBefore)throw new Error('Empty image observation must be unavailable and read-only.');
+  await writeFile(join(directory,'image-reservations.json'),JSON.stringify({boundary:'Actual empty workspace image cache, not process memory or regional streaming.',budget:imageUsage,empty:factReply(emptyImage)},null,2));
   const scanLayout=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'room.scan',version:1}}]);
   const scanValue=factReply(scanLayout).value as {available:boolean;stateId:string;count:number};
   if(scanValue.available||scanValue.stateId!==''||scanValue.count!==0)throw new Error('Desktop scan facts must not invent a physical room.');

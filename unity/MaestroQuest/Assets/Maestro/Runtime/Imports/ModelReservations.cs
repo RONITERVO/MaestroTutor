@@ -11,25 +11,14 @@ namespace Maestro.Quest.Imports
     // reservation until its outstanding importer has drained and released assets.
     internal static class ModelReservations
     {
-        internal sealed class Owner
-        {
-            internal readonly string World,Region,Target,Role;
-            internal Owner(RoomWorldIdentity world,string target,string role)
-            {
-                if(world!=null&&!world.Valid)throw new ArgumentException("Invalid model world identity");
-                if(role!="object"&&role!="avatar"&&role!="preview"&&role!="unscoped")throw new ArgumentException("Invalid model owner role");
-                if(target!=null&&target!=""&&(target.Length>128||target.Any(char.IsControl)))throw new ArgumentException("Invalid model owner target");
-                World=world?.worldId??"";Region=world?.regionId??"";Target=target??"";Role=role;
-            }
-        }
         internal sealed class Lease:IDisposable
         {
             internal readonly string Id=Guid.NewGuid().ToString("N"),Hash;
-            internal readonly Owner Owner;
+            internal readonly RoomResourceOwner Owner;
             internal readonly int Vertices,Pixels,Morphs;
             internal string State="loading";
             bool disposed;
-            internal Lease(ModelAsset asset,Owner owner)
+            internal Lease(ModelAsset asset,RoomResourceOwner owner)
             {
                 Hash=asset.Hash;Owner=owner;Vertices=asset.Inspection.Vertices;
                 Pixels=asset.Inspection.TexturePixels;Morphs=asset.Inspection.MorphVertices;
@@ -43,8 +32,9 @@ namespace Maestro.Quest.Imports
         {
             get{lock(gate)return(leases.Count,leases.Sum(x=>x.Vertices),leases.Sum(x=>x.Pixels),leases.Sum(x=>x.Morphs));}
         }
-        internal static Lease Reserve(ModelAsset asset,Owner owner)
+        internal static Lease Reserve(ModelAsset asset,RoomResourceOwner owner)
         {
+            if(owner==null||owner.Role=="appearance")throw new ArgumentException("Invalid model resource owner");
             lock(gate){
                 var used=Budget;var info=asset.Inspection;
                 if(used.Models>=ImportedModel.MaximumLiveModels||used.Vertices+(long)info.Vertices>ImportedModel.MaximumLiveVertices||

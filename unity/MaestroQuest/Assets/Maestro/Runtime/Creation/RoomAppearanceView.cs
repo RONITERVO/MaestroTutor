@@ -19,11 +19,12 @@ namespace Maestro.Quest.Creation
         readonly List<AppearanceMaterials.Lease> leases=new();
         readonly List<VisibilityMaterials.Lease> visibilityLeases=new();
         AppearanceImages images;
+        RoomResourceOwner imageOwner=new(null,null,"unscoped");
         readonly Dictionary<string,AppearanceImages.Lease> imageLeases=new(StringComparer.Ordinal);
-        internal void ConfigureImages(AppearanceImages value){if(images==value)return;if(images)images.Changed-=ImagesChanged;images=value;if(images)images.Changed+=ImagesChanged;refreshPending=true;}
+        internal void ConfigureImages(AppearanceImages value,RoomResourceOwner owner){imageOwner=owner??throw new ArgumentNullException(nameof(owner));if(images==value)return;if(images)images.Changed-=ImagesChanged;images=value;if(images)images.Changed+=ImagesChanged;refreshPending=true;}
         void ImagesChanged(string hash){if(imageLeases.ContainsKey(hash))refreshPending=true;}
         internal string ImageState(string hash){if(!isActiveAndEnabled||!images||!imageLeases.ContainsKey(hash))return "unloaded";var state=images.State(hash);return state=="ready"&&refreshPending?"loading":state;}
-        Texture Image(AppearanceStyle style){if(style.patternMode!="image")return null;if(!images)return null;if(!imageLeases.TryGetValue(style.imageHash,out var lease)){lease=images.Acquire(style.imageHash);imageLeases.Add(style.imageHash,lease);}return lease.Texture;}
+        Texture Image(AppearanceStyle style){if(style.patternMode!="image")return null;if(!images)return null;if(!imageLeases.TryGetValue(style.imageHash,out var lease)){lease=images.Acquire(style.imageHash,imageOwner);imageLeases.Add(style.imageHash,lease);}return lease.Texture;}
         VisibilityState visibility;
         bool refreshPending;
         internal bool PointerVisible=>!isActiveAndEnabled||visibility==null||visibility.Opacity>0;

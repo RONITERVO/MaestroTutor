@@ -6249,3 +6249,31 @@ still implementation limits, not the final town/country authoring promise.
 
 Verification for this increment is recorded in the release coverage ledger. No
 headset installation, release signing, deployment or Store operation is included.
+
+
+### Scoped appearance-image ownership before regional streaming — 2026-10-10
+
+Model and image holders now use the same immutable `RoomResourceOwner` value:
+copied world, region, entity and resource role. Image bindings retain distinct
+runtime leases while sharing one decoded texture by exact image hash. Removing
+one object's binding cannot evict the texture from another object. The final
+release cancels outstanding reads and releases the texture, while leaving the
+saved appearance and private original image available for reuse. Workspace
+retirement invalidates outstanding leases; a late read cannot upload into it.
+
+`runtime.imageBudget`, `runtime.imageReservation` and `runtime.imageOwner` expose
+this existing cache through the same catalog used by the book, agent and programs.
+An entry ID lasts until its final lease is released; a later load gets a new ID.
+Owner IDs and indices may change during renderer refresh and must never become
+saved entity references. Observations do not decode, retry, release, save or make
+an offscreen object eligible for eviction. Texture cost is counted once per
+shared entry and is a conservative ready-texture estimate, excluding file reads,
+decode scratch space, previews, model textures and browser images.
+
+This closes the image-owner prerequisite, not shared regional admission. The
+current workspace remains bounded to one region. Audio, geometry and navigation
+ownership, active dependencies, cross-region references and persistent simulation
+still need coordinated activation before user-built towns/countries can be
+claimed. Visibility, real-room collision participation and resource retention
+remain separate decisions. See the release coverage ledger for actual native,
+book and real-provider evidence and remaining hardware gates.

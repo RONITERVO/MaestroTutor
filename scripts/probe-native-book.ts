@@ -450,6 +450,32 @@ try{
  assert.equal(acceptedChat.output?.imageHash,chatHash);assert.match(String(acceptedChat.output?.appearanceId),/^[a-f0-9]{32}$/);
  await writeFile(join(directory,'book-chat-image.json'),JSON.stringify({boundary:'Synthetic local PNG in the original chat store, actual Chrome controls/transport and native preview/acceptance. No provider or headset capture.',chatHash,selectedChat,acceptedChat},null,2));
  await page.screenshot({path:join(directory,'book-chat-image.png')});
+ // Bind the accepted chat image, then inspect actual retention through generated fact forms.
+ await openNamedAction('Choose object appearance','object.appearance.bind');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([acceptedChat.output!.appearanceId,acceptedChat.output!.revision]));
+ const chatBinding=await runNamedAction('object.appearance.bind');
+ const imageObservationRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ const readImageFact=async(id:string,label:string,args:Record<string,string>={})=>{
+  await page!.getByRole('button',{name:'Back to workshop',exact:true}).click();await page!.getByRole('button',{name:'Action catalog',exact:true}).click();
+  await page!.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page!.getByLabel('Search facts',{exact:true}).fill(id);await page!.getByRole('button',{name:'Search',exact:true}).click();
+  await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
+  for(const [name,value] of Object.entries(args))await page!.getByLabel('Fact inputs '+name,{exact:true}).fill(value);
+  if(Object.keys(args).length)await page!.getByRole('button',{name:'Read fact',exact:true}).click();
+  await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
+  return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Image fact missing');return c.value as Record<string,string|number>;});
+ };
+ let imageReservation=await readImageFact('runtime.imageReservation','Shared appearance image reservation',{index:'0'});
+ const imageReadyDeadline=Date.now()+10000;
+ while(imageReservation.state==='loading'&&Date.now()<imageReadyDeadline){await page.waitForTimeout(100);imageReservation=await readImageFact('runtime.imageReservation','Shared appearance image reservation',{index:'0'});}
+ assert.equal(imageReservation.imageHash,chatHash);assert.equal(imageReservation.state,'ready');assert.equal(imageReservation.owners,1);
+ const imageBudget=await readImageFact('runtime.imageBudget','Current room appearance image budget');
+ assert.equal(imageBudget.entries,1);assert.equal(imageBudget.owners,1);assert.equal(imageBudget.textureBytes,imageReservation.textureBytes);assert.ok(Number(imageBudget.textureBytes)>0);
+ const imageOwner=await readImageFact('runtime.imageOwner','Appearance image owner',{reservationId:String(imageReservation.reservationId),index:'0'});
+ assert.equal(imageOwner.target,'book');assert.equal(imageOwner.role,'appearance');assert.equal(imageOwner.imageHash,chatHash);assert.match(String(imageOwner.worldId),/^[a-f0-9]{32}$/);assert.match(String(imageOwner.regionId),/^[a-f0-9]{32}$/);
+ assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),imageObservationRevision,'Fact forms must not change the world');
+ await writeFile(join(directory,'book-image-residency.json'),JSON.stringify({boundary:'Actual Chrome book forms and native shared image cache. Runtime ownership is not visibility or streaming permission; no provider or physical headset claim.',chatBinding,imageBudget,imageReservation,imageOwner},null,2));
+ await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-image-residency.png')});
  // The user edits the same live presentation schema the agent uses.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();

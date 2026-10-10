@@ -19,7 +19,7 @@ namespace Maestro.Quest.Creation
         bool primarySelected,constructionSelected;
         internal bool ConstructionMarked=>constructionSelected&&selection&&selection.activeSelf;
         Color tint;
-        ModelReservations.Owner modelOwner;
+        RoomResourceOwner modelOwner;
         Collider originalCollider, chosenCollider;
         ItemCollider collisionShape;
         CollisionGeometry customGeometry;
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Creation
             && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null, RoomWorldIdentity world = null)
         {
-            if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new ModelReservations.Owner(world,data.id,"object");
+            if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new RoomResourceOwner(world,data.id,"object");
             importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
             Bounds bounds;
             Collider collider;

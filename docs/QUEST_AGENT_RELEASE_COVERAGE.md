@@ -2539,3 +2539,54 @@ thermal, physical microphone, mixed-audio echo-cancellation or provider acceptan
 The experimental reflection mixer remains outside the production room until the
 existing Live capture requirements are met. No headset, signing, cloud, Store or
 paid-provider operation is included, and the full v1 goal remains incomplete.
+
+
+## Scoped shared-image ownership — 2026-10-10
+
+Appearance bindings now hold explicit runtime leases with immutable authored
+world/region/entity scope. Model and image holders share the same owner value.
+Two objects using the same exact image hash share one decoded texture, while
+retaining separate owners. Refresh keeps the entry alive; the last release cancels
+outstanding reads and releases texture residency without deleting the private
+original image or reusable appearance. Retired workspace leases cannot supply a
+texture. Released entry IDs never redirect to a later reload of the same hash.
+
+The native cache is observed through `runtime.imageBudget`,
+`runtime.imageReservation` and `runtime.imageOwner`. The generated book forms,
+agent and programs consume those same bounded definitions. Observations are
+detached and read-only. Texture bytes count one conservative ready-texture cost
+per image, excluding source reads, decode scratch space, previews, imported-model
+textures, browser images and other workspaces. This is resource retention, not
+visibility, eviction permission, measured RAM/VRAM or regional streaming.
+
+Five new native regressions cover real shared renderer bindings, copied ownership
+through missing-file retry, stale IDs after reloading, pending-read cancellation
+on workspace disposal, and refusal at entry/owner bounds. The focused suite
+passes 16 native tests, including existing image/model lifetime checks. The actual
+native loading/ready/owner fixture passes shared web validation. App/probe typing,
+lint, production bundle, source/catalog boundaries and 1,689 targeted web tests
+in 156 files pass. Full native suites and headless/book acceptance are recorded
+in the PR checkpoint and `.quest-evidence/image-residency/verification.json`;
+focused results alone do not establish that broader acceptance.
+
+The headless journey now checks an empty cache without mutation. The original
+book journey binds an accepted chat image and reads its shared entry, cost and
+exact owner using generated controls. Real-provider image journeys additionally
+ask who uses the image and how much texture space it costs, retain the actual
+inspection journal before assertions, require query-only operations and check
+final lease release after unbinding while preserving reusable bytes.
+
+An initial BYOK run `ed85731822de49109fd07fc02df0fcef` was interrupted after image
+generation/import and partial follow-up, with no terminal result; it is not a
+pass or semantic failure. Fresh managed `dc8c50554c0f42b5821479368d272f13` and BYOK
+`8d4c146961b94700a6bb9c931335b385` runs both stopped at their first Gemini request
+with HTTP 402: the provider project's prepaid credits were depleted. Their
+failures are retained. Real-provider acceptance of this new inspection remains
+open until billing is restored and fresh runs complete; no recorded or scripted
+provider output substitutes for that gate.
+
+No device, signing, deployment, upload or Store operation is included. Installed
+and packaged versions are unchanged. Coordinated regional activation, audio and
+geometry/navigation ownership, cross-region persistence and the broader v1
+release gates remain incomplete. The earlier intermittent native audio crash
+also remains unresolved; this image change does not claim a repair.

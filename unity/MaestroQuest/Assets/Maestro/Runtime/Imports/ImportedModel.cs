@@ -20,11 +20,11 @@ namespace Maestro.Quest.Imports
         // Reservations include previews and in-flight loads; these are source budgets, not measured RAM/VRAM.
         public static (int Models,int Vertices,int TexturePixels,int MorphVertices) LiveBudget=>ModelReservations.Budget;
         ModelReservations.Lease reservation;
-        ModelReservations.Owner resourceOwner=new(null,null,"unscoped");
+        Creation.RoomResourceOwner resourceOwner=new(null,null,"unscoped");
         bool loading;
         internal void ConfigureResourceOwner(Creation.RoomWorldIdentity world,string target,string role)
-            =>ConfigureResourceOwner(new ModelReservations.Owner(world,target,role));
-        internal void ConfigureResourceOwner(ModelReservations.Owner owner)
+            =>ConfigureResourceOwner(new Creation.RoomResourceOwner(world,target,role));
+        internal void ConfigureResourceOwner(Creation.RoomResourceOwner owner)
         {
             if(loading||reservation!=null||destroyed)throw new InvalidOperationException("Model resource ownership is fixed before loading");
             resourceOwner=owner??throw new ArgumentNullException(nameof(owner));
