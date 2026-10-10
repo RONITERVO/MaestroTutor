@@ -2920,3 +2920,9 @@ These are source checks against desktop Unity. Existing provider and headset hol
 remain; there is no new device, billing, signing, deployment or upload result.
 Regional streaming, capacity expansion and the wider release requirements remain
 unfinished.
+
+### Regional retention diagnostic — source acceptance
+
+Coverage added for area/connection closure (including cycles introduced by grouping), world-owned actors versus home creations, disabled and missing peers, independent snapshots, action/manual ownership, pending and paused detached audio, audio cleanup, runtime-object loss without saved deletion, whole-world physics holds and workspace edit holds. `world.region.retention` is shared through catalog validation and the native headless world-area journey.
+
+Independent regional unloading, observer admission, swept ground/water dependencies, regional failure isolation and native resource retirement remain acceptance work. A diagnostic read is not evidence of streaming. Paid provider and headset runs remain withheld under their existing holds.

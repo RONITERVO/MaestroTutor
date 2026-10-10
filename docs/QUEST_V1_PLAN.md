@@ -6618,3 +6618,11 @@ IDs, shared assets/programs and the physical shell; workspace replacement is not
 a streaming primitive. Admission/refusal and observed/retained/coarse states must
 be shared facts before agents can depend on them. Larger coordinates, aggregate
 budgets, water life, physical acceptance and the other release gates remain open.
+
+### Regional runtime dependency foundation (2026-10-10)
+
+Authored areas now have one ephemeral dependency graph, separate from persisted membership and native allocation ownership. A live channel lease, held body, ongoing recipe animation, simulated body, pending model or pending/playing/paused sound retains its entity. Area members stay together; enabled physical connections propagate retention in both directions across areas. The book and Maestro stay world-owned and do not implicitly retain every unassigned creation. Remembered structure layouts alone are not joints. Missing runtime objects and missing saved connection peers remain unavailable dependencies, not deleted or recreated content.
+
+`world.region.retention` exposes the same native diagnostic through the shared catalog, original book inspector and agent/headless transport. Empty `id` means home creations. It reports saved/resident/retained counts and aggregate reasons; inspecting it changes no journal revision, Undo, pose or audio state. Each query reads current owners, so closing a detached voice or releasing a pose lease removes the corresponding demand without relying on a second lifecycle counter.
+
+This is dependency groundwork, not completed streaming. `unloadingSupported` is explicitly false. Current physics admission still owns the whole bounded world, so running simulation retains all collision areas, including sleeping bodies' support. Before enabling unloading: add observer/swept bounds, explicit ground/water/navigation dependencies, action activation, per-area preparation and retirement, fact states for dormant/preparing/failed entities, and budget-aware cancellation/retry. No distance-only culling or visibility toggles may destroy required native objects. Capacity remains 64 creations and the existing coordinate bound. Device/provider acceptance remains on hold.

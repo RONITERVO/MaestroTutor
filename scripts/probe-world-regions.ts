@@ -19,11 +19,12 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  const assigned=await invoke('object.region.assign',{target,revision:before.revision,regionId:id,regionRevision:saved.output!.revision});
  const bound=await fact('object.region',{target}),members=await fact('world.region.members',{id,offset:0});
  assert.equal(bound.regionId,id);assert.deepEqual(members.members,[target]);assert.equal(bound.homeRegionId,before.homeRegionId);
+ const retention=await fact('world.region.retention',{id});assert.equal(retention.memberCount,1);assert.equal(retention.residentCount,1);assert.equal(retention.unloadingSupported,false);assert.ok(Array.isArray(retention.reasons));
  const sameDefinition=await fact('object.definition',{target});delete definition.revision;delete sameDefinition.revision;assert.deepEqual(sameDefinition,definition,'Region assignment moved or rebuilt authored content');
  const renamed=await invoke('world.region.save',{id,revision:members.revision,name:'Café garden',members:[target]});
  const named=await fact('world.region',{id});assert.equal(named.name,'Café garden');assert.equal(named.memberCount,1);
  await execute([{action:'undo'}]);assert.equal((await fact('world.region',{id})).name,'Learner garden');
  await execute([{action:'undo'}]);assert.equal((await fact('object.region',{target})).regionId,before.regionId);
  const empty=await fact('world.region',{id});const removed=await invoke('world.region.remove',{id,revision:empty.revision});
- await writeFile(join(directory,'world-regions.json'),JSON.stringify({boundary:'Actual shared native transport, saved authored areas, assignment, rename and Undo. No region streaming, enlarged capacity, provider or headset claim.',before,saved,assigned,bound,members,renamed,named,removed},null,2));
+ await writeFile(join(directory,'world-regions.json'),JSON.stringify({boundary:'Actual shared native transport, saved authored areas, assignment, rename and Undo. No region streaming, enlarged capacity, provider or headset claim.',before,saved,assigned,bound,members,retention,renamed,named,removed},null,2));
 }

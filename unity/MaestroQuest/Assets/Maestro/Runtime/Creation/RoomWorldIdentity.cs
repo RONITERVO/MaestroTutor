@@ -6,7 +6,8 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Authored identity, independent of workspace generations, revision
-    /// guards and physical tracking anchors. The current format has one region.</summary>
+    /// guards and physical tracking anchors. regionId identifies the home/runtime
+    /// scope; authored areas have their own durable RoomRegion identities.</summary>
     [Serializable]
     public sealed class RoomWorldIdentity
     {

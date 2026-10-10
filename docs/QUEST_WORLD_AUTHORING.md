@@ -684,3 +684,9 @@ These are saved authored areas. They do not yet load or unload independently,
 increase the current world capacity or keep distant regions simulated. The shared
 facts report membership rather than claiming runtime readiness. Regional activation
 and retention are tracked separately in the v1 plan.
+
+### Inspecting an area's current native dependencies
+
+The shared `world.region.retention` fact accepts an authored area ID, or empty `id` for home creations. It reports saved members, active native objects, retained members, missing connection peers and aggregate retention reasons. A sound retains its emitter while preparing, playing or paused; manual/action channel ownership and enabled connections also carry retention across area boundaries. The report is ephemeral and does not edit the world.
+
+`unloadingSupported: false` means these diagnostics are groundwork for regional loading. They do not authorize releasing an area. All creations currently remain in the bounded whole-world runtime, and running physics conservatively retains the collision environment. A missing runtime object is reported as unavailable while its saved entity remains intact.

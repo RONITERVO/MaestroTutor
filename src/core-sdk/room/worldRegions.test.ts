@@ -3,6 +3,7 @@
 import {expect,it} from 'vitest';
 import {capabilityDefinition,capabilityResources,validateCapabilityArguments} from '../../../shared/capabilities';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
+import {validateFactArguments,validFactValue} from '../../../shared/behaviourFacts';
 import {applyCurrentInputs,currentInputRequest} from '../../../shared/currentCapabilityInputs';
 import {applyResourceChoice,readResourceChoicePage,resourceChoices} from '../../../shared/resourceChoices';
 import {parseProgram} from './programs';
@@ -22,4 +23,15 @@ it('programs declare creation ownership and use catalog actions without a separa
  const args={target,revision:4,regionId:area,regionRevision:7};expect(capabilityResources('object.region.assign',args)).toEqual([target]);
  const program={version:2,entry:'main',resources:[target],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[{id:'assign',op:'invoke',capability:'object.region.assign',version:1,arguments:args,bindings:{}}]}]};
  expect(parseProgram(JSON.stringify(program)).error).toBeNull();program.resources=[];expect(parseProgram(JSON.stringify(program)).error).toContain('resource');
+});
+
+it('shares native dependency diagnostics without claiming independent regional unloading',()=>{
+ const id='world.region.retention';
+ for(const value of ['',area])expect(validateFactArguments(id,1,{id:value})).toBeNull();
+ expect(validateFactArguments(id,1,{id:'book'})).not.toBeNull();
+ const value={id:area,memberCount:2,residentCount:2,retainedCount:2,missingDependencyCount:0,reasons:['audio','ownership'],unloadingSupported:false};
+ expect(validFactValue(id,value)).toBe(true);
+ expect(validFactValue(id,{...value,residentCount:"2"})).toBe(false);
+ expect(validFactValue(id,{...value,reasons:[true]})).toBe(false);
+ expect(behaviourFact(id)!.description).toContain('transient diagnostic');
 });

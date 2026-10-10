@@ -400,6 +400,10 @@ try{
   await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
   return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Resource fact missing');return c.value as Record<string,string|number>;});
  };
+ const areaRetention=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
+ assert.equal(areaRetention.memberCount,1);assert.equal(areaRetention.residentCount,1);assert.equal(areaRetention.unloadingSupported,false);
+ await page.screenshot({path:join(directory,'book-native-region-retention.png')});
+ await writeFile(join(directory,'book-native-region-retention.json'),JSON.stringify({boundary:'Original book fact form and actual native area dependency report; no unloading or provider claim.',areaRetention},null,2));
  let importedSound:unknown=null;
  let soundFixture:{hash:string;seconds:number;name:string}|null=null;
  try{soundFixture=JSON.parse(await readFile(join(directory,'sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}

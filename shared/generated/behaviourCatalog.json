@@ -41246,6 +41246,46 @@
       ]
     },
     {
+      "id": "world.region.retention",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "memberCount": "number",
+          "residentCount": "number",
+          "retainedCount": "number",
+          "missingDependencyCount": "number",
+          "reasons": {
+            "list": "text"
+          },
+          "unloadingSupported": "boolean"
+        }
+      },
+      "label": "Area runtime dependencies",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and observer/ground/water admission must be implemented before independent residency. Missing objects are never treated as deleted by this report.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": ""
+      },
+      "features": [
+        "factQueries.v1",
+        "worldRegions.v1"
+      ]
+    },
+    {
       "id": "object.region",
       "version": 1,
       "type": {
@@ -43097,7 +43137,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "274da8a6793550d10d1ecf016e4dbce60ef4e424577f2bcb7ec352713172a9b6"
+      "sha256": "bc53c8485902b53d9aa30b4f18c4f2fb2b60cc703571fbaffbe0a346321ce807"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -43708,8 +43748,16 @@
       "sha256": "ffb381740916333877b85ffcff11e4197740b5c4bd56b4843ebdbac0c6d7ac1a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionRetention.cs",
+      "sha256": "bfb642ebeee5d078f7876732e4da7e10d24c338156feedf3936235583dbba028"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
       "sha256": "6f4653cafa2d0dd449b9ba5d7e52f8331ac1dbefd1015c6d187e2afb8b26bbc7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
+      "sha256": "40853a4e40f14731c664eda4d21f53497b74b5960f0728037cec205ab671befc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -43789,7 +43837,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldIdentity.cs",
-      "sha256": "57ec909541d6b5de214bb866e6b673dcf71f3c221af20366b5674edd7e692b0f"
+      "sha256": "b028815c3c4d3cc7d1bc91c41acc35178e86157885846974882c8c1f4d3b8220"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldPlacement.cs",
@@ -43853,7 +43901,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "ccebb010ec7d90b2792be0f0298b3ecc8395eecbc53cd0e2d92bbe7a7a862982"
+      "sha256": "63950ce244472f313214cb3855640c118b8cd74c2661d17a3560747cb3ab0fbc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -44365,7 +44413,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "239840424c0d41167335185e5c7d673c2c6603ddee9c50bcedf0957119150f4e"
+      "sha256": "1fc29214d57ffa7fbfa604dfb3308fbdab32fc66ccec4752628be5eeb8c61ac9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

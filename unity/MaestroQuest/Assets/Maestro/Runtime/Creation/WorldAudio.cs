@@ -143,6 +143,8 @@ namespace Maestro.Quest.Creation
             } else {if(!anchor)return false;rotation=anchor.rotation;position=anchor.TransformPoint(emitter.position);}
             error=null;return true;
         }
+        // Pending, playing and paused voices all retain their emitting object.
+        internal string[] RetainedTargets()=>instances.Values.Where(v=>!v.Closed).Select(v=>v.Target).Distinct(StringComparer.Ordinal).ToArray();
         internal Instance Current(string target,string emitter)=>instances.Values.FirstOrDefault(v=>v.Target==target&&v.Emitter==emitter);
         internal void Cancel(Instance v,string reason="Sound playback was cancelled")=>Close(v,reason,"cancelled");
         internal void Close(Instance v,string error="Sound playback was cancelled",string phase=null)
