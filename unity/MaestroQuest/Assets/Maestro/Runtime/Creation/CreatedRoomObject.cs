@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Owned geometry and paint for one user-created object.</summary>
-    public sealed partial class CreatedRoomObject : MonoBehaviour
+    public sealed partial class CreatedRoomObject : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         Material pigment;
         RecipeObject recipe;
@@ -172,7 +172,10 @@ namespace Maestro.Quest.Creation
             var outline = selection.GetComponent<PencilMarks>(); outline.SetPaths(paths,.001f); outline.SetColor(IllustratedMaterials.Ribbon);
             selection.SetActive(false);
         }
-        void OnDestroy() {preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
         void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

@@ -7,7 +7,7 @@ namespace Maestro.Quest.Art
 {
     /// <summary>One owned mesh for authored details or a user's spatial drawing.</summary>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-    public sealed class PencilMarks : MonoBehaviour
+    public sealed class PencilMarks : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         Mesh mesh;
         Material material;
@@ -30,6 +30,9 @@ namespace Maestro.Quest.Art
 
         public void SetColor(Color color) { if (material){material.color = color;Creation.RoomAppearanceView.VisualsChanged(this);} }
 
-        void OnDestroy() { ArtResources.Release(mesh); ArtResources.Release(material); }
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true; ArtResources.Release(mesh); ArtResources.Release(material); }
     }
 }

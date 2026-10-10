@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Native evaluation of saved recipes, shared by manual and agent edits.</summary>
-    public sealed partial class RecipeObject : MonoBehaviour
+    public sealed partial class RecipeObject : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         Dictionary<string,Transform> nodes = new();
         Dictionary<string,Quaternion> rest = new();
@@ -92,6 +92,9 @@ namespace Maestro.Quest.Creation
         void OnApplicationPause(bool paused) { if (paused) Stop(); }
         void OnApplicationFocus(bool focused) { if (!focused) Stop(); }
         void OnDisable() {Stop();}
-        void OnDestroy() {CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; visual?.Dispose();visual=null; }
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;CancelParts();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; visual?.Dispose();visual=null; }
     }
 }

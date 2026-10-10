@@ -23,6 +23,11 @@ namespace Maestro.Quest.Creation
         {
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
             RoomObjectData data=null;foreach(var item in edit.Snapshot().objects)if(item.id==model.Target){data=item;break;}
+            EnlistModel(model,data);
+        }
+        internal void EnlistModel(PreparedImportedModel model,RoomObjectData data)
+        {
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");
             model.Validate(data);models.Add(model.Target,model);resources.Add(model);
         }
         internal PreparedImportedModel TakeModel(RoomObjectData data)
@@ -62,31 +67,42 @@ namespace Maestro.Quest.Creation
                     // Reconciliation can rebuild a lost creation. Admit its geometry before
                     // accepting history, even when the accepted edit targets a peer.
                     bool missing=!editor.Find(data.id)&&!data.IsBuiltIn;
-                    if(!changed.Contains(data.id)&&!missing)continue;
-                    var before=missing?null:editor.Read(data.id);var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
-                    if(data.kind==RoomObjectKind.Assembly&&JsonUtility.ToJson(before?.recipe)!=JsonUtility.ToJson(data.recipe)){
-                        var candidate=new RecipeVisual(data.recipe,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));prepared.resources.Add(candidate);prepared.recipes.Add(data.id,candidate);
-                    }
-                    if((data.collision?.shapes.Length??0)>0&&JsonUtility.ToJson(before?.collision)!=JsonUtility.ToJson(data.collision)){
-                        var candidate=new CollisionGeometry(data.collision,null,owner);prepared.resources.Add(candidate);prepared.collisions.Add(data.id,candidate);
-                    }
-                    var field=data.heightFields?.Length==1?data.heightFields[0]:null;var previous=before?.heightFields?.Length==1?before.heightFields[0]:null;
-                    if(field!=null&&JsonUtility.ToJson(field)!=JsonUtility.ToJson(previous)){
-                        var candidate=new HeightFieldGeometry(field,owner);prepared.resources.Add(candidate);prepared.fields.Add(data.id,candidate);
-                    }
-                    if(data.kind!=RoomObjectKind.ImportedModel)continue;
-                    // New/unloaded model instances keep the established asynchronous
-                    // import/readiness path. An edit of existing geometry must be
-                    // prepared now; it cannot advance history and fail afterwards.
-                    if(before==null||before.modelGeometry.Same(data.modelGeometry))continue;
-                    if(editor.PhysicsWorld&&editor.PhysicsWorld.Running)throw new ModelImportException("Pause physics before changing imported geometry");
-                    var item=editor.Find(data.id);var view=item?item.GetComponent<CreatedRoomObject>():null;
-                    if(!view)throw new ModelImportException("Wait for the imported geometry to load");
-                    if(!view.CanConfigureModelGeometry(data.modelGeometry,out error))throw new ModelImportException(error);
-                    prepared.resources.Add(view.PrepareModelGeometry(data.modelGeometry));
+                    if(editor.NativeEntityDormant(data.id)||(!changed.Contains(data.id)&&!missing))continue;
+                    var before=missing?null:editor.Read(data.id);
+                    prepared.PrepareGeometry(editor,data,before);
                 }
                 return prepared;
             }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
+        }
+        internal static RoomEditPreparation PrepareNative(RoomEditor editor,RoomObjectData[] values)
+        {
+            var result=new RoomEditPreparation();
+            try{foreach(var data in values)result.PrepareGeometry(editor,data,null);return result;}
+            catch{result.Dispose();throw;}
+        }
+        void PrepareGeometry(RoomEditor editor,RoomObjectData data,RoomObjectData before)
+        {
+            var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
+            if(data.kind==RoomObjectKind.Assembly&&JsonUtility.ToJson(before?.recipe)!=JsonUtility.ToJson(data.recipe)){
+                var candidate=new RecipeVisual(data.recipe,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));resources.Add(candidate);recipes.Add(data.id,candidate);
+            }
+            if((data.collision?.shapes.Length??0)>0&&JsonUtility.ToJson(before?.collision)!=JsonUtility.ToJson(data.collision)){
+                var candidate=new CollisionGeometry(data.collision,null,owner);resources.Add(candidate);collisions.Add(data.id,candidate);
+            }
+            var field=data.heightFields?.Length==1?data.heightFields[0]:null;var previous=before?.heightFields?.Length==1?before.heightFields[0]:null;
+            if(field!=null&&JsonUtility.ToJson(field)!=JsonUtility.ToJson(previous)){
+                var candidate=new HeightFieldGeometry(field,owner);resources.Add(candidate);fields.Add(data.id,candidate);
+            }
+            if(data.kind!=RoomObjectKind.ImportedModel)return;
+            // New/unloaded model instances keep the established asynchronous
+            // import/readiness path. An edit of existing geometry must be
+            // prepared now; it cannot advance history and fail afterwards.
+            if(before==null||before.modelGeometry.Same(data.modelGeometry))return;
+            if(editor.PhysicsWorld&&editor.PhysicsWorld.Running)throw new ModelImportException("Pause physics before changing imported geometry");
+            var item=editor.Find(data.id);var view=item?item.GetComponent<CreatedRoomObject>():null;
+            if(!view)throw new ModelImportException("Wait for the imported geometry to load");
+            if(!view.CanConfigureModelGeometry(data.modelGeometry,out var issue))throw new ModelImportException(issue);
+            resources.Add(view.PrepareModelGeometry(data.modelGeometry));
         }
         public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();}
     }

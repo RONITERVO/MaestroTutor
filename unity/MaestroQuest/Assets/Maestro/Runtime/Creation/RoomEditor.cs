@@ -448,20 +448,23 @@ namespace Maestro.Quest.Creation
             item.GrabStarted-=GrabStarted;item.GrabFinished-=GrabFinished;
             var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted;
         }
-        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null, RoomEditPreparation preparation = null)
+        void Reconcile(HashSet<string> changed = null, bool applyChangedPose = true, HashSet<string> poseChanges = null, RoomEditPreparation preparation = null, HashSet<string> activating = null, List<GameObject> activationRoots = null, Transform activationParent = null)
         {
             applying = true;
+            try {
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
+            SynchronizeNativeResidency(ids);
             foreach (var id in objects.Keys.Where(id => !ids.Contains(id)).ToArray())
             {
                 var item = objects[id];DetachNativeIdentity(id,item);
                 if(item){item.gameObject.SetActive(false);Destroy(item.gameObject);}
             }
             SynchronizeVisibility(document);
-            regionModels.Clear();
+            if(activating==null)regionModels.Clear();
             int slot = 0;
             foreach (var data in document.objects)
             {
+                if(activating!=null&&!activating.Contains(data.id)||NativeEntityDormant(data.id)&&activating?.Contains(data.id)!=true)continue;
                 bool created = false;
                 if (!objects.TryGetValue(data.id,out var item)||!item)
                 {
@@ -470,7 +473,8 @@ namespace Maestro.Quest.Creation
                     // an accepted edit. World-owned book/avatar instances belong to
                     // their host and must never become ordinary creation prefabs.
                     if(data.IsBuiltIn)continue;
-                    var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
+                    var root = new GameObject(data.kind.ToString()); root.transform.SetParent(activationParent?activationParent:transform,false);
+                    if(activating!=null)activationRoots.Add(root);
                     // Canonical scale is linked to XRI before restoring saved pose/scale.
                     item = root.AddComponent<CreatedRoomObject>().BuildPrepared(data, Models,RuntimeGate,WorldIdentity,preparation);
                     AddIdentity(data.id,item); room.Register(item);
@@ -480,7 +484,7 @@ namespace Maestro.Quest.Creation
                 // Undo/Redo reconfigure the full document, but only the objects in
                 // that history entry own a pose restoration. Unrelated live poses
                 // may differ legitimately from their last saved placement.
-                if (!item.Grab.isSelected && (created || ((poseChanges==null || poseChanges.Contains(data.id)) && (changed == null || (applyChangedPose && changed.Contains(data.id)))))) ApplyPose(item,data);
+                if (!item.Grab.isSelected && (created || ((poseChanges==null || poseChanges.Contains(data.id)) && (changed == null || (applyChangedPose && changed.Contains(data.id)))))) ApplyPose(item,activating!=null?NativeActivationPose(data):data);
                 var environment=item.GetComponent<RoomEnvironmentBinding>()??item.gameObject.AddComponent<RoomEnvironmentBinding>();
                 item.WaterTraversal=RoomWaterTraversal.Effective(data);
                 environment.Apply(PhysicsWorld,item,string.IsNullOrEmpty(data.environmentProfile)?true:journal.ReadEnvironment(data.environmentProfile).realCollisions);
@@ -509,11 +513,13 @@ namespace Maestro.Quest.Creation
                     item.GetComponent<CreatedRoomObject>().ApplyColor(data.appearanceBindings.Any(b=>b.kind=="root")?Color.white:data.color); slot++;
                 }
                 ApplyVisibility(data,item,document);
+                if(activating!=null)RestoreNativeRecipe(data,item);
             }
             // Resolve links only after every member and its current pose/collider exists.
-            foreach(var data in document.objects){var item=Find(data.id);if(!item)continue;var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge)hinge.Apply(this,data.connections);}
-            Liquids?.Synchronize(document);
-            applying = false; RefreshRegionCollision(); UpdateSelection();
+            foreach(var data in document.objects){if(activating!=null&&!activating.Contains(data.id))continue;var item=Find(data.id);if(!item)continue;var hinge=item.GetComponent<RoomConnectionView>();if(!hinge&&(data.connections?.Length??0)>0)hinge=item.gameObject.AddComponent<RoomConnectionView>();if(hinge){hinge.Apply(this,data.connections);if(activating!=null)RestoreNativeConnection(data,hinge);}}
+            if(activating==null)Liquids?.Synchronize(document);
+            } finally { applying = false; }
+            if(activating==null){RefreshRegionCollision(); UpdateSelection();}
         }
 
         void ApplyPose(RoomItem item, RoomObjectData data)
@@ -689,10 +695,10 @@ namespace Maestro.Quest.Creation
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
-            ClearViewCapture();FinishLiquidPour(out _);
+            CancelNativeActivation();ClearViewCapture();FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }

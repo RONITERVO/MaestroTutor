@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Owned ink meshes follow the configured anchor. No colliders or rigid bodies are created for ink.</summary>
-    public sealed class DrawingSurfaceView:MonoBehaviour
+    public sealed class DrawingSurfaceView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         sealed class Patch {public DrawingSurface Data;public Transform Root,Anchor;public string Encoded;public readonly Dictionary<string,GameObject> Ink=new();}
         readonly Dictionary<string,Patch> patches=new();
@@ -51,6 +51,9 @@ namespace Maestro.Quest.Creation
             }
             return id!=null;
         }
-        void OnDestroy(){foreach(var p in patches.Values)Release(p);patches.Clear();}
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;foreach(var p in patches.Values)Release(p);patches.Clear();}
     }
 }

@@ -4,7 +4,7 @@ using System;
 using Maestro.Quest.Art;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
-    public sealed class MaterialToolContentsView:MonoBehaviour {
+    public sealed class MaterialToolContentsView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner {
         const int Sides=16,Rings=4;
         RoomMaterialStore accepted,preview;SculptTip tip;
         GameObject heap;Mesh mesh;Material material;Transform anchor;
@@ -24,6 +24,9 @@ namespace Maestro.Quest.Creation {
             for(int ring=0;ring<Rings-1;ring++)for(int side=0;side<Sides;side++){int a=1+ring*Sides+side,b=1+ring*Sides+(side+1)%Sides,c=a+Sides,d=b+Sides;triangles[at++]=a;triangles[at++]=c;triangles[at++]=b;triangles[at++]=b;triangles[at++]=c;triangles[at++]=d;}
             mesh.Clear();mesh.vertices=vertices;mesh.triangles=triangles;mesh.RecalculateNormals();mesh.RecalculateBounds();
         }
-        void OnDestroy(){ArtResources.Release(mesh);ArtResources.Release(material);if(heap)Destroy(heap);}
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;ArtResources.Release(mesh);ArtResources.Release(material);if(heap)Destroy(heap);}
     }
 }

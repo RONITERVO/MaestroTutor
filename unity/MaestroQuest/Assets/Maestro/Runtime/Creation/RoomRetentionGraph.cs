@@ -53,6 +53,12 @@ namespace Maestro.Quest.Creation
             }
             return true;
         }
+        internal string[] Closure(IEnumerable<string> targets)
+        {
+            var found=new HashSet<string>(StringComparer.Ordinal);var pending=new Queue<string>(targets);
+            while(pending.Count>0){string id=pending.Dequeue();if(!Contains(id)||!found.Add(id))continue;foreach(var next in edges[id])pending.Enqueue(next);}
+            return found.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        }
         internal void RetainAll(RoomRetentionReason reason){foreach(var id in edges.Keys)Retain(id,reason);}
         internal RoomRetentionReason Reasons(string target)=>reasons.TryGetValue(target,out var value)?value:RoomRetentionReason.None;
         internal string[] Members(string area)=>areas.TryGetValue(area,out var members)?(string[])members.Clone():null;

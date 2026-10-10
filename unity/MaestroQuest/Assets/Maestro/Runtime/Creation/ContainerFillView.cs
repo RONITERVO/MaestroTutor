@@ -5,7 +5,7 @@ using Maestro.Quest.Art;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
     /// <summary>Bounded, upward-facing liquid-level presentation; never mutates quantity or physics.</summary>
-    public sealed partial class ContainerFillView:MonoBehaviour {
+    public sealed partial class ContainerFillView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner {
         const int Segments=24;
         readonly List<Vector3> rim=new(72),vertices=new(74);
         readonly List<int> triangles=new(216);
@@ -46,6 +46,9 @@ namespace Maestro.Quest.Creation {
         // Kept as the existing display entry point; immersion uses the identical plane.
         internal static float Level(Vector3 normal,float radius,float height,float fraction)=>ContainerFlowGeometry.Level(normal,radius,height,fraction);
 
-        void OnDestroy(){ArtResources.Release(mesh);ArtResources.Release(material);if(surface)Destroy(surface);}
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;ArtResources.Release(mesh);ArtResources.Release(material);if(surface)Destroy(surface);}
     }
 }

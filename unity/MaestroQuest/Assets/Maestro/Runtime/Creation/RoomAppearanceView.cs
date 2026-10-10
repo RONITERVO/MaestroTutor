@@ -12,7 +12,7 @@ namespace Maestro.Quest.Creation
 {
     /// <summary>Presentation of saved bindings. Never edits geometry, collision,
     /// audio or browser-page materials. Sources and shared variants have separate owners.</summary>
-    internal sealed class RoomAppearanceView:MonoBehaviour
+    internal sealed class RoomAppearanceView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         sealed class Rendered {internal Renderer Renderer;internal Material[] Original,Applied;}
         readonly List<Rendered> rendered=new();
@@ -90,6 +90,9 @@ namespace Maestro.Quest.Creation
         void Clear(){Restore();foreach(var lease in visibilityLeases)lease.Dispose();visibilityLeases.Clear();foreach(var lease in leases)lease.Dispose();leases.Clear();foreach(var lease in imageLeases.Values)lease.Dispose();imageLeases.Clear();}
         void OnEnable(){Refresh();}
         void OnDisable(){Clear();}
-        void OnDestroy(){if(images)images.Changed-=ImagesChanged;if(avatar)avatar.ModelChanged-=Refresh;Clear();}
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;if(images)images.Changed-=ImagesChanged;if(avatar)avatar.ModelChanged-=Refresh;Clear();}
     }
 }

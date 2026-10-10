@@ -13,6 +13,7 @@ namespace Maestro.Quest.Creation
         string RegionCollisionIssue()
         {
             if(!this||!isActiveAndEnabled||journal==null)return "The authored region is unavailable";
+            if(dormantNative.Count>0)return "Authored areas must finish native activation before whole-world collision simulation";
             foreach(var entry in regionModels){
                 var model=entry.Value;
                 if(!model||!model.isActiveAndEnabled||!model.ModelGeometryReady){

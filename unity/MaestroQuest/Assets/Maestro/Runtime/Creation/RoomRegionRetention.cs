@@ -14,6 +14,7 @@ namespace Maestro.Quest.Creation
             if(journal==null)return null;
             var graph=journal.RetentionGraph();
             foreach(var target in graph.Targets){
+                if(NativeEntityDormant(target)){if(graph.MissingDependency(target))graph.Retain(target,RoomRetentionReason.Unavailable);continue;}
                 var item=Find(target);
                 if(target is "book" or "maestro")graph.Retain(target,RoomRetentionReason.WorldOwned);
                 if(!item||!item.isActiveAndEnabled){graph.Retain(target,RoomRetentionReason.Unavailable);continue;}
@@ -23,6 +24,7 @@ namespace Maestro.Quest.Creation
                 if(item.GetComponent<RigidRoomItem>()?.AnimationOwned==true||item.GetComponent<RecipeObject>()?.IsPlaying==true)
                     graph.Retain(target,RoomRetentionReason.Animation);
                 var model=item.GetComponent<CreatedRoomObject>();
+                if(model&&model.Model&&model.Model.IsPlaying)graph.Retain(target,RoomRetentionReason.Animation);
                 if(model&&regionModels.ContainsKey(target)&&!model.ModelGeometryReady)graph.Retain(target,RoomRetentionReason.Unavailable);
                 if(graph.MissingDependency(target))graph.Retain(target,RoomRetentionReason.Unavailable);
             }

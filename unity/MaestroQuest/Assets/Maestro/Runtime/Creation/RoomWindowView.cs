@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 namespace Maestro.Quest.Creation
 {
     /// <summary>Owns bounded mask renderers; source is shared by humans, programs and agents.</summary>
-    public sealed class RoomWindowView:MonoBehaviour
+    public sealed class RoomWindowView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         sealed class Mask { internal RoomWindow Data;internal GameObject Object;internal MeshRenderer Renderer; }
         readonly List<Mask> masks=new();
@@ -49,6 +49,9 @@ namespace Maestro.Quest.Creation
         void OnEnable()=>Refresh();
         void OnDisable(){Requested=false;if(view)view.SetWindowRequest(this,false);foreach(var m in masks)if(m.Renderer)m.Renderer.enabled=false;}
         void ClearMasks(){foreach(var m in masks)if(m.Object){m.Object.SetActive(false);ArtResources.Release(m.Object);}masks.Clear();}
-        void OnDestroy(){if(view)view.SetWindowRequest(this,false);ClearMasks();ArtResources.Release(material);ArtResources.Release(mesh);}
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;if(view)view.SetWindowRequest(this,false);ClearMasks();ArtResources.Release(material);ArtResources.Release(mesh);}
     }
 }

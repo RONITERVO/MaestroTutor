@@ -89,7 +89,7 @@ namespace Maestro.Quest.Creation
             // fork, even while the baseline waits for an earlier autosave.
             try{TemporaryMemory?.BeginTemporary();}catch(Exception e){error=e.Message;return false;}
             savedPair=null;TemporaryStorageUncertain=false;
-            savedJournal=journal;journal=journal.Fork();savedBaseDurable=false;dirty=false;
+            savedJournal=journal;journal=journal.Fork();CancelNativeActivation();nativeJournal=journal;savedBaseDurable=false;dirty=false;
             TemporarySaveRevision=0;TemporarySessionId=Guid.NewGuid().ToString("N");ResetLayerPresentation(true);Revision++;ClearConstructionSelection();
             var previous=saveTask;saveTask=null;
             DispatchTemporarySave(baseline,baseline:true,previous);

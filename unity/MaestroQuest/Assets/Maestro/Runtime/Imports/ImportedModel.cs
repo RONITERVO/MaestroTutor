@@ -13,7 +13,7 @@ using UnityEngine;
 namespace Maestro.Quest.Imports
 {
     /// <summary>One owned imported instance. Playback never starts from a file or saved room.</summary>
-    public sealed partial class ImportedModel : MonoBehaviour, IDisposable
+    public sealed partial class ImportedModel : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner, IDisposable
     {
         static readonly SemaphoreSlim loadQueue = new(1, 1);
         public const int MaximumLiveModels=6,MaximumLiveVertices=500000,MaximumLiveTexturePixels=64*1024*1024,MaximumLiveMorphVertices=8000000;
@@ -203,6 +203,7 @@ namespace Maestro.Quest.Imports
             if(instance)DisposeInstance(instance);instance=null;animationPlayer=null;initialWeights.Clear();
             ArtResources.Release(generatedAvatar);generatedAvatar=null;
         }
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>Dispose();
         void OnDestroy()=>Dispose();
     }
 }

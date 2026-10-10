@@ -14,7 +14,7 @@ namespace Maestro.Quest.Interaction
 
     /// <summary>Coordinates PhysX, XRI and animation ownership; never replays an old impulse after interruption.</summary>
     [DefaultExecutionOrder(100)]
-    public sealed class RigidRoomItem : MonoBehaviour
+    public sealed class RigidRoomItem : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         RoomItem item;
         Rigidbody body;
@@ -183,8 +183,12 @@ namespace Maestro.Quest.Interaction
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }
         }
         void OnDisable() { MotionRevision++;boundaryActive=false;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
-        void OnDestroy()
+        bool nativeResourcesReleased;
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void OnDestroy()=>ReleaseNativeResources();
+        void ReleaseNativeResources()
         {
+            if(nativeResourcesReleased)return;nativeResourcesReleased=true;
             if (world) world.Changed -= PhysicsChanged;
             if (item && item.Grab) { item.Grab.firstSelectEntered.RemoveListener(Grabbed); item.Grab.lastSelectExited.RemoveListener(Released); }
             ArtResources.Release(material);

@@ -5,7 +5,7 @@ using Maestro.Quest.Art;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
     /// <summary>Accepted owned geometry, replaced only after preparation succeeds.</summary>
-    public sealed class HeightFieldView:MonoBehaviour {
+    public sealed class HeightFieldView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner {
         HeightFieldGeometry geometry;Mesh previewMesh;string encoded;Color tint=Color.white;
         RoomResourceOwner resourceOwner=new(null,null,"unscoped");
         internal void ConfigureResourceOwner(RoomResourceOwner owner){if(geometry!=null)throw new InvalidOperationException("Terrain geometry already has an owner");resourceOwner=owner??throw new ArgumentNullException(nameof(owner));}
@@ -31,6 +31,9 @@ namespace Maestro.Quest.Creation {
             geometry.Attach(transform,tint);encoded=next;Accepted=data.Copy();Preview(null);old?.Dispose();RoomAppearanceView.VisualsChanged(this);return true;
         }
         void ReleaseVisual(){geometry?.Dispose();geometry=null;ArtResources.Release(previewMesh);previewMesh=null;}
-        void OnDestroy()=>ReleaseVisual();
+        bool nativeResourcesReleased;
+        void OnDestroy()=>ReleaseNativeResources();
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;ReleaseVisual();}
     }
 }

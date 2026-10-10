@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction
 {
     /// <summary>One owning item controls every child collider without consuming a layer per entity.</summary>
-    public sealed class RoomEnvironmentBinding:MonoBehaviour
+    public sealed class RoomEnvironmentBinding:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         RoomPhysicsWorld world;
         RoomItem item;
@@ -23,6 +23,8 @@ namespace Maestro.Quest.Interaction
         }
         void OnEnable(){if(world)world.RegisterEnvironment(this);Refresh();}
         void OnDisable(){if(world)world.UnregisterEnvironment(this);}
-        void OnDestroy(){if(world){world.Changed-=Refresh;world.UnregisterEnvironment(this);}}
+        void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
+        void OnDestroy()=>ReleaseNativeResources();
+        void ReleaseNativeResources(){if(world){world.Changed-=Refresh;world.UnregisterEnvironment(this);}world=null;item=null;}
     }
 }

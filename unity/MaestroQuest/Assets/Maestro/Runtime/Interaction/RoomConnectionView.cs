@@ -18,6 +18,7 @@ namespace Maestro.Quest.Interaction
         public bool HasTravel=>isActiveAndEnabled&&definition?.kind=="slider"&&editor&&editor.Find(definition.connected) is RoomItem other&&other.isActiveAndEnabled;
         public float Travel=>HasTravel?definition.Travel(transform,editor.Find(definition.connected).transform):0;
         internal void ResetBreak(){broken=false;Refresh();}
+        internal void RestoreBrokenState(bool value){broken=value;Refresh();}
         void OnJointBreak(float force){if(!admitted||definition==null)return;admitted=false;joint=null;retiring=null;broken=true;rigid?.SetConstraintBlocked(this,false);Phase="broken";Error="Connection broke; align or rearm explicitly to reconnect";editor?.NotifyConnectionBroken(item,definition);}
         public float Angle=>definition!=null&&linked?definition.Angle(transform,linked.transform):0;
         public void Apply(RoomEditor source,RoomConnection[] values)
