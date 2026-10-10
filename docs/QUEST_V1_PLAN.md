@@ -6333,3 +6333,33 @@ verification separately. This establishes reliable retirement, not geometry cost
 admission, asynchronous navigation tiles or automatic regional streaming. Those
 requirements, active cross-region dependencies and physical Quest acceptance
 remain open. No saved-world migration, device or release operation is included.
+
+
+### Authored collision ownership before regional admission — 2026-10-10
+
+Authored compound proxies, accepted height fields and rigid imported-model
+collision now share an explicit runtime ownership ledger. Each lease copies the
+world, region and entity identity when its geometry is created. Prepared or
+disabled geometry remains retained; replacing a collider keeps old and new leases
+separate until Unity actually destroys the old components. Hierarchy destruction
+also retires dead metadata, and releasing geometry does not remove saved objects,
+source model files or Undo history. Terrain updates change the accepted source
+cost on the same lease; temporary visual sculpt previews are excluded.
+
+The shared `runtime.collisionResources` and `runtime.collisionResource` facts
+expose retained source collider/triangle counts and active collider counts through
+the normal book catalog, agent and program interfaces. Counts include repeated
+mesh instances. They are not measured memory, PhysX cooked sizes or new enforced
+capacity limits; default bounds, book/avatar proxies, scans and navigation maps
+have separate ownership and are outside this ledger. Disabled allocation is not
+free allocation, and an enabled collider alone does not prove physical contact.
+
+Coordinated admission is deliberately the next transaction-layer change. Current
+compound/terrain edits persist source before reconciliation allocates geometry,
+and Undo/Redo reconcile accepted history. New capacity rejection must therefore
+be prepared before saving or advancing history, including bulk edits and Undo;
+adding a constructor-only limit would leave partially applied saved changes.
+This ownership increment introduces no such limit, automatic eviction or regional
+streaming. The existing bounded world, per-entity real-room participation and
+saved source remain authoritative. Complete verification and remaining provider,
+headset and native-audio limitations are tracked in the coverage ledger.

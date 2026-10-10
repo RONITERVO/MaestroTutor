@@ -2683,3 +2683,37 @@ The experimental reflection mixer remains outside production room setup pending
 Live capture/AEC and device acceptance. This managed monitor change does not
 claim to fix the earlier MetaXRAudioUnity.dll acoustic-map crash. Full rerun and
 focused native results are recorded with the navigation-lifetime evidence.
+
+
+### Authored collision ownership through shared native facts
+
+`CollisionResourceTests` exercises actual compound meshes, accepted terrain and
+loaded rigid GLB geometry. Coverage checks immutable world/entity ownership,
+source triangle counts against real meshes, inactive retained allocation,
+independent replacement leases, deferred destruction, external parent destruction,
+terrain preview exclusion and accepted-resolution edits, failed save cleanup,
+unsupported skinned import rejection and saved Undo/Redo source preservation.
+A first focused run passed seven tests and failed one new test because it read
+storage before Undo's queued persistence had flushed. The test now uses the
+existing explicit flush; the failed report is preserved, not relabeled as a
+runtime regression or a successful suite.
+
+Actual native observations are exported to a reviewed browser fixture. Shared
+TypeScript contract tests reject extra private fields, invalid observation types
+and invalid indexed queries. The full headless probe uses catalog facts after
+creating compound cup collision and again after Undo destroys it. The original
+book probe uses generated fact forms to inspect the actual imported building's
+collision owner. Both use the same catalog available to agents and programs;
+no special debug read or provider imitation substitutes for native geometry.
+
+Focused, complete native, headless/book, web and CI results are recorded only
+after terminal exit and diagnostic gates in
+`.quest-evidence/collision-residency/verification.json`. This source-count ledger
+is not geometry admission, physical memory measurement or regional streaming.
+Admission must prepare before shared save/Undo/bulk-edit transactions; default
+proxy, scan and navigation geometry are outside the authored collision ledger.
+
+No paid provider calls, headset work, installation, signing, deployment or Store
+changes belong to this increment. The existing managed/BYOK Gemini HTTP 402
+condition and headset cooling/charge hold still limit acceptance. The independent
+intermittent Meta native acoustic-map crash remains unresolved.

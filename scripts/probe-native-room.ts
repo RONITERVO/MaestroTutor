@@ -310,6 +310,22 @@ try{
   const collisionCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
   const collided=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.collision.edit',version:1,arguments:{target:cupId,revision:restored.inspection!.objectRevision,collision:collisionCases[0].collision}}}}]);
   const collisionRevision=collided.objects.find(object=>object.id===cupId)?.objectRevision;
+  const readCollisionOwnership=async()=>{
+   const budgetReply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.collisionResources',version:1}}]);
+   const budget=factReply(budgetReply).value as {entries:number;colliders:number;meshColliders:number;sourceTriangles:number;activeColliders:number};
+   if(!budget||!Number.isInteger(budget.entries)||budget.entries<0)throw new Error('Native authored collision resources are unavailable.');
+   const owners:Array<{leaseId:string;worldId:string;regionId:string;target:string;role:string;kind:string;phase:string;colliders:number;sourceTriangles:number}>=[];
+   for(let index=0;index<budget.entries;index++){
+    const reply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.collisionResource',version:1,arguments:{index}}}]);
+    const owner=factReply(reply).value as typeof owners[number];if(owner)owners.push(owner);
+   }
+   return {budget,owners};
+  };
+  const collisionOwned=await readCollisionOwnership();
+  const cupOwner=collisionOwned.owners.find(owner=>owner.target===cupId&&owner.kind==='compound'&&owner.phase==='ready');
+  if(!cupOwner||cupOwner.colliders!==13||cupOwner.sourceTriangles<=0||cupOwner.worldId.length!==32||cupOwner.regionId.length!==32||cupOwner.leaseId.length!==32||cupOwner.role!=='collision')throw new Error('The actual native cup collision geometry lost its shared resource owner.');
+  if(lease.state().sceneRevision!==collided.sceneRevision)throw new Error('Collision resource observations mutated the authored scene.');
+
   const summary=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
   const summaryValue=summary.catalog?.value as {pieces?:number;shapes?:number;customActive?:boolean}|undefined;
   if(summaryValue?.pieces!==13||summaryValue.shapes!==2||summaryValue.customActive!==true)throw new Error('Native compound collision summary differs from the edit.');
@@ -318,6 +334,9 @@ try{
   await execute([{action:'undo'}]);
   const collisionRestored=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
   if((collisionRestored.catalog?.value as {shapes?:number})?.shapes!==0)throw new Error('Collision Undo did not restore the default proxy.');
+  const collisionReleased=await readCollisionOwnership();
+  if(collisionReleased.owners.some(owner=>owner.target===cupId))throw new Error('Collision Undo left the retired cup geometry retained after native destruction.');
+  await writeFile(join(directory,'collision-resources.json'),JSON.stringify({boundary:'Shared catalog reads of actual native compound collision ownership and Undo cleanup. Source geometry counts, not measured memory, enforced admission or headset evidence.',owned:collisionOwned,released:collisionReleased},null,2));
   await writeFile(join(directory,'collision-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:restored,search:collisionCatalog,definition:collisionDefinition,current:collisionCurrent,after:collided,summary,wall},null,2));
   const removed=await execute([{action:'undo'}]);if(removed.objects.some(object=>object.id===cupId))throw new Error('Lathe Undo did not remove the created geometry.');
   const extrusionCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/extrusion-contract.json','utf8'));

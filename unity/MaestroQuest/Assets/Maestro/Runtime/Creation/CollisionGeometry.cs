@@ -11,14 +11,16 @@ namespace Maestro.Quest.Creation
     internal sealed class CollisionGeometry:IDisposable
     {
         readonly GameObject root;
+        readonly CollisionResources.Lease resource;
         readonly List<Mesh> meshes=new();
         readonly List<Collider> colliders=new();
         public Collider[] Colliders=>colliders.ToArray();
         public void SetActive(bool value){if(root)root.SetActive(value);}
-        public CollisionGeometry(CollisionRecipe recipe,Transform parent) {
+        public CollisionGeometry(CollisionRecipe recipe,Transform parent,RoomResourceOwner owner=null) {
             if(recipe==null||!recipe.Validate(out _))throw new ArgumentException("Invalid collision recipe");
-            root=new GameObject("Editable collision shapes");root.SetActive(false);root.transform.SetParent(parent,false);
-            try{foreach(var s in recipe.shapes){
+            resource=CollisionResources.Begin(owner??new RoomResourceOwner(null,null,"unscoped"),"compound",CollisionResources.Cost.Recipe(recipe));
+            try{root=new GameObject("Editable collision shapes");root.SetActive(false);root.transform.SetParent(parent,false);
+            foreach(var s in recipe.shapes){
                 var node=new GameObject(s.id);node.transform.SetParent(root.transform,false);node.transform.SetLocalPositionAndRotation(s.position,s.rotation);node.transform.localScale=s.size;node.layer=RoomPhysicsLayers.Item;
                 if(s.shape=="box")colliders.Add(node.AddComponent<BoxCollider>());
                 else if(s.shape=="sphere"){var sphere=node.AddComponent<SphereCollider>();sphere.radius=.5f;colliders.Add(sphere);}
@@ -29,7 +31,7 @@ namespace Maestro.Quest.Creation
                     var sector=new GameObject("Wall "+i);sector.transform.SetParent(node.transform,false);sector.layer=RoomPhysicsLayers.Item;
                     AddMesh(sector,Prism(new[]{Point(s.innerRadius,a),Point(.5f,a),Point(.5f,b),Point(s.innerRadius,b)}));
                 }
-            }}catch{Dispose();throw;}
+            }resource.Ready(colliders);}catch{Dispose();throw;}
         }
         void AddMesh(GameObject node,Mesh mesh) {
             meshes.Add(mesh);var collider=node.AddComponent<MeshCollider>();collider.convex=true;collider.sharedMesh=mesh;colliders.Add(collider);
@@ -43,6 +45,6 @@ namespace Maestro.Quest.Creation
             for(int i=0;i<count;i++){int j=(i+1)%count;t.AddRange(new[]{i,count+i,j,j,count+i,count+j});}
             var mesh=new Mesh {name="Collision convex prism",vertices=v,triangles=t.ToArray()};mesh.RecalculateBounds();return mesh;
         }
-        public void Dispose(){if(root){root.SetActive(false);ArtResources.Release(root);}foreach(var mesh in meshes)ArtResources.Release(mesh);meshes.Clear();colliders.Clear();}
+        public void Dispose(){if(root){root.SetActive(false);ArtResources.Release(root);}foreach(var mesh in meshes)ArtResources.Release(mesh);meshes.Clear();resource?.Retire(colliders);colliders.Clear();}
     }
 }

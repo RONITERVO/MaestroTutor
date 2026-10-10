@@ -5,6 +5,7 @@ import native from '../../../test-fixtures/browser/runtimeDiagnostics.json';
 import reservations from '../../../test-fixtures/browser/modelReservations.json';
 import images from '../../../test-fixtures/browser/imageReservations.json';
 import audio from '../../../test-fixtures/browser/audioReservations.json';
+import collision from '../../../test-fixtures/browser/collisionResources.json';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validFactValue,validateFactArguments} from '../../../shared/behaviourFacts';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
@@ -99,4 +100,23 @@ it('preserves actual shared PCM ownership without counting each voice as a separ
  expect(validFactValue('runtime.audioReservation',{...audio.ready,privatePath:'hidden'})).toBe(false);
  expect(validFactValue('runtime.audioOwner',{...audio.owners[0],sourceRevision:'unknown'})).toBe(false);
  expect(behaviourFact('runtime.audioBudget')?.description).toContain('not measured');
+});
+
+it('preserves actual native collision owners, accepted costs and deferred destruction',()=>{
+ expect(validFactValue('runtime.collisionResources',collision.budget)).toBe(true);
+ expect(collision.budget).toEqual({entries:1,preparing:0,ready:1,retiring:0,colliders:11,meshColliders:9,sourceTriangles:124,activeColliders:11});
+ for(const value of [collision.ready,collision.active,collision.retiring])expect(validFactValue('runtime.collisionResource',value)).toBe(true);
+ expect(collision.ready).toMatchObject({kind:'compound',role:'collision',phase:'ready',colliders:11,meshColliders:9,sourceTriangles:124,activeColliders:0});
+ expect(collision.active).toEqual({...collision.ready,activeColliders:11});
+ expect(collision.retiring).toEqual({...collision.ready,phase:'retiring'});
+ expect(collision.ready.worldId).toHaveLength(32);expect(collision.ready.regionId).toHaveLength(32);expect(collision.ready.leaseId).toHaveLength(32);
+ expect(behaviourFact('runtime.collisionResources')?.features).toEqual(['runtimeDiagnostics.v1']);
+ expect(behaviourFact('runtime.collisionResource')?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
+ expect(behaviourFact('runtime.collisionResources')?.description).toContain('not measured RAM');
+ expect(behaviourFact('runtime.collisionResources')?.description).toContain('not proof of simulation');
+ for(const index of [0,65536,2147483647])expect(validateFactArguments('runtime.collisionResource',1,{index})).toBeNull();
+ for(const args of [{index:-1},{index:2147483648},{index:.5},{index:'0'},{index:0,evict:true}])expect(validateFactArguments('runtime.collisionResource',1,args)).not.toBeNull();
+ expect(validFactValue('runtime.collisionResources',{...collision.budget,sourceTriangles:'unknown'})).toBe(false);
+ expect(validFactValue('runtime.collisionResource',{...collision.ready,privatePath:'hidden'})).toBe(false);
+ expect(validFactValue('runtime.collisionResource',{...collision.ready,leaseId:123})).toBe(false);
 });

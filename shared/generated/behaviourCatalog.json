@@ -40399,6 +40399,69 @@
       ]
     },
     {
+      "id": "runtime.collisionResources",
+      "version": 1,
+      "type": {
+        "record": {
+          "entries": "number",
+          "preparing": "number",
+          "ready": "number",
+          "retiring": "number",
+          "colliders": "number",
+          "meshColliders": "number",
+          "sourceTriangles": "number",
+          "activeColliders": "number"
+        }
+      },
+      "label": "Authored collision resources",
+      "description": "Process-wide retained collision geometry from authored compound shapes, accepted height fields and rigid imported-model collision. Includes disabled and prepared replacements. Source collider/triangle counts are not measured RAM, PhysX cooked size, unique mesh assets or enforced admission limits. Repeated mesh instances count separately. Default bounds, book/avatar proxies, scanned room geometry and navigation maps are excluded. Preparing costs are declared; ready costs come from actual accepted colliders; retiring costs remain until all owned collider components are destroyed. activeColliders counts enabled components in active hierarchies, not proof of simulation or contact. Reads may forget completed destruction metadata but never destroy geometry, evict, load or modify saved world data. Regional admission/streaming remains separate.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.collisionResource",
+      "version": 1,
+      "type": {
+        "record": {
+          "leaseId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text",
+          "kind": "text",
+          "phase": "text",
+          "colliders": "number",
+          "meshColliders": "number",
+          "sourceTriangles": "number",
+          "activeColliders": "number"
+        }
+      },
+      "label": "Authored collision owner",
+      "description": "Read one retained authored collision lease by index (zero to runtime.collisionResources.entries minus one). Indices may shift; leaseId is an ephemeral runtime identity, never a saved object reference. World/region/target copy the owning authored entity; unscoped desktop geometry has empty identifiers. role is collision or unscoped; kind is compound, terrain or imported; phase is preparing, ready or retiring. A replacement can retain two leases for one target. Disabled geometry retains its source costs. Retiring source costs remain until all owned collider components are gone; activeColliders reflects actual enabled components in active hierarchies. Same accounting scope and exclusions as runtime.collisionResources; not measured RAM or admission limits. Reads return detached metadata and never delete assets, saved objects or geometry.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -42631,7 +42694,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "d525ad7c387462ffd3d3e5d7b8caf3830aa6359eab0716e187fa1580f1339623"
+      "sha256": "832c2a2307e21adff8c72982479e895958ce2278f723f90303ba7243d387161c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -42791,11 +42854,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionGeometry.cs",
-      "sha256": "08fe8c9d3f819bd354824626f6e1be2c44c8fc2c0659ecea9cee97d991d0113a"
+      "sha256": "c350716a40a4e5377aa20c507136b60ff27291739244fe22dc07a46a3530031e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
       "sha256": "3bf61c6b1e4858824ab65dbe6026542a52319041955f4d0eba6b2da949661e15"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionResources.cs",
+      "sha256": "a3ed4233613ec1c76bc251a0dd2220ae91bad963cdaee94a6dc71a9683fc2a1a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionCapture.cs",
@@ -42835,11 +42902,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
-      "sha256": "2646dc2f4eb6c40d2c5872100cea8520c1cf0b7c1fdfbfabc6c839e6ac1a07e2"
+      "sha256": "cf94c34dcae834050416eb32b09212e524457ee1e0cd9075afafc80ce544763c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "bd7b622c7ae05d02cfe21538fd6e89b4ab7a6debe21e6fc363b29a98a02f2755"
+      "sha256": "ec2c04828d2bd2852fa3a6e2c6ac4d30ef255a9e871a30ad469512063979b904"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -42887,7 +42954,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "e1582465ac88790ce6410350d5adbd0698ac9944916b013148819e5e02e74dd5"
+      "sha256": "3b920738a803a8ccf0a6b1e0933b65e50594fdfe870600d9214c4db93ac14aa7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
@@ -43047,7 +43114,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "9755f04d6c5864d26225fe00ffa3c5bdec44cef8496df5bc2544df51e190199b"
+      "sha256": "46c3a355059e970b3c4c03b338764a26a546132a68c68a4b9a3b9f8b8e302d1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43087,7 +43154,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldEdits.cs",
-      "sha256": "0fe46ad724f591d7a92d91b5a97e1557713086c0e707a9f9fe8ee3263dd26ac6"
+      "sha256": "869ac712b3b6128512013e186ba99d268facb38e167907cbb62fa68c27435d59"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
@@ -43171,7 +43238,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
-      "sha256": "a41c769878d2c31e991c323896b99b08dacc8675debf6af0bcb546142b20a3a8"
+      "sha256": "6f4653cafa2d0dd449b9ba5d7e52f8331ac1dbefd1015c6d187e2afb8b26bbc7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -43395,7 +43462,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",
-      "sha256": "077a45e20e72c42359011f9c539700c2e8cf14e9a279891628569b800acabcb7"
+      "sha256": "99a5161969cb9798e58f80d3a9324b22d348142522162e7f0302006a1c889e40"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
@@ -43607,7 +43674,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "cf67d247686bdc8cd16897231c91de6eb077ad0ac2669ad68ca31eea344422cd"
+      "sha256": "bf7bd32e51fc7e2e9f3908a7cc07df57959068d1a42cc7d589e77d02287abda5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",
@@ -43823,7 +43890,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ef90e7da1bbab1cd7d866aa37afd7dfb6accf6119135342bc35f99f887384370"
+      "sha256": "33ce36440f229048dfa9e81ebd2877a6448e75fd62e57a625a006c108d3bb410"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

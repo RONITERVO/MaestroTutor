@@ -9,6 +9,9 @@ namespace Maestro.Quest.Creation {
     /// <summary>One bounded mesh/collider, rebuilt only when accepted source changes.</summary>
     public sealed class HeightFieldView:MonoBehaviour {
         GameObject surface;Mesh mesh,previewMesh;Material pigment;MeshCollider collision;string encoded;Color sourceColor,tint=Color.white;
+        RoomResourceOwner resourceOwner=new(null,null,"unscoped");
+        CollisionResources.Lease resource;
+        internal void ConfigureResourceOwner(RoomResourceOwner owner){if(resource!=null)throw new InvalidOperationException("Terrain geometry already has an owner");resourceOwner=owner??throw new ArgumentNullException(nameof(owner));}
         internal void Tint(Color color){tint=color;if(pigment){pigment.SetColor("_Color",sourceColor*tint);RoomAppearanceView.VisualsChanged(this);}}
         public Collider Collision=>collision;
         internal RoomHeightField Accepted {get;private set;}
@@ -21,13 +24,18 @@ namespace Maestro.Quest.Creation {
             if(!previewMesh)previewMesh=new Mesh{name="Sculpt gesture preview"};Fill(previewMesh,field);surface.GetComponent<MeshFilter>().sharedMesh=previewMesh;
         }
         public bool Apply(RoomHeightField[] fields){
-            var data=fields?.Length==1?fields[0]:null;string next=data==null?null:JsonUtility.ToJson(data);if(next==encoded)return false;encoded=next;Accepted=data?.Copy();
-            if(data==null){ReleaseVisual();return true;}
-            if(!data.Validate(out var error))throw new ArgumentException(error);
-            if(!surface){surface=new GameObject("Editable height surface");surface.transform.SetParent(transform,false);surface.layer=RoomPhysicsLayers.Item;mesh=new Mesh{name="Bounded height surface"};surface.AddComponent<MeshFilter>().sharedMesh=mesh;var renderer=surface.AddComponent<MeshRenderer>();pigment=IllustratedMaterials.Create(data.color,.035f);pigment.SetFloat("_Shading",.28f);renderer.sharedMaterial=pigment;collision=surface.AddComponent<MeshCollider>();collision.convex=false;}
-            surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position,data.frame.rotation);sourceColor=data.color;Tint(tint);
-            collision.sharedMesh=null;Fill(mesh,data);collision.sharedMesh=mesh;Preview(null);Book.AcousticSurface.Attach(surface,mesh);
-            var walkable=surface.GetComponent<RoomWalkableSurface>()??surface.AddComponent<RoomWalkableSurface>();walkable.Publish(collision);return true;
+            var data=fields?.Length==1?fields[0]:null;
+            if(data!=null&&!data.Validate(out var error))throw new ArgumentException(error);
+            string next=data==null?null:JsonUtility.ToJson(data);if(next==encoded)return false;
+            if(data==null){ReleaseVisual();encoded=null;Accepted=null;return true;}
+            bool creating=!surface;
+            if(creating)resource=CollisionResources.Begin(resourceOwner,"terrain",CollisionResources.Cost.Terrain(data));
+            try{
+                if(creating){surface=new GameObject("Editable height surface");surface.transform.SetParent(transform,false);surface.layer=RoomPhysicsLayers.Item;mesh=new Mesh{name="Bounded height surface"};surface.AddComponent<MeshFilter>().sharedMesh=mesh;var renderer=surface.AddComponent<MeshRenderer>();pigment=IllustratedMaterials.Create(data.color,.035f);pigment.SetFloat("_Shading",.28f);renderer.sharedMaterial=pigment;collision=surface.AddComponent<MeshCollider>();collision.convex=false;}
+                surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position,data.frame.rotation);sourceColor=data.color;Tint(tint);
+                collision.sharedMesh=null;Fill(mesh,data);collision.sharedMesh=mesh;Preview(null);resource.Ready(new[]{collision});Book.AcousticSurface.Attach(surface,mesh);
+                var walkable=surface.GetComponent<RoomWalkableSurface>()??surface.AddComponent<RoomWalkableSurface>();walkable.Publish(collision);encoded=next;Accepted=data.Copy();return true;
+            }catch{if(creating)ReleaseVisual();throw;}
         }
         static void Fill(Mesh mesh,RoomHeightField data){
             var vertices=new List<Vector3>();var uv=new List<Vector2>();var triangles=new List<int>();
@@ -44,7 +52,7 @@ namespace Maestro.Quest.Creation {
             int bottom=vertices.Count;vertices.AddRange(new[]{new Vector3(-data.width/2,-.002f,-data.depth/2),new Vector3(data.width/2,-.002f,-data.depth/2),new Vector3(-data.width/2,-.002f,data.depth/2),new Vector3(data.width/2,-.002f,data.depth/2)});uv.AddRange(new[]{Vector2.zero,Vector2.right,Vector2.up,Vector2.one});triangles.AddRange(new[]{bottom,bottom+1,bottom+2,bottom+1,bottom+3,bottom+2});
             mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
         }
-        void ReleaseVisual(){if(surface)surface.SetActive(false);if(collision)collision.sharedMesh=null;ArtResources.Release(mesh);ArtResources.Release(previewMesh);ArtResources.Release(pigment);if(surface)ArtResources.Release(surface);mesh=null;previewMesh=null;pigment=null;collision=null;surface=null;}
+        void ReleaseVisual(){if(surface)surface.SetActive(false);if(collision)collision.sharedMesh=null;ArtResources.Release(mesh);ArtResources.Release(previewMesh);ArtResources.Release(pigment);if(surface)ArtResources.Release(surface);resource?.Retire(new[]{collision});resource=null;mesh=null;previewMesh=null;pigment=null;collision=null;surface=null;}
         void OnDestroy()=>ReleaseVisual();
     }
 }

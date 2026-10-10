@@ -16,7 +16,7 @@ namespace Maestro.Quest.Creation
             readonly CreatedRoomObject owner;
             internal readonly RoomModelGeometry Settings;
             ImportedCollisionGeometry collision;
-            internal ModelGeometryPreparation(CreatedRoomObject owner,RoomModelGeometry settings){this.owner=owner;Settings=settings.Copy();if(settings.meshCollision)collision=new ImportedCollisionGeometry(owner.Model,settings.walkable);}
+            internal ModelGeometryPreparation(CreatedRoomObject owner,RoomModelGeometry settings){this.owner=owner;Settings=settings.Copy();if(settings.meshCollision)collision=new ImportedCollisionGeometry(owner.Model,settings.walkable,owner.collisionOwner);}
             internal ImportedCollisionGeometry Take(){var value=collision;collision=null;return value;}
             public void Dispose(){collision?.Dispose();collision=null;if(owner&&owner.preparedGeometry==this)owner.preparedGeometry=null;}
         }
@@ -45,7 +45,7 @@ namespace Maestro.Quest.Creation
             {
                 if(!Model.CanApplyGeometry(settings,out _,out var error))throw new ModelImportException(error);
                 if(settings.meshCollision){var body=GetComponent<Rigidbody>();if(body&&!body.isKinematic){GetComponent<RigidRoomItem>().StopVelocity();body.isKinematic=true;}}
-                candidate=preparedGeometry!=null&&preparedGeometry.Settings.Same(settings)?preparedGeometry.Take():settings.meshCollision?new ImportedCollisionGeometry(Model,settings.walkable):null;
+                candidate=preparedGeometry!=null&&preparedGeometry.Settings.Same(settings)?preparedGeometry.Take():settings.meshCollision?new ImportedCollisionGeometry(Model,settings.walkable,collisionOwner):null;
                 if(!Model.ApplyGeometry(settings,out error))throw new ModelImportException(error);
                 var old=importedCollision;importedCollision=candidate;candidate=null;old?.SetActive(false);
                 var box=(BoxCollider)originalCollider;box.transform.localScale=Vector3.one;box.center=Model.LocalBounds.center;box.size=Model.LocalBounds.size+Vector3.one*.02f;

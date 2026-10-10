@@ -19,7 +19,7 @@ namespace Maestro.Quest.Creation
         bool primarySelected,constructionSelected;
         internal bool ConstructionMarked=>constructionSelected&&selection&&selection.activeSelf;
         Color tint;
-        RoomResourceOwner modelOwner;
+        RoomResourceOwner modelOwner,collisionOwner;
         Collider originalCollider, chosenCollider;
         ItemCollider collisionShape;
         CollisionGeometry customGeometry;
@@ -38,6 +38,7 @@ namespace Maestro.Quest.Creation
             && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null, RoomWorldIdentity world = null)
         {
+            collisionOwner=new RoomResourceOwner(world,data.id,"collision");
             if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new RoomResourceOwner(world,data.id,"object");
             importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
             Bounds bounds;
@@ -100,7 +101,7 @@ namespace Maestro.Quest.Creation
             string encoded=source==null||source.shapes.Length==0?null:JsonUtility.ToJson(source);
             if(encoded==collisionEncoded)return;
             // Build a detached replacement before unregistering the previous handles.
-            var candidate=encoded==null?null:new CollisionGeometry(source,transform);
+            var candidate=encoded==null?null:new CollisionGeometry(source,transform,collisionOwner);
             var old=customGeometry;customGeometry=candidate;collisionEncoded=encoded;
             SetCollisionShape(collisionShape,true);old?.Dispose();
         }

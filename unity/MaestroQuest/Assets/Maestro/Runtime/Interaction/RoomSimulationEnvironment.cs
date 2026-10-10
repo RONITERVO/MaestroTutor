@@ -64,6 +64,7 @@ namespace Maestro.Quest.Interaction
             result=ObserveEnvironment();return true;
         }
         void Update() {
+            Creation.CollisionResources.Collect();
             bool ready=AnySimulationReady;
             if(ready==observedReady)return;
             if(!ready)Running=false;

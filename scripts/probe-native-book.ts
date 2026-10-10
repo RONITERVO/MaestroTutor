@@ -569,6 +569,12 @@ try{
   await page.getByRole('heading',{name:'Set imported model geometry',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:join(directory,'book-native-model-geometry.png')});
   await writeFile(join(directory,'book-native-model-geometry.json'),JSON.stringify({boundary:'Original book generated form, current-value prefill, actual native GLB scale/rigid geometry save and readiness readback. Scripted provider elsewhere; no headset claim.',modelFixture,modelGeometry,modelFact},null,2));
+  const collisionBudget=await readResourceFact('runtime.collisionResources','Authored collision resources');
+  const collisionOwners:Array<Record<string,string|number>>=[];
+  for(let index=0;index<Number(collisionBudget.entries);index++)collisionOwners.push(await readResourceFact('runtime.collisionResource','Authored collision owner',{index:String(index)}));
+  const modelOwner=collisionOwners.find(owner=>owner.target===modelFixture.target&&owner.kind==='imported'&&owner.phase==='ready');
+  assert.ok(modelOwner);assert.equal(modelOwner.role,'collision');assert.equal(modelOwner.colliders,1);assert.ok(Number(modelOwner.sourceTriangles)>0);assert.equal(String(modelOwner.worldId).length,32);assert.equal(String(modelOwner.regionId).length,32);assert.equal(modelOwner.activeColliders,1);
+  await writeFile(join(directory,'book-native-collision-resources.json'),JSON.stringify({boundary:'Original book catalog forms inspect actual native imported collision geometry through the same facts available to agents and programs. Source counts, not measured memory, admission, provider or headset evidence.',budget:collisionBudget,owners:collisionOwners,modelTarget:modelFixture.target},null,2));
  }
 
  // Guides follow the same native search/inspect path without changing the room.

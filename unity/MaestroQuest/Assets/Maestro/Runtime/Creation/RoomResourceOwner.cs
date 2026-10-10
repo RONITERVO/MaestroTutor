@@ -12,7 +12,7 @@ namespace Maestro.Quest.Creation
         internal RoomResourceOwner(RoomWorldIdentity world,string target,string role)
         {
             if(world!=null&&!world.Valid)throw new ArgumentException("Invalid resource world identity");
-            if(role is not ("object" or "avatar" or "preview" or "appearance" or "audio" or "unscoped"))throw new ArgumentException("Invalid resource owner role");
+            if(role is not ("object" or "avatar" or "preview" or "appearance" or "audio" or "collision" or "unscoped"))throw new ArgumentException("Invalid resource owner role");
             if(target!=null&&target!=""&&(target.Length>128||target.Any(char.IsControl)))throw new ArgumentException("Invalid resource owner target");
             World=world?.worldId??"";Region=world?.regionId??"";Target=target??"";Role=role;
         }
