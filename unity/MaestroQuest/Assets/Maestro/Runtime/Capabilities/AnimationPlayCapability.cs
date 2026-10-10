@@ -50,6 +50,7 @@ namespace Maestro.Quest.Programs
             var source=Find(arguments);error="Choose a supported animation source and channel";
             return source!=null&&source.Provider.Validate(source.Native(arguments),out error);
         }
+        internal override IEnumerable<string> NativeEntities(JObject arguments){var source=Find(arguments);return source.Provider.NativeEntities(source.Native(arguments));}
         public override BehaviourCatalog.Claim[] Claims(JObject arguments) {var source=Find(arguments);return source.Provider.Claims(source.Native(arguments));}
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error) {var source=Find(arguments);return source.Provider.CanRun(context,source.Native(arguments),out error);}
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {

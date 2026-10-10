@@ -12,6 +12,10 @@ namespace Maestro.Quest.Programs
 {
     internal sealed class HoldObjectCapability:CapabilityModule
     {
+        internal override System.Collections.Generic.IEnumerable<string> NativeEntities(JObject arguments) {
+            yield return (string)arguments["target"];
+            yield return (string)arguments["holder"]["objectId"];
+        }
         public override string Id=>"object.hold";
         public override string Label=>"Hold and release object";
         public override string Duration=>"timed";

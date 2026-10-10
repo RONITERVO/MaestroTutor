@@ -31,7 +31,7 @@ namespace Maestro.Quest.Rules
         static JObject Summary(string id,JObject call,string[] resources,string phase,string status)=>new() {
             ["id"]=id,["capability"]=call["id"].DeepClone(),["version"]=call["version"].DeepClone(),["resources"]=new JArray(resources),["phase"]=phase,["status"]=status==null?"":status.Length<=2048?status:status.Substring(0,2048)
         };
-        JObject Summary(Run run)=>Summary(run.Id,run.Invocation,run.Targets.ToArray(),run.Preparing?"preparing":"running",run.Preparing?run.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading action animation":"Action running");
+        JObject Summary(Run run)=>Summary(run.Id,run.Invocation,run.Targets.ToArray(),run.Acquiring||run.Preparing?"preparing":"running",run.Acquiring?"Loading required objects":run.Preparing?run.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading action animation":"Action running");
         static JObject Summary(FinishedRun run) {
             var summary=Summary(run.Outcome.id,run.Invocation,run.Resources,run.Outcome.phase,run.Outcome.status);
             if(run.Output!=null)summary["output"]=run.Output.DeepClone();return summary;

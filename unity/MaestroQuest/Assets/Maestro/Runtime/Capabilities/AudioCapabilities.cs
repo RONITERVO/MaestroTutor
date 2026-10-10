@@ -62,7 +62,7 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext c,JObject a,out string error){error="The room editor is unavailable";if(!c.Editor||!Validate(a,out error))return false;var id=string.IsNullOrEmpty((string)a["id"])?Guid.NewGuid().ToString("N"):(string)a["id"];return c.Editor.PrepareAudio(id,(int)a["revision"],Read(a,id),out _,out error);}
         public override bool Start(CapabilityContext c,string run,JObject a,out CapabilityOperation operation,out string error){operation=null;if(!CanRun(c,a,out error))return false;var id=string.IsNullOrEmpty((string)a["id"])?Guid.NewGuid().ToString("N"):(string)a["id"];if(!c.Editor.EditAudio(id,(int)a["revision"],Read(a,id),out error))return false;operation=new CompletedCapability(AudioSchema.Receipt(c.Editor,id));return true;}
     }
-    internal sealed class AudioEmitterCapability:CapabilityModule
+    internal sealed class AudioEmitterCapability:NativeTargetCapability
     {
         public override string Id=>"object.audioEmitter.edit";
         public override string Label=>"Attach a sound to an object";
@@ -77,7 +77,7 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext c,JObject a,out string error)=>c.Target(a,out _,out error)&&c.Editor.PrepareAudioEmitter((string)a["target"],(int)a["revision"],(string)a["emitter"],Read(a),out _,out error);
         public override bool Start(CapabilityContext c,string run,JObject a,out CapabilityOperation operation,out string error){operation=null;if(!CanRun(c,a,out error)||!c.Editor.EditAudioEmitter((string)a["target"],(int)a["revision"],(string)a["emitter"],Read(a),out error))return false;operation=new CompletedCapability();return true;}
     }
-    internal sealed class AudioPlayCapability:CapabilityModule
+    internal sealed class AudioPlayCapability:NativeTargetCapability
     {
         public override string Id=>"audio.play";
         public override string Label=>"Play an object's sound";

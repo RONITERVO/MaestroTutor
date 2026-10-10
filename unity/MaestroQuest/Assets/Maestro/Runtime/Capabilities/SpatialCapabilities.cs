@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal abstract class SpatialCapability : CapabilityModule
+    internal abstract class SpatialCapability : NativeTargetCapability
     {
         protected abstract AvatarSpatialMode Mode {get;}
         public override string Duration=>"timed";

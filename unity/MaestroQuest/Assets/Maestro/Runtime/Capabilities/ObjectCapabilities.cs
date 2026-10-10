@@ -78,7 +78,7 @@ namespace Maestro.Quest.Programs
             operation=new CompletedCapability(new JObject {["objectId"]=id});return true;
         }
     }
-    internal sealed class MoveObjectCapability : CapabilityModule
+    internal sealed class MoveObjectCapability : NativeTargetCapability
     {
         public override string Id=>"object.position.set";
         public override string Label=>"Move object";
@@ -99,7 +99,7 @@ namespace Maestro.Quest.Programs
             operation=null;if(!context.Editor.MoveObject((string)arguments["target"],ObjectCapabilityData.Position(arguments),out error))return false;operation=new CompletedCapability();return true;
         }
     }
-    internal sealed class ResizeObjectCapability : CapabilityModule
+    internal sealed class ResizeObjectCapability : NativeTargetCapability
     {
         public override string Id=>"object.scale.set";
         public override string Label=>"Resize object";
@@ -118,7 +118,7 @@ namespace Maestro.Quest.Programs
             operation=null;if(!context.Editor.ResizeObject((string)arguments["target"],(float)arguments["scale"],out error))return false;operation=new CompletedCapability();return true;
         }
     }
-    internal sealed class PaintObjectCapability : CapabilityModule
+    internal sealed class PaintObjectCapability : NativeTargetCapability
     {
         public override string Id=>"object.color.set";
         public override string Label=>"Paint object";
@@ -135,7 +135,7 @@ namespace Maestro.Quest.Programs
             operation=null;if(!context.Editor.PaintObject((string)arguments["target"],ObjectCapabilityData.Color(arguments),out error))return false;operation=new CompletedCapability();return true;
         }
     }
-    internal sealed class DeleteObjectCapability : CapabilityModule
+    internal sealed class DeleteObjectCapability : NativeTargetCapability
     {
         public override string Id=>"object.delete";
         public override string Label=>"Delete object";
@@ -152,7 +152,7 @@ namespace Maestro.Quest.Programs
             operation=null;if(!context.Editor.DeleteObject((string)arguments["target"],out error))return false;operation=new CompletedCapability();return true;
         }
     }
-    internal sealed class PhysicsImpulseCapability : CapabilityModule
+    internal sealed class PhysicsImpulseCapability : NativeTargetCapability
     {
         public override string Id=>"object.physics.impulse";
         public override string Label=>"Push object";
@@ -174,7 +174,7 @@ namespace Maestro.Quest.Programs
             operation=new CompletedCapability();return true;
         }
     }
-    internal sealed class PhysicsStopCapability : CapabilityModule
+    internal sealed class PhysicsStopCapability : NativeTargetCapability
     {
         public override string Id=>"object.physics.stop";
         public override string Label=>"Stop object motion";

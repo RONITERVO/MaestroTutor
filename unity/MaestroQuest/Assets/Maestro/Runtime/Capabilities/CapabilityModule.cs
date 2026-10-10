@@ -34,8 +34,15 @@ namespace Maestro.Quest.Programs
         public virtual bool Validate(JObject arguments,out string error) {error=null;return true;}
         public virtual bool RequiresQuietRoom(JObject arguments)=>false;
         public virtual BehaviourCatalog.Claim[] Claims(JObject arguments)=>Channels.Select(c=>new BehaviourCatalog.Claim((string)arguments["target"],c)).ToArray();
+        // Explicit native dependencies, independent of action channels and saved-only
+        // references. The scheduler acquires these before CanRun; facts never load.
+        internal virtual IEnumerable<string> NativeEntities(JObject arguments)=>Array.Empty<string>();
         public abstract bool CanRun(CapabilityContext context,JObject arguments,out string error);
         public abstract bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error);
+    }
+    internal abstract class NativeTargetCapability : CapabilityModule
+    {
+        internal override IEnumerable<string> NativeEntities(JObject arguments)=>new[]{(string)arguments["target"]};
     }
     /// <summary>Validated named call. Mutable caller JSON can never change the authorized effect.</summary>
     public sealed class CapabilityCall

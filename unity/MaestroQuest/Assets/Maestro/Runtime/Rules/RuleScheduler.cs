@@ -34,7 +34,8 @@ namespace Maestro.Quest.Rules
             public HashSet<string> Targets;
             public BehaviourCatalog.Claim[] Claims=Array.Empty<BehaviourCatalog.Claim>();
             public float Ends, Duration, PrepareDeadline;
-            public bool Preparing,Computing,WaitingForChannels;
+            public bool Preparing,Computing,WaitingForChannels,Acquiring,AcquisitionChecked;
+            public RuleEntityDemand EntityDemand;public float AcquisitionDeadline;
             public float ChannelDeadline,ChannelPoll;public string ChannelStatus;
             public int EventDepth,WaitSerial,WatchSlot=-1;
             public IProgramEventWatch Watch;public bool WatchPending;
@@ -63,15 +64,15 @@ namespace Maestro.Quest.Rules
         bool suspended;
         public int RunningCount => running.Count;
         public bool HasOtherWork(string runId)=>queued.Count>0||running.Any(run=>run.Id!=runId);
-        public int PreparingCount => running.Count(x => x.Preparing);
+        public int PreparingCount => running.Count(x => x.Preparing||x.Acquiring);
         public int QueuedCount => queued.Count;
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
-        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||channelWaits.Any(run=>Overlap(run.Active.Claims,call.Claims))||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
+        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Acquiring||run.Active?.RequiresQuietRoom==true)||channelWaits.Any(run=>Overlap(run.Active.Claims,call.Claims))||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
         public RoomOwnership Ownership {get;}
         public string LastError { get; private set; }
-        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.WaitingForChannels?x.ChannelStatus:x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing||x.Acquiring,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Acquiring?"Loading required objects":x.WaitingForChannels?x.ChannelStatus:x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
             waiting=x.WaitingForChannels||x.Machine?.Wait!=null||x.Machine?.SavingMemory==true,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.WaitingForChannels?Math.Max(0,x.ChannelDeadline-lastNow):x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
             state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>(),
             locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
@@ -181,6 +182,7 @@ namespace Maestro.Quest.Rules
             return StartAction(run,now);
         }
         bool StartAction(Run run,float now) {
+            if(running.Any(other=>other!=run&&other.Acquiring)){LastError="Wait for required room objects to finish loading";Stop(run,false,"failed",LastError);return false;}
             if(run.Active.RequiresQuietRoom&&HasOtherWork(run.Id)||running.Any(x=>x!=run&&x.Active?.RequiresQuietRoom==true)) {
                 LastError="Stop other room actions before this room-wide action";Stop(run,false,"failed",LastError);return false;
             }
@@ -190,6 +192,11 @@ namespace Maestro.Quest.Rules
             if(!ChannelsAvailable(run,claims,out var channelError)){
                 if(run.Reactive&&run.Machine.ChannelWaitSeconds>0){WaitForChannels(run,now,channelError);return true;}
                 LastError=channelError;Stop(run,false,"failed",LastError);return false;
+            }
+            if(!run.AcquisitionChecked&&actions is IRuleEntityAcquisition acquisition){
+                run.AcquisitionChecked=true;run.Acquiring=true;run.AcquisitionDeadline=now+30;
+                run.EntityDemand=acquisition.Acquire(run.Active,()=>run.Acquiring&&running.Contains(run)&&!suspended&&!HasOtherWork(run.Id));
+                if(!PollEntityDemand(run,now))return running.Contains(run);
             }
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
             run.Claims=claims;
@@ -207,7 +214,7 @@ namespace Maestro.Quest.Rules
                     if(!completion.Complete(run.Id,out error)) {LastError=error??"This action could not finish";Stop(run,false,"failed",LastError);return false;}
                 } else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out error)) {LastError=error;Stop(run,false,"failed",error);return false;}
-                run.Active=null;
+                ReleaseEntityDemand(run);run.Active=null;
                 if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
                 // An instant effect is already done. Don't reset activation work or
                 // causal depth, and don't execute a second effect in this frame.
@@ -233,6 +240,7 @@ namespace Maestro.Quest.Rules
             foreach (var run in running.ToArray())
             {
                 if(!running.Contains(run)||run.Children!=null)continue;
+                if(run.Acquiring){if(PollEntityDemand(run,now))StartAction(run,now);continue;}
                 if(run.WaitingForChannels){PollChannelWait(run,now);continue;}
                 if(run.Machine.SavingMemory){PollCheckpoint(run);continue;}
                 if(run.Machine.Wait!=null) {
@@ -266,7 +274,7 @@ namespace Maestro.Quest.Rules
                 else actions.Stop(run.Id,false);
                 if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
                 bool timed=run.Active!=null&&!run.Active.Instant&&!run.Active.AwaitCompletion;
-                run.Active=null;if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
+                ReleaseEntityDemand(run);run.Active=null;if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
                 // At most one step per run per tick, even after a long frame.
                 StartStep(run,now);
             }
@@ -340,7 +348,7 @@ namespace Maestro.Quest.Rules
             foreach(var member in group) {
                 try {actions.Stop(member.Id,member==run&&preservePlacement);}
                 catch(Exception exception) {cleanupFailure??=exception;if(group.Length>1)phase="failed";status=LastError="An action could not stop cleanly; inspect the room before running again";}
-                finally {Finish(member,phase,status,false);}
+                finally {ReleaseEntityDemand(member);Finish(member,phase,status,false);}
             }
             if(cleanupFailure!=null)throw new InvalidOperationException(LastError,cleanupFailure);
         }

@@ -40,6 +40,10 @@ namespace Maestro.Quest.Programs
     /// <summary>Common exclusive target/prop ownership, not an animation dispatcher.</summary>
     internal abstract class FullBodyCapability : CapabilityModule
     {
+        internal override IEnumerable<string> NativeEntities(JObject arguments) {
+            yield return (string)arguments["target"];
+            if(arguments["prop"] is JObject prop)yield return (string)prop["objectId"];
+        }
         public override string Duration=>"timed";
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override BehaviourCatalog.Claim[] Claims(JObject arguments) {

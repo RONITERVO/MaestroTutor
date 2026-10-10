@@ -8,7 +8,7 @@ using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
     /// <summary>Named-only capability: no RuleActionKind value or RuleStep fields.</summary>
-    internal sealed class RotateObjectCapability : CapabilityModule
+    internal sealed class RotateObjectCapability : NativeTargetCapability
     {
         public override string Id=>"object.rotation.set";
         public override string Label=>"Rotate object";

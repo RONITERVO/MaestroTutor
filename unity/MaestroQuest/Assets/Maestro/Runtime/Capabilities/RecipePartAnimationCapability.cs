@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs
 {
-    internal sealed class RecipePartAnimationCapability:CapabilityModule
+    internal sealed class RecipePartAnimationCapability:NativeTargetCapability
     {
         public override string Id=>"animation.recipe.part";
         public override string Label=>"Recipe part animation";

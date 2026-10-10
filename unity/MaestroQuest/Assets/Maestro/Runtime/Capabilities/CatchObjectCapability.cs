@@ -12,6 +12,10 @@ namespace Maestro.Quest.Programs
     internal sealed class CatchObjectCapability:CapabilityModule
     {
         internal const string Feature="physicalCatching.v1";
+        internal override System.Collections.Generic.IEnumerable<string> NativeEntities(JObject arguments) {
+            yield return (string)arguments["target"];
+            yield return (string)arguments["holder"]["objectId"];
+        }
         public override string Id=>"object.physics.catch";
         public override string Label=>"Catch a physical object";
         public override string Duration=>"completion";

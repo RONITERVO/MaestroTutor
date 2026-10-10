@@ -29,7 +29,7 @@ namespace Maestro.Quest.Programs
             public bool Begin(string gesture,out string error) {if(!Acquire(out error))return false;Avatar.Gesture(gesture);return BeginProp(out error);}
         }
     }
-    internal sealed class UpperBodyGestureCapability : CapabilityModule
+    internal sealed class UpperBodyGestureCapability : NativeTargetCapability
     {
         public override string Id=>"avatar.gesture.upperBody";
         public override string Label=>"Upper-body gesture";

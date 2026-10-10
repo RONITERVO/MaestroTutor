@@ -134,7 +134,7 @@ namespace Maestro.Quest.Creation
             }
             var call=(JObject)request["call"];
             bool valid=BehaviourCatalog.TryCall((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out var error);
-            bool available=false,occupied=false;string[] resources=Array.Empty<string>();
+            bool available=false,occupied=false,loading=false;string[] resources=Array.Empty<string>();
             if(valid) {
                 resources=step.Resources.Distinct().ToArray();
                 var runtime=editor?editor.GetComponent<RoomRules>():null;
@@ -143,13 +143,13 @@ namespace Maestro.Quest.Creation
                 if(scheduler==null)error="Action runtime is not ready";
                 else {
                     occupied=scheduler.ActionBusy(step);
-                    available=maintenance?workspace.Runtime.CanRun(step,out error):runtime.CanRun(step,out error);
+                    available=maintenance?workspace.Runtime.CanRun(step,out error):runtime.CanAdmit(step,out loading,out error);
                     if(available&&occupied) {available=false;error=step.RequiresQuietRoom?"Stop other room actions before this room-wide action":"A running action owns a required animation channel or object";}
                     if(available&&!scheduler.HasCapacity) {available=false;error="All action slots are currently in use";}
                 }
             }
             return new JObject {["operation"]="check",["call"]=call.DeepClone(),["valid"]=valid,["available"]=available,["occupied"]=occupied,
-                ["resources"]=new JArray(resources),["status"]=available?"Ready now. This check does not reserve or start the action.":error??"Action unavailable"};
+                ["resources"]=new JArray(resources),["status"]=available?loading?"Can start loading required objects. Native action checks run after loading; this check reserves and starts nothing.":"Ready now. This check does not reserve or start the action.":error??"Action unavailable"};
         }
     }
 }

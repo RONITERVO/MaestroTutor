@@ -9,6 +9,10 @@ namespace Maestro.Quest.Programs
 {
     internal sealed class LaunchObjectCapability:CapabilityModule
     {
+        internal override System.Collections.Generic.IEnumerable<string> NativeEntities(JObject arguments) {
+            yield return (string)arguments["target"];
+            if(arguments["destination"]?["anchor"] is JObject anchor)yield return (string)anchor["objectId"];
+        }
         public override string Id=>"object.physics.launch";
         public override int Version=>2;
         public override string Label=>"Aim and throw object";

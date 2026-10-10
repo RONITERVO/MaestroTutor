@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramRoomSpace, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
+    public sealed partial class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramRoomSpace, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -47,7 +47,7 @@ namespace Maestro.Quest.Rules
             return BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(physicsReady:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.SimulationReady:null,
                 physicsRunning:context.Editor&&context.Editor.PhysicsWorld?context.Editor.PhysicsWorld.Running:null,roomSessionId:context.Editor?.TemporarySessionId,world:this,editor:context.Editor,workspace:context.Workspace),out value);
         }
-        public bool CanRun(CapabilityCall call,out string error){if(domain!=null&&call.Definition.Module.Domain!=domain){error="This action belongs to another execution domain.";return false;}if(call.Definition.Module.Domain=="room"&&context.Editor&&context.Editor.RuntimeGate.Held){error=context.Editor.RuntimeGate.Reason;return false;}return call.Definition.Module.CanRun(context,call.Arguments,out error);}
+        public bool CanRun(CapabilityCall call,out string error){if(domain!=null&&call.Definition.Module.Domain!=domain){error="This action belongs to another execution domain.";return false;}if(call.Definition.Module.Domain=="room"&&context.Editor&&context.Editor.RuntimeGate.Held){error=context.Editor.RuntimeGate.Reason;return false;}if(call.Definition.Module.Domain=="room"&&context.Editor&&context.Editor.NativeActivationPending){error="Wait for required room objects to finish loading";return false;}return call.Definition.Module.CanRun(context,call.Arguments,out error);}
         public bool Start(string runId,CapabilityCall call,out float seconds,out string error) {
             seconds=0;error="This action is already running";if(operations.ContainsKey(runId))return false;
             if(!CanRun(call,out error))return false;results.Remove(runId);interrupted.Remove(runId);

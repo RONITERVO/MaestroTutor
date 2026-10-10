@@ -30,7 +30,7 @@ namespace Maestro.Quest.Programs
                 return ProgramValue.Literal(new JObject {["entries"]=new JArray(entries.Select(s=>new JObject {["instance"]=s.Instance,["target"]=s.Target,["emitter"]=s.Emitter,["phase"]=s.Phase,["lifetime"]=s.Lifetime}))},BehaviourCatalog.Fact("audio.instances").Type);
             },features:new[]{AudioSchema.Feature});
     }
-    internal sealed class AudioStartCapability:CapabilityModule
+    internal sealed class AudioStartCapability:NativeTargetCapability
     {
         public override string Id=>"audio.start";
         public override string Label=>"Start independent room sound";

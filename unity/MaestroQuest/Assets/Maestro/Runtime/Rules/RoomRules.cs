@@ -113,12 +113,13 @@ namespace Maestro.Quest.Rules
         public bool TryReadFact(string name,int version,Newtonsoft.Json.Linq.JObject arguments,out Programs.ProgramValue value) {
             value=default;return !paused&&focused&&isActiveAndEnabled&&Scheduler!=null&&Scheduler.TryRead(name,version,arguments,out value);
         }
-        public bool CanRun(Maestro.Quest.Programs.CapabilityCall step,out string error)
+        public bool CanRun(Maestro.Quest.Programs.CapabilityCall step,out string error)=>CanAdmit(step,out _,out error);
+        internal bool CanAdmit(Maestro.Quest.Programs.CapabilityCall step,out bool loading,out string error)
         {
-            error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;
+            loading=false;error="Action runtime is not ready";if(actions==null||Scheduler==null)return false;
             if(editor.RuntimeGate.Held){error=editor.RuntimeGate.Reason;return false;}
             if(paused||!focused||!isActiveAndEnabled) {error="Actions are paused";return false;}
-            return actions.CanRun(step,out error);
+            return actions.CanAdmit(step,out loading,out error);
         }
         public void StopAll() => Scheduler?.StopAll();
         public void ObserveSnapshot(BookSnapshot snapshot)

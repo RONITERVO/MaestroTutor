@@ -42882,19 +42882,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
-      "sha256": "92bd71427789d574890b437ca459cc4484fac3bf5cc25164ebd1c4ebcb2de1a2"
+      "sha256": "36bd763255c87ec3b6c7fdb6f3b0f8ad02cc21283d2212f146edb2077d2727f3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
-      "sha256": "6094e55a0cee464b90edbd5f8b4a2fc65d4e3c7c6cc48b5b62a9edb2a7ae398d"
+      "sha256": "e6cbdf4ca34b1414cd94ac0c9ebed5ba442a67a0e9c3e08f08f2cdecc64c37fa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPosingCapability.cs",
-      "sha256": "3cd499d6a634ed737f664a2ddff5111e0ac843da5c30d64845d466bad74dc798"
+      "sha256": "8d1eb52a20d7d8aa0f3afe266fc91ccc4a21d049e420655586ec9e207667573e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
-      "sha256": "b84498a5ad2416832510318b67f24af74b6c2bf77e62803ddf08198d1b5a6b3a"
+      "sha256": "85ff429a33a7376386c152332f2d9fc2d6d799f6a916b8a652baaa8f52836c59"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
@@ -42902,7 +42902,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "e8b5db0afb8b126014907439d288f6b6fde3affb3cd7cd8634caf65ca52410a5"
+      "sha256": "642d3137cfc20c676f5d1d08492a266c06f554f5f46fcd198d30e8ec339ea2a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
@@ -42914,7 +42914,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
-      "sha256": "9d9923765f02c35a9637e388f099c156d4eea79db00297b533b4f13776c5a132"
+      "sha256": "6da71b58bc4b3fb4456447a534c94c02e2d02b3614972f96da6ec657ca708c48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
@@ -42926,7 +42926,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "602424860a7e6c0f2e2ba41442c549aaa1fbda9d00f58df7c0c292abdbbf9ade"
+      "sha256": "caa62a56b7be91ef7b4b9debdcb58cbf25b27298fb9cd76c6ea8d6a1a9094e04"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
@@ -42946,7 +42946,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
-      "sha256": "8f43d34ee6a87d214181c06d53a0e4dc265638f1d95ab9429506880ff0816755"
+      "sha256": "6c2283933fb167195c1ce070a3e050bd0086b4e02779f2f396327549cd228241"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
@@ -43042,7 +43042,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
-      "sha256": "84d2aad5dba840bd58229547c45e12a2028b1253ee3192c8fcd69cb283a7db6a"
+      "sha256": "0d94f529ef5ccac587259c3b7a774001dd9ff1541a2704a8a1e31f09ea863a09"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GroupTransformCapability.cs",
@@ -43058,7 +43058,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
-      "sha256": "95c929c659c286f94aa7a8c5836115a4145a53f0bf55b81d09d72e2cc7e81630"
+      "sha256": "ca48bb0bd136f95d0711adac3b7a17b38408e62114d6a6dcedfce3308d2680cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageImportCapability.cs",
@@ -43074,7 +43074,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LaunchObjectCapability.cs",
-      "sha256": "2b705c4b256911517338361267f7ecbbd1721886b5b0aad68974a02be5eba894"
+      "sha256": "8acefaa9d20af1f72dcb0238aeb05e5d1c8c08f20681596fbffbf6b306310422"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayerPresentationCapability.cs",
@@ -43130,7 +43130,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "0438779909828dfe774887e3a4bd1d5f5db8de3de2e85f51b6853dfed8307e95"
+      "sha256": "ed2991e344a046e80be5e5b569528f523921113aa842835f7d440c1a3ace8019"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -43166,7 +43166,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
-      "sha256": "701b3f5a12b179cd45c46763e462af021aeac2121212b7fe194e7a57f7a72ae6"
+      "sha256": "53f3df722ca01e66e27ce7015ff7337b89329af3c15c521cf87048d76f28037b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationFacts.cs",
@@ -43206,7 +43206,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",
-      "sha256": "e6bd4cc16afb0bdd1b8188e8a2baec2bd154880ac9c4f956b75c77fd201ae433"
+      "sha256": "41f6b72a7e736a16005ce885eefbd836a02848f279fea25ed48d3d47f1afba12"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
@@ -43234,7 +43234,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",
-      "sha256": "a0c4af9d75687aacf1179d4abb3fa8aa20b6767430e8e79a4c08af293da3d428"
+      "sha256": "e52a1b834f628c33151a1a8b050ef06250b6ecb367d0bbbc8ee7db5312a172bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
@@ -43598,7 +43598,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "95ca4b9ca7d4a0445e42cd5491550e25a10105017e147205be586d567aa34a34"
+      "sha256": "c36b498ab920e02102e4e05f8cab82dd2c7e89a89ceea7fb3fec3d4eeda9684b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionEdits.cs",
@@ -43758,7 +43758,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "7c97e01d9c27f0734e1f541a88e3ed5e14c9e086b44ab748affdf6394313ccc1"
+      "sha256": "1bb70f9b4d7940d7efabae7120568bfba7f9f110cf02900d78368ddf069b8e0b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -44542,11 +44542,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "531b74fbe481cc001e80af85a68fc7061ed9f526be0bd8821b0a122fd7f3d555"
+      "sha256": "9f94bd7af6405a5f9d00cece93e9780dd5eea3ada281f105a4653cb93e277c39"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "a7f059bd8d460984e2273532ca67f58e7dc942ded6874a10b9fe8bd23c02bd9f"
+      "sha256": "e18bf665fade5b61f35528c85fbf6f9195c36ab7895308af4fba3f5a2b8e1a98"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",
@@ -44565,12 +44565,20 @@
       "sha256": "1474f2a638a00d2e8174c7a0def2cd6a39d48a36e9fb40647035dd5a0d56f47e"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEntityAcquisition.cs",
+      "sha256": "52b6b718d7bd6131096445a21377ac55e54d124457f6be2e4ff9105721f7b78a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEntityDemandScheduler.cs",
+      "sha256": "906b992e9b34bf85d129143a10e314e24de1824e398f1fcfa692d70bf3c95454"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEvents.cs",
       "sha256": "5e22e83811a2259354f546122985515561ee49b792a7b63309738eaedb7c4eac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleInvocations.cs",
-      "sha256": "3d9d14e5d1cbb55c465ee76bedbfa8de7e441269678121b7c98b55ead65b6f28"
+      "sha256": "6d06bcb69768768ae624218ded01a512f127f98e2c633e92b3e84de68ef1e1bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
@@ -44582,7 +44590,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "201de5f74199a8944254a1bd8d9776eff4e6c0144382355e10754586c0fec223"
+      "sha256": "d38d494e5727e902d8ee3f7229a3ec4f1541f7ce9593ced77a5c6ea20b58fa46"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleStorage.cs",

@@ -1,9 +1,9 @@
 # Native capability modules
 
-Development checkpoint, 2026-09-28. All public catalog actions use native
-modules, including animation and movement. The current catalog has thirteen
-actions after typed [animation](QUEST_ANIMATION_VOCABULARY.md) and
-[creation](QUEST_CREATION_VOCABULARY.md) consolidation.
+All public catalog actions use native modules, including animation and movement.
+The generated catalog is the current registry; typed
+[animation](QUEST_ANIMATION_VOCABULARY.md) and
+[creation](QUEST_CREATION_VOCABULARY.md) select their native implementations.
 The handler split does not complete the broader v1 architecture or release acceptance.
 
 ## Shared execution path
@@ -23,7 +23,7 @@ operation once. Input JSON is copied before dispatch so a caller cannot change
 an already validated target or effect. New modules are trusted native C# bundled
 with the app, never downloaded code or agent-written executable C#.
 
-The nine wait/object/physics modules are joined by animation.play, recorded throw,
+The catalog includes wait/object/physics actions, animation.play, recorded throw,
 look and follow. The animation module selects a typed source implementation;
 recording, gesture, embedded, library and recipe operations retain independent
 lifetimes. There is no numeric kind dispatcher or RuleStep conversion on the
@@ -52,6 +52,48 @@ motion assignment and older simple controls retain explicit
 LegacyCapabilityAdapters views. Modules need no numeric kind or RuleStep fields.
 Detailed authoring uses the book's generated forms and source view; quick edits
 preserve control flow, expressions and results. See [native quick edits](QUEST_NATIVE_QUICK_EDITS.md).
+
+## Native entity acquisition
+
+Modules declare `NativeEntities(arguments)` for objects that must exist natively
+before their effect can be validated and started. `NativeTargetCapability` is the
+shared base for a verb that needs only its typed `target`. Composite animation
+variants forward the declaration to their source provider. Explicit holders,
+projectiles, props and destination anchors belong here even if the action does
+not own their channels. Never infer these dependencies from every string in JSON
+or from ownership claims: catching, for example, observes a projectile before it
+owns that projectile. Saved-only readers keep the default empty declaration.
+Declare variant requirements separately: recording/posing starts acquire their
+target, while finish/discard operate on the retained session and must not demand
+a replacement native instance after loss or a failed save.
+
+The scheduler owns acquisition independently of operation preparation. It keeps
+the existing run ID and receipt, exposes “Loading required objects,” and defers
+`CanRun` and `Start` until the declared native entities are ready. Instant effects
+still execute synchronously after acquisition. Timed effects start their duration
+after acquisition, with their normal operation-loading budget remaining separate.
+Stop, pause and the 30-second acquisition deadline release the demand; a late load
+cannot resume a terminated run. Failed preflight also releases it.
+
+`RoomRules.CanAdmit` is a read-only entry check shared by catalog checks and agent
+execution. For dormant entities it can admit preparation without claiming the
+final effect will succeed. The catalog explains that distinction. The module's
+full native preflight runs again after acquisition. Neither catalog inspection
+nor facts perform file I/O, activate an area, or reserve action channels.
+
+Current activation admits an entire saved area/physical-connection closure for
+one owning run, with no other running or queued work. Resident calls preserve
+normal concurrency. The journal remains authoritative and imported candidates
+remain private until the whole group is ready. Failed loads retain saved data
+and exact asset identities. Additions to this path need coverage for actual
+native retirement, cancellation, failed import retry, and the real agent entry
+point, not only a mock scheduler.
+
+Automatic streaming is still disabled. Initial native dependency declarations
+cover the verbs listed in the [release plan](QUEST_V1_PLAN.md#action-owned-native-acquisition--2026-10-10);
+other authoring modules still need auditing before arbitrary dormant areas are
+exposed. Observer demand, per-frame preparation budgets, ground/water/navigation
+dependencies and regional physics admission remain separate required work.
 
 ## Demonstrated extension
 

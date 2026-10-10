@@ -9,6 +9,11 @@ namespace Maestro.Quest.Programs
 {
     internal sealed class AnimationPosingCapability:CapabilityModule
     {
+        // Existing sessions own their preview/take. Finish and discard must not
+        // acquire a replacement instance, especially after loss or a failed save.
+        internal override IEnumerable<string> NativeEntities(JObject arguments) {
+            if((string)arguments["operation"]=="start")yield return (string)arguments["target"];
+        }
         public override string Id=>"animation.pose";
         public override string Label=>"Pose Maestro together";
         public override string Duration=>"instant";
