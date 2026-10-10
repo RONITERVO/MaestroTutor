@@ -93,5 +93,21 @@ namespace Maestro.Quest.Tests
             }
             yield return null;Assert.IsEmpty(CollisionOwners(data.id));
         }
+        [UnityTest] public IEnumerator GeometryPreparationDynamicBodyCanAcceptTerrainAndFixedPhysicsTogether()
+        {
+            string source=Snow(new RoomAgentExecutor(editor));var field=editor.Read(source).heightFields[0];
+            Assert.IsTrue(editor.CreatePrimitive(RoomObjectKind.Block,"Moving terrain candidate",new Vector3(6,2,4),1,Color.white,out var id,out var error),error);
+            Assert.IsTrue(editor.SetItemPhysics(id,new ObjectPhysicsSettings{mode="solid",shape="automatic",mass=1}));physics.SetSurfaces(true,"Synthetic transition floor");physics.StartPhysics();var item=editor.Find(id);Assert.IsTrue(item.GetComponent<RigidRoomItem>().Simulating);
+            var data=editor.Read(id);data.heightFields=new[]{field.Copy()};data.physics=ItemPhysics.Fixed;
+            Assert.IsTrue(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out error),error);LogAssert.NoUnexpectedReceived();Assert.IsTrue(item.GetComponent<Rigidbody>().isKinematic);
+            var view=item.GetComponent<HeightFieldView>();Assert.IsTrue(view.Collision.enabled);Assert.Contains(view.Collision,item.Grab.colliders);yield return new WaitForFixedUpdate();LogAssert.NoUnexpectedReceived();
+        }
+        [UnityTest] public IEnumerator GeometryPreparationUndoRestoresTerrainWhilePhysicsIsRunning()
+        {
+            string id=Snow(new RoomAgentExecutor(editor));var item=editor.Find(id);var before=editor.Read(id);var moving=before.Copy();moving.heightFields=Array.Empty<RoomHeightField>();moving.physics=ItemPhysics.Solid;
+            physics.SetSurfaces(true,"Synthetic undo transition floor");physics.StartPhysics();Assert.IsTrue(editor.ApplyAgentEdit(editor.Revision,new[]{moving},Array.Empty<string>(),out var error),error);Assert.IsTrue(item.GetComponent<RigidRoomItem>().Simulating);
+            editor.Undo();LogAssert.NoUnexpectedReceived();Assert.IsTrue(item.GetComponent<Rigidbody>().isKinematic);Assert.AreEqual(JsonUtility.ToJson(before),JsonUtility.ToJson(editor.Read(id)));Assert.IsNotNull(item.GetComponent<HeightFieldView>().Collision);
+            editor.Redo();LogAssert.NoUnexpectedReceived();Assert.IsTrue(item.GetComponent<RigidRoomItem>().Simulating);Assert.IsNull(item.GetComponent<HeightFieldView>().Collision);yield return new WaitForFixedUpdate();LogAssert.NoUnexpectedReceived();
+        }
     }
 }

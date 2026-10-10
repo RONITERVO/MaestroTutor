@@ -2759,6 +2759,14 @@ failed against source `898315c5`, then passed unchanged after the fix. Existing
 ownership tests now require separate terrain leases instead of in-place mutation;
 failed compound saves retain an inactive retiring candidate until destruction.
 
+Two further native cases verify dynamic-to-fixed terrain acceptance and Undo
+while physics is running. Both pass with the existing runtime; the source-review
+concern did not reproduce. A first complete run passed 988 PlayMode checks and
+failed one physical-sculpt assertion that still dereferenced the retired collider.
+That assertion now explicitly checks unchanged old mesh, cleared old collider,
+and new accepted render/collision geometry; the complete 25-test focused group
+passes. The failed broad report is retained separately.
+
 The existing falling-ball terrain test explicitly observes the old collider's
 destruction after an accepted sculpt, then verifies painting and removal using
 the current surface. Its optional native render is saved with focused evidence.

@@ -6425,6 +6425,9 @@ new-entity publication and one-step Undo/Redo, and disposing a composite candida
 when a later imported-model member refuses preparation. The native support test
 also checks that sculpting lower wakes a settled ball, replacement destroys the
 old collider, and painting/removal use the new mesh and material.
+Native cases for adding a field while switching a dynamic body to fixed physics,
+and undoing a combined field removal/dynamic-mode edit during active physics,
+also pass without changing the existing reconciliation order.
 
 This prepares authored terrain/compound collision alongside loaded imported
 geometry. It is not a global memory budget, measured PhysX cooking cost, regional
