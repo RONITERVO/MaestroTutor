@@ -43098,7 +43098,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "4c02f73de454aea9c147f4131640e7f741b505d4a0974e480ad5ad06bc4c35c0"
+      "sha256": "6d0e992714f3aa747698270601e13d94866d0087d18be246abf7f4abfbb080eb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -43109,12 +43109,16 @@
       "sha256": "faba309d3ec26c76a9f8a3f250c935134ba9a7c561fce8be532a556aec44e009"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
+      "sha256": "67d35f950367960b9f0fb2fe9b3374b214618db19bcb40191d78852b0027b42e"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
       "sha256": "7c9a7180019d512d254163603ebc91f36fd009c4b161a897b6f6de5cea45f1f4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "46c3a355059e970b3c4c03b338764a26a546132a68c68a4b9a3b9f8b8e302d1c"
+      "sha256": "2cd67106d42caaded9c766f1d7159d7e1f39f18408f5b986771ecf5db2fabc53"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43198,7 +43202,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelGeometryEdits.cs",
-      "sha256": "8e570447c96caeaee565e25702e3d21b15f08bc1011afa26e1922bcdd6596b5e"
+      "sha256": "60dabb4f0d473c149833e580a3815ab597f32da97ac5cdb6777ab586937f0bef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotion.cs",
@@ -43227,6 +43231,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
       "sha256": "f9f80079617574cf0ad143fc8e8094dc05c4e0c52095a012858090b13d66db5e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
+      "sha256": "f05f2738718670e0430dc48a846887f737cc87c0fade7574c12bdbbe19024554"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

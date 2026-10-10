@@ -206,7 +206,7 @@ namespace Maestro.Quest.Creation
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
     public sealed partial class RoomJournal
     {
-        sealed class Change { public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; public RoomWeather BeforeWeather,AfterWeather; }
+        internal sealed class Change { public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; public RoomWeather BeforeWeather,AfterWeather; }
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
         readonly Dictionary<string,int> revisions = new();
@@ -316,6 +316,13 @@ namespace Maestro.Quest.Creation
         }
         public bool Apply(RoomObjectData[] replacements, string[] removals, out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null)
         {
+            if(!Prepare(replacements,removals,out var prepared,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather))return false;
+            using(prepared)return prepared.Accept(this,out error);
+        }
+        internal bool Prepare(RoomObjectData[] replacements, string[] removals, out PreparedEdit prepared,out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null)
+        {
+            prepared=null;error="Choose valid unique object replacements and removals";
+            if(replacements==null||removals==null||replacements.Any(x=>x==null||string.IsNullOrEmpty(x.id))||removals.Any(string.IsNullOrEmpty)||replacements.Select(x=>x.id).Distinct().Count()!=replacements.Length)return false;
             if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
             if(audioEdits!=null&&!audioEdits.Validate(out error))return false;
             if(environmentEdits!=null&&!environmentEdits.Validate(out error))return false;
@@ -335,7 +342,8 @@ namespace Maestro.Quest.Creation
             var visibilityIds=(visibilityEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(visibilityEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var styles=appearanceEdits?.Apply(AppearanceSnapshot())??AppearanceSnapshot();
             var appearanceIds=(appearanceEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(appearanceEdits?.Removals??Array.Empty<string>()).ToHashSet();
-            if (!(new RoomDocument { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = candidate.Values.ToArray(), structures=groups,audioSources=sounds,environmentProfiles=profiles,appearances=styles,visibilityLayers=layers,lighting=lighting??Lighting,worldTime=worldTime??WorldTime,weather=weather??Weather }).Validate(out error)) return false;
+            var document=new RoomDocument { version = RoomDocument.CurrentVersion, world=world.Copy(), viewpoint=viewpoint.Copy(), objects = candidate.Values.OrderBy(x=>x.id,StringComparer.Ordinal).ToArray(), structures=groups,audioSources=sounds,environmentProfiles=profiles,appearances=styles,visibilityLayers=layers,lighting=lighting??Lighting,worldTime=worldTime??WorldTime,weather=weather??Weather };
+            if(!document.Validate(out error))return false;
             var profileIds=(environmentEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(environmentEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var soundIds=(audioEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(audioEdits?.Removals??Array.Empty<string>()).ToHashSet();
             var groupIds=(structureEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(structureEdits?.Removals??Array.Empty<string>()).ToHashSet();
@@ -361,33 +369,19 @@ namespace Maestro.Quest.Creation
                 BeforeAppearances=appearanceIds.Where(appearances.ContainsKey).Select(id=>appearances[id].Copy()).ToArray(),
                 AfterAppearances=styles.Where(x=>appearanceIds.Contains(x.id)).Select(x=>x.Copy()).ToArray()
             };
-            if (change.AfterWeather==null&&change.AfterWorldTime==null&&change.AfterLighting==null&&Equivalent(change.Before, change.After)&&EquivalentStructures(change.BeforeStructures,change.AfterStructures)&&EquivalentAudio(change.BeforeAudio,change.AfterAudio)&&EquivalentEnvironments(change.BeforeEnvironments,change.AfterEnvironments)&&EquivalentVisibility(change.BeforeVisibility,change.AfterVisibility)&&EquivalentAppearances(change.BeforeAppearances,change.AfterAppearances)) {
-                // A live layout may already match while its periodic saved pose lags.
-                // Accept that snapshot without an empty Undo entry or stale journal.
-                if(observedBefore!=null&&!Equivalent(changedIds.Where(items.ContainsKey).Select(id=>items[id]).ToArray(),change.After))Set(change.Before,change.After);
-                return true;
-            }
-            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting);SetWorldTime(change.AfterWorldTime);SetWeather(change.AfterWeather);
-            undo.Add(change); if (undo.Count > 32) undo.RemoveAt(0); redo.Clear(); return true;
+            bool same=change.AfterWeather==null&&change.AfterWorldTime==null&&change.AfterLighting==null&&Equivalent(change.Before, change.After)&&EquivalentStructures(change.BeforeStructures,change.AfterStructures)&&EquivalentAudio(change.BeforeAudio,change.AfterAudio)&&EquivalentEnvironments(change.BeforeEnvironments,change.AfterEnvironments)&&EquivalentVisibility(change.BeforeVisibility,change.AfterVisibility)&&EquivalentAppearances(change.BeforeAppearances,change.AfterAppearances);
+            bool baseline=observedBefore!=null&&!Equivalent(changedIds.Where(items.ContainsKey).Select(id=>items[id]).ToArray(),change.After);
+            prepared=new PreparedEdit(this,change,document,same?"baseline":"edit",baseline);error=null;return true;
         }
 
-        public bool Undo() => Undo(out _);
-        internal bool Undo(out HashSet<string> changedObjects)
+        public bool Undo()=>Undo(out _);
+        internal bool Undo(out HashSet<string> changedObjects)=>AcceptHistory(true,out changedObjects);
+        public bool Redo()=>Redo(out _);
+        internal bool Redo(out HashSet<string> changedObjects)=>AcceptHistory(false,out changedObjects);
+        bool AcceptHistory(bool reverse,out HashSet<string> changedObjects)
         {
-            changedObjects=null;
-            if (!CanUndo) return false;
-            var change = undo[undo.Count - 1]; undo.RemoveAt(undo.Count - 1);
-            changedObjects=change.Before.Concat(change.After).Select(item=>item.id).ToHashSet();
-            Set(change.After, change.Before);SetStructures(change.AfterStructures,change.BeforeStructures);SetAudio(change.AfterAudio,change.BeforeAudio);SetEnvironments(change.AfterEnvironments,change.BeforeEnvironments);SetAppearances(change.AfterAppearances,change.BeforeAppearances);SetVisibility(change.AfterVisibility,change.BeforeVisibility);SetLighting(change.BeforeLighting);SetWorldTime(change.BeforeWorldTime);SetWeather(change.BeforeWeather); redo.Add(change); return true;
-        }
-        public bool Redo() => Redo(out _);
-        internal bool Redo(out HashSet<string> changedObjects)
-        {
-            changedObjects=null;
-            if (!CanRedo) return false;
-            var change = redo[redo.Count - 1]; redo.RemoveAt(redo.Count - 1);
-            changedObjects=change.Before.Concat(change.After).Select(item=>item.id).ToHashSet();
-            Set(change.Before, change.After);SetStructures(change.BeforeStructures,change.AfterStructures);SetAudio(change.BeforeAudio,change.AfterAudio);SetEnvironments(change.BeforeEnvironments,change.AfterEnvironments);SetAppearances(change.BeforeAppearances,change.AfterAppearances);SetVisibility(change.BeforeVisibility,change.AfterVisibility);SetLighting(change.AfterLighting);SetWorldTime(change.AfterWorldTime);SetWeather(change.AfterWeather); undo.Add(change); return true;
+            changedObjects=null;if(!PrepareHistory(reverse,out var prepared,out _))return false;
+            using(prepared){if(!prepared.Accept(this,out _))return false;changedObjects=prepared.ChangedObjects;return true;}
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {

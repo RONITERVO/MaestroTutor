@@ -251,34 +251,18 @@ namespace Maestro.Quest.Creation
         }
         bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
-            if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
-            if(audioEdits!=null&&!audioEdits.Validate(out error))return false;
-            if(environmentEdits!=null&&!environmentEdits.Validate(out error))return false;
-            if(visibilityEdits!=null&&!visibilityEdits.Validate(out error))return false;
-            if(appearanceEdits!=null&&!appearanceEdits.Validate(out error))return false;
-            var candidate=journal.Snapshot();
-            if(lighting!=null)candidate.lighting=lighting.Copy();
-            if(worldTime!=null)candidate.worldTime=worldTime.Copy();
-            if(weather!=null)candidate.weather=weather.Copy();
-            var changed=replacements.Select(x=>x.id).Concat(removals).ToHashSet();
-            candidate.objects=candidate.objects.Where(x=>!changed.Contains(x.id)).Concat(replacements).ToArray();
-            if(structureEdits!=null)candidate.structures=structureEdits.Apply(candidate.structures);
-            if(audioEdits!=null)candidate.audioSources=audioEdits.Apply(candidate.audioSources);
-            if(environmentEdits!=null)candidate.environmentProfiles=environmentEdits.Apply(candidate.environmentProfiles);
-            if(visibilityEdits!=null)candidate.visibilityLayers=visibilityEdits.Apply(candidate.visibilityLayers);
-            if(appearanceEdits!=null)candidate.appearances=appearanceEdits.Apply(candidate.appearances);
-            if(!candidate.Validate(out error))return false;
-            if(observedBefore!=null&&!journal.EditBaseline(replacements,removals,observedBefore,out _,out error))return false;
-            if(TemporaryRoom) {
-                if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting,worldTime,weather)){error=Status;return false;}
-                return true;
+            if(!journal.Prepare(replacements,removals,out var edit,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather))return false;
+            using(edit) {
+                using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null)return false;
+                if(!TemporaryRoom) {
+                    CompleteSave(wait:true);
+                    if(!edit.Current(journal)){error="The room changed before saving; inspect it before retrying";return false;}
+                    if(!storage.Save(edit.Snapshot(),out error))return false;
+                }
+                if(!edit.Accept(journal,out error))return false;
+                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose);
+                MarkDirty();SetStatus(message);if(!TemporaryRoom){dirty=false;lastSaveError=null;}return true;
             }
-            // Same serialized writer and journal as manual edits; no global Editing
-            // signal here because the caller already owns only the affected targets.
-            CompleteSave(wait:true);
-            if(!storage.Save(candidate,out error))return false;
-            if(!Commit(replacements,removals,message,true,applyPose,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,visualOnly,lighting,worldTime,weather)){error=Status;return false;}
-            dirty=false;lastSaveError=null;return true;
         }
 
         Vector3 SpawnPosition()
@@ -326,8 +310,19 @@ namespace Maestro.Quest.Creation
             Editing?.Invoke(); if(DeleteObject(selected,out var error)) { selected = null; UpdateSelection(); } else SetStatus(error);
         }
 
-        public void Undo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Undo(out var changed)) { Reconcile(poseChanges:changed); MarkDirty(); SetStatus("Undone"); } else SetStatus("Nothing to undo"); }
-        public void Redo() { if(!FinishLiquidPour(out var liquidError)){SetStatus(liquidError);return;} using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return;} Editing?.Invoke(); if (Busy()) return; if (journal.Redo(out var changed)) { Reconcile(poseChanges:changed); MarkDirty(); SetStatus("Redone"); } else SetStatus("Nothing to redo"); }
+        public void Undo()=>ApplyHistory(true);
+        public void Redo()=>ApplyHistory(false);
+        void ApplyHistory(bool reverse)
+        {
+            if(!FinishLiquidPour(out var error)){SetStatus(error);return;}using var write=WriteGate.TryWrite(out error);if(write==null){SetStatus(error);return;}
+            Editing?.Invoke();if(Busy())return;
+            if(!journal.PrepareHistory(reverse,out var edit,out error)){SetStatus(error);return;}
+            using(edit) {
+                using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return;}
+                if(!edit.Accept(journal,out error)){SetStatus(error);return;}
+                Reconcile(poseChanges:edit.ChangedObjects);MarkDirty();SetStatus(reverse?"Undone":"Redone");
+            }
+        }
         internal bool DrawingInProgress=>(GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke))||SculptingInProgress;
         internal bool PutPencilAwayForPose(out string error)
         {
@@ -377,8 +372,12 @@ namespace Maestro.Quest.Creation
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return false;}
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
-            if (!journal.Apply(replacements,removals,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather)) { SetStatus(error); return false; }
-            if(visualOnly)ReconcileVisibility();else Reconcile(replacements.Select(item => item.id).ToHashSet(), applyPose ?? !placement); MarkDirty(); SetStatus(success); return true;
+            if(!journal.Prepare(replacements,removals,out var edit,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather)){SetStatus(error);return false;}
+            using(edit) {
+                using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return false;}
+                if(!edit.Accept(journal,out error)){SetStatus(error);return false;}
+                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose??!placement);MarkDirty();SetStatus(success);return true;
+            }
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
         {

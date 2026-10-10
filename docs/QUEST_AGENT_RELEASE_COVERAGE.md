@@ -2717,3 +2717,32 @@ No paid provider calls, headset work, installation, signing, deployment or Store
 changes belong to this increment. The existing managed/BYOK Gemini HTTP 402
 condition and headset cooling/charge hold still limit acceptance. The independent
 intermittent Meta native acoustic-map crash remains unresolved.
+
+
+### Prepared source/history acceptance and shared geometry preflight
+
+Four `GeometryTransaction` regressions failed against the previous runtime and
+pass unchanged after the shared preflight change. They use actual loaded GLB
+geometry, a native unreadable-mesh transition, mixed object edits and real
+Undo/Redo. Refused edits preserve source, visible poses and history; abandoned
+native candidates drain without replacing accepted owners. A positive mixed
+edit checks durable source, actual colliders and one-step Undo/Redo restoration.
+A further native check covers the common pause-physics requirement across mixed
+edits and Undo/Redo, with successful retries after pausing. The first broad run
+was deliberately interrupted after 187 completed PlayMode checks without a
+failure to add that shared guard; it is retained as incomplete evidence.
+
+Ten `PreparedRoomEditTests` verify immutable inputs/output snapshots, pure
+preparation, single-use acceptance, disposal, same-world foreign journal refusal,
+live-placement/time/viewpoint staleness, history previews, no-op Redo preservation
+and invalid/duplicate source rejection. The editor now saves the same prepared
+candidate it later accepts, instead of separately rebuilding it for the journal.
+
+Baseline failures, focused results and final complete native/headless/book and
+exact-head CI results are retained in `.quest-evidence/edit-transactions/`.
+Terminal process exit and existing diagnostic gates are required for acceptance.
+The shared native preparation currently handles changed geometry on loaded
+imported models; new-model activation and other resource preallocation remain
+open, as do coordinated regional budgets and streaming. No new provider calls,
+headset operations, signing, deployment or Store changes belong to this increment.
+Existing Gemini HTTP 402 and headset cooling/charge limits still apply.

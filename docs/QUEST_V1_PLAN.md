@@ -6363,3 +6363,37 @@ This ownership increment introduces no such limit, automatic eviction or regiona
 streaming. The existing bounded world, per-entity real-room participation and
 saved source remain authoritative. Complete verification and remaining provider,
 headset and native-audio limitations are tracked in the coverage ledger.
+
+
+### Prepared edit transactions before regional admission — 2026-10-10
+
+The journal now prepares one immutable candidate and history delta without
+changing source, revisions or Undo/Redo stacks. Persistence writes a detached
+copy of that exact candidate, then accepts it once. Cancellation and stale
+preparations preserve the original state. Guards include live placement,
+history, viewpoint and advancing world time; a token cannot move to another
+journal, including a temporary fork. Unchanged edits still preserve Redo.
+
+Saved edits, manual/mixed edits and Undo/Redo share the same native preparation
+boundary. Loaded imported models now validate and prepare changed geometry
+before source publication. A failed member rejects the complete mixed edit;
+failed Undo/Redo retains its history entry. All these paths require physics to
+be paused before changing imported geometry, matching the dedicated action.
+Prepared geometry is consumed by
+reconciliation or released on failure. The earlier one-off model geometry
+preparation path is consolidated into this shared path.
+
+Four actual native failures were reproduced first: accepting an oversized model
+in a mixed edit, accepting skinned rigid collision in a mixed edit, and consuming
+Undo/Redo when the required native mesh is no longer readable. Journal tests
+cover copied inputs, detached observations, cancellation, single-use acceptance,
+stale state and history previews. Broad native/app results are in the coverage
+ledger and per-run evidence.
+
+This is the transaction boundary required for further admission work. Compound
+and terrain source limits still use document validation; their heavy allocations
+still occur during reconciliation. New model instances retain their explicit
+asynchronous loading/readiness path. This increment does not implement regional
+activation, coordinated memory/cost budgets, preallocation of every scene resource
+or rollback of arbitrary native allocation failures after publication. Those
+remaining requirements stay part of v1; the existing bounded world is unchanged.

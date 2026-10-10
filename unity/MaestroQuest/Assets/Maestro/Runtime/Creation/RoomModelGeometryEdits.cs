@@ -22,7 +22,6 @@ namespace Maestro.Quest.Creation
             var view=Find(target).GetComponent<CreatedRoomObject>();
             try
             {
-                using var prepared=view.PrepareModelGeometry(settings);
                 if(!CommitPersisted(new[]{data},Array.Empty<string>(),"Imported geometry saved",false,out error,ComponentBefore(new[]{data})))return false;
                 if(view.ModelGeometryReady)return true;error="Geometry settings were saved but preparation is unavailable: "+view.ModelGeometryIssue;return false;
             }
