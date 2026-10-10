@@ -6446,6 +6446,8 @@ saved, manual/mixed or Undo/Redo edits are accepted. A new entity needs no live
 component for this preparation. The candidate owns copied source and stable
 world/region/entity identity; transfer requires the same target and encoded recipe.
 Cancellation or a later refused member disposes every untaken candidate.
+Custom shape objects join the owned hierarchy before mesh evaluation so a
+construction exception cannot strand an unparented temporary object.
 
 `RecipeObject` adopts the prepared hierarchy, part handles, rest rotations and
 bounds only after construction succeeds. It then stops replaced playback and

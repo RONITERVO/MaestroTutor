@@ -2793,7 +2793,9 @@ Additional native checks verify exact-source transfer once, ownership surviving
 preparation disposal after transfer, custom mesh destruction, shared base paint
 survival, and compound-recipe creation with saved pose/source plus Undo/Redo.
 Existing recipe, custom-shape, appearance, per-part animation and shared-material
-render tests check the surrounding behavior. Actual baseline, focused, complete
+render tests check the surrounding behavior. The first full run was deliberately
+stopped after 125 completed PlayMode cases without failures to tighten custom
+shape ownership before mesh construction; that run remains incomplete evidence. Actual baseline, focused, complete
 Unity, native headless/book and exact-commit CI evidence are retained in
 `.quest-evidence/recipe-preparation/verification.json`; only completed receipts
 with clean terminal exits and diagnostic gates count as acceptance.
