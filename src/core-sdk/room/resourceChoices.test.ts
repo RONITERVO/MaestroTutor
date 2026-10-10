@@ -10,7 +10,7 @@ const entry={id:'a'.repeat(32),name:'Distant landscape',revision:7};
 const view=(fact='visibility.layers',value:unknown={offset:0,total:1,pageSize:3,entries:[entry]},offset=0):CatalogView=>({operation:'inspect',category:'facts',capability:fact,version:1,definition:behaviourFact(fact)!,arguments:{offset},available:true,value,status:'Available'}) as CatalogView;
 it('checks every native resource choice against its paged fact and destination fields',()=>{
  let count=0;const visit=(s:CapabilitySchema)=>{count+=resourceChoices(s).length;for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(6);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(7);
 });
 it('rejects arbitrary facts, guards, prototype paths and overlapping or incompatible destinations',()=>{
  for(const mutate of [(s:CapabilitySchema)=>s['x-choices']![0].fact='object.visibility',(s:CapabilitySchema)=>s['x-choices']![0].version=2,(s:CapabilitySchema)=>s['x-choices']![0].id='constructor',(s:CapabilitySchema)=>s['x-choices']![0].id='target',(s:CapabilitySchema)=>s['x-choices']![0].revision='revision',(s:CapabilitySchema)=>s['x-choices']![0].revision='layerId',(s:CapabilitySchema)=>s['x-choices']!.push({...s['x-choices']![0]}),(s:CapabilitySchema)=>s.properties!.layerId['x-static']=true]){

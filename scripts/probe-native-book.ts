@@ -349,6 +349,20 @@ try{
  const contactState=await page.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Contact fact missing');return c.value as {known:boolean;immersed:boolean};});assert.equal(contactState.known,false);assert.equal(contactState.immersed,false);
  await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-liquid-contact.png')});
  await writeFile(join(directory,'book-native-liquid-contact.json'),JSON.stringify({boundary:'Original book fact form through native transport. Untracked desktop input stays unknown. No contact, provider or headset claim.',contactState},null,2));
+ // Shared area authoring uses the same generated controls as every other catalog action.
+ await openNamedAction('Save world area','world.region.save');
+ await page.getByLabel('Action inputs name',{exact:true}).fill('Café garden');
+ const region=await runNamedAction('world.region.save');
+ await openNamedAction('Choose creation area','object.region.assign');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Load saved area',exact:true}).click();
+ await page.getByLabel('Choose area',{exact:true}).selectOption(JSON.stringify([region.output!.id,region.output!.revision]));
+ const regionBinding=await runNamedAction('object.region.assign');assert.equal(regionBinding.call.arguments.regionId,region.output!.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs regionId',{exact:true}).inputValue(),region.output!.id);
+ await page.getByRole('region',{name:'Area choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-region.png')});
+ await writeFile(join(directory,'book-native-region.json'),JSON.stringify({boundary:'Actual original-book generated controls, named area choice and native saved membership readback. No regional streaming, provider or headset claim.',region,regionBinding},null,2));
  await openNamedAction('Save environment profile','environment.profile.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Virtual terrain only');
  await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');

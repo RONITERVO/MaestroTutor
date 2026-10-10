@@ -6580,3 +6580,41 @@ audio policy, installed APK, provider or release setting changes here.
 The initial native regressions prove that both a queued import and an unavailable
 saved model previously allowed physics against an aligned scan. See the release
 coverage ledger for the regression runs and subsequent complete verification.
+
+
+### Durable authored areas before regional activation — 2026-10-10
+
+A world now has up to 32 named authored areas in its canonical room document.
+Area IDs are stable and names are display text. Each creation belongs to at most
+one named area; unassigned creations use the home area. Book and Maestro remain
+world-owned so regional loading cannot duplicate the interface or tutor. That
+ownership does not pin Maestro to the home floor: movement, ground selection,
+real-room collision participation, visibility and sound remain separate policies.
+
+The catalog exposes `world.region.save`, `world.region.remove` and
+`object.region.assign`, with paged `world.regions`, `world.region.members`,
+`world.region` and `object.region` facts. Shared generated controls, programs and
+the delegated agent use the same revisions and receipts. Area assignment changes
+membership without moving, cloning or rebuilding the object. Rename requires the
+complete existing member set; removal refuses nonempty areas. Deleting a creation
+removes membership in the same Undo entry; Undo restores the same IDs. Local copies
+and imported portable blueprints start in home rather than inheriting a foreign
+world's area IDs. Moving between areas edits both memberships atomically.
+
+Room format 36 includes this partition in saves, temporary Keep/Discard, paired
+snapshots and portable workspace archives. Version-35 rooms without the field
+load into home and retain their original file until a new accepted save. Unknown
+area versions preserve the file read-only; malformed fields refuse validation.
+Membership is outside the portable object payload, independent of material,
+collision, drawing, audio and animation component schemas.
+
+Runtime residency still uses the existing single bounded world scope. This step
+does not retag live resource leases, unload GameObjects, expand the 64-creation
+limit or the coordinate range, or prove offscreen simulation. Those boundaries
+are explicit in the catalog. Next, activation must use accepted per-area dependency
+sets and frame-aware bounds, retaining held/thrown objects, ground, audible sources,
+Maestro and active programs across borders. It must preserve stable world entity
+IDs, shared assets/programs and the physical shell; workspace replacement is not
+a streaming primitive. Admission/refusal and observed/retained/coarse states must
+be shared facts before agents can depend on them. Larger coordinates, aggregate
+budgets, water life, physical acceptance and the other release gates remain open.

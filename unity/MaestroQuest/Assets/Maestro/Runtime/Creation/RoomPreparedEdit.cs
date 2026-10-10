@@ -58,6 +58,7 @@ namespace Maestro.Quest.Creation
         {
             var d=Snapshot();
             d.objects=Swap(d.objects,forward?c.Before:c.After,forward?c.After:c.Before,x=>x.id).OrderBy(x=>x.id,StringComparer.Ordinal).ToArray();
+            d.regions=Swap(d.regions,forward?c.BeforeRegions:c.AfterRegions,forward?c.AfterRegions:c.BeforeRegions,x=>x.id);
             d.structures=Swap(d.structures,forward?c.BeforeStructures:c.AfterStructures,forward?c.AfterStructures:c.BeforeStructures,x=>x.id);
             d.audioSources=Swap(d.audioSources,forward?c.BeforeAudio:c.AfterAudio,forward?c.AfterAudio:c.BeforeAudio,x=>x.id);
             d.environmentProfiles=Swap(d.environmentProfiles,forward?c.BeforeEnvironments:c.AfterEnvironments,forward?c.AfterEnvironments:c.BeforeEnvironments,x=>x.id);
@@ -68,6 +69,7 @@ namespace Maestro.Quest.Creation
         void Publish(Change c,bool forward)
         {
             Set(forward?c.Before:c.After,forward?c.After:c.Before);
+            SetRegions(forward?c.BeforeRegions:c.AfterRegions,forward?c.AfterRegions:c.BeforeRegions);
             SetStructures(forward?c.BeforeStructures:c.AfterStructures,forward?c.AfterStructures:c.BeforeStructures);
             SetAudio(forward?c.BeforeAudio:c.AfterAudio,forward?c.AfterAudio:c.BeforeAudio);
             SetEnvironments(forward?c.BeforeEnvironments:c.AfterEnvironments,forward?c.AfterEnvironments:c.BeforeEnvironments);

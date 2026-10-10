@@ -5263,6 +5263,274 @@
       }
     },
     {
+      "id": "world.region.save",
+      "version": 1,
+      "label": "Save world area",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^.{1,80}$",
+            "maxLength": 80
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{32}$",
+              "maxLength": 32,
+              "x-resource": "object"
+            },
+            "minItems": 0,
+            "maxItems": 64
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "name",
+          "members"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldRegions.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "regionMembership"
+      ],
+      "requirements": [
+        "workspace.available",
+        "region.revision.current",
+        "storage.writable"
+      ],
+      "description": "Create or rename one of up to 32 authored areas. Empty id, revision 0 and empty members create. To rename, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Current runtime still uses the whole bounded world: these actions do not independently load/unload areas, change native resource residency, expand capacity or promise offscreen simulation. Physics, visibility and sound policies remain separate.",
+      "example": {
+        "id": "",
+        "revision": 0,
+        "name": "Café garden",
+        "members": []
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "world.region.remove",
+      "version": 1,
+      "label": "Remove unused world area",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "id",
+          "revision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldRegions.v1"
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "regionMembership"
+      ],
+      "requirements": [
+        "workspace.available",
+        "region.revision.current",
+        "storage.writable"
+      ],
+      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Current runtime still uses the whole bounded world: these actions do not independently load/unload areas, change native resource residency, expand capacity or promise offscreen simulation. Physics, visibility and sound policies remain separate.",
+      "example": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.region.assign",
+      "version": 1,
+      "label": "Choose creation area",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "regionId": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{32})$",
+            "maxLength": 32
+          },
+          "regionRevision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "regionId",
+          "regionRevision"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldRegions.v1"
+        ],
+        "x-current": {
+          "fact": "object.region",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "regionId": [
+              "regionId"
+            ],
+            "regionRevision": [
+              "regionRevision"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-choices": [
+          {
+            "label": "Area",
+            "fact": "world.regions",
+            "version": 1,
+            "id": "regionId",
+            "revision": "regionRevision",
+            "emptyLabel": "Home area"
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "regionMembership"
+      ],
+      "requirements": [
+        "workspace.available",
+        "region.revision.current",
+        "storage.writable"
+      ],
+      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Current runtime still uses the whole bounded world: these actions do not independently load/unload areas, change native resource residency, expand capacity or promise offscreen simulation. Physics, visibility and sound policies remain separate.",
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "regionId": "",
+        "regionRevision": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "world.time.configure",
       "version": 1,
       "label": "Configure world time and day lighting",
@@ -40847,9 +41115,172 @@
         }
       },
       "label": "World and region identity",
-      "description": "Read the durable authored world and current region identities. Entity IDs and authored positions in this workspace are interpreted inside this scope. These identities survive reload, geometry edits, Undo, temporary keep/discard, viewpoint movement and archive restoration. They are not workspace-session guards, physical room anchors, action receipts or revisions. Current worlds contain one bounded region; this fact does not claim streaming or change the 25-metre coordinate limit. Restoring an archive retains its world identity; it does not implicitly fork a new world. If identity cannot be saved or verified, this fact is unavailable. Observation never creates a world, writes a file, activates a region or starts programs.",
+      "description": "Read the durable authored world and home/runtime region identities. Entity IDs and authored positions in this workspace are interpreted inside this scope. These identities survive reload, geometry edits, Undo, temporary keep/discard, viewpoint movement and archive restoration. They are not workspace-session guards, physical room anchors, action receipts or revisions. Authored area membership is available through world.regions and object.region. The runtime still uses one shared bounded scope; this fact does not claim regional streaming or change the 25-metre coordinate limit. Restoring an archive retains its world identity; it does not implicitly fork a new world. If identity cannot be saved or verified, this fact is unavailable. Observation never creates a world, writes a file, activates a region or starts programs.",
       "features": [
         "worldIdentity.v1"
+      ]
+    },
+    {
+      "id": "world.region",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "name": "text",
+          "memberCount": "number",
+          "temporary": "boolean"
+        }
+      },
+      "label": "World area",
+      "description": "Saved area definition and current revision. Read every world.region.members page at this revision before renaming. This is authored membership, not a regional runtime readiness report.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldRegions.v1"
+      ]
+    },
+    {
+      "id": "world.regions",
+      "version": 1,
+      "type": {
+        "record": {
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "revision": "number",
+                "name": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "World areas",
+      "description": "Named authored areas ordered by stable ID, three per page. The implicit home region is available through world.identity and the empty membership choice. Advance offset by pageSize until total. Does not report loaded scene regions.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          }
+        },
+        "required": [
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "worldRegions.v1"
+      ]
+    },
+    {
+      "id": "world.region.members",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "offset": "number",
+          "total": "number",
+          "pageSize": "number",
+          "members": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Area creations",
+      "description": "Sixteen exact creation IDs per page at the area's revision. Membership is durable authored state, independent of current scene transforms.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 64.0
+          }
+        },
+        "required": [
+          "id",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "worldRegions.v1"
+      ]
+    },
+    {
+      "id": "object.region",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "regionId": "text",
+          "regionRevision": "number",
+          "homeRegionId": "text",
+          "temporary": "boolean"
+        }
+      },
+      "label": "Creation area",
+      "description": "Saved region membership for one creation. Empty regionId means the home region. The book and Maestro are world-owned. A membership edit neither moves nor unloads the object.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "worldRegions.v1"
       ]
     },
     {
@@ -42418,7 +42849,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "a000f56c4182d3faa6ee83100821fbea002b808e42eea3f10810ad209c751ebc"
+      "sha256": "6cd062ce71a354f835f9731be2f851c7b2525e521d48fe8cc58c2c23f167d69b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -42665,6 +43096,10 @@
       "sha256": "3d1f77d9271a9ecbac61ba6658551f99b919dbe5199e9e3e64ef425cd911e932"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
+      "sha256": "274da8a6793550d10d1ecf016e4dbce60ef4e424577f2bcb7ec352713172a9b6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
       "sha256": "f0ee8b95058044fadc99ea54bb091d5677ddf3b68b842897629db177e7a9c47d"
     },
@@ -42794,7 +43229,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldIdentityFacts.cs",
-      "sha256": "7e187a1f0275c859fdf69e8edadbf9888d0fe760e14697a706b917dc9fb642e0"
+      "sha256": "3d46de10e11f8ec625922113ac5b1f9f1b440ba8fa1c5ba44013e40cbc20073a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldLightingCapability.cs",
@@ -43106,11 +43541,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "31cd71eb316b942d1ca8eba3a93fb8b492a77d6a8d2201ba1f44a25b365b9c62"
+      "sha256": "6729b526a3997e4c6e0598bf4d3407cd5f56a5f4b72494ac899641320ca1d73b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "6d0e992714f3aa747698270601e13d94866d0087d18be246abf7f4abfbb080eb"
+      "sha256": "97108c67b62df8beb6d19651e0c6ad4cfc059f465d7238e7029c310ae8704204"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -43130,7 +43565,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "cde7b0b0354e49385ef7f895c41c4cac34cb4215155a306a24dfb200eaefaceb"
+      "sha256": "bfd0d947e104d21b2d7db43e8047fa7dcda2459c39d96f353703b5c4c5fe5171"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43250,7 +43685,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "f05f2738718670e0430dc48a846887f737cc87c0fade7574c12bdbbe19024554"
+      "sha256": "6f30363dfb828a8121d971d03bb6845f77c40122bd21c18d4a2a031ca7596009"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -43261,8 +43696,16 @@
       "sha256": "8be8002440509909f0617ae86d21d8c14bef602fe315538068ed075e1726ceeb"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegion.cs",
+      "sha256": "a019256141437dcb460b69197f71700a656bb67e73cf939bce07610789cb261a"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
       "sha256": "ef573a2e258ed11c356c256388903653dc5849e2f82183b8c2ca8ef42f0d5d9f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionEdits.cs",
+      "sha256": "ffb381740916333877b85ffcff11e4197740b5c4bd56b4843ebdbac0c6d7ac1a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -43282,7 +43725,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "74b114f5b04a3b1838650665511d5f856fa4209dc1a3b63edf0888e24d6d7f63"
+      "sha256": "f725291528b53f71cd719faadf29da11687fa5b7244063a32cf8958e81c83d2d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -43794,7 +44237,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "f8039538537ffdee0eb2e6c381ccdd5ab4c0da20d731ddcc872dd0acb50a0b8d"
+      "sha256": "57af172cc204dca66447d1e186d037b8defc0c4d4796437bf57b5ecc0e79ea98"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -43814,7 +44257,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveSnapshot.cs",
-      "sha256": "88258050f44adde7755e6e61b7e68b79b33251dc33028f9b4fcafe7d8307fe87"
+      "sha256": "e9d2b49251f326cb8d3a38252f3588f50a086a17463b3d80f62f4a70ffe183f5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
@@ -43922,7 +44365,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "33ce36440f229048dfa9e81ebd2877a6448e75fd62e57a625a006c108d3bb410"
+      "sha256": "239840424c0d41167335185e5c7d673c2c6603ddee9c50bcedf0957119150f4e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

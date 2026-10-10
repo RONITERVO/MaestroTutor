@@ -49,6 +49,12 @@ namespace Maestro.Quest.Tests
             documents["models/"+modelHash+".txt"]=Bytes("Maestro äö\nOriginal attribution kept");
             var module=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-modules-nested.json")))["imports"][0]["module"] as JObject;moduleHash=ProgramModules.Hash(module);documents["program-modules.v1/"+moduleHash+".json"]=Bytes(module.ToString(Formatting.None));
         }
+        [Test] public void AuthoredRegionsSurviveArchiveAndUnknownFieldsCannotDisappear() {
+            var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));string target=new string('1',32),id=new string('a',32);
+            room.objects=room.objects.Append(new RoomObjectData{id=target,kind=RoomObjectKind.Block}).ToArray();room.regions=new[]{new RoomRegion{id=id,name="Café garden",members=new[]{target}}};documents[RoomStorage.FileName]=Document(room);
+            using(var staged=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory)){var restored=new RoomStorage(staged.DirectoryPath).Load(out var error);Assert.That(restored,Is.Not.Null,error);Assert.That(restored.world.worldId,Is.EqualTo(room.world.worldId));Assert.That(restored.regions.Single().id,Is.EqualTo(id));Assert.That(restored.regions.Single().members,Is.EqualTo(new[]{target}));}
+            var wire=JObject.Parse(JsonUtility.ToJson(room));wire["regions"][0]["futureBehaviour"]=true;documents[RoomStorage.FileName]=Bytes(wire.ToString());Assert.That(()=>Snapshot(),Throws.Exception);
+        }
         [Test] public void ImportedImageRoundTripsExactBytesAndReportsMissingAssets(){
             var bytes=ImageFiles.Png();string hash=ModelLibrary.Hash(bytes),path="images/"+hash+".image";
             var room=JsonUtility.FromJson<RoomDocument>(Encoding.UTF8.GetString(documents[RoomStorage.FileName]));room.appearances=new[]{new RoomAppearance{id=new string('a',32),name="Tiles",style=new(){patternMode="image",imageHash=hash,renderMode="blend",opacity=.5f}}};

@@ -19,6 +19,7 @@ import {probeWorldPresentation} from './probe-world-presentation';
 import {probeWorldLighting} from './probe-world-lighting';
 import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
+import {probeWorldRegions} from './probe-world-regions';
 import {probeConstructionResources} from './probe-construction-resources';
 import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering';
 import {runAgentPhysicsProof} from './probe-agent-physics';
@@ -413,6 +414,7 @@ try{
   await probeLiquidMedium(execute,directory);
   await probeWaterTraversal(execute,directory);
   await probeVisibilityLayers(execute,directory);
+  await probeWorldRegions(execute,directory);
 
   const profileSaved=await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:'',revision:0,name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]);
   const profileId=profileSaved.execution?.selected?.output?.id;

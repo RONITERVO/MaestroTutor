@@ -661,3 +661,26 @@ An ordinary object's opening follows the object or its recipe part, including vi
 Rendering multiplies framebuffer RGB and alpha together to expose the headset's existing passthrough underlay. Opaque foreground geometry uses depth; the mask shares the transparent queue with translucent surfaces so nearer transparent objects composite afterward. Mask depth is the authored plane, not a measurement of the real scene. As with ordinary sorted transparency, intersecting transparent geometry has ordering limitations. Overlapping masks multiply the coverage left behind. A frame should have an actual open centre when that is the intended construction; the component is not a mesh-cutting operation. The view keeps the underlay available at full backdrop opacity only while an active opening requests it. It never opts into camera sharing. Without a running headset passthrough subsystem the source remains editable and masks are not rendered. `renderingReady` reports that prerequisite, not physical alignment or visual acceptance.
 
 Current bounds are four windows per object, one per plane, and 16 per room. Their mask geometry has no collider. Virtual-only camera snapshots omit mask renderers, preserving the virtual-only provenance; composed headset sharing retains the real rendered view. Room format 34 and prototype format 4 retain these components through storage, Undo, copying and reusable construction source. Version-33 rooms without windows remain readable. Unknown window versions block writing; malformed explicit fields fail validation and use the existing room-recovery path rather than silently defaulting the window. Quest stereo, hand/controller foreground composition, transparency sorting, anchor recovery and performance require device acceptance separately from desktop framebuffer tests.
+
+
+## Organize creations into world areas
+
+Use **Save world area** to create a named area, then **Choose creation area** on
+an object. Load its current values, load saved areas and select the area by name.
+Choose **Home area** to remove the named assignment. The agent uses these same
+catalog actions. Area membership does not move the object or alter its physics,
+materials, animations, depth visibility or sound. In particular it does not change
+whether that object collides with the scanned floor; use its environment profile
+for that choice. Maestro and the book remain world-owned.
+
+Each creation has at most one area, and a world supports 32 named areas. To rename,
+read `world.region` and all `world.region.members` pages at the same revision and
+provide that complete membership. Move all creations out before removing an area.
+Deletion and Undo keep object membership together. Copies and portable imports
+start in home. Saves, temporary rooms and workspace export/restore retain exact
+area and creation identities.
+
+These are saved authored areas. They do not yet load or unload independently,
+increase the current world capacity or keep distant regions simulated. The shared
+facts report membership rather than claiming runtime readiness. Regional activation
+and retention are tracked separately in the v1 plan.

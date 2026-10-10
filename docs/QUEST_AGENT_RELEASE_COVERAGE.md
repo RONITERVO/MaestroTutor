@@ -2900,3 +2900,23 @@ Complete native/headless/book and exact-commit CI results are recorded under
 or headset result is implied: existing billing and device holds remain. Multiple
 regions, dependency-based streaming and the wider v1 release requirements remain
 unfinished; this checkpoint does not claim city-scale runtime capacity.
+
+
+## Authored area membership — 2026-10-10
+
+Room format 36 and the shared `worldRegions.v1` catalog add durable named areas.
+Focused native checks pass: 46 EditMode persistence/archive cases and four
+PlayMode authoring journeys. Coverage includes transfer, deletion/Undo, copy-to-home,
+exact IDs, stale revisions, failure before publication, live rigid-body continuity,
+receipt replay, temporary Keep/Discard and portable archive restoration. The first
+archive run exposed an omitted top-level field allowlist entry; it was fixed and
+the entire focused archive group passed afterward. Earlier compile failures were
+local wiring/test errors and are not accepted verification runs.
+
+The complete shared headless client and original-book journey now create and assign
+an area, reload its native state and preserve evidence. Final complete suite and
+exact-commit CI results are recorded in `.quest-evidence/region-authoring/verification.json`.
+These are source checks against desktop Unity. Existing provider and headset holds
+remain; there is no new device, billing, signing, deployment or upload result.
+Regional streaming, capacity expansion and the wider release requirements remain
+unfinished.
