@@ -22,6 +22,7 @@ namespace Maestro.Quest.Imports
         ModelReservations.Lease reservation;
         Creation.RoomResourceOwner resourceOwner=new(null,null,"unscoped");
         bool loading;
+        CancellationTokenSource waitingForImporter;
         internal void ConfigureResourceOwner(Creation.RoomWorldIdentity world,string target,string role)
             =>ConfigureResourceOwner(new Creation.RoomResourceOwner(world,target,role));
         internal void ConfigureResourceOwner(Creation.RoomResourceOwner owner)
@@ -76,18 +77,25 @@ namespace Maestro.Quest.Imports
             if (!this || destroyed) throw new ObjectDisposedException(nameof(ImportedModel));
             if (loading || reservation != null) throw new InvalidOperationException("Model is already loading or loaded");
             loading=true;
-            await loadQueue.WaitAsync();
             RuntimeGltfInstance loaded = null;
+            bool enteredImporter=false;
             try
             {
+                // Waiting is retained work too. Refuse over-capacity requests
+                // before queueing, and keep one lease through import and readiness.
+                reservation=ModelReservations.Reserve(asset,resourceOwner);
+                waitingForImporter=new CancellationTokenSource();
+                await loadQueue.WaitAsync(waitingForImporter.Token);
+                enteredImporter=true;
+                waitingForImporter.Dispose();waitingForImporter=null;
                 if (!this || destroyed) return;
+                reservation.Mark("loading");
                 var info = asset.Inspection;
                 // Editor batch previews deliberately use a synchronous caller. Do not
                 // capture its main-thread context and then block awaiting a worker.
                 try { MotionRigHash = awaitCaller is ImmediateCaller ? MotionPack.RigIdentity(asset.Bytes) : await Task.Run(() => MotionPack.RigIdentity(asset.Bytes)); }
                 catch (ModelImportException error) { MotionRigHash = null; MotionRigIssue = error.Message; }
                 if (!this || destroyed) return;
-                reservation = ModelReservations.Reserve(asset,resourceOwner);
                 awaitCaller ??= new RuntimeOnlyAwaitCaller();
                 if (info.IsAvatar)
                 {
@@ -121,8 +129,13 @@ namespace Maestro.Quest.Imports
                 LocalBounds = new Bounds(Vector3.zero, bounds.size * factor);
                 instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();reservation.Mark("ready");
             }
+            catch (OperationCanceledException) when (destroyed&&!enteredImporter) { ReleaseBudget(); }
             catch { if (loaded) loaded.Dispose(); instance = null; ArtResources.Release(generatedAvatar); generatedAvatar = null; ReleaseBudget(); throw; }
-            finally { loading=false;if(destroyed)ReleaseBudget();loadQueue.Release(); }
+            finally {
+                waitingForImporter?.Dispose();waitingForImporter=null;loading=false;
+                if(destroyed||!this)ReleaseBudget();
+                if(enteredImporter)loadQueue.Release();
+            }
         }
         public void FitAsMaestro(float height = 1.7f)
         {
@@ -172,7 +185,12 @@ namespace Maestro.Quest.Imports
         public void Dispose()
         {
             if(destroyed)return;destroyed=true;
-            if(loading)reservation?.Mark("retiring");else ReleaseBudget();
+            if(waitingForImporter!=null) {
+                // No importer work can begin after destroyed is set. Cancel the
+                // waiter independently; it must not retain admission behind a
+                // different object's slow native import.
+                waitingForImporter.Cancel();ReleaseBudget();
+            } else if(loading)reservation?.Mark("retiring");else ReleaseBudget();
             if(instance)instance.Dispose();instance=null;animationPlayer=null;initialWeights.Clear();
             ArtResources.Release(generatedAvatar);generatedAvatar=null;
         }

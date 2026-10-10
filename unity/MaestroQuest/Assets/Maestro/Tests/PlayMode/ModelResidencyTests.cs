@@ -84,7 +84,7 @@ namespace Maestro.Quest.Tests
             try{
                 yield return new WaitUntil(()=>barrier.Entered||load.IsCompleted);Assert.That(barrier.Entered,Is.True,load.Exception?.ToString());
                 var skipped=queued.LoadAsync(asset);var following=next.LoadAsync(asset);queued.Dispose();
-                Assert.That(ImportedModel.LiveBudget.Models,Is.EqualTo(before.Models+1));
+                Assert.That(ImportedModel.LiveBudget.Models,Is.EqualTo(before.Models+2),"The following queued load reserves its source cost; the disposed waiter releases its own slot");
                 barrier.Open();yield return new WaitUntil(()=>load.IsCompleted&&skipped.IsCompleted&&following.IsCompleted);
                 Assert.That(load.Exception,Is.Null);Assert.That(skipped.Exception,Is.Null);Assert.That(following.Exception,Is.Null);
                 Assert.That(queued.Ready,Is.False);Assert.That(next.Ready,Is.True);Assert.That(ImportedModel.LiveBudget.Models,Is.EqualTo(before.Models+2));

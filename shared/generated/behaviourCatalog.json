@@ -40097,7 +40097,7 @@
         }
       },
       "label": "Imported model budgets",
-      "description": "Process-wide model reservations including avatar, previews and in-flight imports, with enforced limits. Source vertices, decoded texture MiPixels (1048576 pixels), morph million-vertices (1000000) and instance counts are budgets, not measured RAM/VRAM. Does not include procedural objects, book textures, WebView or operating-system memory. Reading never loads, evicts or changes anything.",
+      "description": "Process-wide model reservations including avatars, previews, queued requests and in-flight imports, with enforced limits. Source vertices, decoded texture MiPixels (1048576 pixels), morph million-vertices (1000000) and instance counts are budgets, not measured RAM/VRAM. Does not include procedural objects, book textures, WebView or operating-system memory. Reading never loads, evicts or changes anything.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -40120,7 +40120,7 @@
         }
       },
       "label": "Imported model reservation",
-      "description": "Read one process-wide model lease by index (0 to runtime.modelBudget.reserved.models minus one). Indices may shift between reads; reservationId is a runtime-only identity, never an authored entity reference. World/region/target identify the owning object or avatar; previews have an empty target, and unscoped desktop imports have empty world/region. role is object, avatar, preview or unscoped. loading reserves before native import; ready means imported geometry exists, not that a candidate is visible or usable as collision; retiring retains costs until an abandoned in-flight importer drains. Avatar replacement can temporarily hold two leases for the same target. Waiting requests that have not acquired the serialized importer have no reservation. Source costs are conservative limits, not measured RAM/VRAM. Reads are detached and never load, cancel, evict or change settings. Regional streaming remains separate.",
+      "description": "Read one process-wide model lease by index (0 to runtime.modelBudget.reserved.models minus one). Indices may shift between reads; reservationId is a runtime-only identity, never an authored entity reference. World/region/target identify the owning object or avatar; previews have an empty target, and unscoped desktop imports have empty world/region. role is object, avatar, preview or unscoped. queued reserves source costs before waiting for the serialized importer; loading means it has acquired that importer; ready means imported geometry exists, not that a candidate is visible or usable as collision; retiring retains costs until an abandoned in-flight importer drains. Avatar replacement can temporarily hold two leases for the same target. Disposed queued requests cancel their wait and release admission without waiting for another importer; an already running import retains its costs until it drains. The same reservationId survives queued, loading and ready. Source costs are conservative limits, not measured RAM/VRAM. Reads are detached and never load, cancel, evict or change settings. Regional streaming remains separate.",
       "input": {
         "type": "object",
         "properties": {
@@ -42694,7 +42694,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "832c2a2307e21adff8c72982479e895958ce2278f723f90303ba7243d387161c"
+      "sha256": "da48cb4657735e9a29ae85b20740a178872d514a79d80247f648a71c0d00d1cb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -43482,7 +43482,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "1128086f3d7afab6912d170fa9f5fa71286dd59fb86a5d8e7befdcb44a277535"
+      "sha256": "7583c4656d425142bafcf7e0c650b998a0ee60cd892e49539b46df687266b4f6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
@@ -43502,7 +43502,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelReservations.cs",
-      "sha256": "d3725e15520368f8f2dc06227c6daa04f357bdfe5f0f8beca6423eac2badfefe"
+      "sha256": "bbfd01f7f12bc0c7cb6846fe814348ac3ebf7072aca2993851c3a741bac7d4b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionBatch.cs",

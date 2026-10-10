@@ -2806,3 +2806,30 @@ initial asynchronous model readiness, physical Quest behavior or paid-provider
 acceptance. Existing HTTP 402, headset cooling/charge, independent native acoustic
 crash and Store/release gates remain unchanged; no device or release operation
 belongs to this increment.
+
+
+### Queued model admission
+
+`ModelQueueTests` exercises actual native import serialization: all waiting source
+costs count before importer access, overflow refuses immediately, disposing a
+waiter finishes while another native importer remains blocked, one reservation
+identity survives queued/loading/ready, a refused loader can retry, and an inactive
+candidate can be explicitly cancelled without allocating native geometry.
+Existing residency coverage now counts the still-valid following queued request.
+The shared web fact test uses `test-fixtures/browser/modelQueue.json`, captured
+from the native identity test, rather than synthetic phase observations.
+
+The baseline reproduced two behavioral failures against `59f2b593`; the third
+missing-reservation case hit the original NUnit null assertion, which was corrected
+before expanded verification. The initial three checks passed after implementation.
+The expanded native run passed 21 cases with two expected private-file skips and
+clean editor/log gates. Its temporary wrapper nevertheless returned failure because
+it required an unqualified Passed summary; that harness outcome is preserved.
+Complete Unity, headless/book and exact-commit CI results are retained in
+`.quest-evidence/model-queue/verification.json`. Only completed terminal receipts
+count as full acceptance.
+
+This does not establish all-resource transactionality, world streaming, physical
+Quest behavior or paid-provider acceptance. Existing HTTP 402, headset cooling/charge,
+experimental acoustic-map crash and release gates remain unchanged. No install,
+signing, deployment, upload or Store operation belongs to this increment.

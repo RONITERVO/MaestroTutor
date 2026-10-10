@@ -3,6 +3,7 @@
 import {expect,it} from 'vitest';
 import native from '../../../test-fixtures/browser/runtimeDiagnostics.json';
 import reservations from '../../../test-fixtures/browser/modelReservations.json';
+import queue from '../../../test-fixtures/browser/modelQueue.json';
 import images from '../../../test-fixtures/browser/imageReservations.json';
 import audio from '../../../test-fixtures/browser/audioReservations.json';
 import collision from '../../../test-fixtures/browser/collisionResources.json';
@@ -119,4 +120,16 @@ it('preserves actual native collision owners, accepted costs and deferred destru
  expect(validFactValue('runtime.collisionResources',{...collision.budget,sourceTriangles:'unknown'})).toBe(false);
  expect(validFactValue('runtime.collisionResource',{...collision.ready,privatePath:'hidden'})).toBe(false);
  expect(validFactValue('runtime.collisionResource',{...collision.ready,leaseId:123})).toBe(false);
+});
+
+it('keeps one admitted native model identity and cost while waiting, importing and ready',()=>{
+ const id='runtime.modelReservation';
+ for(const [state,value] of Object.entries(queue)){
+  expect(validFactValue(id,value)).toBe(true);
+  expect(value).toEqual({...queue.queued,state});
+ }
+ expect(queue.queued.state).toBe('queued');expect(queue.queued.vertices).toBeGreaterThan(0);
+ expect(queue.queued.worldId).toHaveLength(32);expect(queue.queued.target).toHaveLength(32);
+ expect(behaviourFact(id)?.description).toContain('queued reserves source costs before waiting');
+ expect(behaviourFact(id)?.description).toContain('Disposed queued requests cancel');
 });

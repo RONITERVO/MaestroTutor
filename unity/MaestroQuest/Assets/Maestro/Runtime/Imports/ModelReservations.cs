@@ -9,6 +9,7 @@ namespace Maestro.Quest.Imports
 {
     // Runtime leases, never authored object IDs. A disposed loader keeps its
     // reservation until its outstanding importer has drained and released assets.
+    // A queued loader has no native assets yet and can release immediately.
     internal static class ModelReservations
     {
         internal sealed class Lease:IDisposable
@@ -16,7 +17,7 @@ namespace Maestro.Quest.Imports
             internal readonly string Id=Guid.NewGuid().ToString("N"),Hash;
             internal readonly RoomResourceOwner Owner;
             internal readonly int Vertices,Pixels,Morphs;
-            internal string State="loading";
+            internal string State="queued";
             bool disposed;
             internal Lease(ModelAsset asset,RoomResourceOwner owner)
             {

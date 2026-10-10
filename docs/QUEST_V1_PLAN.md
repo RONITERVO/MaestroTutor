@@ -6472,3 +6472,29 @@ final appearance overrides and selection outlines are not preallocated here.
 Regional streaming, global budgets, cross-region dependencies and the remaining
 provider/headset/release gates remain part of v1. No runtime code execution or
 new provider API is introduced.
+
+
+### Model queue admission and cancellation — 2026-10-10
+
+Imported objects, previews and avatar candidates reserve their existing source
+budgets before waiting for the serialized native importer. A full budget refuses
+immediately; waiting work can no longer remain uncounted. One immutable owner and
+reservation identity persist through queued, loading and ready. The existing
+six-model, vertex, texture and morph limits are unchanged and remain conservative
+source costs, not measured RAM or VRAM.
+
+Explicit disposal cancels a queued wait and releases its admission independently
+of the active import. Once native import has started, an abandoned loader retains
+its retiring reservation until the importer drains. A rejected loader can retry
+after capacity is released; it never releases a semaphore slot it did not acquire.
+Inactive avatar candidates still require explicit disposal by their owner.
+
+The shared diagnostic fact exposes these same states to user and agent tools.
+Native checks cover queue overflow, prompt cancellation, stable ownership, retry,
+and never-active candidates alongside existing import and avatar-replacement tests.
+An actual native queued/loading/ready observation is a shared web-contract fixture.
+
+This closes an admission gap in the existing model loader. It does not make room
+source acceptance wait for a new model's readiness, reserve every presentation
+resource, or implement regional streaming. Those activation/transaction boundaries,
+coordinated regional admission and the existing release gates remain open.
