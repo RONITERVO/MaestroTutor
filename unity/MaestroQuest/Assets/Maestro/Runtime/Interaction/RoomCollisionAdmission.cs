@@ -15,7 +15,9 @@ namespace Maestro.Quest.Interaction
         internal void ConfigureCollisionAdmission(UnityEngine.Object owner,Func<string> admission)
         {
             if(!owner||admission==null)throw new ArgumentException("Collision admission needs a live region owner");
-            if(hasCollisionAuthority&&collisionAuthority!=owner)throw new InvalidOperationException("A physics world already belongs to an authored region");
+            // The persistent shell survives workspace replacement. A disabled owner still
+            // owns it; only a destroyed predecessor permits a fresh region binding.
+            if(hasCollisionAuthority&&collisionAuthority&&collisionAuthority!=owner)throw new InvalidOperationException("A physics world already belongs to an authored region");
             collisionAuthority=owner;collisionAdmission=admission;hasCollisionAuthority=true;RefreshCollisionAdmission();
         }
         internal void RefreshCollisionAdmission()

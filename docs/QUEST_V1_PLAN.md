@@ -6561,6 +6561,10 @@ do not perform this transition themselves. The native lifecycle applies it; fres
 manual or shared Start is still required. Unaccepted previews and prepared imports
 are outside the accepted region roster, so they cannot pause existing activity.
 An already prepared model transfers into that roster without a loading pause.
+The persistent physics shell can accept a fresh region owner only after its
+previous owner has been destroyed. Merely disabling a live editor cannot surrender
+its authority. Workspace replacement remains paused and invalidates earlier Start
+intent; retirement must never leave the shell permanently bound to a dead editor.
 
 This is admission for imported collision in the existing single bounded region.
 It is not an all-resource transaction, general region authoring, spatial streaming,

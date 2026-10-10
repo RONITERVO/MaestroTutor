@@ -2884,6 +2884,16 @@ The first complete run was deliberately stopped for this correction, not accepte
 as completed verification. The final related suite passes 23 cases, including all eight admission scenarios;
 the complete run covers the final source separately.
 
+The next complete run exposed a workspace-lifecycle regression: the persistent
+physics shell rejected a fresh editor after the old workspace owner was destroyed.
+That run was stopped and preserved under `full-workspace-red`; it is not a pass.
+A narrow two-case run reproduced both the authority exception and failed workspace
+replacement (0/2, editor exit 2). Binding now rejects live competing owners,
+including disabled ones, but permits a new owner after destruction. It remains
+paused and rejects prior Start intent. The corrected focused group passed 27 cases,
+including all nine admission scenarios plus workspace replacement, cancellation
+and re-enable paths (editor/wrapper exit 0, diagnostic gates passed).
+
 Local catalog/core/probe checks and 60 shared physics/book-form tests passed.
 Complete native/headless/book and exact-commit CI results are recorded under
 `.quest-evidence/region-admission/verification.json` as they finish. No real-provider

@@ -12,6 +12,23 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class RoomRulesTests
     {
+        [Test] public void RegionAdmissionReplacesDestroyedWorkspaceOwnerWithoutBorrowingItsRunIntent()
+        {
+            var shell=new GameObject("Collision authority shell");
+            try {
+                var first=new GameObject("Previous region");first.transform.SetParent(shell.transform,false);
+                var next=new GameObject("Next region");next.transform.SetParent(shell.transform,false);
+                var world=shell.AddComponent<RoomPhysicsWorld>();world.SetSurfaces(true,"Aligned test scan");
+                world.ConfigureCollisionAdmission(first,()=>null);Assert.IsTrue(world.SetRunning(true,out var error),error);
+                Assert.Throws<System.InvalidOperationException>(()=>world.ConfigureCollisionAdmission(next,()=>null));
+                first.SetActive(false);Assert.Throws<System.InvalidOperationException>(()=>world.ConfigureCollisionAdmission(next,()=>null),"A disabled owner is still live and cannot be displaced");
+                Object.DestroyImmediate(first);world.RefreshCollisionAdmission();Assert.IsFalse(world.SimulationReady);Assert.IsFalse(world.Running);
+                string oldState=(string)world.ObserveSimulation()["stateId"];
+                world.ConfigureCollisionAdmission(next,()=>null);
+                Assert.IsTrue(world.SimulationReady);Assert.IsFalse(world.Running,"Replacing the retired owner must not resume its simulation intent");
+                Assert.IsFalse(world.CanSetSimulation(oldState,true,out error));Assert.IsTrue(world.SetRunning(true,out error),error);
+            }finally{Object.DestroyImmediate(shell);}
+        }
         bool AdmissionCanOccupy(){using var query=new RoomEnvironmentQueries().Begin(physics);return query.CanOccupy(block.transform.position,block,null);}
         [UnityTest] public IEnumerator RegionAdmissionQueuedGeometryStopsPhysicsAndTraversalUntilExplicitRestart()
         {
