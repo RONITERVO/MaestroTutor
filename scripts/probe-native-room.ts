@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {prepareAgentModelGeometry,runAgentModelGeometryProof} from './probe-agent-model-geometry';
+import {probeModelAssetBounds} from './probe-model-asset-bounds';
 import {runAgentWindowProof} from './probe-agent-windows';
 import {prepareAgentGeneratedImage,runAgentGeneratedImageProof} from './probe-agent-generated-image';
 import {prepareAgentImportedImage,runAgentImportedImageProof} from './probe-agent-imported-image';
@@ -230,6 +231,7 @@ try{
   }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
 
  }else{
+  await probeModelAssetBounds(execute,directory);
   const catalog=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.create',version:1}}]);
   const definition=catalog.catalog?.definition as {example?:Record<string,unknown>}|undefined;
   if(!definition?.example)throw new Error('The native create capability has no example.');

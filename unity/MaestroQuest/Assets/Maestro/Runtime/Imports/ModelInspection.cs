@@ -14,12 +14,13 @@ namespace Maestro.Quest.Imports
         public ModelImportException(string message) : base(message) { }
     }
 
-    public sealed class ModelInspection
+    public sealed partial class ModelInspection
     {
         public const int MaximumBytes = 64 * 1024 * 1024;
         public int Vertices, Triangles, TexturePixels, Clips, MorphVertices;
         public bool IsAvatar;
         public string Attribution;
+        public ModelAssetBounds AssetBounds {get;private set;}
 
         // Inspect before asking Unity to allocate meshes, textures or animation curves.
         // This deliberately accepts a documented, self-contained subset of glTF 2.0.
@@ -33,7 +34,7 @@ namespace Maestro.Quest.Imports
             { throw new ModelImportException("This model contains invalid GLB data. Export it again as a self-contained GLB or VRM."); }
         }
 
-        sealed class Inspector
+        sealed partial class Inspector
         {
             readonly byte[] bytes;
             readonly bool motionOnly;
@@ -161,6 +162,7 @@ namespace Maestro.Quest.Imports
                 info.IsAvatar = root["extensions"]?["VRMC_vrm"] != null || root["extensions"]?["VRM"] != null;
                 var meta = root["extensions"]?["VRMC_vrm"]?["meta"] ?? root["extensions"]?["VRM"]?["meta"];
                 info.Attribution = meta?.ToString(Formatting.Indented) ?? (string)root["asset"]?["copyright"] ?? "No author or license information is included in this model.";
+                info.AssetBounds=InspectBounds();
                 return info;
             }
             void CheckAccessor(JToken accessor)

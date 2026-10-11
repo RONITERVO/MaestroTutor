@@ -16,7 +16,7 @@ param(
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
-if($SyntheticModel -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticModel is an explicit offline Book fixture only.'}
+if($SyntheticModel -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SyntheticModel is an explicit offline Headless or Book fixture only.'}
 if($SyntheticImage -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticImage is an explicit offline Book fixture only.'}
 if($SyntheticSound -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticSound is an explicit offline Book fixture only.'}
 if($SyntheticRoomScan -and $ProviderScenario -ne 'LearnerConversation'){throw 'SyntheticRoomScan is an explicit LearnerConversation fixture only.'}

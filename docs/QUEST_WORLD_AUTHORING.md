@@ -740,3 +740,18 @@ again. Unknown is different from empty: the app keeps it as a possible viewing
 dependency. Skinned models and scan-anchored drawings currently report unknown
 visual bounds. A bounding box is not proof that a place is walkable, clear or
 physically supported, and this readout does not enable automatic world streaming.
+
+### Inspecting an imported asset's footprint
+
+The shared catalog's **Imported asset bounds** fact (`object.model.assetBounds`)
+lets the user or agent inspect a validated static model using the same scale and
+pivot calculation as the native import. Values are in object-local metres before
+placement/scale. Changing the saved geometry settings changes the projection at
+the reported object revision, without loading an unloaded model.
+
+The content-hash metadata cache is bounded and populated by ordinary model-library
+reads/saves. A cache miss, animation, skin, deformation or unsupported/unstable
+transform is explicitly unknown. The imported asset envelope excludes authored
+decorations, colliders, root motion and current native availability; it is not a
+complete object envelope or a walkability/collision guarantee. Reading it does not
+start file access, native loading, provider calls or automatic regional streaming.

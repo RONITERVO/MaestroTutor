@@ -597,6 +597,14 @@ try{
   await page.getByRole('heading',{name:'Set imported model geometry',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:join(directory,'book-native-model-geometry.png')});
   await writeFile(join(directory,'book-native-model-geometry.json'),JSON.stringify({boundary:'Original book generated form, current-value prefill, actual native GLB scale/rigid geometry save and readiness readback. Scripted provider elsewhere; no headset claim.',modelFixture,modelGeometry,modelFact},null,2));
+  const modelAssetBounds=await readResourceFact('object.model.assetBounds','Imported asset bounds',{target:modelFixture.target});
+  assert.equal(modelAssetBounds.modelHash,modelFixture.hash);assert.equal(modelAssetBounds.derivationVersion,1);assert.equal(modelAssetBounds.coordinates,'object');
+  assert.equal(modelAssetBounds.inspected,true);assert.equal(modelAssetBounds.known,true);assert.equal(modelAssetBounds.hasBounds,true);
+  const assetMin=modelAssetBounds.min as unknown as {x:number;y:number;z:number},assetMax=modelAssetBounds.max as unknown as {x:number;y:number;z:number};
+  assert.ok(Math.abs(assetMax.x-assetMin.x-6)<.0002);assert.ok(Math.abs(assetMin.y+.1)<.0001);assert.ok(Math.abs(assetMax.y-3)<.0001);
+  await page.getByRole('heading',{name:'Imported asset bounds',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(directory,'book-native-model-asset-bounds.png')});
+  await writeFile(join(directory,'book-native-model-asset-bounds.json'),JSON.stringify({boundary:'Original book generated fact form reads the same validated static asset metadata as agents and programs. Asset-only envelope, not collision readiness or whole-object streaming.',modelFixture,modelAssetBounds},null,2));
   const collisionBudget=await readResourceFact('runtime.collisionResources','Authored collision resources');
   const collisionOwners:Array<Record<string,string|number>>=[];
   for(let index=0;index<Number(collisionBudget.entries);index++)collisionOwners.push(await readResourceFact('runtime.collisionResource','Authored collision owner',{index:String(index)}));

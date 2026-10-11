@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Art;
+using Maestro.Quest.Creation;
 using UniGLTF;
 using UniVRM10;
 using UnityEngine;
@@ -119,14 +120,12 @@ namespace Maestro.Quest.Imports
                 if (instance.Renderers.Count == 0) throw new ModelImportException("This model has no supported visible mesh.");
                 var bounds = instance.Renderers[0].bounds; foreach (var renderer in instance.Renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
                 rawBounds = bounds;
-                float size = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-                if (!float.IsFinite(size) || size < .00001f || size > 10000) throw new ModelImportException("The model has invalid dimensions. Apply transforms and export it again.");
-                float factor = .35f / size;
-                instance.transform.SetParent(transform, false); instance.transform.localScale = Vector3.one * factor;
                 objectRotation = info.IsAvatar ? Quaternion.Euler(0,180,0) : Quaternion.identity;
+                if(!ModelGeometryLayout.TryCreate(bounds,objectRotation,new RoomModelGeometry(),out var layout,out var layoutError))throw new ModelImportException(layoutError);
+                instance.transform.SetParent(transform, false); instance.transform.localScale = Vector3.one * layout.Factor;
                 instance.transform.localRotation = objectRotation;
-                instance.transform.localPosition = -(instance.transform.localRotation * bounds.center) * factor;
-                LocalBounds = new Bounds(Vector3.zero, bounds.size * factor);
+                instance.transform.localPosition = layout.Position;
+                LocalBounds = layout.Bounds;
                 instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();reservation.Mark("ready");
             }
             catch (OperationCanceledException) when (destroyed&&!enteredImporter) { ReleaseBudget(); }

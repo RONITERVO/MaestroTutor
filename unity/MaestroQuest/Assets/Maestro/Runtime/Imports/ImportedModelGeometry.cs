@@ -10,7 +10,7 @@ namespace Maestro.Quest.Imports
     public sealed partial class ImportedModel
     {
         internal const int MaximumCollisionMeshes=32,MaximumCollisionTriangles=50000;
-        internal const float MaximumGeometrySize=12.5f;
+        internal const float MaximumGeometrySize=ModelGeometryLayout.MaximumSize;
         Quaternion objectRotation=Quaternion.identity;
         bool geometryFrozen;
         internal Bounds SourceBounds=>rawBounds;
@@ -18,16 +18,8 @@ namespace Maestro.Quest.Imports
         internal bool CanApplyGeometry(RoomModelGeometry settings,out Bounds bounds,out string error)
         {
             bounds=default;error="Wait for a loaded imported model";if(!Ready)return false;
-            if(settings==null||!settings.Valid){error="Invalid model scale, pivot or collision settings";return false;}
-            float factor=settings.scaleMode=="source"?settings.metresPerUnit:.35f/Mathf.Max(rawBounds.size.x,rawBounds.size.y,rawBounds.size.z);
-            var size=rawBounds.size*factor;
-            if(!RoomRecipe.Finite(size)||Mathf.Max(size.x,size.y,size.z)>MaximumGeometrySize){error="The configured model must fit within 12.5 metres before the object's own scale; use a smaller source scale or split the environment";return false;}
-            // Object orientation stays compatible with the existing GLB/VRM import.
-            var x=objectRotation*(Vector3.right*size.x);var y=objectRotation*(Vector3.up*size.y);var z=objectRotation*(Vector3.forward*size.z);
-            size=new Vector3(Mathf.Abs(x.x)+Mathf.Abs(y.x)+Mathf.Abs(z.x),Mathf.Abs(x.y)+Mathf.Abs(y.y)+Mathf.Abs(z.y),Mathf.Abs(x.z)+Mathf.Abs(y.z)+Mathf.Abs(z.z));
-            var centre=settings.pivot=="source"?objectRotation*rawBounds.center*factor:settings.pivot=="base"?Vector3.up*size.y*.5f:Vector3.zero;
-            if(!RoomRecipe.Finite(centre)||centre.magnitude>MaximumGeometrySize){error="The source pivot is too far from the model; choose center or base";return false;}
-            bounds=new Bounds(centre,size);
+            if(!ModelGeometryLayout.TryCreate(rawBounds,objectRotation,settings,out var layout,out error))return false;
+            bounds=layout.Bounds;
             if(settings.meshCollision&&!CollisionMeshes(out _,out error))return false;
             error=null;return true;
         }
@@ -50,9 +42,9 @@ namespace Maestro.Quest.Imports
         internal bool ApplyGeometry(RoomModelGeometry settings,out string error)
         {
             if(!CanApplyGeometry(settings,out var bounds,out error))return false;
-            Stop();float factor=settings.scaleMode=="source"?settings.metresPerUnit:.35f/Mathf.Max(rawBounds.size.x,rawBounds.size.y,rawBounds.size.z);
-            instance.transform.localRotation=objectRotation;instance.transform.localScale=Vector3.one*factor;
-            instance.transform.localPosition=bounds.center-objectRotation*rawBounds.center*factor;
+            if(!ModelGeometryLayout.TryCreate(rawBounds,objectRotation,settings,out var layout,out error))return false;
+            Stop();instance.transform.localRotation=objectRotation;instance.transform.localScale=Vector3.one*layout.Factor;
+            instance.transform.localPosition=layout.Position;
             LocalBounds=bounds;geometryFrozen=settings.meshCollision;return true;
         }
     }

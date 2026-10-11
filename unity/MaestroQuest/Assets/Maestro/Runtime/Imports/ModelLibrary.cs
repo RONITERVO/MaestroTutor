@@ -19,7 +19,7 @@ namespace Maestro.Quest.Imports
     }
 
     /// <summary>Content-addressed private copies; room/undo records never hold external paths.</summary>
-    public sealed class ModelLibrary
+    public sealed partial class ModelLibrary
     {
         readonly string directory;
         readonly BundledAvatar included;
@@ -46,6 +46,11 @@ namespace Maestro.Quest.Imports
             });
         }
         ModelAsset ReadLocal(string hash)
+        {
+            try {var value=ReadLocalCore(hash);RememberBounds(value);return value;}
+            catch {ForgetBounds(hash);throw;}
+        }
+        ModelAsset ReadLocalCore(string hash)
         {
             if (!ValidHash(hash)) throw new ModelImportException("This room has an invalid model reference.");
             string path = Path.Combine(directory, hash + ".glb");
@@ -80,6 +85,7 @@ namespace Maestro.Quest.Imports
             // Original metadata remains in the GLB; the sidecar also preserves package attribution.
             string attribution=check.Inspection.Attribution+(included?.Hash==check.Hash?"\n\n"+included.Attribution:"");
             File.WriteAllText(Path.Combine(directory, check.Hash + ".txt"), check.Name + "\nSHA256: " + check.Hash + "\n\n" + attribution, Encoding.UTF8);
+            RememberBounds(check);
         }
         public sealed class Entry { public string Hash,Name;public long Bytes; }
         // Metadata discovery only. Selection re-reads, hashes and loads the chosen

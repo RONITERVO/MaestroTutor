@@ -35748,6 +35748,60 @@
       ]
     },
     {
+      "id": "object.model.assetBounds",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "modelHash": "text",
+          "derivationVersion": "number",
+          "coordinates": "text",
+          "inspected": "boolean",
+          "known": "boolean",
+          "hasBounds": "boolean",
+          "min": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "max": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "reason": "text"
+        }
+      },
+      "label": "Imported asset bounds",
+      "description": "Read the validated static GLB asset envelope with the object's saved scale/pivot settings, in object-local metres before root placement/scale. Null for non-model objects. Values are derived from actual dense POSITION vertices, selected scene and supported TRS transforms; exporter min/max is not trusted. Existing library reads/saves populate a bounded content-hash cache. inspected=false means no cached inspection; known=false is never empty, while known=true with hasBounds=false means no mesh in the selected scene. Animated, skinned, VRM, deformable and matrix/extended-node geometry remain unknown. Reading never opens files, loads models, changes the room or acquires ownership. This is asset geometry only, with a small numerical margin: it excludes authored decorations, selection outlines, colliders, future motion and root pose. It does not prove current file availability, native presence, collision/navigation readiness, whole-object spatial bounds or automatic streaming. Geometry settings are read fresh at the reported revision.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "object.placement",
       "version": 1,
       "type": {
@@ -44141,23 +44195,39 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "fbe7bc060cce6fbbf894a7e90c59347e4634d6e059e2249db03318fb61e3d2a8"
+      "sha256": "a53c93d347dfc32baef8ea048ede01ec0a6f1e54e015515b7109cdac72fb0f64"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
-      "sha256": "c3f55794d135c08b479eb3bf5d455a33feb946340757c2b2ae284a5b0aa01fb3"
+      "sha256": "d933d53bca7e57494f93031a856d987f9b1ed173dd7fd3e55c77fbd07148dc38"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LocalMotionBatchSource.cs",
       "sha256": "9ce4f3221e9e1aae72cbe441b04577c33f7702eb8f5aad8d0e0f7f5fd5b7a304"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelAssetBounds.cs",
+      "sha256": "5382851791df5c8cf8d2bc0c52d294b75e413955a691f7fd34ea21688214cc56"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelGeometryLayout.cs",
+      "sha256": "8a1b364d0cbfe3e00842534c83967fa456ed6b3949978cb81cde0a3dfd9e251f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelInspection.cs",
-      "sha256": "86bb6b9486e8c216e69b8d6e248ae1d31dd1fb2dc8315a0d897fc638d3e4f60c"
+      "sha256": "a80b2c9d7ad5aba32d3f02c07e648f62ec7dabef72be54abf8733218032a479b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelInspectionBounds.cs",
+      "sha256": "32c900a3eff9cc3d86f4b43cb12bb2fa100591a071abf36306e8a7ecafecac98"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibrary.cs",
-      "sha256": "b000d19ac7e2961e6ea2c5b3fb2fec2911a4c6ff11b2012e383fb41e15cb3765"
+      "sha256": "d215a3855de4857ecbe7603da66ac2a4ff385fdaa8d09970398caf5b3a02527a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelLibraryBounds.cs",
+      "sha256": "43afb79804d82518db577ab2f6b8f2c328c0c8e13fb9d7c550b1fcec472ecb19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ModelReservations.cs",
@@ -44573,7 +44643,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "88a757fa1b07cff2501c22d2d4b56405a17a43e53f1c04d674d1fbef82cdae87"
+      "sha256": "673fd7e7d5661829445bf1039c6bc6edd0fce0dfd7b3d3474db465e31ef9dc65"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -44594,6 +44664,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/LegacyCapabilityAdapters.cs",
       "sha256": "f5e46d1a74dbc76d0bf10636ad0a0574b95a98c09f50b1daae1ec055c92601ce"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ModelAssetBoundsFact.cs",
+      "sha256": "9eb98d12001cbdb84e67b18d6356036610e18fc1794e626b30c5472185967374"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",

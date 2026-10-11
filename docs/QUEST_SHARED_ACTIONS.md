@@ -415,3 +415,21 @@ bounds cannot exclude a candidate spatially; known source layers and empty camer
 masks still apply.
 These reads do not instantiate or authorize retirement. Automatic streaming,
 future-motion coverage and cold-start asset envelopes remain unimplemented.
+
+### Imported asset bounds
+
+`object.model.assetBounds` v1 reads versioned, content-hash-derived metadata for an
+imported object using its current saved geometry settings and revision. It returns
+object-local min/max before root placement/scale, plus `inspected`, `known`,
+`hasBounds` and an explanatory `reason`. `inspected=false` is a cache miss and
+never starts I/O. `known=false` is not empty space. Static dense GLB geometry is
+derived from actual vertices and selected-scene TRS; animated/deformed, matrix or
+extended transforms and precision-range exceptions stay unknown. Library reads
+and saves populate the bounded cache. No loading, saved edit or ownership occurs
+when a user, program or agent reads the fact.
+
+This describes only imported asset geometry, with a numerical margin. It excludes
+selection/decorations, collision, future motion and native readiness. Continue
+using `object.spatialBounds` for sampled/retained whole-object candidates and the
+existing readiness/collision facts before acting. Metadata is not proof that an
+asset file remains available and does not enable automatic streaming.

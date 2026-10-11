@@ -6886,3 +6886,36 @@ cache is not a persistent cold-start asset index. Predictive demand, hysteresis,
 verified animated envelopes, indirect shadow/reflection footprints, regional
 physics/navigation/water admission and scalable quotas are still required before
 automatic streaming. Headset, provider and release acceptance remain outstanding.
+
+### Validated static import envelopes before native allocation (2026-10-11)
+
+The import inspector now derives a versioned static asset envelope from validated
+dense POSITION bytes and the selected glTF scene. It follows reachable mesh
+instances and the installed UniGLTF Z-axis conversion, including nested TRS,
+rotations, negative/nonuniform scale and interleaved accessors. Exporter min/max
+hints are not trusted. Animated, skinned, VRM, morph, matrix/extended-node and
+out-of-range transforms explicitly remain unknown; an empty selected scene is
+separate from unknown. Inspection allocates no Unity model, mesh or texture.
+
+Native import and metadata projection share one scale/pivot layout calculation.
+The existing model library owns a bounded 32-entry, content-hash metadata cache
+populated only after verified reads or successful saves. It stores immutable
+values, never another authored document or native resource. Failed asset reads
+invalidate their cache entry. Cache reads do not touch disk, copy bundled assets,
+reserve native capacity or start work; cached content does not prove that its
+backing file still exists. A fresh library can derive these values through its
+ordinary validated byte-read path without instantiating a model.
+
+Users, programs and the agent share `object.model.assetBounds`: the current saved
+model settings projected into object-local metres, with inspection/known/empty
+states and a derivation version. This covers the imported asset only, with a small
+float margin. It deliberately does not replace `object.spatialBounds`, which also
+covers object-owned decorations, nor claim collision, navigation or motion
+readiness. The original book fact form and native headless journey exercise the
+same endpoint using an original synthetic building.
+
+Remaining work includes owned cold-start indexing/scheduling, canonical envelopes
+for other geometry and decorations, verified deformation envelopes, predictive
+observation/hysteresis, regional collision/navigation/water and audibility demand.
+Automatic streaming remains disabled. No provider, headset or release acceptance
+is implied by this source increment.
