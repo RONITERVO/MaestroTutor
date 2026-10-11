@@ -16,8 +16,9 @@ namespace Maestro.Quest.Creation {
         string viewData;
         float nextViewCapture,viewExpires;
         bool capturingView;
+        int viewGeneration;
         internal JObject ViewCaptureMetadata=>viewMetadata!=null&&Time.unscaledTime<viewExpires?(JObject)viewMetadata.DeepClone():null;
-        internal void ClearViewCapture(){viewMetadata=null;viewData=null;}
+        internal void ClearViewCapture(){viewGeneration++;viewMetadata=null;viewData=null;}
         internal JObject ViewCapturePayload(string session,string acknowledged){
             var metadata=ViewCaptureMetadata;if(metadata==null||(string)metadata["captureId"]==acknowledged)return null;
             return new JObject{["version"]=1,["revision"]=1,["session"]=session,["capture"]=metadata,["data"]=viewData};
@@ -32,12 +33,34 @@ namespace Maestro.Quest.Creation {
         }
         internal bool CaptureView(out JObject result,out string error){
             result=null;if(!CaptureCameraView(out var image,out error))return false;
-            viewData=(string)image["data"];viewMetadata=(JObject)image["capture"];viewExpires=Time.unscaledTime+120;result=(JObject)viewMetadata.DeepClone();return true;
+            result=PublishViewCapture(image);return true;
         }
         internal bool CaptureCameraView(out JObject result,out string error){
             result=null;if(!CanCaptureView(out error))return false;
             capturingView=true;nextViewCapture=Time.unscaledTime+1;
-            GameObject cameraObject=null;RenderTexture target=null;Texture2D pixels=null;var previous=RenderTexture.active;
+            Camera camera=null;
+            try{
+                camera=CreateViewCamera();
+                using var observation=ObserveNativeCamera(camera,sourceLayers:-1);
+                if(MissingViewEntities(camera).Length>0||ViewModelsLoading(camera)){
+                    error="The virtual room view is still loading; use an owned capture request";return false;
+                }
+                return RenderCameraView(camera,out result,out error);
+            }catch(InvalidOperationException ex){error=ex.Message;return false;}
+            finally{if(camera)Destroy(camera.gameObject);capturingView=false;}
+        }
+        internal JObject PublishViewCapture(JObject image){
+            viewData=(string)image["data"];viewMetadata=(JObject)image["capture"];viewExpires=Time.unscaledTime+120;return (JObject)viewMetadata.DeepClone();
+        }
+        Camera CreateViewCamera(){
+            var camera=new GameObject("Virtual room snapshot",typeof(Camera)).GetComponent<Camera>();camera.enabled=false;
+            camera.transform.SetPositionAndRotation(Viewer.position,Viewer.rotation);camera.stereoTargetEye=StereoTargetEyeMask.None;
+            camera.cullingMask=1<<CaptureLayer;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.91f,.93f,.94f,1);
+            camera.nearClipPlane=.03f;camera.farClipPlane=30;camera.fieldOfView=60;camera.aspect=(float)ViewWidth/ViewHeight;camera.allowHDR=false;camera.allowMSAA=false;camera.useOcclusionCulling=false;
+            return camera;
+        }
+        bool RenderCameraView(Camera camera,out JObject result,out string error){
+            result=null;error=null;nextViewCapture=Time.unscaledTime+1;RenderTexture target=null;Texture2D pixels=null;var previous=RenderTexture.active;
             var changed=new Dictionary<GameObject,int>();
             try{
                 var book=Find("book");var selected=new HashSet<Renderer>();
@@ -55,11 +78,6 @@ namespace Maestro.Quest.Creation {
                     if(renderer.TryGetComponent<Imports.ImportedSkinBounds>(out var skin))skin.RefreshRendererBounds();
                     if(!changed.ContainsKey(renderer.gameObject)){changed.Add(renderer.gameObject,renderer.gameObject.layer);renderer.gameObject.layer=CaptureLayer;}
                 }
-                cameraObject=new GameObject("Virtual room snapshot",typeof(Camera));var camera=cameraObject.GetComponent<Camera>();camera.enabled=false;
-                camera.transform.SetPositionAndRotation(Viewer.position,Viewer.rotation);camera.stereoTargetEye=StereoTargetEyeMask.None;
-                camera.cullingMask=1<<CaptureLayer;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.91f,.93f,.94f,1);
-                camera.nearClipPlane=.03f;camera.farClipPlane=30;camera.fieldOfView=60;camera.aspect=(float)ViewWidth/ViewHeight;camera.allowHDR=false;camera.allowMSAA=false;camera.useOcclusionCulling=false;
-                using var observation=ObserveNativeCamera(camera,sourceLayers:-1);
                 target=RenderTexture.GetTemporary(ViewWidth,ViewHeight,24,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB);camera.targetTexture=target;using(new Maestro.Quest.Interaction.RoomDepthOcclusion.VirtualCapture())camera.Render();
                 RenderTexture.active=target;pixels=new Texture2D(ViewWidth,ViewHeight,TextureFormat.RGB24,false);pixels.ReadPixels(new Rect(0,0,ViewWidth,ViewHeight),0,0);pixels.Apply();
                 byte[] bytes=null;foreach(int quality in new[]{75,50,30}){bytes=pixels.EncodeToJPG(quality);if(bytes.Length<=ViewByteLimit)break;}
@@ -73,8 +91,8 @@ namespace Maestro.Quest.Creation {
                 result=new JObject{["capture"]=metadata,["data"]=Convert.ToBase64String(bytes)};return true;
             }catch(Exception ex) when(ex is InvalidOperationException||ex is ArgumentException||ex is UnityException){error="Virtual room snapshot failed: "+ex.Message;return false;}
             finally{
-                RenderTexture.active=previous;if(cameraObject){cameraObject.GetComponent<Camera>().targetTexture=null;Destroy(cameraObject);}if(target)RenderTexture.ReleaseTemporary(target);if(pixels)Destroy(pixels);
-                foreach(var pair in changed)if(pair.Key)pair.Key.layer=pair.Value;capturingView=false;
+                RenderTexture.active=previous;if(camera)camera.targetTexture=null;if(target)RenderTexture.ReleaseTemporary(target);if(pixels)Destroy(pixels);
+                foreach(var pair in changed)if(pair.Key)pair.Key.layer=pair.Value;
             }
         }
     }

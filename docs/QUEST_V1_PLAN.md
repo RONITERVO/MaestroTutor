@@ -7241,3 +7241,34 @@ passed. The generated catalog changes only source fingerprints and the existing
 acoustic diagnostic description. The earlier intermittent native-audio crash
 remains unresolved; this successful run does not establish its cause or a fix.
 No headset, paid-provider, signing, deployment or upload was performed.
+
+
+### Prepared virtual camera views
+
+The agent snapshot capability and the book's virtual-only camera share one
+cancellable capture request. Its camera observation remains owned while relevant
+saved geometry loads through the existing native display/action preparation lane.
+Unknown geometry is included conservatively; a known independent area outside
+the camera does not load solely for this request. Missing scan anchors retain the
+same hidden-ink behavior as the ordinary viewer. Capture does not enable physics,
+change authored placement, or create Undo entries.
+
+The capture updates its viewer pose while waiting, checks again after native
+publication, and renders only after relevant native objects and model loads are
+ready. The delivered image metadata identifies the actual render pose and scene
+revision. A room edit, workspace/session change, Stop, focus loss, disable, expired
+book source lease, or 120-second deadline invalidates pending work. Failure never
+publishes a successful image of an incomplete room. The previous agent snapshot
+survives an ordinary capture failure; session/lifecycle changes clear it. Camera
+stream frames remain separate from durable agent snapshot receipts.
+
+`room.view.capture` now declares completion duration through the shared catalog,
+with the same arguments and image metadata. Resident scenes still complete
+immediately. Physical sensor capture and mixed-view screen sharing retain their
+existing source owners and permissions; mixed-view capture observes the actual
+headset display and is not a second synthetic render.
+
+This closes synthetic camera admission for dormant geometry. It does not enable
+automatic unloading, enlarge the world limits, guarantee texture availability,
+or establish headset performance. Audio residency and regional simulation remain
+separate prerequisites for larger worlds.

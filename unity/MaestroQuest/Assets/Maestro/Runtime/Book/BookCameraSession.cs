@@ -30,17 +30,19 @@ namespace Maestro.Quest.Book {
         double seen=double.NegativeInfinity,frameAt;
         JObject frame;
         RoomEditor owner;
+        VirtualRoomCapture pending;
+        double receivedAt;
         bool started;
         internal BookCameraSession(Func<RoomEditor> read,params IBookCameraFeed[] devices){this.read=read;this.devices=devices??Array.Empty<IBookCameraFeed>();}
         static bool Token(string value)=>value!=null&&Regex.IsMatch(value,"\\A[a-f0-9]{32}\\z");
-        void Release(){foreach(var device in devices)device?.Stop();started=false;frame=null;owner=null;}
+        void Release(){pending?.Dispose();pending=null;foreach(var device in devices)device?.Stop();started=false;frame=null;owner=null;}
         internal void Receive(BookCameraRequest value,double now){
             if(value==null||!Token(value.session)||value.pulse<1||value.requestId==null||value.acknowledged==null||
                 (value.requestId.Length>0&&(!Token(value.requestId)||(value.sourceId!=VirtualSource&&Device(value.sourceId)==null)))||
                 (value.acknowledged.Length>0&&!Token(value.acknowledged))){Suspend();return;}
             if(session!=value.session){Suspend();session=value.session;pulse=0;blockedId="";}
             if(value.pulse<=pulse)return;
-            pulse=value.pulse;seen=now;
+            pulse=value.pulse;seen=now;receivedAt=UnityEngine.Time.realtimeSinceStartupAsDouble;
             if(requestId!=value.requestId){Release();error=null;requestId=value.requestId;sourceId=value.sourceId;}
             else if(requestId.Length>0&&sourceId!=value.sourceId){Suspend();return;}
             if(frame!=null&&(string)frame["capture"]["captureId"]==value.acknowledged)frame=null;
@@ -67,9 +69,17 @@ namespace Maestro.Quest.Book {
                     if(frame!=null&&now-frameAt>2)frame=null;
                     if(frame==null){
                         if(physical){if(device.Frame(out frame,out var captureError))frameAt=now;else if(captureError!=null){error=captureError;failed=true;}}
-                        else if(editor.CanCaptureView(out _)){
-                            if(editor.CaptureCameraView(out frame,out _)){frame["sourceId"]=VirtualSource;frameAt=now;}
-                            else failed=true;
+                        else {
+                            if(pending==null&&editor.CanCaptureView(out _)){
+                                var request=requestId;var context=session;
+                                pending=editor.BeginViewCapture(out error,()=>owner==editor&&requestId==request&&session==context&&UnityEngine.Time.realtimeSinceStartupAsDouble-receivedAt<=2);
+                                if(pending==null)failed=true;
+                            }
+                            if(pending?.Done==true){
+                                if(pending.Read(out frame,out error)){frame["sourceId"]=VirtualSource;frameAt=now;}
+                                else failed=true;
+                                pending.Dispose();pending=null;
+                            }
                         }
                     }
                 }

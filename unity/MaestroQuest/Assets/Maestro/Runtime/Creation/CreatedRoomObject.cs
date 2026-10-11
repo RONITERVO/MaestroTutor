@@ -29,6 +29,8 @@ namespace Maestro.Quest.Creation
         bool pendingCollider;
         public ImportedModel Model { get; private set; }
         public string ModelStatus { get; private set; }
+        bool modelLoading;
+        internal bool ModelLoading=>modelLoading;
         RoomItem acousticItem;
         RigidRoomItem acousticBody;
         // Mobility is an acoustic input, independently of whether physics or
@@ -145,7 +147,7 @@ namespace Maestro.Quest.Creation
 
         async void LoadModel(string hash, ModelLibrary library, Collider collider)
         {
-            ModelStatus = "Loading local model…";
+            modelLoading=true;ModelStatus = "Loading local model…";
             try
             {
                 var asset = await library.ReadAsync(hash); if (!this) return;
@@ -157,6 +159,7 @@ namespace Maestro.Quest.Creation
                 ApplyModelGeometry(requestedModelGeometry);
             }
             catch (System.Exception error) { if (this) {ModelStatus = ModelGeometryIssue = error is ModelImportException ? error.Message : "This model could not be loaded. Import a compatible GLB or VRM again.";modelGeometryReady=false;SetCollisionShape(collisionShape,true);GetComponentInParent<RoomEditor>()?.RefreshRegionCollision();} }
+            finally{if(this)modelLoading=false;}
         }
         public void ApplyColor(Color color) { tint = color; GetComponent<HeightFieldView>()?.Tint(color); if(recipe) recipe.Tint(color); if (pigment) pigment.color = color; if (drawing) drawing.SetColor(color); if (Model && Model.Ready) Model.Instance.GetComponent<PencilModelStyle>()?.Tint(color); }
         public void SetSelection(bool primary,bool member){primarySelected=primary;constructionSelected=member;SetSelected(primary||member);}

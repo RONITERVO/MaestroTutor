@@ -4551,7 +4551,7 @@
           "roomViewCapture.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
@@ -4559,7 +4559,7 @@
         "viewer.available",
         "workspace.available"
       ],
-      "description": "Capture a single 512×384 virtual-only image from the current viewer pose, with a 60 degree vertical field of view. Includes Maestro and user-created room objects with their current appearance and pose. Excludes the book, private page/chat content, tool trays, scanned geometry and real camera/passthrough imagery. Neutral background; this is not a complete headset screenshot or proof of visibility against real walls. Pixels are separate from the metadata result and recurring room observations. The user and the delegated task can inspect the same exact hash-identified image. Capture does not move anything, save the room, create an object, or upload an image by itself. At most once per second; the native image expires after two minutes or session/lifecycle change. A retained receipt does not recreate an expired image. Desktop capture does not prove headset performance.",
+      "description": "Capture a single 512×384 virtual-only image from the current viewer pose, with a 60 degree vertical field of view. Prepares relevant saved objects through the shared native loading budget before rendering, for up to 120 seconds. The pose is refreshed while loading; metadata records the actual capture pose. Stop, room edits, session changes and loss of focus interrupt preparation. A loading failure returns no new image. Includes Maestro and user-created room objects with their current appearance and pose. Excludes the book, private page/chat content, tool trays, scanned geometry and real camera/passthrough imagery. Neutral background; this is not a complete headset screenshot or proof of visibility against real walls. Pixels are separate from the metadata result and recurring room observations. The user and the delegated task can inspect the same exact hash-identified image. Capture does not move anything, save the room, create an object, or upload an image by itself. At most once per second; the native image expires after two minutes or session/lifecycle change. A retained receipt does not recreate an expired image. Desktop capture does not prove headset performance.",
       "example": {},
       "output": {
         "type": "object",
@@ -42996,7 +42996,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCameraSession.cs",
-      "sha256": "6292811fcab39c99e661ea8c866013d8927867de277a83d86cf28662a72fe22a"
+      "sha256": "3fa465b78a4adf90f112289aaae5f93e92dfeeb0c0fd16c3764956b623b14f80"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.Diagnostics.cs",
@@ -43456,7 +43456,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomViewCapability.cs",
-      "sha256": "0339a050811b571fb76d0b4f4c741497642007fb3d92f5f6f36f7beae2a1335f"
+      "sha256": "04ae10c445b8e3cf604a9c57020aedc897ba33e02aade29a2ef609cfd9428167"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",
@@ -43676,7 +43676,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "d7dc4b05bffcba69c30534195eca4e897ef3d2d01232543e2e863f6ade53e176"
+      "sha256": "a58761193cc99a11cc00cd137473890f81ad9117d565d43d4a5e4e93d9cfe043"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -44164,7 +44164,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
-      "sha256": "aaf6338120e357e5324fa71b49d400a3e65309c0e9aa7de79891004905fed35f"
+      "sha256": "7ddbc08dc6b66be6707b60b7d4f0ac4d04456f44972818e9c58173bb325cc7ad"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewPreparation.cs",
+      "sha256": "95f20dfd96176cda3079eadc7380cb3eb9948f74bb7af7ff007a541a74ca06bf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewerDemand.cs",
@@ -44265,6 +44269,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
       "sha256": "3483d164a42b61c234a5d570c927839c2cbccb91e4e266aaf50c45e4e114b9db"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VirtualRoomCapture.cs",
+      "sha256": "ff2c02ac55ea6852194d5c69800308d7b28ca0d90c038bfbdc82e4d99cb55871"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WeatherCover.cs",
