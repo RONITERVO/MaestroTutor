@@ -11,8 +11,9 @@ namespace Maestro.Quest.Imports
         public bool HasBounds {get;}
         public Bounds SourceBounds {get;}
         public string Reason {get;}
-        internal ModelAssetBounds(bool known,bool hasBounds,Bounds bounds,string reason)
-        {Known=known;HasBounds=hasBounds;SourceBounds=bounds;Reason=reason;}
+        internal float Margin {get;}
+        internal ModelAssetBounds(bool known,bool hasBounds,Bounds bounds,string reason,float margin=0)
+        {Known=known;HasBounds=hasBounds;SourceBounds=bounds;Reason=reason;Margin=margin;}
         internal static ModelAssetBounds Unknown(string reason)=>new(false,false,default,reason);
     }
 }

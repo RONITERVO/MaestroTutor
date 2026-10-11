@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation
         Task<ModelAssetBounds> reading;string readingHash;bool ended;
         internal int Count=>entries.Count;
         internal bool Pending=>!ended&&(pending.Count>0||reading!=null);
-        internal RoomSpatialIndex(ModelLibrary library):this(library.PrepareBoundsAsync,hash=>library.TryReadBounds(hash,out var value)?value:null){}
+        internal RoomSpatialIndex(ModelLibrary library):this(library.PrepareRestBoundsAsync,hash=>library.TryReadBounds(hash,out var value,true)?value:null){}
         internal RoomSpatialIndex(Func<string,CancellationToken,Task<ModelAssetBounds>> inspect,Func<string,ModelAssetBounds?> cached=null)
         {this.inspect=inspect??throw new ArgumentNullException(nameof(inspect));this.cached=cached??(_=>null);}
         internal void Synchronize(RoomDocument document)

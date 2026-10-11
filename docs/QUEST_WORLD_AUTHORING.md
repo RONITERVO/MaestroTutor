@@ -821,3 +821,12 @@ recreate hidden ink. Returning to the exact anchor can make the drawing appear
 again through normal display loading. Rebinding remains an explicit user/agent
 edit. These bounds do not verify physical alignment or start room scanning or
 physics; they share the existing saved objects, catalog and Undo history.
+
+
+### Imported resting shapes
+
+An imported GLB can have a different default shape from its raw mesh, because of its skeleton or default morph weights. Maestro uses the verified resting shape for supported GLB fitting and source pivots, applies node morph overrides ahead of mesh defaults, and restores those defaults when animation stops.
+
+The shared `object.model.restBounds` fact reports that default shape in object-local metres with the saved model scale and pivot. Reading it does not load the model or edit the world. The original `object.model.assetBounds` fact still describes static supported geometry; neither fact promises the space occupied by every future animation. Current native geometry remains available through the spatial-bounds fact. Unknown bounds are not empty space. Unsupported import math and VRM-specific deformation remain unknown in the cold resting fact. Animated or otherwise actively used objects continue to be retained independently of their resting bounds.
+
+When a file needs the native fallback importer, fitting measures its loaded resting geometry once. Default deformations still affect its size and placement even when the cold resting fact cannot prove them. This does not turn an unknown fact into a known value or start an animation.

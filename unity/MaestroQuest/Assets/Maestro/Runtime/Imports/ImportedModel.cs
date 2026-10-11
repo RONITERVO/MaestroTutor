@@ -110,6 +110,7 @@ namespace Maestro.Quest.Imports
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }
                 animationPlayer = instance.GetComponent<Animation>();
                 if (animationPlayer) { animationPlayer.playAutomatically = false; animationPlayer.cullingType = AnimationCullingType.AlwaysAnimate; animationPlayer.Stop(); }
+                info.RestDefaults?.Apply(instance);
                 foreach (var skin in instance.SkinnedMeshRenderers) {
                     // These imported meshes retain four source weights per vertex, even
                     // when Android's global quality profile would use only two.
@@ -118,7 +119,11 @@ namespace Maestro.Quest.Imports
                 }
                 foreach (var animator in instance.GetComponentsInChildren<Animator>()) animator.enabled = false;
                 if (instance.Renderers.Count == 0) throw new ModelImportException("This model has no supported visible mesh.");
-                var bounds = instance.Renderers[0].bounds; foreach (var renderer in instance.Renderers.Skip(1)) bounds.Encapsulate(renderer.bounds);
+                // Validated cold geometry and native fitting use the same rest
+                // envelope; unsupported cold math is measured once on the loaded
+                // instance, including its applied default skin/morph deformation.
+                var bounds = info.RestBounds.Known&&info.RestBounds.HasBounds
+                    ? info.RestBounds.SourceBounds : MeasureNativeRestBounds(instance);
                 rawBounds = bounds;
                 objectRotation = info.IsAvatar ? Quaternion.Euler(0,180,0) : Quaternion.identity;
                 if(!ModelGeometryLayout.TryCreate(bounds,objectRotation,new RoomModelGeometry(),out var layout,out var layoutError))throw new ModelImportException(layoutError);
@@ -137,6 +142,31 @@ namespace Maestro.Quest.Imports
                 if(destroyed||!this)ReleaseBudget();
                 if(enteredImporter)loadQueue.Release();
             }
+        }
+        static Bounds MeasureNativeRestBounds(RuntimeGltfInstance model)
+        {
+            // Import-only fallback. Do not turn native allocation into a passive
+            // metadata read or retain a baked mesh as another source of truth.
+            var vertices=new List<Vector3>();var bounds=new Bounds();bool found=false;Mesh baked=null;
+            try {
+                var inverse=model.transform.worldToLocalMatrix;
+                foreach(var renderer in model.Renderers){
+                    Mesh mesh;
+                    if(renderer is SkinnedMeshRenderer skin){
+                        baked ??= new Mesh { name="Maestro temporary import bounds" };
+                        skin.BakeMesh(baked,true);mesh=baked;
+                    } else mesh=renderer.GetComponent<MeshFilter>()?.sharedMesh;
+                    if(!mesh)continue;
+                    mesh.GetVertices(vertices);var frame=inverse*renderer.transform.localToWorldMatrix;
+                    foreach(var vertex in vertices){
+                        var point=frame.MultiplyPoint3x4(vertex);
+                        if(!RoomRecipe.Finite(point))throw new ModelImportException("This model has invalid resting geometry.");
+                        if(found)bounds.Encapsulate(point);else {bounds=new Bounds(point,Vector3.zero);found=true;}
+                    }
+                }
+                if(!found)throw new ModelImportException("This model has no supported visible mesh.");
+                return bounds;
+            } finally { ArtResources.Release(baked); }
         }
         public void FitAsMaestro(float height = 1.7f)
         {

@@ -53,9 +53,12 @@ namespace Maestro.Quest.Creation
                     }
                     break;
                 case RoomObjectKind.ImportedModel:
+                    // Cold/reloaded imports start at the verified rest definition.
+                    // Playing animation and pose ownership separately retain natives.
                     if(!asset.HasValue||!asset.Value.Known||!asset.Value.HasBounds||
                        !ModelGeometryLayout.TryCreate(asset.Value.SourceBounds,Quaternion.identity,data.modelGeometry,out var layout,out _))return RoomSpatialBounds.Unknown;
-                    root.Include(ref visual,layout.Bounds);break;
+                    var imported=layout.Bounds;imported.Expand(asset.Value.Margin*layout.Factor*2);
+                    root.Include(ref visual,imported);break;
                 default:return RoomSpatialBounds.Unknown;
             }
             if(!visual.Known||!visual.HasBounds)return RoomSpatialBounds.Unknown;

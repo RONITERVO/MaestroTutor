@@ -7110,3 +7110,12 @@ all physical-world dependencies. Cold-start animated-model bounds, indirect
 shadow/reflection and audibility demand, regional ground/water/navigation/swept
 physics, automatic retirement and larger-world budgets remain unfinished.
 Physical alignment and Quest performance still require separate device evidence.
+
+
+### Imported GLB resting geometry — 2026-10-11
+
+Cold spatial preparation now has an explicit resting-shape contract. It uses selected-scene dense vertices, supported TRS, four normalized skin influences, inverse binds (or the installed importer's absent-bind fallback), and node-over-mesh default morph weights. The ordinary GLB importer applies those defaults before remembering its reset state and uses the same validated source envelope for fitting, source scale and pivot. Unsupported math, VRM constraints, joint dependencies outside the selected scene and shared skin bindposes stay unknown; the normal importer remains available where the envelope cannot be proven. In that fallback path, import measures the actual loaded rest vertices once, including skinning and default morphs, before fitting. The temporary baked mesh is released and the cold metadata remains unknown; no passive fact can trigger this native work.
+
+The existing static `object.model.assetBounds` contract is preserved. `object.model.restBounds` exposes the distinct resting envelope through the same generated catalog, exact content-hash cache and passive fact path. The room-owned spatial index prepares this metadata through its existing bounded worker slot. Authored/dormant geometry includes the verified rest shape plus normal authored additions. It does not claim a currently animated pose or bound every future imported clip, library motion or user pose. Active animation, ownership, audio, observation and collision dependencies continue to retain native entities independently.
+
+This increment also fixes missing GLB default morph weights on initial load and Stop. Native geometry comparisons must cover mixed and quantized influences, inverse binds, default morph overrides, fitting/pivots, selected-scene behavior and native retirement/reactivation. Automatic unloading and selective startup remain disabled until the remaining motion, indirect visibility, audibility and regional collision/navigation dependencies are proven. No device/provider/release acceptance follows from desktop results.

@@ -21,6 +21,8 @@ namespace Maestro.Quest.Imports
         public bool IsAvatar;
         public string Attribution;
         public ModelAssetBounds AssetBounds {get;private set;}
+        public ModelAssetBounds RestBounds {get;private set;}
+        internal ModelRestDefaults RestDefaults {get;private set;}
 
         // Inspect before asking Unity to allocate meshes, textures or animation curves.
         // This deliberately accepts a documented, self-contained subset of glTF 2.0.
@@ -163,6 +165,7 @@ namespace Maestro.Quest.Imports
                 var meta = root["extensions"]?["VRMC_vrm"]?["meta"] ?? root["extensions"]?["VRM"]?["meta"];
                 info.Attribution = meta?.ToString(Formatting.Indented) ?? (string)root["asset"]?["copyright"] ?? "No author or license information is included in this model.";
                 info.AssetBounds=InspectBounds();
+                info.RestBounds=InspectRestBounds();
                 return info;
             }
             void CheckAccessor(JToken accessor)
