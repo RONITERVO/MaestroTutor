@@ -259,6 +259,10 @@ initial map still owned native inputs. Teardown now drains that ownership even
 without a later replacement gate. All 23 focused lifecycle/production-hold cases
 pass, including eight mixer replacement cycles. This fixes test isolation only;
 it does not establish the native crash's cause or lift the production hold.
+The subsequent unchanged full verifier on `72a9444a` passed 1,136 EditMode and
+1,255 PlayMode tests, with three expected optional private-asset skips and both
+native integration journeys completing cleanly. This is a passing complete run,
+not proof that the intermittent fault has been resolved.
 
 ## Audio backend lifecycle decision — 2026-10-11
 
@@ -297,3 +301,30 @@ Preserve the current directional-speech path and explicit reflection hold during
 that evaluation. Passing desktop checks is not permission to enable reflections:
 real Quest timing, audible behavior and multi-emitter Live acceptance remain
 required. The full native regression gate remains mandatory and unchanged.
+
+
+### Isolated native candidate evidence
+
+The optional [native evaluator](Tools/AudioBackendEvaluation/README.md) now checks
+Steam Audio 4.8.1 without changing the Unity project or its current renderer. The
+runner checks the official SDK archive digest, compiles the probe using installed
+Windows C++ tools, and retains a unique result with exact source hashes. Vendor
+binaries remain local ignored evidence.
+
+Twelve fresh context/simulator cycles passed with runtime-created geometry,
+finite reflected samples, wall addition/removal/repositioning, source removal,
+room deletion/reconstruction and joined background simulation. The first draft
+was correctly rejected by native parameter validation; explicit valid unused
+hybrid/volumetric defaults resolved those warnings. The retained passing run uses
+right-handed SDK coordinates, validation enabled, one simulation thread and two
+sources. Its small desktop timings are not Quest budgets or worst-case bounds.
+
+This provides evidence for an explicitly owned native context and editable
+geometry. It does not establish Unity DSP lifetime, concurrent per-voice tails,
+HRTF perception, imported/instanced meshes, Android/IL2CPP compatibility, Live echo
+handling or device performance. Runtime simulation calls are synchronous: cancel
+further scheduling, discard stale generations and join an active call before
+freeing its inputs. An adapter must additionally fence audio-thread consumers.
+The current Meta renderer, production reflection hold and full native gate remain
+unchanged. Evaluate the Unity integration boundary next; do not switch a shipping
+world to this candidate on the basis of the standalone probe.

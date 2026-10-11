@@ -7299,3 +7299,28 @@ candidate, not an installed or accepted replacement. The evidence, boundary and
 acceptance requirements are recorded in
 [the audio lifecycle decision](../unity/AUDIO.md#audio-backend-lifecycle-decision--2026-10-11).
 This does not lift device/provider holds or change any release acceptance gate.
+
+
+### Reproducible native audio candidate evaluation — 2026-10-11
+
+A standalone Windows probe now exercises Steam Audio 4.8.1 against runtime-created
+geometry, direct occlusion and real reflected output samples. Twelve fresh native
+context cycles pass, including source removal, room deletion/reconstruction and
+background-worker draining. The optional runner pins the official archive digest,
+records compiler/source identity and fails on native diagnostics or abnormal exit.
+No SDK binary, Unity dependency, saved format or capability schema is changed.
+
+This narrows an audio maintenance choice; it does not accept a replacement backend.
+The next step is a Unity adapter evaluation preserving shared source/emitter and
+acoustic-geometry identities, followed by actual audio-thread lifetime, source
+continuity, Android/IL2CPP and Quest/Live measurements. Current production
+reflections stay disabled and the intermittent Meta crash remains unresolved.
+See [the evaluator scope](../unity/Tools/AudioBackendEvaluation/README.md) and
+[the audio acceptance contract](../unity/AUDIO.md).
+
+The full standard native verifier subsequently completed on `72a9444a`: 1,136
+EditMode and 1,255 PlayMode passes, three expected optional private-asset skips,
+and both original-book/headless journeys with clean exits. The tested mirror
+matches all 905 native source files. This passing run is recorded separately from
+the unresolved intermittent fault; it does not activate reflections or clear
+hardware/provider acceptance. See the release coverage ledger for exact receipts.

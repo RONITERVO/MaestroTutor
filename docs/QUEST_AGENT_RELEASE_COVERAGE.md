@@ -2979,3 +2979,42 @@ computation from a completed but unusable map. This is test isolation and failur
 evidence, not a production native-crash fix. Runtime source remains `941cea77`;
 the full native failure is still open. Raw red/green receipts and exact tested
 source hash are under `.quest-evidence/audio-cleanup/verification.json`.
+
+
+### Optional native audio backend evaluator — 2026-10-11
+
+The [standalone Windows probe](../unity/Tools/AudioBackendEvaluation/README.md)
+uses the official Steam Audio SDK 4.8.1 C API. Its archive digest matches the
+published release digest. The final probe/runner bytes match the retained passing
+receipt. Twelve fresh context/simulator cycles passed with validation enabled:
+wall addition/removal/repositioning, real finite reflected samples, source removal,
+room deletion/reconstruction and a background simulation joined before teardown.
+Compilation also passed with MSVC warnings treated as errors. An incorrect SDK
+archive was refused before extraction. Evidence is retained in
+`.quest-evidence/audio-backend-evaluation/verification.json`.
+
+The first draft failed because unused volumetric/hybrid settings were zero and
+were rejected by native validation. That failed run is retained; explicit valid
+defaults corrected the probe. This is candidate evaluation, not an app runtime fix
+or an accepted replacement. It introduces no Unity dependency or saved-state
+change. The small desktop timing is not a Quest budget. Unity DSP, continuous
+multi-voice tails, HRTF perception, Android/IL2CPP, imported/instanced geometry,
+Live echo handling, and real-device performance remain separate acceptance work.
+
+### Full native gate after fixture cleanup — 2026-10-11
+
+The unchanged `Verify-Quest.ps1` completed on `72a9444a` with exit 0:
+1,136 EditMode tests and 1,255 PlayMode tests passed, with only the three explicit
+optional private-asset checks skipped. Both native journeys completed with
+client, editor and terminal exit 0: headless `a8e696543d00477280b5b1fb3d0d8fe9`
+and original two-page book `262c26ad64514aa9b2a20fb680ccfea4`. They used local
+provider fixtures. All 905 Maestro C# source files matched the tested mirror.
+The book's captured virtual image and shared image-import result were inspected.
+No new device or paid-provider acceptance is inferred.
+
+This restores a passing complete native run after the fixture cleanup. It does
+not establish a production fix for the earlier intermittent Meta native fault;
+that dump and failed run remain retained and production reflections stay disabled.
+The terminal and cross-checked result are in
+`.quest-evidence/audio-cleanup/full-verification.json`. The optional C++ evaluator
+and documentation added afterward do not change the tested Unity source.
