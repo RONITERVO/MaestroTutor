@@ -29,7 +29,9 @@ namespace Maestro.Quest
         void Awake()
         {
             gameObject.AddComponent<Diagnostics.RuntimeDiagnostics>();
-            var acoustics = gameObject.AddComponent<RoomAcoustics>();
+            // Direct obstruction stays active. Reflection output and its map
+            // scheduler must be introduced together after mixed-audio Live acceptance.
+            gameObject.AddComponent<RoomAcoustics>();
             var originObject = new GameObject("User origin");
             originObject.SetActive(false);
             originObject.transform.SetParent(transform, false);
@@ -49,8 +51,6 @@ namespace Maestro.Quest
             origin.CameraFloorOffsetObject = offset;
             origin.RequestedTrackingOriginMode = XROrigin.TrackingOriginMode.Floor;
             origin.CameraYOffset = 1.55f;
-            gameObject.AddComponent<RoomAcousticMapScheduler>().Configure(acoustics, camera.transform,
-                () => headTracking == null || (headTracking.ReadValue<int>() & 3) == 3);
 #if UNITY_ANDROID && !UNITY_EDITOR
             var metaManager = originObject.AddComponent<OVRManager>();
             metaManager.trackingOriginType = OVRManager.TrackingOrigin.FloorLevel;

@@ -8,7 +8,9 @@ namespace Maestro.Quest.Book
 {
     /// <summary>Rebuilds stable room acoustics after edits or travel. A bounded
     /// listener-point cache avoids a bake for each head movement. Failures back
-    /// off; neither an observation nor an agent request performs this work.</summary>
+    /// off; neither an observation nor an agent request performs this work.
+    /// Experimental: not installed by MaestroRoom while reflection output is
+    /// disabled. The output owner and this scheduler must be admitted together.</summary>
     [DefaultExecutionOrder(210)]
     public sealed class RoomAcousticMapScheduler : MonoBehaviour
     {

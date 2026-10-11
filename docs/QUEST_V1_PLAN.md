@@ -38,8 +38,9 @@ handles procedural and imported bounded WAV sounds with editable emitters, loopi
 playback, independent controls and events alongside the separate Maestro speech
 renderer. Longer media, additional codecs, generated-artifact attachment, stream
 adapters and continuous-background-audio/Live coexistence remain implementation gates.
-The experimental reflection mixer stays out of the production scene until the
-capture policy handles a mixed scene without indefinitely suppressing the user.
+The experimental reflection mixer and its map scheduler stay out of the production
+scene until the capture policy handles a mixed scene without indefinitely
+suppressing the user. Direct sound obstruction remains active without map baking.
 
 The owner's authored-world clarification adds shared appearance/texture/opacity,
 height-changing terrain, weather, lighting and interactive water to the delivery
@@ -7119,3 +7120,27 @@ Cold spatial preparation now has an explicit resting-shape contract. It uses sel
 The existing static `object.model.assetBounds` contract is preserved. `object.model.restBounds` exposes the distinct resting envelope through the same generated catalog, exact content-hash cache and passive fact path. The room-owned spatial index prepares this metadata through its existing bounded worker slot. Authored/dormant geometry includes the verified rest shape plus normal authored additions. It does not claim a currently animated pose or bound every future imported clip, library motion or user pose. Active animation, ownership, audio, observation and collision dependencies continue to retain native entities independently.
 
 This increment also fixes missing GLB default morph weights on initial load and Stop. Native geometry comparisons must cover mixed and quantized influences, inverse binds, default morph overrides, fitting/pivots, selected-scene behavior and native retirement/reactivation. Automatic unloading and selective startup remain disabled until the remaining motion, indirect visibility, audibility and regional collision/navigation dependencies are proven. No device/provider/release acceptance follows from desktop results.
+
+
+### Production acoustics excludes unrouted reflection work — 2026-10-11
+
+The production room had retained its automatic reflection-map scheduler after the
+reflection output mixer was withheld for mixed-audio Live capture acceptance.
+Settled room boundaries could therefore start native baking with no routed output.
+The application now installs neither experimental reflection component. Direct
+geometry and spatial speech obstruction remain active without a reflection map.
+The scheduler and mixer remain available to their explicit experimental tests;
+they must be admitted together when their capture/lifetime integration is ready.
+
+A new PlayMode regression constructs the actual `MaestroRoom` with fresh private
+workspace storage, verifies that no reflection owner or scheduler is installed,
+and observes eligible hidden/non-colliding boundary geometry and speech through
+more than the scheduling settling period. The test failed on the original startup
+and passes after the change. All 27 focused native checks pass, including measured
+listener-output obstruction, multi-voice experimental reflections, native map
+replacement/cancellation and passive acoustic facts. No tests were skipped.
+
+This removes unnecessary production work; it does not establish a cause or fix
+for the retained intermittent Meta native-audio crash. The prior full-suite and
+book/headless evidence belongs to `e03df7fb`; this increment has the focused native
+coverage above. No headset, provider, signing, deployment or upload was performed.

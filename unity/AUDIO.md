@@ -10,8 +10,10 @@ The current implementation exposes reusable procedural and imported WAV sources,
 finite or looping native playback, independent controls and playback events through
 the shared capability catalog. Longer media, other codecs and live stream adapters remain pending. Maestro speech still
 uses its existing native speech session, and artifact music still plays in the
-web app. Room reflection output is under development and is not installed by
-`MaestroRoom`. These audio changes have not been accepted on the headset.
+web app. Room reflection output and its background map scheduler are under
+development and are not installed by `MaestroRoom`. Direct native obstruction
+remains active without a reflection map. These audio changes have not been
+accepted on the headset.
 
 ## Current executable slice
 
