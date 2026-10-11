@@ -723,3 +723,10 @@ Actions that need the same control channel still cannot compete. Editing a neede
 object, shared style or collision profile can require retrying its pending action;
 editing an unrelated object does not. Whole-room edits keep their existing action
 cancellation behavior. Automatic area streaming remains disabled.
+
+The dependency report also shows `observation` for objects in the headset view or
+an app-owned camera capture. It considers the object's visible bounds, so a long
+object can still be needed when its centre is off-screen. Connected area members
+remain together. Finishing a snapshot releases that camera's dependency. This is
+a current-view diagnostic; it does not load dormant objects or turn on automatic
+world streaming.

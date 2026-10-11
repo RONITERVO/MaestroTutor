@@ -35,6 +35,7 @@ namespace Maestro.Quest.Creation
             var audio=GetComponent<WorldAudio>();
             if(audio)foreach(var target in audio.RetainedTargets())graph.Retain(target,RoomRetentionReason.Audio);
             PhysicsWorld?.RetainNavigation(this,graph);
+            RetainObservedNative(graph);
             // The current collision admission is whole-world. Until swept bounds and
             // per-area ground/water dependencies exist, no collider area can be
             // released while simulation runs (even if a body is asleep).

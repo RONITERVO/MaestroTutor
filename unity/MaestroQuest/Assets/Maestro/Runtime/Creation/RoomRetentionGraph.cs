@@ -9,7 +9,7 @@ namespace Maestro.Quest.Creation
     {
         None=0, WorldOwned=1, Held=2, Ownership=4, Audio=8, Animation=16,
         Physics=32, CollisionEnvironment=64, Unavailable=128, WorkspaceBusy=256,
-        Navigation=512, WaterRoute=1024
+        Navigation=512, WaterRoute=1024, Observation=2048
     }
     /// <summary>Ephemeral dependency closure, never authored state or permission to unload.
     /// Area members activate together; enabled native connections retain both ends.

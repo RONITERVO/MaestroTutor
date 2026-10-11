@@ -6831,3 +6831,28 @@ physics still needs the whole collision environment. Observer/audibility demand,
 regional maps, swept support and water-medium demand, wider capacities and device
 performance remain necessary before automatic streaming. Real-provider, headset
 and release acceptance remain outstanding.
+
+### Owned camera demand in native retention — 2026-10-11
+
+The existing area/connection graph now includes `observation` for resident native
+renderers intersecting the room's active viewer camera or an explicitly leased
+capture camera. It uses live world-space renderer bounds and the actual camera
+projection/culling mask, including the union of both XR eyes when stereo is active.
+Unrelated scene cameras do not retain this world's objects. Disabled renderers
+and force-hidden renderers do not contribute; invalid bounds/projections are
+conservatively retained rather than treated as proof that an area is invisible.
+
+The virtual-room snapshot owns a lease through its synchronous render and readback.
+Multiple leases release independently, including repeated leases for one camera.
+A completed snapshot does not keep its scene alive. Reads use current transforms,
+never load dormant content or change saved revisions, and the existing internal
+retirement barrier refuses to remove an observed connected group. The same fact
+schema exposes the reason to the book, agent and saved programs.
+
+This protects current direct views, not every dependency needed for automatic
+streaming. Predictive/head-turn demand and hysteresis, dormant spatial envelopes,
+shadow/reflection footprints, regional ground/water/navigation/swept collision
+admission, audibility-driven simulation and scalable capacity remain. Automatic
+unloading stays disabled. Stereo behavior is wired to Unity's eye matrices but
+still requires headset acceptance; desktop cameras cannot establish XR visual or
+performance acceptance.

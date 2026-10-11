@@ -389,3 +389,12 @@ identity. Preparation also guards connected membership and every source in its
 closure. Unrelated edits do not invalidate those inputs. The same module preflight
 still runs after loading; read-only facts do not acquire objects. Conservative
 retirement, whole-world physics admission and automatic-streaming limits remain.
+
+`world.region.retention` reports `observation` when the room's viewer or an owned
+capture camera sees resident renderer bounds. Area members and enabled physical
+connections propagate the same reason. Camera layers, projection and current
+native transforms determine this demand; unrelated scene cameras do not. A
+scoped capture lease ends after rendering/readback, independently of other
+viewers. Reading this fact never activates dormant content or edits the journal.
+This direct-view guard does not enable automatic streaming: predictive view
+demand, dormant bounds and indirect shadow/reflection dependencies remain.
