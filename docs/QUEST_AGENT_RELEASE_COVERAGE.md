@@ -3151,3 +3151,23 @@ Natural acoustic-tail retirement, multi-source reservations, production geometry
 Android/IL2CPP, Live and physical Quest acceptance remain open. Current reflection
 output stays disabled. Broader world residency/regional simulation and v1 Store
 requirements remain open. See [audio contract](../unity/AUDIO.md#shared-pcm-completion-and-pause-admission).
+
+
+### Ground reload test readiness — 2026-10-11
+
+The full native check after the PCM change passed all 1,140 EditMode cases and
+1,254 PlayMode cases, with one ground-reload failure and three expected private
+asset skips. The ground test waited for the workspace shell but immediately read
+terrain that startup admits cooperatively on later frames. Shell readiness does
+not imply resident collision geometry.
+
+The test now waits for actual display admission, verifies the terrain's native
+identity/collider, and retains all prior ground, bookmark and walking assertions.
+On reload it deliberately suspends native display after the shell is ready,
+confirms that no accepted ground is reported, then resumes and verifies the saved
+terrain and viewpoint. That focused regression passes with clean Unity shutdown
+and the standard diagnostic log gate. No runtime or capability change was made
+for this repair. The original failure and the focused result remain in
+`.quest-evidence/audio-stream-contract`; a new full standard verification is
+required before declaring this checkpoint passed. Queries across dormant regions
+remain part of the separate unfinished regional-ground contract.

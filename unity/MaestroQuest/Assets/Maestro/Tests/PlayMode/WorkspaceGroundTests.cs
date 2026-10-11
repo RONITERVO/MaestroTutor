@@ -19,6 +19,14 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourCatalog.TryRead("world.ground",1,args,new BehaviourCatalog.FactContext(editor:host.Current.Editor),out var value),Is.True);
             return JObject.FromObject(value.Value);
         }
+        IEnumerator SavedGroundReady(string target){
+            var editor=host.Current.Editor;float deadline=Time.realtimeSinceStartup+12;
+            while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(editor.NativeDisplayPending,Is.False,"Saved terrain admission did not finish: "+editor.Status);
+            Assert.That(editor.NativePhase(target),Is.EqualTo(NativeEntityPhase.Resident),editor.NativeActivationError(target));
+            Assert.That(editor.Find(target),Is.Not.Null,"A ready workspace shell does not imply resident saved terrain");
+            Assert.That(editor.Find(target).GetComponent<HeightFieldView>()?.Collision,Is.Not.Null);
+        }
         [UnityTest]public IEnumerator AcceptedGroundFactAndWalkedBookmarkSurviveAWorldReload(){
             PhysicalFloor();recoveryHeadTracked=true;room.Viewer.position=new Vector3(4,1.6f,4);
             var terrain=new RoomHeightField{cells=8,width=2,depth=2,maxHeight=.5f,heights=new float[81]};
@@ -29,7 +37,7 @@ namespace Maestro.Quest.Tests
                 new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro},
                 new RoomObjectData{id=terrainId,kind=RoomObjectKind.Assembly,name="Small hill",position=new Vector3(4,0,4),physics=ItemPhysics.Fixed,heightFields=new[]{terrain},
                     recipe=new RoomRecipe{parts=new[]{new RecipePart{id="base",position=Vector3.down*.05f,size=new Vector3(2,.1f,2)}}}}}};
-            Assert.That(new RoomStorage(Path.Combine(directory,"room")).Save(doc,out var error),Is.True,error);Open();yield return ReadyHost();
+            Assert.That(new RoomStorage(Path.Combine(directory,"room")).Save(doc,out var error),Is.True,error);Open();yield return ReadyHost();yield return SavedGroundReady(terrainId);
             var editor=host.Current.Editor;Assert.That(editor.RuntimeGate.Held,Is.False);Assert.That(editor.TryFlush(out error),Is.True,error);
             string path=Path.Combine(editor.SaveDirectory,RoomStorage.FileName),bytes=File.ReadAllText(path);int revision=editor.Revision;
             var point=new Vector3(4,.25f,4);var supported=GroundFact(point);var missing=GroundFact(Vector3.zero);
@@ -49,7 +57,15 @@ namespace Maestro.Quest.Tests
             Assert.That(expected.position.x,Is.EqualTo(4.2f).Within(.001));Assert.That(expected.position.y,Is.EqualTo(.29f).Within(.002));
             Assert.That(room.Viewer.localToWorldMatrix,Is.EqualTo(physicalHead));Assert.That(editor.TryFlush(out error),Is.True,error);
             string savedDirectory=directory;var closing=host;UnityEngine.Object.Destroy(root);yield return null;while(!closing.Retirement.IsCompleted)yield return null;
-            BuildShell(savedDirectory);PhysicalFloor();room.Viewer.SetPositionAndRotation(new Vector3(-3,1.7f,6),Quaternion.Euler(0,73,0));recoveryHeadTracked=true;Open();yield return ReadyHost();
+            BuildShell(savedDirectory);PhysicalFloor();room.Viewer.SetPositionAndRotation(new Vector3(-3,1.7f,6),Quaternion.Euler(0,73,0));recoveryHeadTracked=true;
+            // Deliberately keep display admission pending after shell readiness.
+            // Ground queries observe accepted native surfaces, not saved placeholders.
+            afterContentBuild=()=>root.GetComponentInChildren<RoomEditor>().enabled=false;
+            Open();yield return ReadyHost();afterContentBuild=null;
+            Assert.That(host.Current.Editor.NativeDisplayPending,Is.True);
+            Assert.That(host.Current.Editor.Find(terrainId),Is.Null);
+            Assert.That((bool)GroundFact(point)["found"],Is.False);
+            host.Current.Editor.enabled=true;yield return SavedGroundReady(terrainId);
             Assert.That(view.ReadViewpoint(out var restored),Is.True);Assert.That(Vector3.Distance(restored.position,expected.position),Is.LessThan(.001));
             var after=GroundFact(point);Assert.That((string)after["worldId"],Is.EqualTo(doc.world.worldId));Assert.That((bool)after["found"],Is.True);Assert.That((float)after["position"]["y"],Is.EqualTo(.25f).Within(.001));
             Assert.That(view.Active,Is.False);Assert.That(physics.Running,Is.False);Assert.That(view.Enter(),Is.True);Assert.That(view.Move(room.transform.TransformDirection(Vector3.left*.02f)),Is.True,view.MovementError);
