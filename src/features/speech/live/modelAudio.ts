@@ -3,40 +3,38 @@
 import { extendPlaybackEnd } from '../../../../shared/audio/speechGate';
 import { OUTPUT_SAMPLE_RATE, type ModelAudioDecodeJob } from './types';
 import { type AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
-import {
-  getAudioOutputTailDelayMs
-} from '../utils/playbackDrain';
-import type { LiveTimerPorts } from './ports';
+import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
 import type { LiveSessionData } from './state';
 import { type ModelAudioDecodeCheckpoint } from './types';
 
 export function createLiveModelAudio(state: Pick<LiveSessionData,
-  'outputAudioContextRef' | 'playbackNodeRef' | 'inputCodecWorkerRef'
-  | 'outputCodecWorkerRef' | 'currentSessionIdRef' | 'turnTimingRef'
+  'speechOutputRef' | 'inputCodecWorkerRef'
+  | 'outputCodecWorkerRef' | 'currentSessionIdRef' | 'isCleaningUpRef' | 'turnTimingRef'
   | 'currentModelAudioTurnIdRef' | 'nextModelAudioTurnIdRef' | 'nextModelAudioDecodeJobIdRef'
-  | 'pendingModelAudioDecodeJobsRef' | 'playbackTelemetryRef' | 'playbackDrainCoordinatorRef'
+  | 'pendingModelAudioDecodeJobsRef' | 'playbackTelemetryRef'
   | 'playbackPendingRef' | 'playbackUntilRef' | 'currentModelAudioChunksRef'
   | 'currentModelAudioTotalLengthRef'
->, ports: Pick<LiveTimerPorts, 'setTimeout'> & { createCodecWorker(): AudioCodecWorkerClient }) {
+>, ports: { createCodecWorker(): AudioCodecWorkerClient; onFailure(message: string, sessionId: number): void }) {
   const {
-    outputAudioContextRef, playbackNodeRef, inputCodecWorkerRef,
-    outputCodecWorkerRef, currentSessionIdRef, turnTimingRef,
+    speechOutputRef, inputCodecWorkerRef,
+    outputCodecWorkerRef, currentSessionIdRef, isCleaningUpRef, turnTimingRef,
     currentModelAudioTurnIdRef, nextModelAudioTurnIdRef, nextModelAudioDecodeJobIdRef,
-    pendingModelAudioDecodeJobsRef, playbackTelemetryRef, playbackDrainCoordinatorRef,
+    pendingModelAudioDecodeJobsRef, playbackTelemetryRef,
     playbackPendingRef, playbackUntilRef, currentModelAudioChunksRef,
     currentModelAudioTotalLengthRef,
   } = state;
-  const { setTimeout, createCodecWorker } = ports;
+  const { createCodecWorker } = ports;
+  let commitQueue = Promise.resolve();
   let pendingDrain: {
     checkpoint: ModelAudioDecodeCheckpoint;
-    node: AudioWorkletNode;
-    context: AudioContext;
+    output: SpeechOutput;
     promise: Promise<void>;
   } | null = null;
   const sameCheckpoint = (a: ModelAudioDecodeCheckpoint, b: ModelAudioDecodeCheckpoint) => (
     a.sessionId === b.sessionId && a.turnId === b.turnId && a.lastJobId === b.lastJobId
   );
   const startNextModelAudioTurn = (sessionId: number) => {
+    commitQueue = Promise.resolve();
     currentModelAudioTurnIdRef.current = sessionId > 0 ? nextModelAudioTurnIdRef.current++ : 0;
   };
 
@@ -80,48 +78,46 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
 
   const stopAllAudio = () => {
     pendingDrain = null;
-    playbackDrainCoordinatorRef.current.cancelAll();
     playbackPendingRef.current = false;
-    if (playbackNodeRef.current) {
-      try {
-        playbackNodeRef.current.port.postMessage({ type: 'reset' });
-        // Queued audio was just discarded, so it will not play out.
-        playbackUntilRef.current = 0;
-      } catch {
-        // Ignore reset failures during teardown/interruption.
-      }
-    }
+    playbackUntilRef.current = 0;
+    try { speechOutputRef.current?.reset(); } catch { /* Teardown remains authoritative. */ }
   };
 
   const waitForPlaybackDrain = (): Promise<void> => {
-    const playbackNode = playbackNodeRef.current;
-    const outputContext = outputAudioContextRef.current;
+    const output = speechOutputRef.current;
     const decodeCheckpoint = getModelAudioDecodeCheckpoint();
-    if (pendingDrain && pendingDrain.node === playbackNode && pendingDrain.context === outputContext
+    if (pendingDrain && pendingDrain.output === output
       && sameCheckpoint(pendingDrain.checkpoint, decodeCheckpoint)) {
       return pendingDrain.promise;
     }
-    if (!playbackNode || !outputContext || !playbackPendingRef.current) return Promise.resolve();
+    if (!output || !playbackPendingRef.current) return Promise.resolve();
 
-    const drain = { checkpoint: decodeCheckpoint, node: playbackNode, context: outputContext, promise: Promise.resolve() };
+    const drain = { checkpoint: decodeCheckpoint, output, promise: Promise.resolve() };
     pendingDrain = drain;
     const timing = turnTimingRef.current;
-    const isCurrent = () => outputAudioContextRef.current === outputContext
+    const isCurrent = () => speechOutputRef.current === output
       && currentSessionIdRef.current === decodeCheckpoint.sessionId
       && currentModelAudioTurnIdRef.current === decodeCheckpoint.turnId;
     drain.promise = (async () => {
       const startedAt = Date.now();
-      const result = await playbackDrainCoordinatorRef.current.request(playbackNode.port);
+      let result: 'drained' | 'cancelled';
+      try { result = await output.drain(); }
+      catch {
+        if (isCurrent()) {
+          playbackTelemetryRef.current.queueErrors += 1;
+          ports.onFailure('Speech playback stopped before completion.', decodeCheckpoint.sessionId);
+        }
+        return;
+      }
       if (!isCurrent()) return;
       playbackTelemetryRef.current.lastDrainWaitMs = Date.now() - startedAt;
       if (result !== 'drained') {
         playbackTelemetryRef.current.drainCancellations += 1;
+        if (pendingDrain === drain && playbackPendingRef.current)
+          ports.onFailure('Speech playback stopped before completion.', decodeCheckpoint.sessionId);
         return;
       }
       playbackTelemetryRef.current.drains += 1;
-      if (outputContext.state === 'closed') return;
-      await new Promise(resolve => setTimeout(resolve, getAudioOutputTailDelayMs(outputContext)));
-      if (!isCurrent()) return;
       // A late PCM chunk still owns its own drain, even after this tail finishes.
       if (sameCheckpoint(getModelAudioDecodeCheckpoint(), decodeCheckpoint)) {
         playbackPendingRef.current = false;
@@ -147,6 +143,7 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
   /** Decode jobs are fenced by both session and turn; cancellation never allows
    * late worker results to reach the playback queue or retained transcript audio. */
   const enqueueModelAudio = (inlineAudio: string, sessionId: number, playModelAudio: boolean) => {
+    if (currentSessionIdRef.current !== sessionId || isCleaningUpRef.current) return;
     turnTimingRef.current?.markLatest('response.last-audio-received');
     turnTimingRef.current?.markOnce('response.first-audio-received');
     const turnId = currentModelAudioTurnIdRef.current;
@@ -161,27 +158,33 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
 
     const isJobActive = () => (
       !job.cancelled
+      && !isCleaningUpRef.current
       && currentSessionIdRef.current === sessionId
       && currentModelAudioTurnIdRef.current === turnId
     );
 
-    job.promise = ensureOutputCodecWorker().decodeBase64ToPcmBuffer(inlineAudio)
-      .then((buffer) => {
+    // Decode may finish out of order. Commit samples to the renderer and saved
+    // transcript in arrival order, with a fresh chain after a cancelled turn.
+    let decoding: Promise<ArrayBuffer>;
+    try { decoding = ensureOutputCodecWorker().decodeBase64ToPcmBuffer(inlineAudio); }
+    catch (error) { decoding = Promise.reject(error); }
+    const decoded = decoding
+      .then(buffer => ({ buffer, error: undefined }), error => ({ buffer: undefined, error }));
+    job.promise = commitQueue.then(async () => {
+        const result = await decoded;
         if (!isJobActive()) return;
+        if (!result.buffer) throw result.error;
 
-        const pcm16 = new Int16Array(buffer);
+        const pcm16 = new Int16Array(result.buffer);
         if (!pcm16.length) return;
 
         currentModelAudioChunksRef.current.push(pcm16);
         currentModelAudioTotalLengthRef.current += pcm16.length;
 
-        if (playModelAudio && playbackNodeRef.current) {
+        if (playModelAudio) {
           try {
-            playbackNodeRef.current.port.postMessage({
-              type: 'push',
-              pcm: pcm16,
-              inputSampleRate: OUTPUT_SAMPLE_RATE,
-            });
+            if (!speechOutputRef.current) throw new Error('Speech output is unavailable.');
+            speechOutputRef.current.write(pcm16);
             playbackPendingRef.current = true;
             playbackUntilRef.current = extendPlaybackEnd(
               playbackUntilRef.current,
@@ -191,7 +194,8 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
             );
           } catch (error) {
             playbackTelemetryRef.current.queueErrors += 1;
-            console.warn('Playback worklet queue failed', error);
+            console.warn('Speech output queue failed', error);
+            ports.onFailure('Speech playback stopped before completion.', sessionId);
           }
         }
       })
@@ -199,10 +203,12 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
         if (!isJobActive()) return;
         playbackTelemetryRef.current.decodeErrors += 1;
         console.warn('Audio decode failed', error);
+        ports.onFailure('Speech audio could not be decoded.', sessionId);
       })
       .finally(() => {
         pendingModelAudioDecodeJobsRef.current.delete(jobId);
       });
+    commitQueue = job.promise;
 
     pendingModelAudioDecodeJobsRef.current.set(jobId, job);
   };

@@ -40,16 +40,29 @@ jobs:
       - name: Install Live gateway dependencies
         run: npm --prefix live-gateway ci
 
-      # Root runtime audit currently contains reviewed high-severity findings in
-      # Node-only Transformers dependencies that are not shipped in the browser.
-      # Functions has one reviewed moderate transitive UUID finding. These
-      # thresholds keep a new critical app or high-severity backend finding from
-      # entering a release unnoticed without forcing incompatible overrides.
+      # Exact, expiring exception for the unused root Firebase Node server path.
+      # New advisories (including new findings on that package) fail this check.
       - name: Audit shipped app dependencies
-        run: npm audit --omit=dev --audit-level=critical
+        run: |
+          npm audit --omit=dev --json > app-audit.json || test "$?" -eq 1
+          node scripts/verify-app-audit.mjs app-audit.json
       - name: Audit shipped Functions dependencies
         run: npm --prefix functions audit --omit=dev --audit-level=high
+      - name: Audit shipped Live gateway dependencies
+        run: npm --prefix live-gateway audit --omit=dev --audit-level=high
 
+      - name: Verify generated behaviour catalog sources
+        run: npm run verify:behaviour-catalog
+      - name: Verify included Quest avatar integrity
+        run: npm run verify:quest-assets
+      - name: Test Quest release manifest policy
+        shell: pwsh
+        run: ./unity/Tools/Test-QuestReleaseManifest.ps1
+      - name: Test Unity diagnostic log gate
+        shell: pwsh
+        run: ./unity/Tools/Test-QuestUnityLog.ps1
+      - name: Type-check native integration drivers
+        run: npm run verify:quest-probes
       - name: Test app and shared core
         run: npm test
       - name: Lint app

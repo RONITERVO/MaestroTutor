@@ -1,0 +1,363 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using Maestro.Quest.Interaction;
+using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;
+
+namespace Maestro.Quest.Rules
+{
+    public interface IRuleActions
+    {
+        bool CanRun(CapabilityCall step, out string error);
+        bool Start(string runId, CapabilityCall step, out float seconds, out string error);
+        void Stop(string runId, bool preservePlacement);
+    }
+    public interface IRuleOwnershipSource { RoomOwnership Ownership {get;} }
+    public interface IRuleInterruptionInfo { string InterruptionStatus(string runId); }
+    public interface IRuleGrabPolicy { bool WaitsThroughGrab(string runId,string target); }
+    public interface IRuleResults { Newtonsoft.Json.Linq.JObject TakeResult(string runId); }
+    public interface IRuleCompletion { bool Complete(string runId,out string error); }
+    public enum RuleActionState { Preparing, Ready, Failed }
+    public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
+
+    /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
+    public sealed partial class RuleScheduler : IProgramFacts, IProgramFactQueries
+    {
+        sealed class Run
+        {
+            public string Id;
+            public RuleSequence Sequence;
+            public RuleBinding Binding;
+            public HashSet<string> Targets;
+            public BehaviourCatalog.Claim[] Claims=Array.Empty<BehaviourCatalog.Claim>();
+            public float Ends, Duration, PrepareDeadline;
+            public bool Preparing,Computing,WaitingForChannels,Acquiring,AcquisitionChecked;
+            public RuleEntityDemand EntityDemand;public float AcquisitionDeadline;
+            public float ChannelDeadline,ChannelPoll;public string ChannelStatus;
+            public int EventDepth,WaitSerial,WatchSlot=-1;
+            public IProgramEventWatch Watch;public bool WatchPending;
+            public bool Reactive=>Sequence.Compile(out _).Version==3;
+            public ProgramMachine Machine;
+            public string MemoryIdentity;public System.Threading.Tasks.Task<ProgramMemoryStore.Result> MemoryWrite;
+            public Run Parent;public Run[] Children;public string TerminalNode;
+            public CapabilityCall Active;
+            public RoomOwnership.Lease OwnershipLease;
+            public Newtonsoft.Json.Linq.JObject Invocation,Output;
+        }
+        sealed class Pending { public string SequenceId; public RuleBinding Binding; }
+        readonly IRuleActions actions;
+        readonly List<Run> running = new();
+        readonly List<Pending> queued = new();
+        readonly List<Run> channelWaits = new();
+        readonly Dictionary<string,float> firedAt = new();
+        sealed class FinishedRun {public RuleOutcome Outcome;public Newtonsoft.Json.Linq.JObject Invocation,Output;public string[] Resources;}
+        readonly Queue<FinishedRun> outcomes=new();
+        public RuleOutcome[] Outcomes=>outcomes.Where(x=>x.Invocation==null).Select(x=>x.Outcome).ToArray();
+        public const int MaximumConcurrent=8,MaximumOutcomes=16;
+        public bool HasCapacity=>running.Count<MaximumConcurrent;
+        RuleDocument document = new();
+        readonly Dictionary<string,string> unavailable=new();
+        string activity;
+        bool suspended;
+        public int RunningCount => running.Count;
+        public bool HasOtherWork(string runId)=>queued.Count>0||running.Any(run=>run.Id!=runId);
+        public int PreparingCount => running.Count(x => x.Preparing||x.Acquiring);
+        public int QueuedCount => queued.Count;
+        public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
+        static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
+        static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
+        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||channelWaits.Any(run=>Overlap(run.Active.Claims,call.Claims))||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
+        public RoomOwnership Ownership {get;}
+        public string LastError { get; private set; }
+        public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing||x.Acquiring,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Acquiring?"Loading required objects":x.WaitingForChannels?x.ChannelStatus:x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
+            waiting=x.WaitingForChannels||x.Machine?.Wait!=null||x.Machine?.SavingMemory==true,waitEvent=x.Machine?.Wait?.Event,waitSeconds=x.WaitingForChannels?Math.Max(0,x.ChannelDeadline-lastNow):x.Machine?.Wait!=null&&x.Machine.Wait.Seconds>0?Math.Max(0,x.Ends-lastNow):0,
+            state=x.Machine?.State.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>(),
+            locals=x.Machine?.Locals.Select(v=>new ProgramVariableView {name=v.Key,type=v.Value.Type.ToString().ToLowerInvariant(),value=v.Value.Display}).ToArray()??Array.Empty<ProgramVariableView>()}).ToArray();
+        public InvocationReceipts Receipts { get; }
+        public RuleScheduler(IRuleActions actions,InvocationReceipts receipts=null) { this.actions = actions; Receipts=receipts;Ownership=(actions as IRuleOwnershipSource)?.Ownership??new RoomOwnership(); }
+        public bool TryRead(string name,out ProgramValue value) {
+            if(BehaviourCatalog.TryRead(name,new BehaviourCatalog.FactContext(activity),out value))return true;
+            if(actions is IProgramFacts source)return source.TryRead(name,out value);value=default;return false;
+        }
+        public bool TryRead(string name,int version,JObject arguments,out ProgramValue value) {
+            if(BehaviourCatalog.TryRead(name,version,arguments,new BehaviourCatalog.FactContext(activity),out value))return true;
+            if(actions is IProgramFactQueries source)return source.TryRead(name,version,arguments,out value);value=default;return false;
+        }
+        public void Configure(RuleDocument value)
+        {
+            if (!value.Validate(out var error,true)) throw new ArgumentException(error);
+            StopAll(); document = value.Copy(); firedAt.Clear();unavailable.Clear();
+            foreach(var sequence in document.sequences){var issue=document.ProgramError(sequence);if(issue!=null)unavailable.Add(sequence.id,issue);}
+        }
+        public void Suspend(bool value) { suspended = value; if (value) { StopAll(); activity = null; } }
+        public void ForgetActivity()
+        {
+            activity = null;
+            foreach (var run in running.ToArray()) if (run.Binding?.stopOnExit == true && !BindingStillValid(run.Binding)) Stop(run,false);
+            queued.RemoveAll(x => !BindingStillValid(x.Binding));
+        }
+        public void SetActivity(string value, float now)
+        {
+            if (suspended || (value != "speaking" && value != "listening" && value != "thinking" && value != "idle")) return;
+            string previous = activity; activity = value;
+            foreach (var run in running.ToArray()) if (run.Binding?.stopOnExit == true && !BindingStillValid(run.Binding)) Stop(run,false);
+            queued.RemoveAll(x => !BindingStillValid(x.Binding));
+            // The first snapshot establishes a baseline; loading a save is not an event.
+            if (previous == null || previous == value) return;
+            foreach (RuleEventKind kind in Enum.GetValues(typeof(RuleEventKind))) if (RuleDocument.Activity(kind) == value) Emit(kind,null,now);
+        }
+        bool BindingStillValid(RuleBinding binding) => binding == null ||
+            (RuleDocument.ConditionMatches(binding.condition,activity) && (!binding.stopOnExit || RuleDocument.IsObjectEvent(binding.trigger) || RuleDocument.Activity(binding.trigger) == activity));
+        public void Emit(RuleEventKind kind, string sourceId, float now)
+        {
+            if (suspended || !float.IsFinite(now)) return;
+            var definition=BehaviourCatalog.Event(kind);if(definition!=null)EnqueueEvent(definition.Id,sourceId??"",new ProgramValue(definition.ObjectEvent?sourceId:definition.Activity),now,0,out _);
+            foreach (var binding in document.bindings)
+            {
+                if (unavailable.ContainsKey(binding.sequenceId) || !binding.enabled || binding.trigger != kind || (RuleDocument.IsObjectEvent(kind) && binding.sourceId != sourceId) || !RuleDocument.ConditionMatches(binding.condition,activity)) continue;
+                if (firedAt.TryGetValue(binding.id,out float last) && now-last < binding.cooldown) continue;
+                if (Trigger(binding.sequenceId,now,binding)) firedAt[binding.id] = now;
+            }
+        }
+        public bool Trigger(string sequenceId, float now, RuleBinding binding = null)
+        {
+            LastError = null;
+            if (suspended || !float.IsFinite(now)) { LastError = "Rules are paused"; return false; }
+            var sequence = document.sequences.FirstOrDefault(x => x.id == sequenceId);
+            if (sequence == null) { LastError = "That action sequence no longer exists"; return false; }
+            if (unavailable.TryGetValue(sequenceId,out var issue)){LastError=issue;return false;}
+            if (!BindingStillValid(binding)) return false;
+            ProgramMachine machine;string memoryIdentity;
+            try{machine=CreateMachine(sequence,out memoryIdentity);}catch(Exception ex){LastError=ex.Message;return false;}
+            var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
+            bool earlierChannels=channelWaits.Any(wait=>wait.Sequence.id!=sequenceId&&Overlap(wait.Active.Claims,Whole(targets)));
+            if(earlierChannels&&sequence.interruption!=RuleInterruption.QueueLatest){LastError="An earlier program is waiting for a required channel";return false;}
+            var conflicts = running.Where(x => x.Sequence.id == sequenceId || Conflicts(x,Whole(targets))).ToArray();
+            if (conflicts.Length > 0 || !HasCapacity || earlierChannels)
+            {
+                if (sequence.interruption == RuleInterruption.Ignore) { LastError = "An action already owns this target"; return false; }
+                if (sequence.interruption == RuleInterruption.QueueLatest || (conflicts.Length == 0 && !HasCapacity))
+                {
+                    queued.RemoveAll(x => x.SequenceId == sequenceId);
+                    if (queued.Count >= 8) { LastError = "The action queue is full"; return false; }
+                    queued.Add(new Pending { SequenceId = sequenceId, Binding = binding?.Copy() }); return true;
+                }
+                foreach (var run in conflicts) Stop(run,false);
+            }
+            var next = new Run { Id = Guid.NewGuid().ToString("N"), Sequence = sequence.Copy(), Binding = binding?.Copy(), Targets = targets, Claims=Whole(targets) };
+            next.Machine=machine;next.MemoryIdentity=memoryIdentity;
+            running.Add(next);if(!next.Reactive&&!Reserve(next,next.Claims))return false;return StartStep(next,now);
+        }
+        bool Reserve(Run run,BehaviourCatalog.Claim[] claims) {
+            if(run.OwnershipLease?.Held==true)return true;
+            if(Ownership.TryAcquire(run.Id,run.Sequence.name,RoomActorRole.Program,claims,
+                notice=>{if(running.Contains(run))Stop(run,notice.PreservePlacement,"cancelled",notice.Message);},out run.OwnershipLease,out var error))return true;
+            LastError=error;Stop(run,false,"failed",error);return false;
+        }
+        void ReleaseClaims(Run run) {run.OwnershipLease?.Dispose();run.OwnershipLease=null;}
+        bool StartStep(Run run, float now)
+        {
+            run.Computing=false;
+            {
+                var yielded=run.Machine.Advance(out run.Active);
+                if(yielded==ProgramYield.Checkpoint)return QueueCheckpoint(run);
+                if(yielded==ProgramYield.Parallel)return StartParallel(run);
+                if(yielded==ProgramYield.Waiting)return WaitForEvent(run,now);
+                if(yielded==ProgramYield.Signal) {
+                    var signal=run.Machine.Signal;
+                    if(!EnqueueEvent(signal.Event,"",signal.Value,now,run.EventDepth+1,out var eventError)) {LastError=eventError;Stop(run,false,"failed",eventError);return false;}
+                    run.Computing=true;return true;
+                }
+                if(yielded==ProgramYield.Yield) {run.Computing=true;return true;}
+                if(yielded==ProgramYield.Failed) {LastError=run.Machine.Error;Stop(run,false,"failed",LastError);return false;}
+                if(yielded==ProgramYield.Completed) {
+                    if(run.Sequence.repeat) {try{run.Machine=CreateMachine(run.Sequence,out run.MemoryIdentity);run.Computing=true;}catch(Exception ex){LastError=ex.Message;Stop(run,false,"failed",LastError);return false;}}
+                    else Finish(run,"completed","Program completed");
+                    return true;
+                }
+            }
+            return StartAction(run,now);
+        }
+        bool StartAction(Run run,float now) {
+            if(run.Active.RequiresQuietRoom&&HasOtherWork(run.Id)||running.Any(x=>x!=run&&x.Active?.RequiresQuietRoom==true)) {
+                LastError="Stop other room actions before this room-wide action";Stop(run,false,"failed",LastError);return false;
+            }
+            var claims=run.Reactive?run.Active.Claims:run.Claims;
+            if(run.Reactive)run.Targets=run.Active.Resources.ToHashSet();
+            if(Ownership.Error!=null||Ownership.Suspended){LastError=Ownership.Error??"Room actions are paused";Stop(run,false,"failed",LastError);return false;}
+            if(!ChannelsAvailable(run,claims,out var channelError)){
+                if(run.Reactive&&run.Machine.ChannelWaitSeconds>0){WaitForChannels(run,now,channelError);return true;}
+                LastError=channelError;Stop(run,false,"failed",LastError);return false;
+            }
+            run.Claims=claims;
+            if(!Reserve(run,claims))return false;
+            if(!run.AcquisitionChecked&&actions is IRuleEntityAcquisition acquisition){
+                run.AcquisitionChecked=true;run.Acquiring=true;run.AcquisitionDeadline=now+30;
+                run.EntityDemand=acquisition.Acquire(run.Active,()=>run.Acquiring&&running.Contains(run)&&!suspended);
+            }
+            // Recheck after a possible channel wait as well as after loading.
+            if(run.AcquisitionChecked&&!PollEntityDemand(run,now))return running.Contains(run);
+            if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
+            RemoveChannelWait(run);
+            bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
+            if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
+            { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
+            run.Duration = seconds; run.PrepareDeadline = now+(awaited?Math.Clamp(run.Active.Definition.Module.CompletionTimeoutSeconds,1,600):30);
+            var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
+            if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false,"failed",LastError); return false; }
+            if(instant||awaited&&state==RuleActionState.Ready) {
+                if(state!=RuleActionState.Ready) {LastError="An instant action cannot defer its effect";Stop(run,false,"failed",LastError);return false;}
+                if(actions is IRuleCompletion completion) {
+                    if(!completion.Complete(run.Id,out error)) {LastError=error??"This action could not finish";Stop(run,false,"failed",LastError);return false;}
+                } else actions.Stop(run.Id,false);
+                if(!CompleteResult(run,out error)) {LastError=error;Stop(run,false,"failed",error);return false;}
+                ReleaseEntityDemand(run);run.Active=null;
+                if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();}
+                // An instant effect is already done. Don't reset activation work or
+                // causal depth, and don't execute a second effect in this frame.
+                if(run.Invocation!=null) {
+                    if(run.Machine.Advance(out _)!=ProgramYield.Completed) {LastError="Invalid one-off completion";Stop(run,false,"failed",LastError);return false;}
+                    Finish(run,"completed","Action completed");
+                } else run.Computing=true;
+                return true;
+            }
+            run.Preparing = state == RuleActionState.Preparing;
+            run.Ends = now + seconds; return true;
+        }
+        bool CompleteResult(Run run,out string error) {
+            var result=actions is IRuleResults source?source.TakeResult(run.Id):new Newtonsoft.Json.Linq.JObject();
+            if(!run.Machine.CompleteAction(result,out error))return false;
+            if(result.Count>0)run.Output=(Newtonsoft.Json.Linq.JObject)result.DeepClone();
+            return true;
+        }
+        public void Tick(float now)
+        {
+            if (suspended || !float.IsFinite(now)) return;
+            lastNow=now;PollWatches(now);DispatchEvents(now);
+            foreach (var run in running.ToArray())
+            {
+                if(!running.Contains(run)||run.Children!=null)continue;
+                if(run.Acquiring){if(PollEntityDemand(run,now))StartAction(run,now);continue;}
+                if(run.WaitingForChannels){PollChannelWait(run,now);continue;}
+                if(run.Machine.SavingMemory){PollCheckpoint(run);continue;}
+                if(run.Machine.Wait!=null) {
+                    if(run.Machine.Wait.Seconds==0||now<run.Ends)continue;
+                    Unsubscribe(run);run.Machine.Resume(false);run.EventDepth=0;StartStep(run,now);continue;
+                }
+                if(run.Computing) {StartStep(run,now);continue;}
+                if(run.Active?.AwaitCompletion==true) {
+                    string issue=null;var state=actions is IRuleReadiness awaited?awaited.State(run.Id,out issue):RuleActionState.Ready;
+                    if(state==RuleActionState.Preparing && now<run.PrepareDeadline)continue;
+                    if(state!=RuleActionState.Ready) {
+                        LastError=state==RuleActionState.Preparing?"The action did not complete in time; inspect its outcome before retrying":issue??"The action failed";
+                        Stop(run,false,"failed",LastError);continue;
+                    }
+                    run.Preparing=false;run.Ends=now;
+                }
+                if (run.Preparing)
+                {
+                    if (now >= run.PrepareDeadline) { LastError = "The action took too long to load; try again"; Stop(run,false,"failed",LastError); continue; }
+                    var state = ((IRuleReadiness)actions).State(run.Id,out var error);
+                    if (state == RuleActionState.Failed)
+                    { LastError = error ?? "The action took too long to load; try again"; Stop(run,false,"failed",LastError); continue; }
+                    if (state == RuleActionState.Ready) { run.Preparing = false; run.Ends = now+run.Duration; }
+                    continue; // Loading time never consumes any of the requested playback.
+                }
+                if (actions is IRuleReadiness active && active.State(run.Id,out var activeError) == RuleActionState.Failed)
+                { LastError=activeError ?? "This action stopped because its target changed"; Stop(run,false,"failed",LastError); continue; }
+                if (now < run.Ends) continue;
+                if (actions is IRuleCompletion completion)
+                { if (!completion.Complete(run.Id,out var completionError)) { LastError=completionError ?? "This action could not finish"; Stop(run,false,"failed",LastError); continue; } }
+                else actions.Stop(run.Id,false);
+                if(!CompleteResult(run,out var resultError)) {LastError=resultError;Stop(run,false,"failed",resultError);continue;}
+                bool timed=run.Active!=null&&!run.Active.Instant&&!run.Active.AwaitCompletion;
+                ReleaseEntityDemand(run);run.Active=null;if(run.Reactive) {ReleaseClaims(run);if(run.Invocation==null)run.Targets.Clear();run.Claims=Array.Empty<BehaviourCatalog.Claim>();if(timed) {run.Machine.BeginActivation();run.EventDepth=0;}}
+                // At most one step per run per tick, even after a long frame.
+                StartStep(run,now);
+            }
+            PumpCheckpoints(now);
+            foreach (var pending in queued.ToArray())
+            {
+                var sequence = document.sequences.FirstOrDefault(x => x.id == pending.SequenceId);
+                if (sequence == null || !BindingStillValid(pending.Binding)) { queued.Remove(pending); continue; }
+                var targets = (sequence.Compile(out _).Version==3?Array.Empty<string>():sequence.Targets()).ToHashSet();
+                if (!HasCapacity || running.Any(x => x.Sequence.id == sequence.id || Conflicts(x,Whole(targets))) || channelWaits.Any(wait=>Overlap(wait.Active.Claims,Whole(targets)))) continue;
+                queued.Remove(pending); Trigger(sequence.id,now,pending.Binding);
+            }
+        }
+        public void StopConflicting(RuleStep step,bool preservePlacement)
+        {
+            var claims=BehaviourCatalog.Claims(step);
+            foreach(var run in running.Where(x=>Conflicts(x,claims)).ToArray())Stop(run,preservePlacement);
+            CancelQueuedConflicting(claims);
+        }
+        public void CancelQueuedConflicting(BehaviourCatalog.Claim[] claims) {
+            // Pending v2 sequences reserve whole objects. Pending v3 programs
+            // own nothing until their next invocation and are rechecked then.
+            queued.RemoveAll(x=>document.sequences.FirstOrDefault(y=>y.id==x.SequenceId) is RuleSequence sequence &&
+                sequence.Compile(out _).Version!=3 && Whole(sequence.Targets()).Any(claim=>claims.Any(claim.Conflicts)));
+        }
+        public void GrabTarget(string targetId)
+        {
+            foreach(var run in running.Where(x=>x.Targets.Contains(targetId)).ToArray()){
+                bool observes=!run.Claims.Any(c=>c.Target==targetId)&&actions is IRuleGrabPolicy policy&&policy.WaitsThroughGrab(run.Id,targetId);
+                if(!observes)Stop(run,true);
+            }
+            queued.RemoveAll(x=>document.sequences.FirstOrDefault(y=>y.id==x.SequenceId)?.Targets().Contains(targetId)==true);
+        }
+        public void StopTarget(string targetId, bool preservePlacement)
+        {
+            foreach (var run in running.Where(x => x.Targets.Contains(targetId)).ToArray()) Stop(run,preservePlacement && run.Active!=null && run.Active.Resources.Contains(targetId));
+            queued.RemoveAll(x => document.sequences.FirstOrDefault(y => y.id == x.SequenceId)?.Targets().Contains(targetId) == true);
+        }
+        void Finish(Run run,string phase,string status,bool joining=true) {
+            if(!running.Contains(run))return;
+            if(run.Invocation!=null) {if(phase=="completed")status="Action completed";else if(phase=="cancelled"&&status=="Behaviour stopped")status="Action cancelled";}
+            ReleaseClaims(run);Unsubscribe(run);RemoveChannelWait(run);running.Remove(run);checkpoints.Remove(run);
+            // A child completing is not a completed behaviour. Keep the existing
+            // outcome contract root-only so readers cannot mistake a branch for
+            // the requested program's result while its parent is still waiting.
+            if(run.Parent==null)outcomes.Enqueue(new FinishedRun {Outcome=new RuleOutcome {id=run.Id,sequenceId=run.Sequence.id,phase=phase,nodeId=run.TerminalNode??run.Machine?.NodeId,status=status??phase},Invocation=run.Invocation,Output=run.Output,Resources=run.Targets.ToArray()});
+            while(outcomes.Count>MaximumOutcomes)outcomes.Dequeue();
+            if(run.Invocation!=null)Receipts?.Update(LiveInvocation(run.Id));
+            if(joining&&phase=="completed"&&run.Parent!=null)JoinParallel(run.Parent);
+        }
+        bool StartParallel(Run parent) {
+            var branches=parent.Machine.Branches;
+            if(running.Count+branches.Length>MaximumConcurrent) {LastError="Not enough scheduler slots for all parallel branches";Stop(parent,false,"failed",LastError);return false;}
+            parent.Children=branches.Select(machine=>new Run {Id=Guid.NewGuid().ToString("N"),Sequence=parent.Sequence,Parent=parent,Machine=machine,Targets=new(),Computing=true,EventDepth=parent.EventDepth}).ToArray();
+            running.AddRange(parent.Children);return true;
+        }
+        void JoinParallel(Run parent) {
+            if(!running.Contains(parent)||parent.Children.Any(running.Contains))return;
+            // Preserve causal depth through fork/join, including child signals.
+            parent.EventDepth=parent.Children.Max(child=>child.EventDepth);parent.Children=null;
+            if(!parent.Machine.CompleteParallel(out var error)){LastError=error;Stop(parent,false,"failed",error);return;}
+            parent.Computing=true;
+        }
+        static Run Root(Run run){while(run.Parent!=null)run=run.Parent;return run;}
+        void Stop(Run run,bool preservePlacement,string phase="cancelled",string status="Behaviour stopped") {
+            if(!running.Contains(run))return;
+            var root=Root(run);if(run!=root){root.TerminalNode=run.Machine?.NodeId;status="Branch "+run.Machine?.Function+": "+status;}var group=running.Where(candidate=>Root(candidate)==root).Reverse().ToArray();
+            var notice=run.MemoryWrite!=null?"Stopped waiting. An accepted memory save may still finish; inspect remembered values before starting again.":(actions as IRuleInterruptionInfo)?.InterruptionStatus(run.Id);
+            if(!string.IsNullOrEmpty(notice))status=phase=="cancelled"?notice:status+". "+notice;
+            Exception cleanupFailure=null;
+            foreach(var member in group) {
+                try {actions.Stop(member.Id,member==run&&preservePlacement);}
+                catch(Exception exception) {cleanupFailure??=exception;if(group.Length>1)phase="failed";status=LastError="An action could not stop cleanly; inspect the room before running again";}
+                finally {ReleaseEntityDemand(member);Finish(member,phase,status,false);}
+            }
+            if(cleanupFailure!=null)throw new InvalidOperationException(LastError,cleanupFailure);
+        }
+        public bool StopSequence(string id)
+        {
+            if(!document.sequences.Any(x=>x.id==id))return false;
+            foreach(var run in running.Where(x=>x.Sequence.id==id).ToArray())Stop(run,false);
+            queued.RemoveAll(x=>x.SequenceId==id);return true;
+        }
+        public void StopAll() { foreach (var run in running.ToArray()) Stop(run,false); queued.Clear();eventQueue.Clear(); }
+    }
+}

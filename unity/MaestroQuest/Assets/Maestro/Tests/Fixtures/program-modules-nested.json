@@ -1,0 +1,392 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [],
+  "state": [],
+  "events": [
+    {
+      "name": "user.first",
+      "type": "number"
+    },
+    {
+      "name": "user.second",
+      "type": "number"
+    }
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "a",
+          "initial": 0
+        },
+        {
+          "name": "b",
+          "initial": 0
+        },
+        {
+          "name": "c",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "first",
+          "op": "call",
+          "module": "first",
+          "function": "add",
+          "args": [
+            {
+              "value": 1
+            }
+          ],
+          "result": "a"
+        },
+        {
+          "id": "again",
+          "op": "call",
+          "module": "first",
+          "function": "add",
+          "args": [
+            {
+              "value": 2
+            }
+          ],
+          "result": "b"
+        },
+        {
+          "id": "other",
+          "op": "call",
+          "module": "second",
+          "function": "add",
+          "args": [
+            {
+              "value": 5
+            }
+          ],
+          "result": "c"
+        },
+        {
+          "id": "wait",
+          "op": "sleep",
+          "seconds": {
+            "value": 10
+          }
+        }
+      ]
+    }
+  ],
+  "moduleVersion": 1,
+  "imports": [
+    {
+      "alias": "first",
+      "hash": "0d0ade58c33136365690523874eb794ec91866aa98a59e810222cc5447ea5143",
+      "module": {
+        "version": 1,
+        "name": "Wrapped counter",
+        "exports": [
+          "add"
+        ],
+        "program": {
+          "version": 3,
+          "entry": "main",
+          "resources": [],
+          "state": [],
+          "events": [
+            {
+              "name": "user.changed",
+              "type": "number"
+            }
+          ],
+          "functions": [
+            {
+              "name": "main",
+              "returns": "void",
+              "parameters": [],
+              "locals": [],
+              "body": []
+            },
+            {
+              "name": "add",
+              "returns": "number",
+              "parameters": [
+                {
+                  "name": "amount",
+                  "type": "number"
+                }
+              ],
+              "locals": [
+                {
+                  "name": "value",
+                  "initial": 0
+                }
+              ],
+              "body": [
+                {
+                  "id": "forward",
+                  "op": "call",
+                  "module": "inner",
+                  "function": "add",
+                  "args": [
+                    {
+                      "var": "amount"
+                    }
+                  ],
+                  "result": "value"
+                },
+                {
+                  "id": "returnValue",
+                  "op": "return",
+                  "value": {
+                    "var": "value"
+                  }
+                }
+              ]
+            }
+          ],
+          "moduleVersion": 1,
+          "imports": [
+            {
+              "alias": "inner",
+              "hash": "ec5a303130b4f1a81037e7741a436ec51c197564a547ceb705751f7f4e668bb3",
+              "module": {
+                "version": 1,
+                "name": "Counter",
+                "exports": [
+                  "add"
+                ],
+                "program": {
+                  "version": 3,
+                  "entry": "main",
+                  "resources": [],
+                  "state": [
+                    {
+                      "name": "count",
+                      "initial": 0
+                    }
+                  ],
+                  "events": [
+                    {
+                      "name": "user.changed",
+                      "type": "number"
+                    }
+                  ],
+                  "functions": [
+                    {
+                      "name": "main",
+                      "returns": "void",
+                      "parameters": [],
+                      "locals": [],
+                      "body": [
+                        {
+                          "id": "unused",
+                          "op": "setState",
+                          "variable": "count",
+                          "value": {
+                            "value": 999
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "add",
+                      "returns": "number",
+                      "parameters": [
+                        {
+                          "name": "amount",
+                          "type": "number"
+                        }
+                      ],
+                      "locals": [],
+                      "body": [
+                        {
+                          "id": "bump",
+                          "op": "call",
+                          "function": "privateAdd",
+                          "args": [
+                            {
+                              "var": "amount"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "send",
+                          "op": "emitEvent",
+                          "event": "user.changed",
+                          "value": {
+                            "state": "count"
+                          }
+                        },
+                        {
+                          "id": "result",
+                          "op": "return",
+                          "value": {
+                            "state": "count"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "privateAdd",
+                      "returns": "void",
+                      "parameters": [
+                        {
+                          "name": "amount",
+                          "type": "number"
+                        }
+                      ],
+                      "locals": [],
+                      "body": [
+                        {
+                          "id": "change",
+                          "op": "setState",
+                          "variable": "count",
+                          "value": {
+                            "op": "add",
+                            "args": [
+                              {
+                                "state": "count"
+                              },
+                              {
+                                "var": "amount"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "signals": {
+                "user.changed": "user.changed"
+              }
+            }
+          ]
+        }
+      },
+      "signals": {
+        "user.changed": "user.first"
+      }
+    },
+    {
+      "alias": "second",
+      "hash": "ec5a303130b4f1a81037e7741a436ec51c197564a547ceb705751f7f4e668bb3",
+      "module": {
+        "version": 1,
+        "name": "Counter",
+        "exports": [
+          "add"
+        ],
+        "program": {
+          "version": 3,
+          "entry": "main",
+          "resources": [],
+          "state": [
+            {
+              "name": "count",
+              "initial": 0
+            }
+          ],
+          "events": [
+            {
+              "name": "user.changed",
+              "type": "number"
+            }
+          ],
+          "functions": [
+            {
+              "name": "main",
+              "returns": "void",
+              "parameters": [],
+              "locals": [],
+              "body": [
+                {
+                  "id": "unused",
+                  "op": "setState",
+                  "variable": "count",
+                  "value": {
+                    "value": 999
+                  }
+                }
+              ]
+            },
+            {
+              "name": "add",
+              "returns": "number",
+              "parameters": [
+                {
+                  "name": "amount",
+                  "type": "number"
+                }
+              ],
+              "locals": [],
+              "body": [
+                {
+                  "id": "bump",
+                  "op": "call",
+                  "function": "privateAdd",
+                  "args": [
+                    {
+                      "var": "amount"
+                    }
+                  ]
+                },
+                {
+                  "id": "send",
+                  "op": "emitEvent",
+                  "event": "user.changed",
+                  "value": {
+                    "state": "count"
+                  }
+                },
+                {
+                  "id": "result",
+                  "op": "return",
+                  "value": {
+                    "state": "count"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "privateAdd",
+              "returns": "void",
+              "parameters": [
+                {
+                  "name": "amount",
+                  "type": "number"
+                }
+              ],
+              "locals": [],
+              "body": [
+                {
+                  "id": "change",
+                  "op": "setState",
+                  "variable": "count",
+                  "value": {
+                    "op": "add",
+                    "args": [
+                      {
+                        "state": "count"
+                      },
+                      {
+                        "var": "amount"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "signals": {
+        "user.changed": "user.second"
+      }
+    }
+  ]
+}

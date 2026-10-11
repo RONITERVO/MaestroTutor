@@ -1,0 +1,628 @@
+{
+  "execution": {
+    "selected": {
+      "id": "25ddeab89be64e758a2171caf8ab0d3c",
+      "capability": "animation.author",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "target": "maestro",
+        "revision": 6,
+        "frames": 3,
+        "duration": 0.5,
+        "loop": false,
+        "poseSaved": false
+      },
+      "call": {
+        "id": "animation.author",
+        "version": 1,
+        "arguments": {
+          "operation": "frames",
+          "target": "maestro",
+          "revision": 2,
+          "replace": true,
+          "frames": [
+            {
+              "time": 0.0,
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "scale": 1.0,
+              "joints": [
+                {
+                  "joint": "Hips",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Spine",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Chest",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Neck",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Head",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "LeftUpperArm",
+                  "rotation": {
+                    "x": 0.9576418,
+                    "y": -0.202205867,
+                    "z": -0.202205837,
+                    "w": -0.03388052
+                  }
+                },
+                {
+                  "joint": "LeftLowerArm",
+                  "rotation": {
+                    "x": -0.0972728953,
+                    "y": 0.126540288,
+                    "z": -0.09323745,
+                    "w": 0.9827677
+                  }
+                },
+                {
+                  "joint": "LeftHand",
+                  "rotation": {
+                    "x": 0.0620362833,
+                    "y": 0.008912142,
+                    "z": -0.0188436266,
+                    "w": 0.9978562
+                  }
+                },
+                {
+                  "joint": "RightUpperArm",
+                  "rotation": {
+                    "x": 0.9576418,
+                    "y": 0.202205867,
+                    "z": 0.202205837,
+                    "w": -0.03388052
+                  }
+                },
+                {
+                  "joint": "RightLowerArm",
+                  "rotation": {
+                    "x": -0.0972728953,
+                    "y": -0.126540288,
+                    "z": 0.09323745,
+                    "w": 0.9827677
+                  }
+                },
+                {
+                  "joint": "RightHand",
+                  "rotation": {
+                    "x": 0.0620362833,
+                    "y": -0.008912142,
+                    "z": 0.0188436266,
+                    "w": 0.9978562
+                  }
+                },
+                {
+                  "joint": "LeftUpperLeg",
+                  "rotation": {
+                    "x": 0.999914,
+                    "y": -0.006638682,
+                    "z": -0.00663869129,
+                    "w": 0.009164877
+                  }
+                },
+                {
+                  "joint": "LeftLowerLeg",
+                  "rotation": {
+                    "x": 0.0207732115,
+                    "y": 0.0022250656,
+                    "z": -0.002457963,
+                    "w": 0.999778748
+                  }
+                },
+                {
+                  "joint": "LeftFoot",
+                  "rotation": {
+                    "x": -0.52407,
+                    "y": 0.005894818,
+                    "z": -0.00147618726,
+                    "w": 0.8516536
+                  }
+                },
+                {
+                  "joint": "RightUpperLeg",
+                  "rotation": {
+                    "x": 0.999914,
+                    "y": 0.006638682,
+                    "z": 0.00663869129,
+                    "w": 0.009164877
+                  }
+                },
+                {
+                  "joint": "RightLowerLeg",
+                  "rotation": {
+                    "x": 0.0207732115,
+                    "y": -0.0022250656,
+                    "z": 0.002457963,
+                    "w": 0.999778748
+                  }
+                },
+                {
+                  "joint": "RightFoot",
+                  "rotation": {
+                    "x": -0.52407,
+                    "y": -0.005894818,
+                    "z": 0.00147618726,
+                    "w": 0.8516536
+                  }
+                }
+              ]
+            },
+            {
+              "time": 0.25,
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "scale": 1.0,
+              "joints": [
+                {
+                  "joint": "Hips",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Spine",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Chest",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Neck",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Head",
+                  "rotation": {
+                    "x": 0.258819044,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 0.9659258
+                  }
+                },
+                {
+                  "joint": "LeftUpperArm",
+                  "rotation": {
+                    "x": 0.9576418,
+                    "y": -0.202205867,
+                    "z": -0.202205837,
+                    "w": -0.03388052
+                  }
+                },
+                {
+                  "joint": "LeftLowerArm",
+                  "rotation": {
+                    "x": -0.0972728953,
+                    "y": 0.126540288,
+                    "z": -0.09323745,
+                    "w": 0.9827677
+                  }
+                },
+                {
+                  "joint": "LeftHand",
+                  "rotation": {
+                    "x": 0.0620362833,
+                    "y": 0.008912142,
+                    "z": -0.0188436266,
+                    "w": 0.9978562
+                  }
+                },
+                {
+                  "joint": "RightUpperArm",
+                  "rotation": {
+                    "x": 0.9576418,
+                    "y": 0.202205867,
+                    "z": 0.202205837,
+                    "w": -0.03388052
+                  }
+                },
+                {
+                  "joint": "RightLowerArm",
+                  "rotation": {
+                    "x": -0.0972728953,
+                    "y": -0.126540288,
+                    "z": 0.09323745,
+                    "w": 0.9827677
+                  }
+                },
+                {
+                  "joint": "RightHand",
+                  "rotation": {
+                    "x": 0.0620362833,
+                    "y": -0.008912142,
+                    "z": 0.0188436266,
+                    "w": 0.9978562
+                  }
+                },
+                {
+                  "joint": "LeftUpperLeg",
+                  "rotation": {
+                    "x": 0.999914,
+                    "y": -0.006638682,
+                    "z": -0.00663869129,
+                    "w": 0.009164877
+                  }
+                },
+                {
+                  "joint": "LeftLowerLeg",
+                  "rotation": {
+                    "x": 0.0207732115,
+                    "y": 0.0022250656,
+                    "z": -0.002457963,
+                    "w": 0.999778748
+                  }
+                },
+                {
+                  "joint": "LeftFoot",
+                  "rotation": {
+                    "x": -0.52407,
+                    "y": 0.005894818,
+                    "z": -0.00147618726,
+                    "w": 0.8516536
+                  }
+                },
+                {
+                  "joint": "RightUpperLeg",
+                  "rotation": {
+                    "x": 0.999914,
+                    "y": 0.006638682,
+                    "z": 0.00663869129,
+                    "w": 0.009164877
+                  }
+                },
+                {
+                  "joint": "RightLowerLeg",
+                  "rotation": {
+                    "x": 0.0207732115,
+                    "y": -0.0022250656,
+                    "z": 0.002457963,
+                    "w": 0.999778748
+                  }
+                },
+                {
+                  "joint": "RightFoot",
+                  "rotation": {
+                    "x": -0.52407,
+                    "y": -0.005894818,
+                    "z": 0.00147618726,
+                    "w": 0.8516536
+                  }
+                }
+              ]
+            },
+            {
+              "time": 0.5,
+              "position": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "rotation": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 1.0
+              },
+              "scale": 1.0,
+              "joints": [
+                {
+                  "joint": "Hips",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Spine",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Chest",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Neck",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "Head",
+                  "rotation": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0,
+                    "w": 1.0
+                  }
+                },
+                {
+                  "joint": "LeftUpperArm",
+                  "rotation": {
+                    "x": 0.9576418,
+                    "y": -0.202205867,
+                    "z": -0.202205837,
+                    "w": -0.03388052
+                  }
+                },
+                {
+                  "joint": "LeftLowerArm",
+                  "rotation": {
+                    "x": -0.0972728953,
+                    "y": 0.126540288,
+                    "z": -0.09323745,
+                    "w": 0.9827677
+                  }
+                },
+                {
+                  "joint": "LeftHand",
+                  "rotation": {
+                    "x": 0.0620362833,
+                    "y": 0.008912142,
+                    "z": -0.0188436266,
+                    "w": 0.9978562
+                  }
+                },
+                {
+                  "joint": "RightUpperArm",
+                  "rotation": {
+                    "x": 0.9576418,
+                    "y": 0.202205867,
+                    "z": 0.202205837,
+                    "w": -0.03388052
+                  }
+                },
+                {
+                  "joint": "RightLowerArm",
+                  "rotation": {
+                    "x": -0.0972728953,
+                    "y": -0.126540288,
+                    "z": 0.09323745,
+                    "w": 0.9827677
+                  }
+                },
+                {
+                  "joint": "RightHand",
+                  "rotation": {
+                    "x": 0.0620362833,
+                    "y": -0.008912142,
+                    "z": 0.0188436266,
+                    "w": 0.9978562
+                  }
+                },
+                {
+                  "joint": "LeftUpperLeg",
+                  "rotation": {
+                    "x": 0.999914,
+                    "y": -0.006638682,
+                    "z": -0.00663869129,
+                    "w": 0.009164877
+                  }
+                },
+                {
+                  "joint": "LeftLowerLeg",
+                  "rotation": {
+                    "x": 0.0207732115,
+                    "y": 0.0022250656,
+                    "z": -0.002457963,
+                    "w": 0.999778748
+                  }
+                },
+                {
+                  "joint": "LeftFoot",
+                  "rotation": {
+                    "x": -0.52407,
+                    "y": 0.005894818,
+                    "z": -0.00147618726,
+                    "w": 0.8516536
+                  }
+                },
+                {
+                  "joint": "RightUpperLeg",
+                  "rotation": {
+                    "x": 0.999914,
+                    "y": 0.006638682,
+                    "z": 0.00663869129,
+                    "w": 0.009164877
+                  }
+                },
+                {
+                  "joint": "RightLowerLeg",
+                  "rotation": {
+                    "x": 0.0207732115,
+                    "y": -0.0022250656,
+                    "z": 0.002457963,
+                    "w": 0.999778748
+                  }
+                },
+                {
+                  "joint": "RightFoot",
+                  "rotation": {
+                    "x": -0.52407,
+                    "y": -0.005894818,
+                    "z": 0.00147618726,
+                    "w": 0.8516536
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "25ddeab89be64e758a2171caf8ab0d3c",
+        "capability": "animation.author",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "target": "maestro",
+          "revision": 6,
+          "frames": 3,
+          "duration": 0.5,
+          "loop": false,
+          "poseSaved": false
+        }
+      }
+    ],
+    "nextRunId": "99da8a768e1049faa1fcb406ae12fd92",
+    "storageError": null,
+    "recovery": null
+  },
+  "metadata": {
+    "target": "maestro",
+    "revision": 6,
+    "frames": 3,
+    "duration": 0.5,
+    "loop": false,
+    "poseSaved": false
+  },
+  "frame": {
+    "time": 0.25,
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "rotation": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "w": 1.0
+    },
+    "scale": 1.0,
+    "jointChannels": true,
+    "joints": [
+      "Hips",
+      "Spine",
+      "Chest",
+      "Neck",
+      "Head",
+      "LeftUpperArm",
+      "LeftLowerArm",
+      "LeftHand",
+      "RightUpperArm",
+      "RightLowerArm",
+      "RightHand",
+      "LeftUpperLeg",
+      "LeftLowerLeg",
+      "LeftFoot",
+      "RightUpperLeg",
+      "RightLowerLeg",
+      "RightFoot"
+    ]
+  },
+  "frameQuery": {
+    "target": "maestro",
+    "revision": 6,
+    "index": 1
+  },
+  "joint": {
+    "x": 0.258819044,
+    "y": 0.0,
+    "z": 0.0,
+    "w": 0.9659258
+  },
+  "jointQuery": {
+    "target": "maestro",
+    "revision": 6,
+    "index": 1,
+    "joint": "Head"
+  }
+}

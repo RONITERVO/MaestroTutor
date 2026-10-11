@@ -673,3 +673,56 @@ and reports success only after the app itself shows its normal signed-in state.
   guess. Keep `VITE_ANDROID_EXTERNAL_STRIPE_CHECKOUT_ENABLED=false` in production
   until a maintainer records Play programme enrollment and reporting obligations.
   The authoritative checklist is `docs/STRIPE_ONLY_BILLING.md`.
+
+
+## Quest agent session (protocol 1.9.0)
+
+The ordinary chat/suggestion methods now support the native agent when a room is
+explicitly connected. Use one `maestro rpc` process: `room.connect` takes the
+`directory` of an explicitly started, owned `QuestRoomProbe`. There is no implicit
+headset connection or replacement scene. `room.disconnect` cancels the agent and
+closes this transport without shutting down someone else's Editor.
+
+`chat.turn` captures the original input before sending it. `suggestions.process`
+uses the same proposal verification and shared `RoomTaskHandoff`/provider executor
+as the browser; it never accepts a synthetic agent decision. The agent result is
+projected into ordinary chat using the same compact message projection. The
+journal, including original context and receipts, lives in the profile's
+`room-tasks` directory. Claims are atomic and never replayed after restart. Missing
+or unfinished records remain uncertain; reconnect repairs display from the journal.
+
+`room.tasks` returns compact task summaries. `includeEvidence:true` explicitly
+includes the private original context/media and receipts. `room.stop` addresses
+one task ID. Stop and inspection can pass a running JSON-RPC request; ordinary
+mutations remain serial. Source deletion, account/conversation changes and native
+session loss revoke execution. Profiles and their task evidence are local private
+files, not release artifacts to upload by default.
+
+`journey.room` takes `text`, optional `languagePairId`, and `requireActions`
+(default true). Seed a real earlier chat turn first. It requires actual tutor and
+verifier streaming, a verified handoff, preserved input/history, native receipts,
+a completed task, final chat delivery, provider usage for all stages and managed
+ledger reconciliation (or explicit BYOK payer). It does not accept mocked or
+synthetic verifier overrides. Native state assertions specific to the requested
+result are additionally required by a release scenario.
+
+Live conversation/observer journeys can capture the exact successfully sent
+packets and JPEG frames for the handoff. Raw microphone capture is not substituted
+for transmitted input. Incomplete media prevents room actions. Ordinary RPC
+results omit that media; the private task journal retains it. These additions do
+not establish real-provider Live/Quest parity merely by passing unit tests.
+A Live result is refused if its originating history, selection, access or native
+session changed; it cannot reselect an old conversation after completion. The
+provider may already have consumed the turn, so this is not an immediate midstream
+cancellation claim. Text task proposals retain their tool envelope; spoken task
+proposals use natural language and the normal after-turn verifier.
+
+The native probe's `LiveVisual` and `ObserverVisual` scenarios exercise these
+ordinary paths with real providers and byte-level media checks. Their internal
+`runHeadlessRoomLiveTurn` evidence wrapper is not a new public RPC method. See the
+[native probe instructions](QUEST_NATIVE_ROOM_PROBE.md) for the explicit speech
+fixture, semantic checks, billing and physical-device limitations.
+
+See [Quest agent release coverage](QUEST_AGENT_RELEASE_COVERAGE.md) for the required
+release matrix. Existing first-lesson, attachment, media and accounting gates
+remain required in both access modes.

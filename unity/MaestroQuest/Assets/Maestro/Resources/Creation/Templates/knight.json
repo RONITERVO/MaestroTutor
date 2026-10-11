@@ -1,0 +1,198 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "knight",
+  "name": "Knight",
+  "description": "Editable chess knight. Grip to move; Foot aligns with board squares. Game rules are optional programs.",
+  "tags": [
+    "game",
+    "chess",
+    "lathe"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Base",
+          "shape": "lathe",
+          "position": {
+            "x": 0,
+            "y": 0.016,
+            "z": 0
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.032,
+            "z": 0.052
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.25
+            },
+            {
+              "x": 0.38,
+              "y": 0.3
+            },
+            {
+              "x": 0.3,
+              "y": 0.5
+            },
+            {
+              "x": 0,
+              "y": 0.5
+            }
+          ],
+          "segments": 24
+        },
+        {
+          "id": "Head",
+          "shape": "extrude",
+          "position": {
+            "x": 0,
+            "y": 0.066,
+            "z": 0
+          },
+          "size": {
+            "x": 0.047,
+            "y": 0.068,
+            "z": 0.026
+          },
+          "rotation": {
+            "x": 0,
+            "y": -0.70710678,
+            "z": 0,
+            "w": 0.70710678
+          },
+          "parent": null,
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": -0.36,
+              "y": -0.5
+            },
+            {
+              "x": 0.3,
+              "y": -0.5
+            },
+            {
+              "x": 0.2,
+              "y": -0.12
+            },
+            {
+              "x": 0.48,
+              "y": 0.16
+            },
+            {
+              "x": 0.45,
+              "y": 0.35
+            },
+            {
+              "x": 0.02,
+              "y": 0.43
+            },
+            {
+              "x": -0.02,
+              "y": 0.5
+            },
+            {
+              "x": -0.17,
+              "y": 0.36
+            },
+            {
+              "x": -0.31,
+              "y": 0.12
+            }
+          ],
+          "segments": 0
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": 0.05,
+            "z": 0
+          },
+          "size": {
+            "x": 0.052,
+            "y": 0.1,
+            "z": 0.052
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "segments": 12
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "Foot",
+        "name": "Foot",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
+  }
+}

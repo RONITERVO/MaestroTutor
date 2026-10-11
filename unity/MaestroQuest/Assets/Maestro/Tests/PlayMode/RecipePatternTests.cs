@@ -1,0 +1,27 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;using System.Collections;using System.IO;using System.Linq;
+using Maestro.Quest.Creation;using Maestro.Quest.Programs;using Newtonsoft.Json.Linq;using NUnit.Framework;using UnityEngine;using UnityEngine.TestTools;
+namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
+ RoomRecipe PatternPanel()=>JsonUtility.FromJson<RoomRecipe>(JArray.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/pattern-contract.json")))[1]["recipe"].ToString());
+ [UnityTest] public IEnumerator RecipePatternSharedEditReadbackUndoAndTintKeepBothPigments(){
+  var recipe=PatternPanel();Assert.That(editor.CreateRecipe("Pattern panel",new Vector3(4,2,4),1,recipe,out var id,out var error),Is.True,error);var go=editor.Find(id);var geometry=go.GetComponent<RecipeObject>();var material=geometry.Part("Panel").GetComponentInChildren<Renderer>().sharedMaterial;
+  Assert.That(material.GetFloat("_PatternMode"),Is.EqualTo(1));Assert.That(material.GetVector("_PatternCounts").x,Is.EqualTo(8));geometry.Tint(new Color(.5f,.8f,.3f,1));material=geometry.Part("Panel").GetComponentInChildren<Renderer>().sharedMaterial;Assert.That(material.GetColor("_PatternColor").r,Is.EqualTo(.5f).Within(.001));Assert.That(material.color.r,Is.EqualTo(.04f).Within(.001));
+  var args=new JObject{["target"]=id,["revision"]=editor.ObjectRevision(id),["index"]=0};Assert.That(BehaviourCatalog.TryRead("object.recipe.part",1,args,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True);Assert.That(value.Characters,Is.LessThanOrEqualTo(1024));Assert.That((string)((JObject)value.Value)["part"]["pattern"]["plane"],Is.EqualTo("xz"));
+  var patch=RecipePatch(id);recipe.parts[0].pattern.kind="stripes";recipe.parts[0].pattern.columns=4;patch["arguments"]["parts"]=new JArray(JObject.Parse(JsonUtility.ToJson(recipe.parts[0])));RecipeRun(new RoomAgentExecutor(editor),patch);yield return null;Assert.That(material==null,Is.True);Assert.That(editor.Read(id).recipe.parts[0].pattern.kind,Is.EqualTo("stripes"));Assert.That(new RoomStorage(directory).Load(out _).objects.Single(o=>o.id==id).recipe.parts[0].pattern.columns,Is.EqualTo(4));editor.Undo();Assert.That(editor.Read(id).recipe.parts[0].pattern.kind,Is.EqualTo("checker"));Assert.That(BehaviourCatalog.TryRead("object.recipe.part",1,args,new BehaviourCatalog.FactContext(editor:editor),out _),Is.False);
+ }
+ [UnityTest] public IEnumerator RecipePatternFailedSaveAndTemporaryDiscardPreserveAcceptedAppearance(){
+  var recipe=PatternPanel();Assert.That(editor.CreateRecipe("Pattern panel",new Vector3(4,2,4),1,recipe,out var id,out var error),Is.True,error);var material=editor.Find(id).GetComponent<RecipeObject>().Part("Panel").GetComponentInChildren<Renderer>().sharedMaterial;
+  var patch=RecipePatch(id);recipe.parts[0].pattern.columns=4;patch["arguments"]["parts"]=new JArray(JObject.Parse(JsonUtility.ToJson(recipe.parts[0])));string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
+  try {Assert.That(editor.EditRecipe(id,editor.ObjectRevision(id),(JObject)patch["arguments"],out error),Is.False);Assert.That(material.GetVector("_PatternCounts").x,Is.EqualTo(8));Assert.That(editor.Read(id).recipe.parts[0].pattern.columns,Is.EqualTo(8));}finally{Directory.Delete(pending);}
+  Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;patch["arguments"]["revision"]=editor.ObjectRevision(id);RecipeRun(new RoomAgentExecutor(editor),patch);Assert.That(editor.Read(id).recipe.parts[0].pattern.columns,Is.EqualTo(4));Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(id).recipe.parts[0].pattern.columns,Is.EqualTo(8));
+ }
+ [UnityTest] public IEnumerator RecipePatternShaderRendersEveryCheckerSquareAndFollowsRotation(){
+  var recipe=PatternPanel();Assert.That(editor.CreateRecipe("Pattern render",new Vector3(6,2,6),1,recipe,out var id,out var error),Is.True,error);var go=editor.Find(id);go.transform.rotation=Quaternion.Euler(10,31,12);yield return null;
+  var camera=new GameObject("Pattern acceptance",typeof(Camera)).GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=.36f;camera.nearClipPlane=.01f;camera.farClipPlane=2;camera.transform.position=go.transform.TransformPoint(new Vector3(0,1,0));camera.transform.rotation=go.transform.rotation*Quaternion.LookRotation(Vector3.down,Vector3.forward);var render=new RenderTexture(512,512,24);var pixels=new Texture2D(512,512,TextureFormat.RGB24,false);var prior=RenderTexture.active;
+  try {camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,512,512),0,0);pixels.Apply();
+   for(int z=0;z<8;z++)for(int x=0;x<8;x++){var point=camera.WorldToViewportPoint(go.transform.TransformPoint(new Vector3((x-3.5f)*.08f,.01f,(z-3.5f)*.08f)));var color=pixels.GetPixel(Mathf.RoundToInt(point.x*511),Mathf.RoundToInt(point.y*511));Assert.That(color.grayscale,(x+z)%2==0?Is.LessThan(.35f):Is.GreaterThan(.6f),$"Square {x},{z}");}
+   string output=Environment.GetEnvironmentVariable("MAESTRO_PATTERN_PREVIEW");if(!string.IsNullOrEmpty(output))File.WriteAllBytes(output,pixels.EncodeToPNG());
+  }finally{RenderTexture.active=prior;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(camera.gameObject);}
+ }
+}}

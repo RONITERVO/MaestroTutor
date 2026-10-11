@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "name": "typed number list",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": true
+    },
+    {
+      "name": "unsupported data version",
+      "source": "{\"version\":3,\"dataVersion\":2,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "missing opt in",
+      "source": "{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "version 2 cannot opt in",
+      "source": "{\"version\":2,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "index is numeric",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":\"0\"}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "empty list needs shape",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"initial\":[]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "list item type mismatch",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,\"two\"]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "oversized list",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "list shape exact keys",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\",\"other\":true},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "void is not item type",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"void\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "wrong record fields",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"initial\":{\"a\":1},\"type\":{\"record\":{\"b\":\"number\"}}}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "large record",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"initial\":{\"0\":0,\"1\":1,\"2\":2,\"3\":3,\"4\":4,\"5\":5,\"6\":6,\"7\":7,\"8\":8,\"9\":9,\"10\":10,\"11\":11,\"12\":12,\"13\":13,\"14\":14,\"15\":15,\"16\":16}}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "unsafe record key",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"initial\":{\"__proto__\":\"value\"}}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "oversized serialized value",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"initial\":[\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "records compare structurally",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0},{\"name\":\"r\",\"type\":{\"record\":{\"b\":\"boolean\",\"a\":\"number\"}},\"initial\":{\"a\":1,\"b\":true}}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": true
+    },
+    {
+      "name": "custom events remain scalar",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[{\"name\":\"user.items\",\"type\":{\"list\":\"number\"}}],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":0}]}}]}]}",
+      "valid": false
+    },
+    {
+      "name": "negative index fails at runtime",
+      "source": "{\"version\":3,\"dataVersion\":1,\"entry\":\"main\",\"resources\":[],\"state\":[],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"items\",\"type\":{\"list\":\"number\"},\"initial\":[1,2]},{\"name\":\"item\",\"initial\":0}],\"body\":[{\"id\":\"read\",\"op\":\"set\",\"variable\":\"item\",\"value\":{\"op\":\"at\",\"args\":[{\"var\":\"items\"},{\"value\":-1}]}}]}]}",
+      "valid": true
+    }
+  ]
+}

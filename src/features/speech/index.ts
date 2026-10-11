@@ -18,6 +18,7 @@ export { useTtsEngine } from './hooks/useTtsEngine';
 export {
   useGeminiLiveConversation,
   type LiveSessionState,
+  type LiveTurnContext,
   type LiveTurnTranscriptUpdate,
   type LiveTurnTranscriptUpdateReason,
 } from './hooks/useGeminiLiveConversation';

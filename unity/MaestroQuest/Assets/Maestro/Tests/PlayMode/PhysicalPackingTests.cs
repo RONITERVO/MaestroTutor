@@ -1,0 +1,63 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;using System.Collections;using System.IO;using System.Linq;
+using Maestro.Quest.Creation;using Maestro.Quest.Interaction;using Maestro.Quest.Programs;
+using Newtonsoft.Json.Linq;using NUnit.Framework;using UnityEngine;using UnityEngine.TestTools;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
+ (string id,HeightFieldView view,SpatialSculpting capture) PackingStage(){var(id,view,capture)=SculptStage();Assert.That(capture.ConfigurePacking(true,.12f,.25,.15f,out var error),Is.True,error);return(id,view,capture);}
+ void PackingEvidence(string stage,string source){
+  string output=Environment.GetEnvironmentVariable("MAESTRO_PHYSICAL_PACKING_EVIDENCE");if(string.IsNullOrEmpty(output))return;Directory.CreateDirectory(output);
+  var camera=new GameObject("Physical packing evidence",typeof(Camera)).GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=.6f;camera.nearClipPlane=.01f;camera.farClipPlane=5;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.16f,.22f,.27f);camera.transform.position=editor.Find(source).transform.position+new Vector3(1,1.2f,-1.3f);camera.transform.LookAt(editor.Find(source).transform.position);
+  var render=new RenderTexture(1024,1024,24);var pixels=new Texture2D(1024,1024,TextureFormat.RGB24,false);var prior=RenderTexture.active;try{camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1024,1024),0,0);pixels.Apply();File.WriteAllBytes(Path.Combine(output,"physical-packing-"+stage+".png"),pixels.EncodeToPNG());}finally{RenderTexture.active=prior;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(camera.gameObject);}
+ }
+ IEnumerator FinishPackingSave(){float deadline=Time.realtimeSinceStartup+10;while(editor.TemporarySavePending&&Time.realtimeSinceStartup<deadline)yield return null;Assert.That(editor.TemporarySavePending,Is.False,"Temporary room save did not settle");}
+ string PackedId()=> (string)SculptFact("material.pack.capture")["lastSaved"]["objectId"];
+ [UnityTest] public IEnumerator PhysicalPackingFingerPreviewAndOneAtomicUndoUseSharedBallEvaluator(){
+  var(id,view,capture)=PackingStage();var before=editor.Read(id).heightFields[0];var accepted=((MeshCollider)view.Collision).sharedMesh;var contact=SculptContact(view);int count=editor.Snapshot().objects.Length;
+  capture.Finger(0,contact);Assert.That(capture.Active,Is.False,"Must first separate after enabling");capture.Finger(0,contact+Vector3.up*.2f);capture.Finger(0,contact);Assert.That(capture.Active,Is.True,editor.Status);
+  var fact=SculptFact("material.pack.capture");string session=(string)fact["sessionId"];Assert.That((string)fact["phase"],Is.EqualTo("contact"));Assert.That((double)fact["amountLitres"],Is.InRange(.249,.25));
+  Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(((MeshCollider)view.Collision).sharedMesh,Is.SameAs(accepted));Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before.heights));
+  PackingEvidence("preview",id);
+  for(int i=0;i<20;i++)capture.Finger(0,SculptContact(view,.03f));Assert.That(SculptFact("object.field.capture.path",new JObject{["sessionId"]=session,["offset"]=0})["points"].Count(),Is.EqualTo(1));
+  capture.Finger(0,contact+Vector3.up*.3f);Assert.That(capture.Busy,Is.False,editor.Status);string ball=PackedId();Assert.That(ball,Has.Length.EqualTo(32));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
+  PackingEvidence("saved",id);var data=editor.Read(ball);double amount=data.materialStores[0].amountLitres;Assert.That(before.VolumeLitres-editor.Read(id).heightFields[0].VolumeLitres,Is.EqualTo(amount).Within(.000001));Assert.That(data.recipe.parts[0].shape,Is.EqualTo("sphere"));Assert.That(data.collision.shapes[0].size,Is.EqualTo(data.recipe.parts[0].size));
+  Assert.That(new RoomStorage(directory).Load(out _).objects.Single(o=>o.id==ball).materialStores[0].amountLitres,Is.EqualTo(amount));Assert.That((string)SculptFact("material.pack.capture")["lastSaved"]["sessionId"],Is.EqualTo(session));
+  editor.Undo();Assert.That(editor.Read(ball),Is.Null);Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before.heights));editor.Redo();Assert.That(editor.Read(ball).materialStores[0].amountLitres,Is.EqualTo(amount));yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingRotatedScaledSurfaceUsesWorldClearanceAndLocalMeasuredQuantity(){
+  var(id,view,capture)=PackingStage();var item=editor.Find(id);item.transform.rotation=Quaternion.Euler(18,35,12);item.transform.localScale=Vector3.one*1.5f;var before=editor.Read(id).heightFields[0];var contact=SculptContact(view,.1f,.08f);var ray=new Ray(contact+view.Surface.up*.18f,-view.Surface.up);
+  capture.Begin(0,ray);Assert.That(capture.Active,Is.True,editor.Status);capture.Move(0,ray);Assert.That(capture.Active,Is.True,editor.Status);capture.End(0);Assert.That(capture.Busy,Is.False,editor.Status);var ball=editor.Read(PackedId());Assert.That(ball,Is.Not.Null);float radius=ball.recipe.parts[0].size.x/2;Assert.That(Vector3.Distance(ball.position,contact+view.Surface.up*(radius+.025f)),Is.LessThan(.00001f));Assert.That(ball.scale,Is.EqualTo(1));Assert.That(before.VolumeLitres-editor.Read(id).heightFields[0].VolumeLitres,Is.EqualTo(ball.materialStores[0].amountLitres).Within(.000001));yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingCapacityRefusesBeforeAnyPreviewOrConsumption(){
+  var(id,view,capture)=PackingStage();var before=editor.Read(id).heightFields[0].heights;
+  for(int i=0;i<16;i++){Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Store "+i,new Vector3(8,2,4),1,Color.white,out var store,out var error),Is.True,error);Assert.That(editor.EditMaterialStore(store,editor.ObjectRevision(store),new RoomMaterialStore(),out error),Is.True,error);}
+  int count=editor.Snapshot().objects.Length;capture.Begin(0,SculptRay(view));Assert.That(capture.Busy,Is.False);Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(PackedId(),Is.Empty);yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingSaveFailureRetainsAndSharedRetryCannotDuplicate(){
+  var(id,view,capture)=PackingStage();var before=editor.Read(id).heightFields[0].heights;int count=editor.Snapshot().objects.Length;capture.Begin(0,SculptRay(view));Assert.That(capture.Active,Is.True,editor.Status);string session=capture.SessionId;
+  string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);try{capture.End(0);Assert.That(capture.Retained,Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before));Assert.That(editor.BeginTemporaryRoom(out _),Is.False);Assert.That(capture.ConfigurePacking(false,.1f,.1,.1f,out _),Is.False);}finally{Directory.Delete(pending);}
+  var request=ContainerRequest(SculptResolve(capture));var ex=new RoomAgentExecutor(editor);Assert.That(ex.Execute(request,out var error,out _),Is.True,error);Assert.That(capture.Busy,Is.False);string ball=PackedId();Assert.That(editor.Read(ball),Is.Not.Null);Assert.That(ex.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));Assert.That((string)SculptFact("material.pack.capture")["lastSaved"]["sessionId"],Is.EqualTo(session));editor.Undo();Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before));yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingTrackingPauseAndMovedSourceRequireExplicitRecovery(){
+  var(id,view,capture)=PackingStage();int count=editor.Snapshot().objects.Length;capture.Begin(0,SculptRay(view));capture.Cancel(0);Assert.That(capture.Retained,Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
+  editor.Find(id).transform.position+=Vector3.right*.1f;Assert.That(capture.CanResolve(capture.SessionId,false,out var error),Is.False);Assert.That(error,Does.Contain("moved"));ContainerRun(new RoomAgentExecutor(editor),SculptResolve(capture,true));Assert.That(capture.Busy,Is.False);Assert.That(PackedId(),Is.Empty);
+  capture.Begin(0,SculptRay(view));Assert.That(capture.Active,Is.True,editor.Status);capture.SendMessage("OnApplicationPause",true);Assert.That(capture.Retained,Is.True);capture.SendMessage("OnApplicationPause",false);Assert.That(capture.Retained,Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));ContainerRun(new RoomAgentExecutor(editor),SculptResolve(capture,true));yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingRefusesBlockedSpaceAndRetainsIfBlockerArrivesBeforeSave(){
+  var(id,view,capture)=PackingStage();int count=editor.Snapshot().objects.Length;var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(root.transform);wall.transform.position=SculptContact(view)+Vector3.up*.07f;wall.transform.localScale=Vector3.one*.09f;
+  capture.Finger(0,SculptContact(view)+Vector3.up*.3f);capture.Finger(0,SculptContact(view));Assert.That(capture.Busy,Is.False);Assert.That(editor.Status,Does.Contain("clear space"));UnityEngine.Object.DestroyImmediate(wall);capture.Begin(0,SculptRay(view));Assert.That(capture.Active,Is.True,editor.Status);
+  var position=JsonUtility.FromJson<Vector3>(SculptFact("material.pack.capture")["position"].ToString());wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(root.transform);wall.transform.position=position;wall.transform.localScale=Vector3.one*.02f;
+  capture.End(0);Assert.That(capture.Retained,Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(capture.CanResolve(capture.SessionId,false,out _),Is.False);UnityEngine.Object.DestroyImmediate(wall);ContainerRun(new RoomAgentExecutor(editor),SculptResolve(capture));Assert.That(editor.Read(PackedId()),Is.Not.Null);yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingSettingsSharePhysicalAndAgentOwnershipAndNoAutomaticEffects(){
+  var(id,view,capture)=PackingStage();var ex=new RoomAgentExecutor(editor);int count=editor.Snapshot().objects.Length;
+  var call=new JObject{["id"]="material.pack.tool.set",["version"]=1,["arguments"]=new JObject{["enabled"]=true,["radius"]=.15,["amountLitres"]=.1,["mass"]=.2}};ContainerRun(ex,call);Assert.That(capture.Mode,Is.EqualTo("off"));Assert.That(capture.PackingEnabled,Is.True);Assert.That((double)SculptFact("material.pack.tool")["amountLitres"],Is.EqualTo(.1));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(capture.Active,Is.False);
+  Assert.That(capture.Configure("lower",.08f,.03f,out var error),Is.True,error);Assert.That(capture.PackingEnabled,Is.False);ContainerRun(ex,call);Assert.That(editor.ConfigureDrawing("surface",editor.Paint,editor.DrawingRadius,out error),Is.True,error);Assert.That(capture.PackingEnabled,Is.False);ContainerRun(ex,call);
+  Assert.That(editor.Ownership.TryAcquire("other-human","Other human edit",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(id,"wholeTarget")},null,out var lease,out error),Is.True,error);capture.Begin(0,SculptRay(view));Assert.That(capture.Busy,Is.False);lease.Dispose();capture.Begin(0,SculptRay(view));Assert.That(capture.Active,Is.True,editor.Status);capture.End(0);Assert.That(editor.Read(PackedId()),Is.Not.Null);yield return null;
+ }
+ [UnityTest] public IEnumerator PhysicalPackingBallIsOrdinaryGrabbableAndTemporaryDiscardRestoresBothSides(){
+  var(id,view,capture)=PackingStage();var before=editor.Read(id).heightFields[0].heights;Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishPackingSave();capture.Begin(0,SculptRay(view));Assert.That(capture.Active,Is.True,editor.Status);capture.End(0);string ball=PackedId();var item=editor.Find(ball);Assert.That(item,Is.Not.Null);Assert.That(capture.CanGripWhilePacking(item),Is.True);Assert.That(capture.CanGripWhilePacking(editor.Find(id)),Is.False);var hand=Hand(1,item.transform.position);manager.SelectEnter((IXRSelectInteractor)hand,item.Grab);Assert.That(item.Grab.isSelected,Is.True);manager.SelectExit((IXRSelectInteractor)hand,item.Grab);Assert.That(item.Grab.isSelected,Is.False);
+  yield return FinishPackingSave();Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(ball),Is.Null);Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before));yield return null;
+ }
+}}

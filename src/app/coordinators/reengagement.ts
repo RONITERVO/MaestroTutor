@@ -34,7 +34,8 @@ export const createReengagementSequence = ({
           '',
           imageResult.base64,
           imageResult.mimeType,
-          'image-reengagement'
+          'image-reengagement',
+          ...(imageResult.imageOrigin ? [{ imageOrigin: imageResult.imageOrigin }] : [])
         );
       }
     }

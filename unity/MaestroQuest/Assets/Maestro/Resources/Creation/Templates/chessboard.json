@@ -1,0 +1,1336 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "chessboard",
+  "name": "Chessboard",
+  "description": "An editable 8 by 8 board with named A1–H8 snap points. A1 is dark; no chess rules or occupancy locks.",
+  "tags": [
+    "game",
+    "chess",
+    "pattern"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Frame",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.688,
+            "y": 0.028,
+            "z": 0.688
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.34,
+            "g": 0.19,
+            "b": 0.1,
+            "a": 1
+          }
+        },
+        {
+          "id": "Squares",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.015,
+            "z": 0
+          },
+          "size": {
+            "x": 0.64,
+            "y": 0.006,
+            "z": 0.64
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "parent": null,
+          "color": {
+            "r": 0.12,
+            "g": 0.16,
+            "b": 0.25,
+            "a": 1
+          },
+          "pattern": {
+            "kind": "checker",
+            "plane": "xz",
+            "columns": 8,
+            "rows": 8,
+            "secondary": "#F4E8D0"
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Board",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.002,
+            "z": 0
+          },
+          "size": {
+            "x": 0.688,
+            "y": 0.032,
+            "z": 0.688
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "segments": 0
+        }
+      ]
+    },
+    "physics": {
+      "mode": "fixed",
+      "shape": "automatic",
+      "mass": 0.06
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "A1",
+        "name": "A1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B1",
+        "name": "B1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C1",
+        "name": "C1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D1",
+        "name": "D1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E1",
+        "name": "E1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F1",
+        "name": "F1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G1",
+        "name": "G1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H1",
+        "name": "H1",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": -0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A2",
+        "name": "A2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B2",
+        "name": "B2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C2",
+        "name": "C2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D2",
+        "name": "D2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E2",
+        "name": "E2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F2",
+        "name": "F2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G2",
+        "name": "G2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H2",
+        "name": "H2",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": -0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A3",
+        "name": "A3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B3",
+        "name": "B3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C3",
+        "name": "C3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D3",
+        "name": "D3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E3",
+        "name": "E3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F3",
+        "name": "F3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G3",
+        "name": "G3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H3",
+        "name": "H3",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": -0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A4",
+        "name": "A4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B4",
+        "name": "B4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C4",
+        "name": "C4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D4",
+        "name": "D4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E4",
+        "name": "E4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F4",
+        "name": "F4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G4",
+        "name": "G4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H4",
+        "name": "H4",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": -0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A5",
+        "name": "A5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B5",
+        "name": "B5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C5",
+        "name": "C5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D5",
+        "name": "D5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E5",
+        "name": "E5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F5",
+        "name": "F5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G5",
+        "name": "G5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H5",
+        "name": "H5",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": 0.04
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A6",
+        "name": "A6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B6",
+        "name": "B6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C6",
+        "name": "C6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D6",
+        "name": "D6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E6",
+        "name": "E6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F6",
+        "name": "F6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G6",
+        "name": "G6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H6",
+        "name": "H6",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A7",
+        "name": "A7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B7",
+        "name": "B7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C7",
+        "name": "C7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D7",
+        "name": "D7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E7",
+        "name": "E7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F7",
+        "name": "F7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G7",
+        "name": "G7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H7",
+        "name": "H7",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "A8",
+        "name": "A8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.28,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "B8",
+        "name": "B8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.2,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "C8",
+        "name": "C8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.12,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "D8",
+        "name": "D8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": -0.04,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "E8",
+        "name": "E8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.04,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "F8",
+        "name": "F8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.12,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "G8",
+        "name": "G8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.2,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "H8",
+        "name": "H8",
+        "family": "ChessSquare",
+        "frame": {
+          "position": {
+            "x": 0.28,
+            "y": 0.018,
+            "z": 0.28
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
+  }
+}

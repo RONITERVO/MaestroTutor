@@ -29,7 +29,7 @@ describe('headless access policy', () => {
       const policy = HEADLESS_METHOD_ACCESS_POLICY[method];
       return policy.parityClass === 'provider-parity'
         && policy.costClass !== 'none'
-        && !['paired-first-lesson', 'paired-raw'].includes(policy.releaseProof);
+        && !['paired-first-lesson', 'paired-raw', 'paired-native-room'].includes(policy.releaseProof);
     });
     expect(unpaired).toEqual([]);
   });

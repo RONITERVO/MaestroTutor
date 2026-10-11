@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import { imageOriginContext } from '../../../../shared/prompts/context';
 import type { AppSettings, ChatMessage } from '../../../core/types';
 import type { SendCoordinatorPorts } from './send';
 import type { HistoryMediaOverride } from './attachmentUploads';
@@ -127,6 +128,8 @@ export function createSendRequestPreparer(ports: SendRequestPorts) {
         geminiPromptText = userMessageText;
         break;
     }
+
+    if (imageForGeminiContextBase64 && userMessageContext.imageOrigin) geminiPromptText += `\n${imageOriginContext(userMessageContext.imageOrigin)}`;
 
     if (messageType === 'image-reengagement') {
       if (typeof passedImageBase64 === 'string' && passedImageBase64 && typeof passedImageMimeType === 'string' && passedImageMimeType) {

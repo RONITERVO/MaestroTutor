@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "package": "com.maestro.quest",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "metaAppId": "1763835394893209",
+  "signingCertificateSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "web": {
+    "firebaseApiKey": "synthetic-public-firebase-key",
+    "firebaseAuthDomain": "maestro-fixture.firebaseapp.com",
+    "firebaseProjectId": "maestro-fixture",
+    "firebaseAppId": "1:123456:web:abcdef",
+    "questFirebaseAppId": "1:123456:web:fedcba",
+    "firebaseAppCheckSiteKey": "synthetic-site-key",
+    "backendBaseUrl": "https://maestro-fixture.cloudfunctions.net/api",
+    "questAttestationUrl": "https://maestro-fixture.cloudfunctions.net/questAttestation",
+    "questAccountLinkUrl": "https://maestro-fixture.cloudfunctions.net/questAccountLink",
+    "questAccountLinkVerificationUrl": "https://chatwithmaestro.com/quest-link.html"
+  }
+}

@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { roomLiveJsonBytes } from '../roomLiveProtocol';
 import {
   LIVE_AUDIO_TOKENS_PER_SECOND,
   LIVE_VIDEO_TOKENS_PER_FRAME_LOW,
@@ -12,6 +13,9 @@ import type {
 
 export interface LiveGatewayUsageCheckpoint {
   inputAudioBytes: number;
+  /** Optional for older persisted checkpoints; bounded UTF-8 tool envelopes. */
+  inputToolResponseBytes?: number;
+  outputToolCallBytes?: number;
   inputVideoBytes: number;
   inputVideoFrameCount: number;
   /** User turn boundaries accepted by the gateway. */
@@ -195,6 +199,8 @@ export const mergeLiveGatewayUsageCheckpoints = (
   const providerTurnUsage = mergeTurnUsage(previous.providerTurnUsage, next.providerTurnUsage);
   return {
     inputAudioBytes: Math.max(previous.inputAudioBytes, next.inputAudioBytes),
+    inputToolResponseBytes: Math.max(previous.inputToolResponseBytes || 0, next.inputToolResponseBytes || 0),
+    outputToolCallBytes: Math.max(previous.outputToolCallBytes || 0, next.outputToolCallBytes || 0),
     inputVideoBytes: Math.max(previous.inputVideoBytes || 0, next.inputVideoBytes || 0),
     inputVideoFrameCount: Math.max(previous.inputVideoFrameCount || 0, next.inputVideoFrameCount || 0),
     clientTurnBoundaryCount: Math.max(previous.clientTurnBoundaryCount || 0, next.clientTurnBoundaryCount || 0),
@@ -218,6 +224,8 @@ export const mergeLiveGatewayUsageCheckpoints = (
 
 export const createLiveGatewayUsageCheckpoint = (): LiveGatewayUsageCheckpoint => ({
   inputAudioBytes: 0,
+  inputToolResponseBytes: 0,
+  outputToolCallBytes: 0,
   inputVideoBytes: 0,
   inputVideoFrameCount: 0,
   clientTurnBoundaryCount: 0,
@@ -258,6 +266,14 @@ export const observeLiveGatewayClientMessage = (
   };
 };
 
+/** Call only after matching pending IDs and successfully forwarding the result. */
+export const observeLiveGatewayToolResponse = (
+  checkpoint: LiveGatewayUsageCheckpoint, response: {functionResponses: unknown[]},
+): LiveGatewayUsageCheckpoint => ({
+  ...checkpoint,
+  inputToolResponseBytes: (checkpoint.inputToolResponseBytes || 0) + roomLiveJsonBytes(response),
+});
+
 export const observeLiveGatewayProviderMessage = (
   checkpoint: LiveGatewayUsageCheckpoint,
   messageValue: unknown,
@@ -265,6 +281,7 @@ export const observeLiveGatewayProviderMessage = (
   if (!messageValue || typeof messageValue !== 'object' || Array.isArray(messageValue)) return checkpoint;
   const message = messageValue as {
     setupComplete?: unknown;
+    toolCall?: {functionCalls?: unknown[]};
     usageMetadata?: unknown;
     serverContent?: {
       turnComplete?: unknown;
@@ -278,9 +295,10 @@ export const observeLiveGatewayProviderMessage = (
         inlineData?: { data?: unknown; mimeType?: unknown };
       }>
     : [];
+  const toolBytes = message.toolCall?.functionCalls?.length ? roomLiveJsonBytes(message.toolCall) : 0;
   let outputAudioBytes = checkpoint.outputAudioBytes;
   let outputAudioSampleRate = checkpoint.outputAudioSampleRate;
-  let usefulOutput = checkpoint.usefulOutput
+  let usefulOutput = checkpoint.usefulOutput || toolBytes > 0
     || (typeof message.serverContent?.outputTranscription?.text === 'string'
       && Boolean(message.serverContent.outputTranscription.text.trim()));
   for (const part of parts) {
@@ -308,6 +326,7 @@ export const observeLiveGatewayProviderMessage = (
   return {
     ...checkpoint,
     outputAudioBytes,
+    outputToolCallBytes: (checkpoint.outputToolCallBytes || 0) + toolBytes,
     outputAudioSampleRate,
     setupComplete: checkpoint.setupComplete || Boolean(message.setupComplete),
     usefulOutput,
@@ -336,16 +355,23 @@ const transportUsage = (checkpoint: LiveGatewayUsageCheckpoint): UsageMetadataLi
     checkpoint.outputAudioBytes,
     checkpoint.outputAudioSampleRate,
   );
+  // Missing provider metadata uses a labelled transport estimate, not a claimed
+  // exact tokenizer count. Retained context is not charged again without evidence.
+  const inputTextTokens = Math.ceil((checkpoint.inputToolResponseBytes || 0) / 4);
+  const outputTextTokens = Math.ceil((checkpoint.outputToolCallBytes || 0) / 4);
+  const input = inputAudioTokens + inputTextTokens, output = outputAudioTokens + outputTextTokens;
   return {
-    promptTokenCount: inputAudioTokens,
-    responseTokenCount: outputAudioTokens,
-    totalTokenCount: inputAudioTokens + outputAudioTokens,
-    ...(inputAudioTokens > 0
-      ? { promptTokensDetails: [{ modality: 'AUDIO', tokenCount: inputAudioTokens }] }
-      : {}),
-    ...(outputAudioTokens > 0
-      ? { responseTokensDetails: [{ modality: 'AUDIO', tokenCount: outputAudioTokens }] }
-      : {}),
+    promptTokenCount: input,
+    responseTokenCount: output,
+    totalTokenCount: input + output,
+    ...(input > 0 ? {promptTokensDetails:[
+      ...(inputAudioTokens > 0 ? [{modality:'AUDIO',tokenCount:inputAudioTokens}] : []),
+      ...(inputTextTokens > 0 ? [{modality:'TEXT',tokenCount:inputTextTokens}] : []),
+    ]} : {}),
+    ...(output > 0 ? {responseTokensDetails:[
+      ...(outputAudioTokens > 0 ? [{modality:'AUDIO',tokenCount:outputAudioTokens}] : []),
+      ...(outputTextTokens > 0 ? [{modality:'TEXT',tokenCount:outputTextTokens}] : []),
+    ]} : {}),
   };
 };
 
@@ -363,14 +389,16 @@ const addTransportBreakdown = (
   const providerOutput = finiteCount(provider.responseTokenCount ?? provider.candidatesTokenCount);
   const transportInput = finiteCount(transport.promptTokenCount);
   const transportOutput = finiteCount(transport.responseTokenCount);
+  const transportInputAudio = detailsTotal(transport.promptTokensDetails?.filter(detail => detail.modality === 'AUDIO'));
+  const transportOutputAudio = detailsTotal(transport.responseTokensDetails?.filter(detail => detail.modality === 'AUDIO'));
   if (providerInput === 0 && transportInput > 0) {
     result.promptTokenCount = transportInput;
   }
   if (providerOutput === 0 && transportOutput > 0) {
     result.responseTokenCount = transportOutput;
-    result.responseTokensDetails = [{ modality: 'AUDIO', tokenCount: transportOutput }];
+    result.responseTokensDetails = transport.responseTokensDetails;
   } else if (providerOutput > 0 && detailsTotal(provider.responseTokensDetails ?? provider.candidatesTokensDetails) === 0) {
-    const audio = Math.min(providerOutput, finiteCount(transport.responseTokenCount));
+    const audio = Math.min(providerOutput, transportOutputAudio);
     result.responseTokensDetails = [
       ...(audio > 0 ? [{ modality: 'AUDIO', tokenCount: audio }] : []),
       ...(providerOutput > audio ? [{ modality: 'TEXT', tokenCount: providerOutput - audio }] : []),
@@ -400,7 +428,7 @@ const addTransportBreakdown = (
     // turns. Camera frames use the enforced low-resolution token allocation.
     const audio = Math.min(
       mergedInput,
-      transportInput * billedTurns + transportOutput * Math.max(0, billedTurns - 1),
+      transportInputAudio * billedTurns + transportOutputAudio * Math.max(0, billedTurns - 1),
     );
     const video = Math.min(
       mergedInput - audio,

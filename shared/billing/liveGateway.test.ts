@@ -8,6 +8,7 @@ import {
   mergeLiveGatewayUsageCheckpoints,
   observeLiveGatewayClientMessage,
   observeLiveGatewayProviderMessage,
+  observeLiveGatewayToolResponse,
 } from './liveGateway';
 
 const pcmBase64 = (bytes: number): string => Buffer.alloc(bytes).toString('base64');
@@ -238,5 +239,43 @@ describe('managed Live gateway usage evidence', () => {
         totalTokenCount: 50,
       },
     });
+  });
+});
+
+
+describe('room tool billing evidence', () => {
+  const tool = {toolCall:{functionCalls:[{id:'c1',name:'observeMaestroRoomV1',args:{}}]}};
+  const response = {functionResponses:[{id:'c1',name:'observeMaestroRoomV1',response:{scene:'Ää 界'}}]};
+  it('keeps useful tool output billable even when speech fails, with text-only fallback counts', () => {
+    let checkpoint = observeLiveGatewayProviderMessage(createLiveGatewayUsageCheckpoint(),tool);
+    checkpoint = observeLiveGatewayToolResponse(checkpoint,response);
+    expect(checkpoint.usefulOutput).toBe(true);
+    expect(checkpoint.inputToolResponseBytes).toBe(Buffer.byteLength(JSON.stringify(response),'utf8'));
+    const usage = getLiveGatewayBillableUsage(checkpoint);
+    expect(usage.billable).toBe(true); expect(usage.source).toBe('transport');
+    expect(usage.usageMetadata.promptTokensDetails).toEqual([{modality:'TEXT',tokenCount:Math.ceil(checkpoint.inputToolResponseBytes!/4)}]);
+    expect(usage.usageMetadata.responseTokensDetails).toEqual([{modality:'TEXT',tokenCount:Math.ceil(checkpoint.outputToolCallBytes!/4)}]);
+  });
+  it('uses provider totals without charging observed tool bytes a second time', () => {
+    let checkpoint = observeLiveGatewayProviderMessage(createLiveGatewayUsageCheckpoint(),tool);
+    checkpoint = observeLiveGatewayToolResponse(checkpoint,response);
+    checkpoint = observeLiveGatewayProviderMessage(checkpoint,{usageMetadata:{promptTokenCount:200,responseTokenCount:100,totalTokenCount:300,
+      promptTokensDetails:[{modality:'TEXT',tokenCount:200}],responseTokensDetails:[{modality:'TEXT',tokenCount:100}]}});
+    expect(getLiveGatewayBillableUsage(checkpoint)).toMatchObject({source:'provider',usageMetadata:{totalTokenCount:300,promptTokenCount:200,responseTokenCount:100}});
+  });
+  it('does not label tool text as audio when inferring missing provider modality detail', () => {
+    let checkpoint = observeLiveGatewayProviderMessage(createLiveGatewayUsageCheckpoint(),tool);
+    checkpoint = observeLiveGatewayToolResponse(checkpoint,response);
+    checkpoint = observeLiveGatewayProviderMessage(checkpoint,{usageMetadata:{promptTokenCount:200,responseTokenCount:100,totalTokenCount:300}});
+    const usage = getLiveGatewayBillableUsage(checkpoint).usageMetadata;
+    expect(usage.promptTokensDetails).toEqual([{modality:'TEXT',tokenCount:200}]);
+    expect(usage.responseTokensDetails).toEqual([{modality:'TEXT',tokenCount:100}]);
+  });
+  it('merges byte counters idempotently with older checkpoints during recovery', () => {
+    const old = createLiveGatewayUsageCheckpoint(); delete old.inputToolResponseBytes; delete old.outputToolCallBytes;
+    const next = observeLiveGatewayToolResponse(observeLiveGatewayProviderMessage(old,tool),response);
+    const merged = mergeLiveGatewayUsageCheckpoints(old,next);
+    expect(merged).toEqual(next);
+    expect(mergeLiveGatewayUsageCheckpoints(merged,next)).toEqual(next);
   });
 });

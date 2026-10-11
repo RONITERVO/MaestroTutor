@@ -1,0 +1,71 @@
+{
+  "version": 2,
+  "entry": "main",
+  "resources": [
+    "maestro"
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [],
+      "body": [
+        {
+          "id": "block_1",
+          "op": "if",
+          "test": {
+            "op": "eq",
+            "args": [
+              {
+                "fact": "maestro.state"
+              },
+              {
+                "value": "speaking"
+              }
+            ]
+          },
+          "then": [
+            {
+              "id": "block_2",
+              "op": "repeat",
+              "count": {
+                "value": 2
+              },
+              "body": [
+                {
+                  "id": "block_3",
+                  "op": "invoke",
+                  "capability": "animation.play",
+                  "version": 1,
+                  "arguments": {
+                    "target": "maestro",
+                    "seconds": 0.2,
+                    "source": {
+                      "kind": "gesture",
+                      "gesture": "greeting"
+                    },
+                    "channel": "wholeTarget"
+                  },
+                  "bindings": {}
+                }
+              ]
+            }
+          ],
+          "else": [
+            {
+              "id": "block_4",
+              "op": "invoke",
+              "capability": "time.wait",
+              "version": 1,
+              "arguments": {
+                "seconds": 1
+              },
+              "bindings": {}
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

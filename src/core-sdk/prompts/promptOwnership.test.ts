@@ -63,6 +63,69 @@ describe('prompt ownership', () => {
     expect(catalogueRuntimeViolations('const example = "window.document"; const data = { window: "example" };')).toEqual([]);
   });
 
+  it('keeps the native vocabulary runtime dependent only on generated data', () => {
+    const source = readFileSync(new URL('../../../shared/behaviourCatalog.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('behaviourCatalog.ts', source, ts.ScriptTarget.Latest, true);
+    const imports = ast.statements.filter(ts.isImportDeclaration);
+    expect(imports.filter(node=>!node.importClause?.isTypeOnly).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./generated/behaviourCatalog.json']);
+    expect(imports.filter(node=>node.importClause?.isTypeOnly).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./programValues','./capabilities']);
+    expect(catalogueRuntimeViolations(source, 'behaviourCatalog.ts')).toEqual([]);
+  });
+
+  it('keeps capability validation independent of browsers and native code', () => {
+    const source = readFileSync(new URL('../../../shared/capabilities.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('capabilities.ts', source, ts.ScriptTarget.Latest, true);
+    const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
+    expect(imports).toEqual(['./surfaceGeometry','./roomConnection','./creationPrototype','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
+    const dependencies: Record<string, string[]> = {
+      creationBatch: ['./roomConnection', './creationResources', './creationPrototype'],
+      creationPrototype: ['./surfaceGeometry', './creationResources', './roomConnection'],
+      creationResources: ['./roomConnection'],
+      programValues: ['./programLimits'], programLimits: ['./generated/behaviourCatalog.json'], roomConnection: [], surfaceGeometry: [],
+    };
+    for (const [name, expectedImports] of Object.entries(dependencies)) {
+      const dependency = readFileSync(new URL('../../../shared/' + name + '.ts', import.meta.url), 'utf8');
+      const dependencyAst = ts.createSourceFile(name + '.ts', dependency, ts.ScriptTarget.Latest, true);
+      expect(dependencyAst.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(expectedImports);
+      expect(catalogueRuntimeViolations(dependency, name + '.ts')).toEqual([]);
+    }
+    const identity = readFileSync(new URL('../../../shared/programModuleIdentity.ts', import.meta.url), 'utf8');
+    expect(catalogueRuntimeViolations(identity, 'programModuleIdentity.ts')).toEqual([]);
+    const recipe = readFileSync(new URL('../../../shared/roomRecipe.ts', import.meta.url), 'utf8');
+    const recipeAst = ts.createSourceFile('roomRecipe.ts', recipe, ts.ScriptTarget.Latest, true);
+    expect(recipeAst.statements.filter(ts.isImportDeclaration)).toEqual([]);
+    expect(catalogueRuntimeViolations(recipe, 'roomRecipe.ts')).toEqual([]);
+    const collision = readFileSync(new URL('../../../shared/collisionRecipe.ts', import.meta.url), 'utf8');
+    const collisionAst = ts.createSourceFile('collisionRecipe.ts', collision, ts.ScriptTarget.Latest, true);
+    expect(collisionAst.statements.filter(ts.isImportDeclaration).map(node=>(node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./roomRecipe']);
+    expect(catalogueRuntimeViolations(collision, 'collisionRecipe.ts')).toEqual([]);
+    expect(catalogueRuntimeViolations(source, 'capabilities.ts')).toEqual([]);
+  });
+
+  it('keeps event validation dependent only on the native manifest and pure shared schema helpers', () => {
+    const source = readFileSync(new URL('../../../shared/behaviourEvents.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('behaviourEvents.ts', source, ts.ScriptTarget.Latest, true);
+    const imports = ast.statements.filter(ts.isImportDeclaration);
+    expect(imports.map(node => (node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./behaviourCatalog','./capabilities']);
+    const bindings=imports[1].importClause?.namedBindings;
+    expect(bindings&&ts.isNamedImports(bindings)&&bindings.elements.filter(node=>!node.isTypeOnly).map(node=>node.name.text)).toEqual(['validateCapabilityValue','schemaField']);
+    expect(catalogueRuntimeViolations(source, 'behaviourEvents.ts')).toEqual([]);
+  });
+
+  it('keeps shared room task ceilings free of runtime-specific dependencies', () => {
+    const source = readFileSync(new URL('../../../shared/roomTaskBudget.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('roomTaskBudget.ts', source, ts.ScriptTarget.Latest, true);
+    expect(ast.statements.filter(node => ts.isImportDeclaration(node) || ts.isExportDeclaration(node))).toEqual([]);
+    expect(catalogueRuntimeViolations(source, 'roomTaskBudget.ts')).toEqual([]);
+  });
+
+  it('keeps command field vocabulary dependent only on pure control definitions', () => {
+    const source = readFileSync(new URL('../../../shared/roomCommandFields.ts', import.meta.url), 'utf8');
+    const ast = ts.createSourceFile('roomCommandFields.ts', source, ts.ScriptTarget.Latest, true);
+    expect(ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text)).toEqual(['./prompts/roomcontrols']);
+    expect(catalogueRuntimeViolations(source, 'roomCommandFields.ts')).toEqual([]);
+  });
+
   it('keeps the catalogue runtime-independent and usable by Functions', () => {
     const rootDirectory = new URL('../../../shared/prompts/', import.meta.url);
     for (const file of readdirSync(rootDirectory).filter(name => name.endsWith('.ts'))) {
@@ -70,7 +133,8 @@ describe('prompt ownership', () => {
       const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
       for (const statement of ast.statements) {
         if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
-          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^\.\/[a-z]+$/);
+          if (ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly && (statement.moduleSpecifier as ts.StringLiteral).text === '../roomViewCapture') continue;
+          if (statement.moduleSpecifier) expect((statement.moduleSpecifier as ts.StringLiteral).text).toMatch(/^(?:\.\/[a-z]+|\.\.\/(?:behaviourCatalog|behaviourEvents|capabilities|roomTaskBudget|roomCommandFields))$/);
         }
       }
       expect(catalogueRuntimeViolations(source, file)).toEqual([]);

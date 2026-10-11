@@ -1,0 +1,20 @@
+{
+  "name": "Maestro.Quest.Tests",
+  "rootNamespace": "Maestro.Quest.Tests",
+  "references": [
+    "Maestro.Quest",
+    "Maestro.Quest.TestFixtures",
+    "TLab.Capture",
+    "Maestro.Quest.Editor"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ]
+}

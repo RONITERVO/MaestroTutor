@@ -1,7 +1,7 @@
 // Copyright 2025 Roni Tervo
 //
 // SPDX-License-Identifier: Apache-2.0
-// Import React only for the classic JSX transform; React 17+ uses the automatic runtime.
+export { IconGlobe, IconTarget, IconPalette } from './AnimatedIcons';
 
 export const IconMicrophone = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>;
 export const IconBookOpen = (props: any) => <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
@@ -206,116 +206,9 @@ export const IconScissors = (props: any) => (
 	</svg>
 );
 
-export const IconGlobe = (props: any) => (
-	<svg
-		{...props}
-		xmlns="http://www.w3.org/2000/svg"
-		fill="none"
-		viewBox="0 0 24 24"
-		stroke="currentColor"
-	>
-		<defs>
-			<style>
-				{`
-          .globe-spin {
-            transform-origin: center;
-            animation: spin3D 3s linear infinite;
-          }
-          
-          .globe-bounce {
-            transform-origin: center;
-            animation: bounce 4s ease-in-out infinite;
-          }
-
-          @keyframes spin3D {
-            0% { transform: scaleX(1); }
-            50% { transform: scaleX(0); }
-            100% { transform: scaleX(1); }
-          }
-
-          @keyframes bounce {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-1.5px); }
-          }
-        `}
-			</style>
-		</defs>
-
-		<g className="globe-bounce" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-			{/* Outer Globe Edge */}
-			<circle cx="12" cy="12" r="9" />
-
-			{/* Equator (Horizontal) */}
-			<line x1="3" y1="12" x2="21" y2="12" />
-
-			{/* Prime Meridian (Vertical Axis) */}
-			<line x1="12" y1="3" x2="12" y2="21" />
-
-			{/* Spinning 3D Meridian */}
-			<ellipse cx="12" cy="12" rx="5" ry="9" className="globe-spin" />
-		</g>
-	</svg>
-);
-
 export const IconMessageSquare = (props: any) => (
 	<svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
 		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
-	</svg>
-);
-
-export const IconTarget = (props: any) => (
-	<svg
-		{...props}
-		xmlns="http://www.w3.org/2000/svg"
-		fill="none"
-		viewBox="0 0 24 24"
-		stroke="currentColor"
-	>
-		<defs>
-			<style>
-				{`
-          .target-lock {
-            transform-origin: center;
-            /* Snapping rotation to feel like a mechanical focus/lock-on */
-            animation: snapSpin 3s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
-          }
-          
-          .target-pulse {
-            transform-origin: center;
-            animation: pulseRing 2.5s ease-out infinite;
-          }
-
-          @keyframes snapSpin {
-            0%, 20% { transform: rotate(0deg) scale(1); }
-            30%, 70% { transform: rotate(90deg) scale(1.05); }
-            80%, 100% { transform: rotate(180deg) scale(1); }
-          }
-
-          @keyframes pulseRing {
-            0% { transform: scale(0.6); opacity: 0.8; }
-            80%, 100% { transform: scale(1.6); opacity: 0; }
-          }
-        `}
-			</style>
-		</defs>
-
-		{/* Radar pulse emitted from the center */}
-		<circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.2" className="target-pulse" />
-
-		{/* Bullseye Center Dot */}
-		<circle cx="12" cy="12" r="2.5" fill="currentColor" />
-
-		{/* Lock-on Outer Brackets */}
-		<g className="target-lock" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
-			{/* Outer Ring */}
-			<circle cx="12" cy="12" r="7" />
-
-			{/* 4 Directional Crosshairs */}
-			<path d="M 12 2 L 12 5" />
-			<path d="M 12 19 L 12 22" />
-			<path d="M 2 12 L 5 12" />
-			<path d="M 19 12 L 22 12" />
-		</g>
 	</svg>
 );
 
@@ -498,118 +391,6 @@ export const IconUserImageGen = (props: any) => (
 			<g className="ai-sparkle">
 				<path d="M 0 -6 Q 0 0 6 0 Q 0 0 0 6 Q 0 0 -6 0 Q 0 0 0 -6 Z" fill="#FBBF24" />
 			</g>
-		</g>
-	</svg>
-);
-export const IconPalette = (props: any) => (
-	<svg
-		{...props}
-		xmlns="http://www.w3.org/2000/svg"
-		viewBox="-5 -5 110 110"
-		aria-label="Customize UI Colors"
-	>
-		<defs>
-			<style>
-				{`
-          .brush-dip {
-            transform-origin: 95px 102px;
-            animation: dip 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-          }
-
-          .paint-pulse {
-            transform-origin: 65px 72px;
-            animation: pulsePaint 1.25s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
-          }
-
-          .sparkle-1 {
-            transform-origin: 20px 20px;
-            animation: twinkle 2s ease-in-out infinite alternate;
-          }
-
-          .sparkle-2 {
-            transform-origin: 85px 25px;
-            animation: twinkle 2s ease-in-out infinite alternate 1s;
-          }
-
-          @keyframes dip {
-            0%, 25% { transform: rotate(16deg) translate(8px, -4px); }
-            75%, 100% { transform: rotate(0deg) translate(0px, 0px); }
-          }
-
-          @keyframes pulsePaint {
-            0%, 35% { transform: scale(1); opacity: 0.9; }
-            75%, 100% { transform: scale(1.18); opacity: 1; }
-          }
-
-          @keyframes twinkle {
-            0%, 100% { transform: scale(0.6) rotate(0deg); opacity: 0.3; }
-            50% { transform: scale(1.2) rotate(45deg); opacity: 1; }
-          }
-        `}
-			</style>
-		</defs>
-
-		{/* ========================================== */}
-		{/* 1. PALETTE BASE (Styled as a UI Modal Window)*/}
-		{/* ========================================== */}
-		<path
-			d="M 30 15 
-         C 10 15 10 45 10 60 
-         C 10 80 30 90 50 90 
-         C 75 90 90 75 90 50 
-         C 90 20 60 10 45 15 
-         C 40 16 35 15 30 15 Z 
-         M 30 57 
-         C 34.4 57 38 60.6 38 65 
-         C 38 69.4 34.4 73 30 73 
-         C 25.6 73 22 69.4 22 65 
-         C 22 60.6 25.6 57 30 57 Z"
-			fillRule="evenodd"
-			fill="#F1F5F9"
-			stroke="#334155"
-			strokeWidth="6"
-		/>
-
-		{/* UI Window Control Dots (The visual pun) */}
-		<g fill="#94A3B8">
-			<circle cx="40" cy="20" r="2.5" />
-			<circle cx="48" cy="20" r="2.5" />
-			<circle cx="56" cy="20" r="2.5" />
-		</g>
-
-		{/* ========================================== */}
-		{/* 2. UI THEME COLOR BLOBS / SWATCHES         */}
-		{/* ========================================== */}
-		<g stroke="#FFFFFF" strokeWidth="3">
-			<circle cx="28" cy="32" r="9" fill="#F43F5E" />
-			<circle cx="54" cy="30" r="10" fill="#FBBF24" />
-			<circle cx="76" cy="48" r="9" fill="#10B981" />
-
-			{/* Target Blue Blob (Animated to pulse when clicked) */}
-			<circle cx="65" cy="72" r="10" fill="#3B82F6" className="paint-pulse" />
-		</g>
-
-		{/* ========================================== */}
-		{/* 3. ANIMATED PAINTBRUSH (Action Cursor)     */}
-		{/* ========================================== */}
-		<g className="brush-dip">
-			{/* Blue Paint Bristles */}
-			<line x1="77" y1="84" x2="65" y2="72" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round" />
-			{/* Wooden Handle */}
-			<line x1="95" y1="102" x2="77" y2="84" stroke="#B45309" strokeWidth="8" strokeLinecap="round" />
-			{/* Silver Ferrule (overlaps the joint) */}
-			<line x1="81" y1="88" x2="73" y2="80" stroke="#CBD5E1" strokeWidth="8" strokeLinecap="round" />
-		</g>
-
-		{/* ========================================== */}
-		{/* 4. MAGIC UI SPARKLES                       */}
-		{/* ========================================== */}
-		<g className="sparkle-1" transform="translate(16, 16)">
-			<path d="M 0 -7 Q 0 0 7 0 Q 0 0 0 7 Q 0 0 -7 0 Q 0 0 0 -7 Z" fill="#FBBF24" />
-		</g>
-
-		<g className="sparkle-2" transform="translate(86, 26)">
-			<path d="M 0 -6 Q 0 0 6 0 Q 0 0 0 6 Q 0 0 -6 0 Q 0 0 0 -6 Z" fill="#38BDF8" />
 		</g>
 	</svg>
 );

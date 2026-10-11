@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "noEmit": true,
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
+  "include": [
+    "scripts/probe-native-room.ts",
+    "scripts/probe-native-book.ts",
+    "test-fixtures/browser/questNativeBookFixture.tsx",
+    "src/vite-env.d.ts",
+    "scripts/native-probe-contract.test.ts",
+    "scripts/agent-provider-contract.test.ts",
+    "scripts/probe-agent-program.test.ts",
+    "scripts/probe-agent-animation.test.ts",
+    "scripts/probe-agent-composite.test.ts",
+    "test-fixtures/browser/questPhysicalPackingFixture.tsx",
+    "test-fixtures/browser/questRectangularContainerFixture.tsx",
+    "scripts/probe-provider-book.ts",
+    "scripts/book-provider-evidence.test.ts",
+    "scripts/probe-agent-physics.ts",
+    "scripts/probe-agent-physics.test.ts",
+    "scripts/probe-agent-steering.ts",
+    "scripts/probe-agent-steering.test.ts",
+    "scripts/probe-learner-room.ts",
+    "scripts/probe-quest-camera-provider.ts",
+    "test-fixtures/browser/quest-camera.tsx"
+  ],
+  "references": []
+}

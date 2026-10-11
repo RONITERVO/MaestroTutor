@@ -1,0 +1,87 @@
+{
+  "current": {
+    "revision": "d43cb41df32740028177be89043e8bcc",
+    "generationId": "91f877ad2d874724a51f82e46618d19d",
+    "available": true,
+    "reviewRequired": true,
+    "changing": false,
+    "activationRequestId": "4337000eeff74ea4ab38100366243fcf",
+    "reviewRequestId": "",
+    "error": ""
+  },
+  "activation": {
+    "requestId": "4337000eeff74ea4ab38100366243fcf",
+    "selectionRequestId": "f6d3bc90515647dcbeb6d3f5b5763e08",
+    "originRevision": "initial",
+    "committedRevision": "d43cb41df32740028177be89043e8bcc",
+    "phase": "review",
+    "status": "Imported workspace opened. Review its contents before starting activity.",
+    "preview": {
+      "generationId": "91f877ad2d874724a51f82e46618d19d",
+      "manifestHash": "17145049e932bc8e1a4992cd79425f7bfb9055f20a46cb986a6819562252fb48"
+    },
+    "retained": {
+      "generationId": "7bbda16edd214c3a99fc997f2077b113",
+      "manifestHash": "366f8abc6d5b4eda47d04462ded360a13a538541541186780519665d1402b34b"
+    }
+  },
+  "execution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "4381ea000003478d824925d412375e68",
+    "storageError": null,
+    "recovery": null,
+    "workspace": {
+      "selected": {
+        "id": "d2bb0085f99d4cdcb4c484ab06d6e1ff",
+        "capability": "workspace.archive.activate",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "requestId": "4337000eeff74ea4ab38100366243fcf"
+        },
+        "call": {
+          "id": "workspace.archive.activate",
+          "version": 1,
+          "arguments": {
+            "selectionRequestId": "f6d3bc90515647dcbeb6d3f5b5763e08",
+            "generationId": "91f877ad2d874724a51f82e46618d19d",
+            "manifestHash": "17145049e932bc8e1a4992cd79425f7bfb9055f20a46cb986a6819562252fb48",
+            "expectedRevision": "initial"
+          }
+        }
+      },
+      "running": [],
+      "outcomes": [
+        {
+          "id": "8c2afa86feac436486a756e2f6c50ee5",
+          "capability": "workspace.archive.select",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "f6d3bc90515647dcbeb6d3f5b5763e08"
+          }
+        },
+        {
+          "id": "d2bb0085f99d4cdcb4c484ab06d6e1ff",
+          "capability": "workspace.archive.activate",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "requestId": "4337000eeff74ea4ab38100366243fcf"
+          }
+        }
+      ],
+      "nextRunId": "6f482c9bcaa84098a1eb61a43d425f9b",
+      "storageError": null,
+      "recovery": null
+    }
+  }
+}

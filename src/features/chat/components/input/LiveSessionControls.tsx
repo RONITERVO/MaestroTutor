@@ -45,7 +45,7 @@ const LiveSessionControls: React.FC<LiveSessionControlsProps> = ({
   }, [liveSessionActive, onStartLiveSession, onStopLiveSession]);
 
   return (
-    <div className="absolute top-1 right-1 flex items-center gap-2 z-30">
+    <div className="flex items-center justify-end gap-2 mt-1">
       {liveSessionConnecting && <SmallSpinner className="w-5 h-5 text-live-idle-spinner drop-shadow" />}
       <button
         type="button"

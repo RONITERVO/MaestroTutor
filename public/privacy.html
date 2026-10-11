@@ -17,9 +17,9 @@
   </head>
   <body>
     <h1>Privacy Policy</h1>
-    <p><strong>Effective Date:</strong> September 2, 2026</p>
+    <p><strong>Effective Date:</strong> October 9, 2026</p>
     <p>
-      Maestro Tutor offers two ways to access Google Gemini: bring your own API key
+      Maestro Tutor (Chat with Maestro) offers two ways to access Google Gemini: bring your own API key
       ("BYOK") or sign in to use Maestro managed access. The data flow depends on
       the access mode you choose.
     </p>
@@ -28,7 +28,7 @@
     <ul>
       <li><strong>API key:</strong> A Google AI Studio API key you enter is stored locally on your device. Maestro does not send that key to its managed service.</li>
       <li><strong>Generation content:</strong> Prompts and media are sent directly from your device to Google Gemini.</li>
-      <li><strong>Local data:</strong> Chat history and local usage information are stored on your device. Uninstalling the app clears the app's local data on that device.</li>
+      <li><strong>Local data:</strong> Chat history and local usage information are stored on your device. Clear local app/browser data to remove it from that installation. Files you export, copies in device backups and copies on other devices are separate.</li>
     </ul>
 
     <h2>Managed access</h2>
@@ -41,9 +41,25 @@
       <li><strong>Content reports:</strong> If you voluntarily report an AI response, Maestro stores the reported content, selected reason, optional notes, surface/model details, and basic request/account metadata so the report can be reviewed.</li>
     </ul>
 
+    <h2>Maestro Quest and room tasks</h2>
+    <p>Quest v1 is for adults aged 18 or older. Each new book session asks you to confirm you are 18 or older before chat and AI features start. This is self-confirmation, not identity or age verification. Maestro does not request a birth date or save that confirmation as an age record.</p>
+    <ul>
+      <li><strong>Your creations:</strong> Imported models and animations, drawings, room objects, behaviour programs and their saved settings are stored in the headset's app data. Exported room backups are separate files under your control.</li>
+      <li><strong>Room scans and tracking:</strong> With room-access permission, the app loads the Meta room scan to place collision surfaces and support movement. Scanned floor/wall geometry and continuous head/hand/controller tracking are used locally; the room agent does not receive the raw scan mesh or a continuous tracking stream. It can receive bounded room status and the authored objects' positions and settings when relevant to a task. A task can explicitly request the loaded scan's room/surface identifiers, semantic labels, poses and rectangular or box bounds through the same Maestro AI connection. These layout details are not a raw mesh or camera image, but can reveal the size and arrangement of your room. Requested details follow task-history and chat-backup retention; deleting Maestro history does not delete Meta's stored room scan.</li>
+      <li><strong>Selected camera and screen sharing:</strong> Viewing passthrough alone does not upload imagery to Gemini. In the book's camera controls you can select a virtual-scene view, the forward physical headset camera, or a shared headset-screen view. Physical camera access needs headset camera permission. Screen sharing needs separate system consent and can include real surroundings, virtual objects and visible interface content such as chat text; the system may omit some layers. Selecting a source enables its local preview. When you send camera context in chat or enable it during Live, images go through your selected BYOK or managed Maestro AI connection. Turning sharing off or interrupting the app stops new capture. Sent images and delegated task copies follow the chat/task history, export and provider-retention rules below.</li>
+      <li><strong>Microphone:</strong> Microphone permission is separate, and audio is sent when you use speech features. Live can run with microphone only and all camera sources off. The headset-screen source captures video only; it does not capture other apps' playback audio.</li>
+      <li><strong>Virtual-room snapshots:</strong> When a room task needs to inspect your virtual creations, it can capture an image containing Maestro, your virtual objects and programmable buttons. It excludes the book/chat pages, tool trays, scanned room geometry and real camera or passthrough imagery. That task can send the image through your existing Maestro AI connection and retain the same image in Task details and chat backups. Manual or background captures are not automatically sent to AI. Task copies follow the same history deletion and backup rules as other task evidence.</li>
+      <li><strong>Delegated AI tasks:</strong> A room task uses the existing Maestro AI connection and access mode. Its requests can include the source conversation, attachments, language settings and relevant room objects, programs and action results. A task delegated from Live can reuse the audio and enabled camera frames already sent during that turn, both for planning and the final reply. This may include private speech or room images.</li>
+      <li><strong>Task history:</strong> The source context, action results and included Live media are retained with the local task journal and can be included in chat-history exports. The journal is pruned when its source history is removed. Deleting history does not remove copies you previously exported or already sent to a provider.</li>
+      <li><strong>Quest managed access:</strong> When enabled, Meta entitlement and integrity checks establish that the app is eligible for managed access. Maestro's service verifies a short-lived Meta integrity token and request challenge before issuing Firebase App Check access. It does not retain that token or Meta device identifiers, or request your Meta profile, friends or Meta Avatar. Meta processes platform data under its own policies.</li>
+      <li><strong>Account linking:</strong> To link the book to your existing Maestro account, you approve a short-lived code after Google sign-in in your browser. The service holds hashes of the pairing code and device secret, timestamps, status and, while approved, your Maestro account ID. The account ID and secret hash are removed on redemption or cancellation. Hashed IP/account rate-limit subjects help prevent abuse.</li>
+    </ul>
+
     <h2>Retention</h2>
     <ul>
-      <li>Rate-limit windows expire two minutes after their window begins.</li>
+      <li>Local chat, task journals, imported content and saved rooms remain until you remove them or clear that installation's app data. Exported files and device backups can remain separately.</li>
+      <li>Rate-limit windows are scheduled for deletion two minutes after their window begins.</li>
+      <li>Quest integrity challenges and account-link records expire after five minutes and are scheduled for deletion at expiry. A consumed integrity challenge is deleted immediately. Consumed/cancelled account links retain only timestamps and status until cleanup.</li>
       <li>Consumed or expired Live ticket metadata, released Live-session metadata, and deleted-file metadata are scheduled for deletion after 30 days. Live ticket setup content and secret hashes are removed when the ticket is consumed or expires.</li>
       <li>Settled or released reservations and checkout-grant snapshots are scheduled for deletion after 90 days.</li>
       <li>AI-content reports are scheduled for deletion after 365 days unless account deletion anonymizes them sooner.</li>
@@ -53,11 +69,12 @@
 
     <h2>Account deletion</h2>
     <p>
-      Uninstalling clears local app data only; it does not delete a managed account.
+      Uninstalling does not delete a managed account, exported files or copies in backups.
       A managed user can choose <strong>Delete managed account</strong> in the app or use the
       <a href="/delete-account.html">account-deletion page</a>. Deletion removes the
       Firebase-authenticated Maestro account, its managed user data and files, and the
-      linked Stripe customer when applicable. Purchase-integrity claims and previously
+      linked Stripe customer when applicable, including pending Quest account-link approvals.
+      Local chat and room files, and exported backups, must be removed separately. Purchase-integrity claims and previously
       submitted content reports may remain only in anonymized form. A one-way account
       tombstone is retained to prevent delayed requests or payment events from recreating
       the deleted account. Stripe, Google, and Google Play may retain payment,
@@ -76,12 +93,13 @@
     <p>
       Maestro uses Google Gemini, Firebase and Google Cloud, Stripe for managed-credit
       purchases, and Google Play for Android distribution and Play Integrity App Check—not
-      for managed-credit payments. Their handling of data is governed by their own terms
+      for managed-credit payments. Quest distribution, entitlement, integrity and room services use Meta. Their handling of data is governed by their own terms
       and policies. See
       <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>,
       <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer">Gemini API Terms</a>,
-      <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy and Security</a>, and
-      <a href="https://stripe.com/legal/privacy-center" target="_blank" rel="noopener noreferrer">Stripe's Privacy Center</a>.
+      <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener noreferrer">Firebase Privacy and Security</a>,
+      <a href="https://stripe.com/legal/privacy-center" target="_blank" rel="noopener noreferrer">Stripe's Privacy Center</a>, and
+      <a href="https://www.meta.com/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Meta's Privacy Policy</a>.
     </p>
 
     <h2>Security and policy changes</h2>
@@ -93,6 +111,6 @@
     </p>
 
     <h2>Contact</h2>
-    <p>If you have privacy questions or a deletion problem, contact the developer through the <a href="https://github.com/ronitervo/maestrotutor/issues" target="_blank" rel="noopener noreferrer">GitHub repository</a>.</p>
+    <p>For privacy questions, account-deletion problems or other support, email <a href="mailto:maestrochattolearn@gmail.com">maestrochattolearn@gmail.com</a>. See the <a href="/support.html">support page</a> for account and local-data guidance. Do not post account details or private conversation content in public issue reports.</p>
   </body>
 </html>

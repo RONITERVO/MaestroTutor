@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { ChatMessage, ReplySuggestion, SpeechPart } from '../../../core/types';
 import { TranslationReplacements } from '../../../core/i18n/index';
 import { IconEyeOpen, IconBookmark } from '../../../shared/ui/Icons';
@@ -33,6 +34,7 @@ import { buildAiContentReportRequest } from '../../../core-sdk/managedAccount';
 import { maestroManagedAccountController } from '../../../services/account/maestroManagedAccountController';
 import { maestroAccessService } from '../../../services/access/maestroAccessService';
 import type { AiContentReportReason } from '../../../core/contracts/backend';
+import { useBookPresentation } from '../../../platform/quest/BookPresentationContext';
 
 const BOOKMARK_SHOW_ABOVE_CHUNK_SIZE = 100;
 const isRealChatMessage = (m: ChatMessage) => (m.role === 'user' || m.role === 'assistant') && !m.thinking;
@@ -97,6 +99,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   } = props;
 
   const { t } = useAppTranslations();
+  const book = useBookPresentation();
   const persistedMessages = useMaestroStore(selectMessages);
   const liveTranscriptMessages = useMaestroStore(selectLiveTranscriptMessages);
   const replySuggestions = useMaestroStore(selectReplySuggestions);
@@ -296,8 +299,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Single source of the embed height cap and the one shared IntersectionObserver.
-  useEmbedViewport(scrollContainerRef, deviceBudgets);
+  useEmbedViewport(book?.layout === 'conversation' ? book.spreadRoot : scrollContainerRef, deviceBudgets);
   const shouldAutoScrollRef = useRef(true);
+  useEffect(() => {
+    if (!book || !scrollContainerRef.current) return;
+    scrollContainerRef.current.scrollTop = book.isLatestPage ? scrollContainerRef.current.scrollHeight : 0;
+  }, [book?.historyPageKey, book?.isLatestPage]);
 
   const handleContainerScroll = useCallback(() => {
     const container = scrollContainerRef.current;
@@ -307,7 +314,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
   }, []);
 
   useEffect(() => {
-    if (shouldAutoScrollRef.current) {
+    if (shouldAutoScrollRef.current && (!book || book.isLatestPage)) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [persistedMessages]);
@@ -612,6 +619,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
     }
   }
 
+  if (book) messagesToRender = combinedMessages.filter(message => book.visibleMessageIds.has(message.id) || (book.isLatestPage && liveTranscriptMessageIds.has(message.id)));
+
   const handleSpeakWholeMessage = useCallback((message: ChatMessage) => {
      if (isSpeaking) {
        stopSpeaking();
@@ -723,6 +732,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
           text: targetMessage.text,
           langCode: lang,
           cachedAudio: recorded.dataUrl,
+          speaker: 'learner',
           context: { source: 'message', messageId: targetMessage.id },
         }];
         speakText(parts, lang);
@@ -742,102 +752,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
       ], langToUse);
     }, [isSpeaking, stopSpeaking, currentTargetLangCode, currentNativeLangCode, speakText]);
 
-  return (
-    <div className="flex flex-col h-full bg-page-bg notebook-lines">
-      <div
-        ref={scrollContainerRef}
-        className="flex-grow overflow-y-auto overflow-x-hidden p-4"
-        onScroll={handleContainerScroll}
-        onPointerMove={handleSwipePointerMove}
-        onPointerUp={handleSwipePointerUp}
-        onPointerCancel={handleSwipePointerCancel}
-      >
-        {/* Fixed-height top spacer: allows users to scroll the topmost message
-            down to the bottom of the viewport, keeping it clear of top controls
-            (bookmark bar, header, etc.). Uses 100vh minus some buffer for the
-            input area. This spacer always exists regardless of message count. */}
-        <div 
-          className="shrink-0" 
-          style={{ height: 'calc(100vh - 200px)' }} 
-          aria-hidden 
-        />
-        <div className="space-y-2">
-       {bookmarkInfo.hasBookmark && hiddenCount > 0 && (
-         <div
-           className="my-1 px-2 py-1 bg-history-peek-bg border border-line-border sketch-shape-2 flex items-center gap-2"
-           role="region"
-           aria-label={t('chat.bookmark.hiddenHeaderAria') || 'Hidden messages above'}
-           style={{
-             // @ts-ignore
-             containerType: 'inline-size'
-           }}
-         >
-           <IconEyeOpen className="w-4 h-4 text-history-peek-icon" />
-           <span className="text-page-text" style={{ fontSize: '2.8cqw' }}>
-             {bookmarkViewMode === 'above' && bookmarkChunkMeta
-               ? translateOrFallback(
-                   'chat.bookmark.showingAboveRange',
-                   `Showing messages above ${bookmarkChunkMeta.displayStart}-${bookmarkChunkMeta.displayEnd} of ${hiddenCount}`,
-                   { start: bookmarkChunkMeta.displayStart, end: bookmarkChunkMeta.displayEnd, total: hiddenCount }
-                 )
-               : translateOrFallback(
-                   'chat.bookmark.hiddenCount',
-                   `${hiddenCount} above messages hidden`,
-                   { count: hiddenCount }
-                 )}
-           </span>
-           <div className="ml-auto flex items-center gap-2" style={{ fontSize: '2.8cqw' }}>
-             {bookmarkViewMode === 'above' && bookmarkChunkMeta ? (
-               <button
-                 className="px-2 py-1 sketch-shape-4 bg-history-btn-bg hover:bg-history-btn-hover text-page-text border border-line-border disabled:opacity-50"
-                 onClick={() => {
-                   if (bookmarkChunkMeta && bookmarkChunkMeta.chunkIndex < bookmarkChunkMeta.chunkCount - 1) {
-                     setBookmarkAboveChunkIndex(prev => Math.min(prev + 1, bookmarkChunkMeta.chunkCount - 1));
-                   }
-                 }}
-                 disabled={bookmarkChunkMeta.chunkIndex >= bookmarkChunkMeta.chunkCount - 1}
-                 title={translateOrFallback(
-                   'chat.bookmark.showNextChunk',
-                   `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`,
-                   { count: BOOKMARK_SHOW_ABOVE_CHUNK_SIZE }
-                 )}
-               >
-                 {translateOrFallback(
-                   'chat.bookmark.showNextChunk',
-                   `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`,
-                   { count: BOOKMARK_SHOW_ABOVE_CHUNK_SIZE }
-                 )}
-               </button>
-             ) : (
-               <button
-                 className="px-2 py-1 sketch-shape-6 bg-history-btn-bg hover:bg-history-btn-hover text-page-text border border-line-border"
-                 onClick={() => {
-                   if (hiddenCount > 0) {
-                     setBookmarkViewMode('above');
-                     setBookmarkAboveChunkIndex(0);
-                   }
-                 }}
-                 title={translateOrFallback(
-                   'chat.bookmark.showAboveChunk',
-                   hiddenCount > BOOKMARK_SHOW_ABOVE_CHUNK_SIZE
-                     ? `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`
-                     : 'Show messages above',
-                   { count: Math.min(hiddenCount, BOOKMARK_SHOW_ABOVE_CHUNK_SIZE) }
-                 )}
-               >
-                 {translateOrFallback(
-                   'chat.bookmark.showAboveChunk',
-                   hiddenCount > BOOKMARK_SHOW_ABOVE_CHUNK_SIZE
-                     ? `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`
-                     : 'Show messages above',
-                   { count: Math.min(hiddenCount, BOOKMARK_SHOW_ABOVE_CHUNK_SIZE) }
-                 )}
-               </button>
-             )}
-           </div>
-         </div>
-       )}
-         {messagesToRender.map((msg, msgIdx) => {
+  const renderChatMessage = (msg: ChatMessage, msgIdx: number) => {
           if (msg.role === 'system_selection') {
             return null;
           }
@@ -933,7 +848,110 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
               />
             </div>
           );
-        })}
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-page-bg notebook-lines">
+      {book?.layout === 'conversation' && book.earlierPageTarget && createPortal(
+        <div className="space-y-2" onPointerMove={handleSwipePointerMove} onPointerUp={handleSwipePointerUp} onPointerCancel={handleSwipePointerCancel}>
+          {combinedMessages.filter(message => book.earlierMessageIds.has(message.id)).map(renderChatMessage)}
+        </div>, book.earlierPageTarget,
+      )}
+      <div
+        ref={scrollContainerRef}
+        data-quest-chat-scroll={book ? '' : undefined}
+        className="flex-grow overflow-y-auto overflow-x-hidden p-4"
+        onScroll={handleContainerScroll}
+        onPointerMove={handleSwipePointerMove}
+        onPointerUp={handleSwipePointerUp}
+        onPointerCancel={handleSwipePointerCancel}
+      >
+        {/* Fixed-height top spacer: allows users to scroll the topmost message
+            down to the bottom of the viewport, keeping it clear of top controls
+            (bookmark bar, header, etc.). Uses 100vh minus some buffer for the
+            input area. This spacer always exists regardless of message count. */}
+        <div
+          className="shrink-0"
+          style={{ height: book ? 32 : 'calc(100vh - 200px)' }}
+          aria-hidden
+        />
+        <div className="space-y-2">
+       {!book && bookmarkInfo.hasBookmark && hiddenCount > 0 && (
+         <div
+           className="my-1 px-2 py-1 bg-history-peek-bg border border-line-border sketch-shape-2 flex items-center gap-2"
+           role="region"
+           aria-label={t('chat.bookmark.hiddenHeaderAria') || 'Hidden messages above'}
+           style={{
+             // @ts-ignore
+             containerType: 'inline-size'
+           }}
+         >
+           <IconEyeOpen className="w-4 h-4 text-history-peek-icon" />
+           <span className="text-page-text" style={{ fontSize: '2.8cqw' }}>
+             {bookmarkViewMode === 'above' && bookmarkChunkMeta
+               ? translateOrFallback(
+                   'chat.bookmark.showingAboveRange',
+                   `Showing messages above ${bookmarkChunkMeta.displayStart}-${bookmarkChunkMeta.displayEnd} of ${hiddenCount}`,
+                   { start: bookmarkChunkMeta.displayStart, end: bookmarkChunkMeta.displayEnd, total: hiddenCount }
+                 )
+               : translateOrFallback(
+                   'chat.bookmark.hiddenCount',
+                   `${hiddenCount} above messages hidden`,
+                   { count: hiddenCount }
+                 )}
+           </span>
+           <div className="ml-auto flex items-center gap-2" style={{ fontSize: '2.8cqw' }}>
+             {bookmarkViewMode === 'above' && bookmarkChunkMeta ? (
+               <button
+                 className="px-2 py-1 sketch-shape-4 bg-history-btn-bg hover:bg-history-btn-hover text-page-text border border-line-border disabled:opacity-50"
+                 onClick={() => {
+                   if (bookmarkChunkMeta && bookmarkChunkMeta.chunkIndex < bookmarkChunkMeta.chunkCount - 1) {
+                     setBookmarkAboveChunkIndex(prev => Math.min(prev + 1, bookmarkChunkMeta.chunkCount - 1));
+                   }
+                 }}
+                 disabled={bookmarkChunkMeta.chunkIndex >= bookmarkChunkMeta.chunkCount - 1}
+                 title={translateOrFallback(
+                   'chat.bookmark.showNextChunk',
+                   `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`,
+                   { count: BOOKMARK_SHOW_ABOVE_CHUNK_SIZE }
+                 )}
+               >
+                 {translateOrFallback(
+                   'chat.bookmark.showNextChunk',
+                   `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`,
+                   { count: BOOKMARK_SHOW_ABOVE_CHUNK_SIZE }
+                 )}
+               </button>
+             ) : (
+               <button
+                 className="px-2 py-1 sketch-shape-6 bg-history-btn-bg hover:bg-history-btn-hover text-page-text border border-line-border"
+                 onClick={() => {
+                   if (hiddenCount > 0) {
+                     setBookmarkViewMode('above');
+                     setBookmarkAboveChunkIndex(0);
+                   }
+                 }}
+                 title={translateOrFallback(
+                   'chat.bookmark.showAboveChunk',
+                   hiddenCount > BOOKMARK_SHOW_ABOVE_CHUNK_SIZE
+                     ? `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`
+                     : 'Show messages above',
+                   { count: Math.min(hiddenCount, BOOKMARK_SHOW_ABOVE_CHUNK_SIZE) }
+                 )}
+               >
+                 {translateOrFallback(
+                   'chat.bookmark.showAboveChunk',
+                   hiddenCount > BOOKMARK_SHOW_ABOVE_CHUNK_SIZE
+                     ? `Show ${BOOKMARK_SHOW_ABOVE_CHUNK_SIZE} above`
+                     : 'Show messages above',
+                   { count: Math.min(hiddenCount, BOOKMARK_SHOW_ABOVE_CHUNK_SIZE) }
+                 )}
+               </button>
+             )}
+           </div>
+         </div>
+       )}
+         {messagesToRender.map(renderChatMessage)}
         {latestGroundingChunks && latestGroundingChunks.length > 0 && (
           <div
             className="mt-4 p-3 bg-web-results-bg sketch-shape-8 shadow sketchy-border-thin"
@@ -985,7 +1003,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = (props) => {
         />
 
 
-       {bookmarkInfo.hasBookmark && bookmarkViewMode === 'above' && (
+       {!book && bookmarkInfo.hasBookmark && bookmarkViewMode === 'above' && (
          <div
            className="my-1 px-2 py-1 bg-history-peek-bg border border-line-border sketch-shape-10 flex items-center gap-2"
            role="region"

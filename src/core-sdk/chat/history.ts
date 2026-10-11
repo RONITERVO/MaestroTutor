@@ -5,7 +5,7 @@ import { formatLearnerProfileContext, formatConversationSummary } from '../../co
 
 import { MAX_MEDIA_TO_KEEP } from '../../core/config/app';
 import { ART_STYLE_REFERENCE_MAX_CHARS, ART_STYLE_REFERENCE_TEXT } from './artStyleReference';
-import type { ChatMessage } from '../../core/types';
+import type { ChatMessage, ChatFilePart } from '../../core/types';
 import { selectUploadedAttachmentParts } from './uploadedAttachmentVariants';
 
 export interface DerivedHistoryItem {
@@ -13,7 +13,7 @@ export interface DerivedHistoryItem {
   role: 'user' | 'assistant';
   text?: string;
   rawAssistantResponse?: string;
-  fileParts?: Array<{ fileUri: string; mimeType: string }>;
+  fileParts?: ChatFilePart[];
   chatSummary?: string;
   avatarFileUri?: string;
   avatarMimeType?: string;

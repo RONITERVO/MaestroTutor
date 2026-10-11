@@ -34,7 +34,7 @@ export interface SuggestionCoordinatorPorts {
   runReplySuggestions(input: ReplySuggestionsInput, options: Pick<ReplySuggestionsOptions, 'lifecycleHooks'>): Promise<ReplySuggestionsResult>;
   normalizeSuggestionCreatorArtifact(artifact: unknown): NormalizedSuggestionArtifact | null;
   normalizeSuggestionCreatorToolRequest(tool: unknown, messageId: string): NormalizedSuggestionToolRequest | null;
-  executeAssistantToolRequest(id: string, tool: NormalizedSuggestionToolRequest | null): Promise<void>;
+  executeAssistantToolRequest(id: string, tool: NormalizedSuggestionToolRequest | null, sourceAssistantId?: string): Promise<void>;
   addMessage(message: NewMessage): string;
   updateMessage(id: string, patch: Partial<ChatMessage>): void;
   setReplySuggestions(suggestions: ReplySuggestion[]): void;
@@ -71,7 +71,8 @@ export function createSuggestionCoordinator(ports: SuggestionCoordinatorPorts) {
       for (const patch of plan.assistantPatches) updateMessage(assistantMessageId, patch);
       if (resolvedToolRequest) {
         const toolMessageId = plan.splitToolMessage ? addMessage(plan.splitToolMessage) : assistantMessageId;
-        await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
+        if (resolvedToolRequest.tool === 'agent') await executeAssistantToolRequest(toolMessageId, resolvedToolRequest, assistantMessageId);
+        else await executeAssistantToolRequest(toolMessageId, resolvedToolRequest);
       }
     };
 

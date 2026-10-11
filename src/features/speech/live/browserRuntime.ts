@@ -1,3 +1,4 @@
+import { acquireUserMedia } from '../../../platform/browser/sessionActivity';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { getGeminiModels } from '../../../core/config/models';
@@ -25,6 +26,8 @@ import {
 } from '../worklets';
 import { createBrowserLiveVideo } from './browserVideo';
 import type { LiveActivityPorts, LiveRuntimePorts } from './ports';
+import { WorkletSpeechOutput } from '../utils/workletSpeechOutput';
+import { selectSpeechOutput } from '../utils/selectSpeechOutput';
 
 /** Browser/native adapters. No orchestration policy lives in this composition. */
 export function createBrowserLiveRuntime(activity: LiveActivityPorts): LiveRuntimePorts {
@@ -33,13 +36,20 @@ export function createBrowserLiveRuntime(activity: LiveActivityPorts): LiveRunti
     acquireLocalWhisperClient, releaseLocalWhisperClient, waitForLocalSpeechTrigger, flushCaptureWorkletNode,
     isNativePlatform: () => Capacitor.isNativePlatform(),
     getAudioContextConstructor: () => window.AudioContext || (window as any).webkitAudioContext,
-    getUserMedia: constraints => navigator.mediaDevices.getUserMedia(constraints),
+    getUserMedia: constraints => acquireUserMedia(constraints),
     createAudioWorkletNode: (context, name, options) => new AudioWorkletNode(context, name, options),
+    createSpeechOutput: async (context, events) => selectSpeechOutput(async () => {
+      await context.audioWorklet.addModule(PCM_PLAYBACK_PROCESSOR_URL);
+      const node = new AudioWorkletNode(context, PCM_PLAYBACK_PROCESSOR_NAME, {
+        numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1],
+      });
+      return new WorkletSpeechOutput(context, node, events);
+    }, events),
     createCanvas: () => document.createElement('canvas'),
     createCodecWorker: () => new AudioCodecWorkerClient(),
     createVideo: state => createBrowserLiveVideo(state, { hasCameraConsent: () => hasCameraConsent(useMaestroStore.getState().settings) }),
     setTimeout: (callback, ms) => window.setTimeout(callback, ms),
     clearTimeout: id => window.clearTimeout(id),
-    FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME, PCM_PLAYBACK_PROCESSOR_URL, PCM_PLAYBACK_PROCESSOR_NAME,
+    FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME,
   };
 }

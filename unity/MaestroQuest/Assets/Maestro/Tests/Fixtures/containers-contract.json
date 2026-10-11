@@ -1,0 +1,500 @@
+[
+  {
+    "name": "configure valid",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "remove valid",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "remove",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1
+    },
+    "valid": true
+  },
+  {
+    "name": "transfer valid",
+    "capability": "object.container.transfer",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountMl": 100
+    },
+    "valid": true
+  },
+  {
+    "name": "reject amountMl",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 250.01,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject radius",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject height",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 3,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject liquid",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water\n",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject capacityMl",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 0,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject nonunit frame",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 0
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "reject transfer amountMl",
+    "capability": "object.container.transfer",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountMl": 0
+    },
+    "valid": false
+  },
+  {
+    "name": "reject transfer amountMl",
+    "capability": "object.container.transfer",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountMl": 1000001
+    },
+    "valid": false
+  },
+  {
+    "name": "reject transfer source",
+    "capability": "object.container.transfer",
+    "arguments": {
+      "source": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1
+      },
+      "amountMl": 100
+    },
+    "valid": false
+  },
+  {
+    "name": "reject transfer destination",
+    "capability": "object.container.transfer",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 0
+      },
+      "amountMl": 100
+    },
+    "valid": false
+  },
+  {
+    "name": "rectangular cavity",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        },
+        "rectangle": {
+          "width": 1.18,
+          "depth": 0.78
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "rectangle too wide",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        },
+        "rectangle": {
+          "width": 2.01,
+          "depth": 0.78
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "rectangle missing depth",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        },
+        "rectangle": {
+          "width": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "null rectangle keeps cylindrical cavity",
+    "capability": "object.container.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 1,
+      "definition": {
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.04,
+        "height": 0.1,
+        "capacityMl": 250,
+        "amountMl": 200,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        },
+        "rectangle": null
+      }
+    },
+    "valid": true
+  }
+]

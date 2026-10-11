@@ -10,7 +10,10 @@ const mocks = vi.hoisted(() => ({
   getCurrentIdentity: vi.fn(),
   getAppCheckToken: vi.fn(),
   getAppCheckFailureReason: vi.fn(),
+  quest: false,
 }));
+
+vi.mock('../../platform/quest/questIntegrityBridge', () => ({ isNativeQuestBook: () => mocks.quest }));
 
 vi.mock('../../core/security/managedAccessSessionStorage', () => ({
   loadManagedAccessSession: mocks.loadManagedAccessSession,
@@ -195,5 +198,82 @@ describe('App Check preflight', () => {
     const headers = new Headers(fetchMock.mock.calls[0][1].headers);
     expect(headers.get('X-Firebase-AppCheck')).toBe('attestation-jwt');
     expect(headers.get('Authorization')).toBe('Bearer token');
+  });
+});
+
+
+describe('unpublished Quest identity handshake', () => {
+  const fetchMock = vi.fn();
+  const identity = { firebaseIdToken: 'approved-token', refreshToken: null, expiresAt: null, user: { ...managedSession.user, id: 'approved-user' } };
+  beforeEach(() => {
+    vi.clearAllMocks(); vi.resetModules(); vi.stubGlobal('fetch', fetchMock);
+    mocks.getAppCheckToken.mockResolvedValue('quest-proof');
+    mocks.loadManagedAccessSession.mockResolvedValue(managedSession);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+  it('uses the approved identity, not a cached account, and leaves shared storage unpublished', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ session: { ...managedSession, user: identity.user } })));
+    const { getManagedSessionForIdentity } = await import('./maestroBackendService');
+    const controller = new AbortController(); await getManagedSessionForIdentity({ ...identity, signal: controller.signal });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://backend.example/auth/session');
+    const init = fetchMock.mock.calls[0][1];
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer approved-token');
+    expect(new Headers(init.headers).get('X-Firebase-AppCheck')).toBe('quest-proof');
+    expect(init.signal.aborted).toBe(false); controller.abort(); expect(init.signal.aborted).toBe(true);
+    expect(mocks.getCurrentIdentity).not.toHaveBeenCalled(); expect(mocks.saveManagedAccessSession).not.toHaveBeenCalled();
+  });
+  it('rejects a different backend account', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ session: managedSession })));
+    const { getManagedSessionForIdentity } = await import('./maestroBackendService');
+    await expect(getManagedSessionForIdentity(identity)).rejects.toThrow('could not be confirmed');
+    expect(mocks.saveManagedAccessSession).not.toHaveBeenCalled();
+  });
+  it('rechecks ownership after attestation before sending the approved credential', async () => {
+    let current = true;
+    mocks.getAppCheckToken.mockImplementationOnce(async () => { current = false; return 'proof'; });
+    const { getManagedSessionForIdentity } = await import('./maestroBackendService');
+    await expect(getManagedSessionForIdentity({ ...identity, assertCurrent: () => { if (!current) throw new DOMException('Cancelled', 'AbortError'); } })).rejects.toMatchObject({ name: 'AbortError' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('Quest checkout boundary', () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    vi.stubGlobal('fetch', fetchMock);
+    mocks.quest = true;
+    mocks.loadManagedAccessSession.mockResolvedValue(managedSession);
+    mocks.getCurrentIdentity.mockResolvedValue(null);
+    mocks.getAppCheckToken.mockResolvedValue('proof');
+  });
+  afterEach(() => { mocks.quest = false; vi.unstubAllGlobals(); });
+
+  it('refuses a direct purchase without credentials, network or a checkout session', async () => {
+    const { maestroBackendService } = await import('./maestroBackendService');
+    await expect(maestroBackendService.createStripeCheckoutSession('pack_1000')).rejects.toMatchObject({
+      status: 403, code: 'billing/checkout-unavailable',
+    });
+    expect(mocks.loadManagedAccessSession).not.toHaveBeenCalled();
+    expect(mocks.getAppCheckToken).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('preserves the shared account and balance route on Quest', async () => {
+    fetchMock.mockResolvedValueOnce(Response.json({ account: managedSession }));
+    const { maestroBackendService } = await import('./maestroBackendService');
+    await expect(maestroBackendService.getAccountSummary()).resolves.toEqual({ account: managedSession });
+    expect(fetchMock.mock.calls[0][0]).toBe('https://backend.example/account/summary');
+  });
+
+  it('retains the existing web checkout route', async () => {
+    mocks.quest = false;
+    const checkout = { url: 'https://checkout.stripe.com/example', sessionId: 'cs_example' };
+    fetchMock.mockResolvedValueOnce(Response.json(checkout));
+    const { maestroBackendService } = await import('./maestroBackendService');
+    await expect(maestroBackendService.createStripeCheckoutSession('pack_1000')).resolves.toEqual(checkout);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://backend.example/billing/stripe/checkout');
   });
 });

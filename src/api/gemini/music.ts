@@ -14,6 +14,7 @@ import { trackMusicGeneration } from '../../shared/utils/costTracker';
 import { getAi } from './client';
 import { maestroAccessService } from '../../services/access/maestroAccessService';
 import { maestroBackendService } from '../../services/backend/maestroBackendService';
+import { sessionActivity } from '../../platform/browser/sessionActivity';
 
 const STREAM_PLAYBACK_GAIN = 0.22;
 
@@ -65,9 +66,10 @@ const stopActiveMusicPlayback = async () => {
   try { playback.gainNode.disconnect(); } catch {}
   try { await playback.audioContext.close(); } catch {}
 };
+sessionActivity.onSuspend(stopActiveMusicPlayback);
 
 const ensureMusicPlayback = async (): Promise<ActiveMusicPlayback | null> => {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined' || !sessionActivity.isActive()) return null;
   const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
   if (!AudioContextCtor) return null;
 
@@ -82,6 +84,7 @@ const ensureMusicPlayback = async (): Promise<ActiveMusicPlayback | null> => {
   if (audioContext.state === 'suspended') {
     try { await audioContext.resume(); } catch {}
   }
+  if (!sessionActivity.isActive()) { await audioContext.close(); return null; }
   const gainNode = audioContext.createGain();
   gainNode.gain.value = STREAM_PLAYBACK_GAIN;
   gainNode.connect(audioContext.destination);
@@ -100,7 +103,7 @@ const queueMusicChunkForPlayback = async (
   channels: number,
 ): Promise<boolean> => {
   const playback = await ensureMusicPlayback();
-  if (!playback) return false;
+  if (!playback || !sessionActivity.isActive() || playback.audioContext.state === 'closed') return false;
   const audioBuffer = pcmToAudioBuffer(
     base64ToUint8(base64Chunk),
     playback.audioContext,
@@ -131,6 +134,7 @@ export const generateMusic = async (params: {
   streamPlayback?: boolean;
   onStreamPlaybackStart?: () => void;
 }): Promise<GeminiMusicResult> => {
+  if (!sessionActivity.isActive()) throw new DOMException('Media is paused.', 'AbortError');
   const model = getGeminiModels().music.generation;
   const streamPlayback = params.streamPlayback !== false;
   if (streamPlayback) await stopActiveMusicPlayback();
@@ -138,15 +142,22 @@ export const generateMusic = async (params: {
     prompt: params.prompt,
     durationSeconds: params.durationSeconds,
   });
+  const interruption = new AbortController();
+  const abort = () => interruption.abort();
+  params.abortSignal?.addEventListener('abort', abort, { once: true });
+  if (params.abortSignal?.aborted || !sessionActivity.isActive()) abort();
+  let finished!: () => void;
+  const completion = new Promise<void>(resolve => { finished = resolve; });
+  const unregister = sessionActivity.onSuspend(() => { abort(); return completion; });
 
   try {
     const common = {
       model,
       prompt: params.prompt,
       durationSeconds: params.durationSeconds,
-      abortSignal: params.abortSignal,
+      abortSignal: interruption.signal,
       ...(streamPlayback ? {
-        onPcmChunk: (chunk: CoreMusicChunk) => queueMusicChunkForPlayback(
+        onPcmChunk: (chunk: CoreMusicChunk) => interruption.signal.aborted ? Promise.resolve(false) : queueMusicChunkForPlayback(
           chunk.pcmBase64,
           chunk.sampleRate,
           chunk.channels,
@@ -155,10 +166,12 @@ export const generateMusic = async (params: {
       } : {}),
     };
     const accessMode = await maestroAccessService.resolveAccessMode();
+    const aiClient = accessMode === 'managed' ? null : await getAi({ apiVersion: 'v1alpha' });
+    if (interruption.signal.aborted) throw new DOMException('Music generation was interrupted.', 'AbortError');
     const result = accessMode === 'managed'
       ? await runCoreManagedMusicGeneration({ backend: maestroBackendService, ...common })
       : await runCoreMusicGeneration({
-        aiClient: await getAi({ apiVersion: 'v1alpha' }),
+        aiClient: aiClient!,
         ...common,
       });
     if (accessMode === 'byok') trackMusicGeneration(model, result.durationSeconds);
@@ -179,5 +192,7 @@ export const generateMusic = async (params: {
     if (streamPlayback) await stopActiveMusicPlayback();
     log.error(error);
     throw error;
+  } finally {
+    unregister(); params.abortSignal?.removeEventListener('abort', abort); finished();
   }
 };

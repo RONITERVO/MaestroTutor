@@ -1,0 +1,28 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using Newtonsoft.Json.Linq;
+using static Maestro.Quest.Programs.CapabilitySchema;
+namespace Maestro.Quest.Programs
+{
+    public static class NativeObjectFacts
+    {
+        public static BehaviourCatalog.FactDefinition Definition()=>new("object.definition",ProgramDataType.Read(JObject.Parse("{\"record\":{\"target\":\"text\",\"revision\":\"number\",\"kind\":\"text\",\"name\":\"text\",\"position\":{\"record\":{\"x\":\"number\",\"y\":\"number\",\"z\":\"number\"}},\"rotation\":{\"record\":{\"x\":\"number\",\"y\":\"number\",\"z\":\"number\",\"w\":\"number\"}},\"scale\":\"number\",\"content\":{\"record\":{\"points\":\"number\",\"parts\":\"number\",\"frames\":\"number\",\"modelHash\":\"text\",\"recipePlaying\":\"boolean\"}}}}")),"Saved object definition",
+            "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
+            Object(new JObject {["target"]=Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32))}),new JObject {["target"]="book"},(context,args)=>{
+                string id=(string)args["target"];if(!context.Editor)return null;var d=context.Editor.Read(id);if(d==null)return null;
+                return ProgramValue.Literal(new JObject {["target"]=id,["revision"]=context.Editor.ObjectRevision(id),["kind"]=d.kind.ToString(),["name"]=Imports.ImportObservation.Text(d.name),
+                    ["position"]=Interaction.ScannedRoom.Triple(d.position),["rotation"]=new JObject {["x"]=d.rotation.x,["y"]=d.rotation.y,["z"]=d.rotation.z,["w"]=d.rotation.w},["scale"]=d.scale,
+                    ["content"]=new JObject {["points"]=d.points?.Length??0,["parts"]=d.recipe?.parts.Length??0,["frames"]=d.motion?.frames.Length??0,["modelHash"]=d.modelHash??"",["recipePlaying"]=d.recipe?.playing??false}});
+            });
+        public static BehaviourCatalog.FactDefinition Presence(){var output=Object(new JObject{["target"]=Text(null,32),["revision"]=Number(0,int.MaxValue,true),["saved"]=new JObject{["type"]="boolean"},["nativeInstance"]=new JObject{["type"]="boolean"},["active"]=new JObject{["type"]="boolean"},["state"]=Text(null,16)});return new("object.presence",OutputType(output),"Object saved and native presence",
+            "Distinguish saved existence from the native room instance without loading or changing anything. state is missing (no saved entity), unavailable (saved entity without a native instance), inactive (native instance disabled), or active. revision is the canonical saved revision, zero when missing. Active does not prove geometry, images, audio, navigation or physics readiness; use the relevant component facts. Saved definition, collision, drawing, surface and recorded-animation reads do not require a native instance. Live position, playback and interaction require an active instance. This reports current native presence, not implemented regional streaming or permission to unload.",Object(new JObject{["target"]=Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32))}),new JObject{["target"]="book"},(c,a)=>c.Editor&&c.Editor.ObserveObjectPresence((string)a["target"]) is JObject value?ProgramValue.Literal(value,OutputType(output)):null);}
+        public static BehaviourCatalog.FactDefinition Position()=>new("object.position",ProgramDataType.Read(JObject.Parse("{\"record\":{\"x\":\"number\",\"y\":\"number\",\"z\":\"number\"}}")),"Object room position",
+            "Current transform origin in authored room coordinates as a record {x,y,z}, matching object.position.set and layout inputs. This is not a mesh centre, surface, floor height or navigation destination. Target may be the book, Maestro or an existing creation. Grabs, animations and physics all affect the reading; physics need not run. Missing/disabled targets, invalid positions and paused app runtime are unavailable. Reads take no ownership, grant no editing authority and do not subscribe. Save the result in a local when several calculations need the same snapshot. Virtual-world translation or yaw does not change this snapshot. It identifies a place in this authored room, not a persistent anchor to a physical surface or a point in another room. Invalid room frames are unavailable.",
+            Object(new JObject {["target"]=Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32))}),new JObject {["target"]="book"},
+            (context,args)=>context.World is IProgramRoomSpace space&&space.TryRoomPosition((string)args["target"],out var position)?ReadPosition(position):null,version:2);
+        static ProgramValue? ReadPosition(UnityEngine.Vector3 position) {
+            if(!float.IsFinite(position.x)||!float.IsFinite(position.y)||!float.IsFinite(position.z)||System.Math.Abs(position.x)>1000000||System.Math.Abs(position.y)>1000000||System.Math.Abs(position.z)>1000000)return null;
+            return ProgramValue.Literal(new JObject {["x"]=position.x,["y"]=position.y,["z"]=position.z});
+        }
+    }
+}

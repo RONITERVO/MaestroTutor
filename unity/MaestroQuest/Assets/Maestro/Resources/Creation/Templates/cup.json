@@ -1,0 +1,230 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "cup",
+  "name": "Cup",
+  "description": "Open handled cup with an editable 500 ml liquid store. Tilt to pour or dip its opening into a larger vessel to fill.",
+  "tags": [
+    "tableware",
+    "container",
+    "lathe"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Body",
+          "shape": "lathe",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.22,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.91,
+            "g": 0.88,
+            "b": 0.76,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": 0,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": 0.5
+            },
+            {
+              "x": 0.4,
+              "y": -0.4
+            },
+            {
+              "x": 0,
+              "y": -0.4
+            }
+          ],
+          "segments": 24
+        },
+        {
+          "id": "Handle",
+          "shape": "lathe",
+          "position": {
+            "x": 0.13,
+            "y": 0.01,
+            "z": 0
+          },
+          "size": {
+            "x": 0.1,
+            "y": 0.025,
+            "z": 0.135
+          },
+          "rotation": {
+            "x": 0.7071067811865476,
+            "y": 0,
+            "z": 0.0,
+            "w": 0.7071067811865476
+          },
+          "parent": null,
+          "color": {
+            "r": 0.91,
+            "g": 0.88,
+            "b": 0.76,
+            "a": 1
+          },
+          "profile": [
+            {
+              "x": 0.3,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": -0.5
+            },
+            {
+              "x": 0.5,
+              "y": 0.5
+            },
+            {
+              "x": 0.3,
+              "y": 0.5
+            }
+          ],
+          "segments": 24
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Floor",
+          "shape": "cylinder",
+          "position": {
+            "x": 0,
+            "y": -0.099,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.022,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "segments": 12
+        },
+        {
+          "id": "Wall",
+          "shape": "ring",
+          "position": {
+            "x": 0,
+            "y": 0.011,
+            "z": 0
+          },
+          "size": {
+            "x": 0.2,
+            "y": 0.198,
+            "z": 0.2
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "innerRadius": 0.4,
+          "segments": 12
+        },
+        {
+          "id": "Handle",
+          "shape": "ring",
+          "position": {
+            "x": 0.13,
+            "y": 0.01,
+            "z": 0
+          },
+          "size": {
+            "x": 0.1,
+            "y": 0.025,
+            "z": 0.135
+          },
+          "rotation": {
+            "x": 0.7071067811865476,
+            "y": 0,
+            "z": 0.0,
+            "w": 0.7071067811865476
+          },
+          "innerRadius": 0.3,
+          "segments": 8
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.3
+    },
+    "containers": [
+      {
+        "version": 1,
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": -0.088,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        },
+        "radius": 0.078,
+        "height": 0.198,
+        "capacityMl": 500,
+        "amountMl": 0,
+        "liquid": "Water",
+        "color": {
+          "r": 0.16,
+          "g": 0.55,
+          "b": 0.85,
+          "a": 1
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,182 @@
+# Copyright 2026 Roni Tervo
+# SPDX-License-Identifier: Apache-2.0
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)][string]$Editor,
+    [Parameter(Mandatory)][string]$BuildMirror,
+    [switch]$UpdateBehaviourCatalog,
+    [switch]$RenderArt,
+    [switch]$RenderRecipes,
+    [switch]$RenderRules,
+    [switch]$RenderImports,
+    [switch]$RenderPhysics,
+    [string]$TutorMotionPreviewIds,
+    [string]$ModelAuditDirectory,
+    [string]$MotionAuditDirectory,
+    [string]$ModelPreview,
+    [switch]$ModelAsMaestro,
+    [string]$PageCapture
+)
+$ErrorActionPreference = 'Stop'
+if ($ModelAsMaestro -and !$ModelPreview) { throw 'ModelAsMaestro requires a local ModelPreview file.' }
+. (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+$sourceProject = Join-Path $repoRoot 'unity/MaestroQuest'
+$mirrorRoot = [IO.Path]::GetFullPath($BuildMirror).TrimEnd('\','/')
+$editorPath = (Resolve-Path -LiteralPath $Editor).Path
+if ($mirrorRoot.Length -gt 80 -or $mirrorRoot.StartsWith($repoRoot, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'Use a short, dedicated build directory outside the repository.'
+}
+if ($mirrorRoot -eq [IO.Path]::GetPathRoot($mirrorRoot).TrimEnd('\','/')) { throw 'The drive root cannot be a build mirror.' }
+$receiptPath = Join-Path $mirrorRoot '.maestro-build-mirror.json'
+if (Test-Path -LiteralPath $mirrorRoot) {
+    if (!(Test-Path -LiteralPath $receiptPath)) { throw 'Existing directory has no Maestro build receipt; choose a new empty path.' }
+    $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+    if ($receipt.source -ne $sourceProject) { throw 'Build mirror belongs to a different source project.' }
+} else {
+    New-Item -ItemType Directory -Path $mirrorRoot | Out-Null
+    @{source=$sourceProject} | ConvertTo-Json | Set-Content -LiteralPath $receiptPath
+}
+foreach ($folder in @('Assets','Packages','ProjectSettings')) {
+    $from = Join-Path $sourceProject $folder
+    $to = Join-Path $mirrorRoot $folder
+    New-Item -ItemType Directory -Path $to -Force | Out-Null
+    # Remove only obsolete source files in this receipt-owned copy. Cache/log
+    # directories are outside these three roots and are never touched.
+    foreach ($file in Get-ChildItem -LiteralPath $to -Recurse -File) {
+        $resolvedFile = [IO.Path]::GetFullPath($file.FullName)
+        if (!$resolvedFile.StartsWith($to + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Unexpected mirror path.' }
+        $relative = [IO.Path]::GetRelativePath($to, $resolvedFile)
+        if (!(Test-Path -LiteralPath (Join-Path $from $relative))) { Remove-Item -LiteralPath $resolvedFile }
+    }
+    Copy-Item -Path "$from/*" -Destination $to -Recurse -Force
+}
+$logRoot = Join-Path $mirrorRoot 'Logs'
+$env:MAESTRO_OBJECT_EDIT_EVIDENCE = Join-Path $logRoot 'object-edit-evidence'
+$env:MAESTRO_RECIPE_CREATION_EVIDENCE = Join-Path $logRoot 'recipe-creation-evidence'
+New-Item -ItemType Directory -Path $logRoot -Force | Out-Null
+function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$ResultPath = '') {
+    $logPath = Join-Path $logRoot $LogName
+    # Desktop verification uses a desktop target and Meta's D3D11 OpenXR path.
+    $argumentsWithPaths = @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath', ('"' + $mirrorRoot + '"'), '-logFile', ('"' + $logPath + '"')) + $Arguments
+    if ($ResultPath -and (Test-Path -LiteralPath $ResultPath)) { Remove-Item -LiteralPath $ResultPath }
+    if (Test-Path -LiteralPath $logPath) { Remove-Item -LiteralPath $logPath }
+    # KAT Gateway owns the machine's default ADB server. Unity's shutdown can
+    # hang trying to stop it; give build children their own server endpoint.
+    Stop-QuestBuildHelper
+    $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041'; MAESTRO_QUEST_RELEASE_PROFILE = ''; MAESTRO_QUEST_KEYSTORE = ''; MAESTRO_QUEST_KEY_ALIAS = ''; MAESTRO_QUEST_STORE_PASSWORD = ''; MAESTRO_QUEST_KEY_PASSWORD = '' }
+    $deadline = [DateTime]::UtcNow.AddMinutes(20)
+    $reportWrittenAt = $null
+    $shutdownAt = $null
+    $helperStopped = $false
+    try { while (!$process.WaitForExit(1000)) {
+        if (!$reportWrittenAt -and (($ResultPath -and (Test-Path -LiteralPath $ResultPath)) -or
+            ((Test-Path -LiteralPath $logPath) -and (Select-String -LiteralPath $logPath -Pattern 'MAESTRO_PROJECT_CONFIGURED|Batchmode quit successfully invoked' -Quiet)))) {
+            $reportWrittenAt = [DateTime]::UtcNow
+        }
+        # A configuration/test marker is not shutdown. Killing ADB at that point can
+        # strand Unity before it enters its normal exit path. Give normal shutdown
+        # time to finish; only clean an inherited helper if shutdown itself stalls.
+        if (!$shutdownAt -and (Test-Path -LiteralPath $logPath) -and
+            (Select-String -LiteralPath $logPath -Pattern 'Batchmode quit successfully invoked|Killing ADB server|Exiting batchmode' -Quiet)) {
+            $shutdownAt = [DateTime]::UtcNow
+        }
+        if (!$helperStopped -and $shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(10)) {
+            Stop-QuestBuildHelper
+            $helperStopped = $true
+        }
+        if ([DateTime]::UtcNow -gt $deadline -or ($reportWrittenAt -and [DateTime]::UtcNow -gt $reportWrittenAt.AddSeconds(60))) {
+            $process.Kill(); $process.WaitForExit()
+            throw "Unity verification did not exit in time; see $logPath. A written test report alone is not a successful build."
+        }
+    } } finally { Stop-QuestBuildHelper }
+    if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $logPath -Tail 50; throw "Unity exited $($process.ExitCode); see $logPath" }
+    & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $logPath
+}
+Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.Configure') 'configure.log'
+$nativeCatalog = Join-Path $logRoot 'behaviour-catalog.json'
+$sharedCatalog = Join-Path $repoRoot 'shared/generated/behaviourCatalog.json'
+if (!(Test-Path -LiteralPath $nativeCatalog)) { throw 'Native behaviour catalog was not exported.' }
+if ($UpdateBehaviourCatalog) { Copy-Item -LiteralPath $nativeCatalog -Destination $sharedCatalog -Force }
+$nativeJson = Get-Content -LiteralPath $nativeCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress
+$sharedJson = Get-Content -LiteralPath $sharedCatalog -Raw | ConvertFrom-Json | ConvertTo-Json -Depth 100 -Compress
+if ($nativeJson -cne $sharedJson) { throw 'Behaviour catalog drift. Review registrations, then run Verify-Quest.ps1 with -UpdateBehaviourCatalog.' }
+$env:MAESTRO_BEHAVIOUR_CATALOG = $sharedCatalog
+$env:MAESTRO_RECEIPT_EVIDENCE = Join-Path $logRoot 'receipt-evidence'
+$testResult = Join-Path $logRoot 'editmode-results.xml'
+Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
+[xml]$testReport = Get-Content -LiteralPath $testResult
+if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 151) { throw 'Unity test results did not satisfy the current development checks.' }
+$playResult = Join-Path $logRoot 'playmode-results.xml'
+$env:MAESTRO_RUNTIME_DIAGNOSTICS = Join-Path $logRoot 'runtime-diagnostics'
+$env:MAESTRO_PROGRAM_EVIDENCE = Join-Path $logRoot 'program-evidence'
+$env:MAESTRO_PROGRAM_MEMORY_EVIDENCE = Join-Path $logRoot 'program-memory-evidence'
+$env:MAESTRO_ANCHOR_ZONE_EVIDENCE = Join-Path $logRoot 'anchor-zone-evidence'
+$env:MAESTRO_CHANNEL_WAIT_EVIDENCE = Join-Path $logRoot 'channel-wait-evidence'
+$env:MAESTRO_CATALOG_EVIDENCE = Join-Path $logRoot 'catalog-evidence'
+$env:MAESTRO_EXECUTION_EVIDENCE = Join-Path $logRoot 'execution-evidence'
+$env:MAESTRO_PHYSICS_ACTION_EVIDENCE = Join-Path $logRoot 'physics-action-evidence'
+$env:MAESTRO_CREATION_EVIDENCE = Join-Path $logRoot 'creation-evidence'
+$env:MAESTRO_EVENT_EVIDENCE = Join-Path $logRoot 'event-evidence'
+$env:MAESTRO_CHANNEL_EVIDENCE = Join-Path $logRoot 'channel-evidence'
+$env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
+$env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }
+$env:MAESTRO_MOTION_DIRECTORY = if ($MotionAuditDirectory) { (Resolve-Path -LiteralPath $MotionAuditDirectory).Path } else { '' }
+$env:MAESTRO_REQUIRE_HUMANOID = if ($ModelAsMaestro) { '1' } else { '' }
+Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
+[xml]$playReport = Get-Content -LiteralPath $playResult
+# Unity marks the whole report Skipped:Ignored when only the deliberately
+# optional private-file checks are ignored. Never permit other skipped tests.
+$expectedSkipped = @()
+if (!$ModelPreview) { $expectedSkipped += 'SelectedExternalModelLoadsAndPlaysEmbeddedSkeletalAnimationWhenPresent' }
+if (!$ModelAsMaestro) { $expectedSkipped += 'SelectedExternalHumanoidUsesTheRealTutorReplacementAndPosePath' }
+if (!$MotionAuditDirectory) { $expectedSkipped += 'SelectedCollectionMotionsMatchSourceTransformsAndDeformedMeshes' }
+$unexpectedCases = @($playReport.SelectNodes('//test-case[@result!="Passed"]') | Where-Object {
+    $_.result -ne 'Skipped' -or $_.label -ne 'Ignored' -or $expectedSkipped -notcontains $_.name
+})
+if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 98 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
+if ($MotionAuditDirectory) {
+    $env:MAESTRO_MOTION_AUDIT = Join-Path $repoRoot '.quest-evidence/motion-library'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestMotionAudit.Inspect') 'motion-audit.log'
+}
+if ($ModelAuditDirectory) {
+    $env:MAESTRO_MODEL_DIRECTORY = (Resolve-Path -LiteralPath $ModelAuditDirectory).Path
+    $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestModelAudit.Inspect') 'model-audit.log'
+}
+if ($ModelPreview) {
+    $env:MAESTRO_MODEL_PREVIEW = (Resolve-Path -LiteralPath $ModelPreview).Path
+    $env:MAESTRO_MODEL_AUDIT = Join-Path $repoRoot '.quest-evidence/model-audit.json'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestModelAudit.Preview') 'model-preview.log'
+}
+if ($RenderRecipes) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderRecipes') 'recipe-preview.log'
+}
+if ($RenderArt) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
+    $env:MAESTRO_BOOK_PREVIEW_TEXTURE = if ($PageCapture) { (Resolve-Path -LiteralPath $PageCapture).Path } else { '' }
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.Render') 'art-preview.log'
+}
+if ($RenderRules) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderRules') 'rule-preview.log'
+}
+if ($TutorMotionPreviewIds) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot ".quest-evidence/tutor-motions"
+    $env:MAESTRO_MOTION_PREVIEW_IDS = $TutorMotionPreviewIds
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestTutorMotionPreview.Render') 'tutor-motion-preview.log'
+}
+if ($RenderPhysics) {
+    $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
+    Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderPhysics') 'physics-preview.log'
+}
+Write-Output "Unity checks passed: $($testReport.'test-run'.passed) EditMode and $($playReport.'test-run'.passed) PlayMode tests. Evidence: $logRoot"
+
+# The complete app can advertise combinations absent from small test fixtures.
+# Exercise its real room inbox with the same shared client used by the book.
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -SyntheticModel
+
+# Exercise the original two-page chat and editors against a separate real native room.
+# Chrome/Vite are owned by the journey; provider responses are local scripted SSE.
+& (Join-Path $PSScriptRoot 'Run-QuestRoomProbe.ps1') -Editor $editorPath -BuildMirror $mirrorRoot -Journey Book -SyntheticSound -SyntheticImage -SyntheticModel

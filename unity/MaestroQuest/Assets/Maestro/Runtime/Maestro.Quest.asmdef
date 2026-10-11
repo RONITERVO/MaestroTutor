@@ -1,0 +1,28 @@
+{
+  "name": "Maestro.Quest",
+  "rootNamespace": "Maestro.Quest",
+  "references": [
+    "Unity.Collections",
+    "Meta.XR.Audio",
+    "Oculus.VR",
+    "Meta.XR.EnvironmentDepth",
+    "meta.xr.mrutilitykit",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "Unity.XR.CoreUtils",
+    "Unity.XR.Management",
+    "Unity.XR.OpenXR",
+    "Unity.XR.Interaction.Toolkit",
+    "Unity.XR.Hands",
+    "Unity.XR.ARFoundation",
+    "Unity.XR.ARSubsystems",
+    "TLab.Capture",
+    "UniGLTF",
+    "UniGLTF.Utils",
+    "VRM10",
+    "UniHumanoid",
+    "Unity.Newtonsoft.Json",
+    "Oculus.Platform"
+  ],
+  "autoReferenced": true
+}

@@ -1,0 +1,253 @@
+[
+  {
+    "name": "bounded surface transfer",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 1
+    },
+    "valid": true
+  },
+  {
+    "name": "minimum quantity",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0.001
+    },
+    "valid": true
+  },
+  {
+    "name": "maximum quantity",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 8000
+    },
+    "valid": true
+  },
+  {
+    "name": "negative quantity",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": -1
+    },
+    "valid": false
+  },
+  {
+    "name": "too much",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 8001
+    },
+    "valid": false
+  },
+  {
+    "name": "same owner",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "out of rectangle maximum",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 3,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "too wide",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 2.01
+      },
+      "amountLitres": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "old revision",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 0,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown field",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "destination": {
+        "target": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "revision": 1,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 1,
+      "mass": 1
+    },
+    "valid": false
+  }
+]
