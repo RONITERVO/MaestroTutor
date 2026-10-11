@@ -3326,3 +3326,16 @@ application's 907 C# inputs remain unchanged from the full `c93a98c6` check.
 See [the audio boundary and evidence](../unity/AUDIO.md#candidate-presentation-parity--2026-10-12).
 Production integration, canonical geometry/obstruction, capture monitoring and
 Android/Quest acceptance remain open; reflection gates remain disabled.
+
+
+### Candidate geometry lifetime coverage — 2026-10-12
+
+The optional renderer now passes 47 native cases. Six new cases cover immutable
+accepted-geometry capture, destruction of its visible source, asymmetric local
+coordinates, shared/movable mesh instances, topology replacement, output-boundary
+edits and reset while a worker retains resources. All 67 graphs, 76 mesh owners and
+77 instance owners close normally; all 26 input hashes match. The 907 application
+C# inputs remain unchanged. The retained first run's two failures came from silence
+fixtures that still had a distant reflector within the finite response range.
+See [the exact evidence and production limitations](../unity/AUDIO.md#candidate-immutable-geometry-boundary--2026-10-12).
+This remains desktop candidate coverage, not app integration or physical acceptance.

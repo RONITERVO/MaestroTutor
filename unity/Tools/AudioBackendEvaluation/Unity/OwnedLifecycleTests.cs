@@ -112,7 +112,7 @@ namespace Maestro.AudioEvaluation
         bool[] enabled;
         float volume;
         bool pause;
-        int opened, closed, diagnostics;
+        int opened, closed, diagnostics, meshesOpened, meshesClosed, instancesOpened, instancesClosed;
         float[] measured, measuredRight;
         [UnitySetUp]
         public IEnumerator Setup()
@@ -123,6 +123,8 @@ namespace Maestro.AudioEvaluation
             opened = PreparedGraph.Opened;
             closed = PreparedGraph.Closed;
             diagnostics = PreparedGraph.Diagnostics;
+            meshesOpened = PreparedGraph.MeshesOpened; meshesClosed = PreparedGraph.MeshesClosed;
+            instancesOpened = PreparedGraph.InstancesOpened; instancesClosed = PreparedGraph.InstancesClosed;
             others = UnityEngine.Object.FindObjectsByType<AudioListener>(FindObjectsSortMode.None);
             enabled = new bool[others.Length];
             for (int i = 0; i < others.Length; i++)
@@ -426,6 +428,12 @@ namespace Maestro.AudioEvaluation
             Debug.Log("OWNED_LIFETIME opened=" + (PreparedGraph.Opened - opened) +
                       " closed=" + (PreparedGraph.Closed - closed) +
                       " nativeDiagnostics=" + (PreparedGraph.Diagnostics - diagnostics));
+            Debug.Log("GEOMETRY_LIFETIME meshesOpened="+(PreparedGraph.MeshesOpened-meshesOpened)+
+                      " meshesClosed="+(PreparedGraph.MeshesClosed-meshesClosed)+
+                      " instancesOpened="+(PreparedGraph.InstancesOpened-instancesOpened)+
+                      " instancesClosed="+(PreparedGraph.InstancesClosed-instancesClosed));
+            Assert.AreEqual(PreparedGraph.MeshesOpened-meshesOpened,PreparedGraph.MeshesClosed-meshesClosed);
+            Assert.AreEqual(PreparedGraph.InstancesOpened-instancesOpened,PreparedGraph.InstancesClosed-instancesClosed);
             Assert.IsTrue(drained, "Do not release a still-owned worker or callback on timeout");
             Assert.AreEqual(PreparedGraph.Opened - opened, PreparedGraph.Closed - closed,
                             "Every native graph released");

@@ -324,7 +324,7 @@ and verification. The app's renderer and reflection gates remain unchanged.
 
 ### Presentation controls and Unity reference measurements
 
-`-OwnedLifecycle` now requires **41 passing cases**. Exact voice handles support
+The preceding `-OwnedLifecycle` checkpoint required **41 passing cases**. Exact voice handles support
 mutable gain without reopening the input or recalculating the room response.
 The final submission applies gain to direct and reflected output together,
 including already processed tails. Zero gain continues the source clock; Pause
@@ -370,3 +370,57 @@ Production renderer selection, shared reservations, canonical geometry and
 obstruction, shared capture monitoring, Android/AOT and physical/performance
 acceptance remain open. Production reflections and automatic map scheduling stay
 disabled; these results do not resolve the retained Meta map-worker crash.
+
+
+### Immutable mesh instances from accepted geometry
+
+`-OwnedLifecycle` now requires **47 passing cases**. The candidate accepts value
+snapshots through the existing application `IAcousticGeometry` contract, copied
+into the isolated project and verified by hash. Local vertices, indices and
+placement are copied before publication; the worker never reads a GameObject or
+live importer mesh. The payload is derived renderer input, not another saved
+world schema or a replacement for canonical geometry preparation.
+
+A native subscene owns each immutable mesh payload. Exact instance identities
+place it in the simulation scene; multiple placements can share one payload.
+Translation, rotation and scale update the instance without rebuilding its mesh
+or restarting source playback. Changed topology replaces the corresponding
+instance and releases the old mesh after its last placement leaves. Geometry
+mutation and simulation share one worker and the existing graph lease. This
+follows the SDK's [scene and instance ownership API](https://valvesoftware.github.io/steam-audio/doc/capi/scene.html).
+
+All geometry replacements fence obsolete wet output at final submission, including
+edits during an admitted PCM callback. Device resets retain a busy worker's native
+objects until it returns, then build from the latest snapshot. Invalid meshes,
+transforms, duplicate identities and exceeded scan/virtual reservations fail
+before native admission. The current app's neutral hard-surface approximation is
+retained; image textures, opacity and physics participation do not infer acoustic
+materials or remove sound boundaries.
+
+Six additional cases measure real Unity output after destroying the source view
+and mutating its borrowed arrays, verify offset local vertices against a mirrored
+location, move/rotate/scale instanced geometry, share and replace topology, edit at
+the output boundary and reset while a worker owns the scene. Every case now checks
+native mesh and instance closure as well as graph closure.
+
+Run `342471727b9d` passes all 47 cases, releases all 67 graphs, 76 native mesh
+owners and 77 instance owners, reports zero native validation diagnostics and
+exits normally. All 26 input hashes match, including the copied application
+geometry contract and PCM transport. All 907 application C# sources and ten
+protected unrelated files remain unchanged. Evidence is retained in
+`.quest-evidence/audio-geometry`.
+
+The first run `c5cf6c3b5c79` passed 45 cases and failed two new silence assertions:
+a room moved 30 metres away still produced a weak reflection within the probe's
+0.25-second response. The corrected fixtures put that room 200 metres away,
+beyond the response horizon, retaining the exact silence assertions. Ordinary
+30-metre movement still measures attenuation. Runtime code was unchanged by this
+test correction; the failed run is retained. The 200-metre fixture does not expand
+the application's authored-world bounds.
+
+This proves the candidate's geometry input and lifetime boundary on Windows. The
+production bridge from active and dormant room owners, cooperative upload budget,
+direct obstruction, acoustic-material authoring, capture monitoring, Android/AOT,
+sustained performance and physical Quest/Live acceptance remain open. No candidate
+backend is installed in the application, reflections remain disabled, and the
+retained Meta map-worker crash remains unresolved.

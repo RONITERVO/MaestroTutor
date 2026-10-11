@@ -87,7 +87,7 @@ packages.mkdir()
 }}, indent=2), encoding="utf-8")
 tests = project / "Assets/Evaluation"
 tests.mkdir()
-files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmControls.cs", "PcmTransformBinding.cs", "PcmPresentationTests.cs"] if owned else ["CandidateTests.cs"]
+files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmControls.cs", "PcmTransformBinding.cs", "PcmPresentationTests.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "GeometryAudioTests.cs"] if owned else ["CandidateTests.cs"]
 for name in files:
     shutil.copyfile(source / "Unity" / name, tests / name)
 (tests / "Maestro.AudioCandidate.Tests.asmdef").write_text(json.dumps({
@@ -96,6 +96,7 @@ for name in files:
 }, indent=2), encoding="utf-8")
 if owned:
     shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs", tests / "SpeechPcmStream.cs")
+    shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometry.cs", tests / "AcousticGeometry.cs")
     binding = project / "Assets/Plugins/SteamAudio"
     (binding / "Maestro.NativeBinding.asmdef").write_text(json.dumps({"name": "Maestro.NativeBinding"}), encoding="utf-8")
     if not (binding / "Binaries/Windows/x86_64/phonon.dll").exists():

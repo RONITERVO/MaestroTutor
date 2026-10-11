@@ -666,3 +666,27 @@ The application is unchanged. Production adapter/reservations, accepted geometry
 obstruction, capture monitoring, Android/AOT and Quest/Live acceptance remain
 required. No production reflection backend is enabled, and the Meta fault remains
 unresolved.
+
+
+### Candidate immutable geometry boundary — 2026-10-12
+
+The isolated renderer now consumes copied mesh/placement values through the same
+`IAcousticGeometry` definition used by active surfaces and dormant geometry. A
+native mesh can serve multiple exact instances. Moving, rotating or scaling an
+instance retains the mesh and source playback; replacing topology retires its
+old resources under the existing worker lease. Any geometry revision fences
+obsolete reflected output, including an edit at the final submission boundary.
+
+All 47 candidate cases pass, with 67 graphs, 76 mesh owners and 77 instance owners
+released, zero native diagnostics, matching input hashes and normal process exits.
+Tests include destroying the original view, mutating borrowed arrays, asymmetric
+coordinate conversion and reset during a retained worker. The first failed run
+and its corrected physical test conditions are retained. See the
+[reproducible geometry evidence](Tools/AudioBackendEvaluation/README.md#immutable-mesh-instances-from-accepted-geometry).
+
+The production geometry bridge is still required: active/dormant ownership,
+preparation budgets and unavailable boundaries must retain their current semantics.
+This is a renderer input boundary, not a second persistent scene or automatic
+world streaming. Direct obstruction, material authoring, capture monitoring,
+Android/AOT and Quest/Live acceptance remain open. No application runtime, saved
+schema, capability, reflection gate or device installation changed.

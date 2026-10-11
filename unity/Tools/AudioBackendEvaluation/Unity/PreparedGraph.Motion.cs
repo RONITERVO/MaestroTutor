@@ -31,13 +31,7 @@ namespace Maestro.AudioEvaluation
                 throw new InvalidOperationException("Overlapping acoustic simulation");
             try
             {
-                if (frame.Room && room == IntPtr.Zero)
-                    AddRoom();
-                else if (!frame.Room && room != IntPtr.Zero)
-                {
-                    API.iplStaticMeshRemove(room, scene);
-                    API.iplStaticMeshRelease(ref room);
-                }
+                ApplyGeometry(frame.Geometry);
                 API.iplSceneCommit(scene);
                 API.iplSimulatorCommit(simulator);
                 for (int i = 0; i < VoiceCount; i++)

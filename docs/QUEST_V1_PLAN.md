@@ -7613,3 +7613,20 @@ application's 907 C# inputs remain unchanged from the full `c93a98c6` check.
 See [the audio boundary and evidence](../unity/AUDIO.md#candidate-presentation-parity--2026-10-12).
 Production integration, canonical geometry/obstruction, capture monitoring and
 Android/Quest acceptance remain open; reflection gates remain disabled.
+
+
+### Candidate geometry ownership — 2026-10-12
+
+The isolated audio renderer now accepts immutable mesh/placement snapshots through
+the existing application geometry interface. Native instances share immutable
+payloads; placement changes retain mesh ownership and voice progress. New geometry
+revisions reject old reflected output, and a busy worker retains its scene through
+reset/retirement. Actual Unity output tests cover source-view loss, borrowed-array
+mutation, asymmetric coordinates, transformation, topology replacement and reset.
+All 47 cases pass with complete graph/mesh/instance closure and exact source hashes.
+See [the boundary, evidence and retained failed fixture](../unity/AUDIO.md#candidate-immutable-geometry-boundary--2026-10-12).
+
+This does not wire the candidate into production or change canonical storage,
+per-entity room participation, world bounds or automatic residency. The room-owned
+geometry bridge, upload work budget, direct obstruction, capture, Android/AOT and
+Quest/Live acceptance remain required; production reflections stay disabled.

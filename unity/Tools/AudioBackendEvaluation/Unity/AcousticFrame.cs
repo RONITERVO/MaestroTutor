@@ -6,27 +6,30 @@ using SteamAudio;
 namespace Maestro.AudioEvaluation
 {
     // Immutable snapshot in the SDK's right-handed metre coordinates. This probe's
-    // fixed topology is deliberately separate from any saved Maestro room schema.
+    // fixed voice capacity is separate from the immutable accepted geometry.
     internal sealed class AcousticFrame
     {
         internal const int MaximumSources = 32;
         internal readonly CoordinateSpace3 Listener;
         readonly CoordinateSpace3[] sources;
-        internal readonly bool Room;
+        internal readonly AcousticSceneData Geometry;
         internal int SourceCount => sources.Length;
         internal CoordinateSpace3 Source(int slot) => sources[slot];
         internal AcousticFrame(bool room, CoordinateSpace3 listener, params CoordinateSpace3[] sources)
+            : this(room ? AcousticSceneData.ProbeRoom : AcousticSceneData.Empty, listener, sources) { }
+        internal AcousticFrame(AcousticSceneData geometry, CoordinateSpace3 listener, params CoordinateSpace3[] sources)
         {
+            if (geometry == null) throw new ArgumentNullException(nameof(geometry));
             Validate(listener);
             if (sources == null || sources.Length < 1 || sources.Length > MaximumSources)
                 throw new ArgumentException("Invalid acoustic voice capacity");
             foreach (var source in sources) Validate(source);
             this.sources = (CoordinateSpace3[])sources.Clone();
-            Room = room;
+            Geometry = geometry;
             Listener = listener;
         }
         AcousticFrame(AcousticFrame original, CoordinateSpace3 listener, CoordinateSpace3[] ownedSources)
-        { Room = original.Room; Listener = listener; sources = ownedSources; }
+        { Geometry = original.Geometry; Listener = listener; sources = ownedSources; }
         internal AcousticFrame WithListener(CoordinateSpace3 listener)
         {
             Validate(listener);

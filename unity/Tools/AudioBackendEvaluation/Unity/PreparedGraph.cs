@@ -41,7 +41,7 @@ namespace Maestro.AudioEvaluation
         readonly PcmBinding[] renderedPcm = new PcmBinding[MaximumVoices];
         readonly bool[] renderedPcmAudible = new bool[MaximumVoices];
         internal Action BeforeOutput; // Isolated callback-boundary race probe.
-        IntPtr context, scene, simulator, room, hrtf;
+        IntPtr context, scene, simulator, hrtf;
         int readers, retired, disposed, rendering;
         NativeDsp.DecodeParams decode;
         internal bool Disposed => Volatile.Read(ref disposed) != 0;
@@ -155,44 +155,6 @@ namespace Maestro.AudioEvaluation
                 Check(NativeDsp.iplAudioBufferAllocate(context, 1, Frame, ref inputs[i]));
                 Check(NativeDsp.iplAudioBufferAllocate(context, 4, Frame, ref wet[i]));
                 Check(NativeDsp.iplAudioBufferAllocate(context, 2, Frame, ref stereo[i]));
-            }
-        }
-        void AddRoom()
-        {
-            // Pinned input arrays survive the call; the native mesh owns its copy.
-            var vertices = new[] { V(-3, -3, -3), V(3, -3, -3), V(3, 3, -3), V(-3, 3, -3),
-                                   V(-3, -3, 3),  V(3, -3, 3),  V(3, 3, 3),  V(-3, 3, 3) };
-            var triangles = new[] { 0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4,
-                                    3, 7, 6, 3, 6, 2, 0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5 };
-            var materials = new[] { .2f, .2f, .2f, .5f, .01f, .01f, .01f };
-            var indices = new int[12];
-            GCHandle a = default, b = default, c = default, d = default;
-            try
-            {
-                a = GCHandle.Alloc(vertices, GCHandleType.Pinned);
-                b = GCHandle.Alloc(triangles, GCHandleType.Pinned);
-                c = GCHandle.Alloc(materials, GCHandleType.Pinned);
-                d = GCHandle.Alloc(indices, GCHandleType.Pinned);
-                var mesh = new StaticMeshSettings { numVertices = 8,
-                                                    numTriangles = 12,
-                                                    numMaterials = 1,
-                                                    vertices = a.AddrOfPinnedObject(),
-                                                    triangles = b.AddrOfPinnedObject(),
-                                                    materials = c.AddrOfPinnedObject(),
-                                                    materialIndices = d.AddrOfPinnedObject() };
-                Check(API.iplStaticMeshCreate(scene, ref mesh, out room));
-                API.iplStaticMeshAdd(room, scene);
-            }
-            finally
-            {
-                if (a.IsAllocated)
-                    a.Free();
-                if (b.IsAllocated)
-                    b.Free();
-                if (c.IsAllocated)
-                    c.Free();
-                if (d.IsAllocated)
-                    d.Free();
             }
         }
         internal bool TryEnter()
@@ -353,11 +315,7 @@ namespace Maestro.AudioEvaluation
                 API.iplSimulatorCommit(simulator);
                 API.iplSimulatorRelease(ref simulator);
             }
-            if (room != IntPtr.Zero)
-            {
-                API.iplStaticMeshRemove(room, scene);
-                API.iplStaticMeshRelease(ref room);
-            }
+            ReleaseGeometry();
             if (scene != IntPtr.Zero)
             {
                 API.iplSceneCommit(scene);

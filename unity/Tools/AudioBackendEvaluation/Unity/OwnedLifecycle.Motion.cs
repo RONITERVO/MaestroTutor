@@ -22,7 +22,7 @@ namespace Maestro.AudioEvaluation
             if (frame == null) throw new ArgumentNullException(nameof(frame));
             if (frame.SourceCount != desiredScene.SourceCount) throw new ArgumentException("Acoustic topology changed");
             sceneRevision++;
-            if (desiredScene.Room != frame.Room)
+            if (!ReferenceEquals(desiredScene.Geometry, frame.Geometry))
                 geometryRevision = sceneRevision;
             desiredScene = frame;
             simulationHook = afterSimulation;
