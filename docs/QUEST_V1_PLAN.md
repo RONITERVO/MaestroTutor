@@ -7272,3 +7272,30 @@ This closes synthetic camera admission for dormant geometry. It does not enable
 automatic unloading, enlarge the world limits, guarantee texture availability,
 or establish headset performance. Audio residency and regional simulation remain
 separate prerequisites for larger worlds.
+
+
+Prepared-capture verification: 28 focused native cases and 207 shared web tests
+passed. The complete verifier passed 1,136 EditMode cases before failing in native
+audio. A separate diagnostic run passed 1,251 PlayMode cases with three explicit
+optional private-asset skips and the audio-output fixture excluded. Both native
+headless and original-book journeys passed with clean exits using local provider
+fixtures. All 905 C# source files matched the tested mirror. Book captures were
+inspected. None of this clears the full native failure or the existing Quest and
+real-provider acceptance gates.
+
+### Audio backend maintenance and native failure — 2026-10-11
+
+The acoustic-map crash recurred during the complete native check on `941cea77`.
+The dump proves a native null read during map computation; the initiating cause
+remains unresolved. The diagnostic run excluding `RoomAudioOutputTests` is separate
+coverage, never a replacement full gate. Production reflections stay disabled.
+
+Meta's final-release notice for Audio SDK 85 changes the maintenance assumption:
+future SDK fixes cannot be the only recovery plan. Keep Maestro's saved audio,
+surface intent and shared capability contracts independent of the native renderer.
+Evaluate a replaceable runtime acoustic backend against the existing behavior and
+lifecycle tests, followed by measured Quest/Live acceptance. Steam Audio is a
+candidate, not an installed or accepted replacement. The evidence, boundary and
+acceptance requirements are recorded in
+[the audio lifecycle decision](../unity/AUDIO.md#audio-backend-lifecycle-decision--2026-10-11).
+This does not lift device/provider holds or change any release acceptance gate.

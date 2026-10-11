@@ -245,8 +245,55 @@ listener signal as well as PCM consumption, and drain retired native ownership
 before disposing callback state. These tests run through the standard
 `unity/Tools/Verify-Quest.ps1` runner.
 
-A prior Windows full-suite crash in `MetaXRAudioUnity.dll` has not been reproduced
-by this focused coverage and has no established cause. Keep it open alongside
-the Quest/Live acceptance gates; do not treat repeated passing desktop tests as a
-runtime fix. Exact evidence and scope are in
+The Windows full-suite crash in `MetaXRAudioUnity.dll` recurred on source
+`941cea77`: the repeated room/mixer test did not obtain its initial map within the
+test deadline, then a native map worker faulted. The saved minidump identifies a
+null read in `AudioSceneIRComputeCustomPoints`' native call tree, not its cause.
+Application lifetime/cancellation and SDK behavior still need to be distinguished.
+Focused passes and runs excluding the mixer fixture do not satisfy the full gate.
+Exact evidence and scope are in
 [the release coverage ledger](../docs/QUEST_AGENT_RELEASE_COVERAGE.md#native-audio-lifetime-stress-coverage--2026-10-10).
+
+A separate cleanup regression reproduced the fixture's early return while an
+initial map still owned native inputs. Teardown now drains that ownership even
+without a later replacement gate. All 23 focused lifecycle/production-hold cases
+pass, including eight mixer replacement cycles. This fixes test isolation only;
+it does not establish the native crash's cause or lift the production hold.
+
+## Audio backend lifecycle decision — 2026-10-11
+
+[Meta's SDK release notice](https://developers.meta.com/vr/downloads/package/meta-xr-audio-sdk/)
+identifies 85.0 as its final release, with future compatibility and bug fixes not
+guaranteed. The project currently pins 85.0.0. This notice does not establish the
+cause of the crash, and replacing a backend is not an accepted fix without tests.
+
+Keep saved sources, emitters, stable asset references, acoustic surface intent,
+playback receipts and human/agent capabilities owned by Maestro. Native handles,
+plugin settings, baked map files and renderer-specific budgets are derived runtime
+state. Do not introduce them into portable worlds or programs. A backend change
+must preserve source identity, world placement, exact Stop ownership and lifecycle
+receipts without requiring users to rebuild their creations.
+
+The next audio integration boundary should own geometry registration, listener and
+emitter updates, direct obstruction, reflection preparation and output teardown.
+Its support/readiness must be observable; unsupported reflection preparation cannot
+silently report success. Retain geometry and callback ownership until computation
+finishes, and fence both simulation and audio-thread consumers before freeing
+resources. A timeout requests cancellation; it does not prove either consumer has
+released its inputs. Device resets must also invalidate cached native contexts.
+
+Evaluate Steam Audio as a candidate before activating production reflections.
+Its [Unity documentation](https://valvesoftware.github.io/steam-audio/doc/unity/index.html)
+describes dynamic geometry affecting propagation, and its
+[platform requirements](https://valvesoftware.github.io/steam-audio/doc/unity/getting-started.html)
+include Android ARM64. Those are capabilities to investigate, not evidence of our
+Quest performance or compatibility. The evaluation must use runtime-created and
+imported geometry, cold geometry, moving emitters, multiple simultaneous voices,
+room replacement, actual audio resets, cancellation and native teardown. Compare
+measured output and CPU/memory cost, including Live's echo/capture behavior, before
+choosing a replacement. No second production backend is installed by this decision.
+
+Preserve the current directional-speech path and explicit reflection hold during
+that evaluation. Passing desktop checks is not permission to enable reflections:
+real Quest timing, audible behavior and multi-emitter Live acceptance remain
+required. The full native regression gate remains mandatory and unchanged.

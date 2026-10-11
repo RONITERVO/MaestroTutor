@@ -15,13 +15,20 @@ namespace Maestro.Quest.Tests
         ManualResetEventSlim computeGate, computeEntered;
         [UnityTearDown] public IEnumerator CleanupComputation()
         {
-            if (computeGate == null) yield break;
-            computeGate.Set();
+            // Initial map work also owns native inputs, even when an assertion
+            // prevents the later replacement gate from ever being created.
+            computeGate?.Set();
             var next = new GameObject("Mixer computation cleanup").AddComponent<RoomAcoustics>();
-            double end = Time.realtimeSinceStartupAsDouble + 5;
-            while (!next.Ready && Time.realtimeSinceStartupAsDouble < end) yield return null;
-            bool released = next.Ready; UnityEngine.Object.Destroy(next.gameObject); yield return null;
-            if (released) { computeGate.Dispose(); computeEntered.Dispose(); computeGate = computeEntered = null; }
+            bool released = false;
+            try
+            {
+                double end = Time.realtimeSinceStartupAsDouble + 5;
+                while (!next.Ready && Time.realtimeSinceStartupAsDouble < end) yield return null;
+                released = next.Ready;
+            }
+            finally { UnityEngine.Object.Destroy(next.gameObject); }
+            yield return null;
+            if (released) { computeGate?.Dispose(); computeEntered?.Dispose(); computeGate = computeEntered = null; }
             Assert.IsTrue(released, "Retired mixer computation must release the room before the next fixture");
         }
         [UnityTest] public IEnumerator RepeatedRoomMixReplacementPreservesNativeMapAndVoiceLifetimes()
@@ -30,6 +37,7 @@ namespace Maestro.Quest.Tests
             // source-only mock cannot detect a cross-thread native lifetime fault.
             for (int cycle = 0; cycle < 8; cycle++)
             {
+                TestContext.Progress.WriteLine("ROOM_AUDIO_CYCLE_BEGIN " + cycle);
                 yield return RenderMix(replaceMapDuringSpeech: cycle % 2 == 1);
                 yield return Resources.UnloadUnusedAssets();
                 GC.Collect(); GC.WaitForPendingFinalizers();
@@ -38,6 +46,57 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator OwnedReflectionMixRendersAndStoppingOneVoicePreservesAnother() => RenderMix(false);
         [UnityTest] public IEnumerator MapReplacementDuringMultipleVoicesKeepsDspAlive() => RenderMix(true);
+        [UnityTest] public IEnumerator InitialMapRetirementWaitsWithoutReplacementGate()
+        {
+            // The initial calculation can still own the native context when an
+            // assertion fails, before RenderMix creates its replacement gate.
+            var initialGate = new ManualResetEventSlim(false);
+            var initialEntered = new ManualResetEventSlim(false);
+            var root = new GameObject("Initial map cleanup regression");
+            var room = root.AddComponent<RoomAcoustics>();
+            IEnumerator drain = null;
+            try
+            {
+                Assert.IsTrue(room.Ready, room.Issue);
+                AddWalls(root);
+                room.Synchronize(); room.Synchronize();
+                room.FirstMapProgress = () => { initialEntered.Set(); initialGate.Wait(TimeSpan.FromSeconds(10)); };
+                Assert.IsTrue(room.RequestMap(new[] { Vector3.zero }));
+                double deadline = Time.realtimeSinceStartupAsDouble + 3;
+                while (!initialEntered.IsSet && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
+                Assert.IsTrue(initialEntered.IsSet, "Hold the real initial map calculation");
+                root.SetActive(false);
+                Assert.IsNull(computeGate, "No replacement calculation has been requested");
+                drain = CleanupComputation();
+                for (int frame = 0; frame < 4; frame++)
+                {
+                    Assert.IsTrue(drain.MoveNext(), "Cleanup returned while the initial native map still owned its inputs");
+                    yield return drain.Current;
+                }
+                initialGate.Set();
+                while (drain.MoveNext()) yield return drain.Current;
+            }
+            finally
+            {
+                initialGate.Set();
+                (drain as IDisposable)?.Dispose();
+                room.FirstMapProgress = null; UnityEngine.Object.Destroy(root);
+                // TearDown owns disposal after the worker drains, including when
+                // the regression fails against the former early-return cleanup.
+                computeGate = initialGate; computeEntered = initialEntered;
+            }
+        }
+        static void AddWalls(GameObject root)
+        {
+            var positions = new[] { new Vector3(-2,0,0), new Vector3(2,0,0), new Vector3(0,-1.5f,0), new Vector3(0,1.5f,0), new Vector3(0,0,-2), new Vector3(0,0,2) };
+            var scales = new[] { new Vector3(.1f,3,4), new Vector3(.1f,3,4), new Vector3(4,.1f,4), new Vector3(4,.1f,4), new Vector3(4,3,.1f), new Vector3(4,3,.1f) };
+            for (int i = 0; i < positions.Length; i++)
+            {
+                var wall = GameObject.CreatePrimitive(PrimitiveType.Cube); wall.transform.SetParent(root.transform, false);
+                wall.transform.localPosition = positions[i]; wall.transform.localScale = scales[i];
+                AcousticSurface.Attach(wall, wall.GetComponent<MeshFilter>().sharedMesh, environment: true);
+            }
+        }
         IEnumerator RenderMix(bool replaceMapDuringSpeech)
         {
             var root = new GameObject("Owned room audio test");
@@ -59,18 +118,12 @@ namespace Maestro.Quest.Tests
             try
             {
                 Assert.IsTrue(room.Ready, room.Issue);
-                var positions = new[] { new Vector3(-2,0,0), new Vector3(2,0,0), new Vector3(0,-1.5f,0), new Vector3(0,1.5f,0), new Vector3(0,0,-2), new Vector3(0,0,2) };
-                var scales = new[] { new Vector3(.1f,3,4), new Vector3(.1f,3,4), new Vector3(4,.1f,4), new Vector3(4,.1f,4), new Vector3(4,3,.1f), new Vector3(4,3,.1f) };
-                for (int i = 0; i < positions.Length; i++)
-                {
-                    var wall = GameObject.CreatePrimitive(PrimitiveType.Cube); wall.transform.SetParent(root.transform, false);
-                    wall.transform.localPosition = positions[i]; wall.transform.localScale = scales[i];
-                    AcousticSurface.Attach(wall, wall.GetComponent<MeshFilter>().sharedMesh, environment: true);
-                }
+                AddWalls(root);
                 room.Synchronize(); yield return null; room.Synchronize();
                 Assert.IsTrue(room.RequestMap(new[] { listenerObject.transform.position }));
                 double deadline = Time.realtimeSinceStartupAsDouble + 8;
                 while (room.MapComputing && Time.realtimeSinceStartupAsDouble < deadline) { room.Synchronize(); yield return null; }
+                Assert.IsFalse(room.MapComputing, "Initial acoustic map did not finish before the test deadline");
                 Assert.IsTrue(room.MapReady, room.MapIssue);
                 audio.Refresh(); Assert.IsTrue(audio.ReflectionsActive, audio.Issue);
                 long a = first.Begin(24000), b = second.Begin(24000);

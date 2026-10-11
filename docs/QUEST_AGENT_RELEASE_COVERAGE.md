@@ -2926,3 +2926,56 @@ unfinished.
 Coverage added for area/connection closure (including cycles introduced by grouping), world-owned actors versus home creations, disabled and missing peers, independent snapshots, action/manual ownership, pending and paused detached audio, audio cleanup, runtime-object loss without saved deletion, whole-world physics holds and workspace edit holds. `world.region.retention` is shared through catalog validation and the native headless world-area journey.
 
 Independent regional unloading, observer admission, swept ground/water dependencies, regional failure isolation and native resource retirement remain acceptance work. A diagnostic read is not evidence of streaming. Paid provider and headset runs remain withheld under their existing holds.
+
+
+## Prepared virtual camera capture — 2026-10-11
+
+Source `941cea77` shares cancellable prepared native views between agent snapshots
+and the original book's virtual camera. The focused native run passed 28 cases,
+including 17 new cases for dormant and queued geometry, actual rendered pixels,
+unknown bounds, late pose changes, missing imports, receipt replay and lifecycle
+cancellation. Four shared web suites passed 207 tests. The complete verifier passed
+1,136 EditMode cases, then failed in the existing native audio stress coverage.
+Exact-commit CI [38158795585](https://github.com/RONITERVO/MaestroTutor/actions/runs/38158795585)
+passed its app/shared, backend, catalog and build gates.
+
+The failed native run first reported `MapReady == false` in
+`RepeatedRoomMixReplacementPreservesNativeMapAndVoiceLifetimes`, then exited with
+`0xc0000005`. The preserved dump identifies a null read at DLL offset `0xa1509`
+inside the native acoustic-map computation call tree. This narrows where it
+failed, not why: native cancellation, context/mixer lifetime and SDK behavior
+remain hypotheses. Production reflection output and scheduling stay disabled.
+
+A separately named diagnostic PlayMode run excluded only `RoomAudioOutputTests`
+using anchored case names (not a negative fixture expression, which NUnit also
+applies to parent suites). It passed 1,251 cases and skipped exactly the three
+existing optional private-asset checks. The standard verifier and release gate
+were not altered. This result isolates other regressions; it is not a full-suite
+pass or a resolution of the audio crash. Raw receipts, selection and crash evidence
+are retained under `.quest-evidence/prepared-capture/`.
+
+The separate shared headless and original two-page book journeys both passed
+with client/editor/terminal exit 0, using local provider fixtures. All 905 native
+C# files matched the mirror before the subsequent cleanup-test edit. The book's
+virtual snapshot, physics facts and human-takeover captures were visually inspected.
+These captures establish desktop behavior, not new physical-camera, Quest or real
+provider acceptance. Evidence: `diagnostic-verification.json` under that directory.
+
+
+### Initial audio-map cleanup regression
+
+The mixer fixture previously returned from teardown when no replacement gate
+existed. An initial native map could therefore remain active after an earlier
+setup assertion failed. A regression holds the actual native callback, retires
+the room before any replacement is requested, and checks that teardown continues
+waiting across frames. Against the original helper it failed with the intended
+assertion (0/1 passed, editor exit 2). With unconditional lease draining, all 23
+focused native acoustic-map, production-hold and mixer cases passed, including
+eight room/mixer replacement cycles (editor/wrapper exit 0, log gates passed).
+
+The fixture also disposes its temporary lease-check object if enumeration is
+aborted, records stress-cycle indices and distinguishes an unfinished initial
+computation from a completed but unusable map. This is test isolation and failure
+evidence, not a production native-crash fix. Runtime source remains `941cea77`;
+the full native failure is still open. Raw red/green receipts and exact tested
+source hash are under `.quest-evidence/audio-cleanup/verification.json`.
