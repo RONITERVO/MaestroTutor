@@ -49,6 +49,20 @@ namespace Maestro.AudioEvaluation
             Volatile.Write(ref pcm[index], new PcmBinding(++pcmSerial, null));
             return true;
         }
+        internal bool FinishPcm(string id, PcmVoice voice, double now,
+                                out Maestro.Quest.Book.SpeechPcmStream.Cursor receipt)
+        {
+            receipt = default;
+            int index = Array.IndexOf(VoiceIds, id);
+            if (index < 0 || voice == null || IsRetired || Volatile.Read(ref pcm[index])?.Voice != voice ||
+                !voice.RendererDrained(now))
+                return false;
+            var final = voice.Read(now);
+            if (!final.SourceDrained || !StopPcm(id, voice))
+                return false;
+            receipt = final;
+            return true;
+        }
         void PreparePcm(ref SteamAudio.AudioSettings audio)
         {
             var settings = new NativeDsp.BinauralSettings { hrtf = hrtf };
@@ -69,6 +83,7 @@ namespace Maestro.AudioEvaluation
             NativeDsp.iplBinauralEffectReset(direct[voice]);
             NativeDsp.iplReflectionEffectReset(reflections[voice]);
             NativeDsp.iplAmbisonicsDecodeEffectReset(decoders[voice]);
+            ResetPcmTail(voice);
             consumedPcm[voice] = binding;
             Volatile.Write(ref resetAcks[voice], binding.Serial);
         }
@@ -81,15 +96,33 @@ namespace Maestro.AudioEvaluation
                     output[2 * i + c] += gain * channel[i];
             }
         }
-        void RenderPcm(int voice, PcmBinding binding, AcousticFrame frame, bool geometryReady,
+        bool RenderPcm(int voice, PcmBinding binding, AcousticFrame frame, bool geometryReady, long geometryRevision,
                        ref NativeDsp.DecodeParams parameters, float[] output, double dspTime)
         {
             ObservePcm(voice, binding);
+            renderedPcmAudible[voice] = renderedPcmFinal[voice] = false;
+            if (!double.IsFinite(dspTime) || dspTime < pcmDspUntil[voice] - 1e-7)
+                return false;
+            pcmDspUntil[voice] = dspTime + (double)Frame / Rate;
             Array.Clear(signal, 0, signal.Length);
-            bool audible = binding.Voice?.Open == true;
-            if (audible)
-                audible = binding.Voice.Render(signal, Rate, dspTime);
-            renderedPcmAudible[voice] = audible;
+            Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
+            if (binding.Voice?.Open != true || pcmTailPhase[voice] == PcmRenderPhase.Drained)
+            {
+                ConsumeSilentResponse(voice, ref parameters);
+                return true;
+            }
+            var cursor = binding.Voice.Read(dspTime);
+            if (cursor.SourceDrained || pcmTailPhase[voice] == PcmRenderPhase.Draining)
+            {
+                pcmTailPhase[voice] = PcmRenderPhase.Draining;
+                renderedPcmAudible[voice] = !cursor.Paused && !cursor.Faulted;
+                RenderPcmTail(voice, binding.Voice, geometryReady && pcmWetGeometry[voice] == geometryRevision,
+                              ref parameters, output);
+                // GetTail does not consume a newly published native IR. Do not
+                // acknowledge it until a later silent Apply has actually read it.
+                return false;
+            }
+            renderedPcmAudible[voice] = binding.Voice.Render(signal, Rate, dspTime);
             Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
             var listener = frame.Listener;
             var source = voice == 0 ? frame.First : frame.Second;
@@ -97,9 +130,12 @@ namespace Maestro.AudioEvaluation
                                                              context, source.origin, listener.origin, listener.ahead,
                                                              listener.up),
                                                          interpolation = 0, spatialBlend = 1, hrtf = hrtf };
-            NativeDsp.iplBinauralEffectApply(direct[voice], ref spatial, ref inputs[voice], ref stereo[voice]);
+            directTail[voice] =
+                NativeDsp.iplBinauralEffectApply(direct[voice], ref spatial, ref inputs[voice], ref stereo[voice]);
             CopyStereo(voice, output, binding.Voice?.DryGain ?? 0);
             bool wetReady = geometryReady && binding.Serial <= Volatile.Read(ref responseResets[voice]);
+            if (wetReady)
+                pcmWetGeometry[voice] = geometryRevision;
             if (!wetReady)
             {
                 Array.Clear(signal, 0, signal.Length);
@@ -107,12 +143,13 @@ namespace Maestro.AudioEvaluation
             }
             // Continue consuming pending native responses with zero input while
             // reset/geometry is unresolved. Dry PCM is neither stalled nor replayed.
-            NativeDsp.iplReflectionEffectApply(reflections[voice], ref responses[voice], ref inputs[voice],
-                                               ref wet[voice], IntPtr.Zero);
-            NativeDsp.iplAmbisonicsDecodeEffectApply(decoders[voice], ref parameters, ref wet[voice],
-                                                     ref stereo[voice]);
+            reflectionTail[voice] = NativeDsp.iplReflectionEffectApply(reflections[voice], ref responses[voice],
+                                                                       ref inputs[voice], ref wet[voice], IntPtr.Zero);
+            decoderTail[voice] = NativeDsp.iplAmbisonicsDecodeEffectApply(decoders[voice], ref parameters,
+                                                                          ref wet[voice], ref stereo[voice]);
             if (wetReady)
                 CopyStereo(voice, reflectedMix[voice], binding.Voice?.WetGain ?? 0);
+            return true;
         }
     }
 }

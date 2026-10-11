@@ -62,6 +62,13 @@ namespace Maestro.AudioEvaluation
         [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
         internal static extern int iplBinauralEffectApply(IntPtr effect, ref BinauralParams parameters,
                                                           ref Buffer input, ref Buffer output);
+        internal const int TailComplete = 1;
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern int iplBinauralEffectGetTail(IntPtr effect, ref Buffer output);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern int iplReflectionEffectGetTail(IntPtr effect, ref Buffer output, IntPtr mixer);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern int iplAmbisonicsDecodeEffectGetTail(IntPtr effect, ref Buffer output);
         [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
         internal static extern void iplBinauralEffectReset(IntPtr effect);
         [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]

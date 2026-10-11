@@ -12,6 +12,8 @@ namespace Maestro.AudioEvaluation
     {
         readonly SpeechPcmStream stream;
         int stopped;
+        readonly double outputDelay;
+        double rendererEnd = double.PositiveInfinity;
         internal readonly float DryGain, WetGain;
         internal bool Paused => stream.IsPaused;
         internal bool Open => Volatile.Read(ref stopped) == 0;
@@ -21,6 +23,7 @@ namespace Maestro.AudioEvaluation
                 wetGain > 1)
                 throw new ArgumentOutOfRangeException("Invalid voice mix");
             stream = new SpeechPcmStream(startAt, tail);
+            outputDelay = tail;
             DryGain = dryGain;
             WetGain = wetGain;
         }
@@ -30,6 +33,13 @@ namespace Maestro.AudioEvaluation
         internal bool Render(float[] output, int rate, double time) => stream.Render(output, 1, rate, time);
         internal bool Complete(long lastSequence, out string error) => stream.TryComplete(lastSequence, out error);
         internal void SetPaused(bool value) => stream.SetPaused(value);
+        // Source receipts and downstream DSP completion have different clocks.
+        // Publication occurs only after the final block passed the submission gate.
+        internal bool RendererDrained(double now) => Open &&
+                                                     double.IsFinite(now) && now >= Volatile.Read(ref rendererEnd);
+        internal void SubmitRendererEnd(double blockEnd) => Interlocked.CompareExchange(ref rendererEnd,
+                                                                                        blockEnd + outputDelay,
+                                                                                        double.PositiveInfinity);
         internal void Close()
         {
             Interlocked.Exchange(ref stopped, 1);
@@ -45,6 +55,12 @@ namespace Maestro.AudioEvaluation
             if (closed || generation != commandGeneration || graph == null)
                 return null;
             return graph.BeginPcm(id, startAt, tail, dryGain, wetGain);
+        }
+        internal bool FinishPcm(string id, PcmVoice voice, double now, out SpeechPcmStream.Cursor receipt)
+        {
+            receipt = default;
+            var graph = Active;
+            return !closed && graph != null && graph.FinishPcm(id, voice, now, out receipt);
         }
         internal bool StopPcm(string id, PcmVoice voice)
         {

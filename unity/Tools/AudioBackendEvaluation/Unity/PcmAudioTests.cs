@@ -317,6 +317,7 @@ namespace Maestro.AudioEvaluation
             Assert.IsTrue(receipt.InputComplete);
             Assert.IsTrue(receipt.SourceDrained);
             Assert.IsTrue(voice.Open, "Completing source input does not implicitly terminate its renderer owner");
+            Assert.IsTrue(voice.RendererDrained(time + .1), "Native effects must explicitly finish after source completion");
             Debug.Log("PCM_TAIL energy=" + tailEnergy + " played=" + receipt.Played);
             owner.StopPcm(PreparedGraph.VoiceIds[0], voice);
             sink.BypassRendering = false;

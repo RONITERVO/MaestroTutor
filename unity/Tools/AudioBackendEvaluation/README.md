@@ -236,7 +236,7 @@ bounds, not the intended world or source limits of the release.
 
 ### Shared pause and completion contract
 
-The current `-OwnedLifecycle` requirement is **24 passing cases**. The copied app
+The preceding `-OwnedLifecycle` checkpoint required **24 passing cases**. The copied app
 transport now exposes explicit source-input completion and callback admission.
 Finite source completion is tested through the same sealed-input cursor used by
 `WorldAudio`; the candidate does not maintain a second completion queue. Pausing a
@@ -257,3 +257,30 @@ EditMode/PlayMode results and the original book/headless journeys are recorded i
 `.quest-evidence/audio-stream-contract`. The renderer is still outside the app;
 Android, production geometry, bounded multi-source admission, acoustic-tail
 retirement, Live capture and physical Quest acceptance remain required.
+
+
+### Finite tails and owner release
+
+`-OwnedLifecycle` now requires **29 passing cases**. The candidate uses the pinned
+native direct, reflection and decoder tail APIs after sealed source playback.
+Completion is published after the final output boundary and checked against the
+output clock before the exact handle can be released with its final source
+receipt. Stopped or replaced voices cannot claim completion for their successor.
+
+Five added cases check final-block timing, completed voices consuming later
+responses without replay, a continuing second voice, paused tails, replacement
+with an empty open stream, actual device reset during draining, and room removal
+while an obsolete tail still exists. The run `d82d2951f5f4` passes all 29 cases,
+releases all 45 native graphs and reports zero native validation diagnostics.
+Detailed receipts are in `.quest-evidence/audio-tail-retirement`.
+
+Tail callbacks cannot acknowledge impulse responses they have not consumed;
+silent Apply resumes that handoff once the voice has drained. Source PCM counts
+do not include echoes. These contracts are detailed in
+[AUDIO.md](../../AUDIO.md#natural-renderer-completion). The candidate remains
+isolated; app geometry, production source budgets, Android/IL2CPP and Quest/Live
+acceptance are still required.
+
+A negative probe publishing completion before the final submission boundary
+fails the new timing check (28 pass, one expected failure). Exact hashes verify
+restoration of every input used by the passing run.

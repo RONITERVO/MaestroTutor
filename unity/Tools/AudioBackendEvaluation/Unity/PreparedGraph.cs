@@ -223,7 +223,9 @@ namespace Maestro.AudioEvaluation
                 var parameters = decode;
                 var frame = Volatile.Read(ref presentation);
                 parameters.orientation = frame.Listener;
-                bool geometryReady = revision >= Volatile.Read(ref requiredRevision);
+                long geometryRevision = Volatile.Read(ref requiredRevision);
+                bool geometryReady = revision >= geometryRevision;
+                bool responsesConsumed = true;
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
                     Array.Clear(dryMix[voice], 0, dryMix[voice].Length);
@@ -232,7 +234,8 @@ namespace Maestro.AudioEvaluation
                     renderedPcm[voice] = binding;
                     if (binding != null)
                     {
-                        RenderPcm(voice, binding, frame, geometryReady, ref parameters, dryMix[voice], dspTime);
+                        responsesConsumed &= RenderPcm(voice, binding, frame, geometryReady, geometryRevision,
+                                                       ref parameters, dryMix[voice], dspTime);
                         continue;
                     }
                     bool audible = Volatile.Read(ref playing[voice]) != 0;
@@ -268,14 +271,17 @@ namespace Maestro.AudioEvaluation
                     var binding = renderedPcm[voice];
                     // Stop/replacement can arrive after DSP but before submission.
                     // It discards only that voice's block; unrelated voices continue.
-                    if (binding != Volatile.Read(ref pcm[voice]) ||
-                        (binding == null ? Volatile.Read(ref playing[voice]) == 0
-                                         : binding.Voice?.Open != true || !renderedPcmAudible[voice]))
+                    if (binding != Volatile.Read(ref pcm[voice]) || binding != null && binding.Voice?.Open != true)
                         continue;
-                    for (int i = 0; i < output.Length; i++)
-                        output[i] += dryMix[voice][i] + (wetCurrent ? reflectedMix[voice][i] : 0);
+                    bool audible = binding == null ? Volatile.Read(ref playing[voice]) != 0 : renderedPcmAudible[voice];
+                    if (audible)
+                        for (int i = 0; i < output.Length; i++)
+                            output[i] += dryMix[voice][i] + (wetCurrent ? reflectedMix[voice][i] : 0);
+                    if (binding != null && renderedPcmFinal[voice])
+                        binding.Voice.SubmitRendererEnd(dspTime + (double)Frame / Rate);
                 }
-                Volatile.Write(ref renderedRevision, revision);
+                if (responsesConsumed)
+                    Volatile.Write(ref renderedRevision, revision);
                 return true;
             }
             finally

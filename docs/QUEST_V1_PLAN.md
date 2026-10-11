@@ -7463,6 +7463,39 @@ confirms that no accepted ground is reported, then resumes and verifies the save
 terrain and viewpoint. That focused regression passes with clean Unity shutdown
 and the standard diagnostic log gate. No runtime or capability change was made
 for this repair. The original failure and the focused result remain in
-`.quest-evidence/audio-stream-contract`; a new full standard verification is
-required before declaring this checkpoint passed. Queries across dormant regions
-remain part of the separate unfinished regional-ground contract.
+`.quest-evidence/audio-stream-contract`. The subsequent full `88d98811` run passes
+all 1,140 EditMode and 1,255 PlayMode cases, with only the three expected private
+asset skips. Both shared-headless and original two-page-book native journeys
+pass with client/editor/terminal exits of zero; they use local scripted responses,
+not providers. The full wrapper exits zero, and all 905 source/mirror files match
+the frozen verification input. Web/backend CI also passes (2,867 app/shared,
+100 Functions, 57 billing and 31 Live tests). Queries across dormant regions remain
+part of the separate unfinished regional-ground contract.
+
+
+### Finite acoustic tails and exact owner release — 2026-10-12
+
+The isolated owned renderer now passes 29 cases. After sealed source playback,
+its native direct, reflection and decoder tails drain independently of source
+sample receipts. The final returned block is retained, and exact voice release
+requires both output submission and elapsed device-buffer delay. Stop, replacement
+and reset invalidate old handles; temporary underruns never become completion.
+Paused tails drain silently. Removing/replacing room geometry cannot revive its
+old echo after the replacement response arrives.
+
+Tail-only native calls do not consume newly published responses. They hold back
+that acknowledgment until drained slots resume silent consumption, without
+reopening their output. A second voice continues through scene changes and the
+first owner's release. This bounded fixture uses two sources and a 0.25-second
+response; production source admission and update latency still need integration.
+
+All 45 native graphs close with zero validation diagnostics. Deliberately reporting
+completion before final submission fails the new timing case (28 pass, one
+expected failure). Exact source hashes confirm restoration of all tested inputs.
+Evidence: `audio-unity/d82d2951f5f4`, negative `audio-unity/b44cf59f7f5a`, and
+`.quest-evidence/audio-tail-retirement`. The 905 app native inputs remain identical
+to the completed full `88d98811` verification above. No production renderer,
+dependency, saved contract, provider or device change is included. Next integrate
+production reservations, geometry/obstruction and per-source activity, then verify
+Android/IL2CPP and physical Quest/Live behavior. Wider world residency and v1 Store
+gates remain open. See [audio contract](../unity/AUDIO.md#natural-renderer-completion).

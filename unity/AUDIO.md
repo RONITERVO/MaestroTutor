@@ -486,3 +486,38 @@ passes. Source completion and acoustic-tail retirement remain distinct. Producti
 reflection output is still disabled, and a future renderer must preserve natural
 tails, bounded reservations and per-source activity without extending source PCM
 counters or suppressing unrelated world sound during Live.
+
+
+### Natural renderer completion
+
+The current isolated candidate passes 29 cases, including five added tail and
+owner-release cases. It distinguishes source playback receipts from downstream
+binaural, convolution and Ambisonics decoder completion. Sealed input enters a
+finite drain phase; the native `GetTail` calls retain their final returned block,
+even when that call reports completion. The owner can release the exact voice
+only after the last block passes submission and its output delay elapses. Release
+returns the final source receipt; Stop, replacement and format reset invalidate
+the old handle immediately. Neither operation can complete a newer utterance.
+
+A temporary underrun stays open. Pause suppresses tail output while finite DSP
+history drains; resuming cannot replay the suppressed echo. Invalid/backwards DSP
+times do not advance tail state. A room edit invalidates echoes belonging to its
+older geometry, even after a new simulation is ready. Tail-only native calls do
+not consume a newly published impulse response, so they must not acknowledge it.
+After draining, silent Apply calls resume consumption without reopening output;
+a continuing second voice is checked across later scene updates and owner release.
+This can defer another simulation through the bounded tail. The present fixture
+uses a 0.25-second response and two voices; production scheduling and source-budget
+behavior still need integration rather than inheriting those fixture limits.
+
+The 29-case run releases all 45 native graphs with zero native validation
+diagnostics. Both actual Unity callbacks and controlled calls to the same render
+path are exercised with synthetic PCM. This is Windows evidence, not Android,
+physical audibility or Live acceptance. No replacement renderer is installed in
+the app, and the existing reflection hold remains. The next integration work is
+production source/reservation ownership, real geometry and obstruction parity,
+Android/IL2CPP, per-source capture activity and Quest validation.
+
+A negative probe publishing completion before the final submission boundary
+fails the new timing check (28 pass, one expected failure). Exact hashes verify
+restoration of every input used by the passing run.
