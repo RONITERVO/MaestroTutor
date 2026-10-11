@@ -797,3 +797,11 @@ prioritizes areas during startup. Losing tracking or leaving a view does not
 start physics, and a timed-out or broken import waits for an explicit retry.
 The current release implementation still opens the complete bounded saved room;
 automatic unloading and larger-world streaming remain unfinished.
+
+
+Loaded supported avatars and skinned models expose spatial bounds for their
+current joints and morph shapes. These are conservative envelopes: they help
+visibility and loading decisions but do not replace collision shapes or prove a
+walking route. Reading them does not play an animation or modify the room.
+A retired model's envelope also covers its reset pose; bounds for an unprepared
+animated import can still be unknown.

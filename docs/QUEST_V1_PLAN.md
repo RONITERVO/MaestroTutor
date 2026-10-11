@@ -7052,3 +7052,31 @@ reads no longer clone or serialize recipes. Metadata inspection remains passive
 and independent of native allocation. Ground/water/navigation, indirect views,
 audibility and swept-physics dependencies, plus headset performance acceptance,
 are still required before automatic selective retirement and larger worlds.
+
+
+### Owned native deformation envelopes — 2026-10-11
+
+Loaded GLB/VRM skins now prepare a per-joint geometry envelope after the owned
+pencil-mesh conversion. The cache belongs to that imported instance. Current
+bounds project those envelopes through the actual joint/bind transforms and
+include single-frame morph deltas at the current weights, including negative
+and extrapolated weights. Positive normalized skin weights keep the deformed
+vertices inside the union. Invalid weights, unsupported blend-shape frames,
+changed mesh/quality or unavailable bones remain unknown.
+
+Passive spatial reads never bake meshes, traverse vertex arrays, update render
+bounds or change animation state. An owned late-frame update uses the same
+geometry for renderer culling; observation does not depend on stale importer
+bounds. One-off room captures refresh the same envelope before their synchronous
+render, including captures requested before LateUpdate. Unsupported skins retain
+conservative observation and use Unity's
+ordinary offscreen-update fallback. Native retirement captures value-only bounds
+covering both the current and reset pose; no mesh, renderer or bone cache is kept
+alive by the retired room entry. Cold-start authored bounds for arbitrary skinned
+and animated assets remain unknown, and active animation still retains its area.
+This is not an all-future-motion envelope or permission for regional physics.
+
+Verification compares envelopes with actual imported Unity baked geometry, not
+only source skeleton transforms. Automatic unloading, cold-start deformation
+indexing, scan-anchor/indirect-view/audibility demand and regional physical
+admission remain unfinished. Device/provider/release acceptance is separate.

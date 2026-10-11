@@ -63,11 +63,11 @@ namespace Maestro.Quest.Creation
                     // TextMesh also uses MeshRenderer, without a MeshFilter.
                     // Renderer.localBounds is the geometry contract in both cases.
                     result.Visual.Include(renderer.localBounds,inverse*renderer.transform.localToWorldMatrix);
-                }else{
-                    // Skinned bounds are not proof of every deformed/rest pose.
-                    // A verified import/animation envelope is future work.
-                    result.Visual.Known=false;
-                }
+                }else if(renderer is SkinnedMeshRenderer&&renderer.TryGetComponent<Imports.ImportedSkinBounds>(out var skin)){
+                    var deformed=skin.Read(inverse,includeRest:true);
+                    if(!deformed.Known)result.Visual.Known=false;
+                    else if(deformed.HasBounds)result.Visual.Include(deformed.Bounds,Matrix4x4.identity);
+                }else result.Visual.Known=false;
             }
             // Imported static nodes can return to their initial transforms when
             // reloaded. Cover that rest shape as well as the captured idle pose.

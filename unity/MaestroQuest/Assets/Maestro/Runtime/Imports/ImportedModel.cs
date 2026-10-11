@@ -126,7 +126,9 @@ namespace Maestro.Quest.Imports
                 instance.transform.localRotation = objectRotation;
                 instance.transform.localPosition = layout.Position;
                 LocalBounds = layout.Bounds;
-                instance.gameObject.AddComponent<PencilModelStyle>().Apply(); instance.ShowMeshes();reservation.Mark("ready");
+                instance.gameObject.AddComponent<PencilModelStyle>().Apply();
+                foreach(var skin in instance.SkinnedMeshRenderers)skin.gameObject.AddComponent<ImportedSkinBounds>().Initialize(skin,instance.transform);
+                instance.ShowMeshes();reservation.Mark("ready");
             }
             catch (OperationCanceledException) when (destroyed&&!enteredImporter) { ReleaseBudget(); }
             catch { if (loaded) DisposeInstance(loaded); instance = null; ArtResources.Release(generatedAvatar); generatedAvatar = null; ReleaseBudget(); throw; }

@@ -49,7 +49,12 @@ namespace Maestro.Quest.Creation {
                 // The temporary layer is private to this synchronous render. Never include an unrelated renderer.
                 if(UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude,FindObjectsSortMode.None).Any(r=>r.enabled&&r.gameObject.layer==CaptureLayer&&!selected.Contains(r)))
                     throw new InvalidOperationException("The snapshot render layer is in use");
-                foreach(var renderer in selected)if(!changed.ContainsKey(renderer.gameObject)){changed.Add(renderer.gameObject,renderer.gameObject.layer);renderer.gameObject.layer=CaptureLayer;}
+                foreach(var renderer in selected){
+                    // This synchronous capture may run before LateUpdate. Use
+                    // the same current skin envelope as the regular viewer.
+                    if(renderer.TryGetComponent<Imports.ImportedSkinBounds>(out var skin))skin.RefreshRendererBounds();
+                    if(!changed.ContainsKey(renderer.gameObject)){changed.Add(renderer.gameObject,renderer.gameObject.layer);renderer.gameObject.layer=CaptureLayer;}
+                }
                 cameraObject=new GameObject("Virtual room snapshot",typeof(Camera));var camera=cameraObject.GetComponent<Camera>();camera.enabled=false;
                 camera.transform.SetPositionAndRotation(Viewer.position,Viewer.rotation);camera.stereoTargetEye=StereoTargetEyeMask.None;
                 camera.cullingMask=1<<CaptureLayer;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.91f,.93f,.94f,1);

@@ -35724,7 +35724,7 @@
         }
       },
       "label": "Object spatial bounds",
-      "description": "Read conservative axis-aligned visual and accepted non-trigger collision envelopes in authored room coordinates without loading, saving, editing or acquiring ownership. source is native (sampled instance), retained (value-only geometry captured before intentional retirement), authored (prepared canonical visual geometry, collision unknown), unknown (saved but no prepared envelope), or missing. Each extent has known and hasBounds: only known=true with hasBounds=false proves empty; unknown zero min/max is never empty space. Geometry edits invalidate retained envelopes; bounded room-owned preparation can replace them with authored visual envelopes including selection, surface ink, terrain, container fill and carried material. Recipe rotation tracks use conservative swept bounds. Unsupported imports and scan anchors remain unknown. Preparation can read model bytes but this fact never starts preparation or I/O; root placement reprojects them using the same stopped-pose rule as native activation. Disabled child geometry may be included. Skinned/unsupported renderers, pending imports and scan-anchored geometry are unknown. Bounds are broad-phase candidates, not exact contact, visibility, walkability, clearance, collision policy, future motion or physics readiness. They do not prove an unloaded model file remains available. No automatic regional streaming is enabled by this read.",
+      "description": "Read conservative axis-aligned visual and accepted non-trigger collision envelopes in authored room coordinates without loading, saving, editing or acquiring ownership. source is native (sampled instance), retained (value-only geometry captured before intentional retirement), authored (prepared canonical visual geometry, collision unknown), unknown (saved but no prepared envelope), or missing. Each extent has known and hasBounds: only known=true with hasBounds=false proves empty; unknown zero min/max is never empty space. Geometry edits invalidate retained envelopes; bounded room-owned preparation can replace them with authored visual envelopes including selection, surface ink, terrain, container fill and carried material. Recipe rotation tracks use conservative swept bounds. Unsupported imports and scan anchors remain unknown. Preparation can read model bytes but this fact never starts preparation or I/O; root placement reprojects them using the same stopped-pose rule as native activation. Disabled child geometry may be included. Loaded supported skins include envelopes derived from current joints, single-frame morph deltas and the reset pose; reads do not bake meshes or change rendering. Unsupported renderers, pending imports and scan-anchored geometry are unknown. These native skin values are not cold-start envelopes for all future animation. Bounds are broad-phase candidates, not exact contact, visibility, walkability, clearance, collision policy, future motion or physics readiness. They do not prove an unloaded model file remains available. No automatic regional streaming is enabled by this read.",
       "input": {
         "type": "object",
         "properties": {
@@ -43990,7 +43990,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservation.cs",
-      "sha256": "167bd8d2ffc53da1f865ef2fb149b56d26337b3f0e5166c419c42409028db3c9"
+      "sha256": "bef791c236afe6580ecf9bd34b2e7629f332926b995fbc23b514cbb9980bd320"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservationPrediction.cs",
@@ -44050,7 +44050,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialBounds.cs",
-      "sha256": "091900d6b9da3d9995e73165ce2ad70a272194772b7405a7960152bead8e3055"
+      "sha256": "d2e89b6f84ce1371433814b9afb4022b241aba652dc5c68f665c691399e5356f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialIndex.cs",
@@ -44090,7 +44090,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
-      "sha256": "b1707ab451a2aa7ad879fb58321bb148f1dd6f18b2e5bb8efb65559474b1bb36"
+      "sha256": "aaf6338120e357e5324fa71b49d400a3e65309c0e9aa7de79891004905fed35f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewerDemand.cs",
@@ -44282,11 +44282,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "a53c93d347dfc32baef8ea048ede01ec0a6f1e54e015515b7109cdac72fb0f64"
+      "sha256": "0219320db1ca15ec06a7798d9dcbd0905aeafb15213e8c320fffab6ab8f75d50"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
       "sha256": "d933d53bca7e57494f93031a856d987f9b1ed173dd7fd3e55c77fbd07148dc38"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedSkinBounds.cs",
+      "sha256": "82f7a7af4153679ac776242a50adac253ee1fd810a6857f64b7f718beb9d04ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LocalMotionBatchSource.cs",
@@ -44806,7 +44810,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/SpatialBoundsFact.cs",
-      "sha256": "a56c45fa7f072c466a1a55ac0504a43173e3db95b0f42034ae2929407d8876a4"
+      "sha256": "f004e2701e59d07662516dd4bfbf81b424c651362abb55b1ac62daf8cbe9f7e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/CapabilityQuickEdit.cs",

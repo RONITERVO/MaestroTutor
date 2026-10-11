@@ -39,6 +39,11 @@ namespace Maestro.Quest.Creation
         internal bool Includes(Renderer renderer)
         {
             if((mask&(1<<renderer.gameObject.layer))==0)return false;
+            if(renderer is SkinnedMeshRenderer){
+                if(!renderer.TryGetComponent<Imports.ImportedSkinBounds>(out var skin))return true;
+                var value=skin.Read(Matrix4x4.identity);
+                return !value.Known||value.HasBounds&&Includes(value.Bounds);
+            }
             return Includes(renderer.bounds);
         }
         internal bool Includes(RoomSpatialBounds spatial)
