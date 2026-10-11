@@ -13,7 +13,7 @@ it('carries exact native state identities through explicit physics start and pau
  expect(current).toEqual(native.after);
  expect(native.start.selected.output).toMatchObject({ready:true,running:true,active:true,held:false,canStart:true});
  expect(native.after).toMatchObject({ready:true,running:false,active:true,held:false,canStart:true});
- expect(capabilityDefinition('physics.simulation.set')).toMatchObject({duration:'instant',channels:[]});
+ expect(capabilityDefinition('physics.simulation.set')).toMatchObject({duration:'completion',channels:[]});
 });
 it('requires explicit supported desired mode, exact state format and native feature support',()=>{
  const call=native.start.selected.call;
