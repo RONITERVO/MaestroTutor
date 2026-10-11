@@ -360,7 +360,7 @@ export async function streamGeminiLiveTts(params: GeminiLiveTtsParams): Promise<
       onStatusUpdate?.('PLAYBACK DRAINING');
       const drainStartedAt = Date.now();
       let drainResult: 'drained' | 'cancelled';
-      try { drainResult = await output.drain(); }
+      try { drainResult = await output.finish(); }
       catch { interruptImmediately('AUDIO_OUTPUT_FAILED'); return; }
       const playbackDrainMs = Date.now() - drainStartedAt;
       // An explicit stop may arrive after turnComplete while the scheduled

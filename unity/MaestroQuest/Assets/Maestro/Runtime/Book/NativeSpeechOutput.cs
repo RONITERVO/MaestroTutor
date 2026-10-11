@@ -12,7 +12,7 @@ namespace Maestro.Quest.Book
     {
         public long generation, acceptedSequence, submittedSamples, playedSamples;
         public int sampleRate;
-        public bool started;
+        public bool started, inputComplete, rendererDrained;
     }
 
     /// <summary>Owned mono PCM playback, with a DSP timeline rather than network
@@ -74,12 +74,26 @@ namespace Maestro.Quest.Book
             if (accepted && pcm.Length > 0 && roomAudio) roomAudio.NoteSpeech();
             return accepted;
         }
+        public bool TryComplete(long owner, long lastSequence, long submittedSamples, out string error)
+        {
+            error = null;
+            if (!open || owner != generation || !isActiveAndEnabled || paused || !focused)
+            { error = "Speech output was stopped"; return false; }
+            Tick();
+            if (!open) { error = "Speech output was stopped"; return false; }
+            if (stream.Read(Clock()).Submitted != submittedSamples)
+            { error = "Speech completion sample count does not match"; return false; }
+            return stream.TryComplete(lastSequence, out error);
+        }
         public SpeechOutputSnapshot Read()
         {
             Tick();
-            var state = stream?.Read(Clock()) ?? default;
+            double now = Clock();
+            var state = stream?.Read(now) ?? default;
             return new SpeechOutputSnapshot { generation = generation, sampleRate = sampleRate,
-                acceptedSequence = state.Sequence, submittedSamples = state.Submitted, playedSamples = state.Played, started = state.Played > 0 };
+                acceptedSequence = state.Sequence, submittedSamples = state.Submitted, playedSamples = state.Played,
+                started = state.Played > 0, inputComplete = state.InputComplete,
+                rendererDrained = state.SourceDrained && playback?.IsDrained(now) == true };
         }
         internal void Tick()
         {

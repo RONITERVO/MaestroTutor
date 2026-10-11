@@ -102,3 +102,17 @@ it('reports render-side format rejection instead of silently dropping a chunk', 
   h.render(); await rejected;
   expect(h.onError).toHaveBeenCalledOnce(); expect(h.node.disconnect).toHaveBeenCalledOnce();
 });
+
+it('finishes one epoch after its device tail and requires reset before writing again', async () => {
+  const h = await fixture(); h.output.write(new Int16Array(240));
+  const pending = h.output.finish(), done = vi.fn(); void pending.then(done);
+  expect(h.output.finish()).toBe(pending);
+  expect(() => h.output.write(new Int16Array(1))).toThrow('complete');
+  h.render(2); await vi.advanceTimersByTimeAsync(119); expect(done).not.toHaveBeenCalled();
+  await vi.advanceTimersByTimeAsync(1); await expect(pending).resolves.toBe('drained');
+  expect(() => h.output.write(new Int16Array(1))).toThrow('complete');
+  h.output.reset(); h.output.write(new Int16Array(240));
+  const next = h.output.finish(); h.output.reset(); await expect(next).resolves.toBe('cancelled');
+  const empty = h.output.finish(); await expect(empty).resolves.toBe('drained');
+  h.output.dispose(); expect(vi.getTimerCount()).toBe(0);
+});

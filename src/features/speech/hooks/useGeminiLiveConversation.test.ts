@@ -94,7 +94,7 @@ afterEach(async () => { cleanup(); await flush(); vi.useRealTimers(); vi.unstubA
 describe('actual Live hook lifecycle before session-controller extraction', () => {
   it('uses one injected output without a dry browser copy and waits for its native completion', async () => {
     const done = deferred<'drained' | 'cancelled'>();
-    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn(() => done.promise) };
+    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn(async () => 'drained'), finish: vi.fn(() => done.promise) };
     ports.outputFactory = async () => output;
     const h = harness(); await h.start(true);
     expect(nodes.map(node => node.name)).toEqual(['capture']);
@@ -103,13 +103,45 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
       inputTranscription: { text: 'Hi' }, outputTranscription: { text: 'Hola' }, turnComplete: true } });
     await flush(); expect(output.write).toHaveBeenCalledWith(new Int16Array([100, 200, 300]));
     connections[0].callbacks.onclose(); await flush();
-    expect(output.drain).toHaveBeenCalledOnce(); expect(output.dispose).not.toHaveBeenCalled();
+    expect(output.finish).toHaveBeenCalledOnce(); expect(output.dispose).not.toHaveBeenCalled();
     await advance(2000); expect(output.dispose).not.toHaveBeenCalled(); expect(ports.flushUsage).not.toHaveBeenCalled();
     expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
     done.resolve('drained'); await flush();
     expect(output.dispose).toHaveBeenCalledOnce(); expect(ports.flushUsage).toHaveBeenCalledOnce();
     expect(h.callbacks.onStateChange).toHaveBeenLastCalledWith('idle');
     expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Hi', 'Hola', new Int16Array(), [new Int16Array([100, 200, 300])]);
+  });
+
+  it.each(['complete', 'early close', 'interrupt', 'stop'] as const)('owns accepted decoding and final audio tail through %s', async terminal => {
+    const tail = deferred<'drained' | 'cancelled'>(), decode = deferred<ArrayBuffer>();
+    const output = { sampleRate: 24000, write: vi.fn(), read: vi.fn(),
+      drain: vi.fn(async () => 'drained'), finish: vi.fn(() => tail.promise),
+      reset: vi.fn(() => tail.resolve('cancelled')), dispose: vi.fn() };
+    ports.outputFactory = async () => output; ports.decode.mockReturnValueOnce(decode.promise);
+    const h = harness(); await h.start(true);
+    const callbacks = connections[0].callbacks;
+    callbacks.onmessage({ serverContent: { modelTurn: { parts: [{ inlineData: { data: 'accepted' } }] },
+      inputTranscription: { text: 'Hi' }, outputTranscription: { text: 'Hola' }, turnComplete: true } });
+    if (terminal === 'early close') callbacks.onclose();
+    await flush(); if (terminal !== 'early close') callbacks.onclose(); await flush();
+    expect(output.finish).not.toHaveBeenCalled(); expect(output.dispose).not.toHaveBeenCalled();
+    decode.resolve(new Int16Array([3, 5, 7]).buffer); await flush();
+    expect(output.write).toHaveBeenCalledExactlyOnceWith(new Int16Array([3, 5, 7]));
+    expect(output.finish).toHaveBeenCalledOnce();
+    callbacks.onmessage({ usageMetadata: { totalTokenCount: 42 }, serverContent: {
+      modelTurn: { parts: [{ inlineData: { data: 'too late' } }] }, outputTranscription: { text: 'Ignore this' } } });
+    await flush(); expect(ports.decode).toHaveBeenCalledOnce(); expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+    if (terminal === 'interrupt') { callbacks.onmessage({ serverContent: { interrupted: true } }); await flush(); }
+    else if (terminal === 'stop') await act(async () => { await h.result.current.stop(); });
+    else { tail.resolve('drained'); await flush(); }
+    if (terminal === 'complete' || terminal === 'early close') {
+      expect(h.callbacks.onTurnComplete).toHaveBeenCalledExactlyOnceWith('Hi', 'Hola', new Int16Array(), [new Int16Array([3, 5, 7])]);
+      expect(output.finish).toHaveBeenCalledOnce();
+    } else expect(h.callbacks.onTurnComplete).not.toHaveBeenCalled();
+    expect(output.dispose).toHaveBeenCalledOnce(); expect(ports.flushUsage).toHaveBeenCalledOnce();
+    expect(ports.trackUsage).toHaveBeenCalledWith({ totalTokenCount: 42 });
+    expect(h.callbacks.onError).not.toHaveBeenCalled();
+    expect(output.finish).toHaveBeenCalledOnce();
   });
 
   it('disposes a late output after Stop during renderer initialization before connecting the provider', async () => {
@@ -124,7 +156,7 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
   });
 
   it('silences output immediately while microphone cleanup is pending and refuses late provider audio', async () => {
-    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn() };
+    const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn(), finish: vi.fn() };
     ports.outputFactory = async () => output;
     const h = harness(); await h.start(true); const closing = deferred<void>();
     ports.flushCapture.mockReturnValueOnce(closing.promise);
@@ -141,7 +173,7 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     let onError!: () => void;
     const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(),
-      drain: vi.fn(async () => failure === 'cancelled' ? 'cancelled' : 'drained') };
+      drain: vi.fn(async () => failure === 'cancelled' ? 'cancelled' : 'drained'), finish: vi.fn(async () => failure === 'cancelled' ? 'cancelled' : 'drained') };
     if (failure === 'write') output.write.mockImplementation(() => { throw new Error('Queue full'); });
     if (failure === 'drain') output.drain.mockRejectedValue(new Error('Renderer unavailable'));
     if (failure === 'decode') ports.decode.mockRejectedValue(new Error('Invalid PCM'));

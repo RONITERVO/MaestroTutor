@@ -36,8 +36,9 @@ public class BookSpeechMailboxTest {
     @Test public void onlyStructuredBoundedStatusIsInsertedInTopDocumentScript() {
         assertNull(BookSpeechMailbox.script("alert(1)"));
         assertNull(BookSpeechMailbox.script("{\"version\":1}"));
+        assertNull(BookSpeechMailbox.script("{\"version\":2}"));
         assertNull(BookSpeechMailbox.script("x".repeat(2049)));
-        String script = BookSpeechMailbox.script("{\"version\":2,\"session\":\"a\\\"b\"}");
+        String script = BookSpeechMailbox.script("{\"version\":3,\"session\":\"a\\\"b\"}");
         assertTrue(script.contains("window.maestroBook.speechExchange("));
         assertTrue(script.contains("a\\\"b"));
     }

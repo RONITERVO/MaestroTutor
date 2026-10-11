@@ -70,4 +70,18 @@ describe('Live playback completion ownership', () => {
     await h.audio.waitForModelAudioDecodeCheckpoint(h.audio.getModelAudioDecodeCheckpoint());
     expect(write).toHaveBeenLastCalledWith(new Int16Array([4]));
   });
+  it('keeps finite completion separate from an open drain and shares it across terminal observers', async () => {
+    const h = setup(); const pending = h.audio.finishPlayback(), done = vi.fn(); void pending.then(done);
+    expect(h.audio.finishPlayback()).toBe(pending);
+    h.acknowledge(); await flush(); expect(done).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(120); await expect(pending).resolves.toBe('drained');
+    h.audio.startNextModelAudioTurn(1); expect(h.audio.finishPlayback()).toBe(pending);
+    expect(() => h.state.speechOutputRef.current!.write(new Int16Array(1))).toThrow('complete');
+    h.audio.stopAllAudio();
+    await expect(h.audio.finishPlayback()).resolves.toBe('cancelled');
+    h.audio.startNextModelAudioTurn(1); h.state.speechOutputRef.current!.write(new Int16Array(3));
+    const cancelled = h.audio.finishPlayback(); h.audio.stopAllAudio();
+    await expect(cancelled).resolves.toBe('cancelled'); expect(h.onFailure).not.toHaveBeenCalled();
+  });
+
 });

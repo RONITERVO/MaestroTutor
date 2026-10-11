@@ -60,18 +60,21 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
   const {
     enqueueModelAudio, cancelModelAudioDecodeJobs, getModelAudioDecodeCheckpoint,
     waitForModelAudioDecodeCheckpoint, waitForPlaybackDrain, startNextModelAudioTurn,
-    stopAllAudio,
+    stopAllAudio, finishPlayback,
   } = ports.audio;
   const { getTranscriptLinkedUserAudio, emitTurnTranscriptUpdate, flushPendingTranscriptUpdate } = ports.transcripts;
   const { cleanup, getAudioTelemetrySnapshot, debugLogService } = ports;
   const { sessionId, playModelAudio, emitTurns, observerActivity, usageTracker } = session;
   let transportTerminalHandled = false;
+  let producerClosed = false;
+  let terminalInterrupted = false;
   const finishTransportLifecycle = async (
     terminalState: 'idle' | 'error',
     errorMessage?: string,
   ) => {
     if (transportTerminalHandled || currentSessionIdRef.current !== sessionId) return;
     transportTerminalHandled = true;
+    producerClosed = true;
     const terminalSession = sessionRef.current;
     sessionRef.current = null;
     try { terminalSession?.close?.(); } catch { }
@@ -79,11 +82,15 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
     // onclose/onerror can overtake worker decoding. First seal the ordered
     // server-message queue, then let the audio thread render every PCM chunk.
     await serverMessageQueueRef.current.catch(() => undefined);
+    // Close may arrive before an already accepted turnComplete is processed.
+    // Flush that newly scheduled finalizer before cleanup can discard the turn.
+    turnFinalizer.flush();
+    await serverMessageQueueRef.current.catch(() => undefined);
     const checkpoint = getModelAudioDecodeCheckpoint();
     await waitForModelAudioDecodeCheckpoint(checkpoint);
-    if (currentSessionIdRef.current !== sessionId) return;
-    await waitForPlaybackDrain();
-    if (currentSessionIdRef.current !== sessionId) return;
+    if (currentSessionIdRef.current !== sessionId) { usageTracker.flush(); return; }
+    if (!terminalInterrupted) await finishPlayback();
+    if (currentSessionIdRef.current !== sessionId) { usageTracker.flush(); return; }
     // One response owns one usage snapshot, including late accounting
     // callbacks. Flush only after the ordered queue and playback settle.
     usageTracker.flush();
@@ -119,7 +126,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
     // onclose flushes the quiet timer. It must not bypass the same audible
     // completion boundary and start a lesson/tool handoff while speech remains.
     if (currentSessionIdRef.current !== sessionId) return;
-    await waitForPlaybackDrain();
+    if (await finishPlayback() !== 'drained') return;
     if (
       currentSessionIdRef.current !== sessionId
       || currentModelAudioTurnIdRef.current !== modelAudioCheckpoint.turnId
@@ -282,6 +289,7 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
   const enqueueTurnFinalization = () => {
     if (currentSessionIdRef.current !== sessionId || turnFinalizationStarted) return;
     turnFinalizationStarted = true;
+    producerClosed = true;
     serverMessageQueueRef.current = serverMessageQueueRef.current
       .catch(() => undefined)
       .then(finalizeProviderTurn)
@@ -313,22 +321,35 @@ export function createLiveProviderCallbacks(state: Pick<LiveSessionData,
       updateState('active');
     },
     onmessage: (msg: LiveServerMessage) => {
-      turnFinalizer.touch();
+      if (currentSessionIdRef.current !== sessionId) return;
+      // Accounting belongs to this received response even if Stop invalidates
+      // the queued content while its renderer tail is still pending.
+      if (msg.usageMetadata) usageTracker.trackSnapshot(msg.usageMetadata);
+      // Capture admission now: messages queued before sealing retain their PCM;
+      // late accounting may still arrive while the final renderer tail drains.
+      const acceptContent = !producerClosed;
+      if (acceptContent) turnFinalizer.touch();
+      else if (msg.serverContent?.interrupted) {
+        terminalInterrupted = true;
+        // Do not queue Stop behind the very completion it needs to cancel.
+        liveInputContextRef.current?.invalidate('interrupted');
+        cancelModelAudioDecodeJobs(sessionId);
+        stopAllAudio();
+      }
       serverMessageQueueRef.current = serverMessageQueueRef.current
         .catch(() => undefined)
         .then(async () => {
           // Check session is still valid before processing message
           if (currentSessionIdRef.current !== sessionId) return;
 
-          if (msg.usageMetadata) {
-            usageTracker.trackSnapshot(msg.usageMetadata);
-          }
           if (msg.goAway) {
             notifyLiveConsumer(() => callbacksRef.current.onGoAway?.(msg.goAway!));
           }
           if (msg.sessionResumptionUpdate) {
             notifyLiveConsumer(() => callbacksRef.current.onSessionResumptionUpdate?.(msg.sessionResumptionUpdate!));
           }
+
+          if (!acceptContent) return;
 
           // 1. Handle Audio Output
           const modelTurnParts = msg.serverContent?.modelTurn?.parts ?? [];

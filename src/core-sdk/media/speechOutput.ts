@@ -21,7 +21,11 @@ export interface SpeechOutput {
   read(): { submittedSamples: number; playedSamples: number; started: boolean };
   /** Fence at the samples submitted now; later writes cannot satisfy it early. */
   drain(): Promise<'drained' | 'cancelled'>;
-  /** Discards queued audio and cancels every old drain. Late callbacks have no effect. */
+  /** Seal this reset epoch after its producer closes. No more writes are allowed
+   * until reset. Resolves only after every source sample and renderer-owned tail;
+   * repeated calls share the same completion. This is distinct from drain(). */
+  finish(): Promise<'drained' | 'cancelled'>;
+  /** Discards queued audio and cancels every old drain/finish. Late callbacks have no effect. */
   reset(): void;
   /** Terminal reset; never closes an AudioContext borrowed from its caller. */
   dispose(): void;

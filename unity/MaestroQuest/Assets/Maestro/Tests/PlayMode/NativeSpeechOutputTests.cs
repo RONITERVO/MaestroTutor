@@ -45,6 +45,36 @@ namespace Maestro.Quest.Tests
             clock += .011; Assert.AreEqual(2400, output.Read().playedSamples);
             yield return null; Assert.AreSame(source,root.GetComponentInChildren<AudioSource>());
         }
+        [UnityTest] public IEnumerator FinishingRequiresExactInputAndRetainsItsReceiptUntilStop()
+        {
+            long generation=output.Begin(24000); Write(generation,1,new short[2400]);
+            Assert.IsFalse(output.TryComplete(generation,2,2400,out _));
+            Assert.IsFalse(output.TryComplete(generation,1,2399,out _));
+            Assert.IsFalse(output.Read().inputComplete);
+            Assert.IsTrue(output.TryComplete(generation,1,2400,out var error),error);
+            Assert.IsFalse(output.TryWrite(generation,2,new short[1],out _));
+            Assert.IsTrue(output.TryComplete(generation,1,2400,out error),error);
+            output.Render(new float[2400],1,24000,clock+.1);
+            clock += .24; Assert.IsFalse(output.Read().rendererDrained);
+            clock += .02; var receipt=output.Read();
+            Assert.IsTrue(receipt.rendererDrained); Assert.AreEqual(2400,receipt.playedSamples);
+            Assert.AreEqual(generation,receipt.generation);
+            output.Stop(); Assert.IsFalse(output.Read().rendererDrained);
+            Assert.IsFalse(output.TryComplete(generation,1,2400,out _));
+            yield return null;
+        }
+        [UnityTest] public IEnumerator EmptyCompletionAndReplacementRemainOwnedByTheirNativeGeneration()
+        {
+            long old=output.Begin(24000);
+            Assert.IsTrue(output.TryComplete(old,0,0,out var error),error);
+            Assert.IsTrue(output.Read().rendererDrained);
+            long current=output.Begin(24000); Write(current,1,new short[240]);
+            Assert.IsFalse(output.TryComplete(old,0,0,out _));
+            Assert.IsFalse(output.Read().inputComplete);
+            root.SendMessage("OnApplicationFocus",false);
+            Assert.IsFalse(output.TryComplete(current,1,240,out _));
+            yield return null;
+        }
         [UnityTest] public IEnumerator DuplicateOutOfOrderStoppedAndDisabledPacketsNeverPlay()
         {
             var generation = output.Begin(24000); Write(generation, 1, new short[2400]);
@@ -117,9 +147,12 @@ namespace Maestro.Quest.Tests
                     for(int i=0;i<pcm.Length;i++) pcm[i]=(short)Math.Round(Math.Sin((packet*4800+i)*440.0/24000*Math.PI*2)*3276);
                     Assert.IsTrue(output.TryWrite(generation,packet+1,pcm,out var error),error);
                 }
+                Assert.IsTrue(output.TryComplete(generation,3,14400,out var completionError),completionError);
                 double deadline=Time.realtimeSinceStartupAsDouble+8;
-                while(output.Read().playedSamples<14400 && Time.realtimeSinceStartupAsDouble<deadline) yield return null;
+                while(!output.Read().rendererDrained && Time.realtimeSinceStartupAsDouble<deadline) yield return null;
                 Assert.AreEqual(14400,output.Read().playedSamples,"Real audio callbacks did not complete queued PCM");
+                Assert.IsTrue(output.Read().inputComplete); Assert.IsTrue(output.Read().rendererDrained);
+                Assert.IsFalse(output.TryWrite(generation,4,new short[240],out _));
                 Assert.AreSame(source,root.GetComponentInChildren<AudioSource>());
                 Assert.AreEqual(1,root.GetComponentsInChildren<AudioSource>().Length);
                 var result=probe.Read(); Assert.Greater(result.Blocks,1); Assert.That(result.Channels,Is.InRange(1,2));

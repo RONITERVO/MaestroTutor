@@ -13,6 +13,7 @@ export class WorkletSpeechOutput implements SpeechOutput {
   private played = 0;
   private nextRequest = 1;
   private disposed = false;
+  private finishing: Promise<'drained' | 'cancelled'> | null = null;
   private failure: Error | null = null;
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
   private readonly drains = new Map<number, { fence: number; acknowledged: boolean;
@@ -30,6 +31,7 @@ export class WorkletSpeechOutput implements SpeechOutput {
   write(pcm: Int16Array): void {
     if (this.failure) throw this.failure;
     if (this.disposed || this.context.state === 'closed') throw new Error('Speech output is closed.');
+    if (this.finishing) throw new Error('Speech input is complete. Reset before writing again.');
     if (!(pcm instanceof Int16Array)) throw new Error('Speech output requires mono PCM16.');
     if (!pcm.length) return;
     if (this.submitted - this.rendered + pcm.length > this.sampleRate * this.maxQueuedSeconds)
@@ -99,7 +101,13 @@ export class WorkletSpeechOutput implements SpeechOutput {
     this.drains.clear(); this.dispose();
     this.events.onError?.(error);
   }
+  finish(): Promise<'drained' | 'cancelled'> {
+    if (this.failure) return Promise.reject(this.failure);
+    if (this.disposed) return Promise.resolve('cancelled');
+    return this.finishing ??= this.drain();
+  }
   reset(): void {
+    this.finishing = null;
     this.generation++; this.clearPending();
     if (this.disposed || this.failure) return;
     try { this.node.port.postMessage({ type: 'reset', generation: this.generation }); }

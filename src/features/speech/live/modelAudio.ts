@@ -25,15 +25,18 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
   } = state;
   const { createCodecWorker } = ports;
   let commitQueue = Promise.resolve();
+  let playbackStopped = false;
   let pendingDrain: {
     checkpoint: ModelAudioDecodeCheckpoint;
     output: SpeechOutput;
     promise: Promise<void>;
   } | null = null;
+  let pendingFinish: { output: SpeechOutput; sessionId: number; promise: Promise<'drained' | 'cancelled'> } | null = null;
   const sameCheckpoint = (a: ModelAudioDecodeCheckpoint, b: ModelAudioDecodeCheckpoint) => (
     a.sessionId === b.sessionId && a.turnId === b.turnId && a.lastJobId === b.lastJobId
   );
   const startNextModelAudioTurn = (sessionId: number) => {
+    if (sessionId > 0) playbackStopped = false;
     commitQueue = Promise.resolve();
     currentModelAudioTurnIdRef.current = sessionId > 0 ? nextModelAudioTurnIdRef.current++ : 0;
   };
@@ -77,7 +80,9 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
   };
 
   const stopAllAudio = () => {
+    playbackStopped = true;
     pendingDrain = null;
+    pendingFinish = null;
     playbackPendingRef.current = false;
     playbackUntilRef.current = 0;
     try { speechOutputRef.current?.reset(); } catch { /* Teardown remains authoritative. */ }
@@ -125,6 +130,46 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
       }
     })().finally(() => { if (pendingDrain === drain) pendingDrain = null; });
     return drain.promise;
+  };
+
+  // Only the provider's terminal path seals input. Quiet-window checks remain
+  // reusable source fences, so already accepted late decoding can still write.
+  const finishPlayback = (): Promise<'drained' | 'cancelled'> => {
+    if (playbackStopped) return Promise.resolve('cancelled');
+    const output = speechOutputRef.current;
+    const sessionId = currentSessionIdRef.current;
+    if (!output) return Promise.resolve('drained');
+    if (pendingFinish?.output === output && pendingFinish.sessionId === sessionId) return pendingFinish.promise;
+    const finish = { output, sessionId, promise: Promise.resolve<'drained' | 'cancelled'>('cancelled') };
+    pendingFinish = finish;
+    const timing = turnTimingRef.current;
+    const wasPending = playbackPendingRef.current;
+    const startedAt = Date.now();
+    const isCurrent = () => pendingFinish === finish && speechOutputRef.current === output
+      && currentSessionIdRef.current === sessionId;
+    finish.promise = (async () => {
+      try {
+        const result = await output.finish();
+        if (!isCurrent()) return 'cancelled';
+        playbackTelemetryRef.current.lastDrainWaitMs = Date.now() - startedAt;
+        if (result === 'drained') {
+          if (wasPending) playbackTelemetryRef.current.drains += 1;
+          playbackPendingRef.current = false;
+          timing?.markLatest('playback.drained');
+        } else {
+          playbackTelemetryRef.current.drainCancellations += 1;
+          ports.onFailure('Speech playback stopped before completion.', sessionId);
+        }
+        return result;
+      } catch {
+        if (isCurrent()) {
+          playbackTelemetryRef.current.queueErrors += 1;
+          ports.onFailure('Speech playback stopped before completion.', sessionId);
+        }
+        return 'cancelled';
+      }
+    })();
+    return finish.promise;
   };
 
   const ensureInputCodecWorker = () => {
@@ -212,5 +257,5 @@ export function createLiveModelAudio(state: Pick<LiveSessionData,
 
     pendingModelAudioDecodeJobsRef.current.set(jobId, job);
   };
-  return { enqueueModelAudio, startNextModelAudioTurn, getModelAudioDecodeCheckpoint, cancelModelAudioDecodeJobs, waitForModelAudioDecodeCheckpoint, stopAllAudio, waitForPlaybackDrain, ensureInputCodecWorker, ensureOutputCodecWorker };
+  return { enqueueModelAudio, startNextModelAudioTurn, getModelAudioDecodeCheckpoint, cancelModelAudioDecodeJobs, waitForModelAudioDecodeCheckpoint, stopAllAudio, waitForPlaybackDrain, finishPlayback, ensureInputCodecWorker, ensureOutputCodecWorker };
 }

@@ -563,3 +563,52 @@ with catalog equality, the log gate and normal editor exit. The crash remains
 unresolved; a subsequent passing run is not its fix. Full app verification and
 both native journeys are tracked separately in `.quest-evidence/audio-lease-monitor`.
 Production reflections and automatic map scheduling remain disabled.
+
+
+### Explicit finite speech completion — 2026-10-12
+
+The shared speech output now distinguishes an open `drain()` sample fence from
+terminal `finish()`. Finish seals the current reset epoch, is idempotent, and
+requires the output renderer's final receipt before natural completion. Reset,
+Stop, replacement and disposal cancel that exact owner. Temporary silence and an
+empty packet queue cannot end speech. Browser worklet and scheduled outputs keep
+their hardware-tail waits; Quest keeps the native PCM cursor separate from its
+renderer completion boundary.
+
+Book speech protocol v3 carries the exact final sequence and submitted sample
+count, only after native has accepted every browser packet. Completion travels
+alone, including for empty speech. The native owner rejects mismatched counts,
+combined PCM/completion, stale document/revision/generation and post-finish writes.
+Both input-complete and renderer-drained flags are required in v3 receipts; old
+protocols cannot open a voice. Shared room activity may still suppress capture
+after this particular voice finishes.
+
+TTS and cached replay finish finite input. Live's quiet-window checks remain open
+fences; only provider finalization closes admission after already accepted
+messages and decoding. Late accounting remains eligible, but late content cannot
+write into a sealed voice. An interruption bypasses the ordered completion wait
+to cancel it immediately. Turn persistence and delegated actions await the final
+renderer receipt, and cancelled speech cannot report a completed turn.
+
+The focused checks pass 88 web cases and 21 native speech/lease/mailbox cases,
+including actual DSP callback completion, exact counters, long browser bursts,
+empty input, reset and stale receipts. The final Live lifecycle pass covers 40
+cases after tightening Stop: no second finish, completed turn or spurious error.
+Usage received during the final tail is retained even if Stop invalidates the
+queued content. A regression reproduces transport close overtaking an accepted
+`turnComplete` callback; teardown now flushes that queued finalizer before
+releasing the reply. Android reports 128 passes and two optional private-file skips;
+the release browser AAR builds and lint has zero errors (six warnings). Catalog
+equality and normal native exits pass. Full verification of this change is
+tracked against immutable source in `.quest-evidence/speech-finish` and the PR.
+
+The preceding monitor repair at `0b662089` completed full verification: 1,140
+EditMode and 1,258 PlayMode passes, three expected private-asset skips, and both
+native headless/original-book journeys with client/editor/terminal exit zero.
+All 907 native source and mirror hashes match the frozen input. These journeys
+use local scripted provider responses; no paid provider or headset was accessed.
+
+This is a production completion contract, not installation or acceptance of the
+isolated reflection backend. Production reflection output and automatic map
+scheduling remain disabled. The retained Meta native map-worker crash is
+unresolved; Android/IL2CPP and physical Quest/Live acceptance remain separate gates.

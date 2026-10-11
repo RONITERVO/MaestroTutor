@@ -43024,7 +43024,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookSpeechSession.cs",
-      "sha256": "92314b5d595fcd4744dd2b8d220395610f4a5b549c0b076c94461988ff74777a"
+      "sha256": "2bac0c95a95ddf73a76513bfb62be5e0845c84f73a2b474afb7862a3eef20c6d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BrowserNotice.cs",
@@ -43060,7 +43060,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeSpeechOutput.cs",
-      "sha256": "3937ab5853fa856dc3453ecd08b159d2031202367b50a83ef4806d75c59a3065"
+      "sha256": "2f3f9fb29a930db9e294899535596ee79ab054fbf75cddd86358204ecd27cc53"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.cs",

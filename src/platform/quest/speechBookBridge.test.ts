@@ -9,12 +9,12 @@ function setup() {
   vi.useFakeTimers();
   const client = new SpeechBookClient(() => Date.now()); clients.push(client);
   const idle = client.exchange(null)!;
-  client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0, microphoneSuppressed: false });
+  client.exchange({ ...idle, host, status: 'ready', acceptedSequence: 0, submittedSamples: 0, playedSamples: 0, inputComplete: false, rendererDrained: false, microphoneSuppressed: false });
   return client;
 }
 const receipt = (client: SpeechBookClient, acceptedSequence: number, submittedSamples: number, playedSamples: number) => {
   const request = client.exchange(null)!;
-  return { ...request, host, status: 'playing', acceptedSequence, submittedSamples, playedSamples, microphoneSuppressed: false };
+  return { ...request, host, status: 'playing', acceptedSequence, submittedSamples, playedSamples, inputComplete: false, rendererDrained: false, microphoneSuppressed: false };
 };
 afterEach(() => { for (const client of clients.splice(0)) client.dispose(); vi.useRealTimers(); });
 
@@ -42,7 +42,7 @@ describe('book speech transport', () => {
   });
   it('does not establish a voice connection with an old native speech protocol', () => {
     const client = new SpeechBookClient(); clients.push(client);
-    client.exchange({ ...client.exchange(null), version: 1, host, status: 'ready', microphoneSuppressed: false });
+    client.exchange({ ...client.exchange(null), version: 1, host, status: 'ready', inputComplete: false, rendererDrained: false, microphoneSuppressed: false });
     expect(() => client.create()).toThrow();
   });
   it('copies little-endian PCM, retries unchanged bytes and drains only played samples at its fence', async () => {
@@ -99,4 +99,53 @@ describe('book speech transport', () => {
     expect(() => first.write(new Int16Array([1]))).toThrow(); second.dispose();
     vi.advanceTimersByTime(1501); expect(() => client.create()).toThrow();
   });
+  it('seals a long burst only after every packet is accepted and waits for the renderer receipt', async () => {
+    const client = setup(), output = client.create(); output.write(new Int16Array(24000 * 5));
+    const finished = output.finish(), done = vi.fn(); void finished.then(done);
+    expect(output.finish()).toBe(finished);
+    expect(() => output.write(new Int16Array(1))).toThrow('complete');
+    let packet = client.exchange(null)!;
+    expect(packet.completion).toBeNull(); expect(packet.chunks).toHaveLength(8);
+    let accepted = 0, samples = 0;
+    while (packet.chunks.length) {
+      for (const chunk of packet.chunks) { accepted = chunk.sequence; samples += atob(chunk.pcm).length / 2; }
+      packet = client.exchange({ ...receipt(client, accepted, samples, samples) })!;
+      if (samples < 120000) expect(packet.completion).toBeNull();
+    }
+    expect(packet.completion).toEqual({ sequence: accepted, submittedSamples: 120000 });
+    await Promise.resolve(); expect(done).not.toHaveBeenCalled();
+    client.exchange({ ...receipt(client, accepted, samples, samples), inputComplete: true });
+    await Promise.resolve(); expect(done).not.toHaveBeenCalled();
+    client.exchange({ ...receipt(client, accepted, samples, samples), inputComplete: true, rendererDrained: true, microphoneSuppressed: true });
+    await expect(finished).resolves.toBe('drained');
+    // Other world sounds can still own the microphone suppression monitor.
+    expect(output.isMicrophoneSuppressed?.()).toBe(true);
+  });
+  it('cancels a final tail on reset and cannot reuse an old finish receipt for empty new input', async () => {
+    const client = setup(), output = client.create(); output.write(new Int16Array(240));
+    const oldFinish = output.finish(); client.exchange(receipt(client, 1, 240, 240));
+    const old = { ...receipt(client, 1, 240, 240), inputComplete: true, rendererDrained: true };
+    output.reset(); await expect(oldFinish).resolves.toBe('cancelled');
+    const empty = output.finish(), done = vi.fn(); void empty.then(done);
+    client.exchange(old); await Promise.resolve(); expect(done).not.toHaveBeenCalled();
+    expect(client.exchange(null)?.completion).toEqual({ sequence: 0, submittedSamples: 0 });
+    client.exchange({ ...receipt(client, 0, 0, 0), inputComplete: true, rendererDrained: true });
+    await expect(empty).resolves.toBe('drained');
+  });
+  it.each(['unsolicited', 'unplayed', 'regression', 'loss'])('rejects invalid finite completion: %s', async mode => {
+    const client = setup(), output = client.create(); output.write(new Int16Array(240));
+    const finished = output.finish(); const rejected = expect(finished).rejects.toThrow('interrupted');
+    if (mode === 'unsolicited') client.exchange({ ...receipt(client, 1, 240, 240), inputComplete: true, rendererDrained: true });
+    else {
+      client.exchange(receipt(client, 1, 240, 0));
+      if (mode === 'loss') client.suspend();
+      else if (mode === 'unplayed') client.exchange({ ...receipt(client, 1, 240, 0), inputComplete: true, rendererDrained: true });
+      else {
+        client.exchange({ ...receipt(client, 1, 240, 0), inputComplete: true });
+        client.exchange(receipt(client, 1, 240, 0));
+      }
+    }
+    await rejected; expect(client.exchange(null)?.open).toBe(false);
+  });
+
 });

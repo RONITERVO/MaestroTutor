@@ -28,17 +28,23 @@ namespace Maestro.Quest.Tests
         }
         string Packet(long poll, long revision, bool open, params JObject[] chunks) => new JObject {
             ["document"] = document, ["poll"] = poll, ["payload"] = new JObject {
-                ["version"] = 2, ["session"] = session, ["revision"] = revision, ["open"] = open, ["chunks"] = new JArray(chunks)
+                ["version"] = 3, ["session"] = session, ["revision"] = revision, ["open"] = open, ["chunks"] = new JArray(chunks), ["completion"] = null
             }
         }.ToString(Newtonsoft.Json.Formatting.None);
+        string Completion(long poll, long revision, long sequence, long samples)
+        {
+            var packet = JObject.Parse(Packet(poll,revision,true));
+            packet["payload"]["completion"] = new JObject { ["sequence"]=sequence, ["submittedSamples"]=samples };
+            return packet.ToString();
+        }
         JObject Status => JObject.Parse(bridge.Status(clock));
         [UnityTest] public IEnumerator OldSpeechProtocolCannotOpenAStreamWithoutTheCaptureContract()
         {
             var packet = JObject.Parse(Packet(1,1,true,Chunk(1)));
-            packet["payload"]["version"] = 1;
+            packet["payload"]["version"] = 2;
             Receive(packet.ToString());
             Assert.AreEqual("failed",(string)Status["status"]);
-            Assert.AreEqual(2,(int)Status["version"]);
+            Assert.AreEqual(3,(int)Status["version"]);
             Assert.IsTrue((bool)Status["microphoneSuppressed"]);
             Assert.AreEqual(0,output.Read().submittedSamples);
             yield return null;
@@ -101,6 +107,50 @@ namespace Maestro.Quest.Tests
             Receive(Packet(1,1,true,Chunk(1)));
             for (int i=2;i<40;i++) { clock += .1; Receive(Packet(i,1,true,Chunk(1))); }
             Assert.AreEqual("failed",(string)Status["status"]); Assert.AreEqual(0,output.Read().submittedSamples);
+            yield return null;
+        }
+        [UnityTest] public IEnumerator FiniteCompletionWaitsForTheExactAcceptedEpochAndActualDspTail()
+        {
+            Receive(Packet(1,1,true,Chunk(1)));
+            long generation = output.Read().generation;
+            Assert.IsFalse((bool)Status["inputComplete"]);
+            Receive(Completion(2,1,1,4800));
+            Assert.IsTrue((bool)Status["inputComplete"]); Assert.IsFalse((bool)Status["rendererDrained"]);
+            Receive(Completion(3,1,1,4800)); // Lost completion receipt: never replay or replace the voice.
+            Assert.AreEqual(generation,output.Read().generation);
+            output.Render(new float[4800],1,24000,clock+.1);
+            clock += .34; Assert.IsFalse((bool)Status["rendererDrained"]);
+            clock += .02; Assert.IsTrue((bool)Status["rendererDrained"]);
+            Assert.AreEqual(4800,(long)Status["playedSamples"]);
+            Receive(Packet(4,1,true,Chunk(2))); Assert.AreEqual("failed",(string)Status["status"]);
+            yield return null;
+        }
+        [UnityTest] public IEnumerator CompletionRejectsWrongCountersAndCombinedAudioBeforeSealing()
+        {
+            long poll=0;
+            for(int mode=0;mode<3;mode++)
+            {
+                long revision=mode+1;
+                Receive(Packet(++poll,revision,true,Chunk(1)));
+                var packet=JObject.Parse(Completion(++poll,revision,mode==0?2:1,mode==1?4799:4800));
+                if(mode==2)packet["payload"]["chunks"]=new JArray(Chunk(2));
+                Receive(packet.ToString()); Assert.AreEqual("failed",(string)Status["status"]);
+                Assert.AreEqual(0,output.Read().submittedSamples);
+            }
+            Receive(Completion(++poll,4,0,0));
+            Assert.IsTrue((bool)Status["inputComplete"]); Assert.IsTrue((bool)Status["rendererDrained"]);
+            yield return null;
+        }
+        [UnityTest] public IEnumerator OldCompletionCannotSealOrFinishAReplacementVoice()
+        {
+            Receive(Packet(1,1,true,Chunk(1))); Receive(Completion(2,1,1,4800));
+            Receive(Packet(3,2,false)); Receive(Completion(4,1,1,4800));
+            Assert.AreEqual("ready",(string)Status["status"]); Assert.IsFalse((bool)Status["rendererDrained"]);
+            Receive(Packet(5,3,true,Chunk(1,240))); Receive(Completion(6,1,1,4800));
+            output.Render(new float[240],1,24000,clock+.1); clock += .2;
+            Assert.AreEqual(240,(long)Status["playedSamples"]);
+            Assert.IsFalse((bool)Status["inputComplete"]); Assert.IsFalse((bool)Status["rendererDrained"]);
+            Receive(Completion(7,3,1,240)); Assert.IsTrue((bool)Status["rendererDrained"]);
             yield return null;
         }
         [UnityTest] public IEnumerator MalformedBatchAndMissingSequenceFailWithoutPartialOrDuplicateSpeech()

@@ -37,9 +37,10 @@ export class SpeechBookClient {
     if (this.closed) return null;
     if (input && typeof input === 'object' && !Array.isArray(input)) {
       const value = input as Record<string, unknown>;
-      if (value.version === 2 && value.session === this.session && token(value.host)
+      if (value.version === 3 && value.session === this.session && token(value.host)
         && integer(value.revision) && value.revision <= this.revision
         && typeof value.microphoneSuppressed === 'boolean'
+        && typeof value.inputComplete === 'boolean' && typeof value.rendererDrained === 'boolean'
         && ['ready', 'playing', 'failed'].includes(String(value.status))) {
         if (this.host && this.host !== value.host) this.current?.fail(unavailable());
         this.host = value.host; this.lastSeen = this.now();
@@ -50,8 +51,8 @@ export class SpeechBookClient {
         }
       }
     }
-    return { version: 2, session: this.session, revision: this.revision,
-      open: this.current !== null, chunks: this.current?.poll() ?? [] };
+    return { version: 3, session: this.session, revision: this.revision,
+      open: this.current !== null, chunks: this.current?.poll() ?? [], completion: this.current?.completion() ?? null };
   };
   suspend() { this.current?.fail(unavailable()); this.host = ''; this.ready = false; this.lastSeen = -Infinity; }
   dispose() { this.suspend(); this.closed = true; }
@@ -72,6 +73,9 @@ class BookSpeechOutput implements SpeechOutput {
   private closed = false;
   private failure: Error | null = null;
   private readonly fences = new Set<Fence>();
+  private finishing: (Fence & { sequence: number; promise: Promise<'drained' | 'cancelled'> }) | null = null;
+  private completionOffered = false;
+  private inputComplete = false;
   private readonly watchdog: ReturnType<typeof setInterval>;
   constructor(private readonly owner: SpeechBookClient, private readonly events: SpeechOutputEvents) {
     this.watchdog = setInterval(() => { if (!owner.alive()) this.fail(unavailable()); }, 250);
@@ -79,6 +83,7 @@ class BookSpeechOutput implements SpeechOutput {
   private assertOpen() { if (this.failure) throw this.failure; if (this.closed) throw unavailable(); }
   write(pcm: Int16Array) {
     this.assertOpen();
+    if (this.finishing) throw new Error('Speech input is complete. Reset before writing again.');
     if (!(pcm instanceof Int16Array)) throw new Error('Speech requires mono PCM16.');
     if (this.submitted - this.played + pcm.length > MAX_QUEUED) throw new Error('Speech output buffer is full.');
     if (this.chunks.length + Math.ceil(pcm.length / CHUNK) > 1024) throw new Error('Speech output buffer is full.');
@@ -107,17 +112,33 @@ class BookSpeechOutput implements SpeechOutput {
       return { sequence: chunk.sequence, pcm: chunk.pcm };
     });
   }
+  // Do not seal native input while the browser still owns unaccepted packets.
+  // Completion travels alone, after the exact final source receipt arrives.
+  completion() {
+    const finish = this.finishing;
+    if (!finish || this.accepted !== finish.sequence || this.acceptedSamples !== finish.sample) return null;
+    this.completionOffered = true;
+    return { sequence: finish.sequence, submittedSamples: finish.sample };
+  }
   accept(value: Record<string, unknown>) {
     if (!integer(value.acceptedSequence) || !integer(value.submittedSamples) || !integer(value.playedSamples)) return;
     const sequence = value.acceptedSequence, samples = value.submittedSamples, played = value.playedSamples;
     if (sequence < this.accepted || played < this.played) return;
     const expected = sequence === this.accepted ? this.acceptedSamples : this.chunks.find(chunk => chunk.sequence === sequence)?.last;
     if (sequence > this.offered || samples !== expected || played > samples) { this.fail(unavailable()); return; }
+    if (this.inputComplete && value.inputComplete !== true
+      || value.inputComplete === true && (!this.completionOffered || !this.finishing
+        || sequence !== this.finishing.sequence || samples !== this.finishing.sample)
+      || value.rendererDrained === true && (value.inputComplete !== true || played !== samples)) {
+      this.fail(unavailable()); return;
+    }
+    this.inputComplete = value.inputComplete === true;
     this.accepted = sequence; this.acceptedSamples = samples; this.played = played;
     this.microphoneSuppressed = value.microphoneSuppressed === true;
     this.chunks = this.chunks.filter(chunk => chunk.sequence > sequence);
     if (!this.started && played > 0) { this.started = true; this.events.onEvent?.('started'); }
     for (const fence of this.fences) if (played >= fence.sample) { this.fences.delete(fence); fence.resolve('drained'); }
+    if (value.rendererDrained === true) this.finishing?.resolve('drained');
   }
   read() { return { submittedSamples: this.submitted, playedSamples: this.played, started: this.started }; }
   isMicrophoneSuppressed() { return this.closed || !this.owner.alive() || this.microphoneSuppressed; }
@@ -128,8 +149,20 @@ class BookSpeechOutput implements SpeechOutput {
     if (this.fences.size >= 64) return Promise.reject(new Error('Too many speech drain requests.'));
     return new Promise((resolve, reject) => this.fences.add({ sample: this.submitted, resolve, reject }));
   }
+  finish(): Promise<'drained' | 'cancelled'> {
+    if (this.failure) return Promise.reject(this.failure);
+    if (this.closed) return Promise.resolve('cancelled');
+    if (!this.finishing) {
+      let resolve!: Fence['resolve'], reject!: Fence['reject'];
+      const promise = new Promise<'drained' | 'cancelled'>((done, fail) => { resolve = done; reject = fail; });
+      this.finishing = { sample: this.submitted, sequence: this.sequence, resolve, reject, promise };
+    }
+    return this.finishing.promise;
+  }
   reset() {
     if (this.closed) return;
+    this.finishing?.resolve('cancelled'); this.finishing = null;
+    this.completionOffered = this.inputComplete = false;
     for (const fence of this.fences) fence.resolve('cancelled');
     this.fences.clear(); this.chunks = [];
     this.sequence = this.offered = this.accepted = this.acceptedSamples = this.submitted = this.played = 0; this.started = false;
@@ -143,6 +176,7 @@ class BookSpeechOutput implements SpeechOutput {
   fail(error: Error) {
     if (this.closed) return;
     this.failure = error;
+    this.finishing?.reject(error);
     for (const fence of this.fences) fence.reject(error);
     this.fences.clear(); this.dispose(); this.events.onError?.(error);
   }

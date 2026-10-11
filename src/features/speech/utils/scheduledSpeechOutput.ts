@@ -22,12 +22,14 @@ export class ScheduledSpeechOutput implements SpeechOutput {
   private nextStart = 0;
   private epoch = 0;
   private disposed = false;
+  private finishing: Promise<'drained' | 'cancelled'> | null = null;
   constructor(private readonly context: AudioContext, readonly sampleRate = 24000, private readonly maxQueuedSeconds = 120) {
     if (!Number.isInteger(sampleRate) || sampleRate < 8000 || sampleRate > 48000 || !Number.isFinite(maxQueuedSeconds) || maxQueuedSeconds <= 0)
       throw new Error('Invalid speech output format or queue limit.');
   }
   write(pcm: Int16Array): void {
     if (this.disposed || this.context.state === 'closed') throw new Error('Speech output is closed.');
+    if (this.finishing) throw new Error('Speech input is complete. Reset before writing again.');
     if (!(pcm instanceof Int16Array)) throw new Error('Speech output requires mono PCM16.');
     if (!pcm.length) return;
     if (this.submitted - this.completed + pcm.length > this.sampleRate * this.maxQueuedSeconds)
@@ -73,7 +75,12 @@ export class ScheduledSpeechOutput implements SpeechOutput {
     if (this.completed >= this.submitted) return Promise.resolve('drained');
     return new Promise(resolve => this.drains.add({ fence: this.submitted, resolve }));
   }
+  finish(): Promise<'drained' | 'cancelled'> {
+    if (this.disposed) return Promise.resolve('cancelled');
+    return this.finishing ??= this.drain();
+  }
   reset(): void {
+    this.finishing = null;
     this.epoch++;
     for (const drain of this.drains) drain.resolve('cancelled');
     this.drains.clear();

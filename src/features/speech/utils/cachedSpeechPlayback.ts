@@ -68,7 +68,7 @@ export async function playCachedSpeech(options: {
     const pcm = await phase(decodeCachedSpeech(options.audioDataUrl), 10000);
     if (pcm === CANCELLED || signal.aborted) return 'cancelled';
     output.write(pcm);
-    const result = await phase(output.drain(), pcm.length / RATE * 1000 + 5000);
+    const result = await phase(output.finish(), pcm.length / RATE * 1000 + 5000);
     return result === CANCELLED ? 'cancelled' : result;
   } finally {
     finished = true; signal.removeEventListener('abort', abort); output?.dispose();

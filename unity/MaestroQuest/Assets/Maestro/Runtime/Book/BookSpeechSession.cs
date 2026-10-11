@@ -64,10 +64,23 @@ namespace Maestro.Quest.Book
                 if (envelope["payload"] is not JObject payload) { Fail(); return; }
                 var nextSession = (string)payload["session"];
                 var nextRevision = Number(payload["revision"]);
-                if ((int?)payload["version"] != 2 || !Token(nextSession)
+                if ((int?)payload["version"] != 3 || !Token(nextSession)
                     || payload["open"]?.Type != JTokenType.Boolean || payload["chunks"] is not JArray chunks || chunks.Count > 8)
                     throw new ArgumentException("Invalid speech request");
                 bool nextOpen = (bool)payload["open"];
+                var completion = payload["completion"];
+                if (completion == null || completion.Type != JTokenType.Null && completion is not JObject)
+                    throw new ArgumentException("Invalid speech completion");
+                bool complete = completion is JObject;
+                long finalSequence = 0, finalSamples = 0;
+                if (complete)
+                {
+                    finalSequence = Number(completion["sequence"]);
+                    finalSamples = Number(completion["submittedSamples"]);
+                    // The browser seals only after receiving every packet receipt.
+                    // Reject combined or closed requests before accepting any PCM.
+                    if (!nextOpen || chunks.Count != 0) throw new ArgumentException("Speech completion must travel alone");
+                }
                 // Validate the whole batch before allowing even its first PCM chunk.
                 var decoded = new List<(long Sequence, short[] Samples)>();
                 long previous = 0;
@@ -106,6 +119,7 @@ namespace Maestro.Quest.Book
                     if (state.submittedSamples == state.playedSamples) progressAt = now;
                     if (!output.TryWrite(generation, chunk.Sequence, chunk.Samples, out _)) { Fail(); return; }
                 }
+                if (complete && !output.TryComplete(generation, finalSequence, finalSamples, out _)) { Fail(); return; }
             }
             catch (Exception) { Fail(); }
             Tick(now);
@@ -124,11 +138,13 @@ namespace Maestro.Quest.Book
             Tick(now);
             var state = open && !failed && output ? output.Read() : null;
             return new JObject {
-                ["version"] = 2, ["host"] = host, ["session"] = session, ["revision"] = Math.Max(0, revision),
+                ["version"] = 3, ["host"] = host, ["session"] = session, ["revision"] = Math.Max(0, revision),
                 ["status"] = failed || !output || !output.isActiveAndEnabled ? "failed" : open ? "playing" : "ready",
                 ["acceptedSequence"] = state?.acceptedSequence ?? 0,
                 ["submittedSamples"] = state?.submittedSamples ?? 0,
                 ["playedSamples"] = state?.playedSamples ?? 0,
+                ["inputComplete"] = state?.inputComplete ?? false,
+                ["rendererDrained"] = state?.rendererDrained ?? false,
                 ["microphoneSuppressed"] = failed || !output || output.MicrophoneSuppressed
             }.ToString(Newtonsoft.Json.Formatting.None);
         }
