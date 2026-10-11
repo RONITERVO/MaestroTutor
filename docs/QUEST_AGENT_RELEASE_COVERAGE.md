@@ -3229,3 +3229,23 @@ source hashes and the new helper's provenance change. Complete app verification,
 its book/headless journeys and CI are tracked against the frozen source in
 `.quest-evidence/audio-renderer-lease` and the draft PR. Candidate adaptation,
 production geometry, Android and physical Quest/Live acceptance remain open.
+
+
+### Shared tail monitor regression and retained native crash evidence — 2026-10-12
+
+The full check on `c6f195b8` caught a playback-lease regression: Stop released the
+speech owner's reference to the shared mixer monitor, so its capture gate opened
+while a different routed voice could still be audible. Stop now disposes only its
+own playback lease and retains the independent monitor observation. Existing
+two-voice and room-replacement assertions remain unchanged.
+
+The first repair check reached 19 passing case markers before the repeated-room
+fixture reproduced the earlier Meta native crash. Its dump again records a null
+read at `MetaXRAudioUnity.dll + 0xa1509`; this does not establish the initiating
+cause. The fixture now logs cycle, stage and output format directly to Unity's log
+so a crash cannot erase that evidence before NUnit writes XML. With those
+additional diagnostics, all 20 targeted cases and eight room cycles pass, along
+with catalog equality, the log gate and normal editor exit. The crash remains
+unresolved; a subsequent passing run is not its fix. Full app verification and
+both native journeys are tracked separately in `.quest-evidence/audio-lease-monitor`.
+Production reflections and automatic map scheduling remain disabled.

@@ -7524,3 +7524,15 @@ source hashes and the new helper's provenance change. Complete app verification,
 its book/headless journeys and CI are tracked against the frozen source in
 `.quest-evidence/audio-renderer-lease` and the draft PR. Candidate adaptation,
 production geometry, Android and physical Quest/Live acceptance remain open.
+
+
+### Playback stop and room-tail ownership — 2026-10-12
+
+Full verification exposed and repaired a shared-monitor regression in the playback
+lease refactor. Stopping a voice releases its owned PCM resources while continuing
+to observe the independently owned room tail. All 20 targeted speech, book and
+mixer checks pass, including eight replacement cycles, after adding immediate
+fixture diagnostics. A preceding attempt reproduced the unresolved Meta native
+null read; its evidence remains retained. Neither this repair nor the passing
+rerun enables production reflections. See the [audio evidence](../unity/AUDIO.md#stopped-voices-retain-the-shared-tail-observation--2026-10-12)
+and the release coverage ledger for the full-gate distinction.

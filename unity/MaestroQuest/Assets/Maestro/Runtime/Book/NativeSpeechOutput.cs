@@ -91,7 +91,10 @@ namespace Maestro.Quest.Book
         public void Stop()
         {
             open = false; generation++;
-            playback?.Dispose(); playback = null; roomAudio = null;
+            playback?.Dispose(); playback = null;
+            // The shared mixer owns its audible tail after this voice stops.
+            // Keep observing that monitor; disposing one lease cannot release
+            // capture suppression while another routed voice is still audible.
         }
         internal void FollowAnchor()
         {

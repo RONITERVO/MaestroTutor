@@ -37,11 +37,12 @@ namespace Maestro.Quest.Tests
             // source-only mock cannot detect a cross-thread native lifetime fault.
             for (int cycle = 0; cycle < 8; cycle++)
             {
-                TestContext.Progress.WriteLine("ROOM_AUDIO_CYCLE_BEGIN " + cycle);
+                Trace("cycle-begin " + cycle);
                 yield return RenderMix(replaceMapDuringSpeech: cycle % 2 == 1);
                 yield return Resources.UnloadUnusedAssets();
                 GC.Collect(); GC.WaitForPendingFinalizers();
                 yield return null;
+                Trace("cycle-end " + cycle);
             }
         }
         [UnityTest] public IEnumerator OwnedReflectionMixRendersAndStoppingOneVoicePreservesAnother() => RenderMix(false);
@@ -86,6 +87,16 @@ namespace Maestro.Quest.Tests
                 computeGate = initialGate; computeEntered = initialEntered;
             }
         }
+        // NUnit progress may be lost when the native map worker crashes before
+        // it writes XML. Keep stage/format evidence in Unity's immediate log.
+        static void Trace(string stage, RoomAcoustics room = null)
+        {
+            AudioSettings.GetDSPBufferSize(out var length, out var buffers);
+            Debug.Log("MAESTRO_ROOM_AUDIO " + stage + " rate=" + AudioSettings.outputSampleRate
+                + " block=" + length + " buffers=" + buffers + (room
+                    ? " ready=" + room.Ready + " computing=" + room.MapComputing + " geometry=" + room.GeometryCount
+                    : ""));
+        }
         static void AddWalls(GameObject root)
         {
             var positions = new[] { new Vector3(-2,0,0), new Vector3(2,0,0), new Vector3(0,-1.5f,0), new Vector3(0,1.5f,0), new Vector3(0,0,-2), new Vector3(0,0,2) };
@@ -120,12 +131,15 @@ namespace Maestro.Quest.Tests
                 Assert.IsTrue(room.Ready, room.Issue);
                 AddWalls(root);
                 room.Synchronize(); yield return null; room.Synchronize();
+                Trace("initial-map-request", room);
                 Assert.IsTrue(room.RequestMap(new[] { listenerObject.transform.position }));
                 double deadline = Time.realtimeSinceStartupAsDouble + 8;
                 while (room.MapComputing && Time.realtimeSinceStartupAsDouble < deadline) { room.Synchronize(); yield return null; }
+                Trace("initial-map-result", room);
                 Assert.IsFalse(room.MapComputing, "Initial acoustic map did not finish before the test deadline");
                 Assert.IsTrue(room.MapReady, room.MapIssue);
                 audio.Refresh(); Assert.IsTrue(audio.ReflectionsActive, audio.Issue);
+                Trace("voice-start", room);
                 long a = first.Begin(24000), b = second.Begin(24000);
                 var sourceA = first.GetComponentInChildren<AudioSource>();
                 var sourceB = second.GetComponentInChildren<AudioSource>();
@@ -141,6 +155,7 @@ namespace Maestro.Quest.Tests
                 {
                     computeGate = new ManualResetEventSlim(false); computeEntered = new ManualResetEventSlim(false);
                     room.FirstMapProgress = () => { computeEntered.Set(); computeGate.Wait(TimeSpan.FromSeconds(10)); };
+                    Trace("replacement-map-request", room);
                     Assert.IsTrue(room.RequestMap(new[] { listenerObject.transform.position + Vector3.right * .1f }));
                     deadline = Time.realtimeSinceStartupAsDouble + 3;
                     while (!computeEntered.IsSet && Time.realtimeSinceStartupAsDouble < deadline) yield return null;
@@ -153,10 +168,12 @@ namespace Maestro.Quest.Tests
                         "The listener must continue hearing direct sound while reflections are rebuilt");
                     computeGate.Set(); deadline = Time.realtimeSinceStartupAsDouble + 8;
                     while (room.MapComputing && Time.realtimeSinceStartupAsDouble < deadline) { room.Synchronize(); yield return null; }
+                    Trace("replacement-map-result", room);
                     Assert.IsFalse(room.MapComputing); Assert.IsTrue(room.MapReady, room.MapIssue);
                     room.FirstMapProgress = null; audio.Refresh(); Assert.IsTrue(audio.ReflectionsActive, audio.Issue);
                 }
                 else yield return new WaitForSecondsRealtime(.25f);
+                Trace("stop-first-voice", room);
                 first.Stop();
                 Assert.IsTrue(sourceB.isPlaying); Assert.AreEqual(b, second.Read().generation);
                 Assert.IsTrue(first.MicrophoneSuppressed, "Stopping one voice must not discard the shared output tail");
@@ -178,6 +195,7 @@ namespace Maestro.Quest.Tests
             }
             finally
             {
+                Trace("teardown", room);
                 computeGate?.Set(); room.FirstMapProgress = null;
                 first.Stop(); second.Stop(); audio.enabled = false;
                 UnityEngine.Object.Destroy(root); UnityEngine.Object.Destroy(listenerObject);
