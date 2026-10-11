@@ -90,7 +90,7 @@ namespace Maestro.Quest.Creation
             observationRenderers.Clear();
             foreach(var pair in dormantNative){
                 if(!graph.Contains(pair.Key))continue;
-                var spatial=Frame.Valid?ReadDormantSpatial(pair.Key,pair.Value).Transform(transform.localToWorldMatrix):RoomSpatialBounds.Unknown;
+                var spatial=Frame.Valid?ReadDormantSpatial(pair.Key,pair.Value,out _).Transform(transform.localToWorldMatrix):RoomSpatialBounds.Unknown;
                 foreach(var view in views)if(view.Includes(spatial)){graph.Retain(pair.Key,RoomRetentionReason.Observation);break;}
             }
         }

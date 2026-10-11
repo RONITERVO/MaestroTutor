@@ -162,14 +162,15 @@ namespace Maestro.Quest.Creation
         public void SetSelection(bool primary,bool member){primarySelected=primary;constructionSelected=member;SetSelected(primary||member);}
         public void SetSelected(bool value) { if (selection) {selection.SetActive(value);selection.GetComponent<PencilMarks>().SetColor(constructionSelected&&!primarySelected?IllustratedMaterials.Hex("2B8D88"):IllustratedMaterials.Ribbon);} }
 
+        internal const float SelectionOffset=.012f,SelectionRadius=.001f;
         void BuildSelection(Bounds bounds)
         {
             selection = new GameObject("Selected object outline", typeof(PencilMarks)); selection.transform.SetParent(transform, false);
-            var low = bounds.min - Vector3.one * .012f; var high = bounds.max + Vector3.one * .012f;
+            var low = bounds.min - Vector3.one * SelectionOffset; var high = bounds.max + Vector3.one * SelectionOffset;
             var paths = new List<Vector3[]>();
             foreach (float z in new[] { low.z, high.z }) paths.Add(new[] { new Vector3(low.x,low.y,z), new Vector3(high.x,low.y,z), new Vector3(high.x,high.y,z), new Vector3(low.x,high.y,z), new Vector3(low.x,low.y,z) });
             foreach (float x in new[] { low.x,high.x }) foreach (float y in new[] { low.y,high.y }) paths.Add(new[] { new Vector3(x,y,low.z), new Vector3(x,y,high.z) });
-            var outline = selection.GetComponent<PencilMarks>(); outline.SetPaths(paths,.001f); outline.SetColor(IllustratedMaterials.Ribbon);
+            var outline = selection.GetComponent<PencilMarks>(); outline.SetPaths(paths,SelectionRadius); outline.SetColor(IllustratedMaterials.Ribbon);
             selection.SetActive(false);
         }
         bool nativeResourcesReleased;

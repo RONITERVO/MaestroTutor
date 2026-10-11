@@ -50,12 +50,12 @@ namespace Maestro.Quest.Imports
             try {var value=ReadLocalCore(hash);RememberBounds(value);return value;}
             catch {ForgetBounds(hash);throw;}
         }
-        ModelAsset ReadLocalCore(string hash)
+        ModelAsset ReadLocalCore(string hash,CancellationToken cancellation=default)
         {
             if (!ValidHash(hash)) throw new ModelImportException("This room has an invalid model reference.");
             string path = Path.Combine(directory, hash + ".glb");
             if (!File.Exists(path)) throw new ModelImportException("This model's local copy is missing. Import the original file again.");
-            byte[] bytes = ReadBounded(path); var asset = Inspect(hash, bytes);
+            byte[] bytes = ReadBounded(path,cancellation);cancellation.ThrowIfCancellationRequested();var asset = Inspect(hash, bytes);
             if (asset.Hash != hash) throw new ModelImportException("The saved model copy is damaged. Import the original file again.");
             return asset;
         }
@@ -123,13 +123,13 @@ namespace Maestro.Quest.Imports
                 }
             });return true;
         }
-        public static byte[] ReadBounded(string path)
+        public static byte[] ReadBounded(string path,CancellationToken cancellation=default)
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             if (stream.Length < 28) throw new ModelImportException("This file is incomplete. Choose a complete GLB or VRM export.");
             if (stream.Length > ModelInspection.MaximumBytes) throw new ModelImportException("Choose a GLB or VRM file of 64 MB or smaller.");
             var bytes = new byte[(int)stream.Length]; int offset = 0;
-            while (offset < bytes.Length) { int read = stream.Read(bytes, offset, bytes.Length - offset); if (read == 0) throw new IOException("Incomplete model copy"); offset += read; }
+            while (offset < bytes.Length) { cancellation.ThrowIfCancellationRequested();int read = stream.Read(bytes, offset, Math.Min(1024*1024,bytes.Length-offset)); if (read == 0) throw new IOException("Incomplete model copy"); offset += read; }
             if (stream.ReadByte() != -1) throw new IOException("Model copy changed"); return bytes;
         }
         public static string SafeName(string value) => new string((value ?? "Imported model").Where(c => !char.IsControl(c) && c != '<' && c != '>').Take(100).ToArray());

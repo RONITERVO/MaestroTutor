@@ -755,3 +755,9 @@ transform is explicitly unknown. The imported asset envelope excludes authored
 decorations, colliders, root motion and current native availability; it is not a
 complete object envelope or a walkability/collision guarantee. Reading it does not
 start file access, native loading, provider calls or automatic regional streaming.
+
+### Inspecting geometry before loading
+
+The shared “Authored object bounds” fact shows the prepared extent of an object, including ink, terrain, fill, carried material and selection outlines. It uses the accepted world data and verified model metadata, independently of whether a native object exists. Preparation is bounded and belongs to the current room; closing or replacing the room cancels it. Reading the fact is passive.
+
+Pending or unsupported geometry is reported as unknown, never as empty space. Animated recipe parts use a conservative swept envelope; animated imported models and scan anchors remain unknown. These bounds help observation and future loading decisions. They do not prove that physics, walking or asset loading is ready. Startup still loads the bounded room; automatic regional streaming is unfinished.

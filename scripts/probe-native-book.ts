@@ -605,6 +605,14 @@ try{
   await page.getByRole('heading',{name:'Imported asset bounds',exact:true}).scrollIntoViewIfNeeded();
   await page.screenshot({path:join(directory,'book-native-model-asset-bounds.png')});
   await writeFile(join(directory,'book-native-model-asset-bounds.json'),JSON.stringify({boundary:'Original book generated fact form reads the same validated static asset metadata as agents and programs. Asset-only envelope, not collision readiness or whole-object streaming.',modelFixture,modelAssetBounds},null,2));
+  const authoredBounds=await readResourceFact('object.authoredBounds','Authored object bounds',{target:modelFixture.target});
+  assert.equal(authoredBounds.prepared,true);assert.equal(authoredBounds.coordinates,'object');
+  const authoredVisual=authoredBounds.visual as unknown as {known:boolean;hasBounds:boolean;min:{x:number;y:number;z:number};max:{x:number;y:number;z:number}};
+  assert.equal(authoredVisual.known,true);assert.equal(authoredVisual.hasBounds,true);
+  for(const axis of ['x','y','z'] as const){assert.ok(authoredVisual.min[axis]<assetMin[axis]);assert.ok(authoredVisual.max[axis]>assetMax[axis]);}
+  await page.getByRole('heading',{name:'Authored object bounds',exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(directory,'book-native-authored-bounds.png')});
+  await writeFile(join(directory,'book-native-authored-bounds.json'),JSON.stringify({boundary:'Original book generated fact form reads the same prepared authored visual envelope as the headless agent client. Native presence, physics readiness and headset acceptance are separate.',modelFixture,authoredBounds},null,2));
   const collisionBudget=await readResourceFact('runtime.collisionResources','Authored collision resources');
   const collisionOwners:Array<Record<string,string|number>>=[];
   for(let index=0;index<Number(collisionBudget.entries);index++)collisionOwners.push(await readResourceFact('runtime.collisionResource','Authored collision owner',{index:String(index)}));

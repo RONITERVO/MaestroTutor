@@ -53,7 +53,7 @@ namespace Maestro.Quest.Creation
             for(int z=data.cells;z>0;z--)boundary.Add(z*n);
             for(int i=0;i<boundary.Count;i++){var a=vertices[boundary[i]];var b=vertices[boundary[(i+1)%boundary.Count]];int start=vertices.Count;vertices.AddRange(new[]{a,b,new Vector3(a.x,-.002f,a.z),new Vector3(b.x,-.002f,b.z)});uv.AddRange(new[]{Vector2.zero,Vector2.right,Vector2.up,Vector2.one});triangles.AddRange(new[]{start,start+1,start+2,start+1,start+3,start+2});}
             int bottom=vertices.Count;vertices.AddRange(new[]{new Vector3(-data.width/2,-.002f,-data.depth/2),new Vector3(data.width/2,-.002f,-data.depth/2),new Vector3(-data.width/2,-.002f,data.depth/2),new Vector3(data.width/2,-.002f,data.depth/2)});uv.AddRange(new[]{Vector2.zero,Vector2.right,Vector2.up,Vector2.one});triangles.AddRange(new[]{bottom,bottom+1,bottom+2,bottom+1,bottom+3,bottom+2});
-            mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            mesh.Clear();mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.bounds=data.GeometryBounds;
         }
         public void Dispose()
         {

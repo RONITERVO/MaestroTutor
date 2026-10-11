@@ -27,6 +27,7 @@ namespace Maestro.Quest.Creation {
             if(fields.Length>1||fields.Any(f=>f==null)||fields.Length>0&&(owner.IsBuiltIn||owner.physics!=ItemPhysics.Fixed))return false;
             if(fields.Length==1)return fields[0].Validate(out error);error=null;return true;
         }
+        internal Bounds GeometryBounds {get{float high=0;foreach(float height in heights)high=Mathf.Max(high,height);return new Bounds(new Vector3(0,(high-.002f)*.5f,0),new Vector3(width,high+.002f,depth));}}
         internal Vector3 Vertex(int x,int z)=>new((float)x/cells*width-width*.5f,heights[z*(cells+1)+x],(float)z/cells*depth-depth*.5f);
         internal float HeightAt(Vector2 point){
             float x=Mathf.Clamp((point.x/width+.5f)*cells,0,cells),z=Mathf.Clamp((point.y/depth+.5f)*cells,0,cells);

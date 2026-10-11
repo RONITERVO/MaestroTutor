@@ -16,5 +16,11 @@ export async function probeModelAssetBounds(execute:Execute,directory:string){
  assert.equal(value.inspected,true);assert.equal(value.known,true);assert.equal(value.hasBounds,true);
  assert.ok(Math.abs(value.max.x-value.min.x-.35)<.0001);
  assert.ok(Object.values(value.min).every(Number.isFinite)&&Object.values(value.max).every(Number.isFinite));
+ const authoredReply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.authoredBounds',version:1,arguments:{target:fixture.target}}}]);
+ const authoredFact=factReply(authoredReply);assert.equal(authoredFact.available,true);
+ const authored=authoredFact.value as {prepared:boolean;coordinates:string;visual:{known:boolean;hasBounds:boolean;min:{x:number;y:number;z:number};max:{x:number;y:number;z:number}}};
+ assert.equal(authored.prepared,true);assert.equal(authored.coordinates,'object');assert.equal(authored.visual.known,true);assert.equal(authored.visual.hasBounds,true);
+ for(const axis of ['x','y','z'] as const){assert.ok(authored.visual.min[axis]<value.min[axis]);assert.ok(authored.visual.max[axis]>value.max[axis]);}
+ await writeFile(join(directory,'authored-bounds.json'),JSON.stringify({boundary:'Actual shared headless client reads prepared whole-object visual geometry including the selection outline. No native admission, collider readiness or automatic streaming claim.',fixture,authored},null,2));
  await writeFile(join(directory,'model-asset-bounds.json'),JSON.stringify({boundary:'Actual shared headless client reads the native validated static GLB envelope. No provider, collision-readiness, automatic streaming or headset claim.',fixture,value},null,2));
 }

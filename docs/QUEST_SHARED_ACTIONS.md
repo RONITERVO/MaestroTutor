@@ -433,3 +433,9 @@ selection/decorations, collision, future motion and native readiness. Continue
 using `object.spatialBounds` for sampled/retained whole-object candidates and the
 existing readiness/collision facts before acting. Metadata is not proof that an
 asset file remains available and does not enable automatic streaming.
+
+### Prepared authored geometry
+
+`object.authoredBounds` v1 reads the room-owned prepared visual envelope before root placement/scale. `prepared=false` means the current geometry has not finished preparation; `visual.known=false` never means empty space. The shared generated form and headless client read the same value. Preparation is owned by the active room, not triggered by reading a fact.
+
+The envelope includes authored decorations and selection geometry. Recipe rotation tracks receive conservative swept envelopes; animated/skinned imports, built-ins and scan anchors remain unknown. This is independent of model availability, native presence and admitted collision/navigation. `object.spatialBounds` can use source `authored` for an unloaded object whose retained geometry was invalidated; its collision extent then remains unknown. Valid retained native envelopes keep priority. Neither fact enables automatic streaming.

@@ -453,7 +453,7 @@ namespace Maestro.Quest.Creation
             applying = true;
             try {
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
-            SynchronizeNativeResidency(ids);
+            SynchronizeNativeResidency(ids);SynchronizeSpatialIndex(document);
             foreach (var id in objects.Keys.Where(id => !ids.Contains(id)).ToArray())
             {
                 var item = objects[id];DetachNativeIdentity(id,item);
@@ -572,6 +572,7 @@ namespace Maestro.Quest.Creation
         float captureAt;
         void Update()
         {
+            TickSpatialPreparation();
             TickWorldTime(UnityEngine.Time.unscaledDeltaTime);
             TickLayerPresentation(UnityEngine.Time.unscaledDeltaTime);
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
@@ -667,10 +668,10 @@ namespace Maestro.Quest.Creation
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
-            CancelNativeActivation();ClearViewCapture();FinishLiquidPour(out _);
+            StopSpatialPreparation();CancelNativeActivation();ClearViewCapture();FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }

@@ -6919,3 +6919,15 @@ for other geometry and decorations, verified deformation envelopes, predictive
 observation/hysteresis, regional collision/navigation/water and audibility demand.
 Automatic streaming remains disabled. No provider, headset or release acceptance
 is implied by this source increment.
+
+### Owned canonical spatial preparation — 2026-10-11
+
+The room now owns a disposable derived spatial index, synchronized from accepted canonical objects before reconciliation admits native instances. Geometry keys exclude only identity/name and root placement, so placement reprojects existing local bounds while geometry edits immediately invalidate them. Preparation runs cooperatively (at most four object units or approximately 2 ms per tick; an individual admitted unit remains indivisible), with at most one background model inspection and content-hash sharing. Disabling/destroying/replacing the room cancels the owner; late work cannot publish into another index or resurrect deleted objects. Prepared entries release their detached source copies. No second saved world, migration or package was introduced.
+
+`object.authoredBounds` exposes the same prepared object-local visual envelope to generated book forms, programs and the agent. Reads never queue preparation, perform I/O, load native geometry or reserve ownership. Explicit background preparation reads validated model bytes without materializing the included asset into the private library. Cache metadata is a description of verified content, not proof that its file is still available. Pending preparation and unsupported geometry remain distinct from known empty geometry.
+
+Supported envelopes cover primitives, drawings, normalized procedural shapes, selection outlines, attached curved ink, editable terrain (including backing), container fill at any gravity orientation and carried material. Recipe rotation tracks use conservative swept spheres around moving ancestors, including part-attached decoration, rather than sampling animation keyframes. Skinned/animated imports, built-in book/avatar geometry and scan anchors remain unknown. Envelopes do not promise future root motion or collision/navigation readiness. A canonical-field coverage test requires new object fields to be reviewed; native renderer-containment tests check the geometry boundary.
+
+After an intentionally retired object's geometry changes, prepared canonical visual bounds can replace its stale retained envelope for observer candidate tests. Valid captured native bounds still take precedence; authored collision bounds remain unknown until native admission. The `object.spatialBounds` source can now be `authored`.
+
+This advances cold preparation and observation, **not automatic regional streaming**: startup still reconciles the current bounded room into native instances. Predictive demand/head turns, hysteresis, swept physics/navigation/water and audibility dependencies, startup admission scheduling and larger-world budgets remain required before changing that lifetime policy. Existing device/provider/release holds remain unchanged.

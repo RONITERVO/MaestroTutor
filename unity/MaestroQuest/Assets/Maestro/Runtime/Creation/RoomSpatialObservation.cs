@@ -9,33 +9,36 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        static string SpatialSource(RoomObjectData source)
+        internal static string SpatialSource(RoomObjectData source)
         {
             // Read() gives a detached value. Exclude only identity/display/placement;
             // future authored geometry fields automatically participate in the key.
             source.id="";source.name="";source.position=Vector3.zero;source.rotation=Quaternion.identity;source.scale=1;
             using var hash=SHA256.Create();return Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(JsonUtility.ToJson(source))));
         }
-        RoomSpatialBounds ReadDormantSpatial(string target,DormantEntity entry)
+        RoomSpatialBounds ReadDormantSpatial(string target,DormantEntity entry,out bool authored)
         {
-            int revision=ObjectRevision(target);
+            authored=false;int revision=ObjectRevision(target);
             if(entry.SpatialRevision!=revision){
                 var data=Read(target);if(data==null)return RoomSpatialBounds.Unknown;
                 var pose=NativeActivationPose(data);
-                entry.SpatialPlacement=Matrix4x4.TRS(pose.position,pose.rotation,Vector3.one*pose.scale);
+                entry.SpatialPlacement=Matrix4x4.TRS(pose.position,pose.rotation.normalized,Vector3.one*pose.scale);
                 entry.SpatialCurrent=entry.SpatialSource==SpatialSource(data);
                 entry.SpatialRevision=revision;
             }
-            return entry.SpatialCurrent?entry.Spatial.Transform(entry.SpatialPlacement):RoomSpatialBounds.Unknown;
+            if(entry.SpatialCurrent)return entry.Spatial.Transform(entry.SpatialPlacement);
+            if(TryAuthoredSpatial(Read(target),out var canonical)){authored=true;return canonical.Transform(entry.SpatialPlacement);}
+            return RoomSpatialBounds.Unknown;
         }
         internal RoomSpatialBounds ReadSpatialBounds(string target,out string source)
         {
             source="missing";if(!HasSavedObject(target))return RoomSpatialBounds.Unknown;
             if(dormantNative.TryGetValue(target,out var entry)){
-                var value=ReadDormantSpatial(target,entry);source=entry.SpatialCurrent?"retained":"unknown";return value;
+                var value=ReadDormantSpatial(target,entry,out var authored);source=entry.SpatialCurrent?"retained":authored?"authored":"unknown";return value;
             }
             source="unknown";var item=Find(target);
-            if(!item||!Frame.Read(item.transform,out var position,out var rotation,out var scale))return RoomSpatialBounds.Unknown;
+            if(!item){var data=Read(target);if(TryAuthoredSpatial(data,out var canonical)){source="authored";return canonical.Transform(Matrix4x4.TRS(data.position,data.rotation.normalized,Vector3.one*data.scale));}return RoomSpatialBounds.Unknown;}
+            if(!Frame.Read(item.transform,out var position,out var rotation,out var scale))return RoomSpatialBounds.Unknown;
             source="native";return RoomSpatialBounds.Capture(item,Read(target)).Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale));
         }
         internal JObject ObserveSpatialBounds(string target)

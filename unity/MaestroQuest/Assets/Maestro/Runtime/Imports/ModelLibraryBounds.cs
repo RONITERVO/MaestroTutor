@@ -1,6 +1,9 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 namespace Maestro.Quest.Imports
 {
@@ -8,6 +11,7 @@ namespace Maestro.Quest.Imports
     {
         const int MaximumBoundsEntries=32;
         readonly object boundsGate=new();
+        readonly SemaphoreSlim boundsPreparation=new(1,1);
         readonly Dictionary<string,ModelAssetBounds> assetBounds=new(StringComparer.Ordinal);
         readonly List<string> boundsOrder=new();
         // Pure read: a cache miss never opens a file, materializes the included
@@ -16,6 +20,26 @@ namespace Maestro.Quest.Imports
         {
             result=default;if(!ValidHash(hash))return false;
             lock(boundsGate)return assetBounds.TryGetValue(hash,out result);
+        }
+        // Explicit owned preparation, not a fact read. Included content is read
+        // in place; unlike native first-use import this never writes a local copy.
+        internal async Task<ModelAssetBounds> PrepareBoundsAsync(string hash,CancellationToken cancellation)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            if(TryReadBounds(hash,out var ready))return ready;
+            // A disabled room can be reopened before its cancelled validation
+            // unit finishes. The library keeps one inspection slot across owners.
+            await boundsPreparation.WaitAsync(cancellation).ConfigureAwait(false);
+            try{return await Task.Run(()=>{
+                cancellation.ThrowIfCancellationRequested();
+                if(TryReadBounds(hash,out var cached))return cached;
+                if(!ValidHash(hash))throw new ModelImportException("This room has an invalid model reference.");
+                ModelAsset asset;
+                if(included!=null&&hash==included.Hash&&!File.Exists(Path.Combine(directory,hash+".glb")))asset=included.Read();
+                else asset=ReadLocalCore(hash,cancellation);
+                cancellation.ThrowIfCancellationRequested();RememberBounds(asset);
+                return asset.Inspection.AssetBounds;
+            },cancellation).ConfigureAwait(false);}finally{boundsPreparation.Release();}
         }
         void RememberBounds(ModelAsset verified)
         {
