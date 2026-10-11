@@ -13,6 +13,7 @@ namespace Maestro.AudioEvaluation
         readonly SpeechPcmStream stream;
         int stopped;
         internal readonly float DryGain, WetGain;
+        internal bool Paused => stream.IsPaused;
         internal bool Open => Volatile.Read(ref stopped) == 0;
         internal PcmVoice(double startAt, double tail, float dryGain, float wetGain)
         {
@@ -26,7 +27,9 @@ namespace Maestro.AudioEvaluation
         internal bool Write(long sequence, short[] pcm, double now,
                             out string error) => stream.TryWrite(sequence, pcm, now, out error);
         internal SpeechPcmStream.Cursor Read(double now) => stream.Read(now);
-        internal void Render(float[] output, int rate, double time) => stream.Render(output, 1, rate, time);
+        internal bool Render(float[] output, int rate, double time) => stream.Render(output, 1, rate, time);
+        internal bool Complete(long lastSequence, out string error) => stream.TryComplete(lastSequence, out error);
+        internal void SetPaused(bool value) => stream.SetPaused(value);
         internal void Close()
         {
             Interlocked.Exchange(ref stopped, 1);

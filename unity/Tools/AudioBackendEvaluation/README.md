@@ -232,3 +232,28 @@ integration, propagation/obstruction parity, production speech/media lifecycle,
 Android/IL2CPP, sustained cost, perceptual output and Live echo handling still
 require verification. Fixed procedural topology and two sources are evaluation
 bounds, not the intended world or source limits of the release.
+
+
+### Shared pause and completion contract
+
+The current `-OwnedLifecycle` requirement is **24 passing cases**. The copied app
+transport now exposes explicit source-input completion and callback admission.
+Finite source completion is tested through the same sealed-input cursor used by
+`WorldAudio`; the candidate does not maintain a second completion queue. Pausing a
+sealed source preserves queued samples while another voice and room-response
+updates continue. Resume renders the remaining source at its original position.
+
+The new submission-boundary case pauses after native DSP and verifies that an
+already admitted PCM block is not discarded. Later paused callbacks are silent
+and do not consume source samples. A negative run replacing admission with the
+latest pause flag produces zero output after consuming that block and fails the
+case. Correct source passes all 24 cases, with 39 graphs released and no native
+validation diagnostics. The updated natural-tail case also asserts sealed input,
+rejected later packets and exact source completion independently of the wet tail.
+
+These are Windows candidate results. They do not replace the complete app native
+suite after changing the shared source. Source and mirror verification, full
+EditMode/PlayMode results and the original book/headless journeys are recorded in
+`.quest-evidence/audio-stream-contract`. The renderer is still outside the app;
+Android, production geometry, bounded multi-source admission, acoustic-tail
+retirement, Live capture and physical Quest acceptance remain required.

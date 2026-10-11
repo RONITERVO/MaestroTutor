@@ -112,7 +112,11 @@ namespace Maestro.Quest.Creation
             else if(Time.realtimeSinceStartupAsDouble-v.ProgressAt>3){Close(v,"Audio output did not consume its queued samples");return;}
             v.Cursor=state.Played/(double)AudioTone.SampleRate;
             if(v.Phase=="preparing"&&state.Played>0){v.Phase="playing";Note(v);}
-            if(!v.Loop&&v.Written==v.Samples.Length&&state.Played==v.Samples.Length){v.Complete=true;Close(v,null);}
+            if(!v.Loop&&v.Written==v.Samples.Length&&!state.InputComplete) {
+                if(!v.Stream.TryComplete(v.Sequence,out var error)){Close(v,error);return;}
+                state=v.Stream.Read(AudioSettings.dspTime);
+            }
+            if(state.SourceDrained){v.Complete=true;Close(v,null);}
         }
         internal void Tick(Instance v)
         {

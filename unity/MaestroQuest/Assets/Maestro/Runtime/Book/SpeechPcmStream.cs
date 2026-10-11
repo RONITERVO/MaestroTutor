@@ -15,9 +15,13 @@ namespace Maestro.Quest.Book
         internal readonly struct Cursor
         {
             public readonly long Sequence, Submitted, Played;
-            public readonly bool Faulted;
-            public Cursor(long sequence, long submitted, long played, bool faulted)
-            { Sequence = sequence; Submitted = submitted; Played = played; Faulted = faulted; }
+            public readonly bool Faulted, Paused, InputComplete, Closed;
+            // Source completion excludes any renderer-owned spatial/filter tail.
+            public bool SourceDrained => InputComplete && !Closed && !Faulted && Played == Submitted;
+            public Cursor(long sequence, long submitted, long played, bool faulted,
+                bool paused, bool inputComplete, bool closed)
+            { Sequence = sequence; Submitted = submitted; Played = played; Faulted = faulted;
+                Paused = paused; InputComplete = inputComplete; Closed = closed; }
         }
         readonly object sync = new();
         readonly float[] samples = new float[Capacity];
@@ -26,7 +30,7 @@ namespace Maestro.Quest.Book
         long sequence, written, consumed, played;
         double phase, renderedUntil = double.NegativeInfinity;
         int receiptHead, receiptCount;
-        bool closed, faulted, paused;
+        bool closed, faulted, paused, inputComplete;
         public SpeechPcmStream(double startAt, double tail)
         {
             if (!double.IsFinite(startAt) || !double.IsFinite(tail) || tail < 0 || tail > 2)
@@ -42,6 +46,7 @@ namespace Maestro.Quest.Book
             {
                 error = null;
                 if (closed || faulted) { error = "Speech output was stopped"; return false; }
+                if (inputComplete) { error = "Speech input was completed"; return false; }
                 if (nextSequence != sequence + 1) { error = "Speech chunk is duplicate or out of order"; return false; }
                 if (pcm == null || count < 1 || count > pcm.Length || count > MaxChunk) { error = "Speech chunk is invalid"; return false; }
                 AdvancePlayed(now - tail);
@@ -51,23 +56,39 @@ namespace Maestro.Quest.Book
                 return true;
             }
         }
+        // Explicit end of input, never inferred from a temporary network underrun.
+        // The exact accepted sequence fences a premature/stale producer completion.
+        // Completing input does not discard queued PCM or terminate native tails.
+        public bool TryComplete(long lastSequence, out string error)
+        {
+            lock (sync)
+            {
+                error = null;
+                if (closed || faulted) { error = "Speech output was stopped"; return false; }
+                if (lastSequence != sequence) { error = "Speech completion sequence does not match"; return false; }
+                inputComplete = true;
+                return true;
+            }
+        }
         // Called by OnAudioFilterRead. Also used by deterministic tests of the
         // exact render path; advancing a test clock alone cannot play samples.
-        public void Render(float[] data, int channels, int outputRate, double dspTime)
+        // True admits this block (including an underrun tail); false means paused,
+        // stopped, invalid or duplicate. A later Pause cannot retract consumed PCM.
+        public bool Render(float[] data, int channels, int outputRate, double dspTime)
         {
             Array.Clear(data, 0, data.Length);
             lock (sync)
             {
-                if (closed || faulted || paused) return;
+                if (closed || faulted || paused) return false;
                 if (channels < 1 || channels > 8 || data.Length % channels != 0
                     || outputRate < Rate || outputRate > 192000 || !double.IsFinite(dspTime))
-                { faulted = true; return; }
+                { faulted = true; return false; }
                 int frames = data.Length / channels;
-                if (frames == 0 || dspTime < renderedUntil - 1e-7) return;
+                if (frames == 0 || dspTime < renderedUntil - 1e-7) return false;
                 renderedUntil = dspTime + (double)frames / outputRate;
                 AdvancePlayed(dspTime - tail);
-                if (written == consumed || renderedUntil <= startAt) return;
-                if (receiptCount == ReceiptCapacity) { faulted = true; return; }
+                if (written == consumed || renderedUntil <= startAt) return true;
+                if (receiptCount == ReceiptCapacity) { faulted = true; return false; }
                 int firstFrame = Math.Clamp((int)Math.Ceiling(Math.Max(0, startAt - dspTime) * outputRate), 0, frames);
                 double firstPosition = consumed + phase, step = (double)Rate / outputRate;
                 int frame = firstFrame;
@@ -91,6 +112,7 @@ namespace Maestro.Quest.Book
                     };
                     receiptCount++;
                 }
+                return true;
             }
         }
         void AdvancePlayed(double audibleTime)
@@ -108,14 +130,15 @@ namespace Maestro.Quest.Book
         }
         public Cursor Read(double now)
         {
-            lock (sync) { AdvancePlayed(now - tail); return new Cursor(sequence, written, played, faulted); }
+            lock (sync) { AdvancePlayed(now - tail); return new Cursor(sequence, written, played, faulted, paused, inputComplete, closed); }
         }
         // Procedural filters can still be called while their AudioSource is paused.
         // Fence consumption on the audio thread, retaining queued frames and phase.
-        public void SetPaused(bool value) { lock(sync) { paused=value; } }
+        public bool IsPaused { get { lock(sync) { return paused; } } }
+        public void SetPaused(bool value) { lock(sync) { if (!closed && !faulted) paused=value; } }
         public void Close()
         {
-            lock (sync) { closed = true; sequence = written = consumed = played = 0; phase = 0; receiptHead = receiptCount = 0; }
+            lock (sync) { closed = true; paused = false; sequence = written = consumed = played = 0; phase = 0; receiptHead = receiptCount = 0; }
         }
     }
 }

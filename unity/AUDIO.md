@@ -449,3 +449,40 @@ interruption and mixed-audio capture, real speech perception, sustained resource
 and physical Quest acceptance remain required. The existing renderer and its
 production reflection hold are unchanged; the previous Meta fault is unresolved.
 See [reproduction](Tools/AudioBackendEvaluation/README.md#application-pcm-and-utterance-ownership).
+
+
+### Shared PCM completion and pause admission
+
+`SpeechPcmStream` now owns explicit input-complete, paused and closed state for
+both app owners and the isolated candidate. `TryComplete(lastSequence)` seals the
+exact accepted packet sequence and rejects later writes without discarding queued
+samples. It is idempotent for that sequence. An empty or temporarily starved queue
+is not implicitly completed. `Cursor.SourceDrained` becomes true only after sealed
+input has actual playback receipts for every submitted source sample. Faulted or
+closed streams cannot report successful natural completion.
+
+Finite `WorldAudio` sources seal input after their last accepted producer chunk
+and finish through `SourceDrained`. Looped sources remain writable. Existing exact
+instance IDs, room/action ownership, pause/resume, source revisions, completion
+notices and Stop behavior remain intact. This is transient transport state, with
+no saved room or tool-schema change. The catalog update records only two runtime
+source-provenance hashes. Browser speech remains open until its existing owner
+closes it; neither silence nor an empty network queue invents an end-of-turn signal.
+
+`Render` returns block admission, not an indication that its samples are nonzero.
+A paused, stopped, duplicate or invalid callback is not admitted. A valid underrun
+can still admit renderer-owned tail processing. Once Render has consumed a block,
+a later Pause cannot drop that block without losing speech. The candidate carries
+that admission to final mixing; subsequent paused blocks consume no source PCM
+and produce no output. It still feeds zero input through native response consumers
+so room changes do not become stale during pause. Resume keeps the queued source
+position. Stop remains stronger: it closes the handle and discards that voice's
+not-yet-submitted output.
+
+The candidate passes 24 cases and releases all 39 graphs without native validation
+diagnostics. A negative run gating an already consumed block on the latest pause
+flag reproduces silent packet loss at submission; the correct admission contract
+passes. Source completion and acoustic-tail retirement remain distinct. Production
+reflection output is still disabled, and a future renderer must preserve natural
+tails, bounded reservations and per-source activity without extending source PCM
+counters or suppressing unrelated world sound during Live.

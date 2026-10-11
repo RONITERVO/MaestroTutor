@@ -37,6 +37,7 @@ namespace Maestro.AudioEvaluation
         readonly float[] signal, channel;
         readonly float[][] dryMix = new float [VoiceCount][], reflectedMix = new float [VoiceCount][];
         readonly PcmBinding[] renderedPcm = new PcmBinding[VoiceCount];
+        readonly bool[] renderedPcmAudible = new bool[VoiceCount];
         internal Action BeforeOutput; // Isolated callback-boundary race probe.
         IntPtr context, scene, simulator, room, hrtf;
         int readers, retired, disposed, rendering;
@@ -268,7 +269,8 @@ namespace Maestro.AudioEvaluation
                     // Stop/replacement can arrive after DSP but before submission.
                     // It discards only that voice's block; unrelated voices continue.
                     if (binding != Volatile.Read(ref pcm[voice]) ||
-                        (binding == null ? Volatile.Read(ref playing[voice]) == 0 : binding.Voice?.Open != true))
+                        (binding == null ? Volatile.Read(ref playing[voice]) == 0
+                                         : binding.Voice?.Open != true || !renderedPcmAudible[voice]))
                         continue;
                     for (int i = 0; i < output.Length; i++)
                         output[i] += dryMix[voice][i] + (wetCurrent ? reflectedMix[voice][i] : 0);

@@ -34,7 +34,7 @@ namespace Maestro.Quest.Tests
                 string source=WorldSound(.15f);WorldEmitter("book",source);WorldEmitter("maestro",source);
                 var actions=new RoomRuleActions(editor,animations);AudioInstanceSample first=default,second=default;
                 yield return IndependentSound(actions,"book",true,s=>first=s);yield return IndependentSound(actions,"maestro",true,s=>second=s);
-                var audio=WorldAudio.For(editor);yield return new WaitForSecondsRealtime(.4f);Assert.IsTrue(audio.ReadInstance("book",first.Instance,out first));Assert.Greater(first.Seconds,.15,"Loop must consume beyond one source duration");
+                var audio=WorldAudio.For(editor);Assert.IsFalse(audio.Current("book","sound").Stream.Read(AudioSettings.dspTime).InputComplete,"Looping input remains writable");yield return new WaitForSecondsRealtime(.4f);Assert.IsTrue(audio.ReadInstance("book",first.Instance,out first));Assert.Greater(first.Seconds,.15,"Loop must consume beyond one source duration");
                 int observed=first.Revision;Assert.IsTrue(audio.Control("book",first.Instance,observed,"pause",0,out first,out var error),error);Assert.AreEqual("paused",first.Phase);
                 Assert.IsFalse(audio.Control("book",first.Instance,observed,"resume",0,out _,out _),"Stale controls must not win");
                 yield return new WaitForSecondsRealtime(.2f);audio.ReadInstance("book",first.Instance,out first);double stoppedAt=first.Seconds;

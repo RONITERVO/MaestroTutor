@@ -42,6 +42,9 @@ namespace Maestro.Quest.Tests
                 var audio=WorldAudio.For(editor);Assert.IsTrue(audio.Begin(target,"sound",out var first,out var error),error);Assert.IsTrue(audio.Begin("book","sound",out var second,out error),error);
                 Assert.IsFalse(audio.Begin(target,"sound",out _,out _),"A second instance cannot silently replace the first");
                 double preparation=Time.realtimeSinceStartupAsDouble+3;while((!first.Output||!second.Output)&&!first.Closed&&!second.Closed&&Time.realtimeSinceStartupAsDouble<preparation)yield return null;Assert.IsNotNull(first.Output,first.Error);Assert.IsNotNull(second.Output,second.Error);
+                Assert.IsTrue(first.Stream.Read(AudioSettings.dspTime).InputComplete,"Finite source seals its accepted input before playback completes");
+                Assert.IsFalse(first.Stream.Read(AudioSettings.dspTime).SourceDrained);
+                Assert.IsFalse(first.Stream.TryWrite(first.Sequence+1,new short[1],AudioSettings.dspTime,out _),"No packet may extend a completed input");
                 block.transform.localPosition+=Vector3.right*.3f;audio.Tick(first);Assert.Less(Vector3.Distance(first.Output.transform.position,block.transform.position),.001f);
                 yield return new WaitForSecondsRealtime(.3f);Assert.Greater(first.Cursor,0);var rendered=probe.Read();Assert.Greater(rendered.Left+rendered.Right,.00001,"The native PCM mix did not render");
                 audio.Close(first);Assert.IsTrue(first.Closed);Assert.IsFalse(first.Complete);Assert.IsFalse(second.Closed);

@@ -118,6 +118,50 @@ namespace Maestro.Quest.Tests
             Assert.IsFalse(stream.Read(200).Faulted); Assert.AreEqual(10001*128,stream.Read(200).Played);
         }
 
+        [Test] public void ExplicitInputCompletionWaitsForActualReceiptsAndRejectsLaterPackets()
+        {
+            var stream=new SpeechPcmStream(0,.05);Write(stream,1,new short[]{1000,2000});
+            Assert.IsFalse(stream.TryComplete(0,out _));Assert.IsFalse(stream.TryComplete(2,out _));
+            Assert.IsFalse(stream.Read(10).InputComplete);Assert.IsTrue(stream.TryComplete(1,out var error),error);
+            Assert.IsTrue(stream.TryComplete(1,out _),"Completion is idempotent for the same accepted sequence");
+            var queued=stream.Read(10);Assert.IsTrue(queued.InputComplete);Assert.IsFalse(queued.SourceDrained);
+            Assert.IsFalse(stream.TryWrite(2,new short[]{3000},10,out _));Assert.AreEqual(2,stream.Read(10).Submitted);
+            var block=new float[4];stream.Render(block,1,48000,10);
+            CollectionAssert.AreEqual(new float[]{1000f/32768,1500f/32768,2000f/32768,2000f/32768},block);
+            Assert.IsFalse(stream.Read(10.04).SourceDrained);var drained=stream.Read(10.06);
+            Assert.AreEqual(2,drained.Played);Assert.IsTrue(drained.SourceDrained);Assert.IsFalse(drained.Closed);
+            stream.Render(block,1,48000,11);Assert.That(block,Is.All.Zero);Assert.AreEqual(2,stream.Read(12).Played);
+        }
+        [Test] public void SealedPausedStreamKeepsItsPositionAndCloseCannotBecomeNaturalCompletion()
+        {
+            var stream=new SpeechPcmStream(0,0);Write(stream,1,new short[]{1000,2000,3000,4000});
+            var block=new float[2];stream.Render(block,1,24000,0);Assert.AreEqual(2,stream.Read(1).Played);
+            stream.SetPaused(true);Assert.IsTrue(stream.TryComplete(1,out _));
+            stream.Render(block,1,24000,5);Assert.That(block,Is.All.Zero);
+            var paused=stream.Read(6);Assert.IsTrue(paused.Paused);Assert.IsTrue(paused.InputComplete);Assert.IsFalse(paused.SourceDrained);Assert.AreEqual(2,paused.Played);
+            stream.SetPaused(false);stream.Render(block,1,24000,10);Assert.AreEqual(3000f/32768,block[0]);
+            Assert.IsTrue(stream.Read(11).SourceDrained);stream.Close();stream.SetPaused(true);
+            var stopped=stream.Read(12);Assert.IsTrue(stopped.Closed);Assert.IsFalse(stopped.Paused);Assert.IsFalse(stopped.SourceDrained);
+            Assert.IsFalse(stream.TryComplete(1,out _));Assert.IsFalse(stream.TryWrite(2,new short[1],12,out _));
+        }
+        [Test] public void RenderAdmissionLinearizesPauseWithoutDroppingAnAlreadyConsumedBlock()
+        {
+            var stream=new SpeechPcmStream(0,0);Write(stream,1,new short[]{1000,2000,3000,4000});var block=new float[2];
+            Assert.IsTrue(stream.Render(block,1,24000,0));stream.SetPaused(true);
+            Assert.AreEqual(1000f/32768,block[0],"An admitted pre-pause block belongs to the output timeline");
+            Assert.AreEqual(2,stream.Read(1).Played);Assert.IsFalse(stream.Render(block,1,24000,1));Assert.That(block,Is.All.Zero);
+            Assert.AreEqual(2,stream.Read(2).Played);stream.SetPaused(false);
+            Assert.IsTrue(stream.Render(block,1,24000,2));Assert.AreEqual(3000f/32768,block[0]);
+            Assert.IsFalse(stream.Render(block,1,24000,2),"Duplicate callbacks are not admitted");
+        }
+        [Test] public void EmptyOrFaultedStreamCannotInventSuccessfulPlayback()
+        {
+            var empty=new SpeechPcmStream(0,0);Assert.IsFalse(empty.Read(100).SourceDrained);
+            Assert.IsTrue(empty.TryComplete(0,out _));Assert.IsTrue(empty.Read(100).SourceDrained);Assert.AreEqual(0,empty.Read(100).Played);
+            var broken=new SpeechPcmStream(0,0);Write(broken,1,new short[1]);Assert.IsTrue(broken.TryComplete(1,out _));
+            broken.Render(new float[4],9,24000,0);Assert.IsTrue(broken.Read(1).Faulted);Assert.IsFalse(broken.Read(1).SourceDrained);Assert.IsFalse(broken.TryComplete(1,out _));
+        }
+
         [Test] public void UnsupportedAudioLayoutFailsWithoutAdvancingPlayback()
         {
             var stream=new SpeechPcmStream(0,.05); Write(stream,1,new short[] {1234});

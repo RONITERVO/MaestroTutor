@@ -288,6 +288,8 @@ namespace Maestro.AudioEvaluation
             sink.BypassRendering = true;
             yield return new WaitForSecondsRealtime(.1f);
             Queue(voice, 440, chunks: 1);
+            Assert.IsTrue(voice.Complete(1, out var completeError), completeError);
+            Assert.IsFalse(voice.Write(2, new short[1], AudioSettings.dspTime, out _));
             var block = new float[graph.Frame * 2];
             double time = AudioSettings.dspTime;
             int inputBlocks = (int)Math.Ceiling(4800d * graph.Rate / 24000 / graph.Frame);
@@ -312,8 +314,88 @@ namespace Maestro.AudioEvaluation
             Assert.AreEqual(4800, receipt.Submitted);
             Assert.AreEqual(4800, receipt.Played, "Reflections must not inflate the source PCM playback cursor");
             Assert.IsFalse(receipt.Faulted);
-            Assert.IsTrue(voice.Open, "A queue underrun/completion does not implicitly terminate its owner");
+            Assert.IsTrue(receipt.InputComplete);
+            Assert.IsTrue(receipt.SourceDrained);
+            Assert.IsTrue(voice.Open, "Completing source input does not implicitly terminate its renderer owner");
             Debug.Log("PCM_TAIL energy=" + tailEnergy + " played=" + receipt.Played);
+            owner.StopPcm(PreparedGraph.VoiceIds[0], voice);
+            sink.BypassRendering = false;
+        }
+        [UnityTest]
+        public IEnumerator PcmPausePreservesSourceWhileOtherVoiceAndSceneContinue()
+        {
+            var owner = sink.Owner;
+            var first = Begin(0);
+            var second = Begin(1);
+            Queue(first, 440, chunks: 32);
+            Queue(second, 660, chunks: 40);
+            Assert.IsTrue(first.Complete(32, out _));
+            yield return PcmReady(0);
+            yield return PcmReady(1);
+            yield return Measure("pcm-before-pause");
+            Tone(440);
+            Tone(660);
+            first.SetPaused(true);
+            yield return new WaitForSecondsRealtime(.1f);
+            long played = first.Read(AudioSettings.dspTime).Played;
+            yield return Updated(owner, owner.UpdateScene(Scene(first: 30)));
+            yield return Updated(owner, owner.UpdateScene(Scene(first: .5f)));
+            yield return Measure("pcm-paused-consumes-current-response");
+            Tone(660);
+            Assert.Less(MeasuredPower(440), MeasuredPower(660) * .001);
+            var paused = first.Read(AudioSettings.dspTime);
+            Assert.IsTrue(paused.Paused);
+            Assert.IsTrue(paused.InputComplete);
+            Assert.IsFalse(paused.SourceDrained);
+            Assert.AreEqual(played, paused.Played);
+            first.SetPaused(false);
+            yield return Measure("pcm-resume-retains-source-and-latest-room");
+            Tone(440);
+            Tone(660);
+            Assert.Greater(first.Read(AudioSettings.dspTime).Played, played);
+            Assert.IsFalse(first.Read(AudioSettings.dspTime).Paused);
+            owner.StopPcm(PreparedGraph.VoiceIds[0], first);
+            owner.StopPcm(PreparedGraph.VoiceIds[1], second);
+        }
+        [UnityTest]
+        public IEnumerator PcmPauseAfterDspKeepsAdmittedBlockAndThenFencesConsumption()
+        {
+            var owner = sink.Owner;
+            var graph = owner.Active;
+            var voice = Begin(0);
+            Queue(voice, 440);
+            yield return PcmReady(0);
+            yield return Measure("pcm-before-pause-at-submit");
+            Tone(440);
+            sink.BypassRendering = true;
+            yield return new WaitForSecondsRealtime(.1f);
+            var block = new float[graph.Frame * 2];
+            double now = AudioSettings.dspTime;
+            graph.BeforeOutput = () => voice.SetPaused(true);
+            try
+            {
+                Assert.IsTrue(owner.Render(block, 2, now));
+            }
+            finally
+            {
+                graph.BeforeOutput = null;
+            }
+            double energy = 0;
+            foreach (float sample in block)
+                energy += sample * (double)sample;
+            Assert.Greater(energy, 1e-6, "The already-admitted block must not be discarded after consuming its PCM");
+            double next = now + (double)graph.Frame / graph.Rate;
+            long played = voice.Read(next + .1).Played;
+            Assert.IsTrue(owner.Render(block, 2, next));
+            foreach (float sample in block)
+                Assert.AreEqual(0, sample);
+            Assert.AreEqual(played, voice.Read(next + 1).Played);
+            voice.SetPaused(false);
+            Assert.IsTrue(owner.Render(block, 2, next + 1));
+            energy = 0;
+            foreach (float sample in block)
+                energy += sample * (double)sample;
+            Assert.Greater(energy, 1e-6);
             owner.StopPcm(PreparedGraph.VoiceIds[0], voice);
             sink.BypassRendering = false;
         }

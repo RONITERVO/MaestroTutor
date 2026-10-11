@@ -43120,7 +43120,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs",
-      "sha256": "1ec3a89ef1ede83a0472396308523ed078c539d40af145de5ae8f291c564ffc3"
+      "sha256": "7e90b88c6e950a32de4c375d49ac8ebbba41f82bbdd4c929d668a52a19bf5696"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechSpatializer.cs",
@@ -44284,7 +44284,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "63950ce244472f313214cb3855640c118b8cd74c2661d17a3560747cb3ab0fbc"
+      "sha256": "5b0425263262a3957eae2ceb61bf5dd5288921f364c3a81e27db72305203f823"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",

@@ -7413,3 +7413,36 @@ applicable to unchanged sources; no provider/headset/signing/deployment action w
 taken. Wider regional world simulation/residency and v1 Store gates remain open.
 See [audio boundary](../unity/AUDIO.md#application-pcm-boundary-in-the-candidate) and
 [reproduction](../unity/Tools/AudioBackendEvaluation/README.md#application-pcm-and-utterance-ownership).
+
+
+### Shared source completion and pause admission — 2026-10-11
+
+The app's `SpeechPcmStream` now owns explicit input-complete, paused and closed
+state. Finite `WorldAudio` playback seals its exact last accepted sequence and
+finishes only after actual source playback receipts drain; looping input remains
+open. Repeated completion is idempotent and later packets are rejected. An empty
+network queue is never interpreted as a completed speech turn. The browser speech
+mailbox, saved schemas, capability definitions and instance events are unchanged.
+Two catalog source-provenance hashes reflect the edited runtime implementations.
+
+Render admission distinguishes a valid zero-input/tail block from paused, stopped
+or invalid work. A pause arriving after PCM consumption keeps that admitted block;
+subsequent paused blocks preserve the queued position. The candidate uses the same
+app transport and consumes native response updates silently during pause, allowing
+another voice and room edits to continue. Resume retains source position and the
+current response. Stop still cancels unsubmitted output and retires its handle.
+
+The candidate passes 24 cases with all 39 graphs released and clean native
+validation. A deliberate late-pause gate discarded consumed PCM and failed the
+new submission check; the admission-based version passes. Four new app EditMode
+cases cover completion, pause, empty/faulted/closed state and actual admission;
+room playback tests additionally check sealed finite input and open looping input.
+Because runtime app code changed, the complete standard native verifier and its
+book/headless journeys are required for this checkpoint. Exact source/mirror and
+terminal evidence is retained in `.quest-evidence/audio-stream-contract`.
+
+This establishes shared transport state, not a replacement shipping renderer.
+Natural acoustic-tail retirement, multi-source reservations, production geometry,
+Android/IL2CPP, Live and physical Quest acceptance remain open. Current reflection
+output stays disabled. Broader world residency/regional simulation and v1 Store
+requirements remain open. See [audio contract](../unity/AUDIO.md#shared-pcm-completion-and-pause-admission).

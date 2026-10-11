@@ -88,7 +88,8 @@ namespace Maestro.AudioEvaluation
             Array.Clear(signal, 0, signal.Length);
             bool audible = binding.Voice?.Open == true;
             if (audible)
-                binding.Voice.Render(signal, Rate, dspTime);
+                audible = binding.Voice.Render(signal, Rate, dspTime);
+            renderedPcmAudible[voice] = audible;
             Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
             var listener = frame.Listener;
             var source = voice == 0 ? frame.First : frame.Second;
