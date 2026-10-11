@@ -110,7 +110,7 @@ namespace Maestro.AudioEvaluation
             }
             ScheduleSimulation();
         }
-        internal bool Render(float[] samples, int channels)
+        internal bool Render(float[] samples, int channels, double dspTime = 0)
         {
             Array.Clear(samples, 0, samples.Length);
             var graph = Active;
@@ -118,7 +118,7 @@ namespace Maestro.AudioEvaluation
                 return false;
             try
             {
-                bool rendered = graph.Render(samples, channels);
+                bool rendered = graph.Render(samples, channels, dspTime);
                 // Do not publish a buffer from an interrupted generation.
                 if (graph != Active)
                 {

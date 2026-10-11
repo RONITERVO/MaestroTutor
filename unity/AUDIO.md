@@ -414,3 +414,38 @@ quality/latency, scene budgets, Android or Quest/Live acceptance. Before app
 integration, verify voice replacement and Stop against real `SpeechPcmStream`
 receipts and native convolution history. No candidate is installed in the app;
 production reflections and automatic scheduling remain disabled.
+
+
+### Application PCM boundary in the candidate
+
+The owned evaluator now passes 22 cases using the unchanged application
+`SpeechPcmStream` implementation, copied and hashed into its isolated project.
+The candidate consumes ordered 24 kHz PCM16 through the same resampling and
+rendered-sample receipts as the app. Test packets are synthesized signals, not
+real provider speech. Source PCM accounting remains independent of native
+reflection duration: natural completion can leave a fading tail, while explicit
+Stop truncates that voice and invalidates its packet handle.
+
+A new utterance resets direct, convolution and decoder history on the audio
+consumer. Acknowledged reset serials request a fresh response on the existing
+single worker; only that response enables wet input. Zero-input native consumption
+continues while dry HRTF speech renders immediately. An in-flight older simulation
+cannot satisfy a newer utterance's reset. Geometry validity gates only the wet
+mix, and final submission rechecks both geometry and per-voice ownership. Closing
+one voice leaves other voices intact. Retiring a graph closes all its PCM handles.
+No callback allocates native effects or prepares scene geometry.
+
+The 22-case run closes 37 graphs with clean native validation. It includes actual
+Unity audio-format changes and stereo listener measurements, plus controlled
+same-render-path probes for the first replacement block, late Stop/room edit at
+submission, and natural tail/receipt separation. Deliberately skipping the native
+direct-history reset reproduces old samples in a fresh empty utterance; the
+restored reset passes. This extends the candidate's evidence without integrating
+it into `NativeSpeechOutput` or accepting it as the Quest renderer.
+
+Next establish production adapter ownership, direct-obstruction/attenuation and
+imported geometry parity, source limits and Android/IL2CPP support. Full chat/Live
+interruption and mixed-audio capture, real speech perception, sustained resources
+and physical Quest acceptance remain required. The existing renderer and its
+production reflection hold are unchanged; the previous Meta fault is unresolved.
+See [reproduction](Tools/AudioBackendEvaluation/README.md#application-pcm-and-utterance-ownership).

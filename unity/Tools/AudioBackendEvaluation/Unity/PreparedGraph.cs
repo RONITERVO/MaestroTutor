@@ -35,11 +35,17 @@ namespace Maestro.AudioEvaluation
         readonly ReflectionEffectParams[] responses = new ReflectionEffectParams[VoiceCount];
         readonly double[] phases = new double[VoiceCount];
         readonly float[] signal, channel;
+        readonly float[][] dryMix = new float [VoiceCount][], reflectedMix = new float [VoiceCount][];
+        readonly PcmBinding[] renderedPcm = new PcmBinding[VoiceCount];
+        internal Action BeforeOutput; // Isolated callback-boundary race probe.
         IntPtr context, scene, simulator, room, hrtf;
         int readers, retired, disposed, rendering;
         NativeDsp.DecodeParams decode;
         internal bool Disposed => Volatile.Read(ref disposed) != 0;
-        internal int Playing => Volatile.Read(ref playing[0]) + Volatile.Read(ref playing[1]);
+        int PlayingSlot(int index) => Volatile.Read(ref pcm[index]) is PcmBinding binding
+                                          ? (binding.Voice?.Open == true ? 1 : 0)
+                                          : Volatile.Read(ref playing[index]);
+        internal int Playing => PlayingSlot(0) + PlayingSlot(1);
         internal static readonly string[] VoiceIds = { "maestro-voice", "world-voice" };
 
         PreparedGraph(int rate, int frame, long generation, AcousticFrame initial, long revision)
@@ -51,6 +57,11 @@ namespace Maestro.AudioEvaluation
             completedRevision = revision;
             signal = new float[frame];
             channel = new float[frame];
+            for (int i = 0; i < VoiceCount; i++)
+            {
+                dryMix[i] = new float[frame * 2];
+                reflectedMix[i] = new float[frame * 2];
+            }
         }
         static void Check(Error error)
         {
@@ -115,6 +126,7 @@ namespace Maestro.AudioEvaluation
             var audio = new SteamAudio.AudioSettings { samplingRate = Rate, frameSize = Frame };
             var hrtfSettings = new HRTFSettings { type = HRTFType.Default, volume = 1 };
             Check(API.iplHRTFCreate(context, ref audio, ref hrtfSettings, out hrtf));
+            PreparePcm(ref audio);
             decode = new NativeDsp.DecodeParams { order = 1, hrtf = hrtf, orientation = Pose(-1, 0, 0),
                                                   binaural = Bool.True };
             for (int i = 0; i < VoiceCount; i++)
@@ -185,18 +197,22 @@ namespace Maestro.AudioEvaluation
             return false;
         }
         internal void Exit() => Interlocked.Decrement(ref readers);
-        internal void Retire() => Interlocked.Exchange(ref retired, 1);
+        internal void Retire()
+        {
+            Interlocked.Exchange(ref retired, 1);
+            RetirePcm();
+        }
         internal bool SetPlaying(string id, bool value)
         {
             int index = Array.IndexOf(VoiceIds, id);
-            if (index < 0 || Volatile.Read(ref retired) != 0)
+            if (index < 0 || Volatile.Read(ref retired) != 0 || Volatile.Read(ref pcm[index]) != null)
                 return false;
             Volatile.Write(ref playing[index], value ? 1 : 0);
             return true;
         }
         // Caller holds a read lease. Only one consumer may mutate DSP history.
         // Mismatched callbacks produce silence, never process old-size buffers.
-        internal bool Render(float[] output, int channels)
+        internal bool Render(float[] output, int channels, double dspTime)
         {
             if (channels != 2 || output.Length != Frame * 2 || Interlocked.Exchange(ref rendering, 1) != 0)
                 return false;
@@ -204,9 +220,20 @@ namespace Maestro.AudioEvaluation
             {
                 long revision = Volatile.Read(ref completedRevision);
                 var parameters = decode;
-                parameters.orientation = Volatile.Read(ref presentation).Listener;
+                var frame = Volatile.Read(ref presentation);
+                parameters.orientation = frame.Listener;
+                bool geometryReady = revision >= Volatile.Read(ref requiredRevision);
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
+                    Array.Clear(dryMix[voice], 0, dryMix[voice].Length);
+                    Array.Clear(reflectedMix[voice], 0, reflectedMix[voice].Length);
+                    var binding = Volatile.Read(ref pcm[voice]);
+                    renderedPcm[voice] = binding;
+                    if (binding != null)
+                    {
+                        RenderPcm(voice, binding, frame, geometryReady, ref parameters, dryMix[voice], dspTime);
+                        continue;
+                    }
                     bool audible = Volatile.Read(ref playing[voice]) != 0;
                     // Consume every published IR even while a voice is muted.
                     // Otherwise the SDK's pending response can prevent newer writes.
@@ -222,20 +249,31 @@ namespace Maestro.AudioEvaluation
                                                        ref wet[voice], IntPtr.Zero);
                     NativeDsp.iplAmbisonicsDecodeEffectApply(decoders[voice], ref parameters, ref wet[voice],
                                                              ref stereo[voice]);
-                    if (!audible)
+                    if (!audible || !geometryReady)
                         continue;
                     for (int c = 0; c < 2; c++)
                     {
                         Marshal.Copy(Marshal.ReadIntPtr(stereo[voice].data, c * IntPtr.Size), channel, 0, Frame);
                         for (int i = 0; i < Frame; i++)
-                            output[2 * i + c] += channel[i];
+                            reflectedMix[voice][2 * i + c] += channel[i];
                     }
                 }
                 // This acknowledges a callback that began after all native writes
                 // for this revision. No second producer may run before it.
+                BeforeOutput?.Invoke();
+                bool wetCurrent = revision >= Volatile.Read(ref requiredRevision);
+                for (int voice = 0; voice < VoiceCount; voice++)
+                {
+                    var binding = renderedPcm[voice];
+                    // Stop/replacement can arrive after DSP but before submission.
+                    // It discards only that voice's block; unrelated voices continue.
+                    if (binding != Volatile.Read(ref pcm[voice]) ||
+                        (binding == null ? Volatile.Read(ref playing[voice]) == 0 : binding.Voice?.Open != true))
+                        continue;
+                    for (int i = 0; i < output.Length; i++)
+                        output[i] += dryMix[voice][i] + (wetCurrent ? reflectedMix[voice][i] : 0);
+                }
                 Volatile.Write(ref renderedRevision, revision);
-                if (revision < Volatile.Read(ref requiredRevision))
-                    Array.Clear(output, 0, output.Length);
                 return true;
             }
             finally
@@ -253,6 +291,8 @@ namespace Maestro.AudioEvaluation
                 return true;
             for (int i = 0; i < VoiceCount; i++)
             {
+                if (direct[i] != IntPtr.Zero)
+                    NativeDsp.iplBinauralEffectRelease(ref direct[i]);
                 if (decoders[i] != IntPtr.Zero)
                     NativeDsp.iplAmbisonicsDecodeEffectRelease(ref decoders[i]);
                 if (reflections[i] != IntPtr.Zero)

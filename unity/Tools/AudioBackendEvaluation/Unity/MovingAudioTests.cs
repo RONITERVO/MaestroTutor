@@ -94,8 +94,12 @@ namespace Maestro.AudioEvaluation
                       " turnedRight=" + turnedRight);
             Assert.Less(Math.Log(left / right) * Math.Log(turnedLeft / turnedRight), 0,
                         "Turning around should reverse the ear-level difference");
-            Assert.Greater(Math.Abs(Math.Log(left / right)), .1,
-                           "Fixture must expose a measurable ear-level difference");
+            // Room simulation is stochastic; its absolute ear imbalance is not
+            // a contract. The turned output must resemble the exchanged ears,
+            // and be substantially closer to that than unchanged orientation.
+            double swappedError = Math.Abs(turnedLeft - right) + Math.Abs(turnedRight - left);
+            double unchangedError = Math.Abs(turnedLeft - left) + Math.Abs(turnedRight - right);
+            Assert.Less(swappedError, unchangedError * .25, "Rotation must exchange the measured ear response");
             Assert.AreEqual(simulations, graph.Simulations, "Head rotation must not rebuild room responses");
             Assert.AreSame(graph, owner.Active);
         }

@@ -42,7 +42,7 @@ namespace Maestro.AudioEvaluation
             if (BypassRendering)
                 Array.Clear(data, 0, data.Length);
             else
-                Owner.Render(data, channels);
+                Owner.Render(data, channels, AudioSettings.dspTime);
         }
         void OnDisable()
         {

@@ -22,7 +22,7 @@ namespace Maestro.AudioEvaluation
         }
         // Exactly one worker owns scene/source input mutation. It holds a lease
         // throughout the call. DSP owns only effects and the native IR consumer.
-        internal void Simulate(AcousticFrame frame, long revision)
+        internal void Simulate(AcousticFrame frame, long revision, long firstReset = 0, long secondReset = 0)
         {
             if (Interlocked.CompareExchange(ref simulating, 1, 0) != 0)
                 throw new InvalidOperationException("Overlapping acoustic simulation");
@@ -62,6 +62,8 @@ namespace Maestro.AudioEvaluation
                 // initial IR pointer remains source-owned; order/length/format are
                 // immutable. Pinned 4.8.1 commits and crossfades its triple buffer.
                 Interlocked.Increment(ref simulations);
+                Volatile.Write(ref responseResets[0], firstReset);
+                Volatile.Write(ref responseResets[1], secondReset);
                 Volatile.Write(ref completedRevision, revision);
             }
             finally

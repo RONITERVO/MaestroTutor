@@ -7385,3 +7385,31 @@ using the existing application PCM path before a shipping backend decision. Wide
 world residency, regional simulation and v1 release gates remain open.
 See [audio contract](../unity/AUDIO.md#moving-response-ownership) and
 [reproduction](../unity/Tools/AudioBackendEvaluation/README.md#moving-responses-and-consumer-handoff).
+
+
+### Application PCM ownership evaluation — 2026-10-11
+
+The isolated owned audio candidate passes 22 Unity PlayMode cases, including nine
+new PCM cases. Its project copies and hashes the app's unchanged `SpeechPcmStream`
+source. Ordered PCM packets exercise actual queue/resampling/receipt behavior,
+direct HRTF output and refreshed convolution output. New utterances and explicit
+Stop reject stale handles and clear old history. Dry speech continues while room
+responses are pending. Edits/Stop arriving at final submission discard only
+outdated reflections or the stopped voice. Natural reflected tails do not inflate
+the source's played-sample cursor. Actual 24/48 kHz resets require fresh handles.
+
+All 37 native graphs close, with zero validation diagnostics. Omitting direct DSP
+history reset in a negative run reproduced an old sample in the first empty
+replacement block; the correct source passes. An older stochastic stereo fixture
+was corrected to verify exchanged ears instead of an arbitrary level-difference
+cutoff. Evidence: `.quest-evidence/audio-unity/0c38d4d423d0/result.json`, with the
+negative run in `a8d3308c166e` and cross-checks in `audio-pcm-adapter`.
+
+This remains a Windows evaluation using synthetic PCM and fixed procedural room
+topology. Production `NativeSpeechOutput`, imported geometry/obstruction parity,
+Android/IL2CPP, sustained cost, real speech and Live/device acceptance remain open.
+No shipping dependency or app runtime changes. The prior full app native run stays
+applicable to unchanged sources; no provider/headset/signing/deployment action was
+taken. Wider regional world simulation/residency and v1 Store gates remain open.
+See [audio boundary](../unity/AUDIO.md#application-pcm-boundary-in-the-candidate) and
+[reproduction](../unity/Tools/AudioBackendEvaluation/README.md#application-pcm-and-utterance-ownership).

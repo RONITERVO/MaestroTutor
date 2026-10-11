@@ -43,6 +43,33 @@ namespace Maestro.AudioEvaluation
             public CoordinateSpace3 orientation;
             public Bool binaural;
         }
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct BinauralSettings
+        {
+            public IntPtr hrtf;
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct BinauralParams
+        {
+            public SteamAudio.Vector3 direction;
+            public int interpolation;
+            public float spatialBlend;
+            public IntPtr hrtf, peakDelays;
+        }
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern Error iplBinauralEffectCreate(IntPtr context, ref SteamAudio.AudioSettings audio,
+                                                             ref BinauralSettings settings, out IntPtr effect);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern int iplBinauralEffectApply(IntPtr effect, ref BinauralParams parameters,
+                                                          ref Buffer input, ref Buffer output);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern void iplBinauralEffectReset(IntPtr effect);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern void iplBinauralEffectRelease(ref IntPtr effect);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern void iplReflectionEffectReset(IntPtr effect);
+        [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
+        internal static extern void iplAmbisonicsDecodeEffectReset(IntPtr effect);
         [DllImport("phonon", CallingConvention = CallingConvention.Winapi)]
         internal static extern Error iplAudioBufferAllocate(IntPtr context, int channels, int samples,
                                                             ref Buffer buffer);

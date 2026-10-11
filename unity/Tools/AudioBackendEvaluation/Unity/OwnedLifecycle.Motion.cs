@@ -47,12 +47,16 @@ namespace Maestro.AudioEvaluation
         {
             var graph = Active;
             if (closed || Failure != null || simulation != null || graph == null ||
-                sceneRevision <= graph.CompletedRevision || graph.RenderedRevision < graph.CompletedRevision ||
-                !graph.TryEnter())
+                (sceneRevision <= graph.CompletedRevision && !graph.NeedsPcmResponse) ||
+                graph.RenderedRevision < graph.CompletedRevision || !graph.TryEnter())
                 return;
+            if (sceneRevision <= graph.CompletedRevision)
+                sceneRevision++;
+            long firstReset = graph.ResetAck(0), secondReset = graph.ResetAck(1);
             var frame = desiredScene;
             long revision = sceneRevision;
             var hook = simulationHook;
+            simulationHook = null; // A retained diagnostic gate belongs to this update only.
             simulationGraph = graph;
             try
             {
@@ -62,7 +66,7 @@ namespace Maestro.AudioEvaluation
                                           {
                                               if (!graph.IsRetired)
                                               {
-                                                  graph.Simulate(frame, revision);
+                                                  graph.Simulate(frame, revision, firstReset, secondReset);
                                                   hook?.Invoke();
                                               }
                                           }

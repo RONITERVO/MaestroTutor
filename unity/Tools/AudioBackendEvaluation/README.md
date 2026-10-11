@@ -139,7 +139,8 @@ moving-response extension below updates the original fixed-pose experiment.
 
 ### Moving responses and consumer handoff
 
-`-OwnedLifecycle` now requires **13 passing cases**, including the original six.
+The moving-response extension established **13 passing cases**, including the original six.
+The PCM extension below raises the current runner requirement to 22.
 The pinned library has a single-producer/single-consumer convolution response
 handoff. The adapter keeps sample rate, block size, IR duration and channel count
 fixed within a graph. It reads the source-owned IR pointer before concurrent work;
@@ -187,3 +188,47 @@ and Live echo cancellation remain integration gates. A future dry-speech path mu
 remain separate from the reflected-output readiness gate. Native effect reset and
 voice replacement must not replay old convolution tails or consume a new stream
 before its output is ready. No app schema, catalog, dependency or setting changes.
+
+
+### Application PCM and utterance ownership
+
+`-OwnedLifecycle` now requires **22 passing cases**. The isolated project copies
+`Assets/Maestro/Runtime/Book/SpeechPcmStream.cs` unchanged from the app and hashes
+that input in the receipt. Synthetic PCM16 packets exercise the actual bounded
+24 kHz queue, ordering checks, resampling and rendered-sample receipts. This is
+not generated speech, a provider session or a deployed app integration.
+
+Each emitter can own a fresh `PcmVoice` handle. Replacement, Stop, Close and device
+reset close old handles; late packets and Stop commands cannot affect a newer
+utterance. Direct HRTF output and reflected output mix separately. A pending room
+response suppresses only reflections. The audio consumer resets each utterance's
+native history and acknowledges its serial; a subsequent simulation publishes a
+response for that reset. Until then it consumes responses with zero reflected
+input while the direct PCM path continues. This also avoids relying on native
+convolution reset to preserve its prior IR, which it does not.
+
+The last output boundary rechecks room validity and each voice identity. Stop
+between processing and submission discards only that voice; room edits discard
+only outdated reflections. Audio already handed to the device remains subject to
+its ordinary buffer latency. Natural queue exhaustion feeds zeros to drain the
+native tail, without adding reflected samples to the source playback cursor.
+Stream completion and explicit Stop are therefore different operations.
+
+Nine new cases cover measured stereo PCM and receipt advancement, late packets,
+dry output during pending geometry, wet-only replacement and another continuing
+voice, actual 24/48 kHz resets, rejected callback sizes, Close, the first silent
+replacement block, edits/Stop at submission, and natural tail completion. The
+boundary and natural-tail probes first suspend the fixture consumer, then invoke
+the same native render method with controlled DSP times; other cases measure
+Unity's real audio callback at the listener. A negative run omitting the direct
+history reset failed the first-buffer silence check (sample -0.0153901838). The
+corrected 22-case run closes all 37 graphs with no native validation diagnostics.
+The older stochastic reflection test now checks exchanged ear levels against
+unchanged orientation, instead of requiring an arbitrary absolute imbalance.
+
+No provider credentials, microphone, headset or physical playback is used. No
+shipping dependency, app renderer, schema or catalog is changed. Imported scene
+integration, propagation/obstruction parity, production speech/media lifecycle,
+Android/IL2CPP, sustained cost, perceptual output and Live echo handling still
+require verification. Fixed procedural topology and two sources are evaluation
+bounds, not the intended world or source limits of the release.
