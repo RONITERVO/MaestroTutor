@@ -7080,3 +7080,33 @@ Verification compares envelopes with actual imported Unity baked geometry, not
 only source skeleton transforms. Automatic unloading, cold-start deformation
 indexing, scan-anchor/indirect-view/audibility demand and regional physical
 admission remain unfinished. Device/provider/release acceptance is separate.
+
+
+### Exact scanned-ink spatial envelopes — 2026-10-11
+
+Scanned drawing layers now participate in the same canonical geometry index as
+other creations. Their local canvas/selection and ink envelope can be prepared
+without a scan, native instance, asset read or second saved representation.
+`object.authoredBounds` exposes that local geometry through the existing catalog.
+
+Room-coordinate bounds resolve the exact saved room and plane anchor using the
+same fit, tracking, lifecycle and frame checks as the visible ink. Retired native
+geometry is retained only as local values, with a detached binding; its old room
+pose is never reused as proof. Anchor movement and authored-world movement
+reproject the current envelope. A same-frame root transform change invalidates
+the scan-coordinate snapshot. Geometry/binding edits invalidate the appropriate
+cache, and Undo can restore a matching retained value.
+
+Unavailable, wrong-room, missing, nonfitting and unsupported scan frames remain
+unknown in spatial facts. This differs from known empty space. Display admission
+also receives placement availability: merely looking through an unavailable
+anchor cannot trigger reconstruction of hidden ink. The exact anchor returning
+can restore ordinary observed loading through the existing native queue.
+Explicit startup remains the bounded whole-room policy. Reading spatial facts
+never syncs/teleports the ink, edits the journal, starts physics or requests a scan.
+
+This covers scanned drawing anchors, not arbitrary future SDK attachments or
+all physical-world dependencies. Cold-start animated-model bounds, indirect
+shadow/reflection and audibility demand, regional ground/water/navigation/swept
+physics, automatic retirement and larger-world budgets remain unfinished.
+Physical alignment and Quest performance still require separate device evidence.

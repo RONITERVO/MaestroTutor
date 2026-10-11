@@ -805,3 +805,19 @@ visibility and loading decisions but do not replace collision shapes or prove a
 walking route. Reading them does not play an animation or modify the room.
 A retired model's envelope also covers its reset pose; bounds for an unprepared
 animated import can still be unknown.
+
+
+### Bounds for drawings on scanned surfaces
+
+A scanned ink layer keeps its own local canvas and drawing geometry even while
+the scan is unavailable. The shared authored-bounds fact can inspect that shape
+without rebuilding the layer. Its room bounds use the exact saved room and wall
+anchor at their current position. Moving the virtual world does not turn the
+last anchor position into a permanent substitute.
+
+If that anchor is missing, belongs to another room, no longer fits the canvas or
+cannot be tracked, room bounds report unknown and observation alone does not
+recreate hidden ink. Returning to the exact anchor can make the drawing appear
+again through normal display loading. Rebinding remains an explicit user/agent
+edit. These bounds do not verify physical alignment or start room scanning or
+physics; they share the existing saved objects, catalog and Undo history.

@@ -32,14 +32,15 @@ namespace Maestro.Quest.Creation
         }
         internal static RoomSpatialBounds Derive(RoomObjectData data,ModelAssetBounds? asset=null)
         {
-            if(data==null||data.IsBuiltIn||ScanDrawingAnchor.Has(data))return RoomSpatialBounds.Unknown;
+            if(data==null||data.IsBuiltIn||!ScanDrawingAnchor.ValidateOwner(data,out _))return RoomSpatialBounds.Unknown;
             var root=new PartFrame(Matrix4x4.identity);var parts=new Dictionary<string,PartFrame>(StringComparer.Ordinal);
             var visual=RoomSpatialExtent.Empty;
             switch(data.kind){
                 case RoomObjectKind.Block:case RoomObjectKind.Ball:case RoomObjectKind.Cylinder:
                     root.Include(ref visual,new Bounds(Vector3.zero,Vector3.one*.13f));break;
                 case RoomObjectKind.Drawing:
-                    Stroke(ref visual,root,data.points,data.radius);break;
+                    if(ScanDrawingAnchor.Has(data))root.Include(ref visual,new Bounds(Vector3.zero,new Vector3(data.surfaces[0].width,data.surfaces[0].height,.002f)));
+                    else Stroke(ref visual,root,data.points,data.radius);break;
                 case RoomObjectKind.Assembly:
                     if(data.recipe==null||!data.recipe.Validate(out _))return RoomSpatialBounds.Unknown;
                     var animated=new HashSet<string>();foreach(var track in data.recipe.tracks)animated.Add(track.part);

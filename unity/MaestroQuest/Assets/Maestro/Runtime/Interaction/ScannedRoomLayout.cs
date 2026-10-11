@@ -44,7 +44,7 @@ namespace Maestro.Quest.Interaction
         IRoomLayoutSource layoutSource;
         ScannedSurface[] layout;
         string layoutId="",layoutRoom="",layoutSetup="",layoutReason="Load a tracked room first";
-        int layoutFrame=-1,layoutFrameId,layoutOmitted;
+        int layoutFrame=-1,layoutFrameId,layoutOmitted;Matrix4x4 layoutCoordinates;
         internal void SetLayoutSourceForTests(IRoomLayoutSource value){layoutSource=value;InvalidateLayout();}
         void InvalidateLayout(){layoutFrame=-1;layout=null;layoutId="";layoutRoom="";layoutOmitted=0;}
         internal static bool RigidFrame(Transform value) {var frame=new Creation.RoomFrame(value);return frame.Valid&&Mathf.Abs(frame.MetresPerUnit-1)<.00005f;}
@@ -55,8 +55,9 @@ namespace Maestro.Quest.Interaction
             else if(Busy||!geometryAccepted||!world.SurfacesReady||tracked!=null&&!tracked.IsPressed())reason="Load a tracked room with floor and wall colliders first";
             else if(!RigidFrame(frame))reason="Room coordinates are unavailable or scaled";
             if(reason!=null){InvalidateLayout();layoutReason=reason;return false;}
-            if(layoutFrame==Time.frameCount&&layoutFrameId==frame.GetInstanceID()&&layoutSetup==setupId)return layout!=null;
-            bool setupChanged=layoutSetup!=setupId||layoutFrameId!=frame.GetInstanceID();layoutSetup=setupId;layoutFrameId=frame.GetInstanceID();layoutFrame=Time.frameCount;
+            var coordinates=frame.localToWorldMatrix;
+            if(layoutFrame==Time.frameCount&&layoutFrameId==frame.GetInstanceID()&&layoutSetup==setupId&&layoutCoordinates.Equals(coordinates))return layout!=null;
+            bool setupChanged=layoutSetup!=setupId||layoutFrameId!=frame.GetInstanceID();layoutSetup=setupId;layoutFrameId=frame.GetInstanceID();layoutFrame=Time.frameCount;layoutCoordinates=coordinates;
             try {
                 layoutSource??=new DeviceLayoutSource(this);
                 if(!layoutSource.TryRead(frame,out var roomId,out var entries,out var omitted,out reason))return RejectLayout(reason??"Room layout is unavailable");

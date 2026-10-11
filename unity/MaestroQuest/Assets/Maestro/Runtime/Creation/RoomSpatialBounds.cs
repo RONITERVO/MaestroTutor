@@ -49,7 +49,7 @@ namespace Maestro.Quest.Creation
         internal RoomSpatialBounds Transform(Matrix4x4 mapping)=>new(){Visual=Visual.Transform(mapping),Collision=Collision.Transform(mapping),VisualLayers=VisualLayers};
         internal static RoomSpatialBounds Capture(RoomItem item,RoomObjectData data)
         {
-            if(!item||data==null||ScanDrawingAnchor.Has(data))return Unknown;
+            if(!item||data==null)return Unknown;
             var created=item.GetComponent<CreatedRoomObject>();
             if(data.kind==RoomObjectKind.ImportedModel&&(!created||!created.ModelGeometryReady))return Unknown;
             var result=new RoomSpatialBounds{Visual=RoomSpatialExtent.Empty,Collision=RoomSpatialExtent.Empty};

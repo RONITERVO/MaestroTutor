@@ -37,8 +37,10 @@ namespace Maestro.Quest.Creation
             }
             foreach(var pair in dormantNative){
                 if(pair.Value.Phase==NativeEntityPhase.Failed)continue;
-                var spatial=ReadDormantSpatial(pair.Key,pair.Value,out _,out var prepared);
-                if(!prepared){viewerDisplayDemand.Remove(pair.Key);continue;}
+                var spatial=ReadDormantSpatial(pair.Key,pair.Value,out _,out var prepared,out var placed);
+                // A missing exact scan plane cannot display this ink. Keep facts
+                // unknown for retention, but do not acquire a useless hidden view.
+                if(!prepared||!placed){viewerDisplayDemand.Remove(pair.Key);continue;}
                 spatial=spatial.Transform(transform.localToWorldMatrix);int revision=ObjectRevision(pair.Key);
                 int priority=direct?.Includes(spatial)==true?(spatial.Visual.Known?0:2):predicted?.Includes(spatial)==true?1:4;
                 if(priority<4){
