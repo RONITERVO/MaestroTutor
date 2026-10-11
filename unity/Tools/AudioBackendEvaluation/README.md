@@ -230,8 +230,8 @@ No provider credentials, microphone, headset or physical playback is used. No
 shipping dependency, app renderer, schema or catalog is changed. Imported scene
 integration, propagation/obstruction parity, production speech/media lifecycle,
 Android/IL2CPP, sustained cost, perceptual output and Live echo handling still
-require verification. Fixed procedural topology and two sources are evaluation
-bounds, not the intended world or source limits of the release.
+require verification. That checkpoint used fixed procedural topology and two sources. The bounded
+admission checks below extend the source count; world geometry remains separate.
 
 
 ### Shared pause and completion contract
@@ -261,7 +261,7 @@ retirement, Live capture and physical Quest acceptance remain required.
 
 ### Finite tails and owner release
 
-`-OwnedLifecycle` now requires **29 passing cases**. The candidate uses the pinned
+The preceding `-OwnedLifecycle` checkpoint required **29 passing cases**. The candidate uses the pinned
 native direct, reflection and decoder tail APIs after sealed source playback.
 Completion is published after the final output boundary and checked against the
 output clock before the exact handle can be released with its final source
@@ -284,3 +284,40 @@ acceptance are still required.
 A negative probe publishing completion before the final submission boundary
 fails the new timing check (28 pass, one expected failure). Exact hashes verify
 restoration of every input used by the passing run.
+
+### Existing streams and bounded voice admission
+
+`-OwnedLifecycle` now requires **34 passing cases**. An owner accepts an existing
+application `SpeechPcmStream` by exclusive transfer, preserving already queued
+samples, the producer's completion flag and the same playback receipt. It does
+not copy them into a second queue. A stream can be claimed only once across
+candidate owners; rejecting an alias leaves its original owner intact. Fresh
+input rejected for invalid settings, stale generation, unavailable output or a
+full budget is closed. The caller must relinquish any previous render consumer;
+this transfer API is not a hot handoff between two concurrently running backends.
+
+Each graph has a fixed, validated capacity of 1–32 voices; the default remains two
+for the original fixtures. Native effects and buffers allocate only for that
+capacity. Instance IDs select exact bounded slots, and replacement handles cannot
+stop or finish their successors. Immutable scene frames hold one pose per slot.
+Their topology cannot change within a graph, and every slot participates in reset
+acknowledgment, response refresh, completion, retirement and ownership counts.
+This is renderer capacity, not a new production reservation policy.
+
+The five additional cases cover transferred prequeued/sealed input and real
+output, duplicate ownership, unavailable inputs, nine simultaneous sources,
+budget refusal, reuse of the ninth slot with new reflected audio, actual Unity
+audio-device reset, immutable poses and rejected topology changes. Nine sources
+exercise the current app combination of eight world-audio owners plus speech;
+the highest slot is checked using reflections alone. Rejected admission cannot
+evict another voice, and reset closes all old streams without replay.
+
+Run `f63ce690e507` passes all 34 cases with normal editor/wrapper exits, 53 native
+graphs created and released, and zero native validation diagnostics. The 19
+recorded input hashes match the verified source. Receipts are retained in
+`.quest-evidence/audio-voice-admission` and the isolated run directory.
+
+This remains a Windows evaluation. Production reservation enforcement, mutable
+gain and distance/nonspatial semantics, accepted world geometry and obstruction,
+Android/IL2CPP, sustained cost and Quest/Live acceptance still need integration
+and verification. The app's renderer and reflection gates remain unchanged.

@@ -3285,8 +3285,13 @@ queued content. A regression reproduces transport close overtaking an accepted
 `turnComplete` callback; teardown now flushes that queued finalizer before
 releasing the reply. Android reports 128 passes and two optional private-file skips;
 the release browser AAR builds and lint has zero errors (six warnings). Catalog
-equality and normal native exits pass. Full verification of this change is
-tracked against immutable source in `.quest-evidence/speech-finish` and the PR.
+equality and normal native exits pass. Full verification at `c93a98c6` passed
+1,140 EditMode and 1,263 PlayMode cases with the three expected private-asset
+skips. Both native headless and original-book journeys passed with normal client,
+editor and terminal exits; all 907 native source/mirror hashes match the frozen
+input. These journeys use local scripted providers. CI passed 2,880 app/shared,
+100 Functions, 57 billing and 31 Live gateway tests plus the build/release gates.
+Exact receipts are retained in `.quest-evidence/speech-finish`.
 
 The preceding monitor repair at `0b662089` completed full verification: 1,140
 EditMode and 1,258 PlayMode passes, three expected private-asset skips, and both
@@ -3298,3 +3303,14 @@ This is a production completion contract, not installation or acceptance of the
 isolated reflection backend. Production reflection output and automatic map
 scheduling remain disabled. The retained Meta native map-worker crash is
 unresolved; Android/IL2CPP and physical Quest/Live acceptance remain separate gates.
+
+### Bounded renderer admission evidence — 2026-10-12
+
+The isolated audio evaluator now passes 34 cases using existing application PCM
+streams, exact playback handles and configurable bounded capacity. Nine-source
+native output, budget refusal, ninth-slot reuse, alias rejection and actual
+Unity device reset are covered. All 53 native graphs close cleanly; 19 source
+hashes match and both process exits are zero. See the
+[audio boundary and remaining integration gates](../unity/AUDIO.md#existing-audio-streams-and-bounded-voices--2026-10-12).
+The app renderer, production reservations and disabled reflection gates are
+unchanged. This is desktop evidence, not Quest or Live acceptance.

@@ -17,13 +17,16 @@ namespace Maestro.AudioEvaluation
         internal bool IsRetired => Volatile.Read(ref retired) != 0;
         internal void Present(AcousticFrame frame, long geometryRevision)
         {
+            if (frame == null || frame.SourceCount != VoiceCount) throw new ArgumentException("Acoustic topology changed");
             Volatile.Write(ref presentation, frame);
             Volatile.Write(ref requiredRevision, geometryRevision);
         }
         // Exactly one worker owns scene/source input mutation. It holds a lease
         // throughout the call. DSP owns only effects and the native IR consumer.
-        internal void Simulate(AcousticFrame frame, long revision, long firstReset = 0, long secondReset = 0)
+        internal void Simulate(AcousticFrame frame, long revision, long[] resets = null)
         {
+            if (frame == null || frame.SourceCount != VoiceCount || resets != null && resets.Length != VoiceCount)
+                throw new ArgumentException("Acoustic topology changed");
             if (Interlocked.CompareExchange(ref simulating, 1, 0) != 0)
                 throw new InvalidOperationException("Overlapping acoustic simulation");
             try
@@ -40,7 +43,7 @@ namespace Maestro.AudioEvaluation
                 for (int i = 0; i < VoiceCount; i++)
                 {
                     var input = new SimulationInputs { flags = SimulationFlags.Reflections,
-                                                       source = i == 0 ? frame.First : frame.Second,
+                                                       source = frame.Source(i),
                                                        occlusionType = OcclusionType.Raycast,
                                                        numOcclusionSamples = 8,
                                                        occlusionRadius = .1f,
@@ -62,8 +65,7 @@ namespace Maestro.AudioEvaluation
                 // initial IR pointer remains source-owned; order/length/format are
                 // immutable. Pinned 4.8.1 commits and crossfades its triple buffer.
                 Interlocked.Increment(ref simulations);
-                Volatile.Write(ref responseResets[0], firstReset);
-                Volatile.Write(ref responseResets[1], secondReset);
+                for (int i=0;i<VoiceCount;i++) Volatile.Write(ref responseResets[i], resets == null ? 0 : resets[i]);
                 Volatile.Write(ref completedRevision, revision);
             }
             finally

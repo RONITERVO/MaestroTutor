@@ -7,7 +7,7 @@ namespace Maestro.AudioEvaluation
 {
     internal sealed partial class OwnedLifecycle
     {
-        AcousticFrame desiredScene = AcousticFrame.Default;
+        AcousticFrame desiredScene;
         long sceneRevision, geometryRevision;
         Task simulation;
         PreparedGraph simulationGraph;
@@ -19,8 +19,8 @@ namespace Maestro.AudioEvaluation
         {
             if (closed)
                 throw new InvalidOperationException("Closed audio owner");
-            if (frame == null)
-                throw new ArgumentNullException(nameof(frame));
+            if (frame == null) throw new ArgumentNullException(nameof(frame));
+            if (frame.SourceCount != desiredScene.SourceCount) throw new ArgumentException("Acoustic topology changed");
             sceneRevision++;
             if (desiredScene.Room != frame.Room)
                 geometryRevision = sceneRevision;
@@ -35,7 +35,7 @@ namespace Maestro.AudioEvaluation
         {
             if (closed)
                 throw new InvalidOperationException("Closed audio owner");
-            var next = new AcousticFrame(desiredScene.Room, pose, desiredScene.First, desiredScene.Second);
+            var next = desiredScene.WithListener(pose);
             var before = desiredScene.Listener.origin;
             if (pose.origin.x != before.x || pose.origin.y != before.y || pose.origin.z != before.z)
                 return UpdateScene(next);
@@ -52,7 +52,7 @@ namespace Maestro.AudioEvaluation
                 return;
             if (sceneRevision <= graph.CompletedRevision)
                 sceneRevision++;
-            long firstReset = graph.ResetAck(0), secondReset = graph.ResetAck(1);
+            var resets = graph.SnapshotResetAcks();
             var frame = desiredScene;
             long revision = sceneRevision;
             var hook = simulationHook;
@@ -66,7 +66,7 @@ namespace Maestro.AudioEvaluation
                                           {
                                               if (!graph.IsRetired)
                                               {
-                                                  graph.Simulate(frame, revision, firstReset, secondReset);
+                                                  graph.Simulate(frame, revision, resets);
                                                   hook?.Invoke();
                                               }
                                           }

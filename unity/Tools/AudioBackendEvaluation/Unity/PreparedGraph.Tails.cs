@@ -14,12 +14,12 @@ namespace Maestro.AudioEvaluation
             Draining,
             Drained
         }
-        readonly PcmRenderPhase[] pcmTailPhase = new PcmRenderPhase[VoiceCount];
-        readonly int[] directTail = new int[VoiceCount], reflectionTail = new int[VoiceCount],
-                       decoderTail = new int[VoiceCount];
-        readonly long[] pcmWetGeometry = new long[VoiceCount];
-        readonly double[] pcmDspUntil = new double[VoiceCount];
-        readonly bool[] renderedPcmFinal = new bool[VoiceCount];
+        readonly PcmRenderPhase[] pcmTailPhase = new PcmRenderPhase[MaximumVoices];
+        readonly int[] directTail = new int[MaximumVoices], reflectionTail = new int[MaximumVoices],
+                       decoderTail = new int[MaximumVoices];
+        readonly long[] pcmWetGeometry = new long[MaximumVoices];
+        readonly double[] pcmDspUntil = new double[MaximumVoices];
+        readonly bool[] renderedPcmFinal = new bool[MaximumVoices];
         void ResetPcmTail(int voice)
         {
             pcmTailPhase[voice] = PcmRenderPhase.Input;

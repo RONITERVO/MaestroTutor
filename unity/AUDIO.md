@@ -599,8 +599,13 @@ queued content. A regression reproduces transport close overtaking an accepted
 `turnComplete` callback; teardown now flushes that queued finalizer before
 releasing the reply. Android reports 128 passes and two optional private-file skips;
 the release browser AAR builds and lint has zero errors (six warnings). Catalog
-equality and normal native exits pass. Full verification of this change is
-tracked against immutable source in `.quest-evidence/speech-finish` and the PR.
+equality and normal native exits pass. Full verification at `c93a98c6` passed
+1,140 EditMode and 1,263 PlayMode cases with the three expected private-asset
+skips. Both native headless and original-book journeys passed with normal client,
+editor and terminal exits; all 907 native source/mirror hashes match the frozen
+input. These journeys use local scripted providers. CI passed 2,880 app/shared,
+100 Functions, 57 billing and 31 Live gateway tests plus the build/release gates.
+Exact receipts are retained in `.quest-evidence/speech-finish`.
 
 The preceding monitor repair at `0b662089` completed full verification: 1,140
 EditMode and 1,258 PlayMode passes, three expected private-asset skips, and both
@@ -612,3 +617,26 @@ This is a production completion contract, not installation or acceptance of the
 isolated reflection backend. Production reflection output and automatic map
 scheduling remain disabled. The retained Meta native map-worker crash is
 unresolved; Android/IL2CPP and physical Quest/Live acceptance remain separate gates.
+
+### Existing audio streams and bounded voices — 2026-10-12
+
+The isolated renderer accepts an exclusively transferred application PCM stream
+and bounded playback-instance IDs. It preserves queued input, completion and
+source receipts without a second queue. Aliased streams cannot gain a second
+owner; rejected fresh inputs close without evicting existing playback. Graph
+capacity and per-slot poses are immutable, while all slots participate in native
+response, reset, tail and retirement handling.
+
+All 34 candidate cases pass, including the current nine-source app combination,
+reflected output from the ninth slot, slot reuse, stale handles and actual device
+reset. All 53 native graphs are released with zero validation diagnostics and
+normal editor/wrapper exits; 19 input hashes match. Exact evidence is retained in
+`.quest-evidence/audio-voice-admission`. See the
+[reproducible evaluator](Tools/AudioBackendEvaluation/README.md#existing-streams-and-bounded-voice-admission).
+
+This is still isolated Windows evidence. The graph's configurable capacity does
+not replace production reservations, and exclusive transfer is not concurrent
+backend handoff. App gain/distance/spatial semantics, canonical geometry and
+obstruction, Android/AOT and Quest/Live acceptance remain required. No candidate
+backend or production reflections are enabled; the retained Meta crash remains
+unresolved.

@@ -12,7 +12,9 @@ namespace Maestro.AudioEvaluation
 {
     internal sealed partial class PreparedGraph
     {
-        internal const int VoiceCount = 2;
+        const int MaximumVoices = AcousticFrame.MaximumSources;
+        internal readonly int VoiceCount;
+        readonly string[] voiceIds = new string[MaximumVoices];
         internal readonly int Rate, Frame;
         internal readonly long Generation;
         internal static int Opened, Closed, Diagnostics;
@@ -25,19 +27,19 @@ namespace Maestro.AudioEvaluation
                 System.Console.Error.WriteLine(message);
             }
         };
-        readonly int[] playing = new int[VoiceCount];
-        readonly IntPtr[] sources = new IntPtr[VoiceCount];
-        readonly IntPtr[] reflections = new IntPtr[VoiceCount];
-        readonly IntPtr[] decoders = new IntPtr[VoiceCount];
-        readonly NativeDsp.Buffer[] inputs = new NativeDsp.Buffer[VoiceCount];
-        readonly NativeDsp.Buffer[] wet = new NativeDsp.Buffer[VoiceCount];
-        readonly NativeDsp.Buffer[] stereo = new NativeDsp.Buffer[VoiceCount];
-        readonly ReflectionEffectParams[] responses = new ReflectionEffectParams[VoiceCount];
-        readonly double[] phases = new double[VoiceCount];
+        readonly int[] playing = new int[MaximumVoices];
+        readonly IntPtr[] sources = new IntPtr[MaximumVoices];
+        readonly IntPtr[] reflections = new IntPtr[MaximumVoices];
+        readonly IntPtr[] decoders = new IntPtr[MaximumVoices];
+        readonly NativeDsp.Buffer[] inputs = new NativeDsp.Buffer[MaximumVoices];
+        readonly NativeDsp.Buffer[] wet = new NativeDsp.Buffer[MaximumVoices];
+        readonly NativeDsp.Buffer[] stereo = new NativeDsp.Buffer[MaximumVoices];
+        readonly ReflectionEffectParams[] responses = new ReflectionEffectParams[MaximumVoices];
+        readonly double[] phases = new double[MaximumVoices];
         readonly float[] signal, channel;
-        readonly float[][] dryMix = new float [VoiceCount][], reflectedMix = new float [VoiceCount][];
-        readonly PcmBinding[] renderedPcm = new PcmBinding[VoiceCount];
-        readonly bool[] renderedPcmAudible = new bool[VoiceCount];
+        readonly float[][] dryMix = new float [MaximumVoices][], reflectedMix = new float [MaximumVoices][];
+        readonly PcmBinding[] renderedPcm = new PcmBinding[MaximumVoices];
+        readonly bool[] renderedPcmAudible = new bool[MaximumVoices];
         internal Action BeforeOutput; // Isolated callback-boundary race probe.
         IntPtr context, scene, simulator, room, hrtf;
         int readers, retired, disposed, rendering;
@@ -46,11 +48,15 @@ namespace Maestro.AudioEvaluation
         int PlayingSlot(int index) => Volatile.Read(ref pcm[index]) is PcmBinding binding
                                           ? (binding.Voice?.Open == true ? 1 : 0)
                                           : Volatile.Read(ref playing[index]);
-        internal int Playing => PlayingSlot(0) + PlayingSlot(1);
+        internal int Playing { get { int count = 0; for (int i=0;i<VoiceCount;i++) count += PlayingSlot(i); return count; } }
+        // Names used only by the original two-tone diagnostic fixtures. PCM
+        // admission below accepts independent, bounded playback-instance IDs.
         internal static readonly string[] VoiceIds = { "maestro-voice", "world-voice" };
 
         PreparedGraph(int rate, int frame, long generation, AcousticFrame initial, long revision)
         {
+            VoiceCount = initial.SourceCount;
+            for (int i=0;i<Math.Min(VoiceCount, VoiceIds.Length);i++) voiceIds[i] = VoiceIds[i];
             Rate = rate;
             Frame = frame;
             Generation = generation;
@@ -205,11 +211,28 @@ namespace Maestro.AudioEvaluation
         }
         internal bool SetPlaying(string id, bool value)
         {
-            int index = Array.IndexOf(VoiceIds, id);
+            int index = FindSlot(id);
             if (index < 0 || Volatile.Read(ref retired) != 0 || Volatile.Read(ref pcm[index]) != null)
                 return false;
             Volatile.Write(ref playing[index], value ? 1 : 0);
             return true;
+        }
+        // Control thread owns slot identity. DSP observes the immutable binding,
+        // including its reset serial, rather than looking up a mutable string.
+        int FindSlot(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) || id.Length > 128) return -1;
+            for (int i=0;i<VoiceCount;i++) if (voiceIds[i] == id) return i;
+            return -1;
+        }
+        int ClaimSlot(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id) || id.Length > 128 || IsRetired) return -1;
+            int existing = FindSlot(id);
+            if (existing >= 0) return existing;
+            for (int i=0;i<VoiceCount;i++) if (PlayingSlot(i) == 0)
+            { voiceIds[i] = id; return i; }
+            return -1;
         }
         // Caller holds a read lease. Only one consumer may mutate DSP history.
         // Mismatched callbacks produce silence, never process old-size buffers.
@@ -242,7 +265,7 @@ namespace Maestro.AudioEvaluation
                     // Consume every published IR even while a voice is muted.
                     // Otherwise the SDK's pending response can prevent newer writes.
                     // Muted voices still receive zero input and never mix their tails.
-                    double step = 2 * Math.PI * (voice == 0 ? 440 : 660) / Rate;
+                    double step = 2 * Math.PI * (440 + 220 * voice) / Rate;
                     for (int i = 0; i < Frame; i++)
                     {
                         signal[i] = audible ? .03f * (float)Math.Sin(phases[voice]) : 0;

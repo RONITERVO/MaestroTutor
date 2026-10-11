@@ -9,20 +9,31 @@ namespace Maestro.AudioEvaluation
     // fixed topology is deliberately separate from any saved Maestro room schema.
     internal sealed class AcousticFrame
     {
-        internal readonly CoordinateSpace3 Listener, First, Second;
+        internal const int MaximumSources = 32;
+        internal readonly CoordinateSpace3 Listener;
+        readonly CoordinateSpace3[] sources;
         internal readonly bool Room;
-        internal AcousticFrame(bool room, CoordinateSpace3 listener, CoordinateSpace3 first, CoordinateSpace3 second)
+        internal int SourceCount => sources.Length;
+        internal CoordinateSpace3 Source(int slot) => sources[slot];
+        internal AcousticFrame(bool room, CoordinateSpace3 listener, params CoordinateSpace3[] sources)
         {
             Validate(listener);
-            Validate(first);
-            Validate(second);
+            if (sources == null || sources.Length < 1 || sources.Length > MaximumSources)
+                throw new ArgumentException("Invalid acoustic voice capacity");
+            foreach (var source in sources) Validate(source);
+            this.sources = (CoordinateSpace3[])sources.Clone();
             Room = room;
             Listener = listener;
-            First = first;
-            Second = second;
         }
-        internal static readonly AcousticFrame Default =
-            new AcousticFrame(true, Pose(-1, 0, 0), Pose(1, 0, 0), Pose(1, 0, .4f));
+        internal AcousticFrame WithListener(CoordinateSpace3 listener) => new AcousticFrame(Room, listener, sources);
+        internal static AcousticFrame CreateDefault(int capacity)
+        {
+            if (capacity < 1 || capacity > MaximumSources) throw new ArgumentOutOfRangeException(nameof(capacity));
+            var poses = new CoordinateSpace3[capacity];
+            for (int i = 0; i < capacity; i++) poses[i] = Pose(1, 0, .4f * i);
+            return new AcousticFrame(true, Pose(-1, 0, 0), poses);
+        }
+        internal static readonly AcousticFrame Default = CreateDefault(2);
         internal static CoordinateSpace3 Pose(float x, float y, float z, float yaw = 0)
         {
             float c = (float)Math.Cos(yaw), s = (float)Math.Sin(yaw);

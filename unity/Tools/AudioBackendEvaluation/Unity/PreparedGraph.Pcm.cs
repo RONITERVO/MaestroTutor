@@ -19,22 +19,29 @@ namespace Maestro.AudioEvaluation
                 Voice = voice;
             }
         }
-        readonly PcmBinding[] pcm = new PcmBinding[VoiceCount], consumedPcm = new PcmBinding[VoiceCount];
-        readonly long[] resetAcks = new long[VoiceCount], responseResets = new long[VoiceCount];
-        readonly IntPtr[] direct = new IntPtr[VoiceCount];
+        readonly PcmBinding[] pcm = new PcmBinding[MaximumVoices], consumedPcm = new PcmBinding[MaximumVoices];
+        readonly long[] resetAcks = new long[MaximumVoices], responseResets = new long[MaximumVoices];
+        readonly IntPtr[] direct = new IntPtr[MaximumVoices];
         long pcmSerial;
         internal long ResetAck(int voice) => Volatile.Read(ref resetAcks[voice]);
-        internal bool NeedsPcmResponse => ResetAck(0) > Volatile.Read(ref responseResets[0]) ||
-                                          ResetAck(1) > Volatile.Read(ref responseResets[1]);
+        internal bool NeedsPcmResponse { get {
+            for (int i=0;i<VoiceCount;i++) if (ResetAck(i) > Volatile.Read(ref responseResets[i])) return true;
+            return false;
+        } }
+        internal long[] SnapshotResetAcks()
+        {
+            var result = new long[VoiceCount];
+            for (int i=0;i<result.Length;i++) result[i] = ResetAck(i);
+            return result;
+        }
         internal bool PcmWetReady(int voice) => Volatile.Read(ref pcm[voice]) is PcmBinding binding
                                                 && binding.Serial <= Volatile.Read(ref responseResets[voice]) &&
                                                 CompletedRevision >= Volatile.Read(ref requiredRevision);
-        internal PcmVoice BeginPcm(string id, double startAt, double tail, float dryGain, float wetGain)
+        internal PcmVoice BindPcm(string id, PcmVoice voice)
         {
-            int index = Array.IndexOf(VoiceIds, id);
-            if (index < 0 || IsRetired)
-                return null;
-            var voice = new PcmVoice(startAt, tail, dryGain, wetGain);
+            int index = ClaimSlot(id);
+            if (index < 0) { voice.Close(); return null; }
+            voice.Slot = index;
             var previous = Interlocked.Exchange(ref pcm[index], new PcmBinding(++pcmSerial, voice));
             previous?.Voice?.Close();
             Volatile.Write(ref playing[index], 0);
@@ -42,7 +49,7 @@ namespace Maestro.AudioEvaluation
         }
         internal bool StopPcm(string id, PcmVoice voice)
         {
-            int index = Array.IndexOf(VoiceIds, id);
+            int index = FindSlot(id);
             if (index < 0 || voice == null || IsRetired || Volatile.Read(ref pcm[index])?.Voice != voice)
                 return false;
             voice.Close();
@@ -53,7 +60,7 @@ namespace Maestro.AudioEvaluation
                                 out Maestro.Quest.Book.SpeechPcmStream.Cursor receipt)
         {
             receipt = default;
-            int index = Array.IndexOf(VoiceIds, id);
+            int index = FindSlot(id);
             if (index < 0 || voice == null || IsRetired || Volatile.Read(ref pcm[index])?.Voice != voice ||
                 !voice.RendererDrained(now))
                 return false;
@@ -125,7 +132,7 @@ namespace Maestro.AudioEvaluation
             renderedPcmAudible[voice] = binding.Voice.Render(signal, Rate, dspTime);
             Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
             var listener = frame.Listener;
-            var source = voice == 0 ? frame.First : frame.Second;
+            var source = frame.Source(voice);
             var spatial = new NativeDsp.BinauralParams { direction = API.iplCalculateRelativeDirection(
                                                              context, source.origin, listener.origin, listener.ahead,
                                                              listener.up),

@@ -87,7 +87,7 @@ packages.mkdir()
 }}, indent=2), encoding="utf-8")
 tests = project / "Assets/Evaluation"
 tests.mkdir()
-files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmAudioTests.cs", "PcmTailTests.cs"] if owned else ["CandidateTests.cs"]
+files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs"] if owned else ["CandidateTests.cs"]
 for name in files:
     shutil.copyfile(source / "Unity" / name, tests / name)
 (tests / "Maestro.AudioCandidate.Tests.asmdef").write_text(json.dumps({

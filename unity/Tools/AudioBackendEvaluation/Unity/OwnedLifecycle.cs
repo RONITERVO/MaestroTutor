@@ -23,6 +23,9 @@ namespace Maestro.AudioEvaluation
         internal int InterruptedVoices { get; private set; }
         internal int StalePreparations { get; private set; }
 
+        internal OwnedLifecycle(int voiceCapacity = 2) { desiredScene = AcousticFrame.CreateDefault(voiceCapacity); }
+        internal int VoiceCapacity => desiredScene.SourceCount;
+
         // Control-thread API. Coalesce resets instead of accumulating workers/contexts.
         internal void Configure(int rate, int frame, Action prepared = null)
         {
