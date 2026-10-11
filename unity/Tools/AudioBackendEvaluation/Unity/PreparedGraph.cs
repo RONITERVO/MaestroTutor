@@ -298,8 +298,14 @@ namespace Maestro.AudioEvaluation
                         continue;
                     bool audible = binding == null ? Volatile.Read(ref playing[voice]) != 0 : renderedPcmAudible[voice];
                     if (audible)
+                    {
+                        // Gain changes at the submission boundary affect dry and
+                        // tail output together, without restarting source or DSP.
+                        float gain = binding?.Voice.Gain ?? 1;
+                        float distance = binding != null ? renderedDistance[voice] : 1;
                         for (int i = 0; i < output.Length; i++)
-                            output[i] += dryMix[voice][i] + (wetCurrent ? reflectedMix[voice][i] : 0);
+                            output[i] += gain * (distance * dryMix[voice][i] + (wetCurrent ? reflectedMix[voice][i] : 0));
+                    }
                     if (binding != null && renderedPcmFinal[voice])
                         binding.Voice.SubmitRendererEnd(dspTime + (double)Frame / Rate);
                 }

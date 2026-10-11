@@ -22,6 +22,7 @@ namespace Maestro.AudioEvaluation
         readonly PcmBinding[] pcm = new PcmBinding[MaximumVoices], consumedPcm = new PcmBinding[MaximumVoices];
         readonly long[] resetAcks = new long[MaximumVoices], responseResets = new long[MaximumVoices];
         readonly IntPtr[] direct = new IntPtr[MaximumVoices];
+        readonly float[] renderedDistance = new float[MaximumVoices];
         long pcmSerial;
         internal long ResetAck(int voice) => Volatile.Read(ref resetAcks[voice]);
         internal bool NeedsPcmResponse { get {
@@ -118,6 +119,7 @@ namespace Maestro.AudioEvaluation
                 ConsumeSilentResponse(voice, ref parameters);
                 return true;
             }
+            renderedDistance[voice] = binding.Voice.Settings.DirectAttenuation(frame.Listener, frame.Source(voice));
             var cursor = binding.Voice.Read(dspTime);
             if (cursor.SourceDrained || pcmTailPhase[voice] == PcmRenderPhase.Draining)
             {
@@ -133,14 +135,30 @@ namespace Maestro.AudioEvaluation
             Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
             var listener = frame.Listener;
             var source = frame.Source(voice);
-            var spatial = new NativeDsp.BinauralParams { direction = API.iplCalculateRelativeDirection(
-                                                             context, source.origin, listener.origin, listener.ahead,
-                                                             listener.up),
-                                                         interpolation = 0, spatialBlend = 1, hrtf = hrtf };
-            directTail[voice] =
-                NativeDsp.iplBinauralEffectApply(direct[voice], ref spatial, ref inputs[voice], ref stereo[voice]);
-            CopyStereo(voice, output, binding.Voice?.DryGain ?? 0);
-            bool wetReady = geometryReady && binding.Serial <= Volatile.Read(ref responseResets[voice]);
+            if (binding.Voice.Settings.Spatial)
+            {
+                bool coincident = source.origin.x == listener.origin.x && source.origin.y == listener.origin.y &&
+                                  source.origin.z == listener.origin.z;
+                var spatial = new NativeDsp.BinauralParams {
+                    direction = coincident ? V(0, 0, -1) : API.iplCalculateRelativeDirection(context, source.origin,
+                        listener.origin, listener.ahead, listener.up),
+                    interpolation = 0, spatialBlend = 1, hrtf = hrtf
+                };
+                directTail[voice] =
+                    NativeDsp.iplBinauralEffectApply(direct[voice], ref spatial, ref inputs[voice], ref stereo[voice]);
+                CopyStereo(voice, output, binding.Voice.DryGain);
+            }
+            else
+            {
+                // Unity's mono nonspatial centre pan is equal-power stereo.
+                // Bypassing HRTF also avoids its gain/filter/latency at blend zero.
+                float gain = binding.Voice.DryGain * .7071067811865475f;
+                for (int i = 0; i < Frame; i++)
+                    output[2 * i] = output[2 * i + 1] = signal[i] * gain;
+                directTail[voice] = NativeDsp.TailComplete;
+            }
+            bool wetReady = binding.Voice.Settings.Spatial && geometryReady &&
+                            binding.Serial <= Volatile.Read(ref responseResets[voice]);
             if (wetReady)
                 pcmWetGeometry[voice] = geometryRevision;
             if (!wetReady)
@@ -156,6 +174,11 @@ namespace Maestro.AudioEvaluation
                                                                           ref wet[voice], ref stereo[voice]);
             if (wetReady)
                 CopyStereo(voice, reflectedMix[voice], binding.Voice?.WetGain ?? 0);
+            if (!binding.Voice.Settings.Spatial)
+            {
+                // Silent IR handoff above does not create an audible room tail.
+                reflectionTail[voice] = decoderTail[voice] = NativeDsp.TailComplete;
+            }
             return true;
         }
     }

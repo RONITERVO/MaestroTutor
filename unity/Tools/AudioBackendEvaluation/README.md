@@ -287,7 +287,7 @@ restoration of every input used by the passing run.
 
 ### Existing streams and bounded voice admission
 
-`-OwnedLifecycle` now requires **34 passing cases**. An owner accepts an existing
+The preceding `-OwnedLifecycle` checkpoint required **34 passing cases**. An owner accepts an existing
 application `SpeechPcmStream` by exclusive transfer, preserving already queued
 samples, the producer's completion flag and the same playback receipt. It does
 not copy them into a second queue. A stream can be claimed only once across
@@ -321,3 +321,52 @@ This remains a Windows evaluation. Production reservation enforcement, mutable
 gain and distance/nonspatial semantics, accepted world geometry and obstruction,
 Android/IL2CPP, sustained cost and Quest/Live acceptance still need integration
 and verification. The app's renderer and reflection gates remain unchanged.
+
+### Presentation controls and Unity reference measurements
+
+`-OwnedLifecycle` now requires **41 passing cases**. Exact voice handles support
+mutable gain without reopening the input or recalculating the room response.
+The final submission applies gain to direct and reflected output together,
+including already processed tails. Zero gain continues the source clock; Pause
+retains its position. Invalid values and stale handles cannot change a successor.
+
+Spatial settings are immutable for one playback. Direct distance falloff matches
+the app's Unity logarithmic rolloff with Rolloff Scale one: a plateau inside the
+minimum distance followed by inverse-distance amplitude. The pinned Unity
+reference checks minima of one and two metres at distances 0, 0.5, 1, 2, 4 and 8,
+with maxDistance three. It confirms attenuation continues beyond maxDistance,
+consistent with [Unity's documented logarithmic behaviour](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/AudioSource-maxDistance.html).
+Do not treat that field as a hard audibility boundary for future region retention.
+Reflected propagation already has native distance response and does not receive
+a duplicate direct-distance factor. A coincident source uses a finite front
+orientation rather than an undefined direction.
+
+Nonspatial mono input uses equal-power stereo centre routing, with no HRTF or
+room contribution. It retains the same queue, output clock and completion path.
+A real AudioSource/mono-clip reference verifies level and equal channels before
+and after listener/source/room movement. The first 41-case run exposed a
+1.896875 power ratio when using the native HRTF effect with blend zero. The
+[SDK describes blend zero as unspatialized](https://valvesoftware.github.io/steam-audio/doc/capi/binaural-effect.html),
+but that did not reproduce Unity's mono panning level. Bypassing that effect and
+using the measured centre-pan gain fixed the mismatch; reference assertions were
+not weakened. The failed run `2be893bf6c21` remains retained (40 pass, one fail).
+
+A borrowed transform binding refreshes after the avatar's LateUpdate. Parent
+translation, rotation and scale therefore move the source without a manual pose
+command. Unity-to-native coordinates are converted at that boundary. Unchanged
+poses do not publish a new revision. Disabled/destroyed anchors stop only their
+exact owner; old bindings retire without stopping replacements or destroying
+the caller's hierarchy. This demonstrates the pose/lifetime contract required by
+the future production adapter; it is not installed in the application.
+
+Run `e92851831b1d` passes all 41 cases, releases all 60 native graphs, has no native
+validation diagnostics and exits normally. All 22 recorded source hashes match.
+The reference comparisons and failed/passing runs are retained in
+`.quest-evidence/audio-presentation`. The preceding corrected run `e0f4bc3ae258`
+also passed, before adding the custom near-distance comparison. All 907 current
+application C# files still match the fully verified `c93a98c6` inputs.
+
+Production renderer selection, shared reservations, canonical geometry and
+obstruction, shared capture monitoring, Android/AOT and physical/performance
+acceptance remain open. Production reflections and automatic map scheduling stay
+disabled; these results do not resolve the retained Meta map-worker crash.

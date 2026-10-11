@@ -18,11 +18,19 @@ namespace Maestro.AudioEvaluation
         readonly double outputDelay;
         double rendererEnd = double.PositiveInfinity;
         internal readonly float DryGain, WetGain;
+        internal readonly PcmSpatialSettings Settings;
+        float gain = 1;
+        internal float Gain => Volatile.Read(ref gain);
+        internal void SetGain(float value)
+        {
+            if (!float.IsFinite(value) || value < 0 || value > 1) throw new ArgumentOutOfRangeException(nameof(value));
+            Volatile.Write(ref gain, value);
+        }
         internal bool Paused => stream.IsPaused;
         internal bool Open => Volatile.Read(ref stopped) == 0;
         // Transfer is permanent for this stream. Reject an alias without closing
         // its real owner; failed admission of a fresh stream always closes it.
-        internal PcmVoice(SpeechPcmStream stream, double tail, float dryGain, float wetGain)
+        internal PcmVoice(SpeechPcmStream stream, double tail, float dryGain, float wetGain, PcmSpatialSettings settings)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             lock (transferred)
@@ -41,6 +49,7 @@ namespace Maestro.AudioEvaluation
                 outputDelay = tail;
                 DryGain = dryGain;
                 WetGain = wetGain;
+                Settings = settings ?? PcmSpatialSettings.Default;
             }
             catch { stream.Close(); throw; }
         }
@@ -68,9 +77,9 @@ namespace Maestro.AudioEvaluation
         internal PcmVoice BeginPcm(string id, long commandGeneration, double startAt, double tail, float dryGain = 1,
                                    float wetGain = 1) => BeginPcm(id, commandGeneration, new SpeechPcmStream(startAt, tail), tail, dryGain, wetGain);
         internal PcmVoice BeginPcm(string id, long commandGeneration, SpeechPcmStream stream, double outputDelay,
-                                   float dryGain = 1, float wetGain = 1)
+                                   float dryGain = 1, float wetGain = 1, PcmSpatialSettings settings = null)
         {
-            var voice = new PcmVoice(stream, outputDelay, dryGain, wetGain);
+            var voice = new PcmVoice(stream, outputDelay, dryGain, wetGain, settings);
             var graph = Active;
             if (closed || generation != commandGeneration || graph == null)
             { voice.Close(); return null; }

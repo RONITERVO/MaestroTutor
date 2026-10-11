@@ -640,3 +640,29 @@ backend handoff. App gain/distance/spatial semantics, canonical geometry and
 obstruction, Android/AOT and Quest/Live acceptance remain required. No candidate
 backend or production reflections are enabled; the retained Meta crash remains
 unresolved.
+
+### Candidate presentation parity — 2026-10-12
+
+The isolated renderer now supports exact-handle gain changes and immutable
+spatial settings. Final output gain applies to dry and wet tails without replay
+or resimulation; gain zero advances playback while Pause does not. Nonspatial
+mono playback bypasses HRTF and room contribution and matches Unity's centre
+panning. Direct logarithmic distance response is compared with real Unity output
+for default and custom minimum distances, including a coincident source and
+positions beyond maxDistance. Native reflected propagation is not attenuated a
+second time by that direct-distance factor.
+
+Borrowed anchors follow real parent translation, rotation and scale after avatar
+updates. Unchanged poses do not resimulate. Disabled/lost anchors and stale
+bindings cannot cancel a replacement voice or destroy the caller's transform.
+The first new run caught nonspatial output at 1.896875 times the reference power;
+the fixed path preserves the original assertion and playback receipt contract.
+
+All 41 cases pass with 60 native graphs released, zero native diagnostics, normal
+editor/wrapper exits and 22 matching input hashes. Evidence and the failed run
+are retained in `.quest-evidence/audio-presentation`; see the
+[reference measurements and scope](Tools/AudioBackendEvaluation/README.md#presentation-controls-and-unity-reference-measurements).
+The application is unchanged. Production adapter/reservations, accepted geometry,
+obstruction, capture monitoring, Android/AOT and Quest/Live acceptance remain
+required. No production reflection backend is enabled, and the Meta fault remains
+unresolved.

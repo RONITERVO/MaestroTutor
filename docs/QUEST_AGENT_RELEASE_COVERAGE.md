@@ -3314,3 +3314,15 @@ hashes match and both process exits are zero. See the
 [audio boundary and remaining integration gates](../unity/AUDIO.md#existing-audio-streams-and-bounded-voices--2026-10-12).
 The app renderer, production reservations and disabled reflection gates are
 unchanged. This is desktop evidence, not Quest or Live acceptance.
+
+### Audio presentation reference coverage — 2026-10-12
+
+The isolated renderer passes 41 cases covering mutable volume through final
+tails, nonspatial mono output, Unity-matched logarithmic distance falloff with
+custom minima, and automatic parent-anchor motion/lifetime. A real Unity reference
+caught and verified the fix for excessive nonspatial level. All 60 native graphs
+close cleanly, 22 source hashes match and both process exits are zero. The
+application's 907 C# inputs remain unchanged from the full `c93a98c6` check.
+See [the audio boundary and evidence](../unity/AUDIO.md#candidate-presentation-parity--2026-10-12).
+Production integration, canonical geometry/obstruction, capture monitoring and
+Android/Quest acceptance remain open; reflection gates remain disabled.

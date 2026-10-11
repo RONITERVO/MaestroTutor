@@ -25,7 +25,24 @@ namespace Maestro.AudioEvaluation
             Room = room;
             Listener = listener;
         }
-        internal AcousticFrame WithListener(CoordinateSpace3 listener) => new AcousticFrame(Room, listener, sources);
+        AcousticFrame(AcousticFrame original, CoordinateSpace3 listener, CoordinateSpace3[] ownedSources)
+        { Room = original.Room; Listener = listener; sources = ownedSources; }
+        internal AcousticFrame WithListener(CoordinateSpace3 listener)
+        {
+            Validate(listener);
+            return new AcousticFrame(this, listener, sources);
+        }
+        internal AcousticFrame WithSource(int slot, CoordinateSpace3 source)
+        {
+            if (slot < 0 || slot >= sources.Length) throw new ArgumentOutOfRangeException(nameof(slot));
+            Validate(source);
+            var copy = (CoordinateSpace3[])sources.Clone();
+            copy[slot] = source;
+            return new AcousticFrame(this, Listener, copy);
+        }
+        static bool SameVector(Vector3 a, Vector3 b) => a.x == b.x && a.y == b.y && a.z == b.z;
+        internal static bool SamePose(CoordinateSpace3 a, CoordinateSpace3 b) => SameVector(a.origin, b.origin) &&
+            SameVector(a.right, b.right) && SameVector(a.up, b.up) && SameVector(a.ahead, b.ahead);
         internal static AcousticFrame CreateDefault(int capacity)
         {
             if (capacity < 1 || capacity > MaximumSources) throw new ArgumentOutOfRangeException(nameof(capacity));
