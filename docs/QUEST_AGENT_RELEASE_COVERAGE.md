@@ -3018,3 +3018,29 @@ that dump and failed run remain retained and production reflections stay disable
 The terminal and cross-checked result are in
 `.quest-evidence/audio-cleanup/full-verification.json`. The optional C++ evaluator
 and documentation added afterward do not change the tested Unity source.
+
+### Isolated Unity audio candidate: reset gap reproduced — 2026-10-11
+
+A fresh Unity 6000.3.24f1 project imports the hash-pinned official Steam Audio
+4.8.1 Unity package outside the app. Configuration exits 0; its three-case native
+PlayMode evaluation exits 2, with **two passes and one failure**. Actual listener
+samples prove runtime wall obstruction, finite reflection-only output, independent
+voice destruction, room deletion/reconstruction and same-format reset recovery.
+The listener is silenced after measurement; no headset, microphone or provider is
+used.
+
+The failing case applies 24 kHz through Unity's audio reset while the candidate
+manager retains a 48 kHz simulation configuration. Nonzero output does not clear
+that mismatch. The failure was observed in the initial focused experiment and
+reproduced by the versioned optional runner in a newly prepared project. No
+ignored/skipped tests or hidden fallback replace that requirement. Exact source
+hashes, XML and editor exits are retained at
+`.quest-evidence/audio-unity/20e168e4026b/result.json`, cross-checked in
+`.quest-evidence/audio-unity-evaluation/verification.json`.
+
+The original app's full native result on `72a9444a` remains passed, and CI on the
+standalone evaluator commit `c8f4683c` passed in run `38163887875`. Neither clears
+the earlier intermittent Meta crash or qualifies Steam Audio as a replacement.
+The next adapter needs a measured, explicit drain/rebuild/rebind path across real
+format changes before integration. The fixture and its pinned-project runner are
+outside the app's Unity assets; no new vendor binary or runtime dependency ships.

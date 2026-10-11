@@ -328,3 +328,28 @@ freeing its inputs. An adapter must additionally fence audio-thread consumers.
 The current Meta renderer, production reflection hold and full native gate remain
 unchanged. Evaluate the Unity integration boundary next; do not switch a shipping
 world to this candidate on the basis of the standalone probe.
+
+### Unity candidate result and reset requirement
+
+The isolated Windows Unity 6000.3.24f1 project now tests the unmodified Steam Audio
+4.8.1 integration at the actual audio listener. Direct wall obstruction,
+reflection-only output, one-source destruction without losing the other source,
+room deletion/reconstruction and a same-format audio reset passed. Samples are
+measured before silencing; this is native DSP evidence, not perceptual listening
+or Quest acceptance.
+
+The changed-format requirement **fails**: after Unity applies 24 kHz, the manager's
+simulation configuration remains at 48 kHz. Nonzero output after that reset is not
+evidence of correct timing or spectral behavior. The stock package therefore does
+not meet the adapter's reset contract yet. Keep the failing test runnable and
+retain its nonzero exit; do not mask it with a geometry-only pass. The optional
+[Unity runner](Tools/AudioBackendEvaluation/README.md#isolated-unity-integration-evaluation)
+recreates the isolated project from the pinned archive and records exact hashes.
+
+The next adapter must explicitly observe audio-configuration changes, retire
+simulation/audio consumers, rebuild format-dependent resources and rebind live
+sources from Maestro-owned identities. In-flight cancellation, pause/focus changes
+and source/room replacement must use the same lifecycle. Test actual configuration
+and output after each transition; a successful reset call alone is insufficient.
+This is a requirement for the candidate, not a diagnosis or fix of the current
+Meta fault. No app backend or production reflection setting changes here.

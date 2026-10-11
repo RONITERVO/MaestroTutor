@@ -7324,3 +7324,16 @@ and both original-book/headless journeys with clean exits. The tested mirror
 matches all 905 native source files. This passing run is recorded separately from
 the unresolved intermittent fault; it does not activate reflections or clear
 hardware/provider acceptance. See the release coverage ledger for exact receipts.
+
+### Audio candidate's Unity reset gap — 2026-10-11
+
+The optional isolated Unity integration probe now measures real listener samples.
+Runtime geometry, multiple reflected voices, room reconstruction and a same-format
+reset pass, but a changed device rate leaves the stock candidate's simulation at
+the old rate: **two tests pass, one fails**. The reproducible failed requirement is
+retained, with the candidate still unaccepted and app code unchanged. Do not move
+this dependency into the app until an explicit drain/rebuild/rebind adapter is
+verified against configuration changes and the remaining lifetime/output cases.
+The audio contract and release ledger record exact scope and evidence. Current
+full app native tests and CI pass; the earlier intermittent Meta fault and device,
+Live/provider and release acceptance remain open.
