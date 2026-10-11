@@ -382,6 +382,9 @@ namespace Maestro.Quest.Tests
             Assert.That(document.objects.Single(x => x.id == data.id).modelHash, Is.EqualTo(data.modelHash));
             foreach (var value in root.GetComponentsInChildren<CreatedRoomObject>()) UnityEngine.Object.Destroy(value.gameObject); yield return null;
             editor = root.AddComponent<RoomEditor>(); editor.Initialize(room, book, maestro, directory);
+            float startupDeadline=Time.realtimeSinceStartup+12;
+            while(editor.NativeStartupPending&&Time.realtimeSinceStartup<startupDeadline)yield return null;
+            Assert.That(editor.NativeStartupPending,Is.False);Assert.That(editor.Find(data.id),Is.Not.Null);
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus); Assert.That(created.Model.IsPlaying, Is.False);
         }

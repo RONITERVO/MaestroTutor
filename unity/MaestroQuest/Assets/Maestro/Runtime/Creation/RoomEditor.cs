@@ -100,6 +100,7 @@ namespace Maestro.Quest.Creation
             maestro.GetComponent<MaestroAvatar>()?.ConfigureRuntime(RuntimeGate);
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro",WorldIdentity);
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
+            if(loaded!=null&&!storage.ReadOnly)InitializeNativeStartup(loaded);
             Reconcile();
             PhysicsWorld?.ConfigureCollisionAdmission(this,RegionCollisionIssue);
             gameObject.AddComponent<Art.WorldLightingView>().Initialize(this);
@@ -573,6 +574,7 @@ namespace Maestro.Quest.Creation
         void Update()
         {
             TickSpatialPreparation();
+            TickNativeStartup();
             TickWorldTime(UnityEngine.Time.unscaledDeltaTime);
             TickLayerPresentation(UnityEngine.Time.unscaledDeltaTime);
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
@@ -661,14 +663,14 @@ namespace Maestro.Quest.Creation
         void RefreshOwnership() {
             worldTimeTickReady=false;
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
-            if(Ownership.Suspended){SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
+            if(Ownership.Suspended){InvalidateNativeStartup();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){InvalidateNativeStartup();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ClearViewCapture();FinishLiquidPour(out _);

@@ -65,6 +65,7 @@ namespace Maestro.Quest.Tests
             int browserId=browser.GetInstanceID();Open();Assert.That(host.Current,Is.Not.Null,host.Status);
             var editor=host.Current.Editor;Assert.That(editor.SaveDirectory,Is.EqualTo(store.DataDirectory(selected.Active)));Assert.That(editor.ReceiptDirectory,Is.EqualTo(store.ReceiptDirectory(selected.Active)));
             Assert.That(editor.RuntimeGate.Held,Is.True);Assert.That(host.ReviewRequired,Is.True);Assert.That(host.Current.Controls.Preferences.deadZone,Is.EqualTo(.3f));
+            yield return ReadyReviewOwners();
             var created=editor.Snapshot().objects.Single(x=>!x.IsBuiltIn);Assert.That(created.name,Is.EqualTo("Imported robot"));var recipe=editor.Find(created.id).GetComponent<RecipeObject>();
             for(int i=0;i<4;i++){recipe.Restart();yield return null;Assert.That(recipe.IsPlaying,Is.False);}
             Assert.That(physics.SetRunning(true,out _),Is.False);Assert.That(browser.GetInstanceID(),Is.EqualTo(browserId));Assert.That(root.GetComponentsInChildren<NativeBookBrowser>().Length,Is.EqualTo(1));

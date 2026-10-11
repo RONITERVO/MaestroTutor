@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests
         GameObject root;string directory,epoch,objectId,sequenceId;RoomEditor editor;RuleWorkshop workshop;RoomRules runtime;
         AnimationWorkshop animations;MovementControls controls;RoomPhysicsWorld physics;MaestroAvatar avatar;RecipeObject recipe;
         RoomRuntimeGate gate;IDisposable review;ControllerFrame frame;
-        [SetUp] public void Setup()
+        [UnitySetUp] public IEnumerator Setup()
         {
             directory=Path.Combine(Path.GetTempPath(),"MqHold-"+Guid.NewGuid().ToString("N"));epoch=Path.Combine(directory,"action-epochs",Guid.NewGuid().ToString("N"));
             objectId=Guid.NewGuid().ToString("N");sequenceId=Guid.NewGuid().ToString("N");
@@ -39,11 +39,15 @@ namespace Maestro.Quest.Tests
             root=new GameObject("Held workspace test");root.AddComponent<XRInteractionManager>();var room=root.AddComponent<RoomInteraction>();var viewer=new GameObject("Viewer");viewer.transform.SetParent(root.transform,false);room.Viewer=viewer.transform;
             RoomItem Item(string name){var obj=new GameObject(name);obj.transform.SetParent(root.transform,false);var collider=obj.AddComponent<BoxCollider>();var item=obj.AddComponent<RoomItem>();item.Configure(new[]{collider});room.Register(item);return item;}
             var book=Item("book");var maestro=Item("maestro");avatar=maestro.gameObject.AddComponent<MaestroAvatar>();physics=root.AddComponent<RoomPhysicsWorld>();physics.SetSurfaces(true,"Aligned test room");
-            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,maestro,directory,physics,gate,epoch);recipe=editor.Find(objectId).GetComponent<RecipeObject>();
+            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,maestro,directory,physics,gate,epoch);
             animations=root.AddComponent<AnimationWorkshop>();animations.Initialize(editor);workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor);
             runtime=root.AddComponent<RoomRules>();runtime.Initialize(workshop,editor,animations,null,room,null);
             controls=root.AddComponent<MovementControls>();controls.Initialize(room,editor,animations,null,runtime,workshop,null,null,()=>true,()=>frame);
             frame=new ControllerFrame {leftTracked=true,rightTracked=true};
+            float deadline=Time.realtimeSinceStartup+12;
+            while(editor.NativeStartupPending&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(editor.NativeStartupPending,Is.False);Assert.That(editor.Find(objectId),Is.Not.Null);
+            recipe=editor.Find(objectId).GetComponent<RecipeObject>();
         }
         JObject Request()=>new() {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=objectId,["seconds"]=10,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"}}};
         void FocusRoundTrip(){foreach(var owner in new MonoBehaviour[]{editor,runtime,controls,physics,avatar}){owner.SendMessage("OnApplicationPause",true);owner.SendMessage("OnApplicationFocus",false);owner.SendMessage("OnApplicationPause",false);owner.SendMessage("OnApplicationFocus",true);}}

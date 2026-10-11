@@ -778,3 +778,14 @@ cancel preparation or press Pause; finishing a load later will not restart it.
 Changing the room setup or saved content also requires a fresh Start request.
 If preparation fails, the action reports the failure and keeps physics paused.
 This does not enable automatic area streaming or expand current world limits.
+
+
+Opening a saved room prepares its objects in stages while the book remains
+available. Connected objects appear together; a broken import in one area does
+not prevent other areas from opening. Loading preserves saved positions and
+animation settings and does not switch gravity on. Failed objects stay in the
+saved room so they can be inspected and retried after their asset is repaired.
+
+During workspace review, the saved objects can open as a still preview. Approval
+alone does not restart saved autoplay, including when approval happens before
+loading finishes; starting activity remains a separate request.

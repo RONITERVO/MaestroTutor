@@ -26,6 +26,7 @@ namespace Maestro.Quest.Creation
             internal NativeEntityPhase Phase;
             internal string Error;
             internal RoomSpatialBounds Spatial;internal string SpatialSource;internal int SpatialRevision;
+            internal bool SuppressStartupAutoplay;
             internal bool SpatialCurrent;internal Matrix4x4 SpatialPlacement;
         }
         readonly Dictionary<string,DormantEntity> dormantNative=new(StringComparer.Ordinal);
@@ -98,7 +99,7 @@ namespace Maestro.Quest.Creation
             loading=graph.Closure(targets).Any(NativeEntityDormant);
             error=null;return !loading||NativeAcquisitionAvailable(out error);
         }
-        async Task<string> ActivateNativeTargets(string[] closure,CancellationToken cancellation,Func<bool> actionAdmission)
+        async Task<string> ActivateNativeTargets(string[] closure,CancellationToken cancellation,Func<bool> actionAdmission,Func<bool> displayDuringHold=null)
         {
             var targets=closure.Where(NativeEntityDormant).ToArray();if(targets.Length==0)return null;
             string error;
@@ -109,10 +110,10 @@ namespace Maestro.Quest.Creation
             using var cancel=CancellationTokenSource.CreateLinkedTokenSource(cancellation);nativeActivation=cancel;
             using var write=WriteGate.TryWrite(out error);if(write==null){nativeActivation=null;return error;}
             var roots=new List<GameObject>();RoomEditPreparation prepared=null;GameObject staging=null;
-            void RuntimeChanged(){if(RuntimeGate.Held)cancel.Cancel();}
+            void RuntimeChanged(){if(RuntimeGate.Held&&displayDuringHold?.Invoke()!=true)cancel.Cancel();}
             RuntimeGate.Changed+=RuntimeChanged;
             foreach(var entry in entries.Values){entry.Phase=NativeEntityPhase.Preparing;entry.Error=null;}
-            bool Current()=>inputCurrent()&&!RuntimeGate.Held&&!WriteGate.Frozen&&(actionAdmission==null||actionAdmission());
+            bool Current()=>inputCurrent()&&(!RuntimeGate.Held||displayDuringHold?.Invoke()==true)&&!WriteGate.Frozen&&(actionAdmission==null||actionAdmission());
             void Check(){cancel.Token.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException("The room changed while activating the area");}
             try {
                 // Unity destruction and asynchronous native resource retirement are
@@ -127,12 +128,13 @@ namespace Maestro.Quest.Creation
                 }
                 Check();document=journal.Snapshot();SynchronizeVisibility(document);
                 staging=new GameObject("Preparing authored area");staging.SetActive(false);staging.transform.SetParent(transform,false);
-                var candidates=new Dictionary<string,Maestro.Quest.Interaction.RoomItem>(StringComparer.Ordinal);int slot=0;
+                var candidates=new Dictionary<string,Maestro.Quest.Interaction.RoomItem>(StringComparer.Ordinal);
+                var slots=document.objects.Where(data=>!data.IsBuiltIn).Select((data,index)=>(data.id,index)).ToDictionary(value=>value.id,value=>value.index,StringComparer.Ordinal);
                 foreach(var data in values){
                     await budget.Step();
                     var root=new GameObject(data.kind.ToString());root.transform.SetParent(staging.transform,false);roots.Add(root);
                     var item=root.AddComponent<CreatedRoomObject>().BuildPrepared(data,Models,RuntimeGate,WorldIdentity,prepared);
-                    ApplyPose(item,NativeActivationPose(data));ConfigureNativeObject(data,item,document,prepared,true,slot++);RestoreNativeRecipe(data,item);
+                    ApplyPose(item,NativeActivationPose(data));ConfigureNativeObject(data,item,document,prepared,true,slots[data.id]);RestoreNativeRecipe(data,item);
                     candidates.Add(data.id,item);
                 }
                 Check();
@@ -176,8 +178,12 @@ namespace Maestro.Quest.Creation
         }
         void RestoreNativeRecipe(RoomObjectData data,Maestro.Quest.Interaction.RoomItem item)
         {
-            if(dormantNative.TryGetValue(data.id,out var entry))
-                item.GetComponent<RecipeObject>()?.RestoreIdleState(entry.Recipe);
+            if(dormantNative.TryGetValue(data.id,out var entry)){
+                var recipe=item.GetComponent<RecipeObject>();recipe?.RestoreIdleState(entry.Recipe);
+                // Approval cannot itself become a new autoplay intent, even if
+                // preview preparation finishes just after its hold is released.
+                if(entry.SuppressStartupAutoplay)recipe?.Stop();
+            }
         }
         void RestoreNativeConnection(RoomObjectData data,Maestro.Quest.Interaction.RoomConnectionView view)
         {

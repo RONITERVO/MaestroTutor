@@ -6988,3 +6988,34 @@ result. World input checks retain IDs/revisions rather than copying recipes on
 every frame. This still admits the current bounded whole world for physics;
 regional collision admission, automatic startup/streaming, larger capacities and
 hardware acceptance remain unfinished.
+
+
+### Cooperative saved-room startup — 2026-10-11
+
+Saved creations now begin as canonical dormant identities rather than being built
+synchronously by the initial reconciliation. The host still owns the book and
+Maestro. A startup owner admits each connected area through the existing shared
+native preparation queue, preserving the single frame budget, resource ledgers,
+atomic publication and stale-input checks used by actions. Saved geometry and
+poses stay in the journal; startup creates no Undo entry or authored revision.
+Fresh recipe instances follow saved autoplay, while previously retired instances
+still restore their stopped runtime poses without restarting autoplay. Recall
+slots use canonical creation order even when areas load separately.
+
+Focus loss and disable cancel current startup interest. Returning to the active
+room can resume loading, but never starts physics. An activity hold can rebuild
+a still preview through a display-only interest in the same queue; ordinary
+actions remain blocked. Review-time autoplay suppression survives even approval
+before loading completes. Write freezes and retiring workspaces still block
+preparation. Temporary forks
+transfer the remaining startup demand to the current journal and invalidate the
+old task. Deleted identities cannot reappear. Failed imports remain inspectable
+and explicitly retryable; startup proceeds with other independent areas instead
+of retrying a broken asset every frame. A 120-second per-area deadline also
+drains its preparation and leaves that area for explicit retry.
+
+This is conservative whole-room startup admission for the current bounded world.
+It does not yet select areas by observation, enable automatic retirement or raise
+capacity limits. Spatial metadata preparation remains independent and passive.
+Regional ground/water/navigation, indirect view and audibility dependencies still
+have to be completed before selective streaming can replace this startup policy.
