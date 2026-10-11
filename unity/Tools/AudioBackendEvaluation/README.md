@@ -107,12 +107,12 @@ It does not load the stock Unity manager or its global spatializer plugin. The
 original default-mode failure remains independently reproducible.
 `PreparedGraph` owns a native context, room, two simulation sources, convolution
 responses, HRTF decoders and buffers for an exact sample rate and block size.
-Preparation runs on one worker before publishing that immutable response. Audio
+Initial preparation runs on one worker before publishing the graph. Audio
 callbacks hold a read lease; retirement forbids new leases and disposal waits for
 existing readers. The control thread polls completion without joining a worker or
 blocking the audio callback. Multiple resets coalesce into one latest request.
 
-Six PlayMode cases pass in the isolated Windows project:
+The initial six PlayMode cases passed in the isolated Windows project:
 
 - Real Unity resets at 48 kHz / 1,024 samples, 24 kHz / 256 samples and 48 kHz /
   512 samples rebuild the native format. Listener measurements contain the
@@ -127,17 +127,63 @@ Six PlayMode cases pass in the isolated Windows project:
 - Close during preparation cannot publish or replay. A superseded worker error
   remains available as retired evidence without poisoning the newer configuration.
 
-The six cases include several assertions from the bullets above. Teardown checks
-that all 17 created graphs are closed and that native validation emits no warnings
+Those six cases include several assertions from the bullets above. Their teardown
+confirmed that all 17 created graphs were closed and that native validation emits no warnings
 or errors. A separate regression first reproduced the stale-error failure, then
 passed after generation-aware error handling. The held-reader check deliberately
 holds the same lease on the test thread; it does not stall Unity's audio device.
 Actual reflected rendering and reset measurement use Unity's real audio thread.
 
-This is a bounded lifecycle prototype, not a second production renderer. It uses
-two synthetic tones and one fixed room/listener pose, with simulation completed
-before DSP publication. It does not establish continuously updating simulation,
-moving HRTFs, speech/media streams, perceptual gain or IR timing, device suspension,
-Android/IL2CPP, Quest budgets or Live echo cancellation. Native response replacement
-and shared app voice/PCM integration must retain this ownership contract before a
-shipping backend decision. No app schema, catalog, dependency or setting changes.
+This is a bounded lifecycle prototype, not a second production renderer. The
+moving-response extension below updates the original fixed-pose experiment.
+
+### Moving responses and consumer handoff
+
+`-OwnedLifecycle` now requires **13 passing cases**, including the original six.
+The pinned library has a single-producer/single-consumer convolution response
+handoff. The adapter keeps sample rate, block size, IR duration and channel count
+fixed within a graph. It reads the source-owned IR pointer before concurrent work;
+ordinary native output fields are not reread while the worker writes them.
+
+One leased worker applies the latest immutable listener/emitter/room snapshot.
+The control thread coalesces intermediate requests and waits for an audio callback
+to consume the completed response before scheduling another. No worker or native
+context is created per incoming pose. Head rotation updates the decoder directly.
+A geometry change silences outdated reflected output until its response is ready.
+A reset preserves the latest desired scene, including a deleted room; it does not
+silently rebuild the original fixture room. A failed current update retires its
+graph and requires explicit recovery. Retired failures remain diagnostic evidence.
+
+The added cases measure native output at the real Unity listener while:
+
+- Moving each emitter and the listener out of and back into the enclosed room.
+- Rotating the listener, reversing the measured left/right level difference
+  without rerunning room simulation.
+- Removing and rebuilding the room three times without restarting either voice.
+- Coalescing twenty incoming edits while a worker remains owned; outdated
+  geometry remains silent until the latest response is consumed.
+- Changing the device format while an update worker is retained, then handling
+  its stale failure without resurrecting deleted geometry.
+- Failing an active update, interrupting output and explicitly recovering.
+- Muting a voice through multiple scene updates and resuming its latest response.
+- Holding audio consumption without blocking the audio thread, allowing at most
+  one unconsumed response, then consuming it and applying the latest queued scene.
+
+Skipping muted DSP consumers reproduced a failure in the new restart case.
+Feeding them zero input and consuming their responses without mixing their output
+corrects it. The final 13-case run closes all 26 graphs, with zero native validation
+warnings/errors. The held-worker gates retain ownership after a real simulation;
+they do not claim interruption inside the synchronous SDK call. The consumer hold
+is fixture instrumentation, not physical headset suspension acceptance.
+
+The source review follows the pinned [producer](https://github.com/ValveSoftware/steam-audio/blob/v4.8.1/core/src/core/simulation_manager.cpp),
+[response buffer](https://github.com/ValveSoftware/steam-audio/blob/v4.8.1/core/src/core/triple_buffer.h)
+and [DSP consumer](https://github.com/ValveSoftware/steam-audio/blob/v4.8.1/core/src/core/overlap_save_convolution_effect.cpp).
+
+This still uses two synthetic tones and one procedurally defined room topology.
+Imported/instanced geometry, application PCM/speech/media, perceptual quality,
+continuous-motion latency and budgets, Android/IL2CPP, Quest suspension/performance
+and Live echo cancellation remain integration gates. A future dry-speech path must
+remain separate from the reflected-output readiness gate. Native effect reset and
+voice replacement must not replay old convolution tails or consume a new stream
+before its output is ready. No app schema, catalog, dependency or setting changes.

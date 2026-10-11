@@ -33,7 +33,7 @@ $record = [ordered]@{
     questAcceptance = $false; providerUsed = $false; physicalAudioPlayback = $false
     sourceHashes = @{}
 }
-foreach ($relative in @('Run-UnityProbe.ps1', 'PrepareUnityProject.py', 'Unity/CandidateTests.cs', 'Unity/NativeDsp.cs', 'Unity/PreparedGraph.cs', 'Unity/OwnedLifecycle.cs', 'Unity/OwnedLifecycleTests.cs')) {
+foreach ($relative in @('Run-UnityProbe.ps1', 'PrepareUnityProject.py', 'Unity/CandidateTests.cs', 'Unity/NativeDsp.cs', 'Unity/PreparedGraph.cs', 'Unity/OwnedLifecycle.cs', 'Unity/OwnedLifecycleTests.cs', 'Unity/AcousticFrame.cs', 'Unity/PreparedGraph.Motion.cs', 'Unity/OwnedLifecycle.Motion.cs', 'Unity/MovingAudioTests.cs')) {
     $record.sourceHashes[$relative] = (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $relative) -Algorithm SHA256).Hash
 }
 $record.sourceHashes['AudioManager.asset'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/ProjectSettings/AudioManager.asset') -Algorithm SHA256).Hash
@@ -74,7 +74,7 @@ try {
         @{ name = $_.name; result = $_.result; message = $_.failure.message.InnerText }
     })
     $expected = @('EditableGeometryAndIndependentVoicesRenderThroughUnity', 'ExistingVoiceSurvivesSameConfigurationAudioReset', 'ChangedDeviceFormatUpdatesSimulationConfiguration')
-    if ($OwnedLifecycle) { $expected = @('DeviceResetRebuildsFormatWithoutReplayingVoices', 'RetiredGraphWaitsForOwnedReader', 'SupersededPreparationDrainsBeforeLatestGenerationPublishes', 'PreparationFailureReleasesNativeOwnershipAndCanRetry', 'SupersededFailureCannotPoisonNewConfiguration', 'CloseDuringPreparationCannotPublishOrReplay') }
+    if ($OwnedLifecycle) { $expected = @('DeviceResetRebuildsFormatWithoutReplayingVoices', 'RetiredGraphWaitsForOwnedReader', 'SupersededPreparationDrainsBeforeLatestGenerationPublishes', 'PreparationFailureReleasesNativeOwnershipAndCanRetry', 'SupersededFailureCannotPoisonNewConfiguration', 'CloseDuringPreparationCannotPublishOrReplay', 'MovingEmittersAndRoomEditsUpdateWithoutVoiceRestart', 'MovingListenerAndHeadRotationChangeMeasuredStereo', 'SceneUpdatesCoalesceWhileAudioContinues', 'ResetDuringSimulationRejectsStaleFailureAndKeepsLatestRoom', 'FailedSceneUpdateRetiresOutputUntilExplicitRetry', 'MutedVoiceConsumesUpdatesBeforeItRestarts', 'ProducerWaitsForAudioConsumerThenAppliesLatestScene') }
     $actual = @($xml.SelectNodes('//test-case') | ForEach-Object { $_.name })
     if (@(Compare-Object ($expected | Sort-Object) ($actual | Sort-Object)).Count -ne 0 -or
         $record.playmodeExit -ne 0 -or $xml.'test-run'.result -ne 'Passed' -or [int]$xml.'test-run'.passed -ne $expected.Count) {

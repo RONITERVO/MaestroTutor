@@ -13,6 +13,7 @@ namespace Maestro.AudioEvaluation
     public sealed class OwnedSink : MonoBehaviour
     {
         internal OwnedLifecycle Owner = new OwnedLifecycle();
+        internal volatile bool BypassRendering;
         AudioSource source;
         AudioClip carrier;
         void OnEnable()
@@ -36,7 +37,13 @@ namespace Maestro.AudioEvaluation
             source.Play();
         }
         void Update() => Owner.Tick();
-        void OnAudioFilterRead(float[] data, int channels) => Owner.Render(data, channels);
+        void OnAudioFilterRead(float[] data, int channels)
+        {
+            if (BypassRendering)
+                Array.Clear(data, 0, data.Length);
+            else
+                Owner.Render(data, channels);
+        }
         void OnDisable()
         {
             AudioSettings.OnAudioConfigurationChanged -= Changed;
@@ -50,7 +57,7 @@ namespace Maestro.AudioEvaluation
     public sealed class CapturedListener : MonoBehaviour
     {
         readonly object gate = new object();
-        readonly float[] captured = new float[262144];
+        readonly float[] captured = new float[262144], capturedRight = new float[262144];
         int count, blocks;
         bool finite = true;
         void OnAudioFilterRead(float[] samples, int channels)
@@ -63,7 +70,11 @@ namespace Maestro.AudioEvaluation
                     for (int c = 0; c < channels; c++)
                         finite &= !float.IsNaN(samples[i + c]) && !float.IsInfinity(samples[i + c]);
                     if (count < captured.Length)
-                        captured[count++] = samples[i];
+                    {
+                        captured[count] = samples[i];
+                        capturedRight[count] = samples[i + (channels > 1 ? 1 : 0)];
+                        count++;
+                    }
                 }
             }
             Array.Clear(samples, 0, samples.Length); // Native output measured, never played to speakers.
@@ -76,17 +87,19 @@ namespace Maestro.AudioEvaluation
                 finite = true;
             }
         }
-        internal (float[] samples, int blocks, bool finite) Read()
+        internal (float[] samples, float[] right, int blocks, bool finite) Read()
         {
             lock (gate)
             {
                 var copy = new float[count];
                 Array.Copy(captured, copy, count);
-                return (copy, blocks, finite);
+                var right = new float[count];
+                Array.Copy(capturedRight, right, count);
+                return (copy, right, blocks, finite);
             }
         }
     }
-    public sealed class OwnedLifecycleTests
+    public sealed partial class OwnedLifecycleTests
     {
         GameObject emitter, listener;
         OwnedSink sink;
@@ -100,7 +113,7 @@ namespace Maestro.AudioEvaluation
         float volume;
         bool pause;
         int opened, closed, diagnostics;
-        float[] measured;
+        float[] measured, measuredRight;
         [UnitySetUp]
         public IEnumerator Setup()
         {
@@ -147,6 +160,7 @@ namespace Maestro.AudioEvaluation
             Assert.Greater(result.blocks, 0, "Real Unity listener callbacks required");
             Assert.IsTrue(result.finite);
             measured = result.samples;
+            measuredRight = result.right;
             double energy = 0;
             foreach (float sample in measured)
                 energy += sample * (double)sample;
@@ -169,8 +183,10 @@ namespace Maestro.AudioEvaluation
             int rate = AudioSettings.outputSampleRate;
             double desired = Power(measured, rate, frequency);
             Assert.Greater(desired, 1e-10, "Expected actual native reflected tone");
-            Assert.Greater(desired, Power(measured, rate, frequency / 2.0) * 20, "Rate halved");
-            Assert.Greater(desired, Power(measured, rate, frequency * 2.0) * 20, "Rate doubled");
+            Assert.Greater(desired, Power(measured, rate, frequency / 2.0) * 20,
+                           "Requested tone missing or unexpected half-rate component");
+            Assert.Greater(desired, Power(measured, rate, frequency * 2.0) * 20,
+                           "Requested tone missing or unexpected double-rate component");
         }
         void Silence()
         {

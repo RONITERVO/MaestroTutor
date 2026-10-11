@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-// A prepared, immutable room response for the optional lifecycle experiment.
-// This is not a moving-world renderer or the app's production audio pipeline.
+// Optional owned native graph. Its format is immutable; response updates have
+// one worker and one DSP consumer. It is not the app's production audio pipeline.
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -10,7 +10,7 @@ using SVector = SteamAudio.Vector3;
 
 namespace Maestro.AudioEvaluation
 {
-    internal sealed class PreparedGraph
+    internal sealed partial class PreparedGraph
     {
         internal const int VoiceCount = 2;
         internal readonly int Rate, Frame;
@@ -42,11 +42,13 @@ namespace Maestro.AudioEvaluation
         internal int Playing => Volatile.Read(ref playing[0]) + Volatile.Read(ref playing[1]);
         internal static readonly string[] VoiceIds = { "maestro-voice", "world-voice" };
 
-        PreparedGraph(int rate, int frame, long generation)
+        PreparedGraph(int rate, int frame, long generation, AcousticFrame initial, long revision)
         {
             Rate = rate;
             Frame = frame;
             Generation = generation;
+            presentation = initial;
+            completedRevision = revision;
             signal = new float[frame];
             channel = new float[frame];
         }
@@ -60,11 +62,12 @@ namespace Maestro.AudioEvaluation
                                      float z) => new CoordinateSpace3 { right = V(1, 0, 0), up = V(0, 1, 0),
                                                                         ahead = V(0, 0, -1), origin = V(x, y, z) };
 
-        // The sole worker owns all mutation and simulation before publication.
-        // No simulation can overwrite the response while an audio callback uses it.
-        internal static PreparedGraph Build(int rate, int frame, long generation, Action prepared = null)
+        // Initial construction owns every resource before publication. Later updates
+        // retain a worker lease and use the pinned SDK's single-consumer IR handoff.
+        internal static PreparedGraph Build(int rate, int frame, long generation, Action prepared = null,
+                                            AcousticFrame initial = null, long revision = 0)
         {
-            var graph = new PreparedGraph(rate, frame, generation);
+            var graph = new PreparedGraph(rate, frame, generation, initial ?? AcousticFrame.Default, revision);
             Interlocked.Increment(ref Opened);
             try
             {
@@ -102,32 +105,13 @@ namespace Maestro.AudioEvaluation
                                                       frameSize = Frame };
             Check(API.iplSimulatorCreate(context, ref simulation, out simulator));
             API.iplSimulatorSetScene(simulator, scene);
-            AddRoom();
             var sourceSettings = new SourceSettings { flags = SimulationFlags.Reflections };
             for (int i = 0; i < VoiceCount; i++)
             {
                 Check(API.iplSourceCreate(simulator, ref sourceSettings, out sources[i]));
                 API.iplSourceAdd(sources[i], simulator);
-                var input = new SimulationInputs { flags = SimulationFlags.Reflections,
-                                                   source = Pose(1, 0, i * .4f),
-                                                   occlusionType = OcclusionType.Raycast,
-                                                   numOcclusionSamples = 8,
-                                                   occlusionRadius = .1f,
-                                                   numTransmissionRays = 1,
-                                                   hybridReverbTransitionTime = .125f,
-                                                   hybridReverbOverlapPercent = .25f,
-                                                   reverbScaleLow = 1,
-                                                   reverbScaleMid = 1,
-                                                   reverbScaleHigh = 1 };
-                API.iplSourceSetInputs(sources[i], SimulationFlags.Reflections, ref input);
             }
-            var shared =
-                new SimulationSharedInputs { listener = Pose(-1, 0, 0), numRays = 1024, numBounces = 8,
-                                             duration = .25f,           order = 1,      irradianceMinDistance = .1f };
-            API.iplSceneCommit(scene);
-            API.iplSimulatorCommit(simulator);
-            API.iplSimulatorSetSharedInputs(simulator, SimulationFlags.Reflections, ref shared);
-            API.iplSimulatorRunReflections(simulator);
+            Simulate(presentation, completedRevision);
             var audio = new SteamAudio.AudioSettings { samplingRate = Rate, frameSize = Frame };
             var hrtfSettings = new HRTFSettings { type = HRTFType.Default, volume = 1 };
             Check(API.iplHRTFCreate(context, ref audio, ref hrtfSettings, out hrtf));
@@ -218,21 +202,28 @@ namespace Maestro.AudioEvaluation
                 return false;
             try
             {
+                long revision = Volatile.Read(ref completedRevision);
+                var parameters = decode;
+                parameters.orientation = Volatile.Read(ref presentation).Listener;
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
-                    if (Volatile.Read(ref playing[voice]) == 0)
-                        continue;
+                    bool audible = Volatile.Read(ref playing[voice]) != 0;
+                    // Consume every published IR even while a voice is muted.
+                    // Otherwise the SDK's pending response can prevent newer writes.
+                    // Muted voices still receive zero input and never mix their tails.
                     double step = 2 * Math.PI * (voice == 0 ? 440 : 660) / Rate;
                     for (int i = 0; i < Frame; i++)
                     {
-                        signal[i] = .03f * (float)Math.Sin(phases[voice]);
+                        signal[i] = audible ? .03f * (float)Math.Sin(phases[voice]) : 0;
                         phases[voice] = (phases[voice] + step) % (2 * Math.PI);
                     }
                     Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
                     NativeDsp.iplReflectionEffectApply(reflections[voice], ref responses[voice], ref inputs[voice],
                                                        ref wet[voice], IntPtr.Zero);
-                    NativeDsp.iplAmbisonicsDecodeEffectApply(decoders[voice], ref decode, ref wet[voice],
+                    NativeDsp.iplAmbisonicsDecodeEffectApply(decoders[voice], ref parameters, ref wet[voice],
                                                              ref stereo[voice]);
+                    if (!audible)
+                        continue;
                     for (int c = 0; c < 2; c++)
                     {
                         Marshal.Copy(Marshal.ReadIntPtr(stereo[voice].data, c * IntPtr.Size), channel, 0, Frame);
@@ -240,6 +231,11 @@ namespace Maestro.AudioEvaluation
                             output[2 * i + c] += channel[i];
                     }
                 }
+                // This acknowledges a callback that began after all native writes
+                // for this revision. No second producer may run before it.
+                Volatile.Write(ref renderedRevision, revision);
+                if (revision < Volatile.Read(ref requiredRevision))
+                    Array.Clear(output, 0, output.Length);
                 return true;
             }
             finally

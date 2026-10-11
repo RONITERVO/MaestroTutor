@@ -7360,3 +7360,28 @@ with the same ownership rules, before an app backend decision. Existing regional
 world simulation, Live capture, physical Quest and Store gates remain open.
 See [audio contract](../unity/AUDIO.md#explicit-lifetime-prototype) and
 [optional reproduction](../unity/Tools/AudioBackendEvaluation/README.md#explicit-lifetime-evaluation).
+
+
+### Moving acoustic response handoff — 2026-10-11
+
+The isolated C API ownership prototype passes all 13 Unity PlayMode cases. It
+updates moving emitters/listeners and edited room geometry while actual DSP runs,
+changes head orientation independently, coalesces repeated edits and respects
+consumer backpressure. Removing/rebuilding the room three times preserves voice
+identity; a reset during a retained worker preserves the latest deleted-room
+state. Failure/retry, old-generation errors, muted-voice restart and stopped audio
+consumption retain explicit ownership. All 26 native graphs close with zero
+validation diagnostics. The old skip-muted behavior failed the new restart case;
+zero-input consumption without output mixing fixes that regression.
+
+This evidence uses two synthetic tones and one procedural room topology on Windows.
+It does not establish application PCM/speech integration, imported/instanced
+geometry, continuous-motion quality or budgets, Android/IL2CPP, Quest suspension,
+perceptual audio or Live echo handling. The stock integration's independent reset
+failure remains preserved. App native source and the existing full verifier are
+unchanged; this increment adds no production dependency or reflection enablement.
+Next, verify direct/reflected stream ownership, Stop and convolution-tail isolation
+using the existing application PCM path before a shipping backend decision. Wider
+world residency, regional simulation and v1 release gates remain open.
+See [audio contract](../unity/AUDIO.md#moving-response-ownership) and
+[reproduction](../unity/Tools/AudioBackendEvaluation/README.md#moving-responses-and-consumer-handoff).

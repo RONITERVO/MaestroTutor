@@ -366,7 +366,7 @@ resources for the actual rate and block size. Repeated changes coalesce. Retired
 errors remain diagnostic evidence without becoming the current configuration's
 failure. No native handles enter saved source definitions.
 
-Six isolated Unity PlayMode cases pass, including real 48/24/48 kHz and
+The initial six isolated Unity PlayMode cases passed, including real 48/24/48 kHz and
 1,024/256/512-sample resets, independently measured reflected voices, silence
 until explicit restart, late-command rejection, reader-held retirement,
 superseded preparation, failed preparation/retry and Close before completion.
@@ -374,10 +374,43 @@ All 17 graphs closed with clean native validation. The stale-worker-error case
 was red before the generation check, then green. These are desktop lifecycle and
 measured-output results; the test tones are silenced at the listener.
 
-The response is prepared for a fixed room and pose before any DSP reader enters.
-This deliberately makes response ownership testable without assuming concurrent
-IR replacement is safe. Continuous simulation, moving listeners, per-voice PCM,
-resource cost, perceptual output and Live capture remain integration gates. The
+The initial prototype prepared its response for a fixed room and pose before any
+DSP reader entered.
+That made response ownership testable before the moving-response extension below.
+Application integration, per-voice PCM, resource cost, perceptual output and Live
+capture remain integration gates. The
 current app still uses its existing renderer with reflections disabled. The
 prototype does not resolve the earlier Meta fault or establish a Quest replacement.
 See [reproduction and limits](Tools/AudioBackendEvaluation/README.md#explicit-lifetime-evaluation).
+
+
+### Moving response ownership
+
+The optional candidate now passes 13 Unity cases, extending the six above with
+moving emitters/listener, independent head rotation, repeated room deletion and
+reconstruction, coalesced edits, a paused DSP consumer, muted-voice restart and
+update failure/reset ownership. All 26 graphs close with clean native validation.
+The measured stereo level difference reverses on a 180-degree head turn without
+recomputing the room. This is measured desktop output, not perceptual acceptance.
+
+The pinned native convolution implementation uses a single producer and consumer
+per response. One leased worker changes geometry/inputs; the audio callback owns
+effect processing and acknowledges complete response consumption. Another worker
+cannot publish until that acknowledgment, so paused consumers cannot accumulate
+stale responses. Muted voices consume zero-input responses without mixing output.
+A regression retaining the earlier skip-muted behavior failed before this change.
+
+Keep desired scene identity outside native lifetime. Device reset rebuilds the
+latest scene, including deleted boundaries. Geometry changes suppress outdated
+reflections while replacement is pending; this gate must not suppress future dry
+speech. Head rotation is independent of slower response computation. Current
+worker failure interrupts and retires the affected graph; stale failure cannot
+poison a replacement. Scene/format resources remain retained until both worker and
+DSP ownership have drained.
+
+Two synthetic voices and one authored room topology establish this protocol.
+They do not establish production PCM handoff, imported geometry, continuous-motion
+quality/latency, scene budgets, Android or Quest/Live acceptance. Before app
+integration, verify voice replacement and Stop against real `SpeechPcmStream`
+receipts and native convolution history. No candidate is installed in the app;
+production reflections and automatic scheduling remain disabled.

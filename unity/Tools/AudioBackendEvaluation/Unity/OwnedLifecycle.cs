@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Maestro.AudioEvaluation
 {
-    internal sealed class OwnedLifecycle
+    internal sealed partial class OwnedLifecycle
     {
         PreparedGraph active, retiring;
         Task<PreparedGraph> pending;
@@ -19,7 +19,7 @@ namespace Maestro.AudioEvaluation
         internal Exception RetiredFailure { get; private set; }
         internal long Generation => generation;
         internal PreparedGraph Active => Volatile.Read(ref active);
-        internal bool Drained => Active == null && retiring == null && pending == null;
+        internal bool Drained => Active == null && retiring == null && pending == null && simulation == null;
         internal int InterruptedVoices { get; private set; }
         internal int StalePreparations { get; private set; }
 
@@ -63,7 +63,8 @@ namespace Maestro.AudioEvaluation
         }
         internal void Tick()
         {
-            if (retiring != null && retiring.TryDispose())
+            FinishSimulation();
+            if (retiring != null && simulation == null && retiring.TryDispose())
                 retiring = null;
             if (pending != null && pending.IsCompleted)
             {
@@ -90,7 +91,10 @@ namespace Maestro.AudioEvaluation
                         StalePreparations++;
                     }
                     else
+                    {
+                        graph.Present(desiredScene, geometryRevision);
                         Volatile.Write(ref active, graph);
+                    }
                 }
                 finished.Dispose();
             }
@@ -100,8 +104,11 @@ namespace Maestro.AudioEvaluation
                 int rate = requestedRate, frame = requestedFrame;
                 long next = generation;
                 Action hook = prepareHook;
-                pending = Task.Run(() => PreparedGraph.Build(rate, frame, next, hook));
+                var initial = desiredScene;
+                long revision = sceneRevision;
+                pending = Task.Run(() => PreparedGraph.Build(rate, frame, next, hook, initial, revision));
             }
+            ScheduleSimulation();
         }
         internal bool Render(float[] samples, int channels)
         {
