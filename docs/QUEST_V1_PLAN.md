@@ -7337,3 +7337,26 @@ verified against configuration changes and the remaining lifetime/output cases.
 The audio contract and release ledger record exact scope and evidence. Current
 full app native tests and CI pass; the earlier intermittent Meta fault and device,
 Live/provider and release acceptance remain open.
+
+
+### Owned audio format lifecycle — 2026-10-11
+
+The candidate evaluation now separates stock-package behavior from an explicitly
+owned native graph. Six Windows Unity PlayMode cases pass through real audio
+callbacks. Same-format reset and changes between 48 kHz / 1,024 samples,
+24 kHz / 256 samples and 48 kHz / 512 samples rebuild resources, interrupt voices
+and require explicit restart. Native reflection/HRTF output retains the expected
+tone frequencies; one stopped voice does not stop the other. Reader-held
+retirement, superseded preparation, failure/retry and Close drain ownership before
+release. A stale-worker failure regression failed first and passes after its error
+was assigned to the retired generation. All 17 graphs close without native
+validation warnings/errors.
+
+This remains an optional isolated prototype with two tones and one fixed room and
+pose. It does not ship a backend, update a saved contract or enable reflections.
+The original stock-package format-reset failure remains runnable. Next, establish
+bounded moving-listener/emitter response replacement and PCM voice integration,
+with the same ownership rules, before an app backend decision. Existing regional
+world simulation, Live capture, physical Quest and Store gates remain open.
+See [audio contract](../unity/AUDIO.md#explicit-lifetime-prototype) and
+[optional reproduction](../unity/Tools/AudioBackendEvaluation/README.md#explicit-lifetime-evaluation).

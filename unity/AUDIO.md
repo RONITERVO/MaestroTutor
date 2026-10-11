@@ -353,3 +353,31 @@ and source/room replacement must use the same lifecycle. Test actual configurati
 and output after each transition; a successful reset call alone is insufficient.
 This is a requirement for the candidate, not a diagnosis or fix of the current
 Meta fault. No app backend or production reflection setting changes here.
+
+
+### Explicit lifetime prototype
+
+The optional evaluator now has a separate `-OwnedLifecycle` mode. It uses the
+pinned C API library directly, keeping the stock integration's failed reset test
+unchanged. The prototype owns preparation, response/buffer lifetime and audio
+consumer leases. A configuration change immediately invalidates voice commands,
+retires the old graph, waits without blocking for its worker/readers, and creates
+resources for the actual rate and block size. Repeated changes coalesce. Retired
+errors remain diagnostic evidence without becoming the current configuration's
+failure. No native handles enter saved source definitions.
+
+Six isolated Unity PlayMode cases pass, including real 48/24/48 kHz and
+1,024/256/512-sample resets, independently measured reflected voices, silence
+until explicit restart, late-command rejection, reader-held retirement,
+superseded preparation, failed preparation/retry and Close before completion.
+All 17 graphs closed with clean native validation. The stale-worker-error case
+was red before the generation check, then green. These are desktop lifecycle and
+measured-output results; the test tones are silenced at the listener.
+
+The response is prepared for a fixed room and pose before any DSP reader enters.
+This deliberately makes response ownership testable without assuming concurrent
+IR replacement is safe. Continuous simulation, moving listeners, per-voice PCM,
+resource cost, perceptual output and Live capture remain integration gates. The
+current app still uses its existing renderer with reflections disabled. The
+prototype does not resolve the earlier Meta fault or establish a Quest replacement.
+See [reproduction and limits](Tools/AudioBackendEvaluation/README.md#explicit-lifetime-evaluation).

@@ -1,0 +1,299 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+// A prepared, immutable room response for the optional lifecycle experiment.
+// This is not a moving-world renderer or the app's production audio pipeline.
+using System;
+using System.Runtime.InteropServices;
+using System.Threading;
+using SteamAudio;
+using SVector = SteamAudio.Vector3;
+
+namespace Maestro.AudioEvaluation
+{
+    internal sealed class PreparedGraph
+    {
+        internal const int VoiceCount = 2;
+        internal readonly int Rate, Frame;
+        internal readonly long Generation;
+        internal static int Opened, Closed, Diagnostics;
+        // Root the reverse-P/Invoke delegate for every context, including a retired one.
+        static readonly LogCallback Log = (level, message) =>
+        {
+            if (level == LogLevel.Warning || level == LogLevel.Error)
+            {
+                Interlocked.Increment(ref Diagnostics);
+                System.Console.Error.WriteLine(message);
+            }
+        };
+        readonly int[] playing = new int[VoiceCount];
+        readonly IntPtr[] sources = new IntPtr[VoiceCount];
+        readonly IntPtr[] reflections = new IntPtr[VoiceCount];
+        readonly IntPtr[] decoders = new IntPtr[VoiceCount];
+        readonly NativeDsp.Buffer[] inputs = new NativeDsp.Buffer[VoiceCount];
+        readonly NativeDsp.Buffer[] wet = new NativeDsp.Buffer[VoiceCount];
+        readonly NativeDsp.Buffer[] stereo = new NativeDsp.Buffer[VoiceCount];
+        readonly ReflectionEffectParams[] responses = new ReflectionEffectParams[VoiceCount];
+        readonly double[] phases = new double[VoiceCount];
+        readonly float[] signal, channel;
+        IntPtr context, scene, simulator, room, hrtf;
+        int readers, retired, disposed, rendering;
+        NativeDsp.DecodeParams decode;
+        internal bool Disposed => Volatile.Read(ref disposed) != 0;
+        internal int Playing => Volatile.Read(ref playing[0]) + Volatile.Read(ref playing[1]);
+        internal static readonly string[] VoiceIds = { "maestro-voice", "world-voice" };
+
+        PreparedGraph(int rate, int frame, long generation)
+        {
+            Rate = rate;
+            Frame = frame;
+            Generation = generation;
+            signal = new float[frame];
+            channel = new float[frame];
+        }
+        static void Check(Error error)
+        {
+            if (error != Error.Success)
+                throw new InvalidOperationException("Native audio creation: " + error);
+        }
+        static SVector V(float x, float y, float z) => new SVector { x = x, y = y, z = z };
+        static CoordinateSpace3 Pose(float x, float y,
+                                     float z) => new CoordinateSpace3 { right = V(1, 0, 0), up = V(0, 1, 0),
+                                                                        ahead = V(0, 0, -1), origin = V(x, y, z) };
+
+        // The sole worker owns all mutation and simulation before publication.
+        // No simulation can overwrite the response while an audio callback uses it.
+        internal static PreparedGraph Build(int rate, int frame, long generation, Action prepared = null)
+        {
+            var graph = new PreparedGraph(rate, frame, generation);
+            Interlocked.Increment(ref Opened);
+            try
+            {
+                graph.Prepare();
+                prepared?.Invoke();
+                return graph;
+            }
+            catch
+            {
+                graph.Retire();
+                graph.TryDispose();
+                throw;
+            }
+        }
+        void Prepare()
+        {
+            var settings = new ContextSettings { version = Constants.kVersion, simdLevel = SIMDLevel.SSE2,
+                                                 flags = ContextFlags.Validation, logCallback = Log };
+            Check(API.iplContextCreate(ref settings, out context));
+            var geometry = new SceneSettings { type = SceneType.Default };
+            Check(API.iplSceneCreate(context, ref geometry, out scene));
+            var simulation = new SimulationSettings { flags = SimulationFlags.Reflections,
+                                                      sceneType = SceneType.Default,
+                                                      reflectionType = ReflectionEffectType.Convolution,
+                                                      maxNumOcclusionSamples = 8,
+                                                      maxNumRays = 1024,
+                                                      numDiffuseSamples = 64,
+                                                      maxDuration = .25f,
+                                                      maxOrder = 1,
+                                                      maxNumSources = VoiceCount,
+                                                      numThreads = 1,
+                                                      rayBatchSize = 1,
+                                                      numVisSamples = 8,
+                                                      samplingRate = Rate,
+                                                      frameSize = Frame };
+            Check(API.iplSimulatorCreate(context, ref simulation, out simulator));
+            API.iplSimulatorSetScene(simulator, scene);
+            AddRoom();
+            var sourceSettings = new SourceSettings { flags = SimulationFlags.Reflections };
+            for (int i = 0; i < VoiceCount; i++)
+            {
+                Check(API.iplSourceCreate(simulator, ref sourceSettings, out sources[i]));
+                API.iplSourceAdd(sources[i], simulator);
+                var input = new SimulationInputs { flags = SimulationFlags.Reflections,
+                                                   source = Pose(1, 0, i * .4f),
+                                                   occlusionType = OcclusionType.Raycast,
+                                                   numOcclusionSamples = 8,
+                                                   occlusionRadius = .1f,
+                                                   numTransmissionRays = 1,
+                                                   hybridReverbTransitionTime = .125f,
+                                                   hybridReverbOverlapPercent = .25f,
+                                                   reverbScaleLow = 1,
+                                                   reverbScaleMid = 1,
+                                                   reverbScaleHigh = 1 };
+                API.iplSourceSetInputs(sources[i], SimulationFlags.Reflections, ref input);
+            }
+            var shared =
+                new SimulationSharedInputs { listener = Pose(-1, 0, 0), numRays = 1024, numBounces = 8,
+                                             duration = .25f,           order = 1,      irradianceMinDistance = .1f };
+            API.iplSceneCommit(scene);
+            API.iplSimulatorCommit(simulator);
+            API.iplSimulatorSetSharedInputs(simulator, SimulationFlags.Reflections, ref shared);
+            API.iplSimulatorRunReflections(simulator);
+            var audio = new SteamAudio.AudioSettings { samplingRate = Rate, frameSize = Frame };
+            var hrtfSettings = new HRTFSettings { type = HRTFType.Default, volume = 1 };
+            Check(API.iplHRTFCreate(context, ref audio, ref hrtfSettings, out hrtf));
+            decode = new NativeDsp.DecodeParams { order = 1, hrtf = hrtf, orientation = Pose(-1, 0, 0),
+                                                  binaural = Bool.True };
+            for (int i = 0; i < VoiceCount; i++)
+            {
+                var output = new SimulationOutputs();
+                API.iplSourceGetOutputs(sources[i], SimulationFlags.Reflections, ref output);
+                if (output.reflections.ir == IntPtr.Zero)
+                    throw new InvalidOperationException("No prepared IR");
+                responses[i] = output.reflections;
+                responses[i].type = ReflectionEffectType.Convolution;
+                responses[i].numChannels = 4;
+                responses[i].irSize = Rate / 4;
+                var effect = new NativeDsp.ReflectionSettings { type = ReflectionEffectType.Convolution, channels = 4,
+                                                                irSize = Rate / 4 };
+                Check(NativeDsp.iplReflectionEffectCreate(context, ref audio, ref effect, out reflections[i]));
+                var decoder =
+                    new NativeDsp.DecodeSettings { layout = new NativeDsp.Layout { type = 1 }, hrtf = hrtf, order = 1 };
+                Check(NativeDsp.iplAmbisonicsDecodeEffectCreate(context, ref audio, ref decoder, out decoders[i]));
+                Check(NativeDsp.iplAudioBufferAllocate(context, 1, Frame, ref inputs[i]));
+                Check(NativeDsp.iplAudioBufferAllocate(context, 4, Frame, ref wet[i]));
+                Check(NativeDsp.iplAudioBufferAllocate(context, 2, Frame, ref stereo[i]));
+            }
+        }
+        void AddRoom()
+        {
+            // Pinned input arrays survive the call; the native mesh owns its copy.
+            var vertices = new[] { V(-3, -3, -3), V(3, -3, -3), V(3, 3, -3), V(-3, 3, -3),
+                                   V(-3, -3, 3),  V(3, -3, 3),  V(3, 3, 3),  V(-3, 3, 3) };
+            var triangles = new[] { 0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4,
+                                    3, 7, 6, 3, 6, 2, 0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5 };
+            var materials = new[] { .2f, .2f, .2f, .5f, .01f, .01f, .01f };
+            var indices = new int[12];
+            GCHandle a = default, b = default, c = default, d = default;
+            try
+            {
+                a = GCHandle.Alloc(vertices, GCHandleType.Pinned);
+                b = GCHandle.Alloc(triangles, GCHandleType.Pinned);
+                c = GCHandle.Alloc(materials, GCHandleType.Pinned);
+                d = GCHandle.Alloc(indices, GCHandleType.Pinned);
+                var mesh = new StaticMeshSettings { numVertices = 8,
+                                                    numTriangles = 12,
+                                                    numMaterials = 1,
+                                                    vertices = a.AddrOfPinnedObject(),
+                                                    triangles = b.AddrOfPinnedObject(),
+                                                    materials = c.AddrOfPinnedObject(),
+                                                    materialIndices = d.AddrOfPinnedObject() };
+                Check(API.iplStaticMeshCreate(scene, ref mesh, out room));
+                API.iplStaticMeshAdd(room, scene);
+            }
+            finally
+            {
+                if (a.IsAllocated)
+                    a.Free();
+                if (b.IsAllocated)
+                    b.Free();
+                if (c.IsAllocated)
+                    c.Free();
+                if (d.IsAllocated)
+                    d.Free();
+            }
+        }
+        internal bool TryEnter()
+        {
+            Interlocked.Increment(ref readers);
+            if (Volatile.Read(ref retired) == 0)
+                return true;
+            Interlocked.Decrement(ref readers);
+            return false;
+        }
+        internal void Exit() => Interlocked.Decrement(ref readers);
+        internal void Retire() => Interlocked.Exchange(ref retired, 1);
+        internal bool SetPlaying(string id, bool value)
+        {
+            int index = Array.IndexOf(VoiceIds, id);
+            if (index < 0 || Volatile.Read(ref retired) != 0)
+                return false;
+            Volatile.Write(ref playing[index], value ? 1 : 0);
+            return true;
+        }
+        // Caller holds a read lease. Only one consumer may mutate DSP history.
+        // Mismatched callbacks produce silence, never process old-size buffers.
+        internal bool Render(float[] output, int channels)
+        {
+            if (channels != 2 || output.Length != Frame * 2 || Interlocked.Exchange(ref rendering, 1) != 0)
+                return false;
+            try
+            {
+                for (int voice = 0; voice < VoiceCount; voice++)
+                {
+                    if (Volatile.Read(ref playing[voice]) == 0)
+                        continue;
+                    double step = 2 * Math.PI * (voice == 0 ? 440 : 660) / Rate;
+                    for (int i = 0; i < Frame; i++)
+                    {
+                        signal[i] = .03f * (float)Math.Sin(phases[voice]);
+                        phases[voice] = (phases[voice] + step) % (2 * Math.PI);
+                    }
+                    Marshal.Copy(signal, 0, Marshal.ReadIntPtr(inputs[voice].data), Frame);
+                    NativeDsp.iplReflectionEffectApply(reflections[voice], ref responses[voice], ref inputs[voice],
+                                                       ref wet[voice], IntPtr.Zero);
+                    NativeDsp.iplAmbisonicsDecodeEffectApply(decoders[voice], ref decode, ref wet[voice],
+                                                             ref stereo[voice]);
+                    for (int c = 0; c < 2; c++)
+                    {
+                        Marshal.Copy(Marshal.ReadIntPtr(stereo[voice].data, c * IntPtr.Size), channel, 0, Frame);
+                        for (int i = 0; i < Frame; i++)
+                            output[2 * i + c] += channel[i];
+                    }
+                }
+                return true;
+            }
+            finally
+            {
+                Volatile.Write(ref rendering, 0);
+            }
+        }
+        // Only the owner calls this, after the preparation Task completed.
+        // Retirement is permanent, so a late reader can only decline the lease.
+        internal bool TryDispose()
+        {
+            if (Volatile.Read(ref retired) == 0 || Volatile.Read(ref readers) != 0)
+                return false;
+            if (Interlocked.Exchange(ref disposed, 1) != 0)
+                return true;
+            for (int i = 0; i < VoiceCount; i++)
+            {
+                if (decoders[i] != IntPtr.Zero)
+                    NativeDsp.iplAmbisonicsDecodeEffectRelease(ref decoders[i]);
+                if (reflections[i] != IntPtr.Zero)
+                    NativeDsp.iplReflectionEffectRelease(ref reflections[i]);
+                if (stereo[i].data != IntPtr.Zero)
+                    NativeDsp.iplAudioBufferFree(context, ref stereo[i]);
+                if (wet[i].data != IntPtr.Zero)
+                    NativeDsp.iplAudioBufferFree(context, ref wet[i]);
+                if (inputs[i].data != IntPtr.Zero)
+                    NativeDsp.iplAudioBufferFree(context, ref inputs[i]);
+                if (sources[i] != IntPtr.Zero)
+                {
+                    API.iplSourceRemove(sources[i], simulator);
+                    API.iplSourceRelease(ref sources[i]);
+                }
+            }
+            if (hrtf != IntPtr.Zero)
+                API.iplHRTFRelease(ref hrtf);
+            if (simulator != IntPtr.Zero)
+            {
+                API.iplSimulatorCommit(simulator);
+                API.iplSimulatorRelease(ref simulator);
+            }
+            if (room != IntPtr.Zero)
+            {
+                API.iplStaticMeshRemove(room, scene);
+                API.iplStaticMeshRelease(ref room);
+            }
+            if (scene != IntPtr.Zero)
+            {
+                API.iplSceneCommit(scene);
+                API.iplSceneRelease(ref scene);
+            }
+            if (context != IntPtr.Zero)
+                API.iplContextRelease(ref context);
+            Interlocked.Increment(ref Closed);
+            return true;
+        }
+    }
+}

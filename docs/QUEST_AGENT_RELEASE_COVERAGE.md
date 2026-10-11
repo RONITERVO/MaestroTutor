@@ -3044,3 +3044,24 @@ the earlier intermittent Meta crash or qualifies Steam Audio as a replacement.
 The next adapter needs a measured, explicit drain/rebuild/rebind path across real
 format changes before integration. The fixture and its pinned-project runner are
 outside the app's Unity assets; no new vendor binary or runtime dependency ships.
+
+
+### Owned audio lifecycle evaluation — 2026-10-11
+
+The optional Unity audio evaluator adds an independent `-OwnedLifecycle` mode.
+It extracts only the pinned Steam Audio 4.8.1 C API binding and Windows CPU library
+into a fresh ignored project. The app project and native verification gate are
+unchanged. Six real PlayMode cases pass: actual sample-rate/block-size reset,
+independent reflected tones, interruption without replay, reader-held retirement,
+coalesced preparation, failure/retry, stale-error ownership and close-before-ready.
+All 17 native graphs close; validation reports zero warnings/errors. The stale
+error regression has retained red-before-green evidence. Listener measurements
+are muted; there is no microphone, provider or headset use.
+
+This is fixed-room/fixed-pose preparation with explicit consumer lifetime, not
+continuous moving-world simulation or production speech integration. The stock
+Unity package's two-pass/one-fail result is preserved separately. Neither result
+clears the Meta crash, Android/IL2CPP, audio perception/performance or Live gates.
+The full app native source is unchanged from the passing `72a9444a` verifier above.
+Reproduction, exact runner receipts and scope:
+[optional evaluator](../unity/Tools/AudioBackendEvaluation/README.md#explicit-lifetime-evaluation).

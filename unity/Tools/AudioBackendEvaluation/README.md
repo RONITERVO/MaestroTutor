@@ -90,3 +90,54 @@ must handle audio-configuration changes through an owned drain/rebuild/rebind
 lifecycle and verify format-correct output, source identities and remaining voices.
 Neither this evaluation nor the C API probe establishes Android/Quest performance,
 Live echo handling or an accepted replacement for the current production renderer.
+
+## Explicit lifetime evaluation
+
+Run the independent ownership experiment with the same pinned archive:
+
+```powershell
+./unity/Tools/AudioBackendEvaluation/Run-UnityProbe.ps1 `
+  -UnityArchive C:/path/to/steamaudio_unity_4.8.1.zip `
+  -Editor C:/path/to/6000.3.24f1/Editor/Unity.exe `
+  -Python python -OwnedLifecycle
+```
+
+This mode extracts only the unmodified C API binding and Windows `phonon.dll`.
+It does not load the stock Unity manager or its global spatializer plugin. The
+original default-mode failure remains independently reproducible.
+`PreparedGraph` owns a native context, room, two simulation sources, convolution
+responses, HRTF decoders and buffers for an exact sample rate and block size.
+Preparation runs on one worker before publishing that immutable response. Audio
+callbacks hold a read lease; retirement forbids new leases and disposal waits for
+existing readers. The control thread polls completion without joining a worker or
+blocking the audio callback. Multiple resets coalesce into one latest request.
+
+Six PlayMode cases pass in the isolated Windows project:
+
+- Real Unity resets at 48 kHz / 1,024 samples, 24 kHz / 256 samples and 48 kHz /
+  512 samples rebuild the native format. Listener measurements contain the
+  intended reflected 440 Hz and 660 Hz tones before they are silenced.
+- Stopping one voice leaves the other audible in the measured output. Reset
+  interrupts both and rejects commands from the old generation; only explicit
+  restart produces new audio. Logical voice IDs remain unchanged.
+- A held reader lease prevents disposal and replacement until it is released.
+- Superseded preparation retains its native ownership until the worker finishes,
+  discards that result, and prepares only the latest request.
+- An injected preparation failure releases ownership and permits explicit retry.
+- Close during preparation cannot publish or replay. A superseded worker error
+  remains available as retired evidence without poisoning the newer configuration.
+
+The six cases include several assertions from the bullets above. Teardown checks
+that all 17 created graphs are closed and that native validation emits no warnings
+or errors. A separate regression first reproduced the stale-error failure, then
+passed after generation-aware error handling. The held-reader check deliberately
+holds the same lease on the test thread; it does not stall Unity's audio device.
+Actual reflected rendering and reset measurement use Unity's real audio thread.
+
+This is a bounded lifecycle prototype, not a second production renderer. It uses
+two synthetic tones and one fixed room/listener pose, with simulation completed
+before DSP publication. It does not establish continuously updating simulation,
+moving HRTFs, speech/media streams, perceptual gain or IR timing, device suspension,
+Android/IL2CPP, Quest budgets or Live echo cancellation. Native response replacement
+and shared app voice/PCM integration must retain this ownership contract before a
+shipping backend decision. No app schema, catalog, dependency or setting changes.

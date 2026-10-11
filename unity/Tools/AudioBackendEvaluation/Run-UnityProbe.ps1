@@ -4,7 +4,8 @@
 param(
     [Parameter(Mandatory)][string]$UnityArchive,
     [Parameter(Mandatory)][string]$Editor,
-    [string]$Python = 'python'
+    [string]$Python = 'python',
+    [switch]$OwnedLifecycle
 )
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
@@ -28,10 +29,11 @@ $record = [ordered]@{
     version = 1; status = 'running'; sourceCommit = (git -C $repo rev-parse HEAD)
     started = [DateTime]::UtcNow.ToString('o'); unity = $version; sdk = '4.8.1'; sdkSha256 = $digest
     project = $project; platform = 'Windows x64'; appRuntimeChanged = $false
+    mode = $(if ($OwnedLifecycle) { 'owned-lifecycle' } else { 'stock-integration' })
     questAcceptance = $false; providerUsed = $false; physicalAudioPlayback = $false
     sourceHashes = @{}
 }
-foreach ($relative in @('Run-UnityProbe.ps1', 'PrepareUnityProject.py', 'Unity/CandidateTests.cs')) {
+foreach ($relative in @('Run-UnityProbe.ps1', 'PrepareUnityProject.py', 'Unity/CandidateTests.cs', 'Unity/NativeDsp.cs', 'Unity/PreparedGraph.cs', 'Unity/OwnedLifecycle.cs', 'Unity/OwnedLifecycleTests.cs')) {
     $record.sourceHashes[$relative] = (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $relative) -Algorithm SHA256).Hash
 }
 $record.sourceHashes['AudioManager.asset'] = (Get-FileHash -LiteralPath (Join-Path $repo 'unity/MaestroQuest/ProjectSettings/AudioManager.asset') -Algorithm SHA256).Hash
@@ -56,21 +58,26 @@ function Invoke-EvaluationEditor([string]$Phase, [string[]]$Extra) {
 }
 Save-Receipt
 try {
-    & $Python (Join-Path $PSScriptRoot 'PrepareUnityProject.py') $archive $project *> (Join-Path $run 'prepare.log')
+    $mode = if ($OwnedLifecycle) { 'owned' } else { 'stock' }
+    & $Python (Join-Path $PSScriptRoot 'PrepareUnityProject.py') $archive $project $mode *> (Join-Path $run 'prepare.log')
     if ($LASTEXITCODE -ne 0) { throw 'Project preparation failed; see prepare.log.' }
-    Invoke-EvaluationEditor 'configure' @('-quit', '-executeMethod', 'Maestro.AudioEvaluation.Configure.Run')
-    if ($record.configureExit -ne 0) { throw 'Candidate configuration failed; see configure.log.' }
+    if (!$OwnedLifecycle) {
+        Invoke-EvaluationEditor 'configure' @('-quit', '-executeMethod', 'Maestro.AudioEvaluation.Configure.Run')
+        if ($record.configureExit -ne 0) { throw 'Candidate configuration failed; see configure.log.' }
+    }
+    $testClass = if ($OwnedLifecycle) { 'Maestro.AudioEvaluation.OwnedLifecycleTests' } else { 'Maestro.AudioEvaluation.CandidateTests' }
     $result = Join-Path $run 'tests.xml'
-    Invoke-EvaluationEditor 'playmode' @('-runTests', '-testPlatform', 'PlayMode', '-testFilter', 'Maestro.AudioEvaluation.CandidateTests', '-testResults', ('"' + $result + '"'))
+    Invoke-EvaluationEditor 'playmode' @('-runTests', '-testPlatform', 'PlayMode', '-testFilter', $testClass, '-testResults', ('"' + $result + '"'))
     if (!(Test-Path -LiteralPath $result)) { throw 'The candidate produced no test report.' }
     [xml]$xml = Get-Content -LiteralPath $result
     $record.tests = @($xml.SelectNodes('//test-case') | ForEach-Object {
         @{ name = $_.name; result = $_.result; message = $_.failure.message.InnerText }
     })
     $expected = @('EditableGeometryAndIndependentVoicesRenderThroughUnity', 'ExistingVoiceSurvivesSameConfigurationAudioReset', 'ChangedDeviceFormatUpdatesSimulationConfiguration')
+    if ($OwnedLifecycle) { $expected = @('DeviceResetRebuildsFormatWithoutReplayingVoices', 'RetiredGraphWaitsForOwnedReader', 'SupersededPreparationDrainsBeforeLatestGenerationPublishes', 'PreparationFailureReleasesNativeOwnershipAndCanRetry', 'SupersededFailureCannotPoisonNewConfiguration', 'CloseDuringPreparationCannotPublishOrReplay') }
     $actual = @($xml.SelectNodes('//test-case') | ForEach-Object { $_.name })
     if (@(Compare-Object ($expected | Sort-Object) ($actual | Sort-Object)).Count -ne 0 -or
-        $record.playmodeExit -ne 0 -or $xml.'test-run'.result -ne 'Passed' -or [int]$xml.'test-run'.passed -ne 3) {
+        $record.playmodeExit -ne 0 -or $xml.'test-run'.result -ne 'Passed' -or [int]$xml.'test-run'.passed -ne $expected.Count) {
         throw 'Candidate requirements did not pass. Retain the failed cases; this does not alter the app native gate.'
     }
     $record.status = 'passed'
