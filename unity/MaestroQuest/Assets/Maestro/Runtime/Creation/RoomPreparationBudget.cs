@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 namespace Maestro.Quest.Creation
@@ -17,6 +18,13 @@ namespace Maestro.Quest.Creation
         long started;
         internal RoomPreparationBudget(Action validate){this.validate=validate??throw new ArgumentNullException(nameof(validate));}
         void BeginFrame(){frame=Time.frameCount;steps=0;started=Stopwatch.GetTimestamp();}
+        // MoveNext performs one owned preparation unit. Validation runs before
+        // each unit, including after a yielded frame; disposal closes the iterator.
+        internal async Task Run(IEnumerable<object> work)
+        {
+            using var steps=work.GetEnumerator();
+            while(true){await Step();if(!steps.MoveNext())return;}
+        }
         internal async Task Step()
         {
             validate();

@@ -43538,7 +43538,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "9eed1a14ce1bbcca9ab69974ac8d5ca068ab11edfd0e872ab0629a3090ded712"
+      "sha256": "fdf72446b287f3fca5864540dc6b8e5b1a45becdc69c645a65f31275ba0f8534"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObjectResidency.cs",
@@ -43566,7 +43566,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeVisual.cs",
-      "sha256": "1ba73e30631d6c7d70c7d705f74ee7c56bf77cb4e5d85ec0cc5985683640aace"
+      "sha256": "0c1e3a5b5c294db60e6ee58e1a6adfc8d07f30e3144e6a3f87df3839f0ee92c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
@@ -43642,7 +43642,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "dd3c6bbd72fcf096c97f6edd699283c946471d2167a2b0fbc3ce9b1989d523de"
+      "sha256": "523e2d0c72cc6e2d5fa2daad39ef24dcf342f50ba12b4edaef9f08095719f287"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -43782,7 +43782,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
-      "sha256": "2a698a30157d79462a538e5a6c45c5df6204a6f90a29fee3a6e8495d4c1c2f48"
+      "sha256": "11ee4fab3cbeb7d125218e5f9121705025ea851ae9cbc81c87f332a1d28747b3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
@@ -43790,7 +43790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
-      "sha256": "a442d272f4d097c7d637cec37a7da5183753560bdc8d7867baae09c0837ea864"
+      "sha256": "91ee3067c00deae6ad94abe087aeb5b2b227ae0d1532ac6186c401f5244df53e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",

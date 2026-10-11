@@ -32,9 +32,20 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = "The construction recipe is invalid or exceeds its limits";
-            if (version != 1 || parts == null || parts.Length < 1 || parts.Length > 32 || tracks == null || tracks.Length > 17 || !float.IsFinite(duration) || duration < .1f || duration > 30) return false;
-            var ids = new Dictionary<string,float>();
-            foreach (var p in parts)
+            var validation=new Validation(this);if(!validation.Header)return false;
+            foreach(var part in parts)if(!validation.Part(part))return false;
+            if(!validation.Tracks())return false;
+            error=null;return true;
+        }
+        // Both synchronous authoring and private native preparation use this
+        // ordered validator. Parents must have been accepted before their child.
+        internal sealed class Validation
+        {
+            readonly RoomRecipe source;
+            readonly Dictionary<string,float> ids=new();
+            internal Validation(RoomRecipe source){this.source=source;}
+            internal bool Header=>source.version==1&&source.parts!=null&&source.parts.Length>=1&&source.parts.Length<=32&&source.tracks!=null&&source.tracks.Length<=17&&float.IsFinite(source.duration)&&source.duration>=.1f&&source.duration<=30;
+            internal bool Part(RecipePart p)
             {
                 if (p == null || !ValidId(p.id) || ids.ContainsKey(p.id) || (p.shape != "box" && p.shape != "sphere" && p.shape != "cylinder" && p.shape != "lathe" && p.shape != "extrude" && p.shape != "sweep") || !RecipeGeometry.Valid(p) ||
                     !MotionFrame.ValidRotation(p.rotation) || !Finite(p.position) || p.position.magnitude > 2 || !Finite(p.size) ||
@@ -45,21 +56,25 @@ namespace Maestro.Quest.Creation
                 distance += p.position.magnitude;
                 if (distance + p.size.magnitude * .5f > 3) return false;
                 ids.Add(p.id,distance);
+                return true;
             }
-            var animated = new HashSet<string>();
-            foreach (var track in tracks)
+            internal bool Tracks()
             {
-                if (track == null || track.part == null || !ids.ContainsKey(track.part) || !animated.Add(track.part) || track.keys == null || track.keys.Length < 2 || track.keys.Length > 16) return false;
-                float previous = -1;
-                foreach (var key in track.keys)
+                var animated = new HashSet<string>();
+                foreach (var track in source.tracks)
                 {
-                    if (key == null || !float.IsFinite(key.time) || key.time <= previous || key.time > duration || previous < 0 && key.time != 0 || !MotionFrame.ValidRotation(key.rotation)) return false;
-                    previous = key.time;
+                    if (track == null || track.part == null || !ids.ContainsKey(track.part) || !animated.Add(track.part) || track.keys == null || track.keys.Length < 2 || track.keys.Length > 16) return false;
+                    float previous = -1;
+                    foreach (var key in track.keys)
+                    {
+                        if (key == null || !float.IsFinite(key.time) || key.time <= previous || key.time > source.duration || previous < 0 && key.time != 0 || !MotionFrame.ValidRotation(key.rotation)) return false;
+                        previous = key.time;
+                    }
+                    if (Mathf.Abs(previous-source.duration) > .001f) return false;
                 }
-                if (Mathf.Abs(previous-duration) > .001f) return false;
+                if (source.playing && source.tracks.Length == 0) return false;
+                return true;
             }
-            if (playing && tracks.Length == 0) return false;
-            error = null; return true;
         }
         public static bool ValidId(string id) => !string.IsNullOrEmpty(id) && id.Length <= 32 && id.All(c => c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c == '_');
         public static bool Finite(Vector3 v) => float.IsFinite(v.x) && float.IsFinite(v.y) && float.IsFinite(v.z);

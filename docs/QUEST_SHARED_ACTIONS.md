@@ -361,3 +361,10 @@ private resources and does not execute the requested effect. This uses the same
 component configuration as normal edits and does not introduce another runtime
 for agents. Its cooperative batch budget does not guarantee a frame-time ceiling
 for an individual mesh upload or activation callback.
+
+Within a procedural object, private preparation also yields between parts. Shared
+ordered validation and the same mesh evaluator serve synchronous authoring and
+asynchronous acquisition. A source snapshot cannot publish until its parts and
+animation tracks are valid and complete; adoption checks that exact source.
+Cancelling midway releases partial meshes and paint. This adds no agent-only
+geometry implementation, new capability, or automatic streaming policy.

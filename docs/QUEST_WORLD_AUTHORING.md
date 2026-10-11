@@ -703,3 +703,9 @@ its saved input prevents the old group from appearing and permits a fresh retry.
 Loading restores saved/cached placement and stopped animation state; it does not
 start physics. Preparation now yields between batches across frames, but this
 does not enable automatic area streaming or increase the current world limits.
+
+Procedural parts can prepare over multiple frames within a single object. Only
+its complete, validated source appears; a cancellation, invalid later part or
+changed saved recipe discards the unfinished geometry. The same evaluator keeps
+its shapes and animations consistent with ordinary synchronous edits. Individual
+mesh uploads and activation callbacks still have no hard frame-time guarantee.

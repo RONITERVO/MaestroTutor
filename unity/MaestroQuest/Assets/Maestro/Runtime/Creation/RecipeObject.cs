@@ -46,9 +46,12 @@ namespace Maestro.Quest.Creation
         public bool Apply(RoomRecipe value)=>Apply(value,null,resourceOwner.Target);
         internal bool Apply(RoomRecipe value,RoomEditPreparation preparation,string target)
         {
-            if(value==null||!value.Validate(out _))return false;
+            if(value==null||preparation==null&&!value.Validate(out _))return false;
             string json=JsonUtility.ToJson(value);if(encoded==json)return false;
-            var candidate=preparation?.TakeRecipe(target,value)??new RecipeVisual(value,resourceOwner);
+            var candidate=preparation?.TakeRecipe(target,value);
+            // Exact prepared sources have already passed the shared validator.
+            // Reconciliation of an unchanged source has no geometry work to repeat.
+            if(candidate==null){if(preparation!=null&&!value.Validate(out _))return false;candidate=new RecipeVisual(value,resourceOwner);}
             // Construction and source copying have finished before stopping any
             // accepted playback, changing part handles or retiring old resources.
             CancelParts();suppressedParts.Clear();var old=visual;old?.SetActive(false);

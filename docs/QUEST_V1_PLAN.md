@@ -6731,3 +6731,32 @@ large geometry/uploads and activation work, observer/audibility/swept demand,
 regional terrain/water/navigation dependencies, regional collision admission,
 concurrent acquisition ownership and scalable capacities still need integration.
 Quest frame-time measurements and real-provider acceptance remain outstanding.
+
+### Procedural preparation within one object — 2026-10-11
+
+Private native activation now yields between procedural parts as well as objects.
+The synchronous edit path and asynchronous loading path drain the same evaluator
+and use one ordered validator for parent references, part geometry and animation
+tracks. The private source copy owns its exact adoption identity. Incomplete or
+stale candidates cannot be adopted or activated, and cancellation releases meshes
+and material leases even when only part of an object has been built. Public
+unprepared recipe inputs still validate before serialization.
+
+A desktop diagnostic used the same 32-part sweep recipe before and after this
+change, with eight samples after warmup. The earlier whole constructor had a
+17.54 ms median. Prepared work now spans a median nine frames; the median busiest
+frame contains 2.41 ms of measured preparation work, with a 4.13 ms maximum across
+these samples. Adoption was measured separately (1.81 ms median). These numbers
+exclude other frame work and are not Quest performance acceptance. Seven native
+regressions cover exact mesh/hierarchy fidelity, mid-object cancellation, late
+invalid parts/tracks, incomplete/disposed publication, stale saved edits and exact
+source adoption without rebuilding accepted geometry.
+
+This targets the measured procedural hotspot. Bounded height-field and compound
+collider constructors remain whole units. Source serialization, a single mesh
+upload/material allocation and activation callbacks remain indivisible; the
+cooperative budget is not a frame-time ceiling. Ordinary journal edits remain
+synchronous. Automatic observation-driven loading, regional terrain/water/
+navigation ownership, concurrent acquisition and larger world limits remain
+separate integration work. Device, real-provider and release acceptance remain
+outstanding.
