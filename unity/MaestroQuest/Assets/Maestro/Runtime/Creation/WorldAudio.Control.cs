@@ -69,14 +69,14 @@ namespace Maestro.Quest.Creation
             if(operation=="gain"&&!RoomAudioDefinition.Range(gain,0,1)){error="Sound gain must be between zero and one";return false;}
             if(operation is not ("pause" or "resume" or "stop" or "gain")){error="Unknown sound control";return false;}
             if(operation=="stop"){Close(v,null,"stopped");result=Sample(v);return true;}
-            if(!v.Output||v.Stream==null){error="The native sound renderer is unavailable";return false;}
+            if(v.Renderer?.Available!=true){error="The native sound renderer is unavailable";return false;}
             switch(operation){
                 case "pause" when !v.Paused:
-                    v.Stream.SetPaused(true);v.Output.Pause();v.Paused=true;v.Phase="paused";Note(v);break;
+                    v.Renderer.SetPaused(true);v.Paused=true;v.Phase="paused";Note(v);break;
                 case "resume" when v.Paused:
-                    v.Paused=false;v.ProgressAt=Time.realtimeSinceStartupAsDouble;v.Stream.SetPaused(false);v.Output.UnPause();v.Phase="playing";Note(v);break;
+                    v.Paused=false;v.ProgressAt=Time.realtimeSinceStartupAsDouble;v.Renderer.SetPaused(false);v.Phase="playing";Note(v);break;
                 case "gain" when v.Gain!=gain:
-                    v.Gain=gain;v.Output.volume=gain;Note(v);break;
+                    v.Gain=gain;v.Renderer.SetGain(gain);Note(v);break;
             }
             result=Sample(v);return true;
         }

@@ -43060,7 +43060,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/NativeSpeechOutput.cs",
-      "sha256": "678a20052ef6b989c3538fc006c78f3263aae1c8968bd35c4c780857f2f33819"
+      "sha256": "fd93d4d5e253df45416f3d66d858c4a48565632f9a67e4b292d7bc481de37379"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.cs",
+      "sha256": "4856df04de5b14d9c0aaa721d691a08961e74a3b4883936ae874321f0025bc97"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PhysicalBookAction.cs",
@@ -44280,11 +44284,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Control.cs",
-      "sha256": "85fd5207860d5f9b6e0ae6ba99d95ad889f050e15c3a1559b35dd0a63b554b22"
+      "sha256": "b6da08baab8e8d6a5a6186b1adb826452f75242292eb5b7c019b00d6a1c1023a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "5b0425263262a3957eae2ceb61bf5dd5288921f364c3a81e27db72305203f823"
+      "sha256": "902befd3c4796da05ff10ac2a9e9766c8748bc1ee97ea2a37bf0163ecbdaf683"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",

@@ -21,10 +21,8 @@ namespace Maestro.Quest.Book
     public sealed class NativeSpeechOutput : MonoBehaviour
     {
         const double ScheduleLeadSeconds = .1;
-        SpeechPcmStream stream;
-        AudioSource source;
-        AudioClip carrier;
-        SpeechPcmFilter filter;
+        PcmOutputLease playback;
+        SpeechPcmStream stream => playback?.Stream;
         long generation;
         int sampleRate;
         bool open, paused, focused = true;
@@ -48,15 +46,7 @@ namespace Maestro.Quest.Book
             FollowAnchor();
         }
         static bool Finite(Vector3 v) => float.IsFinite(v.x) && float.IsFinite(v.y) && float.IsFinite(v.z);
-        internal double TailSeconds
-        {
-            get
-            {
-                if (TailOverride.HasValue) return TailOverride.Value;
-                AudioSettings.GetDSPBufferSize(out var length, out var buffers);
-                return Math.Max(.02, (double)length * Math.Max(1, buffers) / Math.Max(8000, AudioSettings.outputSampleRate) + .02);
-            }
-        }
+        internal double TailSeconds => TailOverride ?? PcmOutputLease.DeviceTail;
         /// <summary>Only the native owner creates generations. A late packet
         /// cannot reopen a stopped output by reusing its old generation.</summary>
         public long Begin(int rate)
@@ -66,23 +56,10 @@ namespace Maestro.Quest.Book
             Stop(); sampleRate = rate;
             try
             {
-                int outputRate = AudioSettings.outputSampleRate;
-                if (outputRate < rate || outputRate > 192000) throw new InvalidOperationException("Unsupported speech output rate.");
-                stream = new SpeechPcmStream(Clock() + ScheduleLeadSeconds, TailSeconds);
-                var child = new GameObject("Maestro voice stream");
-                child.transform.SetParent(transform, false);
-                source = child.AddComponent<AudioSource>();
-                source.playOnAwake = false; source.loop = true;
-                source.spatialBlend = 1; source.dopplerLevel = 0; source.spread = 0; source.priority = 0;
-                source.minDistance = 1; source.maxDistance = 15; source.rolloffMode = AudioRolloffMode.Logarithmic;
-                SpeechSpatializer.Configure(source);
-                roomAudio = source.outputAudioMixerGroup ? GetComponentInParent<RoomAudioOutput>() : null;
-                // A silent mono carrier keeps Unity's DSP graph active. The
-                // procedural filter replaces its samples; it never replays PCM.
-                carrier = AudioClip.Create("Maestro voice carrier", 1024, 1, rate, false);
-                source.clip = carrier;
-                filter = child.AddComponent<SpeechPcmFilter>(); filter.Bind(stream, outputRate);
-                open = true; source.Play();
+                playback = PcmOutputLease.Open(transform,"Maestro voice stream",
+                    new SpeechPcmStream(Clock()+ScheduleLeadSeconds,TailSeconds),true,1,0,1,15);
+                roomAudio = playback.ReflectionOutput;
+                open = true; playback.Start();
             }
             catch { Stop(); throw; }
             return generation;
@@ -106,19 +83,15 @@ namespace Maestro.Quest.Book
         }
         internal void Tick()
         {
-            if (open && (!source || !filter || stream.Read(Clock()).Faulted || roomAudio && roomAudio.MonitorFailed)) Stop();
+            if (!open) return;
+            if (playback?.Available != true || roomAudio && roomAudio.MonitorFailed) { Stop(); return; }
+            var state=stream.Read(Clock());
+            if(state.Faulted||state.Closed)Stop();
         }
         public void Stop()
         {
             open = false; generation++;
-            stream?.Close(); stream = null;
-            if (filter) filter.Stop(); filter = null;
-            if (source) { source.Stop(); source.clip = null; DestroyOwned(source.gameObject); } source = null;
-            if (carrier) DestroyOwned(carrier); carrier = null;
-        }
-        static void DestroyOwned(UnityEngine.Object value)
-        {
-            if (Application.isPlaying) Destroy(value); else DestroyImmediate(value);
+            playback?.Dispose(); playback = null; roomAudio = null;
         }
         internal void FollowAnchor()
         {

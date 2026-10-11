@@ -521,3 +521,25 @@ Android/IL2CPP, per-source capture activity and Quest validation.
 A negative probe publishing completion before the final submission boundary
 fails the new timing check (28 pass, one expected failure). Exact hashes verify
 restoration of every input used by the passing run.
+
+
+### Production playback lease
+
+`NativeSpeechOutput` and `WorldAudio` now share `PcmOutputLease`. Callers retain
+provider/instance identity, source definitions and decode reservations; the lease
+owns the temporary source, filter, carrier and view. Both paths preserve the same
+`SpeechPcmStream` receipts. Gain, pause, pose, availability and completion have one
+renderer boundary. Readiness itself never advances a source clock. A closed lease
+cannot be restarted, and failed preparation closes its transferred stream.
+
+Retain the view independently of its components so cleanup still removes it after
+an AudioSource or filter is lost. Source disappearance must not leave an orphaned
+GameObject or generated AudioClip. The focused native regressions verify this,
+other-voice isolation, rejected setup and fresh speech generations after view loss.
+
+This production refactor still uses Meta direct spatialization. It does not route
+room reflections or install the isolated candidate. `IsDrained(now)` currently
+requires sealed source receipts; the candidate adapter must additionally wait for
+its native final-block/output-delay receipt, without extending the PCM cursor.
+World events and object retention belong to the original exact playback instance.
+The browser mailbox's existing close remains Stop, not an implicit natural end.

@@ -32,10 +32,9 @@ namespace Maestro.Quest.Creation
             internal long Sequence;
             internal RoomItem Item;
             internal RoomAudioEmitter Attachment;
-            internal AudioSource Output;
-            internal AudioClip Carrier;
-            internal SpeechPcmStream Stream;
-            internal SpeechPcmFilter Filter;
+            internal PcmOutputLease Renderer;
+            internal AudioSource Output => Renderer?.Source;
+            internal SpeechPcmStream Stream => Renderer?.Stream;
             internal short[] Samples;
             internal AudioReservations.Lease Resource;
             internal short[] Producer=new short[SpeechPcmStream.MaxChunk];
@@ -83,25 +82,17 @@ namespace Maestro.Quest.Creation
             if(asset.Pending.IsCanceled||asset.Pending.IsFaulted){_=asset.Pending.Exception;Close(v,"The sound could not be decoded");return false;}
             try {
                 v.Samples=asset.Pending.Result;var config=v.Attachment;
-                var child=new GameObject("World sound "+v.Emitter);child.transform.SetParent(transform,false);
-                v.Output=child.AddComponent<AudioSource>();var source=v.Output;
-                source.playOnAwake=false;source.loop=true;source.volume=v.Gain;source.dopplerLevel=0;source.priority=96;
-                source.spatialBlend=config.spatial?1:0;source.minDistance=config.minDistance;source.maxDistance=config.maxDistance;source.rolloffMode=AudioRolloffMode.Logarithmic;
-                if(config.spatial)SpeechSpatializer.Configure(source);
-                AudioSettings.GetDSPBufferSize(out var length,out var buffers);
-                int rate=AudioSettings.outputSampleRate;if(rate<24000||rate>192000)throw new InvalidOperationException("The audio output rate is unsupported");
-                // Reuse the bounded mono PCM transport and actual DSP consumption receipts.
                 v.ProgressAt=Time.realtimeSinceStartupAsDouble;
-                v.Stream=new SpeechPcmStream(AudioSettings.dspTime+.1,Math.Max(.02,(double)length*Math.Max(1,buffers)/rate+.02));
-                v.Carrier=AudioClip.Create("World sound carrier",1024,1,AudioTone.SampleRate,false);source.clip=v.Carrier;
-                v.Filter=child.AddComponent<SpeechPcmFilter>();v.Filter.Bind(v.Stream,rate);
-                Pump(v);if(v.Closed||!Follow(v))return false;source.Play();return true;
+                v.Renderer=PcmOutputLease.Open(transform,"World sound "+v.Emitter,
+                    new SpeechPcmStream(AudioSettings.dspTime+.1,PcmOutputLease.DeviceTail),
+                    config.spatial,v.Gain,96,config.minDistance,config.maxDistance);
+                Pump(v);if(v.Closed||!Follow(v))return false;v.Renderer.Start();return true;
             } catch(Exception e){Close(v,"Could not start room sound: "+e.Message);return false;}
         }
         void Pump(Instance v)
         {
             var state=v.Stream.Read(AudioSettings.dspTime);
-            if(state.Faulted){Close(v,"Audio output stopped consuming samples");return;}
+            if(state.Faulted||state.Closed){Close(v,"Audio output stopped consuming samples");return;}
             while((v.Loop||v.Written<v.Samples.Length)&&state.Submitted-state.Played<24000*7) {
                 int count=v.Loop?v.Producer.Length:(int)Math.Min(v.Producer.Length,v.Samples.Length-v.Written);
                 for(int at=0;at<count;){int source=(int)((v.Written+at)%v.Samples.Length),take=Math.Min(count-at,v.Samples.Length-source);Array.Copy(v.Samples,source,v.Producer,at,take);at+=take;}
@@ -116,7 +107,7 @@ namespace Maestro.Quest.Creation
                 if(!v.Stream.TryComplete(v.Sequence,out var error)){Close(v,error);return;}
                 state=v.Stream.Read(AudioSettings.dspTime);
             }
-            if(state.SourceDrained){v.Complete=true;Close(v,null);}
+            if(v.Renderer.IsDrained(AudioSettings.dspTime)){v.Complete=true;Close(v,null);}
         }
         internal void Tick(Instance v)
         {
@@ -125,15 +116,15 @@ namespace Maestro.Quest.Creation
             int revision=editor.ObjectRevision(v.Target);
             if(revision!=v.ObjectRevision){var current=editor.ReadAudioEmitter(v.Target,v.Emitter);if(current==null||JsonUtility.ToJson(current)!=v.Definition){Cancel(v,"The sound emitter changed or was removed");return;}v.ObjectRevision=revision;}
             if(v.Stream==null){OpenRenderer(v);return;}
-            if(!v.Output||!v.Filter){Close(v,"The audio renderer became unavailable");return;}
+            if(v.Renderer?.Available!=true){Close(v,"The audio renderer became unavailable");return;}
             if(!Follow(v))return;
-            if(v.Paused){var state=v.Stream.Read(AudioSettings.dspTime);if(state.Faulted){Close(v,"The paused audio renderer failed");return;}v.Cursor=state.Played/(double)AudioTone.SampleRate;return;}
+            if(v.Paused){var state=v.Stream.Read(AudioSettings.dspTime);if(state.Faulted||state.Closed){Close(v,"The paused audio renderer failed");return;}v.Cursor=state.Played/(double)AudioTone.SampleRate;return;}
             Pump(v);
         }
         bool Follow(Instance v)
         {
             if(!Anchor(v.Item,v.Attachment,out var position,out var rotation,out var error)){Close(v,error);return false;}
-            v.Output.transform.SetPositionAndRotation(position,rotation);return true;
+            v.Renderer.SetPose(position,rotation);return true;
         }
         static bool Anchor(RoomItem item,RoomAudioEmitter emitter,out Vector3 position,out Quaternion rotation,out string error)
         {
@@ -154,11 +145,10 @@ namespace Maestro.Quest.Creation
         internal void Close(Instance v,string error="Sound playback was cancelled",string phase=null)
         {
             if(v.Closed)return;if(v.Stream!=null)v.Cursor=v.Stream.Read(AudioSettings.dspTime).Played/(double)AudioTone.SampleRate;
-            v.Closed=true;v.Error=error;v.Phase=phase??(v.Complete?"completed":"failed");Note(v);v.Stream?.Close();v.Filter?.Stop();
-            if(v.Output){v.Output.Stop();v.Output.clip=null;Destroy(v.Output.gameObject);}if(v.Carrier)Destroy(v.Carrier);
+            v.Closed=true;v.Error=error;v.Phase=phase??(v.Complete?"completed":"failed");Note(v);v.Renderer?.Dispose();
             var resource=v.Resource?.Resource;v.Resource?.Dispose();v.Resource=null;
             if(resource!=null&&resource.Retiring&&decoded.TryGetValue(v.CacheKey,out var cached)&&ReferenceEquals(resource,cached))decoded.Remove(v.CacheKey);
-            v.Samples=null;v.Producer=null;v.Stream=null;v.Filter=null;v.Output=null;v.Carrier=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
+            v.Samples=null;v.Producer=null;v.Renderer=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
         }
         void CloseAll(string reason){foreach(var voice in instances.Values.ToArray())Cancel(voice,reason);}
         void LateUpdate(){foreach(var voice in instances.Values.ToArray())Tick(voice);PruneDecoded();}

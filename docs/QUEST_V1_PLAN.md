@@ -7499,3 +7499,28 @@ dependency, saved contract, provider or device change is included. Next integrat
 production reservations, geometry/obstruction and per-source activity, then verify
 Android/IL2CPP and physical Quest/Live behavior. Wider world residency and v1 Store
 gates remain open. See [audio contract](../unity/AUDIO.md#natural-renderer-completion).
+
+
+### Shared production playback ownership — 2026-10-12
+
+Speech and authored world audio now use one `PcmOutputLease` for native playback
+setup, the generated carrier, PCM filter, gain/pause/pose controls, completion and
+cleanup. The existing Meta direct renderer remains active; this change does not
+install the experimental backend or enable reflections. Provider generations,
+mouth following, decode reservations, exact world instances, saved definitions,
+events and source limits remain owned by their existing shared systems.
+
+The lease retains its GameObject and carrier independently of the AudioSource.
+Losing native components or a whole view cannot orphan the remaining resources,
+reopen a closed stream or cancel a different sound. Invalid preparation closes
+the transferred stream. Availability checks do not advance the playback clock.
+Finite world completion now consults the renderer boundary, retaining the same
+source-sample receipts; future downstream tails must complete there as well.
+
+Three focused native regressions pass, including lost components with another
+continuing lease, rejected setup, and lost speech view followed by a fresh
+packet generation. Native catalog export matches the shared catalog: only three
+source hashes and the new helper's provenance change. Complete app verification,
+its book/headless journeys and CI are tracked against the frozen source in
+`.quest-evidence/audio-renderer-lease` and the draft PR. Candidate adaptation,
+production geometry, Android and physical Quest/Live acceptance remain open.
