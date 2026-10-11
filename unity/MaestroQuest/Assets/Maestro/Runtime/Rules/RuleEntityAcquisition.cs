@@ -41,7 +41,7 @@ namespace Maestro.Quest.Rules
             bool disposed;
             internal NativeDemand(CapabilityContext context,string[] targets,Func<bool> admission)
             {
-                inputCurrent=context.Editor?context.Editor.CaptureNativeActionInput():null;
+                inputCurrent=context.Editor?context.Editor.CaptureNativeActionInput(targets):null;
                 pending=context.Editor?context.Editor.AcquireNativeEntities(targets,admission,cancellation.Token):Task.FromResult("The room is unavailable");
             }
             internal override RuleActionState State(out string error)

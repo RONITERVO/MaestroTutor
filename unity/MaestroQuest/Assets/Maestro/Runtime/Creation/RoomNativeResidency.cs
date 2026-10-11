@@ -40,22 +40,15 @@ namespace Maestro.Quest.Creation
         internal string NativeActivationError(string target)=>dormantNative.TryGetValue(target,out var entry)?entry.Error:null;
         void SynchronizeNativeResidency(HashSet<string> saved)
         {
-            if(!ReferenceEquals(nativeJournal,journal)){nativeActivation?.Cancel();nativeGeneration++;dormantNative.Clear();nativeJournal=journal;}
+            if(!ReferenceEquals(nativeJournal,journal)){CancelNativeActivation();dormantNative.Clear();nativeJournal=journal;}
             foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray())dormantNative.Remove(id);
         }
-        internal bool NativeActivationPending=>nativeActivation!=null;
-        // Task completion is not effect admission: another Unity callback can edit
-        // or replace the journal before the scheduler's next frame.
-        internal Func<bool> CaptureNativeActionInput()
-        {
-            var source=journal;int revision=Revision,generation=nativeGeneration;
-            return ()=>this&&isActiveAndEnabled&&ReferenceEquals(journal,source)&&Revision==revision&&nativeGeneration==generation;
-        }
+        internal bool NativeActivationPending=>nativeActivation!=null||nativeAcquisitions.Count>0;
         bool NativeTransitionAvailable(out string error,Func<bool> actionAdmission=null)
         {
             if(!CanEditStructures(out error))return false;
             error="Wait for the room's current interaction or action to finish before loading or unloading objects";
-            if(!isActiveAndEnabled||applying||AnyHeld||DrawingMode||nativeActivation!=null||(actionAdmission!=null?!actionAdmission():GetComponent<RoomRules>()?.Scheduler?.HasOtherWork("")==true))return false;
+            if(!isActiveAndEnabled||applying||AnyHeld||DrawingMode||NativeActivationPending||(actionAdmission!=null?!actionAdmission():GetComponent<RoomRules>()?.Scheduler?.HasOtherWork("")==true))return false;
             error=null;return true;
         }
         // The caller owns observation demand. Existing native ownership, audio,
@@ -98,26 +91,14 @@ namespace Maestro.Quest.Creation
             // inactive instance can be repaired, edited or removed by its action.
             foreach(var id in targets)if(!NativeEntityDormant(id)&&!TryGetNativeObject(id,out _,out error))return false;
             loading=graph.Closure(targets).Any(NativeEntityDormant);
-            error=null;return !loading||NativeTransitionAvailable(out error);
-        }
-        internal Task<string> AcquireNativeEntities(string[] targets,Func<bool> actionAdmission,CancellationToken cancellation)
-        {
-            var graph=ReadRetention();
-            if(graph==null||targets.Any(id=>!graph.Contains(id)))return Task.FromResult("A required saved object is missing");
-            var closure=graph.Closure(targets);
-            // Resident calls preserve existing concurrency. Only actual activation
-            // needs exclusive scheduler admission while geometry is assembled.
-            if(!closure.Any(NativeEntityDormant))return Task.FromResult<string>(null);
-            if(actionAdmission==null)return Task.FromResult("Native activation has no action owner");
-            if(!NativeTransitionAvailable(out var error,actionAdmission))return Task.FromResult(error);
-            return ActivateNativeTargets(closure,cancellation,actionAdmission);
+            error=null;return !loading||NativeAcquisitionAvailable(out error);
         }
         async Task<string> ActivateNativeTargets(string[] closure,CancellationToken cancellation,Func<bool> actionAdmission)
         {
             var targets=closure.Where(NativeEntityDormant).ToArray();if(targets.Length==0)return null;
             string error;
             var entries=targets.ToDictionary(id=>id,id=>dormantNative[id],StringComparer.Ordinal);
-            var source=journal;int revision=Revision,generation=nativeGeneration;
+            var inputCurrent=CaptureNativeClosureInput(closure);
             var document=journal.Snapshot();var activating=targets.ToHashSet(StringComparer.Ordinal);
             var values=document.objects.Where(data=>activating.Contains(data.id)).ToArray();
             using var cancel=CancellationTokenSource.CreateLinkedTokenSource(cancellation);nativeActivation=cancel;
@@ -126,20 +107,20 @@ namespace Maestro.Quest.Creation
             void RuntimeChanged(){if(RuntimeGate.Held)cancel.Cancel();}
             RuntimeGate.Changed+=RuntimeChanged;
             foreach(var entry in entries.Values){entry.Phase=NativeEntityPhase.Preparing;entry.Error=null;}
-            bool Current()=>this&&isActiveAndEnabled&&ReferenceEquals(journal,source)&&Revision==revision&&nativeGeneration==generation&&!RuntimeGate.Held&&!WriteGate.Frozen&&(actionAdmission==null||actionAdmission());
+            bool Current()=>inputCurrent()&&!RuntimeGate.Held&&!WriteGate.Frozen&&(actionAdmission==null||actionAdmission());
             void Check(){cancel.Token.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException("The room changed while activating the area");}
             try {
                 // Unity destruction and asynchronous native resource retirement are
                 // distinct. Existing reservation ledgers remain charged while an
                 // importer/decoder drains; new admissions obey those same budgets.
                 while(entries.Values.Any(entry=>entry.RetiringRoot)){Check();await Task.Yield();}
-                Check();var budget=new RoomPreparationBudget(Check);prepared=await RoomEditPreparation.PrepareNativeAsync(this,values,budget);
+                Check();var budget=new RoomPreparationBudget(Check,nativePreparationWindow);prepared=await RoomEditPreparation.PrepareNativeAsync(this,values,budget);
                 foreach(var data in values.Where(data=>data.kind==RoomObjectKind.ImportedModel)){
                     var asset=await Models.ReadAsync(data.modelHash);Check();
                     var model=await PreparedImportedModel.Load(asset,data,WorldIdentity,cancel.Token,Current);
                     try{Check();prepared.EnlistModel(model,data);}catch{model.Dispose();throw;}
                 }
-                Check();SynchronizeVisibility(document);
+                Check();document=journal.Snapshot();SynchronizeVisibility(document);
                 staging=new GameObject("Preparing authored area");staging.SetActive(false);staging.transform.SetParent(transform,false);
                 var candidates=new Dictionary<string,Maestro.Quest.Interaction.RoomItem>(StringComparer.Ordinal);int slot=0;
                 foreach(var data in values){
@@ -197,6 +178,6 @@ namespace Maestro.Quest.Creation
         {
             if(dormantNative.TryGetValue(data.id,out var entry)&&entry.ConnectionSource==JsonUtility.ToJson(data.connections.FirstOrDefault()))view.RestoreBrokenState(entry.ConnectionBroken);
         }
-        void CancelNativeActivation(){nativeGeneration++;nativeActivation?.Cancel();}
+        void CancelNativeActivation(){nativeGeneration++;foreach(var job in nativeAcquisitions.ToArray())job.Cancel();nativeActivation?.Cancel();}
     }
 }

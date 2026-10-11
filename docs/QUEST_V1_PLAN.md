@@ -6642,7 +6642,7 @@ Before actual streaming, finish the remaining native-call audit and introduce ac
 
 Internal native area transitions now retire actual creation GameObjects while keeping their canonical definitions, stable IDs, model hashes, animation definitions, drawings and Undo history. Intentional dormancy is distinct from unexpected native loss, so unrelated accepted edits cannot reconstruct a deliberately retired area. An activation prepares every imported model and synchronous geometry candidate before publishing the connected group. Failed or cancelled preparation keeps saved contents available and permits retry; it never substitutes a loading placeholder for a completed activation.
 
-Area membership and enabled physical connections determine one activation/retirement closure. Existing ownership, audio, running animation, held objects and simulation dependencies prevent retirement. The book and Maestro remain owned by their host. Running or queued programs prevent retirement conservatively. The action-acquisition integration below admits activation for its sole owning run; unrelated running or queued work still prevents loading. Physics remains paused until every required authored area is active under today's whole-world collision admission; restored geometry cannot silently restart it.
+Area membership and enabled physical connections determine one activation/retirement closure. Existing ownership, audio, running animation, held objects and simulation dependencies prevent retirement. The book and Maestro remain owned by their host. Running or queued programs prevent retirement conservatively. The shared acquisition queue described below permits independent loading requests; conservative retirement admission still waits for other running or queued work. Physics remains paused until every required authored area is active under today's whole-world collision admission; restored geometry cannot silently restart it.
 
 Idle native placement, a stopped recipe's part poses/playback interruption, and broken connection state survive retirement when their respective authored inputs have not changed. Renaming an object must not restart its animation or repair its broken connection. Edits invalidate the relevant cached state; canonical edits and Undo remain authoritative. Temporary-room journal replacement cancels pending activation and discards stale native lifetime hints. Native lifetime hints are not a second saved world format.
 
@@ -6659,11 +6659,11 @@ Native modules declare explicit entity dependencies separately from their animat
 
 The scheduler now acquires those entities before native preflight and effect execution, for both one-off user/agent invocations and saved programs. A read-only catalog check may admit loading, with an explicit status saying native checks follow preparation; it does not claim the effect is already ready. The real agent execution path uses that same admission. The receipt keeps its ID and shows “Loading required objects.” Cancellation, pause/runtime hold, changed canonical input, preparation failure and a bounded 30-second acquisition timeout cannot resume a cancelled effect. Full native preflight runs after loading. Instant effects remain synchronous after acquisition; timed playback receives its full requested duration after loading.
 
-An acquisition restores the existing area/connection closure using the canonical journal and transactional native candidates. Only the acquiring scheduler run can authorize this activation, and only when no other run or queued work is present. Other actions cannot slip into the preparation interval. Already-resident actions retain their existing concurrency. Resource ownership, current model hashes, saved revisions and normal action channels remain authoritative; acquisition is not a second program runtime or an alternate agent tool. Failed loading is visible and retryable without replacing saved content.
+An acquisition restores the existing area/connection closure using the canonical journal and transactional native candidates. Each acquiring run supplies its own admission and cancellation. Independent requests share or queue native preparation while unrelated resident actions continue; conflicting action channels and room-wide actions remain excluded. Resource ownership, current model hashes, saved revisions and normal action channels remain authoritative; acquisition is not a second program runtime or an alternate agent tool. Failed loading is visible and retryable without replacing saved content.
 
 Automatic unloading remains disabled. These are internal admission primitives exercised by offline native tests. Observation/audibility demand, finer-grained geometry/upload work within the cooperative preparation budget, ground/water/navigation/swept-support dependencies, regional collision admission, scalable capacities and physical/provider acceptance are still required before distant areas can stream automatically. Whole-world simulation still refuses while any authored area is dormant. No larger capacity, automatic distant simulation, Quest installation or release acceptance follows from this increment.
 
-A completed load retains its journal identity, revision and native generation through final effect admission, including any subsequent channel wait. A new edit or a replacement journal (even at the same revision) between load completion and the next scheduler frame fails the pending action without changing the newer state. Native integration regressions exercise a newer edit, a temporary-room journal boundary, and an editor disable/re-enable at an unchanged revision.
+A completed load retains its journal identity, native generation and revisions of its explicit objects and their shared resources through final effect admission, including any subsequent channel wait. An edit to those inputs or a replacement journal (even at the same revision) between load completion and the next scheduler frame fails the pending action without changing the newer state. Unrelated object edits do not invalidate it. Native integration regressions exercise a newer edit, a temporary-room journal boundary, and an editor disable/re-enable at an unchanged revision.
 
 
 ### Native authoring dependencies — 2026-10-11
@@ -6691,7 +6691,7 @@ placement. No saved token is silently refreshed to force a request through.
 This completes the current explicit authoring-dependency audit, not automatic
 streaming. New modules must declare and test their native dependencies. Finer-grained frame
 budgets, observer/audibility/swept demand, ground/water/navigation support,
-regional physics admission, concurrent acquisition ownership and scalable capacity
+regional physics admission and scalable capacity
 remain required before enabling automatic unloading. Device/provider and release
 acceptance remain outstanding.
 
@@ -6729,7 +6729,7 @@ remain in force after acquisition and through effect admission.
 Automatic observation-driven streaming remains disabled. Chunking individual
 large geometry/uploads and activation work, observer/audibility/swept demand,
 regional terrain/water/navigation dependencies, regional collision admission,
-concurrent acquisition ownership and scalable capacities still need integration.
+scalable capacities still need integration.
 Quest frame-time measurements and real-provider acceptance remain outstanding.
 
 ### Procedural preparation within one object — 2026-10-11
@@ -6757,7 +6757,7 @@ collider constructors remain whole units. Source serialization, a single mesh
 upload/material allocation and activation callbacks remain indivisible; the
 cooperative budget is not a frame-time ceiling. Ordinary journal edits remain
 synchronous. Automatic observation-driven loading, regional terrain/water/
-navigation ownership, concurrent acquisition and larger world limits remain
+navigation ownership and larger world limits remain
 separate integration work. Device, real-provider and release acceptance remain
 outstanding.
 
@@ -6788,6 +6788,46 @@ The current map still covers the bounded world's accepted ground. These explicit
 dependencies do not yet replace whole-world collision admission: running physics
 continues to retain every collision area, including sleeping-body support. Future
 query footprints, swept-body and water-medium demand, regional map construction,
-observer/audibility demand, concurrent acquisition and larger capacities remain
+observer/audibility demand and larger capacities remain
 required before automatic streaming. Quest/provider/release acceptance remains
 outstanding.
+
+### Shared native acquisition queue — 2026-10-11
+
+Independent invocations and saved programs can now request dormant native objects
+concurrently. Equal connected-area closures share one preparation job; different
+or partially overlapping requests queue in one lane and prepare only content
+that is still dormant when they reach it. The lane shares a frame-budget window
+across consecutive jobs, so several short loads cannot each reset the four-unit /
+two-millisecond cooperative budget in one frame. Individual uploads, source
+snapshots and publication callbacks remain indivisible.
+
+Each requester retains its own cancellation and effect admission. Cancelling one
+requester does not discard a shared preparation still needed by another. The last
+requester cancels unused work, and queued cancellation cannot later publish or
+execute an effect. Runtime holds, editor lifecycle and journal replacement cancel
+active and queued work. The scheduler reserves normal action channels before
+loading: conflicts remain explicit, while unrelated resident actions and timers
+continue. Room-wide actions and the legacy bulk-edit cancellation contract remain
+unchanged.
+
+Input guards use explicit object revisions and their referenced appearance,
+environment and visibility revisions rather than the whole room's edit counter.
+Native preparation additionally guards its entire connected closure and area
+membership. Dependency topology is recomputed only when the canonical room
+revision changes. A material, profile, member, model, object or journal change
+cannot publish stale candidates or run an old effect; an unrelated edit need not
+cancel it. Visibility synchronization uses the current accepted document.
+
+Native regressions exercise real independent edits during preparation, queued
+areas, shared loads with one or both requesters, cancellation before activation,
+changed membership, conflicting channels, runtime holds, shared-resource guards
+and successive small loads' aggregate frame budget. Scheduler tests cover
+independent pending claims and cancellation. No extra agent execution path,
+capability, saved format or automatic streaming policy is introduced.
+
+Automatic retirement still waits conservatively for scheduled work; running
+physics still needs the whole collision environment. Observer/audibility demand,
+regional maps, swept support and water-medium demand, wider capacities and device
+performance remain necessary before automatic streaming. Real-provider, headset
+and release acceptance remain outstanding.

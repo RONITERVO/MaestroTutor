@@ -376,3 +376,16 @@ closure as other owners and are available to users, programs and agents. Reads
 never rebuild navigation or activate content. Consumer retirement and route
 completion/cancellation release their own dependencies. Whole-world physics
 admission and the existing loading limits remain in force.
+
+Native acquisition requests now share one preparation queue. Equal connected
+closures share a load; other requests queue without blocking unrelated resident
+actions or timers. Each requester can cancel independently. The scheduler holds
+its normal channels during preparation and still excludes conflicting or
+room-wide work. One shared frame-budget window spans consecutive jobs.
+
+An action's admission guard tracks its explicit object revisions and referenced
+appearance, environment and visibility definitions, plus journal/lifecycle
+identity. Preparation also guards connected membership and every source in its
+closure. Unrelated edits do not invalidate those inputs. The same module preflight
+still runs after loading; read-only facts do not acquire objects. Conservative
+retirement, whole-world physics admission and automatic-streaming limits remain.

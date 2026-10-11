@@ -14,10 +14,13 @@ namespace Maestro.Quest.Creation
         internal const int MaximumStepsPerFrame=4;
         const double SecondsPerFrame=.002;
         readonly Action validate;
-        int frame=-1,steps;
-        long started;
-        internal RoomPreparationBudget(Action validate){this.validate=validate??throw new ArgumentNullException(nameof(validate));}
-        void BeginFrame(){frame=Time.frameCount;steps=0;started=Stopwatch.GetTimestamp();}
+        internal sealed class Window
+        {
+            internal int Frame=-1,Steps;internal long Started;
+            internal void Begin(){Frame=Time.frameCount;Steps=0;Started=Stopwatch.GetTimestamp();}
+        }
+        readonly Window window;
+        internal RoomPreparationBudget(Action validate,Window window=null){this.validate=validate??throw new ArgumentNullException(nameof(validate));this.window=window??new Window();}
         // MoveNext performs one owned preparation unit. Validation runs before
         // each unit, including after a yielded frame; disposal closes the iterator.
         internal async Task Run(IEnumerable<object> work)
@@ -28,12 +31,12 @@ namespace Maestro.Quest.Creation
         internal async Task Step()
         {
             validate();
-            if(frame!=Time.frameCount)BeginFrame();
-            if(steps>0&&(steps>=MaximumStepsPerFrame||(Stopwatch.GetTimestamp()-started)/(double)Stopwatch.Frequency>=SecondsPerFrame)){
-                do{await Task.Yield();validate();}while(Time.frameCount==frame);
-                BeginFrame();
+            if(window.Frame!=Time.frameCount)window.Begin();
+            if(window.Steps>0&&(window.Steps>=MaximumStepsPerFrame||(Stopwatch.GetTimestamp()-window.Started)/(double)Stopwatch.Frequency>=SecondsPerFrame)){
+                do{await Task.Yield();validate();}while(Time.frameCount==window.Frame);
+                window.Begin();
             }
-            steps++;
+            window.Steps++;
         }
     }
 }

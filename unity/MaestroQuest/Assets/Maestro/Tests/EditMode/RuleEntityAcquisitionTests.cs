@@ -25,6 +25,24 @@ namespace Maestro.Quest.Tests
             public bool Complete(string id,out string error){Completions++;error=null;return true;}
             public void Stop(string id,bool preserve){}
         }
+        sealed class IndependentActions:IRuleActions,IRuleEntityAcquisition
+        {
+            internal readonly System.Collections.Generic.Dictionary<string,Demand> Demands=new();
+            internal readonly System.Collections.Generic.List<string> Started=new();
+            public bool CanRun(CapabilityCall call,out string error){error=null;return Demands[(string)call.Arguments["target"]].Ready;}
+            public bool Start(string run,CapabilityCall call,out float seconds,out string error){Started.Add((string)call.Arguments["target"]);seconds=0;error=null;return true;}
+            public void Stop(string run,bool preserve){}
+            RuleEntityDemand IRuleEntityAcquisition.Acquire(CapabilityCall call,Func<bool> admission){Assert.That(admission(),Is.True);var demand=new Demand();Demands.Add((string)call.Arguments["target"],demand);return demand;}
+        }
+        [Test] public void IndependentPendingRequestsKeepSeparateClaimsAndCancellation()
+        {
+            var actions=new IndependentActions();var scheduler=new RuleScheduler(actions);var first=Move();var second=Move();second["arguments"]["target"]=new string('b',32);
+            Assert.That(scheduler.Invoke(first,0,out var a,out var error),Is.True,error);Assert.That(scheduler.Invoke(second,0,out var b,out error),Is.True,error);
+            Assert.That(scheduler.Invoke(first,0,out _,out error),Is.False);Assert.That(scheduler.PreparingCount,Is.EqualTo(2));
+            Assert.That(scheduler.CancelInvocation(a,out error),Is.True,error);actions.Demands[new string('b',32)].Ready=true;scheduler.Tick(1);
+            Assert.That(actions.Started,Is.EqualTo(new[]{new string('b',32)}));Assert.That((string)scheduler.Invocation(b)["phase"],Is.EqualTo("completed"));
+            Assert.That(actions.Demands.Values.All(value=>value.Releases==1),Is.True);
+        }
         static JObject Move()=>new(){["id"]="object.position.set",["version"]=1,["arguments"]=new JObject{["target"]=new string('a',32),["x"]=0,["y"]=1,["z"]=0}};
         static JObject Motion()=>new(){["id"]="animation.play",["version"]=1,["arguments"]=new JObject{["target"]=new string('a',32),["source"]=new JObject{["kind"]="recording"},["channel"]="wholeTarget",["seconds"]=2,["loop"]=false}};
         [Test] public void InstantActionWaitsForEntitiesThenStartsAndCompletesExactlyOnce()

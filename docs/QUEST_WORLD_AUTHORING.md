@@ -715,3 +715,11 @@ walking map holds its ground, and `waterRoute` while a detour is being planned
 around its liquid. Multiple maps can need the same area. Pausing physics retires
 maps; cancelling or finishing a detour releases that search. Inspecting this
 report does not create a route, edit the world or enable automatic unloading.
+
+Independent actions can continue while another area prepares. Requests needing
+the same connected group share its load; cancelling one request leaves the load
+running for the others. Cancelling every requester discards unfinished work.
+Actions that need the same control channel still cannot compete. Editing a needed
+object, shared style or collision profile can require retrying its pending action;
+editing an unrelated object does not. Whole-room edits keep their existing action
+cancellation behavior. Automatic area streaming remains disabled.

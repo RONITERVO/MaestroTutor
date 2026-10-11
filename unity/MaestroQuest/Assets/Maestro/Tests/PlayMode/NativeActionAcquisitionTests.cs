@@ -117,12 +117,12 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Find(peer),Is.Null);yield return NativeActionDone(run);
             Assert.That(editor.Find(peer).isActiveAndEnabled,Is.True);Assert.That(editor.Find(id).isActiveAndEnabled,Is.True);
         }
-        [UnityTest] public IEnumerator NativeActionLoadingRequiresExclusiveAdmissionButSavedReferencesDoNot()
+        [UnityTest] public IEnumerator NativeActionLoadingDoesNotInterruptAnIndependentTimer()
         {
             string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
             var wait=new JObject{["id"]="time.wait",["version"]=1,["arguments"]=new JObject{["seconds"]=10}};
             Assert.That(runtime.Scheduler.Invoke(wait,Time.unscaledTime,out var waiting,out error),Is.True,error);
-            Assert.That(runtime.Scheduler.Invoke(NativeMove(id),Time.unscaledTime,out var run,out error),Is.False);Assert.That(error,Does.Contain("current interaction or action"));Assert.That(editor.Find(id),Is.Null);
+            Assert.That(runtime.Scheduler.Invoke(NativeMove(id),Time.unscaledTime,out var run,out error),Is.True,error);yield return NativeActionDone(run);Assert.That(editor.Find(id).isActiveAndEnabled,Is.True);
             Assert.That((string)runtime.Scheduler.Invocation(waiting)["phase"],Is.EqualTo("running"));runtime.StopAll();
         }
         [UnityTest] public IEnumerator NativeActionImportFailureIsVisibleAndRetryUsesTheSameModel()

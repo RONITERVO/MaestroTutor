@@ -69,7 +69,7 @@ namespace Maestro.Quest.Rules
         public bool TargetsBusy(IEnumerable<string> targets) {var ids=targets.ToHashSet();return running.Any(x=>x.Targets.Overlaps(ids));}
         static BehaviourCatalog.Claim[] Whole(IEnumerable<string> targets)=>targets.Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         static bool Conflicts(Run run,IEnumerable<BehaviourCatalog.Claim> claims)=>claims.Any(claim=>run.Claims.Any(claim.Conflicts));
-        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Acquiring||run.Active?.RequiresQuietRoom==true)||channelWaits.Any(run=>Overlap(run.Active.Claims,call.Claims))||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
+        public bool ActionBusy(CapabilityCall call)=>call.RequiresQuietRoom?(running.Count>0||queued.Count>0):running.Any(run=>run.Active?.RequiresQuietRoom==true)||channelWaits.Any(run=>Overlap(run.Active.Claims,call.Claims))||!Ownership.CanAcquire("catalog-check",RoomActorRole.Program,call.Claims,out _);
         public RoomOwnership Ownership {get;}
         public string LastError { get; private set; }
         public RuleRunView[] ObserveRuns() => running.Where(x=>x.Invocation==null).Select(x=>new RuleRunView {id=x.Id,sequenceId=x.Sequence.id,parentRunId=x.Parent?.Id,preparing=x.Preparing||x.Acquiring,nodeId=x.Machine?.NodeId,functionName=x.Machine?.Function,status=x.Acquiring?"Loading required objects":x.WaitingForChannels?x.ChannelStatus:x.Machine?.SavingMemory==true?"Saving remembered values":x.Children!=null?"Waiting for parallel branches":x.Machine?.Wait!=null?x.Machine.Wait.Condition!=null?"Waiting for condition":x.Machine.Wait.Event==null?"Waiting for timer":"Waiting for "+x.Machine.Wait.Event:x.Computing?"Evaluating":x.Preparing?x.Active?.AwaitCompletion==true?"Waiting for action completion":"Loading":"Running",
@@ -182,7 +182,6 @@ namespace Maestro.Quest.Rules
             return StartAction(run,now);
         }
         bool StartAction(Run run,float now) {
-            if(running.Any(other=>other!=run&&other.Acquiring)){LastError="Wait for required room objects to finish loading";Stop(run,false,"failed",LastError);return false;}
             if(run.Active.RequiresQuietRoom&&HasOtherWork(run.Id)||running.Any(x=>x!=run&&x.Active?.RequiresQuietRoom==true)) {
                 LastError="Stop other room actions before this room-wide action";Stop(run,false,"failed",LastError);return false;
             }
@@ -193,15 +192,15 @@ namespace Maestro.Quest.Rules
                 if(run.Reactive&&run.Machine.ChannelWaitSeconds>0){WaitForChannels(run,now,channelError);return true;}
                 LastError=channelError;Stop(run,false,"failed",LastError);return false;
             }
+            run.Claims=claims;
+            if(!Reserve(run,claims))return false;
             if(!run.AcquisitionChecked&&actions is IRuleEntityAcquisition acquisition){
                 run.AcquisitionChecked=true;run.Acquiring=true;run.AcquisitionDeadline=now+30;
-                run.EntityDemand=acquisition.Acquire(run.Active,()=>run.Acquiring&&running.Contains(run)&&!suspended&&!HasOtherWork(run.Id));
+                run.EntityDemand=acquisition.Acquire(run.Active,()=>run.Acquiring&&running.Contains(run)&&!suspended);
             }
             // Recheck after a possible channel wait as well as after loading.
             if(run.AcquisitionChecked&&!PollEntityDemand(run,now))return running.Contains(run);
             if(!actions.CanRun(run.Active,out var unavailable)) {LastError=unavailable;Stop(run,false,"failed",LastError);return false;}
-            run.Claims=claims;
-            if(!Reserve(run,run.Claims))return false;
             RemoveChannelWait(run);
             bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
