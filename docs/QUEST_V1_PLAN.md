@@ -6856,3 +6856,33 @@ admission, audibility-driven simulation and scalable capacity remain. Automatic
 unloading stays disabled. Stereo behavior is wired to Unity's eye matrices but
 still requires headset acceptance; desktop cameras cannot establish XR visual or
 performance acceptance.
+
+
+### Dormant spatial envelopes and shared observation — 2026-10-11
+
+`object.spatialBounds` exposes separate visual and accepted non-trigger collision
+AABBs in authored room coordinates. Each extent distinguishes known-empty from
+unknown. `source` distinguishes live native sampling, retained value-only
+geometry, an invalid/unavailable envelope and a missing saved entity. Reads do
+not load, acquire ownership, save or enable physics. Disabled child geometry may
+conservatively enlarge bounds; these are candidate envelopes, not exact contact,
+walkability, visibility or future-motion guarantees.
+
+Internal retirement now captures object-local geometry without retaining meshes,
+renderers or colliders. The cache follows the same actual idle placement as native
+activation, and reprojects newly authored root placement. A source fingerprint
+excludes only identity, display name and root placement; changed geometry or import
+normalization/pivot invalidates it. Comparison occurs only on an object revision
+change. Undo can recover the original envelope; journal replacement/deletion drops
+its lifetime state. Stopped recipe part poses are covered. Static imported models
+also include their imported rest bounds because reload resets node transforms.
+
+Owned views now consider dormant envelopes without instantiating objects. Unknown
+geometry remains a candidate; mask-zero cameras do not observe anything. Snapshot
+camera leases explicitly identify logical source layers before temporary render
+layer remapping. Real scan anchors, pending imports, unsupported renderers and
+skinned deformation remain unknown until a reliable envelope is available. This
+cache is not a persistent cold-start asset index. Predictive demand, hysteresis,
+verified animated envelopes, indirect shadow/reflection footprints, regional
+physics/navigation/water admission and scalable quotas are still required before
+automatic streaming. Headset, provider and release acceptance remain outstanding.

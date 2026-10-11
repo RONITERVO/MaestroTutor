@@ -730,3 +730,13 @@ object can still be needed when its centre is off-screen. Connected area members
 remain together. Finishing a snapshot releases that camera's dependency. This is
 a current-view diagnostic; it does not load dormant objects or turn on automatic
 world streaming.
+
+
+The shared **Object spatial bounds** readout shows the space occupied by an
+object's visuals and collision shapes in room coordinates. It can retain that
+information while an area is unloaded, and updates placement without loading it.
+Changing geometry can make the result unknown until the geometry is available
+again. Unknown is different from empty: the app keeps it as a possible viewing
+dependency. Skinned models and scan-anchored drawings currently report unknown
+visual bounds. A bounding box is not proof that a place is walkable, clear or
+physically supported, and this readout does not enable automatic world streaming.

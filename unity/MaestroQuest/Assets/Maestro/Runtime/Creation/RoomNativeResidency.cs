@@ -25,6 +25,8 @@ namespace Maestro.Quest.Creation
             internal RecipeObject.IdleState Recipe;internal bool ConnectionBroken;
             internal NativeEntityPhase Phase;
             internal string Error;
+            internal RoomSpatialBounds Spatial;internal string SpatialSource;internal int SpatialRevision;
+            internal bool SpatialCurrent;internal Matrix4x4 SpatialPlacement;
         }
         readonly Dictionary<string,DormantEntity> dormantNative=new(StringComparer.Ordinal);
         RoomJournal nativeJournal;
@@ -51,7 +53,8 @@ namespace Maestro.Quest.Creation
             if(!isActiveAndEnabled||applying||AnyHeld||DrawingMode||NativeActivationPending||(actionAdmission!=null?!actionAdmission():GetComponent<RoomRules>()?.Scheduler?.HasOtherWork("")==true))return false;
             error=null;return true;
         }
-        // The caller owns observation demand. Existing native ownership, audio,
+        // Owned direct views are part of retention. Predictive/indirect demand
+        // remains the caller's responsibility. Existing native ownership, audio,
         // animation, physical links and collision admission cannot be bypassed.
         // Every connected area is retired together; a peer never loses its joint.
         internal bool RetireNativeArea(string area,out string error)
@@ -67,13 +70,15 @@ namespace Maestro.Quest.Creation
                 var data=Read(id);var item=Find(id);
                 error="The area's native placement is unavailable";
                 if(data==null||data.IsBuiltIn||!item||!item.isActiveAndEnabled||!Frame.Read(item.transform,out var position,out var rotation,out var scale))return false;
-                snapshots.Add(id,new DormantEntity{Position=position,Rotation=rotation,Scale=scale,RetiringRoot=item.gameObject,Phase=NativeEntityPhase.Retiring,ConnectionSource=JsonUtility.ToJson(data.connections.FirstOrDefault()),Recipe=item.GetComponent<RecipeObject>()?.CaptureIdleState(),ConnectionBroken=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>()?.Broken==true});
+                snapshots.Add(id,new DormantEntity{Spatial=RoomSpatialBounds.Capture(item,data),Position=position,Rotation=rotation,Scale=scale,RetiringRoot=item.gameObject,Phase=NativeEntityPhase.Retiring,ConnectionSource=JsonUtility.ToJson(data.connections.FirstOrDefault()),Recipe=item.GetComponent<RecipeObject>()?.CaptureIdleState(),ConnectionBroken=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>()?.Broken==true});
             }
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             // Dynamic placement uses the existing non-Undo capture policy. Other
             // transient poses are cached without rewriting authored rest frames.
             CapturePhysicsPlacements();
-            foreach(var pair in snapshots){var saved=Read(pair.Key);pair.Value.SavedPosition=saved.position;pair.Value.SavedRotation=saved.rotation;pair.Value.SavedScale=saved.scale;dormantNative.Add(pair.Key,pair.Value);}
+            foreach(var pair in snapshots){var saved=Read(pair.Key);pair.Value.SavedPosition=saved.position;pair.Value.SavedRotation=saved.rotation;pair.Value.SavedScale=saved.scale;
+                pair.Value.SpatialSource=SpatialSource(saved);pair.Value.SpatialRevision=ObjectRevision(pair.Key);pair.Value.SpatialCurrent=true;
+                pair.Value.SpatialPlacement=Matrix4x4.TRS(pair.Value.Position,pair.Value.Rotation,Vector3.one*pair.Value.Scale);dormantNative.Add(pair.Key,pair.Value);}
             foreach(var pair in snapshots){var item=Find(pair.Key);DetachNativeIdentity(pair.Key,item);regionModels.Remove(pair.Key);item.gameObject.SetActive(false);Destroy(item.gameObject);}
             RefreshRegionCollision();UpdateSelection();error=null;return true;
         }

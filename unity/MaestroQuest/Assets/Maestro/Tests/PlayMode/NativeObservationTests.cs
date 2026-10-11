@@ -32,6 +32,7 @@ namespace Maestro.Quest.Tests
             camera.transform.rotation=Quaternion.Euler(0,180,0);Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.False);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
             camera.transform.rotation=Quaternion.identity;
+            Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.True,"Retained dormant geometry contributes demand without loading");
             Assert.That(editor.Find(id),Is.Null,"A dependency read cannot instantiate dormant saved content");Assert.That(editor.Read(id),Is.Not.Null);
             Assert.That((bool)editor.ObserveRegionRetention(area)["unloadingSupported"],Is.False);
         }

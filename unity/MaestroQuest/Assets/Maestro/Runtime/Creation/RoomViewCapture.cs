@@ -54,7 +54,7 @@ namespace Maestro.Quest.Creation {
                 camera.transform.SetPositionAndRotation(Viewer.position,Viewer.rotation);camera.stereoTargetEye=StereoTargetEyeMask.None;
                 camera.cullingMask=1<<CaptureLayer;camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=new Color(.91f,.93f,.94f,1);
                 camera.nearClipPlane=.03f;camera.farClipPlane=30;camera.fieldOfView=60;camera.aspect=(float)ViewWidth/ViewHeight;camera.allowHDR=false;camera.allowMSAA=false;camera.useOcclusionCulling=false;
-                using var observation=ObserveNativeCamera(camera);
+                using var observation=ObserveNativeCamera(camera,sourceLayers:-1);
                 target=RenderTexture.GetTemporary(ViewWidth,ViewHeight,24,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB);camera.targetTexture=target;using(new Maestro.Quest.Interaction.RoomDepthOcclusion.VirtualCapture())camera.Render();
                 RenderTexture.active=target;pixels=new Texture2D(ViewWidth,ViewHeight,TextureFormat.RGB24,false);pixels.ReadPixels(new Rect(0,0,ViewWidth,ViewHeight),0,0);pixels.Apply();
                 byte[] bytes=null;foreach(int quality in new[]{75,50,30}){bytes=pixels.EncodeToJPG(quality);if(bytes.Length<=ViewByteLimit)break;}

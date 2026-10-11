@@ -35673,6 +35673,81 @@
       ]
     },
     {
+      "id": "object.spatialBounds",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "source": "text",
+          "coordinates": "text",
+          "visual": {
+            "record": {
+              "known": "boolean",
+              "hasBounds": "boolean",
+              "min": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "max": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              }
+            }
+          },
+          "collision": {
+            "record": {
+              "known": "boolean",
+              "hasBounds": "boolean",
+              "min": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "max": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Object spatial bounds",
+      "description": "Read conservative axis-aligned visual and accepted non-trigger collision envelopes in authored room coordinates without loading, saving, editing or acquiring ownership. source is native (sampled instance), retained (value-only geometry captured before intentional retirement), unknown (saved but no valid envelope), or missing. Each extent has known and hasBounds: only known=true with hasBounds=false proves empty; unknown zero min/max is never empty space. Geometry edits invalidate retained envelopes; root placement reprojects them using the same stopped-pose rule as native activation. Disabled child geometry may be included. Skinned/unsupported renderers, pending imports and scan-anchored geometry are unknown. Bounds are broad-phase candidates, not exact contact, visibility, walkability, clearance, collision policy, future motion or physics readiness. They do not prove an unloaded model file remains available. No automatic regional streaming is enabled by this read.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "object.placement",
       "version": 1,
       "type": {
@@ -41299,7 +41374,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending water detours retain discovered liquid sources until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. This does not prove shadow/reflection footprints or load dormant objects. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and predictive observation, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending water detours retain discovered liquid sources until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. This does not prove shadow/reflection footprints. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and predictive observation, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -43178,7 +43253,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "6160e1772cac08e602ce63a577273b2aa518df58e6e3dff73f2621f3221c6d50"
+      "sha256": "739e22dcda8bc18a3b7b2baaa98c0adb6fc9a4afc7d872ad4ae1d264000da656"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -43770,7 +43845,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "214d6acd87953364bc8df3e739c2bbba5c4ff7373cf8df06a43c299ae2c73c6a"
+      "sha256": "843b76a1131936926dad8b988328a414e972ae841815eac207e5e041e1b19bf6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -43790,7 +43865,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservation.cs",
-      "sha256": "03cce3523a24ac69fa2f36f79ef7215107d95bacaf818da71ba083746e59949c"
+      "sha256": "e7361d64da3d39cc342cb2e67e4465127f7ec10a54aeb9a7c51e22d081d0d2ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
@@ -43845,6 +43920,14 @@
       "sha256": "58da81dbf26d64289bf757e63d58e845480257dc6eee00d5e1bb5241830b9483"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialBounds.cs",
+      "sha256": "091900d6b9da3d9995e73165ce2ad70a272194772b7405a7960152bead8e3055"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialObservation.cs",
+      "sha256": "d79cbc56bd923b51829084be915cb8081a3b3d5db1ae62ccb87ca8d9c9d40ecb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
       "sha256": "f725291528b53f71cd719faadf29da11687fa5b7244063a32cf8958e81c83d2d"
     },
@@ -43870,7 +43953,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
-      "sha256": "c48f3c8512f6354ba9c4ce48b7665182eab18397889be782c01938d4fc4b649a"
+      "sha256": "b1707ab451a2aa7ad879fb58321bb148f1dd6f18b2e5bb8efb65559474b1bb36"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
@@ -44490,7 +44573,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "8a3895d6b17a796d37898dbb7897635dc4c35c0995ca0b511df8e9ce3bc8486c"
+      "sha256": "88a757fa1b07cff2501c22d2d4b56405a17a43e53f1c04d674d1fbef82cdae87"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -44551,6 +44634,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramSubscriptions.cs",
       "sha256": "28b012e2d482d8a609fd741db97f3e05613317a1888086022487cb4f226c3c40"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/SpatialBoundsFact.cs",
+      "sha256": "cfa2c5f9caac102fea4a832949b465ff496e7216e329d60def7082f9f1ce21ee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/CapabilityQuickEdit.cs",

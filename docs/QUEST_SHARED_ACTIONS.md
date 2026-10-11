@@ -397,4 +397,21 @@ native transforms determine this demand; unrelated scene cameras do not. A
 scoped capture lease ends after rendering/readback, independently of other
 viewers. Reading this fact never activates dormant content or edits the journal.
 This direct-view guard does not enable automatic streaming: predictive view
-demand, dormant bounds and indirect shadow/reflection dependencies remain.
+demand and indirect shadow/reflection dependencies remain. Dormant envelope
+coverage and its explicit limitations are described below.
+
+
+`object.spatialBounds` is a shared read-only fact for the book, programs and agent.
+It returns room-coordinate visual/collision envelopes and `source` (`native`,
+`retained`, `unknown`, `missing`). Each extent has `known`, `hasBounds`, `min` and
+`max`; zero values with `known=false` never prove empty space. Retained geometry
+follows the activation pose and is invalidated by geometry/import changes, not
+renaming or unrelated edits. Skinned or unsupported visuals and scan anchors are
+explicitly unknown. Collision envelopes use accepted non-trigger colliders,
+including disabled ones; they do not indicate current collision policy or support.
+
+Owned-camera demand includes retained dormant visual bounds. Unknown dormant
+bounds cannot exclude a candidate spatially; known source layers and empty camera
+masks still apply.
+These reads do not instantiate or authorize retirement. Automatic streaming,
+future-motion coverage and cold-start asset envelopes remain unimplemented.

@@ -409,6 +409,11 @@ try{
  assert.equal(bookPresence.target,'book');assert.equal(bookPresence.state,'active');assert.equal(bookPresence.saved,true);assert.equal(bookPresence.nativeInstance,true);assert.equal(bookPresence.active,true);
  await page.screenshot({path:join(directory,'book-native-object-presence.png')});
  await writeFile(join(directory,'book-native-object-presence.json'),JSON.stringify({boundary:'Original book fact form and actual native book presence; no regional loading, provider or headset claim.',bookPresence},null,2));
+ const bookSpatial=await readResourceFact('object.spatialBounds','Object spatial bounds',{target:'book'});
+ assert.equal(bookSpatial.target,'book');assert.equal(bookSpatial.source,'native');assert.equal(bookSpatial.coordinates,'room');
+ const bookVisual=bookSpatial.visual as unknown as {known:boolean;hasBounds:boolean};assert.equal(bookVisual.known,true);assert.equal(bookVisual.hasBounds,true);
+ await page.screenshot({path:join(directory,'book-native-spatial-bounds.png')});
+ await writeFile(join(directory,'book-native-spatial-bounds.json'),JSON.stringify({boundary:'Original book fact form and native spatial envelopes; no streaming, provider or headset claim.',bookSpatial},null,2));
  let importedSound:unknown=null;
  let soundFixture:{hash:string;seconds:number;name:string}|null=null;
  try{soundFixture=JSON.parse(await readFile(join(directory,'sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
