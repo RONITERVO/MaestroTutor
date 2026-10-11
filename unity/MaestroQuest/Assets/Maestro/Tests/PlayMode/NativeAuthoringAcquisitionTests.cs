@@ -59,7 +59,13 @@ namespace Maestro.Quest.Tests {
     public sealed partial class AvatarSpatialTests {
         ScannedRoom NativePlacementRoom(out SurfaceSource source,out string target){
             var scan=PlacementRoom(out source,out target);var capability=new RegionSaveCapability();Assert.That(capability.Start(new CapabilityContext(editor,authoring),"area",capability.Example,out var operation,out var error),Is.True,error);string area=(string)operation.Result["id"];
-            Assert.That(editor.BindRegion(target,editor.ObjectRevision(target),area,editor.RegionRevision(area),out error),Is.True,error);Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);return scan;
+            Assert.That(editor.BindRegion(target,editor.ObjectRevision(target),area,editor.RegionRevision(area),out error),Is.True,error);
+            // Establish a dormant fixture without an unsampled viewer demanding
+            // all geometry. Restore its real camera before testing acquisition.
+            var camera=viewer.GetComponent<Camera>();Assert.That(camera,Is.Not.Null);bool enabled=camera.enabled;
+            try{camera.enabled=false;Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);}
+            finally{camera.enabled=enabled;}
+            Assert.That(editor.NativeEntityDormant(target),Is.True);Assert.That(camera.enabled,Is.EqualTo(enabled));return scan;
         }
         [UnityTest] public IEnumerator NativeAuthoringSurfacePlacementLoadsItsTargetBeforeQueryingItsBounds(){
             var scan=NativePlacementRoom(out var source,out var target);string setup=scan.SetupIdentity;var physics=world.ObserveSimulation()["stateId"].DeepClone();

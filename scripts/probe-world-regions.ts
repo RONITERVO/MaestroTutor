@@ -7,7 +7,10 @@ import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeWorldRegions(execute:Execute,directory:string){
- const fact=async(capability:string,args:Record<string,unknown>)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}])).value as Record<string,unknown>;
+ const fact=async(capability:string,args?:Record<string,unknown>)=>{
+  const reply=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}]));
+  assert.equal(reply.available,true,JSON.stringify(reply));return reply.value as Record<string,unknown>;
+ };
  const invoke=async(id:string,args:Record<string,unknown>)=>{
   const state=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);
   assert.equal(state.execution!.selected!.phase,'completed');return state.execution!.selected!;
@@ -34,5 +37,20 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  await execute([{action:'undo'}]);assert.equal((await fact('world.region',{id})).name,'Learner garden');
  await execute([{action:'undo'}]);assert.equal((await fact('object.region',{target})).regionId,before.regionId);
  const empty=await fact('world.region',{id});const removed=await invoke('world.region.remove',{id,revision:empty.revision});
+ const viewpoint=await fact('world.viewpoint');assert.equal(viewpoint.located,true);
+ const floor=viewpoint.position as {x:number;y:number;z:number},yaw=Number(viewpoint.yaw)*Math.PI/180;
+ const nearView={x:floor.x+Math.sin(yaw)*3,y:floor.y+.8,z:floor.z+Math.cos(yaw)*3};
+ await invoke('object.position.set',{target,...nearView});
+ const viewArea=await invoke('world.region.save',{id:'',revision:0,name:'Viewer demand check',members:[]});
+ const viewBinding=await fact('object.region',{target});
+ await invoke('object.region.assign',{target,revision:viewBinding.revision,regionId:viewArea.output!.id,regionRevision:viewArea.output!.revision});
+ const viewerDemand=await fact('world.region.retention',{id:viewArea.output!.id});
+ assert.ok((viewerDemand.reasons as string[]).includes('approachingView'),JSON.stringify(viewerDemand));
+ assert.ok((viewerDemand.reasons as string[]).includes('recentObservation'),JSON.stringify(viewerDemand));
+ await invoke('object.position.set',{target,...observed.position});
+ const restoredBinding=await fact('object.region',{target});
+ await invoke('object.region.assign',{target,revision:restoredBinding.revision,regionId:'',regionRevision:0});
+ const viewAreaCurrent=await fact('world.region',{id:viewArea.output!.id});await invoke('world.region.remove',{id:viewArea.output!.id,revision:viewAreaCurrent.revision});
+ await writeFile(join(directory,'viewer-demand.json'),JSON.stringify({boundary:'Shared client uses ordinary placement and area actions, then reads frame-owned observer demand from the actual Unity camera. No headset or automatic-streaming proof.',viewpoint,nearView,viewerDemand},null,2));
  await writeFile(join(directory,'world-regions.json'),JSON.stringify({boundary:'Actual shared native transport, saved authored areas, assignment, rename and Undo. No region streaming, enlarged capacity, provider or headset claim.',before,presence,spatial,absentSpatial,missing,observed,saved,assigned,bound,members,retention,renamed,named,removed},null,2));
 }

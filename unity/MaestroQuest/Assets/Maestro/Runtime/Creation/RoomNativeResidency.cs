@@ -53,8 +53,8 @@ namespace Maestro.Quest.Creation
             if(!isActiveAndEnabled||applying||AnyHeld||DrawingMode||NativeActivationPending||(actionAdmission!=null?!actionAdmission():GetComponent<RoomRules>()?.Scheduler?.HasOtherWork("")==true))return false;
             error=null;return true;
         }
-        // Owned direct views are part of retention. Predictive/indirect demand
-        // remains the caller's responsibility. Existing native ownership, audio,
+        // Owned direct and predicted viewer demand are part of retention. Indirect
+        // demand still needs an automatic loading policy. Existing native ownership, audio,
         // animation, physical links and collision admission cannot be bypassed.
         // Every connected area is retired together; a peer never loses its joint.
         internal bool RetireNativeArea(string area,out string error)

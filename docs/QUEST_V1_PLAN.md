@@ -6931,3 +6931,31 @@ Supported envelopes cover primitives, drawings, normalized procedural shapes, se
 After an intentionally retired object's geometry changes, prepared canonical visual bounds can replace its stale retained envelope for observer candidate tests. Valid captured native bounds still take precedence; authored collision bounds remain unknown until native admission. The `object.spatialBounds` source can now be `authored`.
 
 This advances cold preparation and observation, **not automatic regional streaming**: startup still reconciles the current bounded room into native instances. Predictive demand/head turns, hysteresis, swept physics/navigation/water and audibility dependencies, startup admission scheduling and larger-world budgets remain required before changing that lifetime policy. Existing device/provider/release holds remain unchanged.
+
+
+### Predicted viewer demand and observation grace — 2026-10-11
+
+The existing native retention barrier now includes a frame-owned primary-viewer
+motion history. Direct observation remains separate from `approachingView`
+(a 0.35-second speed-based translation/rotation margin, with minimum 0.15 m and
+12-degree guards) and `recentObservation` (two seconds after view demand).
+Projection tests conservatively expand every actual eye frustum to contain the
+continuous rotational/translation sweep, including intermediate views;
+orthographic and custom projections use the same plane calculation. These are
+loading hints, not a guarantee that arbitrary future head motion or asset latency
+fits that horizon.
+
+Unsampled, stale, nonfinite or discontinuous motion is unknown, so the current view
+retains eligible geometry conservatively until fresh samples resume. Actual
+render layers and renderer state remain authoritative. Dormant retained/authored
+bounds contribute without native loading. One-off capture cameras retain their
+existing scoped lifetime and acquire no lingering prediction/grace. Disable,
+missing viewer, runtime hold and journal changes reset the transient history.
+Diagnostic reads never advance samples or refresh deadlines; the shared
+`world.region.retention` fact exposes all three reasons to book/user, agent and
+programs through the existing catalog.
+
+This does not enable automatic unloading. Startup admission, indirect
+shadow/reflection and audibility footprints, regional ground/water/navigation
+and swept physics, scalable budgets and real-device acceptance still remain.
+The bounded whole-world physics guard and current capacities are unchanged.

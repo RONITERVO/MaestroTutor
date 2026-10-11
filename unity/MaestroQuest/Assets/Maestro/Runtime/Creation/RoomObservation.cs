@@ -13,9 +13,11 @@ namespace Maestro.Quest.Creation
         readonly Plane[][] frusta;
         readonly int mask;
         readonly bool valid;
-        internal RoomObservationView(Camera camera,int? sourceLayers=null)
+        readonly Vector3 origin;readonly float translationMargin,angularChord;
+        internal RoomObservationView(Camera camera,int? sourceLayers=null,float translation=0,float angle=0,bool uncertain=false)
         {
-            mask=sourceLayers??camera.cullingMask;
+            mask=sourceLayers??camera.cullingMask;origin=camera.transform.position;
+            translationMargin=translation;angularChord=2*Mathf.Sin(Mathf.Clamp(angle,0,180)*Mathf.Deg2Rad*.5f);
             try {
                 if(camera.stereoEnabled&&camera.stereoTargetEye!=StereoTargetEyeMask.None){
                     var eyes=new List<Plane[]>();
@@ -23,7 +25,7 @@ namespace Maestro.Quest.Creation
                     if((camera.stereoTargetEye&StereoTargetEyeMask.Right)!=0)eyes.Add(Planes(camera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right)*camera.GetStereoViewMatrix(Camera.StereoscopicEye.Right)));
                     frusta=eyes.ToArray();
                 }else frusta=new[]{Planes(camera.projectionMatrix*camera.worldToCameraMatrix)};
-                valid=frusta.Length>0;
+                valid=!uncertain&&frusta.Length>0&&RoomRecipe.Finite(origin)&&float.IsFinite(translationMargin)&&translationMargin>=0&&float.IsFinite(angularChord);
                 foreach(var planes in frusta)foreach(var plane in planes)
                     valid&=RoomRecipe.Finite(plane.normal)&&float.IsFinite(plane.distance)&&plane.normal.sqrMagnitude>.5f;
             }catch(UnityException){valid=false;}
@@ -48,7 +50,21 @@ namespace Maestro.Quest.Creation
         {
             // Unknown geometry/projection cannot be used as evidence to retire.
             if(!valid||!RoomRecipe.Finite(bounds.center)||!RoomRecipe.Finite(bounds.extents))return true;
-            foreach(var planes in frusta)if(GeometryUtility.TestPlanesAABB(planes,bounds))return true;
+            // Rotating a point by at most theta moves it by at most
+            // 2*r*sin(theta/2). Expanding each actual eye's planes by this
+            // distance plus translation contains the entire swept view, not
+            // merely endpoint frusta. It also supports orthographic cameras.
+            float margin=translationMargin+angularChord*(Vector3.Distance(origin,bounds.center)+bounds.extents.magnitude);
+            if(!float.IsFinite(margin))return true;
+            foreach(var planes in frusta){
+                bool inside=true;
+                foreach(var plane in planes){
+                    var normal=plane.normal;
+                    float radius=Mathf.Abs(normal.x)*bounds.extents.x+Mathf.Abs(normal.y)*bounds.extents.y+Mathf.Abs(normal.z)*bounds.extents.z;
+                    if(plane.GetDistanceToPoint(bounds.center)+radius < -margin){inside=false;break;}
+                }
+                if(inside)return true;
+            }
             return false;
         }
     }
@@ -78,20 +94,24 @@ namespace Maestro.Quest.Creation
             if(viewer&&viewer.isActiveAndEnabled)views.Add(new RoomObservationView(viewer));
             foreach(var lease in observationCameras)if(lease.Camera&&lease.Camera.gameObject.activeInHierarchy)views.Add(new RoomObservationView(lease.Camera,lease.SourceLayers));
             if(views.Count==0)return;
+            VisitObservedNative(views,id=>graph.Retain(id,RoomRetentionReason.Observation));
+            RetainViewerDemand(graph);
+        }
+        void VisitObservedNative(IReadOnlyList<RoomObservationView> views,Action<string> retain)
+        {
             foreach(var pair in objects){
-                var item=pair.Value;if(!item||!item.isActiveAndEnabled||!graph.Contains(pair.Key))continue;
+                var item=pair.Value;if(!item||!item.isActiveAndEnabled)continue;
                 item.GetComponentsInChildren(false,observationRenderers);
                 foreach(var renderer in observationRenderers){
                     if(!renderer||!renderer.enabled||renderer.forceRenderingOff)continue;
                     bool observed=false;foreach(var view in views)if(view.Includes(renderer)){observed=true;break;}
-                    if(observed){graph.Retain(pair.Key,RoomRetentionReason.Observation);break;}
+                    if(observed){retain(pair.Key);break;}
                 }
             }
             observationRenderers.Clear();
             foreach(var pair in dormantNative){
-                if(!graph.Contains(pair.Key))continue;
                 var spatial=Frame.Valid?ReadDormantSpatial(pair.Key,pair.Value,out _).Transform(transform.localToWorldMatrix):RoomSpatialBounds.Unknown;
-                foreach(var view in views)if(view.Includes(spatial)){graph.Retain(pair.Key,RoomRetentionReason.Observation);break;}
+                foreach(var view in views)if(view.Includes(spatial)){retain(pair.Key);break;}
             }
         }
     }

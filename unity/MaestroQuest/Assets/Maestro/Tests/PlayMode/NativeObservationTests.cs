@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
             var camera=go.GetComponent<Camera>();camera.nearClipPlane=.1f;camera.farClipPlane=10;camera.fieldOfView=60;camera.aspect=1;camera.stereoTargetEye=StereoTargetEyeMask.None;
             camera.enabled=viewer;if(viewer)root.GetComponent<RoomInteraction>().Viewer=camera.transform;return camera;
         }
-        [UnityTest] public IEnumerator NativeObservationPreventsRetirementOfVisibleNativeGeometryAndReleasesWhenTurnedAway()
+        [UnityTest] public IEnumerator NativeObservationPreventsRetirementOfVisibleNativeGeometryAndReleasesWhenViewerDisabled()
         {
             string id=editor.Identity(block),area=NativeAreaFor(id);block.transform.position=new Vector3(0,0,3);var camera=NativeObservationCamera();
             var saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;
@@ -30,8 +30,11 @@ namespace Maestro.Quest.Tests
             Assert.That(((JObject)fact.Value)["reasons"].Values<string>(),Does.Contain("observation"));
             Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
             camera.transform.rotation=Quaternion.Euler(0,180,0);Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.False);
+            // A turn alone now keeps predictive/grace demand. This direct-view
+            // test releases the viewer; ViewerDemand tests exercise timed release.
+            camera.enabled=false;
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
-            camera.transform.rotation=Quaternion.identity;
+            camera.enabled=true;camera.transform.rotation=Quaternion.identity;
             Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.True,"Retained dormant geometry contributes demand without loading");
             Assert.That(editor.Find(id),Is.Null,"A dependency read cannot instantiate dormant saved content");Assert.That(editor.Read(id),Is.Not.Null);
             Assert.That((bool)editor.ObserveRegionRetention(area)["unloadingSupported"],Is.False);

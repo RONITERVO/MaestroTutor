@@ -34,6 +34,7 @@ namespace Maestro.Quest.Persistence
             avatar.layer = RoomPhysicsLayers.Environment;
             var avatarItem = avatar.AddComponent<RoomItem>(); avatarItem.Configure(new Collider[] { avatarHandle }, .3f, 1.5f); room.Register(avatarItem);
             Editor = content.AddComponent<RoomEditor>(); var editor=Editor; editor.Initialize(room,bookItem,avatarItem,directory,physics,gate,receiptDirectory,includedAvatar,includedMotions);
+            editor.ConfigureObservationTracking(headTracked);
             if(virtualView)content.AddComponent<WorkspaceViewpoint>().Initialize(editor,virtualView,headTracked);
             router.Editor = editor; input.Editor = editor;
             var drawing = content.AddComponent<SpatialDrawing>(); drawing.Editor = editor; input.Drawing = drawing;

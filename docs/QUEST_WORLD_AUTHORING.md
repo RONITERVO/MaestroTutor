@@ -761,3 +761,12 @@ start file access, native loading, provider calls or automatic regional streamin
 The shared “Authored object bounds” fact shows the prepared extent of an object, including ink, terrain, fill, carried material and selection outlines. It uses the accepted world data and verified model metadata, independently of whether a native object exists. Preparation is bounded and belongs to the current room; closing or replacing the room cancels it. Reading the fact is passive.
 
 Pending or unsupported geometry is reported as unknown, never as empty space. Animated recipe parts use a conservative swept envelope; animated imported models and scan anchors remain unknown. These bounds help observation and future loading decisions. They do not prove that physics, walking or asset loading is ready. Startup still loads the bounded room; automatic regional streaming is unfinished.
+
+
+Area dependency inspection distinguishes objects currently in view from those
+near the expected view (`approachingView`) and recently viewed
+(`recentObservation`). A short grace period prevents rapid turns from immediately
+releasing an area's native contents. These reasons propagate through the same
+area and physical-connection graph as other dependencies. Inspection itself
+does not refresh the timer or load anything. Automatic regional loading remains
+unfinished; current world size and whole-world simulation limits still apply.

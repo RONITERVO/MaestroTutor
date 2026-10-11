@@ -41483,7 +41483,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending water detours retain discovered liquid sources until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. This does not prove shadow/reflection footprints. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and predictive observation, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending water detours retain discovered liquid sources until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. This does not prove shadow/reflection footprints. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and indirect views, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -43362,7 +43362,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "739e22dcda8bc18a3b7b2baaa98c0adb6fc9a4afc7d872ad4ae1d264000da656"
+      "sha256": "0d87d49ed1b0efd9019b1aeadeee675d0a7f409b704fc9e9fddbc8d697abc3a8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -43838,7 +43838,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "d5ab3b5bc998da376ea4550bab00507d383dd0b6b8065e2888b82f7e5b7ec516"
+      "sha256": "7f767da796a226d7808d561b5856789c4886cfa79900d23e71850cf460bff83c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -43958,7 +43958,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "843b76a1131936926dad8b988328a414e972ae841815eac207e5e041e1b19bf6"
+      "sha256": "31d61a8769994769543fb9954816609170c9c2291735945f895592f76d2fc2aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -43978,7 +43978,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservation.cs",
-      "sha256": "9219e3a8b07d2f3cb8e37f49d919358897c539a777a49715f09604f25c0040b5"
+      "sha256": "5f55192b6a9743d4bc913479a0af23c458790871a1654352716294dae76f6690"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservationPrediction.cs",
+      "sha256": "c85c88dd37b8291e5530349c6af4d144b43235df48c633749b759f4ae55c0f74"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
@@ -44018,7 +44022,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
-      "sha256": "32acb4ab9756a990e15618efdf9397d075ed1b3f96e3b50ab8bc8af9d78fd831"
+      "sha256": "28192bfb60e480264eede9ab67d9c9c87ca9dc43becc8f9de59c98c212b722e3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -44075,6 +44079,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewCapture.cs",
       "sha256": "b1707ab451a2aa7ad879fb58321bb148f1dd6f18b2e5bb8efb65559474b1bb36"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewerDemand.cs",
+      "sha256": "059d423701bfc7dd27a97208059b5d43c9ac72de1d3e9a6c5cd3bb1e7832bdcf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
@@ -44606,7 +44614,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
-      "sha256": "f6cb1496eff98ca810de2226687173fd72a980b427adffff80a4c55d7a5478df"
+      "sha256": "aa94495c19d0672e4e4811c127040b6ed587e148aa598eec369e49ffb95cfa5c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceDefaults.cs",

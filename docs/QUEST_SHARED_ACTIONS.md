@@ -439,3 +439,14 @@ asset file remains available and does not enable automatic streaming.
 `object.authoredBounds` v1 reads the room-owned prepared visual envelope before root placement/scale. `prepared=false` means the current geometry has not finished preparation; `visual.known=false` never means empty space. The shared generated form and headless client read the same value. Preparation is owned by the active room, not triggered by reading a fact.
 
 The envelope includes authored decorations and selection geometry. Recipe rotation tracks receive conservative swept envelopes; animated/skinned imports, built-ins and scan anchors remain unknown. This is independent of model availability, native presence and admitted collision/navigation. `object.spatialBounds` can use source `authored` for an unloaded object whose retained geometry was invalidated; its collision extent then remains unknown. Valid retained native envelopes keep priority. Neither fact enables automatic streaming.
+
+
+Viewer demand is sampled by the native frame owner, independently of fact reads.
+`world.region.retention` additionally reports `approachingView` and
+`recentObservation`: the primary viewer uses a conservative 0.35 s motion margin
+(minimum 0.15 m / 12 degrees), then holds demand for two seconds. Stale or
+unreliable motion keeps potentially rendered geometry instead of claiming it is
+safe to unload. This applies to dormant envelopes as well as resident geometry;
+it starts no model reads or activation. Scoped image captures remain scoped.
+The report remains a diagnostic with `unloadingSupported: false`, not a command
+or a claim of regional collision readiness.
