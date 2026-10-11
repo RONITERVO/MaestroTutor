@@ -12,6 +12,7 @@ namespace Maestro.Quest.Book
         // releases native handles. These are derived mesh inputs, not authored data.
         int retainedSurfaces, retainedVertices, retainedTriangles;
         internal int RetainedGeometryCount => retainedSurfaces;
+        internal int ResidencyEpoch {get;private set;}
         internal sealed class RetainedInput : IAcousticGeometry
         {
             internal Transform Frame;
@@ -39,11 +40,17 @@ namespace Maestro.Quest.Book
             internal AcousticSurface[] Surfaces;
             internal RetainedInput[] Inputs;
             internal Entry[] Entries;
-            internal bool Committed, Ended;
+            internal bool Committed, Ended, DefinitionCurrent = true;
+            internal bool Current => !Ended && DefinitionCurrent;
+            internal bool Admitted => Current && Committed && Owner && Owner.ContextOpen && Inputs.All(input => input.Active && Owner.entries.TryGetValue(input,out var entry) && entry.Handle != IntPtr.Zero && !entry.Retired && entry.Revision == input.Revision && entry.Pose.Equals(input.Pose));
             internal int Vertices, Triangles;
             internal bool Commit()
             {
                 if (Ended || Committed || !Owner) return false;
+                if(Surfaces==null){
+                    for(int i=0;i<Inputs.Length;i++){Owner.Register(Inputs[i]);Entries[i]=Owner.entries[Inputs[i]];}
+                    Committed=true;return true;
+                }
                 for (int i = 0; i < Surfaces.Length; i++)
                     if (!Surfaces[i] || !Owner.entries.TryGetValue(Surfaces[i], out var current)
                         || !ReferenceEquals(current, Entries[i]) || current.Retired
@@ -59,6 +66,7 @@ namespace Maestro.Quest.Book
             internal void UpdateDefinition(bool current, Matrix4x4 placement)
             {
                 if (Ended) return;
+                DefinitionCurrent=current;
                 foreach (var input in Inputs)
                 {
                     input.Placement = placement;
@@ -101,11 +109,28 @@ namespace Maestro.Quest.Book
                 if (Owner)
                 {
                     if (Committed) foreach (var input in Inputs) Owner.Unregister(input);
-                    Owner.retainedSurfaces -= Inputs.Length; Owner.retainedVertices -= Vertices; Owner.retainedTriangles -= Triangles;
+                    Owner.retainedSurfaces -= Inputs.Length; Owner.retainedVertices -= Vertices; Owner.retainedTriangles -= Triangles; Owner.ResidencyEpoch++;
                 }
                 foreach (var input in Inputs) { input.Ended = true; input.Vertices = null; input.Indices = null; input.Frame = null; }
                 Owner = null; Surfaces = null; Inputs = null; Entries = null;
             }
+        }
+        internal bool TryPrepareInputs(AcousticMeshInput[] meshes,Transform frame,Matrix4x4 placement,bool boundary,out AcousticResidency residency,out string error)
+        {
+            residency=null;error="Invalid prepared acoustic input";
+            if(meshes==null||!frame||!ValidPose(frame.localToWorldMatrix)||!ValidPose(placement))return false;
+            int vertices=0,triangles=0;
+            foreach(var mesh in meshes){
+                if(mesh==null||!ValidPose(frame.localToWorldMatrix*placement*mesh.Local)||!ValidateMeshData(mesh.Vertices,mesh.Indices,out error))return false;
+                vertices+=mesh.Vertices.Length/3;triangles+=mesh.Indices.Length/3;
+            }
+            if(retainedSurfaces+meshes.Length>MaximumVirtualSurfaces||retainedVertices+vertices>98304||retainedTriangles+triangles>MaximumVirtualTriangles)
+            {error="Retained acoustic geometry budget reached";return false;}
+            var inputs=new RetainedInput[meshes.Length];
+            for(int i=0;i<inputs.Length;i++)inputs[i]=new RetainedInput{Frame=frame,Placement=placement,InitialPlacement=placement,InitialFrame=frame.localToWorldMatrix,
+                InitialWorld=frame.localToWorldMatrix*placement*meshes[i].Local,Local=meshes[i].Local,Vertices=meshes[i].Vertices,Indices=meshes[i].Indices,ReflectionBoundary=boundary};
+            retainedSurfaces+=inputs.Length;retainedVertices+=vertices;retainedTriangles+=triangles;ResidencyEpoch++;
+            residency=new AcousticResidency{Owner=this,Inputs=inputs,Entries=new Entry[inputs.Length],Vertices=vertices,Triangles=triangles};error=null;return true;
         }
         internal bool TryPrepareResidency(GameObject root, Transform frame, out AcousticResidency residency, out string error)
         {

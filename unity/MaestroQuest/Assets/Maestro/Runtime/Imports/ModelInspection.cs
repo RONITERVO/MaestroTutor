@@ -28,9 +28,9 @@ namespace Maestro.Quest.Imports
         // This deliberately accepts a documented, self-contained subset of glTF 2.0.
         public static ModelInspection Inspect(byte[] bytes) => Inspect(bytes,false);
         internal static ModelInspection InspectMotion(byte[] bytes) => Inspect(bytes,true);
-        static ModelInspection Inspect(byte[] bytes, bool motionOnly)
+        static ModelInspection Inspect(byte[] bytes, bool motionOnly, bool acoustic = false)
         {
-            try { return new Inspector(bytes,motionOnly).Read(); }
+            try { return new Inspector(bytes,motionOnly,acoustic).Read(); }
             catch (ModelImportException) { throw; }
             catch (Exception error) when (error is JsonException || error is ArgumentException || error is OverflowException || error is InvalidCastException || error is InvalidOperationException || error is IndexOutOfRangeException || error is NullReferenceException)
             { throw new ModelImportException("This model contains invalid GLB data. Export it again as a self-contained GLB or VRM."); }
@@ -39,13 +39,13 @@ namespace Maestro.Quest.Imports
         sealed partial class Inspector
         {
             readonly byte[] bytes;
-            readonly bool motionOnly;
+            readonly bool motionOnly, acoustic;
             JObject root;
             JArray views, accessors, nodes, meshes;
             int binary, binaryLength;
             long decoded;
             readonly ModelInspection info = new();
-            public Inspector(byte[] value, bool motionOnly) { bytes = value; this.motionOnly = motionOnly; }
+            public Inspector(byte[] value, bool motionOnly, bool acoustic=false) { bytes = value; this.motionOnly = motionOnly; this.acoustic=acoustic; }
             void Require(bool value, string message = "This model contains invalid GLB data.") { if (!value) throw new ModelImportException(message); }
             uint U32(int at) => BitConverter.ToUInt32(bytes, at);
             public ModelInspection Read()
@@ -166,6 +166,7 @@ namespace Maestro.Quest.Imports
                 info.Attribution = meta?.ToString(Formatting.Indented) ?? (string)root["asset"]?["copyright"] ?? "No author or license information is included in this model.";
                 info.AssetBounds=InspectBounds();
                 info.RestBounds=InspectRestBounds();
+                if(acoustic)info.Acoustics=InspectAcousticGeometry();
                 return info;
             }
             void CheckAccessor(JToken accessor)

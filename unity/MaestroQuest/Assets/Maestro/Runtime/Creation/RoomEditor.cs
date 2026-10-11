@@ -574,6 +574,7 @@ namespace Maestro.Quest.Creation
         void Update()
         {
             TickSpatialPreparation();
+            TickNativeAcoustics();
             TickNativeDisplay();
             TickWorldTime(UnityEngine.Time.unscaledDeltaTime);
             TickLayerPresentation(UnityEngine.Time.unscaledDeltaTime);
@@ -663,14 +664,14 @@ namespace Maestro.Quest.Creation
         void RefreshOwnership() {
             worldTimeTickReady=false;
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
-            if(Ownership.Suspended){InvalidateNativeDisplay();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
+            if(Ownership.Suspended){StopAcousticPreparation();InvalidateNativeDisplay();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ClearViewCapture();FinishLiquidPour(out _);

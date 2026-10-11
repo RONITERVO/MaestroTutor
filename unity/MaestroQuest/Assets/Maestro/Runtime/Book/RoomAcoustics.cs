@@ -49,9 +49,17 @@ namespace Maestro.Quest.Book
         public string Issue { get; private set; }
         public int GeometryCount => scannedCount + virtualCount;
         public int TriangleCount => scannedTriangles + virtualTriangles;
-        public int OmittedCount { get; private set; }
+        int omittedGeometry,omittedBoundary;
+        readonly Dictionary<object,bool> preparingGeometry=new();
+        public int OmittedCount => omittedGeometry+preparingGeometry.Count;
+        internal void SetPreparing(object owner,bool? boundary)
+        {
+            bool before=preparingGeometry.TryGetValue(owner,out var previous)&&previous;
+            if(boundary.HasValue)preparingGeometry[owner]=boundary.Value;else preparingGeometry.Remove(owner);
+            if(before!=(boundary==true))StructureChanged();
+        }
         internal int BoundaryCount { get; private set; }
-        internal int OmittedBoundaries { get; private set; }
+        internal int OmittedBoundaries { get {int count=omittedBoundary;foreach(bool boundary in preparingGeometry.Values)if(boundary)count++;return count;} }
         internal long StructureRevision { get; private set; }
 
         internal void Register(IAcousticGeometry surface)
@@ -151,7 +159,7 @@ namespace Maestro.Quest.Book
                     catch (Exception) { Release(entry); surface.Issue = "Acoustic movement could not be applied"; Omit(); }
                 }
             }
-            OmittedCount = omitted; OmittedBoundaries = omittedBoundaries;
+            omittedGeometry = omitted; omittedBoundary = omittedBoundaries;
         }
         // Called by the reflection owner, not by diagnostics or provider code.
         // Input geometry stays frozen while the SDK worker reads it. Direct HRTF
@@ -240,14 +248,22 @@ namespace Maestro.Quest.Book
             }
             if (count < 3 || count > MaximumMeshTriangles * 3) return false;
             var points = mesh.vertices; var triangles = mesh.triangles;
-            foreach (var p in points) if (!float.IsFinite(p.sqrMagnitude) || Mathf.Max(Mathf.Abs(p.x), Mathf.Abs(p.y), Mathf.Abs(p.z)) > 10000) return false;
-            foreach (int i in triangles) if (i < 0 || i >= points.Length) return false;
-            for (int i = 0; i < triangles.Length; i += 3)
-                if (Vector3.Cross(points[triangles[i + 1]] - points[triangles[i]], points[triangles[i + 2]] - points[triangles[i]]).sqrMagnitude < 1e-16f)
-                { issue = "Acoustic mesh has degenerate triangles"; return false; }
             vertices = new float[points.Length * 3]; indices = triangles;
             for (int i = 0; i < points.Length; i++) { vertices[i * 3] = points[i].x; vertices[i * 3 + 1] = points[i].y; vertices[i * 3 + 2] = points[i].z; }
-            issue = null; return true;
+            return ValidateMeshData(vertices,indices,out issue);
+        }
+        internal static bool ValidateMeshData(float[] vertices,int[] indices,out string issue)
+        {
+            issue="Acoustic mesh is unreadable or exceeds its budget";
+            if(vertices==null||indices==null||vertices.Length<9||vertices.Length%3!=0||vertices.Length/3>MaximumMeshVertices
+                ||indices.Length<3||indices.Length%3!=0||indices.Length/3>MaximumMeshTriangles)return false;
+            foreach(float value in vertices)if(!float.IsFinite(value)||Mathf.Abs(value)>10000)return false;
+            foreach(int index in indices)if(index<0||index>=vertices.Length/3)return false;
+            Vector3 Point(int index)=>new(vertices[index*3],vertices[index*3+1],vertices[index*3+2]);
+            for(int i=0;i<indices.Length;i+=3)
+                if(Vector3.Cross(Point(indices[i+1])-Point(indices[i]),Point(indices[i+2])-Point(indices[i])).sqrMagnitude<1e-16f)
+                {issue="Acoustic mesh has degenerate triangles";return false;}
+            issue=null;return true;
         }
         internal static bool ValidPose(Matrix4x4 pose)
         {
@@ -285,7 +301,7 @@ namespace Maestro.Quest.Book
                 var closing = mapJob; mapJob = null;
                 var api = native; var ownedMaterial = material; var ownedLease = lease; var restore = ownsModel; var model = previousModel;
                 material = IntPtr.Zero; lease = null; ownsModel = false;
-                scannedCount = virtualCount = scannedTriangles = virtualTriangles = scannedVertices = virtualVertices = OmittedCount = BoundaryCount = OmittedBoundaries = 0;
+                scannedCount = virtualCount = scannedTriangles = virtualTriangles = scannedVertices = virtualVertices = omittedGeometry = BoundaryCount = omittedBoundary = 0;
                 // No Unity objects in the closure. The previous native scene
                 // remains exclusively leased until every input has been freed.
                 closing.Retire(() =>
@@ -306,7 +322,7 @@ namespace Maestro.Quest.Book
             // Clear its shared tail before another workspace/context can use it.
             if (ownsModel) { native.ResetReverb(); native.SetAcousticModel(previousModel); ownsModel = false; }
             ReleaseLease(lease); lease = null;
-            OmittedCount = OmittedBoundaries = 0;
+            omittedGeometry = omittedBoundary = 0;
         }
         static void ReleaseLease(object owner) { lock (leaseLock) { if (ReferenceEquals(contextLease, owner)) contextLease = null; } }
         void LateUpdate() { if (!opened) Open(); Synchronize(); }

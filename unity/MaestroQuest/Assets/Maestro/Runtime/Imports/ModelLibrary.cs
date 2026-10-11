@@ -50,12 +50,12 @@ namespace Maestro.Quest.Imports
             try {var value=ReadLocalCore(hash);RememberBounds(value);return value;}
             catch {ForgetBounds(hash);throw;}
         }
-        ModelAsset ReadLocalCore(string hash,CancellationToken cancellation=default)
+        ModelAsset ReadLocalCore(string hash,CancellationToken cancellation=default,bool acoustic=false)
         {
             if (!ValidHash(hash)) throw new ModelImportException("This room has an invalid model reference.");
             string path = Path.Combine(directory, hash + ".glb");
             if (!File.Exists(path)) throw new ModelImportException("This model's local copy is missing. Import the original file again.");
-            byte[] bytes = ReadBounded(path,cancellation);cancellation.ThrowIfCancellationRequested();var asset = Inspect(hash, bytes);
+            byte[] bytes = ReadBounded(path,cancellation);cancellation.ThrowIfCancellationRequested();var asset = acoustic ? new ModelAsset{Hash=Hash(bytes),Name=hash,Bytes=bytes,Inspection=ModelInspection.InspectAcoustics(bytes)} : Inspect(hash, bytes);
             if (asset.Hash != hash) throw new ModelImportException("The saved model copy is damaged. Import the original file again.");
             return asset;
         }

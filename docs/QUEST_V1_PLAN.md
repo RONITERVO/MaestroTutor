@@ -7189,3 +7189,55 @@ both passed with clean client/editor/terminal exits; book captures were visually
 checked. The complete verifier exited successfully. These journeys used local
 provider fixtures. No headset, paid-provider, signing, deployment or upload was
 performed; the existing intermittent native-audio limitation remains open.
+
+
+### Saved acoustic geometry without a native view — 2026-10-11
+
+Dormant entities now own cancellable acoustic preparation from their saved
+recipe, accepted terrain or exact private GLB. The preparation reuses native
+procedural evaluators and the model library's serialized inspection lane. It
+retains bounded vertex/index values, never an imported renderer, texture or a
+second saved scene. Rigid selected-scene GLB meshes use the same resting-envelope
+fit and exclusions as native views; skin/morph renderers and alpha cutouts remain
+excluded. Matrix/extended nodes and unsupported transforms stay unknown rather
+than partially clear. Stopped recipe-part poses survive preparation.
+
+Changed dormant definitions rebuild independently, including a previously empty
+acoustic definition that gains terrain. Current saved placement, Undo and world
+frame transforms retain their existing semantics. Native startup remains the
+owner of its requested views; the acoustic path does not duplicate that work.
+One cooperative preparation runs at a time, with the existing native preparation
+window and retained-input budgets. Unchanged failures do not retry each frame;
+capacity failures can retry when reservations change. The 120-second deadline
+cancels the owner and prevents late publication; a file parse already executing
+on a worker is indivisible and must drain before the shared lane is reused.
+
+Focus loss, disable, deletion, edits, workspace replacement and native takeover
+cancel preparation. Missing or invalid inputs remain omitted. The existing
+`runtime.acoustics` fact reports pending saved objects alongside omitted surface
+work and a bounded first preparation issue, equally available to human and agent.
+Those counts are not unique mesh counts or a complete physical-world model.
+Discovering a pending fixed boundary also invalidates completed acoustic maps
+and cancels in-flight map work; repeated unchanged pending input does not restart
+that invalidation. Dynamic input does not invalidate fixed reflection maps.
+
+This adds source preparation and replacement to the preceding ownership work.
+Automatic unloading/selective startup and larger-world limits remain disabled;
+audibility/indirect-view demand, regional collision/ground/water/navigation and
+swept-physics admission still require integration and acceptance. Production
+reflection output/scheduling remain disabled. Device and paid-provider acceptance
+remain separate.
+
+Verification: the complete verifier exited successfully with 1,136 EditMode and
+1,237 PlayMode tests passed; only the three explicit optional private-asset checks
+were skipped. All 22 new acoustic regressions passed, including actual listener
+obstruction, native map-worker cancellation, terrain/custom-mesh parity, empty
+geometry invalidation, missing files, timeout and lifecycle cancellation. All
+902 Maestro C# files match the tested mirror. The shared headless and original
+two-page book journeys passed with clean client/editor/terminal exits, using
+local provider fixtures. Book visibility and physics captures were inspected.
+The five shared catalog/interface suites passed 263 tests; catalog-source checks
+passed. The generated catalog changes only source fingerprints and the existing
+acoustic diagnostic description. The earlier intermittent native-audio crash
+remains unresolved; this successful run does not establish its cause or a fix.
+No headset, paid-provider, signing, deployment or upload was performed.
