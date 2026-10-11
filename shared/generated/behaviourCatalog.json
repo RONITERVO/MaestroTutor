@@ -43080,7 +43080,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticMapScheduler.cs",
-      "sha256": "d70958c84bdf532116f0a59b2d0da6692d80005c1634147f63b7b7024ff76034"
+      "sha256": "4da4d029406ee11323b3fd395e2cfc6239b5eedcd0d29c1b7cdf1469d6ff13b6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
@@ -44664,7 +44664,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/MaestroRoom.cs",
-      "sha256": "a9b1fac5e9dc8c112a146279c2f308a7c2018dbc8bd1e0d90743f621beb58995"
+      "sha256": "bb21f81457f21b7946338da29ba7d791415628bcd356d0f087583c6e1677e177"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/AndroidWorkspacePicker.cs",

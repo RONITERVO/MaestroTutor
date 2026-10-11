@@ -7138,7 +7138,9 @@ and observes eligible hidden/non-colliding boundary geometry and speech through
 more than the scheduling settling period. The test failed on the original startup
 and passes after the change. All 27 focused native checks pass, including measured
 listener-output obstruction, multi-voice experimental reflections, native map
-replacement/cancellation and passive acoustic facts. No tests were skipped.
+replacement/cancellation and passive acoustic facts. Seventeen native catalog
+checks and the web catalog source check also pass. Native regeneration changes
+only two source fingerprints; capability definitions are unchanged. No tests were skipped.
 
 This removes unnecessary production work; it does not establish a cause or fix
 for the retained intermittent Meta native-audio crash. The prior full-suite and
