@@ -42979,12 +42979,16 @@
       "sha256": "e5fcea0287890d08e4e096d68b9c7f786be6fd365f43189514bf0bfea432ae24"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometry.cs",
+      "sha256": "f2655221821e23e874f6ef15b6f0211f140c36c691745b7d6020d8038e9cde19"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticOutputMonitor.cs",
       "sha256": "e6e9fc7721fa79fd5f90e6dee80ef2616dfae3b7b45f5cec5001c1184956c004"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticSurface.cs",
-      "sha256": "0566e4ed681a5cac544d715f19e9270c24017fa59f3f4875f24008d024a5cc20"
+      "sha256": "e15db29a15ec99d52ea418d8326c26ca903a517453055fdd5174afd33e6c9424"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCameraSession.cs",
@@ -43083,8 +43087,12 @@
       "sha256": "4da4d029406ee11323b3fd395e2cfc6239b5eedcd0d29c1b7cdf1469d6ff13b6"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticResidency.cs",
+      "sha256": "295938d333c407e8361d7a517cb9858325f762cf2688eefd0cae19f82f0d5a6c"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
-      "sha256": "29419db430da07dd4e2ecd5d9ab1d9a4abdc3665ce03926c33dfdb4d7632f678"
+      "sha256": "7835a2c5fa206e7808b01906c01b53278dfbb80ff5da823706e7059343c5c4a9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioOutput.cs",
@@ -43904,7 +43912,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "a39be7753c64fd30ef235d0994e9ed84acfa69d629b362e573cd60f6f97150ae"
+      "sha256": "33b062aa190bf736830103f6c6c9cf0677e27fc41dc84adaeb03ea174232e90a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -44024,7 +44032,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "8eee7c3053c037e711ad99e67ef5bf8cec86cff6032686d83f876dae58016038"
+      "sha256": "ec7b0a1ab7feca92ca682d32eedd48c0923f5312f76f0f405b2a81c2a1401dd7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",

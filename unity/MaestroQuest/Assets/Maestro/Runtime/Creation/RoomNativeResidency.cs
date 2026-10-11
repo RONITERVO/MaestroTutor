@@ -28,6 +28,7 @@ namespace Maestro.Quest.Creation
             internal RoomSpatialBounds Spatial;internal string SpatialSource,AuthoredSpatialSource;internal int SpatialRevision;
             internal bool SuppressStartupAutoplay;
             internal bool SpatialCurrent;internal Matrix4x4 SpatialPlacement;internal ScanSpatialPlacement ScanPlacement;
+            internal Book.RoomAcoustics.AcousticResidency Acoustics;internal int AcousticRevision = -1;
         }
         readonly Dictionary<string,DormantEntity> dormantNative=new(StringComparer.Ordinal);
         RoomJournal nativeJournal;
@@ -43,8 +44,15 @@ namespace Maestro.Quest.Creation
         internal string NativeActivationError(string target)=>dormantNative.TryGetValue(target,out var entry)?entry.Error:null;
         void SynchronizeNativeResidency(HashSet<string> saved)
         {
-            if(!ReferenceEquals(nativeJournal,journal)){CancelNativeActivation();dormantNative.Clear();nativeJournal=journal;}
-            foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray())dormantNative.Remove(id);
+            if(!ReferenceEquals(nativeJournal,journal)){CancelNativeActivation();ReleaseNativeAcoustics();dormantNative.Clear();nativeJournal=journal;}
+            foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray()){dormantNative[id].Acoustics?.Dispose();dormantNative.Remove(id);}
+            foreach(var pair in dormantNative){
+                var entry=pair.Value;int revision=ObjectRevision(pair.Key);
+                if(entry.Acoustics==null||entry.AcousticRevision==revision)continue;
+                var data=Read(pair.Key);var pose=NativeActivationPose(data.Copy());
+                entry.Acoustics.UpdateDefinition(entry.SpatialSource==SpatialSource(data),Matrix4x4.TRS(pose.position,pose.rotation,Vector3.one*pose.scale));
+                entry.AcousticRevision=revision;
+            }
         }
         internal bool NativeActivationPending=>nativeActivation!=null||nativeAcquisitions.Count>0;
         bool NativeTransitionAvailable(out string error,Func<bool> actionAdmission=null)
@@ -77,12 +85,22 @@ namespace Maestro.Quest.Creation
             // Dynamic placement uses the existing non-Undo capture policy. Other
             // transient poses are cached without rewriting authored rest frames.
             CapturePhysicsPlacements();
+            var acoustics=GetComponentInParent<Book.RoomAcoustics>();bool retired=false;
+            try{
+            // Reserve all derived inputs before changing either native identity.
+            // Failure rolls back any transferred input to the still-live object.
+            if(acoustics)foreach(var entry in snapshots.Values)
+                if(!acoustics.TryPrepareResidency(entry.RetiringRoot,transform,out entry.Acoustics,out error))return false;
+            foreach(var entry in snapshots.Values)if(entry.Acoustics!=null&&!entry.Acoustics.Commit()){
+                error="The area's acoustic input changed before retirement";return false;
+            }
             foreach(var pair in snapshots){var saved=Read(pair.Key);pair.Value.SavedPosition=saved.position;pair.Value.SavedRotation=saved.rotation;pair.Value.SavedScale=saved.scale;
                 pair.Value.ScanPlacement=ScanSpatialPlacement.From(saved);
                 pair.Value.AuthoredSpatialSource=pair.Value.SpatialSource=SpatialSource(saved);pair.Value.SpatialRevision=ObjectRevision(pair.Key);pair.Value.SpatialCurrent=true;
                 pair.Value.SpatialPlacement=Matrix4x4.TRS(pair.Value.Position,pair.Value.Rotation,Vector3.one*pair.Value.Scale);dormantNative.Add(pair.Key,pair.Value);}
             foreach(var pair in snapshots){var item=Find(pair.Key);DetachNativeIdentity(pair.Key,item);regionModels.Remove(pair.Key);item.gameObject.SetActive(false);Destroy(item.gameObject);}
-            RefreshRegionCollision();UpdateSelection();error=null;return true;
+            retired=true;RefreshRegionCollision();UpdateSelection();error=null;return true;
+            }finally{if(!retired)foreach(var entry in snapshots.Values)entry.Acoustics?.Restore(entry.RetiringRoot);}
         }
         internal Task<string> ActivateNativeArea(string area,CancellationToken cancellation=default)
         {
@@ -154,7 +172,7 @@ namespace Maestro.Quest.Creation
                     Check();
                 }finally{applying=false;}
                 Liquids?.Synchronize(journal.Snapshot());
-                foreach(var id in targets)dormantNative.Remove(id);
+                foreach(var id in targets){dormantNative[id].Acoustics?.Restore(candidates[id].gameObject);dormantNative.Remove(id);}
             }
             catch(Exception failure){
                 foreach(var id in targets){var item=Find(id);if(item&&roots.Contains(item.gameObject)){DetachNativeIdentity(id,item);regionModels.Remove(id);}}
@@ -190,6 +208,7 @@ namespace Maestro.Quest.Creation
         {
             if(dormantNative.TryGetValue(data.id,out var entry)&&entry.ConnectionSource==JsonUtility.ToJson(data.connections.FirstOrDefault()))view.RestoreBrokenState(entry.ConnectionBroken);
         }
+        void ReleaseNativeAcoustics(){foreach(var entry in dormantNative.Values){entry.Acoustics?.Dispose();entry.Acoustics=null;}}
         void CancelNativeActivation(){nativeGeneration++;foreach(var job in nativeAcquisitions.ToArray())job.Cancel();nativeActivation?.Cancel();}
     }
 }

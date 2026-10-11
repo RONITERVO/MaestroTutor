@@ -11,7 +11,7 @@ using UnityEngine.TestTools;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class RoomAcousticsTests
+    public sealed partial class RoomAcousticsTests
     {
         GameObject root;
         RoomAcoustics room;

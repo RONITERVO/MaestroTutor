@@ -7146,3 +7146,46 @@ This removes unnecessary production work; it does not establish a cause or fix
 for the retained intermittent Meta native-audio crash. The prior full-suite and
 book/headless evidence belongs to `e03df7fb`; this increment has the focused native
 coverage above. No headset, provider, signing, deployment or upload was performed.
+
+### Acoustic ownership across native view retirement — 2026-10-11
+
+An internal area retirement now reserves and transfers each admitted virtual
+acoustic mesh before destroying its native view. Room acoustics accepts either
+an active surface component or a retained geometry input, so direct obstruction
+keeps the same SDK geometry owner while renderers, textures, model reservations
+and importer-owned meshes are released. The retained input contains validated
+vertex/index arrays and placement relative to the authored world frame. It adds
+no second saved world and never admits a physical scan outside its tracking owner.
+
+Reservations are independently bounded to 384 surfaces, 98,304 vertices and
+49,152 triangles. Missing or over-budget acoustic preparation refuses retirement
+without changing native identity. A cancelled reactivation keeps the retained
+input. Matching rebuilt geometry takes the existing native owner back; an audio
+reset can recreate it from the retained arrays. Existing worker cancellation
+still defers SDK handle destruction until the worker has drained.
+
+Saved placement edits, Undo and movement of the world frame update the retained
+pose. A changed definition invalidates its old input and exposes omitted geometry
+until native preparation replaces it or Undo restores a matching definition.
+Deletion, temporary-room discard and workspace teardown release the cache. The
+new measured-audio regression found and fixed a placement alias: canonicalizing
+a saved geometry signature had modified the same copy used for placement, moving
+the retained wall to the origin. Placement now uses a separate detached copy.
+
+This is an ownership foundation, not automatic streaming. Cold acoustic admission,
+independent replacement of changed dormant geometry, audibility demand and
+regional physics/navigation/water are still needed before automatic unloading or
+selective startup. Whole-room startup, current object/coordinate limits and the
+production reflection hold remain unchanged. Device/provider/release acceptance
+is separate.
+
+Verification: 1,136 EditMode and 1,215 PlayMode tests passed, with only the three
+explicit optional private-asset checks skipped. All ten new acoustic regressions
+passed, including measured listener obstruction after render/mesh destruction,
+saved placement and Undo, actual audio reset, imported GLB resource release,
+reservation refusal and native map-worker draining. All 895 Maestro C# files
+match the tested mirror. The shared headless and original two-page book journeys
+both passed with clean client/editor/terminal exits; book captures were visually
+checked. The complete verifier exited successfully. These journeys used local
+provider fixtures. No headset, paid-provider, signing, deployment or upload was
+performed; the existing intermittent native-audio limitation remains open.

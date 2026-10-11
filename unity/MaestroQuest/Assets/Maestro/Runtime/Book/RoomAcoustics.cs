@@ -10,14 +10,14 @@ namespace Maestro.Quest.Book
     /// <summary>Owns native acoustic geometry independently of physics, render
     /// visibility and workspace persistence. No reflection into SDK components.</summary>
     [DefaultExecutionOrder(200)]
-    public sealed class RoomAcoustics : MonoBehaviour
+    public sealed partial class RoomAcoustics : MonoBehaviour
     {
         internal const int MaximumMeshVertices = 16384, MaximumMeshTriangles = 8192;
         // Separate reservations prevent a large creation from evicting the scan.
         internal const int MaximumScannedSurfaces = 128, MaximumVirtualSurfaces = 384;
         const int MaximumScannedTriangles = 16384, MaximumVirtualTriangles = 49152;
         const int MaximumUploadsPerFrame = 4;
-        sealed class Entry
+        internal sealed class Entry
         {
             internal IntPtr Handle;
             internal int Triangles, Vertices, Revision = -1, AttemptEpoch = -1;
@@ -25,8 +25,9 @@ namespace Maestro.Quest.Book
             internal bool Boundary;
             internal bool Retired;
             internal Matrix4x4 Pose;
+            internal float[] VertexData; internal int[] IndexData;
         }
-        readonly Dictionary<AcousticSurface, Entry> entries = new();
+        readonly Dictionary<IAcousticGeometry, Entry> entries = new();
         readonly List<Entry> retiredEntries = new();
         static readonly object leaseLock = new();
         static object contextLease;
@@ -53,15 +54,15 @@ namespace Maestro.Quest.Book
         internal int OmittedBoundaries { get; private set; }
         internal long StructureRevision { get; private set; }
 
-        internal void Register(AcousticSurface surface)
+        internal void Register(IAcousticGeometry surface)
         {
             if (!entries.ContainsKey(surface)) { if (surface.ReflectionBoundary) StructureChanged(); entries.Add(surface, new Entry()); }
         }
-        internal void Unregister(AcousticSurface surface)
+        internal void Unregister(IAcousticGeometry surface)
         {
             if (entries.Remove(surface, out var entry)) Release(entry);
         }
-        internal void Invalidate(AcousticSurface surface)
+        internal void Invalidate(IAcousticGeometry surface)
         {
             if (surface.ReflectionBoundary) StructureChanged();
             // Direct geometry is retired immediately, or held until a map job
@@ -129,11 +130,11 @@ namespace Maestro.Quest.Book
             foreach (var pair in entries)
             {
                 var surface = pair.Key; var entry = pair.Value;
-                if (!surface || !surface.isActiveAndEnabled || !surface.Available || !surface.Mesh)
+                if (!surface.Active || !surface.HasGeometry)
                 { Release(entry); continue; }
                 bool boundary = surface.ReflectionBoundary;
                 void Omit() { omitted++; if (boundary) omittedBoundaries++; }
-                var pose = surface.transform.localToWorldMatrix;
+                var pose = surface.Pose;
                 if (!ValidPose(pose)) { Release(entry); surface.Issue = "Invalid acoustic transform"; Omit(); continue; }
                 if (entry.Handle != IntPtr.Zero && (entry.Revision != surface.Revision || entry.Boundary != boundary || entry.Boundary && !entry.Pose.Equals(pose))) Release(entry);
                 if (entry.Handle == IntPtr.Zero)
@@ -178,13 +179,13 @@ namespace Maestro.Quest.Book
             foreach (var pair in entries)
             {
                 var surface = pair.Key; var entry = pair.Value;
-                bool boundary = surface && surface.isActiveAndEnabled && surface.Available && surface.Mesh && surface.ReflectionBoundary;
+                bool boundary = surface.Active && surface.HasGeometry && surface.ReflectionBoundary;
                 // A disabled surface may remain registered after its native
                 // geometry was released. It is no longer an input to this job.
                 bool nativeBoundary = entry.Handle != IntPtr.Zero && entry.Boundary;
                 if (!nativeBoundary && !boundary) continue;
                 if (entry.Handle == IntPtr.Zero || !boundary || !entry.Boundary
-                    || surface.Revision != entry.Revision || !surface.transform.localToWorldMatrix.Equals(entry.Pose)) return false;
+                    || surface.Revision != entry.Revision || !surface.Pose.Equals(entry.Pose)) return false;
             }
             return true;
         }
@@ -196,12 +197,12 @@ namespace Maestro.Quest.Book
             if (map == IntPtr.Zero) return;
             native.AudioSceneIRSetEnabled(map, false); native.DestroyAudioSceneIR(map); map = IntPtr.Zero;
         }
-        bool TryUpload(AcousticSurface surface, Entry entry, Matrix4x4 pose)
+        bool TryUpload(IAcousticGeometry surface, Entry entry, Matrix4x4 pose)
         {
             IntPtr candidate = IntPtr.Zero;
             try
             {
-                if (!ReadMesh(surface.Mesh, out var vertices, out var indices, out var issue)) { surface.Issue = issue; return false; }
+                if (!surface.Read(out var vertices, out var indices, out var issue)) { surface.Issue = issue; return false; }
                 int triangles = indices.Length / 3;
                 bool scan = surface.Scanned;
                 if ((scan ? scannedCount >= MaximumScannedSurfaces : virtualCount >= MaximumVirtualSurfaces) ||
@@ -218,6 +219,7 @@ namespace Maestro.Quest.Book
                 Check(native.AudioGeometrySetTransform(candidate, in pose));
                 Check(native.AudioGeometrySetObjectFlag(candidate, ObjectFlags.ENABLED, true));
                 entry.Handle = candidate; candidate = IntPtr.Zero; entry.Pose = pose; entry.Scanned = scan; entry.Triangles = triangles; entry.Vertices = vertices.Length / 3;
+                entry.VertexData = vertices; entry.IndexData = indices;
                 if (scan) { scannedCount++; scannedTriangles += triangles; scannedVertices += entry.Vertices; }
                 else { virtualCount++; virtualTriangles += triangles; virtualVertices += entry.Vertices; }
                 if (entry.Boundary) { BoundaryCount++; StructureChanged(); }
@@ -269,7 +271,7 @@ namespace Maestro.Quest.Book
             if (entry.Scanned) { scannedCount--; scannedTriangles -= entry.Triangles; scannedVertices -= entry.Vertices; }
             else { virtualCount--; virtualTriangles -= entry.Triangles; virtualVertices -= entry.Vertices; }
             if (entry.Boundary) BoundaryCount--;
-            entry.Triangles = entry.Vertices = 0; epoch++;
+            entry.Triangles = entry.Vertices = 0; entry.VertexData = null; entry.IndexData = null; epoch++;
         }
         void Close()
         {
@@ -277,8 +279,8 @@ namespace Maestro.Quest.Book
             if (mapJob != null)
             {
                 var handles = new HashSet<IntPtr>();
-                foreach (var entry in entries.Values) { if (entry.Handle != IntPtr.Zero) handles.Add(entry.Handle); entry.Handle = IntPtr.Zero; entry.Revision = -1; entry.Retired = false; }
-                foreach (var entry in retiredEntries) { if (entry.Handle != IntPtr.Zero) handles.Add(entry.Handle); entry.Handle = IntPtr.Zero; entry.Retired = false; }
+                foreach (var entry in entries.Values) { if (entry.Handle != IntPtr.Zero) handles.Add(entry.Handle); entry.Handle = IntPtr.Zero; entry.Revision = -1; entry.Retired = false; entry.VertexData = null; entry.IndexData = null; }
+                foreach (var entry in retiredEntries) { if (entry.Handle != IntPtr.Zero) handles.Add(entry.Handle); entry.Handle = IntPtr.Zero; entry.Retired = false; entry.VertexData = null; entry.IndexData = null; }
                 retiredEntries.Clear();
                 var closing = mapJob; mapJob = null;
                 var api = native; var ownedMaterial = material; var ownedLease = lease; var restore = ownsModel; var model = previousModel;

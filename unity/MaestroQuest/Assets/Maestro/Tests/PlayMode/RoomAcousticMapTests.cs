@@ -13,7 +13,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class RoomAcousticMapTests
+    public sealed partial class RoomAcousticMapTests
     {
         GameObject root;
         RoomAcoustics room;

@@ -6,7 +6,7 @@ namespace Maestro.Quest.Book
 {
     /// <summary>An explicitly selected sound-obstructing mesh. Rendering and
     /// colliders do not control it; overlays and grab proxies are not geometry.</summary>
-    public sealed class AcousticSurface : MonoBehaviour
+    public sealed class AcousticSurface : MonoBehaviour, IAcousticGeometry
     {
         internal Mesh Mesh { get; private set; }
         internal int Revision { get; private set; }
@@ -17,6 +17,16 @@ namespace Maestro.Quest.Book
         Creation.CreatedRoomObject creation;
         bool environment;
         internal bool ReflectionBoundary => Scanned || environment || creation && creation.AcousticBoundary;
+        bool IAcousticGeometry.Active => this && isActiveAndEnabled && Available;
+        bool IAcousticGeometry.HasGeometry => this && Mesh;
+        bool IAcousticGeometry.Scanned => Scanned;
+        bool IAcousticGeometry.ReflectionBoundary => ReflectionBoundary;
+        int IAcousticGeometry.Revision => Revision;
+        Matrix4x4 IAcousticGeometry.Pose => transform.localToWorldMatrix;
+        string IAcousticGeometry.Issue { get => Issue; set => Issue = value; }
+        bool IAcousticGeometry.Read(out float[] vertices, out int[] indices, out string issue)
+            => RoomAcoustics.ReadMesh(Mesh, out vertices, out indices, out issue);
+
 
         internal static AcousticSurface Attach(GameObject target, Mesh mesh, bool scanned = false, bool environment = false)
         {

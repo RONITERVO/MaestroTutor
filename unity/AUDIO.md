@@ -97,6 +97,40 @@ allocate another copy on every cycle. No clock-only completion, automatic
 voice stealing or new provider calls are involved. Role labels currently preserve
 intent for the future mix policy; they do not grant microphone privileges.
 
+## Acoustic geometry survives view retirement
+
+Direct acoustic inputs have their own bounded lifetime. Internal native-area
+retirement transfers admitted virtual meshes from their live components to a
+room-owned cache before destroying the render objects. The existing SDK handles
+remain owned through that transfer, including during a native map calculation.
+No renderer, texture, imported-model instance or destroyed component wrapper is
+needed to keep those inputs alive. The cache holds validated vertex/index arrays
+and transforms relative to the authored world frame. The journal remains the
+only authored definition; there is no additional saved acoustic world.
+
+Retained input reservations allow at most 384 surfaces, 98,304 vertices and 49,152
+triangles. These CPU reservations survive an audio-device reset independently of
+the existing native scene budgets. Unprepared, invalid or over-budget acoustic
+input prevents area retirement; failed preparation releases its reservations.
+Physical scanned surfaces stay with their tracking owner and cannot enter this
+virtual-object cache.
+
+Reloading identical geometry transfers its native owner to the rebuilt view.
+Position edits, Undo and movement of the world frame update retained placement.
+A changed saved definition invalidates the cached input until compatible geometry
+is restored or native preparation replaces it; the existing omitted-geometry
+count reports that gap. Such an input is not a stale wall or proof of clear space.
+Deletion, workspace replacement and editor destruction release cache ownership.
+SDK work already reading an input keeps its native handle until cancellation has
+drained. Passive acoustic facts do not create cache entries or load a model.
+
+This separates acoustic and rendering ownership; it is not an automatic acoustic
+culling or regional streaming policy. Cold acoustic admission, sound-demand
+footprints, independent replacement of changed dormant geometry, regional
+physics/navigation/water support and larger-world budgets remain required before
+automatic unloading or selective startup. Production reflection output and map
+scheduling remain disabled pending their existing capture/lifecycle acceptance.
+
 ## One model for user and agent
 
 | Part | Responsibility |
