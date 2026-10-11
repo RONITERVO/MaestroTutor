@@ -709,3 +709,9 @@ its complete, validated source appears; a cancellation, invalid later part or
 changed saved recipe discards the unfinished geometry. The same evaluator keeps
 its shapes and animations consistent with ordinary synchronous edits. Individual
 mesh uploads and activation callbacks still have no hard frame-time guarantee.
+
+The area's dependency report includes `navigation` while an accepted or pending
+walking map holds its ground, and `waterRoute` while a detour is being planned
+around its liquid. Multiple maps can need the same area. Pausing physics retires
+maps; cancelling or finishing a detour releases that search. Inspecting this
+report does not create a route, edit the world or enable automatic unloading.

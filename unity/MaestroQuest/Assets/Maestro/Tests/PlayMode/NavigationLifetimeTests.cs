@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
         {
             foreach(string name in new[]{"accepted","candidate"}){
                 var capture=NavigationField<RoomNavigationGeometry>(name);Assert.AreEqual(0,capture.BuildSources.Count,name+" must not retain sources");
-                foreach(string list in new[]{"colliders","entries"})Assert.AreEqual(0,((ICollection)typeof(RoomNavigationGeometry).GetField(list,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(capture)).Count,name+" must not retain "+list);
+                foreach(string list in new[]{"colliders","entries","dependencies"})Assert.AreEqual(0,((ICollection)typeof(RoomNavigationGeometry).GetField(list,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(capture)).Count,name+" must not retain "+list);
                 Assert.AreEqual(default(Bounds),capture.Bounds);
             }
             Assert.IsNull(NavigationField<NavMeshData>("data"));Assert.AreEqual(-1,NavigationField<int>("agentType"));

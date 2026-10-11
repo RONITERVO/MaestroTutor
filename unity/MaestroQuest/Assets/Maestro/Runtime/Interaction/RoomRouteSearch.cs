@@ -23,6 +23,7 @@ namespace Maestro.Quest.Interaction {
         internal string Failure {get;private set;}
         internal bool Pending=>Result==null&&Failure==null;
         internal int QueryCount=>edges.Count;
+        internal IEnumerable<string> WaterDependencies=>liquids;
         internal RoomRouteSearch(Vector3 from,Vector3 to,string liquid,Vector3 foot,EdgeQuery edge,FootprintQuery footprint,SampleQuery sample,SegmentQuery segment){
             From=from;To=to;this.edge=edge;this.footprint=footprint;this.sample=sample;this.segment=segment;
             nodes.Add(new(){Point=from,Cost=0});nodes.Add(new(){Point=to});edges[Key(0,1)]=null;

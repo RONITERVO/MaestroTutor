@@ -368,3 +368,11 @@ asynchronous acquisition. A source snapshot cannot publish until its parts and
 animation tracks are valid and complete; adoption checks that exact source.
 Cancelling midway releases partial meshes and paint. This adds no agent-only
 geometry implementation, new capability, or automatic streaming policy.
+
+`world.region.retention` also reports actual navigation ownership. `navigation`
+retains sources captured by accepted or pending ground maps; `waterRoute` retains
+liquids discovered by a pending detour. These reasons use the same area/connection
+closure as other owners and are available to users, programs and agents. Reads
+never rebuild navigation or activate content. Consumer retirement and route
+completion/cancellation release their own dependencies. Whole-world physics
+admission and the existing loading limits remain in force.

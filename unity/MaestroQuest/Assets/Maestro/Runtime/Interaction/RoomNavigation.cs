@@ -53,9 +53,9 @@ namespace Maestro.Quest.Interaction
         public void Initialize(RoomPhysicsWorld value)
         {
             if(world==value)return;
-            if(world)world.Changed-=RoomChanged;
+            if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}
             ResetBinding();world=value;
-            if(world&&isActiveAndEnabled)world.Changed+=RoomChanged;
+            if(world&&isActiveAndEnabled){world.Changed+=RoomChanged;world.RegisterNavigation(this);}
         }
         void RoomChanged() { if (!ContextAvailable) Clear(); }
         public bool Prepare(float bodyRadius, float bodyHeight, out string error,RoomItem target=null)
@@ -185,8 +185,8 @@ namespace Maestro.Quest.Interaction
         void Clear(){ReleaseMap();candidate.Clear();observedFrame=false;}
         void ResetBinding(){Clear();configured=false;actor=null;actorBound=false;}
         void LateUpdate(){if((data||PathsPending)&&!ContextAvailable)Clear();}
-        void OnEnable(){if(world)world.Changed+=RoomChanged;}
-        void OnDisable(){if(world)world.Changed-=RoomChanged;ResetBinding();}
-        void OnDestroy(){if(world)world.Changed-=RoomChanged;ResetBinding();world=null;virtualFrame=null;}
+        void OnEnable(){if(world){world.Changed+=RoomChanged;world.RegisterNavigation(this);}}
+        void OnDisable(){if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}ResetBinding();}
+        void OnDestroy(){if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}ResetBinding();world=null;virtualFrame=null;}
     }
 }

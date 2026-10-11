@@ -41299,7 +41299,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and observer/ground/water admission must be implemented before independent residency. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending water detours retain discovered liquid sources until completion or cancellation. Reading does not rebuild navigation. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and observer/ground/water admission must be implemented before independent residency. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -43178,7 +43178,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "bc53c8485902b53d9aa30b4f18c4f2fb2b60cc703571fbaffbe0a346321ce807"
+      "sha256": "153d4616682b64723ed60b03328b60a5ddbcaa042cbe128a01c2b36949303d48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -43810,7 +43810,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionRetention.cs",
-      "sha256": "58dc0dd9a30d5ae1fb2f90fe65de1c8bde1c8ab461ed08f9b6b1338e13c49406"
+      "sha256": "a604d4b78ac52855eca8cbe6c081a4b7ccbb4e46f8c015e1ad5830bbe43e4b7e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -43818,7 +43818,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
-      "sha256": "88d2f2accbdc8ecff96f29b1d5b6c0c31849d7714923d79c3bfa6ddfb2751bd8"
+      "sha256": "ba34b9d8d9eb34166b7fd419ae67572e2b8c58c198b4eca693babc8bbfc157ef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -44218,11 +44218,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "833ba863a879ea601bef0788ffda21dcc7703f46f47da226c176e09631e3fdf3"
+      "sha256": "91dd6b6689de0681d01f623f86ee86d190a0845d9df39b54ea02d97a6a79fd10"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
-      "sha256": "bef3e9611063788e14ae5cac4ff33019973b105ea28b042e6312c8aa6b34aa57"
+      "sha256": "aa0c23c8a9b92515a1fa5aaf306e31deab6faf85c02d15122ecd4eb07c09b2ad"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
+      "sha256": "a81104ad420b2ea13ee31989c5d62829872c7a41ab1e9b2e1fe8e678a8a07e8f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
@@ -44238,7 +44242,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "b0ffe1c6c62b0f277fd6ca2669c01afdef3de398935091325bab4dde65f61454"
+      "sha256": "d4976a010f394738d2d29baa357f92c404668334f10647f6f27c04946fbc4ff4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPointerHit.cs",
@@ -44250,7 +44254,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRouteSearch.cs",
-      "sha256": "0ec7ba2ff84111d780d9adaa57936803e9744379ca818d78b9d1090aac626c4b"
+      "sha256": "89da009a2c88ef9078ff12f7649a644e1a18f641924f863d18a4404b78cb47b8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRuntimeGate.cs",

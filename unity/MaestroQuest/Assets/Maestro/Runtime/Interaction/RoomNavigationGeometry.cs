@@ -25,6 +25,7 @@ namespace Maestro.Quest.Interaction
                 for(int i=0;i<16;i++)if(Mathf.Abs(a[i]-b[i])>.00001f)return false;return true;
             }
         }
+        readonly List<(Creation.RoomEditor owner,string target)> dependencies=new();
         readonly List<Collider> colliders=new();
         readonly List<Entry> entries=new();
         readonly List<NavMeshBuildSource> sources=new();
@@ -34,7 +35,7 @@ namespace Maestro.Quest.Interaction
         internal Quaternion Rotation { get; private set; }
         internal void Clear()
         {
-            colliders.Clear();entries.Clear();sources.Clear();Ground.Clear();Bounds=default;Position=default;Rotation=Quaternion.identity;
+            dependencies.Clear();colliders.Clear();entries.Clear();sources.Clear();Ground.Clear();Bounds=default;Position=default;Rotation=Quaternion.identity;
         }
         internal bool Capture(Transform owner,bool includeScan=true,Transform coordinates=null)
         {
@@ -62,14 +63,26 @@ namespace Maestro.Quest.Interaction
                     Mathf.Abs(x.x)+Mathf.Abs(y.x)+Mathf.Abs(z.x),Mathf.Abs(x.y)+Mathf.Abs(y.y)+Mathf.Abs(z.y),Mathf.Abs(x.z)+Mathf.Abs(y.z)+Mathf.Abs(z.z)));
                 if(sources.Count==0)Bounds=boundsInFrame;else {var bounds=Bounds;bounds.Encapsulate(boundsInFrame);Bounds=bounds;}
                 Ground.Add(collider);sources.Add(source);entries.Add(new Entry(collider,authored?surface.Revision:0,source));
+                // Capture identity with the geometry. A destroyed/replaced collider
+                // cannot silently release an existing map's canonical dependency.
+                var item=collider.GetComponentInParent<RoomItem>(true);
+                var authority=item?item.GetComponentInParent<Creation.RoomEditor>():null;
+                var id=authority?authority.Identity(item):null;
+                if(id!=null)dependencies.Add((authority,id));
             }
             return entries.Count>0;
         }
         internal bool Same(RoomNavigationGeometry other)
         {
-            if(entries.Count!=other.entries.Count)return false;
+            if(entries.Count!=other.entries.Count||dependencies.Count!=other.dependencies.Count)return false;
+            for(int i=0;i<dependencies.Count;i++)if(dependencies[i]!=other.dependencies[i])return false;
             for(int i=0;i<entries.Count;i++)if(!entries[i].Same(other.entries[i]))return false;
             return true;
+        }
+        internal void Retain(Creation.RoomEditor editor,Creation.RoomRetentionGraph graph)
+        {
+            foreach(var dependency in dependencies)if(dependency.owner==editor)
+                graph.Retain(dependency.target,Creation.RoomRetentionReason.Navigation);
         }
         internal List<NavMeshBuildSource> BuildSources => sources;
     }

@@ -6760,3 +6760,34 @@ synchronous. Automatic observation-driven loading, regional terrain/water/
 navigation ownership, concurrent acquisition and larger world limits remain
 separate integration work. Device, real-provider and release acceptance remain
 outstanding.
+
+### Navigation sources in regional retention — 2026-10-11
+
+Each physics world now registers its own active navigation consumers. The shared
+retention graph reads their actual accepted and pending ground snapshots, using
+canonical identities captured with each geometry source. Destroying a collider
+does not erase an existing map's dependency; retiring/rebuilding the map releases
+it. The geometry signature also includes source ownership, so an unchanged mesh
+and transform cannot retain the wrong identity after an ownership change.
+
+The existing `world.region.retention` fact exposes `navigation` for these ground
+sources and `waterRoute` for liquid sources discovered by a pending water detour.
+Area membership and enabled physical connections propagate these reasons through
+the same graph. Reading does not call navigation readiness, bake maps, activate
+content or edit saved state. Multiple consumers retain independently; disabling,
+destroying or rebinding one releases only that consumer. A paused world retires
+its maps. Completed/cancelled water searches stop retaining their discovered
+liquid sources.
+
+Native regressions cover actual terrain maps, unchanged-geometry owner changes,
+source replacement/destruction, pending mixed-world ground, consumer/world
+lifetimes and real water-detour cancellation/completion. Existing navigation
+retirement tests also assert release of the captured dependency identities.
+
+The current map still covers the bounded world's accepted ground. These explicit
+dependencies do not yet replace whole-world collision admission: running physics
+continues to retain every collision area, including sleeping-body support. Future
+query footprints, swept-body and water-medium demand, regional map construction,
+observer/audibility demand, concurrent acquisition and larger capacities remain
+required before automatic streaming. Quest/provider/release acceptance remains
+outstanding.

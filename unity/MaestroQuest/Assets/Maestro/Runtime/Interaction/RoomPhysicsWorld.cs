@@ -77,6 +77,6 @@ namespace Maestro.Quest.Interaction
         void OnApplicationFocus(bool value) { focused=value;if (!focused) PausePhysics();else Notify(); }
         void OnEnable()=>Notify();
         void OnDisable() => PausePhysics();
-        void OnDestroy(){if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;}
+        void OnDestroy(){navigationConsumers.Clear();if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged;}
     }
 }
