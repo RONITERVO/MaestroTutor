@@ -6,6 +6,14 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
+        // Whole-world simulation currently depends on every saved participant.
+        // Admission is explicit; observations never acquire these instances.
+        internal string[] NativeSimulationTargets()=>journal?.SavedObjectIds()??Array.Empty<string>();
+        internal Func<bool> CaptureNativeWorldInput(string[] targets)
+        {
+            var current=CaptureNativeActionInput(targets);var identities=targets.ToHashSet(StringComparer.Ordinal);
+            return ()=>current()&&journal.MatchesSavedObjects(identities);
+        }
         // A later edit to another object is not a reason to cancel this action.
         // Keep identities/revisions, never a second copy of recipes or saved state.
         // Shared resources used by the targets are part of the same input guard.

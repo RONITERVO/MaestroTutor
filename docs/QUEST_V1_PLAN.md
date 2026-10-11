@@ -6959,3 +6959,32 @@ This does not enable automatic unloading. Startup admission, indirect
 shadow/reflection and audibility footprints, regional ground/water/navigation
 and swept physics, scalable budgets and real-device acceptance still remain.
 The bounded whole-world physics guard and current capacities are unchanged.
+
+
+### Explicit physics start prepares dormant content — 2026-10-11
+
+The shared `physics.simulation.set` action now has completion semantics. When
+saved areas are dormant, an explicit Start captures the current world membership
+and relevant revisions, acquires those native instances through the existing
+shared preparation queue, and starts simulation only after a final native and
+environment readiness check. An already resident room still starts immediately;
+Pause remains immediate. No extra user or agent tool is required. The physical
+Start button uses this same action/receipt path; physical Pause retains immediate
+priority.
+
+A preparation intent is separate from readiness observations. Its own native
+loading may change readiness without cancelling the requested Start, but manual
+Pause/Start, a newer accepted Start, scan or environment changes, lifecycle loss,
+workspace transitions, changed saved inputs or membership invalidate it. Stop,
+failed imports and the 120-second completion deadline leave physics paused; a
+late load or later scan readiness never revives that intent. A lost native object
+between preparation and completion also refuses Start. Completed receipts do not
+restart simulation, and stopping a completed receipt does not undo physics.
+
+Facts and preflight remain passive. `physics.simulation.canStart` describes
+immediate simulation readiness; it can be false while an explicit Start can
+prepare dormant content. The action receipt shows preparation and its eventual
+result. World input checks retain IDs/revisions rather than copying recipes on
+every frame. This still admits the current bounded whole world for physics;
+regional collision admission, automatic startup/streaming, larger capacities and
+hardware acceptance remain unfinished.

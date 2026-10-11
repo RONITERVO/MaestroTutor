@@ -450,3 +450,13 @@ safe to unload. This applies to dormant envelopes as well as resident geometry;
 it starts no model reads or activation. Scoped image captures remain scoped.
 The report remains a diagnostic with `unloadingSupported: false`, not a command
 or a claim of regional collision readiness.
+
+
+An explicit `physics.simulation.set` Start can prepare dormant native areas before
+its effect. It uses the shared queue and completion receipt (up to 120 seconds),
+then rechecks current membership, inputs, native existence and selected ground.
+Pause is immediate. A newer control, scan/environment/lifecycle change, workspace
+change, cancellation or failed preparation cannot be revived by a late load.
+The physical Start tool follows the same action path. Facts and preflight never
+load objects; `physics.simulation.canStart` is immediate readiness, not the
+availability of preparation. The current whole-world physics boundary remains.

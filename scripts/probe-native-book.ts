@@ -658,6 +658,23 @@ try{
  await writeFile(join(directory,'book-native-guides.json'),JSON.stringify({boundary:'Original book guide controls with actual native search and inspect. No provider or physical-headset claim.',guide,prerequisite},null,2));
 
 
+ // Exercise the changed completion contract through the original generated form.
+ // All geometry assertions above finish before enabling gravity in this fixture.
+ const physicsBefore=await readResourceFact('physics.simulation','Room physics state');
+ const changePhysics=async(operation:'start'|'pause')=>{
+  await openNamedAction('Start or pause room physics','physics.simulation.set');
+  await page!.getByRole('button',{name:'Load current values',exact:true}).click();
+  await page!.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page!.getByLabel('Action inputs operation',{exact:true}).selectOption(operation);
+  return runNamedAction('physics.simulation.set');
+ };
+ const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
+ const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
+ const physicsAfter=await readResourceFact('physics.simulation','Room physics state');assert.equal(physicsAfter.running,false);
+ await page.getByRole('heading',{name:'Room physics state',exact:true}).scrollIntoViewIfNeeded();
+ await page.screenshot({path:join(directory,'book-native-physics.png')});
+ await writeFile(join(directory,'book-native-physics.json'),JSON.stringify({boundary:'Original generated book Start/Pause controls, current state guard, completion receipts and actual native simulation state. Synthetic aligned floor; no real scan, provider or headset proof. Dormant loading is covered separately by native regressions.',physicsBefore,physicsStarted,physicsPaused,physicsAfter},null,2));
+
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);
  const commandCount=requests.size;

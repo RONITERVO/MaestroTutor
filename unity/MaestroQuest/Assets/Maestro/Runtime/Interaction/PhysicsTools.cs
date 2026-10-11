@@ -31,7 +31,7 @@ namespace Maestro.Quest.Interaction
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.72f,.59f,.04f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
             var labels = new[] { "Load room","Scan room","Show room","Start physics","Pause","Object mode","Mass","Place surface","Collision shape" };
-            Action[] commands = { scan.Load,()=>{if(scan.Busy)scan.CancelSetup();else scan.Scan();},scan.ToggleSurfaces,world.StartPhysics,world.PausePhysics,editor.CyclePhysics,editor.CycleMass,ArmPlacement,editor.CycleCollider };
+            Action[] commands = { scan.Load,()=>{if(scan.Busy)scan.CancelSetup();else scan.Scan();},scan.ToggleSurfaces,StartPhysics,world.PausePhysics,editor.CyclePhysics,editor.CycleMass,ArmPlacement,editor.CycleCollider };
             for (int i = 0; i < labels.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform,false); tool.transform.localPosition = new Vector3(-.23f+i%3*.23f,.11f-i/3*.12f,-.05f);
@@ -44,6 +44,14 @@ namespace Maestro.Quest.Interaction
             status = Label(transform,new Vector3(0,-.235f,-.023f),"",.0047f);
             world.Changed += Refresh; scan.Changed += Refresh; editor.Changed += Refresh; Refresh();
         }
+        internal bool RequestPhysicsStart(out string run,out string error)
+        {
+            run=null;error="Room actions are not ready";var rules=editor?editor.GetComponent<RoomRules>():null;
+            if(!world||!rules||rules.Scheduler==null||!rules.isActiveAndEnabled)return false;
+            var call=new Newtonsoft.Json.Linq.JObject{["id"]="physics.simulation.set",["version"]=1,["arguments"]=new Newtonsoft.Json.Linq.JObject{["operation"]="start",["stateId"]=world.ObserveSimulation()["stateId"]}};
+            return rules.Scheduler.Invoke(call,Time.unscaledTime,out run,out error);
+        }
+        void StartPhysics(){if(!RequestPhysicsStart(out _,out var error)&&status)status.text=error;}
         async void ArmPlacement()
         {
             if (preparingPlacement) return;

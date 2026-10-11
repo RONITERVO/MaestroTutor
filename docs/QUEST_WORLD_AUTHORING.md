@@ -770,3 +770,11 @@ releasing an area's native contents. These reasons propagate through the same
 area and physical-connection graph as other dependencies. Inspection itself
 does not refresh the timer or load anything. Automatic regional loading remains
 unfinished; current world size and whole-world simulation limits still apply.
+
+
+Starting physics can prepare objects whose saved content is not currently loaded.
+The same Start action serves the book, agent, programs and physical tool. You can
+cancel preparation or press Pause; finishing a load later will not restart it.
+Changing the room setup or saved content also requires a fresh Start request.
+If preparation fails, the action reports the failure and keeps physics paused.
+This does not enable automatic area streaming or expand current world limits.
