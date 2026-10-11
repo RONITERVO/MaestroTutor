@@ -45,8 +45,8 @@ namespace Maestro.Quest.Tests
             controls=root.AddComponent<MovementControls>();controls.Initialize(room,editor,animations,null,runtime,workshop,null,null,()=>true,()=>frame);
             frame=new ControllerFrame {leftTracked=true,rightTracked=true};
             float deadline=Time.realtimeSinceStartup+12;
-            while(editor.NativeStartupPending&&Time.realtimeSinceStartup<deadline)yield return null;
-            Assert.That(editor.NativeStartupPending,Is.False);Assert.That(editor.Find(objectId),Is.Not.Null);
+            while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(editor.NativeDisplayPending,Is.False);Assert.That(editor.Find(objectId),Is.Not.Null);
             recipe=editor.Find(objectId).GetComponent<RecipeObject>();
         }
         JObject Request()=>new() {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=objectId,["seconds"]=10,["loop"]=true,["source"]=new JObject {["kind"]="recipe"},["channel"]="wholeTarget"}}};

@@ -24,8 +24,8 @@ namespace Maestro.Quest.Tests
         IEnumerator ReadyReviewOwners()
         {
             host.Current.Rules.Modules.Flush();float deadline=Time.realtimeSinceStartup+20;
-            while((host.Current.Editor.NativeStartupPending||host.Current.Editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy)&&Time.realtimeSinceStartup<deadline)yield return null;
-            Assert.That(host.Current.Editor.NativeStartupPending,Is.False);
+            while((host.Current.Editor.NativeDisplayPending||host.Current.Editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy)&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(host.Current.Editor.NativeDisplayPending,Is.False);
             Assert.That(host.Current.Editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy,Is.False);
         }
         string BeginReview()

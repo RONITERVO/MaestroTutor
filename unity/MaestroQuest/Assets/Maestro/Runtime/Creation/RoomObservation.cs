@@ -35,6 +35,7 @@ namespace Maestro.Quest.Creation
             for(int i=0;i<16;i++)if(!float.IsFinite(matrix[i]))throw new UnityException("Observation projection is unavailable");
             return GeometryUtility.CalculateFrustumPlanes(matrix);
         }
+        internal bool Reliable=>valid;
         internal bool Includes(Renderer renderer)
         {
             if((mask&(1<<renderer.gameObject.layer))==0)return false;

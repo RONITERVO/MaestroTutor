@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation
             internal RecipeObject.IdleState Recipe;internal bool ConnectionBroken;
             internal NativeEntityPhase Phase;
             internal string Error;
-            internal RoomSpatialBounds Spatial;internal string SpatialSource;internal int SpatialRevision;
+            internal RoomSpatialBounds Spatial;internal string SpatialSource,AuthoredSpatialSource;internal int SpatialRevision;
             internal bool SuppressStartupAutoplay;
             internal bool SpatialCurrent;internal Matrix4x4 SpatialPlacement;
         }
@@ -78,7 +78,7 @@ namespace Maestro.Quest.Creation
             // transient poses are cached without rewriting authored rest frames.
             CapturePhysicsPlacements();
             foreach(var pair in snapshots){var saved=Read(pair.Key);pair.Value.SavedPosition=saved.position;pair.Value.SavedRotation=saved.rotation;pair.Value.SavedScale=saved.scale;
-                pair.Value.SpatialSource=SpatialSource(saved);pair.Value.SpatialRevision=ObjectRevision(pair.Key);pair.Value.SpatialCurrent=true;
+                pair.Value.AuthoredSpatialSource=pair.Value.SpatialSource=SpatialSource(saved);pair.Value.SpatialRevision=ObjectRevision(pair.Key);pair.Value.SpatialCurrent=true;
                 pair.Value.SpatialPlacement=Matrix4x4.TRS(pair.Value.Position,pair.Value.Rotation,Vector3.one*pair.Value.Scale);dormantNative.Add(pair.Key,pair.Value);}
             foreach(var pair in snapshots){var item=Find(pair.Key);DetachNativeIdentity(pair.Key,item);regionModels.Remove(pair.Key);item.gameObject.SetActive(false);Destroy(item.gameObject);}
             RefreshRegionCollision();UpdateSelection();error=null;return true;

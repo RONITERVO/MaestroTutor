@@ -16,18 +16,24 @@ namespace Maestro.Quest.Creation
             source.id="";source.name="";source.position=Vector3.zero;source.rotation=Quaternion.identity;source.scale=1;
             using var hash=SHA256.Create();return Convert.ToBase64String(hash.ComputeHash(Encoding.UTF8.GetBytes(JsonUtility.ToJson(source))));
         }
-        RoomSpatialBounds ReadDormantSpatial(string target,DormantEntity entry,out bool authored)
+        RoomSpatialBounds ReadDormantSpatial(string target,DormantEntity entry,out bool authored)=>ReadDormantSpatial(target,entry,out authored,out _);
+        RoomSpatialBounds ReadDormantSpatial(string target,DormantEntity entry,out bool authored,out bool prepared)
         {
-            authored=false;int revision=ObjectRevision(target);
-            if(entry.SpatialRevision!=revision){
+            authored=prepared=false;int revision=ObjectRevision(target);
+            if(entry.AuthoredSpatialSource==null||entry.SpatialRevision!=revision){
                 var data=Read(target);if(data==null)return RoomSpatialBounds.Unknown;
                 var pose=NativeActivationPose(data);
                 entry.SpatialPlacement=Matrix4x4.TRS(pose.position,pose.rotation.normalized,Vector3.one*pose.scale);
-                entry.SpatialCurrent=entry.SpatialSource==SpatialSource(data);
+                // Cache only the detached source key, never another authored object.
+                // Repeated observation does not copy recipes or hash geometry.
+                entry.AuthoredSpatialSource=SpatialSource(data);
+                entry.SpatialCurrent=entry.SpatialSource==entry.AuthoredSpatialSource;
                 entry.SpatialRevision=revision;
             }
-            if(entry.SpatialCurrent)return entry.Spatial.Transform(entry.SpatialPlacement);
-            if(TryAuthoredSpatial(Read(target),out var canonical)){authored=true;return canonical.Transform(entry.SpatialPlacement);}
+            if(entry.SpatialCurrent){prepared=true;return entry.Spatial.Transform(entry.SpatialPlacement);}
+            if(TryAuthoredSpatial(target,entry.AuthoredSpatialSource,out var canonical)){authored=prepared=true;return canonical.Transform(entry.SpatialPlacement);}
+            // Pending preparation must remain conservative for retention, but it
+            // is not yet evidence to queue every unknown object for display.
             return RoomSpatialBounds.Unknown;
         }
         internal RoomSpatialBounds ReadSpatialBounds(string target,out string source)

@@ -789,3 +789,11 @@ saved room so they can be inspected and retried after their asset is repaired.
 During workspace review, the saved objects can open as a still preview. Approval
 alone does not restart saved autoplay, including when approval happens before
 loading finishes; starting activity remains a separate request.
+
+
+When an area is already dormant, looking toward it can bring its connected
+objects back through the same loading system. Available view information also
+prioritizes areas during startup. Losing tracking or leaving a view does not
+start physics, and a timed-out or broken import waits for an explicit retry.
+The current release implementation still opens the complete bounded saved room;
+automatic unloading and larger-world streaming remain unfinished.

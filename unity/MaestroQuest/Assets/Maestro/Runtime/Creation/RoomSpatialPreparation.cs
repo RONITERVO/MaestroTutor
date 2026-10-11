@@ -25,11 +25,16 @@ namespace Maestro.Quest.Creation
             bool prepared=TryAuthoredSpatial(data,out var bounds);
             return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["prepared"]=prepared,["coordinates"]="object",["visual"]=SpatialRecord(bounds.Visual)};
         }
+        bool TryAuthoredSpatial(string target,string source,out RoomSpatialBounds bounds)
+        {
+            bounds=RoomSpatialBounds.Unknown;
+            return spatialIndex!=null&&ReferenceEquals(spatialJournal,journal)&&spatialIndex.TryRead(target,source,out bounds);
+        }
         bool TryAuthoredSpatial(RoomObjectData data,out RoomSpatialBounds bounds)
         {
             bounds=RoomSpatialBounds.Unknown;
             if(data==null||spatialIndex==null||!ReferenceEquals(spatialJournal,journal))return false;
-            return spatialIndex.TryRead(data.id,SpatialSource(data.Copy()),out bounds);
+            return TryAuthoredSpatial(data.id,SpatialSource(data.Copy()),out bounds);
         }
     }
 }

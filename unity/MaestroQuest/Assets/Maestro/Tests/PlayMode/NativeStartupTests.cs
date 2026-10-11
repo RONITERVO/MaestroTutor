@@ -16,20 +16,20 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class RoomEditorTests
     {
-        IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null)
+        IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null,bool suspend=false)
         {
             Assert.That(editor.TryFlush(out var error),Is.True,error);
             if(saved!=null)Assert.That(new RoomStorage(directory).Save(saved,out error),Is.True,error);
             UnityEngine.Object.Destroy(root);yield return null;
             root=new GameObject("Reloaded startup");root.AddComponent<XRInteractionManager>();room=root.AddComponent<RoomInteraction>();
             var book=Included("book");var avatar=Included("maestro");physics=root.AddComponent<RoomPhysicsWorld>();
-            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,avatar,directory,physics,gate);
+            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,avatar,directory,physics,gate);if(suspend)editor.SendMessage("OnApplicationFocus",false);
         }
         IEnumerator StartupFinished()
         {
             float deadline=Time.realtimeSinceStartup+12;
-            while(editor.NativeStartupPending&&Time.realtimeSinceStartup<deadline)yield return null;
-            Assert.That(editor.NativeStartupPending,Is.False,"Saved-room admission did not finish");
+            while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline)yield return null;
+            Assert.That(editor.NativeDisplayPending,Is.False,"Saved-room admission did not finish");
         }
         RoomDocument StartupMany()
         {
@@ -42,7 +42,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Find("book"),Is.Not.Null);Assert.That(editor.Find("maestro"),Is.Not.Null);
             Assert.That(saved.objects.Where(x=>!x.IsBuiltIn).All(x=>editor.Find(x.id)==null&&editor.NativeEntityDormant(x.id)),Is.True);
             Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(json));int revision=editor.Revision;
-            editor.TickNativeStartup();Assert.That(editor.NativeStartupPending,Is.True);Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0),"Prepared members publish as one connected area");
+            editor.TickNativeDisplay();Assert.That(editor.NativeDisplayPending,Is.True);Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0),"Prepared members publish as one connected area");
             yield return StartupFinished();Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(physics.Running,Is.False);
             foreach(var data in saved.objects.Where(x=>!x.IsBuiltIn)){var item=editor.Find(data.id);Assert.That(item,Is.Not.Null);Assert.That(item.transform.localPosition,Is.EqualTo(data.position));Assert.That(editor.Identity(item),Is.EqualTo(data.id));}
             Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(json));Assert.That(editor.CanUndo,Is.False);
@@ -50,7 +50,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator NativeStartupFocusLossThenResumesLoadingOnly()
         {
             var saved=StartupMany();yield return ReloadForStartup(saved);
-            editor.TickNativeStartup();editor.SendMessage("OnApplicationFocus",false);
+            editor.TickNativeDisplay();editor.SendMessage("OnApplicationFocus",false);
             for(int i=0;i<4;i++)yield return null;Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0));
             editor.SendMessage("OnApplicationFocus",true);yield return StartupFinished();Assert.That(physics.Running,Is.False);
             Assert.That(saved.objects.Where(x=>!x.IsBuiltIn).All(x=>editor.Find(x.id)),Is.True);
@@ -76,7 +76,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeStartupPreviewCannotKeepAnOrdinaryActionAliveAcrossReview()
         {
-            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeStartup();string id=saved.objects.First(x=>!x.IsBuiltIn).id;
+            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeDisplay();string id=saved.objects.First(x=>!x.IsBuiltIn).id;
             var action=editor.AcquireNativeEntities(new[]{id},()=>true,CancellationToken.None);
             using(editor.RuntimeGate.Hold("Review shared load")){
                 yield return StartupFinished();Assert.That(action.IsCompleted,Is.True);Assert.That(action.Result,Is.Not.Null,"Only the display owner can survive review");
@@ -85,14 +85,14 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeStartupDisableDrainsWithoutLatePublicationAndEnableRetries()
         {
-            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeStartup();editor.enabled=false;
+            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeDisplay();editor.enabled=false;
             for(int i=0;i<4;i++)yield return null;Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0));
             editor.enabled=true;yield return StartupFinished();Assert.That(saved.objects.Where(x=>!x.IsBuiltIn).All(x=>editor.Find(x.id)),Is.True);
         }
-        [UnityTest] public IEnumerator NativeStartupTimeoutDrainsAndNeedsExplicitRetry()
+        [UnityTest] public IEnumerator NativeDisplayTimeoutDrainsAndNeedsExplicitRetry()
         {
-            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeStartup();
-            editor.TickNativeStartup(Time.unscaledTimeAsDouble+RoomEditor.NativeStartupTimeout+1);
+            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeDisplay();
+            editor.TickNativeDisplay(Time.unscaledTimeAsDouble+RoomEditor.NativeDisplayTimeout+1);
             yield return StartupFinished();Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0));
             Assert.That(editor.Status,Does.Contain("timed out"));for(int i=0;i<3;i++)yield return null;
             Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0));

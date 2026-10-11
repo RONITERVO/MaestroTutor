@@ -7019,3 +7019,36 @@ It does not yet select areas by observation, enable automatic retirement or rais
 capacity limits. Spatial metadata preparation remains independent and passive.
 Regional ground/water/navigation, indirect view and audibility dependencies still
 have to be completed before selective streaming can replace this startup policy.
+
+
+### Observed display admission — 2026-10-11
+
+One display owner now handles both initial saved-room loading and later
+reappearance of dormant creations. It uses the existing native acquisition queue,
+connected-area closure, atomic publication, frame budget, resource accounting and
+stale-input checks. Prepared areas in an owned view take priority over background
+startup work. The current bounded startup still eventually loads every area;
+this does not enable automatic unloading or raise room limits.
+
+Display demand is distinct from conservative retention. Pending spatial metadata,
+an invalid projection or missing tracking is not evidence to load every object.
+Completed unknown geometry stays conservative and can request loading; known
+empty or excluded-layer geometry does not. Direct views, valid predicted views,
+and a short viewer grace period can retain a display request. Capture cameras
+require their actual scoped lease, and a disposed lease cannot publish late
+content. A synchronous one-off capture still represents the currently rendered
+scene; it is not a new asynchronous wait for all dormant content.
+
+Returning view demand can reopen a dormant connected area without another tool
+request. Loss of the last valid demand, focus or ownership cancels its pending
+preparation. Workspace review permits still display previews while activity
+remains held. Display completion creates no authored edit, Undo entry or physics
+Start. Failed imports and display timeouts remain available for explicit retry;
+keeping one in view does not trigger a retry loop.
+
+Dormant observation caches only the canonical geometry key at the object's
+revision. Pose/geometry changes invalidate the appropriate value, while repeated
+reads no longer clone or serialize recipes. Metadata inspection remains passive
+and independent of native allocation. Ground/water/navigation, indirect views,
+audibility and swept-physics dependencies, plus headset performance acceptance,
+are still required before automatic selective retirement and larger worlds.
