@@ -285,7 +285,9 @@ it('authors and renames the native state-and-signal fixture entirely through vis
  fireEvent.click(h.screen.getByLabelText('+ Forever in main'));
  h.click('Edit state & signals');h.change('State 1 name','total');h.change('State 2 name','amounts');h.change('Signal 1 name','user.add');h.change('Signal 2 name','user.stored');h.click('Update draft');
  const expected=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-declarations.json','utf8'));expect(JSON.parse(h.source())).toEqual(expected);expect(h.screen.queryByLabelText('Program JSON')).toBeNull();
-});
+ // This full author-and-rename journey takes about five seconds on CI;
+ // allow runner variation while retaining every visual-control assertion.
+},10_000);
 it('keeps invalid declaration drafts for repair and refuses to delete a used state',()=>{
  const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-declarations.json','utf8'));const h=harness(initial),before=h.source();
  h.click('Edit state & signals');h.change('Signal 1 name','maestro.speaking.enter');h.click('Update draft');expect(h.screen.getByRole('alert').textContent).toContain('custom event');expect(h.source()).toBe(before);
