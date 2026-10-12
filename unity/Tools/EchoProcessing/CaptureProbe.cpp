@@ -49,6 +49,7 @@ struct Fixture {
     CaptureFrame frame{};
     void Start(){Check(input.Start(),"start");}
     CaptureRead Read(){pcm.fill(.9f);frame.epoch=99;return input.Read(pcm.data(),static_cast<int>(pcm.size()),frame);}
+    CaptureRead Flush(){pcm.fill(.9f);frame.epoch=99;return input.FlushPending(pcm.data(),static_cast<int>(pcm.size()),frame);}
     void Empty(){Check(std::all_of(pcm.begin(),pcm.end(),[](float x){return x==0;}),"no stale/raw output");Check(frame.epoch==0,"no stale metadata");}
     void Fault(CaptureFault reason){Check(Read()==CaptureRead::Faulted,"fault expected");Empty();Check(input.Fault()==reason,"fault reason");Check(s->closes==1&&s->destroys==1,"fault retires device");Check(Read()==CaptureRead::Faulted,"fault latched");Check(!input.Start(),"fault cannot restart");}
 };
@@ -91,6 +92,25 @@ int main(){try{
     {Fixture f;f.Start();--f.s->now;f.Fault(CaptureFault::Clock);}Done("observation-clock-rollback");
     {Fixture f;f.Start();f.s->jump_after_read=500000001;f.Fault(CaptureFault::Clock);}Done("stalled-worker-does-not-deliver");
     {for(int i=0;i<64;++i){auto s=std::make_shared<State>();s->chunks={30};{CaptureInput input(std::make_unique<ScriptedDevice>(s),i+1);Check(input.Start(),"repeat start");std::array<float,480> pcm;CaptureFrame frame;Check(input.Read(pcm.data(),480,frame)==CaptureRead::Waiting,"pending owned samples");}Check(s->closes==1&&s->destroys==1,"destruction releases pending capture");}}Done("pending-close-and-repeated-ownership");
-    Check(cases==20,"complete scenario list");
+    {Fixture f;f.Start();f.s->chunks={37};Check(f.Read()==CaptureRead::Waiting,"accepted fragment");const auto reads=f.s->reads;f.s->now+=1000000;
+     Check(f.Flush()==CaptureRead::Frame&&f.frame.samples==37&&f.frame.first_position==0&&f.frame.sequence==0,"exact fragment identity");
+     Check(f.frame.hardware.time_ns==990000000&&f.frame.query_started_ns==1000000000,"flush preserves original observation");
+     Check(std::all_of(f.pcm.begin(),f.pcm.begin()+37,[](float x){return x==.125f;})&&std::all_of(f.pcm.begin()+37,f.pcm.end(),[](float x){return x==0;}),"only actual prefix is audio");
+     Check(f.s->reads==reads&&f.s->closes==0,"flush never reads or releases hardware");}Done("flush-accepted-fragment");
+    {Fixture f;Check(f.Flush()==CaptureRead::Invalid,"flush before start");f.Empty();f.Start();Check(f.Flush()==CaptureRead::Empty&&f.s->reads==0,"empty is explicit");f.Empty();
+     Check(f.Read()==CaptureRead::Frame&&f.frame.samples==480,"full frame count");Check(f.Flush()==CaptureRead::Empty&&f.s->reads==1,"full delivery leaves nothing pending");f.Empty();}Done("flush-empty-and-full");
+    {Fixture f;f.Start();f.s->chunks={199};Check(f.Read()==CaptureRead::Waiting,"partial before flush");Check(f.Flush()==CaptureRead::Frame&&f.frame.samples==199,"partial handed off");
+     Check(f.Flush()==CaptureRead::Empty,"fragment never replayed");Check(f.Read()==CaptureRead::Frame&&f.frame.first_position==199&&f.frame.sequence==1&&f.frame.samples==480,"resume contiguous after fragment");
+     Check(f.s->starts==1&&f.s->closes==0,"same capture owner continues");}Done("flush-resume-without-replay");
+    {for(int mode=0;mode<2;++mode){Fixture f;f.Start();f.s->chunks={37};Check(f.Read()==CaptureRead::Waiting,"pending timed samples");if(mode==0)f.s->now+=500000001;else --f.s->now;
+     Check(f.Flush()==CaptureRead::Faulted&&f.input.Fault()==CaptureFault::Clock,"stale or rollback flush fails");f.Empty();Check(f.s->closes==1&&f.Flush()==CaptureRead::Faulted,"failed flush terminal");}}Done("flush-stale-clock-rejected");
+    {Fixture f;f.Start();f.s->chunks={37};Check(f.Read()==CaptureRead::Waiting,"pending before cancellation");f.input.Close();Check(f.Flush()==CaptureRead::Closed,"close fences flush");f.Empty();Check(f.s->reads==1&&f.s->closes==1,"no read after close");}Done("flush-after-close-discards");
+    {for(int mode=0;mode<2;++mode){Fixture f;f.Start();f.s->chunks={37};Check(f.Read()==CaptureRead::Waiting,"pending before device failure");if(mode==0)++f.s->xruns;else f.s->ready=-1;
+     Check(f.Flush()==CaptureRead::Faulted,"unhealthy device fails flush");f.Empty();Check(f.input.Fault()==(mode==0?CaptureFault::Overflow:CaptureFault::Device)&&f.s->reads==1,"no extra capture after fault");}}Done("flush-device-loss-rejected");
+    {Fixture f;f.Start();f.s->chunks={37};Check(f.Read()==CaptureRead::Waiting,"pending before invalid buffer");std::array<float,479> small;small.fill(.9f);
+     Check(f.input.FlushPending(small.data(),479,f.frame)==CaptureRead::Invalid&&small.front()==.9f&&small.back()==.9f,"invalid flush buffer untouched");
+     Check(f.input.FlushPending(nullptr,480,f.frame)==CaptureRead::Invalid,"null flush buffer rejected");
+     Check(f.Flush()==CaptureRead::Frame&&f.frame.samples==37&&f.frame.sequence==0,"invalid call retains accepted fragment");}Done("flush-buffer-boundaries");
+    Check(cases==27,"complete scenario list");
     std::printf("{\"status\":\"passed\",\"captureCases\":%d,\"assertions\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",cases,assertions);return 0;
 }catch(const std::exception& error){std::fprintf(stderr,"FAILED: %s\n",error.what());return 1;}}

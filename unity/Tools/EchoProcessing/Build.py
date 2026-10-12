@@ -237,7 +237,7 @@ def main():
         else:
             binary = build / "maestro-probe" / ("maestro_echo.dll" if args.platform == "windows" else "libmaestro_echo.so")
             executable = build / "maestro-probe" / ("maestro_echo_probe.exe" if args.platform == "windows" else "maestro_echo_probe")
-            for label, expected_cases in (("capture", 20), ("playback", 22), ("alignment", 27)):
+            for label, expected_cases in (("capture", 27), ("playback", 22), ("alignment", 31)):
                 device_executable = build / ("maestro-probe/maestro_" + label + "_probe.exe")
                 run([device_executable], label + "-probe", 30)
                 device_summary = json.loads((output / (label + "-probe.log")).read_text().splitlines()[-1])

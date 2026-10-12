@@ -1106,3 +1106,16 @@ alternative also fails required scenarios and is not selected. See the
 
 Resolving tonal echo, the shared PCM ownership/lifecycle bridge, final-mix and
 all-audible reference coverage, and actual Quest/Live acceptance remain required.
+
+## Native capture fragments — 2026-10-12
+
+`CaptureInput.FlushPending` publishes the actual valid prefix of a pending short
+read with its original timestamp and exact sample count. It leaves the owner open;
+`Close` remains terminal cancellation. The duplex worker accepts contiguous chunks
+of 1–480 samples, preserving identical PCM and source positions across whole or
+fragmented inputs. Neither a short fragment nor a lack of future microphone samples
+is interpreted as silence. See the [input contract](Tools/EchoProcessing/README.md#accepted-input-fragments-and-flush).
+
+This boundary does not acknowledge the original app's `PcmCapture.flush` promise:
+a downstream delivery fence and DSP-delay treatment are still needed. No app backend
+selection or end-to-end last-word-preservation claim follows from scripted tests.

@@ -75,16 +75,42 @@ CaptureRead CaptureInput::Read(float* output, int count, CaptureFrame& frame) {
     last_now_ = completed;
     if (!stamped_) last_frame_ns_ = completed;
     last_stamp_ = stamp; stamped_ = true; positioned_ = true;
+    query_started_ns_ = before; query_finished_ns_ = after;
     pending_count_ += count_read;
     for (int i = 0; i < pending_count_; ++i)
         if (!std::isfinite(pending_[i]) || std::abs(pending_[i]) > 1) return Fail(CaptureFault::Samples);
     if (pending_count_ < Samples) return CaptureRead::Waiting;
+    return Deliver(output, frame, completed);
+}
+CaptureRead CaptureInput::Deliver(float* output, CaptureFrame& frame, int64_t completed) {
     if (sequence_ == std::numeric_limits<uint64_t>::max()) return Fail(CaptureFault::Gap);
-    frame = {epoch_, sequence_++, first_position_, stamp, before, after};
-    std::copy(pending_.begin(), pending_.end(), output);
+    frame = {epoch_, sequence_++, first_position_, last_stamp_, query_started_ns_, query_finished_ns_, pending_count_};
+    std::copy_n(pending_.begin(), pending_count_, output);
     pending_.fill(0); pending_count_ = 0; last_frame_ns_ = completed;
     return CaptureRead::Frame;
 }
+CaptureRead CaptureInput::FlushPending(float* output, int count, CaptureFrame& frame) {
+    frame = {};
+    if (output && count == Samples) std::fill_n(output, Samples, 0.0f);
+    if (closed_) return CaptureRead::Closed;
+    if (fault_ != CaptureFault::None) return CaptureRead::Faulted;
+    if (!output || count != Samples || !started_) return CaptureRead::Invalid;
+    if (!pending_count_) return CaptureRead::Empty;
+    // Preserve the acquisition observation. Reading the clock to enforce
+    // freshness must never relabel the old fragment with a newer timestamp.
+    const auto now = device_->Now();
+    if (now < last_now_ || now < 0 || now - last_stamp_.time_ns > fresh)
+        return Fail(CaptureFault::Clock);
+    last_now_ = now;
+    if (device_->Ready() != 1) return Fail(CaptureFault::Device);
+    if (device_->Xruns() != xruns_) return Fail(CaptureFault::Overflow);
+    const auto completed = device_->Now();
+    if (completed < now || completed - last_stamp_.time_ns > fresh)
+        return Fail(CaptureFault::Clock);
+    last_now_ = completed;
+    return Deliver(output, frame, completed);
+}
+
 void CaptureInput::Close() {
     if (closed_) return;
     closed_ = true;

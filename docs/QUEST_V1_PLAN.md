@@ -8014,3 +8014,19 @@ and speech. Candidate clock limits are assumptions awaiting device evidence.
 Finite-stream drain/flush and app permission/focus hooks remain unimplemented.
 No native backend, production reflections or automatic map scheduling is enabled.
 The broader world/release requirements and device/provider/release holds remain.
+
+### Preserve accepted microphone fragments — 2026-10-12
+
+The native input candidate now hands off pending short reads with exact sample
+counts and original hardware observations. Flush does not read additional PCM,
+close the device or pad the accepted stream. Close still discards pending input.
+The shared duplex worker accepts these contiguous variable-sized chunks without
+shifting its fixed-frame output; a 60-frame whole/fragmented comparison includes
+ring wraparound and requires identical PCM and source positions.
+
+This completes the input-fragment boundary only. The original app's nonterminal
+flush still needs a downstream completion fence accounting for resampler/APM
+delay. Graceful finite EOS must remain separate from cancellation and from live
+input starvation. No flush completion, last-word preservation in the app, hardware
+acceptance or provider acceptance is claimed yet. Native audio remains unselected,
+and tone-quality failures and the broader world/release gates remain open.

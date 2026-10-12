@@ -303,8 +303,10 @@ overshoot is clipped to normalized PCM and counted in the receipt. Three aligned
 APM instances compare echo-only, double-talk and near-only baseline paths.
 The original and aligned fixtures share the same band-limiting helper.
 
-Twenty-seven contract scenarios cover clocks, variable observation cadence,
+Thirty-one contract scenarios cover clocks, variable observation cadence,
 long uptime, deadlines, identity, queue bounds, lifecycle and missing lookahead.
+A 60-frame comparison requires identical PCM and source positions with whole or
+fragmented capture blocks, including ring wraparound.
 Three 18-second broadband quality configurations add opposite +/-900 ppm device
 rates (1,800 ppm relative skew) and +/-20 microsecond timestamp jitter. Current
 measured-profile results retain roughly 39–49 dB echo reduction, .964 near-signal
@@ -341,6 +343,31 @@ it. No final-mix routing, original app PCM lease bridge, finite-stream flush,
 permission/focus integration or complete WebView/platform reference coverage is
 provided here. Physical timestamp bounds, changing clock rates, long sessions,
 route changes, human speech and Quest/original-Live acceptance remain required.
+
+## Accepted input fragments and flush
+
+`CaptureFrame.samples` identifies the actual valid prefix of the 480-sample
+output buffer. Regular `CaptureInput.Read` still assembles complete 10 ms frames.
+`FlushPending` hands off a shorter accepted fragment without reading more PCM,
+closing the device, inventing acquisition timestamps or changing the owner.
+It returns `Empty` when no fragment exists, and cannot replay a previous handoff.
+The unused buffer suffix is cleared but is **not** part of the capture stream.
+Stale observations, clock rollback, xruns and device loss fail the handoff;
+cancellation via `Close` clears the fragment and fences subsequent delivery.
+
+The duplex worker admits 1–480 samples per capture handoff with matching metadata,
+contiguous positions and monotonically increasing chunk sequence. Arbitrary chunk
+boundaries do not change its fixed 10 ms DSP cadence. It still waits for real sinc
+lookahead; a partial handoff does not authorize zero-padding a stalled microphone.
+There are now 27 capture scenarios and 31 clock/duplex scenarios, including exact
+fragment counts, flush/resume, cancellation and a whole/fragmented PCM comparison.
+
+This is the input boundary needed by the original nonterminal `PcmCapture.flush`
+contract, **not a completed native flush implementation**. A downstream completion
+fence must account for resampler/APM delay before acknowledging that accepted audio
+has reached the original sink. Finite EOS processing and partial DSP output also
+need a distinct contract from cancellation. App lease integration, device behavior
+and acoustic acceptance remain open; no native backend has been selected.
 
 ## Dependency notices
 

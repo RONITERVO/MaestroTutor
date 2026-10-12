@@ -26,6 +26,8 @@ public:
     ~DuplexProcessor();
     DuplexProcessor(const DuplexProcessor&)=delete;
     DuplexProcessor& operator=(const DuplexProcessor&)=delete;
+    // Accept 1..480 real input samples, including a flushed capture fragment.
+    // frame.samples must match count; sequence and sample position stay exact.
     DuplexStatus Capture(const float* input,int count,const CaptureFrame& frame);
     DuplexStatus Render(const float* input,int count,const PlaybackFrame& frame,const PlaybackClock& clock);
     DuplexStatus Process(int16_t* output,int count,DuplexFrame& frame);

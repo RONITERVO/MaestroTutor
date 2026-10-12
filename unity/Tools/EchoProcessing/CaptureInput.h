@@ -11,8 +11,9 @@ struct CaptureFrame {
     int64_t first_position = 0;
     DeviceAudioStamp hardware;
     int64_t query_started_ns = 0, query_finished_ns = 0;
+    int samples = 0; // Actual accepted samples; the unused output suffix is zero.
 };
-enum class CaptureRead { Waiting, Frame, Invalid, Faulted, Closed };
+enum class CaptureRead { Waiting, Frame, Invalid, Faulted, Closed, Empty };
 enum class CaptureFault { None, Device, Clock, Gap, Samples, Overflow, Timeout };
 // Every call, including destruction, belongs to ONE non-real-time worker.
 // No close/read race, callbacks, implicit reopening or permission UI lives here.
@@ -36,17 +37,22 @@ std::unique_ptr<CaptureDevice> OpenAndroidCapture();
 
 class CaptureInput final {
 public:
-    static constexpr int Samples = 480; // Exactly 10 ms, normalized mono float.
+    static constexpr int Samples = 480; // Output capacity: 10 ms, normalized mono float.
     CaptureInput(std::unique_ptr<CaptureDevice> device, uint64_t epoch);
     ~CaptureInput();
     CaptureInput(const CaptureInput&) = delete;
     CaptureInput& operator=(const CaptureInput&) = delete;
     bool Start();
     CaptureRead Read(float* output, int count, CaptureFrame& frame);
+    // Hand off only already accepted samples, without reading more hardware,
+    // padding their count or closing the microphone. Empty means none pending.
+    // This is the input boundary of flush, not a downstream DSP-drain receipt.
+    CaptureRead FlushPending(float* output, int count, CaptureFrame& frame);
     void Close();
     CaptureFault Fault() const { return fault_; }
 private:
     CaptureRead Fail(CaptureFault reason);
+    CaptureRead Deliver(float* output, CaptureFrame& frame, int64_t completed);
     std::unique_ptr<CaptureDevice> device_;
     std::array<float, Samples> pending_{};
     DeviceAudioStamp last_stamp_{};
@@ -54,6 +60,7 @@ private:
     int pending_count_ = 0, xruns_ = 0;
     int64_t started_ns_ = 0, last_now_ = 0, last_frame_ns_ = 0;
     int64_t next_position_ = 0, first_position_ = 0;
+    int64_t query_started_ns_ = 0, query_finished_ns_ = 0;
     bool started_ = false, closed_ = false, stamped_ = false, positioned_ = false;
     CaptureFault fault_ = CaptureFault::None;
 };

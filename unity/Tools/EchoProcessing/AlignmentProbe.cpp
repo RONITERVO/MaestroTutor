@@ -23,7 +23,7 @@ struct Time {
 struct Fixture {
     Time time;DuplexProcessor processor{7,Time::Get,&time};
     std::array<float,480> cap{};std::array<float,960> render{};std::array<int16_t,160> out{};DuplexFrame result;
-    CaptureFrame C(uint64_t seq=0){return {7,seq,static_cast<int64_t>(seq)*480,{4800,1100000000},time.now,time.now};}
+    CaptureFrame C(uint64_t seq=0){return {7,seq,static_cast<int64_t>(seq)*480,{4800,1100000000},time.now,time.now,480};}
     PlaybackFrame R(uint64_t seq=0){return {7,seq,static_cast<int64_t>(seq)*480};}
     PlaybackClock K(uint64_t seq=1){return {this,7,seq,{960,1100000000},time.now,time.now};}
     void Cap(uint64_t seq=0){Check(processor.Capture(cap.data(),480,C(seq))==DuplexStatus::Accepted,"capture admitted");}
@@ -60,7 +60,36 @@ void OwnershipCases(){
     {Fixture f;f.cap.fill(.25f);f.render.fill(.1f);const auto cap=f.cap;const auto render=f.render;f.Cap();f.Cap(1);f.Ref();Check(f.Process()==DuplexStatus::Frame,"process");Check(f.cap==cap&&f.render==render,"inputs immutable");Check(f.result.capture_per_render==1&&f.result.clipped_samples==0,"nominal resampling trace");Check(f.Process()==DuplexStatus::Waiting,"no frame replay");f.Empty();}Done("duplex-immutable-no-replay");
     {Fixture f;f.Cap();f.Cap(1);f.Ref();f.time.step=6000000;Check(f.Process()==DuplexStatus::Faulted,"reverse processing deadline");f.Empty();}Done("duplex-processing-stall");
     {Fixture f;f.time.throws=true;Check(f.Process()==DuplexStatus::Faulted&&f.processor.Fault()==DuplexFault::Clock,"clock callback failure is terminal");f.Empty();}Done("duplex-clock-provider-failure");
+    {Fixture f;auto c=f.C();c.samples=37;Check(f.processor.Capture(f.cap.data(),37,c)==DuplexStatus::Accepted,"short capture fragment");
+     c.sequence=1;c.first_position=37;c.samples=443;Check(f.processor.Capture(f.cap.data(),443,c)==DuplexStatus::Accepted,"fragment completes block");
+     c.sequence=2;c.first_position=480;c.samples=480;Check(f.processor.Capture(f.cap.data(),480,c)==DuplexStatus::Accepted,"real lookahead after fragment");f.Ref();
+     Check(f.Process()==DuplexStatus::Frame&&f.result.capture_first.position==0&&f.result.sequence==0,"fragment boundary does not shift output");}Done("duplex-capture-fragments");
+    {for(int count:{0,481,37}){Fixture f;auto c=f.C();Check(f.processor.Capture(f.cap.data(),count,c)==DuplexStatus::Faulted&&f.processor.Fault()==DuplexFault::Input,"fragment count contract");Check(f.Process()==DuplexStatus::Faulted,"bad fragment cannot produce output");f.Empty();}}Done("duplex-fragment-count-validation");
+    {Fixture f;auto c=f.C();c.samples=37;Check(f.processor.Capture(f.cap.data(),37,c)==DuplexStatus::Accepted,"fragment before gap");c.sequence=1;c.first_position=38;
+     Check(f.processor.Capture(f.cap.data(),37,c)==DuplexStatus::Faulted&&f.processor.Fault()==DuplexFault::Sequence,"partial sample gap rejected");}Done("duplex-fragment-position-gap");
     {Fixture f;auto c=f.C();++c.epoch;Check(f.processor.Capture(f.cap.data(),480,c)==DuplexStatus::Faulted,"old epoch retires");Fixture g;g.Cap();g.Cap(1);g.Ref();Check(g.Process()==DuplexStatus::Frame,"explicit new owner recovers");}Done("duplex-epoch-replacement");
+}
+void FragmentParity(){
+    Time time;DuplexProcessor whole(31,Time::Get,&time),fragmented(31,Time::Get,&time);
+    std::array<float,480> mic{};std::array<float,960> silence{};std::array<int16_t,160> a{},b{};
+    uint64_t input=0,fragment_sequence=0;DuplexFrame af,bf;
+    for(int frame=0;frame<60;++frame){
+        time.now=1100000000+frame*10000000LL;
+        const DeviceAudioStamp cs{frame*480+4752,time.now-1000000},rs{frame*480+912,time.now-1000000};
+        while(input<static_cast<uint64_t>(frame+2)){
+            for(int i=0;i<480;++i)mic[i]=static_cast<float>(.2*std::sin((input*480+i)*.07));
+            CaptureFrame cf{31,input,static_cast<int64_t>(input*480),cs,time.now,time.now,480};
+            Check(whole.Capture(mic.data(),480,cf)==DuplexStatus::Accepted,"whole input");
+            int offset=0;for(int n:{37,181,262}){cf.sequence=fragment_sequence++;cf.first_position=input*480+offset;cf.samples=n;
+                Check(fragmented.Capture(mic.data()+offset,n,cf)==DuplexStatus::Accepted,"fragment input");offset+=n;}
+            ++input;
+        }
+        PlaybackFrame rf{31,static_cast<uint64_t>(frame),frame*480};PlaybackClock rc{&time,31,static_cast<uint64_t>(frame+1),rs,time.now,time.now};
+        Check(whole.Render(silence.data(),960,rf,rc)==DuplexStatus::Accepted&&fragmented.Render(silence.data(),960,rf,rc)==DuplexStatus::Accepted,"shared render timeline");
+        Check(whole.Process(a.data(),160,af)==DuplexStatus::Frame&&fragmented.Process(b.data(),160,bf)==DuplexStatus::Frame,"paired output");
+        Check(a==b&&af.capture_first.position==bf.capture_first.position&&af.capture_first.fraction==bf.capture_first.fraction&&af.sequence==bf.sequence,"fragment boundaries preserve PCM and sample identity");
+    }
+    Done("duplex-fragment-output-parity");
 }
 float Wave(double sample,bool right=false){
     if(sample<0)return 0;
@@ -127,7 +156,7 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
             for(int i=0;i<480;++i){const double t=(input*480+i)/cr;
                 const float e=acoustic_echo(t);
                 mic_echo[i]=e;mic_near[i]=Near(t);mic_both[i]=e+mic_near[i];}
-            CaptureFrame cf{31,input,static_cast<int64_t>(input*480),cs,time.now,time.now};
+            CaptureFrame cf{31,input,static_cast<int64_t>(input*480),cs,time.now,time.now,480};
             Check(echo.Capture(mic_echo.data(),480,cf)==DuplexStatus::Accepted,"quality echo capture");
             Check(both.Capture(mic_both.data(),480,cf)==DuplexStatus::Accepted,"quality mixed capture");
             Check(near.Capture(mic_near.data(),480,cf)==DuplexStatus::Accepted,"quality baseline capture");++input;
@@ -168,6 +197,6 @@ int main(int argc,char** argv){try{
     if(argc==2&&std::strcmp(argv[1],"--tonal")==0){return QualityCases(Pattern::Tonal);}
     if(argc==2&&std::strcmp(argv[1],"--warm-tonal")==0){return QualityCases(Pattern::WarmTonal);}
     if(argc==2&&std::strcmp(argv[1],"--warm-tonal-path-change")==0){return QualityCases(Pattern::WarmTonalPathChange);}
-    Check(argc==1,"known command");ClockCases();OwnershipCases();Check(cases==27,"complete clock/duplex contracts");
+    Check(argc==1,"known command");ClockCases();OwnershipCases();FragmentParity();Check(cases==31,"complete clock/duplex contracts");
     std::printf("{\"status\":\"passed\",\"alignmentCases\":%d,\"assertions\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",cases,checks);return 0;
 }catch(const std::exception& e){std::fprintf(stderr,"FAILED: %s\n",e.what());return 1;}}

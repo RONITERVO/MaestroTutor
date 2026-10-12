@@ -66,14 +66,14 @@ DuplexProcessor::DuplexProcessor(uint64_t epoch,MonotonicClock clock,void* conte
 DuplexProcessor::~DuplexProcessor()=default;
 DuplexStatus DuplexProcessor::Capture(const float* input,int count,const CaptureFrame& frame){
     auto& s=*state_;if(s.Status()!=DuplexStatus::Accepted)return s.Status();
-    if(count!=480||!Valid(input,count))return s.Fail(DuplexFault::Input);
+    if(count<1||count>480||frame.samples!=count||!Valid(input,count))return s.Fail(DuplexFault::Input);
     if(frame.epoch!=s.epoch||frame.sequence!=s.cap_sequence||frame.sequence==UINT64_MAX||frame.first_position<0||
-       frame.first_position>INT64_MAX-480||(s.cap_sequence&&frame.first_position!=s.cap_next))return s.Fail(DuplexFault::Sequence);
-    if(s.written-s.read>capacity-480)return s.Fail(DuplexFault::Overflow);
+       frame.first_position>INT64_MAX-count||(s.cap_sequence&&frame.first_position!=s.cap_next))return s.Fail(DuplexFault::Sequence);
+    if(s.written-s.read>static_cast<uint64_t>(capacity-count))return s.Fail(DuplexFault::Overflow);
     if(!s.capture_clock.Observe(frame.hardware,frame.query_started_ns,frame.query_finished_ns))return s.Fail(DuplexFault::Clock);
     if(!s.cap_sequence)s.cap_first=frame.first_position;
-    for(int i=0;i<480;++i)s.capture[(s.written+i)%capacity]=input[i];
-    s.written+=480;s.cap_next=frame.first_position+480;++s.cap_sequence;return DuplexStatus::Accepted;
+    for(int i=0;i<count;++i)s.capture[(s.written+i)%capacity]=input[i];
+    s.written+=count;s.cap_next=frame.first_position+count;++s.cap_sequence;return DuplexStatus::Accepted;
 }
 DuplexStatus DuplexProcessor::Render(const float* input,int count,const PlaybackFrame& frame,const PlaybackClock& clock){
     auto& s=*state_;if(s.Status()!=DuplexStatus::Accepted)return s.Status();
