@@ -7755,3 +7755,44 @@ closed and zero diagnostics. Its ARM64/IL2CPP High-stripping debug build include
 the actual lease/adapter entry, with zero errors/warnings and 41 matching inputs.
 Evidence is in `.quest-evidence/audio-lease`; earlier test-fixture failure is
 retained separately. These desktop/build checks are not physical audio acceptance.
+
+
+### Rendered reference for shared Live audio — 2026-10-12
+
+The actual application listener tap now has one optional, bounded PCM reference
+owner. It preserves the rendered mono/stereo mix and 10 ms timing, explicitly
+reports discontinuities, and clears retained audio on interruption or closure.
+Playback and the existing activity monitor retain independent lifetimes. This is
+preparation for echo cancellation through the original Live capture owner; it does
+not change the microphone policy, add a second provider connection or enable
+unverified full duplex. See [the audio contract](../unity/AUDIO.md#bounded-rendered-echo-reference--2026-10-12).
+
+The isolated renderer uses the same stream/tap source files, including native
+reflected output and final tails. Its diagnostic player entry exercises actual
+Unity listener callbacks, then silences them before speaker playback. Android
+payload checks require that entry and its listener/reference types after High
+stripping. Desktop listening tests and Android compilation remain separate from
+Quest microphone, audible and performance acceptance. Production still uses Meta
+direct audio with reflections gated; automatic unloading and broader regional
+simulation remain open.
+
+
+Verification passes 1,149 EditMode and 1,289 PlayMode cases, including thirteen new
+reference-buffer/listener cases, with three expected private-asset skips. All 923
+C# source/mirror hashes match (919 app files and four third-party inputs). The
+focused run passes 15 buffer/monitor and 32 playback/listener cases. Native/shared
+catalog equality, source and diagnostic gates, and normal process exits pass.
+Native headless journey `9c549f31fbb548efa742f3b2ec474201` and original-book journey
+`4a1dc448180d4a40a33419ed6ff91de9` pass using local provider fixtures. No headset,
+paid-provider, release-key, deployment or Meta action was performed.
+
+Candidate `46fbb83e9068` passes all 67 cases with 91 graphs closed, zero native
+diagnostics and 40 matching copied C# inputs. It verifies exact reflected stereo
+samples, natural output tails and the muted diagnostic player entry. Android
+build `879f1467b7a0` passes with zero errors/warnings, 46 matching inputs,
+ARM64/IL2CPP and High stripping. All four listener-reference entry types are
+present alongside the PCM lease/adapter; native exports, dependencies and the
+static callback are verified. APK SHA-256 begins `E6094FF8`. It was not installed
+or executed on Android. Evidence, including two corrected test-fixture failures,
+is retained in `.quest-evidence/audio-reference`; the only post-test launcher
+change removes one trailing space, with its exact executed copy retained.

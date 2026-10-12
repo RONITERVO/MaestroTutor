@@ -94,8 +94,8 @@ runtime.mkdir(exist_ok=True)
 tests = evaluation / "Tests" if owned else evaluation
 tests.mkdir(exist_ok=True)
 if owned:
-    runtime_files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmControls.cs", "PcmTransformBinding.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "RuntimeAssembly.cs", "NativePlayerProbe.cs", "GeometryBridge.cs", "PcmLeaseAdapter.cs", "PcmLeasePlayerProbe.cs"]
-    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs", "GeometryBridgeTests.cs", "PresentationConcurrencyTests.cs", "PcmLeaseTests.cs"]
+    runtime_files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmControls.cs", "PcmTransformBinding.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "RuntimeAssembly.cs", "NativePlayerProbe.cs", "GeometryBridge.cs", "PcmLeaseAdapter.cs", "PcmLeasePlayerProbe.cs", "EchoReferencePlayerProbe.cs"]
+    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs", "GeometryBridgeTests.cs", "PresentationConcurrencyTests.cs", "PcmLeaseTests.cs", "EchoReferenceTests.cs"]
     for name in runtime_files:
         shutil.copyfile(source / "Unity" / name, runtime / name)
     for name in test_files:
@@ -110,7 +110,7 @@ else:
     "optionalUnityReferences": ["TestAssemblies"]
 }, indent=2), encoding="utf-8")
 if owned:
-    for name in ["SpeechPcmStream.cs", "AcousticGeometry.cs", "AcousticGeometryCatalog.cs", "PcmOutputLease.cs", "PcmOutputBackend.cs"]:
+    for name in ["SpeechPcmStream.cs", "AcousticGeometry.cs", "AcousticGeometryCatalog.cs", "PcmOutputLease.cs", "PcmOutputBackend.cs", "EchoReferenceStream.cs", "RoomAudioTap.cs", "AcousticOutputMonitor.cs"]:
         shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book" / name, runtime / name)
     shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs", runtime / "RoomPreparationBudget.cs")
     binding = project / "Assets/Plugins/SteamAudio"

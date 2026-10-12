@@ -911,3 +911,42 @@ wrapper exits and local scripted providers. All 920 C# source/mirror hashes matc
 the source gate pass; action/event/fact definitions are unchanged and only four
 runtime source entries change. The focused application run passes 28 cases.
 No headset, paid-provider, release-key, deployment or Meta operation was used.
+
+
+## Bounded rendered echo reference — 2026-10-12
+
+The app listener tap now offers an explicitly owned `EchoReferenceStream` alongside
+its existing activity monitor. The optional stream preserves interleaved mono or
+stereo samples without clipping or changing output, and repackets arbitrary DSP
+blocks into 10 ms frames. Its fixed ring holds at most half a second of PCM. Reads
+and writes allocate no managed memory after admission. Consumed samples, gaps and
+closed owners clear their retained PCM; no samples enter a saved world, program,
+trace or provider request.
+
+Each frame carries a render timestamp, sequence, epoch and the latest paired DSP
+and monotonic observation clocks. Invalid samples/formats, missing render intervals,
+overflow and stale observations report a gap instead of inventing silent frames.
+The capture adapter must reset its canceller on a new epoch or closure and align
+microphone timing separately. These timestamps do not establish acoustic delay,
+hardware latency, clock-drift correction or echo cancellation.
+
+One listener accepts one explicit reference owner. Monitor replacement does not
+cancel it; disposal of an old owner cannot close a newer one. Component/listener
+loss, pause, focus loss and device reconfiguration close the reference. Resuming
+never reopens capture. Ordinary production playback does not open this optional
+stream, and the existing Live microphone policy remains unchanged.
+
+Coverage ends at the Unity listener filter: downstream filters, Android mixing,
+WebView artifact audio and the physical speaker/microphone path may differ.
+Integration needs one existing capture owner, a supported canceller, calibrated
+render/capture alignment and actual Quest microphone/provider acceptance. Continuous
+ambience must not become a permanent Live input gate. Reflections and candidate
+backend promotion remain gated until that complete path is verified.
+
+
+The complete app checks pass 1,149 EditMode and 1,289 PlayMode cases, plus both
+offline native and original-book journeys. The isolated candidate passes 67 native
+cases and its ARM64/IL2CPP High-stripping build. Evidence is retained in
+`.quest-evidence/audio-reference`, with exact input hashes and earlier failed
+fixture attempts. These checks establish the reference's buffer, render and
+ownership behavior; microphone cancellation and Quest acceptance remain open.

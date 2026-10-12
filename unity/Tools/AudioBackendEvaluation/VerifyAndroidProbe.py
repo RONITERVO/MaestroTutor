@@ -53,13 +53,15 @@ with zipfile.ZipFile(apk) as package:
     elf(package.read('lib/arm64-v8a/libil2cpp.so'))
 cpp=list((project/'Library/Bee').rglob('*.cpp'))
 assert cpp,'IL2CPP output required'
-wrappers=[]; registration=False; runtime=False; tests=False; lease_types=set()
+wrappers=[]; registration=False; runtime=False; tests=False; lease_types=set(); reference_types=set()
 for file in cpp:
     text=file.read_text(encoding='utf-8',errors='replace')
     if file.name.startswith('Maestro.AudioCandidate.Runtime'):
         runtime=True
         for name in ["PcmLeasePlayerProbe", "PcmLeaseAdapter", "PcmOutputLease", "PcmOutputBackend"]:
             if re.search(r"\b"+name+r"_\w+",text):lease_types.add(name)
+        for name in ["EchoReferencePlayerProbe", "EchoProbeMute", "EchoReferenceStream", "RoomAudioTap"]:
+            if re.search(r"\b"+name+r"_\w+",text):reference_types.add(name)
         wrappers+=re.findall(r'\b(ReversePInvokeWrapper_PreparedGraph_LogMessage_\w+)\s*\(',text)
 
     if file.name=='Il2CppReversePInvokeWrapperTable.cpp':
@@ -67,10 +69,11 @@ for file in cpp:
     if file.name.startswith('Maestro.AudioCandidate.Tests'):tests=True
 assert runtime and wrappers and registration,'Native callback wrapper missing after High stripping'
 assert not tests,'Test assembly leaked into player'
+assert len(reference_types)==4,('Listener reference entry missing after High stripping',sorted(reference_types))
 assert len(lease_types)==4,('Application lease entry missing after High stripping',sorted(lease_types))
 report={'status':'passed','apkSha256':hashlib.sha256(apk.read_bytes()).hexdigest(),'nativeSha256':hashlib.sha256(phonon).hexdigest(),
         'originalNativeSha256':native_input_sha,'stripToolSha256':hashlib.sha256(strip.read_bytes()).hexdigest(),'nativeTransformation':'llvm-strip --strip-unneeded; exact output bytes verified','architecture':'ARM64','backend':'IL2CPP','requiredExports':len(required),'verifiedExports':sorted(required),
         'nativeDependencies':needed,'reverseCallback':sorted(set(wrappers)),'highStrippingCallbackRegistered':registration,
-        'applicationLeaseTypesCompiled':sorted(lease_types),'testAssemblyIncluded':tests,'deviceRun':False,'audioDeviceAcceptance':False}
+        'listenerReferenceTypesCompiled':sorted(reference_types),'applicationLeaseTypesCompiled':sorted(lease_types),'testAssemblyIncluded':tests,'deviceRun':False,'audioDeviceAcceptance':False}
 Path(sys.argv[3]).write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
 print(json.dumps({k:v for k,v in report.items() if k!='verifiedExports'},indent=2))

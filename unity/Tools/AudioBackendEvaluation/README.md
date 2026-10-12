@@ -591,3 +591,17 @@ unchanged from the full verification at `33a68d7d`. Production selection,
 SDK-independent retention admission, upload timing, voice reservations, direct
 obstruction, shared capture and physical Android/Quest/Live acceptance remain
 open. The existing Meta direct path and disabled reflection gates are unchanged.
+
+
+### Shared listener reference
+
+The isolated project also copies the application's `EchoReferenceStream`,
+`RoomAudioTap` and `AcousticOutputMonitor` by hash. Its reference tests compare
+actual native reflected samples with the final listener, retain finite tails after
+source consumption, and verify independent voice ownership. The player entry
+runs the same optional listener owner on Unity's audio thread and mutes output in
+a later filter. Android payload verification requires all reference entry types
+after High stripping; a built APK is not an Android runtime result.
+
+This does not provide an echo canceller or wire a new microphone into Live.
+See [capture scope and remaining gates](../../AUDIO.md#bounded-rendered-echo-reference--2026-10-12).

@@ -60,10 +60,13 @@ namespace Maestro.AudioEvaluation
         readonly float[] captured = new float[262144], capturedRight = new float[262144];
         int count, blocks;
         bool finite = true;
+        double started;
+        internal double Started { get { lock(gate) return started; } }
         void OnAudioFilterRead(float[] samples, int channels)
         {
             lock (gate)
             {
+                if(count==0)started=AudioSettings.dspTime;
                 blocks++;
                 for (int i = 0; i < samples.Length; i += channels)
                 {
@@ -137,6 +140,7 @@ namespace Maestro.AudioEvaluation
             Assert.AreEqual(AudioSpeakerMode.Stereo, original.speakerMode, "Probe requires actual stereo output");
             listener = new GameObject("Measured then muted listener");
             listener.AddComponent<AudioListener>();
+            listener.AddComponent<Maestro.Quest.Book.RoomAudioTap>();
             capture = listener.AddComponent<CapturedListener>();
             emitter = new GameObject("Owned native output");
             sink = emitter.AddComponent<OwnedSink>();

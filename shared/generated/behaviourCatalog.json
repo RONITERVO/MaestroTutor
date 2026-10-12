@@ -43035,6 +43035,10 @@
       "sha256": "82064f96559e195976ba4ae08a67559068484ded84726791cefb1c14f3251b35"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/EchoReferenceStream.cs",
+      "sha256": "4c55f2720e23ba343fd452cff3f907290f1e5839bde910e0cb5e66e0b0f6f9f9"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/HeadsetBookCamera.cs",
       "sha256": "f5f88d84c1b6cb1f8e4b5ecf87f6ca55e002909a91279e015f5f182d85cd33ed"
     },
@@ -43128,7 +43132,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioTap.cs",
-      "sha256": "4422ea366ca2776a6e1503e97787c05cb2e7c45733b16fa5f2390abee3d54a18"
+      "sha256": "cd2d39e9815384ba563a52db44acb6af54185009297f78ebc7a9f3b52d8b724a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/ScreenShareBookCamera.cs",
