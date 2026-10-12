@@ -103,6 +103,7 @@ def main():
     parser.add_argument("--meson-root", type=Path, required=True, help="Local Meson 1.9.1 install directory")
     parser.add_argument("--ninja", type=Path, required=True)
     parser.add_argument("--platform", choices=("windows", "android"), required=True)
+    parser.add_argument("--profile", choices=("stock", "stationary32"), default="stock")
     parser.add_argument("--ndk", type=Path)
     parser.add_argument("--speech-wav", type=Path, action="append", default=[])
     parser.add_argument("--output", type=Path, required=True)
@@ -127,7 +128,7 @@ def main():
     if args.platform == "android" and not args.ndk:
         parser.error("--ndk is required for Android")
     output.mkdir(parents=True)
-    record = dict(version=1, status="running", platform=args.platform, started=time.time(),
+    record = dict(version=2, status="running", platform=args.platform, profile=args.profile, started=time.time(),
         sourceHashes={name: digest(here / name) for name in SOURCES}, archives={name: digest(path) for name, path in archives.items()},
         meson="1.9.1", python=sys.version, ninjaSha256=digest(ninja),
         providerUsed=False, physicalAudio=False, unityIntegration=False,
@@ -167,10 +168,12 @@ def main():
         manifest = source / "meson.build"
         with manifest.open("a", encoding="utf-8") as file:
             file.write("\nsubdir('maestro-probe')\n")
+        with (source / "meson_options.txt").open("a", encoding="utf-8") as file:
+            file.write("\noption('maestro_echo_profile', type: 'combo', choices: ['stock', 'stationary32'], value: 'stock')\n")
         build = output / "build"
         meson = [sys.executable, "-m", "mesonbuild.mesonmain"]
         setup = meson + ["setup", build, source, "--wrap-mode=nodownload", "--default-library=static",
-            "--buildtype=release", "-Dcpp_std=c++20", "-Dabseil-cpp:cpp_std=c++20",
+            "--buildtype=release", "-Dmaestro_echo_profile=" + args.profile, "-Dcpp_std=c++20", "-Dabseil-cpp:cpp_std=c++20",
             "--force-fallback-for=absl_base,absl_flags,absl_strings,absl_numeric,absl_synchronization,absl_bad_optional_access"]
         if args.platform == "windows":
             setup += ["-Db_vscrt=mt"]
@@ -209,20 +212,33 @@ def main():
             if summary.get("status") != "passed" or summary.get("audioCases") != 8:
                 raise RuntimeError("Incomplete generated-audio result")
             record["probe"] = summary
-            # Retain this tougher diagnostic as FAILED if it fails; it is not a
-            # passing speech case and cannot authorize native capture integration.
-            stress = run([executable, "--noise-stress"], "noise-stress", 90, required=False)
-            stress_log = (output / "noise-stress.log").read_text()
-            if stress not in (0, 1) or (stress == 1 and "FAILED: near-end missing or amplified" not in stress_log):
-                raise RuntimeError("Noise stress crashed or failed for a different reason")
+            # Keep known quality failures visible, while a regression in a
+            # profile's established passing cases fails the evaluation itself.
+            record["qualityDiagnostics"] = {}
+            for name, cases in (("noise-stress", 1), ("onsets", 5), ("path-changes", 2)):
+                code = run([executable, "--" + name], name, 90, required=False)
+                detail = json.loads((output / (name + ".log")).read_text().splitlines()[-1])
+                expected_status = "passed" if code == 0 else "failed"
+                failures = detail.get("failures")
+                if (code not in (0, 1) or detail.get("scope") != name + "-only" or
+                    detail.get("audioCases") != cases or detail.get("status") != expected_status or
+                    not isinstance(failures, int) or not 0 <= failures <= cases or
+                    (failures == 0) != (code == 0)):
+                    raise RuntimeError(name + " crashed or produced incomplete diagnostics")
+                record["qualityDiagnostics"][name] = detail
+                save()
             record["speechWavs"] = []
             for index, wave in enumerate(args.speech_wav):
                 wave = wave.resolve(strict=True)
                 record["speechWavs"].append({"path": str(wave), "sha256": digest(wave)})
                 run([executable, "--speech-wav", wave], "speech-" + str(index), 90)
-            record["noiseStress"] = {"status": "passed" if stress == 0 else "failed", "exitCode": stress}
+            record["noiseStress"] = record["qualityDiagnostics"]["noise-stress"]
+            record["openQualityFailures"] = sum(x["failures"] for x in record["qualityDiagnostics"].values())
+            required_quality = ("path-changes",) if args.profile == "stock" else ("noise-stress", "onsets")
+            record["requiredPassingQuality"] = required_quality
+            if any(record["qualityDiagnostics"][name]["status"] != "passed" for name in required_quality):
+                raise RuntimeError("Regression in this profile's required passing quality cases")
             record["status"] = "bounded-checks-passed-quality-open"
-            record["openQualityFailures"] = 1 if stress else 0
         record["binarySha256"] = digest(binary)
         record["binaryBytes"] = binary.stat().st_size
     except Exception as error:

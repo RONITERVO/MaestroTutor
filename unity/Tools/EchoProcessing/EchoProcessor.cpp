@@ -7,7 +7,36 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#if defined(MAESTRO_ECHO_STATIONARY_EVALUATION)
+#include "modules/audio_processing/aec3/echo_canceller3.h"
+#include <optional>
+#include <stdexcept>
 
+// Explicit research profile only. It fails changing-path checks and must not
+// become the default merely because its steady-room onset checks improve.
+namespace {
+class EchoFactory final : public webrtc::EchoControlFactory {
+public:
+    std::unique_ptr<webrtc::EchoControl> Create(int rate, int render, int capture) override {
+        webrtc::EchoCanceller3Config config;
+        // At 16 kHz the stock 13-block filter covers only 52 ms. Extend all
+        // filter phases together so delayed room reflections fit after alignment.
+        config.filter.refined.length_blocks = 32;
+        config.filter.coarse.length_blocks = 32;
+        config.filter.refined_initial.length_blocks = 32;
+        config.filter.coarse_initial.length_blocks = 32;
+        // Stationary world audio must not make residual suppression erase quiet
+        // near-end speech. Keep AEC's adaptive echo subtraction and path-change
+        // handling; do not switch to a raw/linear-output bypass.
+        config.echo_audibility.use_stationarity_properties = true;
+        config.echo_audibility.use_stationarity_properties_at_init = true;
+        if (!webrtc::EchoCanceller3Config::Validate(&config))
+            throw std::runtime_error("Invalid pinned echo configuration");
+        return std::make_unique<webrtc::EchoCanceller3>(config, std::nullopt, rate, render, capture);
+    }
+};
+}
+#endif
 struct MaestroEcho {
     int render_rate, render_channels, capture_rate;
     uint64_t epoch, render_sequence = 0, capture_sequence = 0;
@@ -32,7 +61,12 @@ struct MaestroEcho {
         config.echo_canceller.enabled = true;
         config.echo_canceller.mobile_mode = false;
         config.pipeline.multi_channel_render = render_channels == 2;
-        apm = webrtc::AudioProcessingBuilder().SetConfig(config).Create();
+        webrtc::AudioProcessingBuilder builder;
+        builder.SetConfig(config);
+#if defined(MAESTRO_ECHO_STATIONARY_EVALUATION)
+        builder.SetEchoControlFactory(std::make_unique<EchoFactory>());
+#endif
+        apm = builder.Create();
         if (!apm) return MAESTRO_ECHO_DSP_ERROR;
         webrtc::ProcessingConfig streams;
         streams.input_stream() = webrtc::StreamConfig(capture_rate, 1);

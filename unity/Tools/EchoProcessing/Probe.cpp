@@ -38,8 +38,29 @@ struct Noise {
     }
 };
 constexpr int seconds = 18, base = 48000;
+// The acoustic source must be band-limited before simulating a 16 kHz ADC.
+// Point-decimating full-band 48 kHz noise invents aliased microphone content that
+// is absent from APM's properly downsampled render reference and cannot cancel.
+void BandLimit(std::vector<float>& values) {
+    constexpr int taps = 161, half = taps / 2;
+    constexpr double pi = 3.141592653589793, cutoff = 6000.0 / base;
+    std::array<double,taps> kernel{}; double total = 0;
+    for (int k = 0; k < taps; ++k) {
+        const int offset = k-half;
+        const double sinc = offset ? std::sin(2*pi*cutoff*offset)/(pi*offset) : 2*cutoff;
+        kernel[k] = sinc*(.54-.46*std::cos(2*pi*k/(taps-1))); total += kernel[k];
+    }
+    for (auto& k : kernel) k /= total;
+    auto input = values;
+    for (size_t i = 0; i < values.size(); ++i) {
+        double sum = 0;
+        for (int k = 0; k < taps && static_cast<size_t>(k) <= i; ++k) sum += kernel[k]*input[i-k];
+        values[i] = static_cast<float>(sum);
+    }
+}
 struct Signals {
     std::vector<float> left, right, near;
+    bool change_path = false, nonlinear = false;
     Signals(bool noise_near = false) : left(seconds * base), right(seconds * base), near(seconds * base) {
         Noise a{0x32455243}, b{0x94376521}, c{0x27182818};
         for (int i = 0; i < seconds * base; ++i) {
@@ -54,12 +75,19 @@ struct Signals {
                 + .15 * std::sin(4 * phase) + .08 * std::sin(7 * phase);
             near[i] = noise_near ? static_cast<float>(.33 * (.75 + .25 * std::sin(17 * t)) * c.Next()) : static_cast<float>(.28 * (.75 + .25 * std::sin(17 * t)) * (voiced + .15 * c.Next()));
         }
+        BandLimit(left); BandLimit(right); BandLimit(near);
     }
     float At(const std::vector<float>& v, int index) const { return index < 0 ? 0 : v[index]; }
     float Echo(int index, int channels) const {
         // 80 ms speaker-buffer delay and two later reflected paths.
         const float first = .55f * At(left, index - 3840) + .18f * At(left, index - 5280);
-        return first + (channels == 2 ? .35f * At(right, index - 4320) : .1f * At(left, index - 6240));
+        float value = first + (channels == 2 ? .35f * At(right, index - 4320) : .1f * At(left, index - 6240));
+        if (change_path && index >= 8 * base) {
+            // Abrupt acoustic-path change, with the same hardware buffer delay.
+            value = .42f * At(left, index - 4560) + .23f * At(left, index - 6960)
+                + .13f * At(channels == 2 ? right : left, index - 8640);
+        }
+        return nonlinear ? .25f * std::tanh(4 * value) : value;
     }
 };
 double Energy(const std::vector<float>& values, int first, int last) {
@@ -123,8 +151,9 @@ void LoadSpeech(Signals& signals, const char* path) {
         signals.near[i] = gain*(speech[sample]*(1-fraction)+speech[next]*fraction);
     }
 }
-void AudioCase(const Signals& signals, const char* name, int render_rate,
-               int channels, int capture_rate, bool echo, bool double_talk, bool reset) {
+struct AudioResult { std::vector<float> output, expected, raw; };
+AudioResult Process(const Signals& signals, int render_rate, int channels, int capture_rate,
+                    bool echo, bool double_talk, bool reset) {
     Owner owner(render_rate, channels, capture_rate);
     std::vector<float> output(seconds * 16000), expected(seconds * 16000), raw(seconds * 16000);
     std::vector<float> render(render_rate / 100 * channels), capture(capture_rate / 100);
@@ -160,17 +189,102 @@ void AudioCase(const Signals& signals, const char* name, int render_rate,
         }
         ++sequence;
     }
+    return {std::move(output),std::move(expected),std::move(raw)};
+}
+bool AudioCase(const Signals& signals, const char* name, int render_rate,
+               int channels, int capture_rate, bool echo, bool double_talk, bool reset,
+               bool diagnostic = false) {
+    const auto result = Process(signals,render_rate,channels,capture_rate,echo,double_talk,reset);
+    const auto& output=result.output; const auto& expected=result.expected; const auto& raw=result.raw;
     const int first = (double_talk ? 6 : 14) * 16000, last = (double_talk ? 9 : 17) * 16000;
     const double reduction = 10 * std::log10(std::max(Energy(raw, first, last), 1e-20) /
         std::max(Energy(output, first, last), 1e-20));
     const auto near = Compare(output, expected, 14 * 16000, 17 * 16000);
     std::printf("{\"case\":\"%s\",\"echoReductionDb\":%.4f,\"nearCorrelation\":%.4f,\"nearGain\":%.4f,\"lagSamples\":%d}\n",
         name, reduction, near.correlation, near.gain, near.lag);
+    if (diagnostic) return (!echo || reduction >= 15) &&
+        (!(double_talk || !echo) || (near.correlation >= .65 && near.gain >= .45 && near.gain <= 1.5));
     if (echo) Check(reduction >= 15, "echo reduction below fixed 15 dB acceptance");
     if (!echo || double_talk) {
         Check(near.correlation >= .65, "near-end correlation below fixed .65 acceptance");
         Check(near.gain >= .45 && near.gain <= 1.5, "near-end missing or amplified");
     }
+    return true;
+}
+int Onsets(const Signals& room) {
+    int failures = 0;
+    constexpr const char* names[] = {"noise-onsets", "fricative-onsets", "voice-onsets",
+                                    "quiet-voice-onsets", "quiet-fricative-onsets"};
+    for (int kind = 0; kind < 5; ++kind) {
+        Signals signals = room;
+        Noise noise{0x82947101};
+        float low = 0;
+        for (int i = 0; i < seconds * base; ++i) {
+            const double t = static_cast<double>(i) / base;
+            const float n = noise.Next();
+            low = .94f * low + .06f * n;
+            const double phase = 2 * 3.141592653589793 * 173 * t;
+            const double voice = .6 * std::sin(phase) + .28 * std::sin(2 * phase) + .15 * std::sin(4 * phase);
+            signals.near[i] = static_cast<float>(kind == 0 ? .33 * n : kind == 1 ? .18 * (n - low) :
+                kind == 2 ? .18 * voice : kind == 3 ? .045 * voice : .045 * (n - low));
+        }
+        BandLimit(signals.near);
+        for (int i = 0; i < seconds * base; ++i) {
+            const double t = static_cast<double>(i) / base, phase = t - std::floor(t);
+            const double envelope = t >= 10 && phase >= .1 && phase < .7 ?
+                std::min({1.0, (phase - .1) / .01, (.7 - phase) / .01}) : 0;
+            signals.near[i] *= static_cast<float>(envelope);
+        }
+        const auto clean = Process(signals, 16000, 1, 16000, false, false, false);
+        const auto mixed = Process(signals, 16000, 1, 16000, true, true, false);
+        double minimum_gain = 100, maximum_gain = 0, minimum_correlation = 1, minimum_baseline_rms = 100;
+        // Compare to the same processor with no echo. Fixed 8 ms APM framing
+        // latency; never search a later window to hide a missing onset.
+        for (int second = 10; second < seconds; ++second) {
+            const int first = second * 16000 + 1600 + 128;
+            for (int size : {1280, 8800}) {
+                double a = 0, b = 0, cross = 0, original = 0;
+                for (int i = first; i < first + size; ++i) {
+                    const double x = mixed.output[i], y = clean.output[i];
+                    a += x * x; b += y * y; cross += x * y;
+                    original += clean.expected[i - 128] * clean.expected[i - 128];
+                }
+                Check(original > 1e-8, "onset source is silent");
+                const double baseline_rms = std::sqrt(b / original);
+                // A relative comparison alone would let both processors mute speech.
+                Check(baseline_rms >= .45 && baseline_rms <= 1.5, "onset baseline lost source level");
+                minimum_baseline_rms = std::min(minimum_baseline_rms, baseline_rms);
+                minimum_gain = std::min(minimum_gain, cross / b);
+                maximum_gain = std::max(maximum_gain, cross / b);
+                minimum_correlation = std::min(minimum_correlation, cross / std::sqrt(std::max(a * b, 1e-30)));
+            }
+        }
+        std::printf("{\"case\":\"%s\",\"minimumGain\":%.4f,\"maximumGain\":%.4f,"
+                    "\"minimumCorrelation\":%.4f,\"minimumBaselineRms\":%.4f,\"windows\":16}\n",
+                    names[kind], minimum_gain, maximum_gain, minimum_correlation, minimum_baseline_rms);
+        if (minimum_gain < .6 || maximum_gain > 1.5 || minimum_correlation < .65) ++failures;
+    }
+    return failures;
+}
+bool PathChange(const Signals& room, const char* name, int rate, int channels, bool nonlinear) {
+    Signals signals = room;
+    signals.change_path = true;
+    signals.nonlinear = nonlinear;
+    const auto result = Process(signals, rate, channels, rate, true, false, false);
+    double transient = 0, minimum_recovered = 100;
+    for (int start = 8; start < 17; ++start) {
+        const double reduction = 10 * std::log10(
+            std::max(Energy(result.raw, start * 16000, (start + 1) * 16000), 1e-20) /
+            std::max(Energy(result.output, start * 16000, (start + 1) * 16000), 1e-20));
+        std::printf("{\"case\":\"%s-window\",\"startSeconds\":%d,\"reductionDb\":%.4f}\n", name, start, reduction);
+        if (start == 8) transient = reduction;
+        else if (start >= 11) minimum_recovered = std::min(minimum_recovered, reduction);
+    }
+    // Expose the first second too: passing after convergence must not be presented
+    // as instantaneous tracking of a moving speaker or a physical-room result.
+    std::printf("{\"case\":\"%s\",\"transientReductionDb\":%.4f,\"minimumRecoveredDb\":%.4f}\n",
+                name, transient, minimum_recovered);
+    return minimum_recovered >= 15;
 }
 void Contracts() {
     MaestroEcho* empty = nullptr;
@@ -236,9 +350,24 @@ int main(int argc, char** argv) {
     try {
         if (argc == 2 && std::strcmp(argv[1], "--noise-stress") == 0) {
             const Signals noisy(true);
-            AudioCase(noisy,"noise-double-talk16",16000,1,16000,true,true,false);
-            std::printf("{\"status\":\"passed\",\"scope\":\"noise-stress-only\"}\n");
-            return 0;
+            const bool passed = AudioCase(noisy,"noise-double-talk16",16000,1,16000,true,true,false,true);
+            std::printf("{\"status\":\"%s\",\"scope\":\"noise-stress-only\",\"audioCases\":1,\"failures\":%d}\n",
+                        passed ? "passed" : "failed", passed ? 0 : 1);
+            return passed ? 0 : 1;
+        }
+        if (argc == 2 && std::strcmp(argv[1], "--onsets") == 0) {
+            const int failures = Onsets(Signals());
+            std::printf("{\"status\":\"%s\",\"scope\":\"onsets-only\",\"audioCases\":5,\"failures\":%d}\n",
+                        failures ? "failed" : "passed", failures);
+            return failures ? 1 : 0;
+        }
+        if (argc == 2 && std::strcmp(argv[1], "--path-changes") == 0) {
+            const Signals signals;
+            int failures = !PathChange(signals, "path-change16", 16000, 1, false);
+            failures += !PathChange(signals, "nonlinear-path-change48", 48000, 2, true);
+            std::printf("{\"status\":\"%s\",\"scope\":\"path-changes-only\",\"audioCases\":2,\"failures\":%d}\n",
+                        failures ? "failed" : "passed", failures);
+            return failures ? 1 : 0;
         }
         if (argc == 3 && std::strcmp(argv[1], "--speech-wav") == 0) {
             Signals speech; LoadSpeech(speech,argv[2]);

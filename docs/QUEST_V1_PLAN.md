@@ -7848,3 +7848,48 @@ owner with measured timing, drift and gap handling, complete audible references,
 permission/lifecycle recovery and real Quest/Live acceptance. Regional world
 activation, terrain/water/navigation support and remaining release gates remain
 open independently; this audio evaluation does not complete the v1 goal.
+
+
+### Echo onset and changing-path regression evidence — 2026-10-12
+
+The native audio evaluation now compares the unchanged default APM profile with an
+explicit research profile using longer filters and stationarity-aware suppression.
+The latter improves noisy/quiet near-end preservation but fails both changing-path
+tests; it is not promoted. This keeps the shared original Live/STT capture owner
+and shipped Unity/Meta audio behavior unchanged.
+
+Both profiles retain eight bounded steady-state/ownership scenarios. Five new
+fixed-window onset profiles catch missing quiet/fricative speech, including an
+independent non-muted baseline check. Two changing-path scenarios check every
+one-second window after a three-second convergence allowance and expose earlier
+transients separately. The microphone fixture is now band-limited before sampling,
+fixing aliases that could not exist in the corresponding render reference.
+No acceptance threshold was lowered to obtain a pass.
+
+Stock processing fails the noisy double-talk case and all five onset profiles,
+while passing both path changes. The research profile passes noise/onsets but
+fails both path changes, falling to roughly 2–3 dB suppression after an initial
+recovery. Both CI jobs preserve these failures explicitly and hard-gate their
+established passing groups; successful bounded CI is not audio-quality acceptance.
+Optional synthesized English/Spanish speech, Android compilation and source hashes
+remain separately recorded. Earlier rejected variants and failed attempts remain
+in `.quest-evidence/echo-quality` and `.quest-evidence/echo-native`.
+
+Next audio work must resolve this measured tradeoff before integrating native
+capture, then cover clock alignment/drift/gaps, complete audible references,
+permission and lifecycle recovery, and physical Quest/original-Live acceptance.
+No headset, provider, signing, deployment or Meta operation is part of this work.
+Regional ground/water/navigation, audibility demand and the other v1 release gates
+remain open; neither an audio probe nor a cross-build completes them.
+
+
+Local source-built verification passes both profiles' eight core cases and required
+passing quality groups, plus three synthesized-speech cases per language/profile.
+The six stock and two research quality failures remain explicit in receipts. The
+research profile also cross-compiles for ARM64/API 32 with the five C exports,
+system-only shared dependencies and 16 KiB load alignment; it has not run on Quest.
+All 923 previously tested C# source hashes and ten unrelated working files remain
+unchanged. A failed legacy-noise parser check and a Windows long-path compilation
+failure are retained with the rejected tuning attempts; shorter output paths and
+structured diagnostic results resolve those harness failures without lowering
+quality thresholds.

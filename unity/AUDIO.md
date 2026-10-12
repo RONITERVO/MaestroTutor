@@ -1004,23 +1004,30 @@ It preserves playback samples and requires a fresh epoch after missing/stale
 frames or invalid input. Reset and destruction retire the owned DSP; no native
 microphone or app adapter is selected. See the [reproduction guide](Tools/EchoProcessing/README.md).
 
-Eight generated-audio scenarios pass on Windows, with roughly 21–24 dB echo
-reduction. Offline synthesized English and Spanish pass three additional cases
-each, including mono/stereo double-talk. The separate noise-heavy double-talk
-case FAILS its fixed near-signal gain threshold (.325 versus the minimum .45).
-That failure remains reproducible and explicitly reported in the runner/CI;
-it is not converted into speech acceptance by the passing voiced cases.
+The two reproducible evaluation profiles retain eight bounded generated-audio and
+ownership scenarios. The default `stock` profile preserves the prior APM settings.
+The explicit `stationary32` research profile uses longer filters and stationarity
+handling; it is not accepted or selected for the app. Both retain three additional
+steady-state cases each for locally synthesized English and Spanish.
 
-The same source cross-compiles with NDK 27.2 for Android ARM64/API 32. ELF checks
-confirm the C exports, system-only shared dependencies and 16 KiB load alignment.
-The Android binary is not executed or packaged into Unity. This work uses no
-physical audio, Quest queries, provider calls, signing, deployment or Meta action.
-Evidence, exact hashes and earlier failed build/probe attempts are retained under
-`.quest-evidence/echo-native`. A dedicated CI workflow runs the bounded Windows
-checks and retains the open quality diagnostic.
+The expanded diagnostics expose a tradeoff: stock processing fails noisy
+near-end audio and all five onset profiles, while the research profile passes
+those checks but fails both abrupt acoustic-path changes. The latter can fall to
+about 2–3 dB echo reduction after an initial recovery. Neither profile is ready for
+native microphone integration. A corrected band-limited acoustic fixture avoids
+inventing microphone aliases in mixed-rate tests; older numerical results remain
+historical and are not directly comparable.
 
-Promotion still requires the noise/unvoiced-speech investigation, perceptual and
-near-end onset testing, native microphone ownership, measured clock/delay/drift
-alignment, all-audible-output coverage, pause/permission recovery and actual
-Quest/original-Live acceptance. This candidate cannot clear the separate Meta
-acoustic-map worker crash or enable production reflections/full duplex.
+CI evaluates both profiles, reports their exact failing quality cases and hard-gates
+their established passing groups. Core contract errors, crashes, missing results
+and regressions fail the run. An explicit quality-failure count remains separate
+from bounded CI success. See the reproduction guide for thresholds and coverage.
+Source hashes and failed attempts are retained in `.quest-evidence/echo-native`
+and `.quest-evidence/echo-quality`. The same source is cross-built for Android
+ARM64/API 32; it is not executed or packaged into Unity.
+
+Promotion still requires resolving both quiet/onset preservation and changing-path
+suppression, perceptual speech checks, native microphone ownership, measured
+clock/delay/drift alignment, all-audible-output coverage, pause/permission recovery
+and actual Quest/original-Live acceptance. This candidate cannot clear the separate
+Meta acoustic-map worker crash or enable production reflections/full duplex.

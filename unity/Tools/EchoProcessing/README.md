@@ -10,7 +10,9 @@ original browser/Live capture policy is unchanged. Native capture integration is
 
 Use Python 3.12+, MSVC x64 build tools and a Windows SDK. Install Meson 1.9.1 and
 Ninja into a task-local directory, or supply existing local installations. The
-runner installs nothing and performs no downloads. Obtain these pinned inputs:
+runner installs nothing and performs no downloads. Keep the output directory name
+short on Windows: MSVC can reject a deeply nested source path even when Python
+can read it. Obtain these pinned inputs:
 
 | Input | Official download | SHA-256 |
 | --- | --- | --- |
@@ -40,8 +42,8 @@ python unity/Tools/EchoProcessing/Build.py `
   --platform windows --output .quest-evidence/echo-native/my-windows-run
 ```
 
-The only upstream build-file change is appending the app-owned probe subdirectory
-in the disposable source copy. Meson uses no downloads and forces the pinned
+The only upstream build-file changes are appending the app-owned probe subdirectory
+and its explicit profile option in the disposable source copy. Meson uses no downloads and forces the pinned
 Abseil fallback. Both dependencies use C++20: MSVC rejects an upstream designated
 initializer under the release's default C++17. Windows SDK `winrt` headers are
 needed by Abseil. Build logs retain warnings from upstream sources.
@@ -89,36 +91,74 @@ The adapter does **not** align clocks, estimate device delay or repair gaps. The
 caller must provide paired frames and APM's hardware-buffer delay estimate. The
 synthetic tests supply an explicit 80 ms model; this is not a Quest calibration.
 
-## Evidence and open quality finding
+## Reproducible profiles and open quality findings
+
+`--profile stock` is the default and keeps the original APM configuration.
+`--profile stationary32` explicitly selects an **unaccepted research profile**:
+32-block (128 ms at 16 kHz) filters and stationarity-aware echo audibility.
+Its private AEC3 header uses the pinned dependency's disabled debug-dump setting.
+Neither profile is installed in Unity. The research profile improves steady-room
+near-end preservation but regresses changing-path suppression, so it must not
+silently replace the default.
 
 The default probe checks eight generated-audio scenarios: mono 16/32 kHz echo,
 stereo 48 kHz echo, mixed 48-to-16 kHz rates, near-only voiced input, mono/stereo
-double-talk, and recovery after an explicit sequence gap. Fixed thresholds are
+double-talk, and recovery after an explicit sequence gap. Fixed thresholds remain
 15 dB echo reduction, .65 near-signal correlation, and .45–1.5 near-signal gain.
 It also checks malformed frames, nonfinite values, stale epochs, output boundaries,
-reference immutability, reset, close and repeated ownership. Internal assertion
-counts include processing each frame and must not be reported as distinct tests.
+reference immutability, reset, close and repeated ownership. Assertion counts
+include processing each frame and must not be reported as distinct tests.
 
-The separate `--noise-stress` diagnostic **currently fails**: predominantly noisy
-near-end input during echo is attenuated too much (gain about .325). It remains a
-reproducible failed result, not a passed speech test. The runner records that
-failure separately; unexpected failures/crashes still fail the run. Eight passing
-bounded tests produce `bounded-checks-passed-quality-open`, never speech-quality
-acceptance. CI states the open diagnostic in its summary and retains the logs.
+The source fixture now uses a 161-tap 6 kHz low-pass filter before sampling at
+16/32/48 kHz. Previously the microphone simulation point-decimated full-band noise,
+creating aliases absent from APM's properly resampled render reference. Earlier
+metrics remain historical evidence, not directly comparable measurements of the
+corrected fixture. This deliberately band-limited test does not establish quality
+throughout the full 48 kHz bandwidth.
 
-On the local Windows run, ordinary voiced double-talk passes; locally synthesized
-English and Spanish also pass three cases each (near-only and mono/stereo echo).
-These objective comparisons do not establish pronunciation intelligibility,
-quiet/unvoiced speech quality, human double-talk quality, or AEC convergence in
-an actual room. The candidate is not ready for microphone integration based on
-these results alone.
+The runner and both CI matrix jobs also execute three diagnostic groups:
 
-Before promotion: investigate the failed noise/unvoiced case, validate real speech
-and near-end onset, connect the existing single capture owner, align render/capture
-clocks with drift and gap handling, cover WebView and other audible sources, verify
-permission/pause/stop lifecycles, and test actual Quest playback/capture and the
-original Live provider path. Production reflections and microphone gates must not
-be relaxed on the strength of a cross-build.
+- `--noise-stress`: one predominantly noisy near-end double-talk case, with the
+  same absolute level/correlation and echo thresholds as the steady-state probe.
+- `--onsets`: five voiced/noisy/fricative-like profiles, including quiet voice and
+  quiet fricatives. Each checks eight bursts in fixed 80 ms onset and 550 ms body
+  windows. Relative near-end gain must remain .6–1.5 and correlation at least .65;
+  an independent .45–1.5 baseline RMS gate prevents both compared paths muting
+  speech. The fixed 8 ms framing offset never slides past a missing onset.
+- `--path-changes`: mono and mildly nonlinear stereo echo paths change abruptly
+  at eight seconds without resetting the DSP. Every one-second window from
+  seconds 11 through 16 must retain at least 15 dB suppression. Earlier transient
+  windows are reported separately; this is not instantaneous path tracking.
+
+Current Windows results:
+
+| Profile | Eight steady/ownership scenarios | Noise-heavy double-talk | Five onset profiles | Two changing paths |
+| --- | --- | --- | --- | --- |
+| `stock` (default) | pass | **fail** | **all five fail** | pass |
+| `stationary32` (explicit research) | pass | pass | pass | **both fail** |
+
+With the corrected fixture, stock noisy near-end gain is about .284 (correlation
+.618), and the quiet-fricative onset minimum gain is .022. The research profile
+retains at least .860 onset gain across the five profiles, but its changed-path
+suppression drops to about 2–3 dB even after an earlier recovery. Passing quiet
+speech alone would have hidden that regression. Locally synthesized English and
+Spanish also exercise near-only and mono/stereo double-talk for each profile;
+these steady-state comparisons are not perceptual pronunciation acceptance.
+
+The runner records every quality failure and returns
+`bounded-checks-passed-quality-open` only when core contracts and that profile's
+established passing quality groups remain intact. Stock path checks and research
+noise/onset checks are hard regression gates. Missing results, incomplete groups,
+invalid-frame failures and crashes fail the run. Known failures remain failures,
+with nonzero `openQualityFailures`, explicit CI warnings and retained logs; green
+bounded CI is **not** audio-quality acceptance. No numeric threshold was relaxed.
+
+Before promotion: resolve the noise/onset versus changing-path tradeoff, validate
+human speech perceptually, connect the existing single capture owner, align
+render/capture clocks with drift and gap handling, cover WebView and other audible
+sources, verify permission/pause/stop lifecycles, and test actual Quest
+playback/capture and the original Live provider path. Production reflections and
+microphone gates must not be relaxed on the strength of a cross-build.
 
 ## Dependency notices
 

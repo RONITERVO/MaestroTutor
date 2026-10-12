@@ -21,6 +21,10 @@ concurrency:
 
 jobs:
   generated-audio:
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [stock, stationary32]
     runs-on: windows-2022
     timeout-minutes: 15
     steps:
@@ -53,15 +57,16 @@ jobs:
             --apm "$root/cache/apm.tar.gz" --abseil "$root/cache/abseil.tar.gz" `
             --overlay "$root/cache/overlay.zip" --meson-root "$root/tools" `
             --ninja "$root/tools/bin/ninja.exe" `
-            --platform windows --output "$root/ci"
+            --platform windows --profile '${{ matrix.profile }}' --output "$root/ci"
           if($LASTEXITCODE -ne 0){throw 'Native evaluation failed'}
           $result=Get-Content "$root/ci/result.json" -Raw | ConvertFrom-Json
-          "Eight bounded generated-audio scenarios passed. Noise-heavy double-talk diagnostic: **$($result.noiseStress.status)**. This is an isolated candidate, not speech-quality, Quest, or release acceptance." >> $env:GITHUB_STEP_SUMMARY
+          "Profile **$($result.profile)**: eight bounded generated-audio scenarios passed. Noise-heavy double-talk: **$($result.noiseStress.status)**; five onset cases: **$($result.qualityDiagnostics.onsets.status)**; two changing-path cases: **$($result.qualityDiagnostics.'path-changes'.status)**. Open failing quality cases: **$($result.openQualityFailures)**. Neither profile is approved for native capture or Quest release." >> $env:GITHUB_STEP_SUMMARY
+          if($result.openQualityFailures -gt 0){Write-Output "::warning::Profile $($result.profile) has $($result.openQualityFailures) open audio-quality failures; bounded CI success is not quality acceptance."}
       - name: Preserve native results and failures
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: native-echo-evaluation
+          name: native-echo-evaluation-${{ matrix.profile }}
           if-no-files-found: ignore
           path: |
             .quest-evidence/echo-native/ci/result.json
