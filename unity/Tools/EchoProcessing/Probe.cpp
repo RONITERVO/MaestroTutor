@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 #include "EchoProcessor.h"
+#include "AudioFixture.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -39,26 +40,7 @@ struct Noise {
     }
 };
 constexpr int seconds = 18, base = 48000;
-// The acoustic source must be band-limited before simulating a 16 kHz ADC.
-// Point-decimating full-band 48 kHz noise invents aliased microphone content that
-// is absent from APM's properly downsampled render reference and cannot cancel.
-void BandLimit(std::vector<float>& values) {
-    constexpr int taps = 161, half = taps / 2;
-    constexpr double pi = 3.141592653589793, cutoff = 6000.0 / base;
-    std::array<double,taps> kernel{}; double total = 0;
-    for (int k = 0; k < taps; ++k) {
-        const int offset = k-half;
-        const double sinc = offset ? std::sin(2*pi*cutoff*offset)/(pi*offset) : 2*cutoff;
-        kernel[k] = sinc*(.54-.46*std::cos(2*pi*k/(taps-1))); total += kernel[k];
-    }
-    for (auto& k : kernel) k /= total;
-    auto input = values;
-    for (size_t i = 0; i < values.size(); ++i) {
-        double sum = 0;
-        for (int k = 0; k < taps && static_cast<size_t>(k) <= i; ++k) sum += kernel[k]*input[i-k];
-        values[i] = static_cast<float>(sum);
-    }
-}
+using maestro_fixture::BandLimit;
 struct Signals {
     std::vector<float> left, right, near;
     bool change_path = false, nonlinear = false, varied_path = false, weak_direct = false;

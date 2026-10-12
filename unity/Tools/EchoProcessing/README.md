@@ -188,7 +188,7 @@ echo audibility, with the pinned dependency's disabled debug-dump setting:
 All three remain outside Unity. The measured profile accepts delay values in
 [4, 500] ms, rejects values below its headroom and faults the epoch on invalid
 input. The other profiles retain [0, 500] ms support. Range validation cannot prove
-that the caller measured the delay correctly. No native timing source is connected.
+that the caller measured the delay correctly. No native timing source is connected to the app.
 
 Private linear-output traces of the internal-estimator profile showed an estimate
 change several seconds after the acoustic path changed, resetting a filter that
@@ -232,7 +232,7 @@ The runner and all three CI matrix jobs also execute four diagnostic groups:
   offsets do not establish tolerance to continuous drift, timestamp jitter or
   arbitrary timing errors.
 
-Current Windows results:
+Current standalone processor results (paired-clock checks below are separate):
 
 | Profile | Eight core scenarios | Noise-heavy double-talk | Five onset profiles | Two changing paths | 24 delay variants |
 | --- | --- | --- | --- | --- | --- |
@@ -259,9 +259,9 @@ stationary noise/onset checks, and every measured-profile diagnostic group are
 hard regression gates. Missing results, incomplete groups,
 invalid-frame failures and crashes fail the run. Known failures remain failures,
 with nonzero `openQualityFailures`, explicit CI warnings and retained logs; green
-bounded CI is **not** audio-quality acceptance. The measured profile records zero
-known generated-quality failures but retains `speechQualityAccepted: false` and
-`questAcceptance: false`. No numeric threshold was relaxed.
+bounded CI is **not** audio-quality acceptance. The measured profile passes those 40 standalone cases, but has additional paired-clock
+tonal failures described below. All profiles retain `speechQualityAccepted: false`
+and `questAcceptance: false`. No numeric threshold was relaxed.
 
 Before promotion: validate measured timing on the actual capture/output path and
 human speech perceptually, connect the existing single capture owner, align
@@ -269,6 +269,69 @@ render/capture clocks with drift and gap handling, cover WebView and other audib
 sources, verify permission/pause/stop lifecycles, and test actual Quest
 playback/capture and the original Live provider path. Production reflections and
 microphone gates must not be relaxed on the strength of a cross-build.
+
+## Clock-aligned duplex candidate
+
+`DuplexProcessor` accepts frames from the existing native capture/output owners,
+uses their independent hardware timelines, and feeds the existing APM C ABI.
+It runs on one worker and acquires no devices. Capture and render epochs, sequence,
+positions and playback-owner observations must remain continuous. Half-second
+queues reject overflow; missing streams have a startup deadline, and stale data,
+clock/provider errors or processing failure retire the whole paired epoch. No raw
+microphone fallback or automatic reopen occurs. Close discards pending data.
+
+`HardwareClock` keeps 64 observations with at least 10 ms spacing so frequent
+worker reads cannot collapse its fitting window. Nominal 48 kHz timing is used
+with an explicit uncertainty allowance during startup. A fit needs eight distinct
+observations spanning at least 250 ms. Candidate admission limits are +/-2,000 ppm
+rate deviation, 200 microseconds timestamp residual, 250 ms freshness and 500 ms
+projection. Prediction bounds use absolute regression weights, an extrapolation
+drift allowance and millisecond delay quantization. These bounds **assume** the
+hardware timestamp error/rate limits; they are not measured Quest accuracy.
+
+The measured buffer delay follows upstream APM's definition:
+`(speaker presentation - reverse analysis) + (capture processing - acquisition)`.
+The worker samples the actual APM call times. Delay uncertainty over 2 ms, a reverse
+processing interval over 5 ms, or a delay interval outside [4, 500] ms faults the
+pair instead of clamping an unknown delay into an accepted range.
+
+The pinned upstream sinc resampler converts microphone samples to the output
+clock's cadence. Its ratio slews at at most 10 ppm per processed 10 ms block;
+whole/fraction sample positions retain phase without skipping frames. It waits
+for real kernel lookahead, never padding missing microphone input. Filter
+overshoot is clipped to normalized PCM and counted in the receipt. Three aligned
+APM instances compare echo-only, double-talk and near-only baseline paths.
+The original and aligned fixtures share the same band-limiting helper.
+
+Twenty-seven contract scenarios cover clocks, variable observation cadence,
+long uptime, deadlines, identity, queue bounds, lifecycle and missing lookahead.
+Three 18-second broadband quality configurations add opposite +/-900 ppm device
+rates (1,800 ppm relative skew) and +/-20 microsecond timestamp jitter. Current
+measured-profile results retain roughly 39–49 dB echo reduction, .964 near-signal
+correlation and .95–.96 gain, with delay error below .65 ms and no clipping.
+The fixed gates remain 15 dB reduction, .65 correlation, .45–1.5 gain (including
+an absolute baseline-energy check), at most 2 ms delay error, and no clipping.
+Quality is measured over seconds 8–17; these are finite constant-rate-skew tests,
+not arbitrary drift, onset, discontinuity-recovery or perceptual acceptance.
+
+**Sustained tones remain an open release issue.** The original eight-tone fixture
+is retained as three `--tonal` diagnostics with the same thresholds. The measured
+profile reduces its echo by only about .1 dB, so all three fail. A direct APM
+control without the new clock/resampler path reproduces that result. Upstream's
+narrow-band adaptation masks are consistent with this finding, but no upstream
+DSP change or definitive acoustic fix is claimed. Broadband success does not
+replace or excuse this failure. All six new quality outcomes are recorded;
+`openQualityFailures` now includes them, alongside the prior standalone failures.
+CI hard-gates the measured broadband cases and preserves tonal failures with a
+warning. They must be resolved or have an explicitly validated product policy
+before promotion; green bounded CI does not approve full-duplex audio.
+
+The source-built Windows runner executes these checks; Android cross-links the
+aligned worker and actual APM library with 16 KiB load alignment but does not run
+it. No final-mix routing, original app PCM lease bridge, finite-stream flush,
+permission/focus integration or complete WebView/platform reference coverage is
+provided here. Physical timestamp bounds, changing clock rates, long sessions,
+route changes, human speech and Quest/original-Live acceptance remain required.
 
 ## Dependency notices
 

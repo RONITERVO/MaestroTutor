@@ -23,7 +23,8 @@ INPUTS = {
 APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253"
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1",
     "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
-    "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp")
+    "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
+    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "AudioFixture.h")
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -219,11 +220,24 @@ def main():
                 record[label + "Probe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(device_binary),
                     "androidNeeded": device_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in device_loads],
                     "deviceOpened": False}
+            alignment_binary = build / "maestro-probe/maestro_alignment_probe"
+            run([readelf, "-h", "-l", "-d", "-Ws", alignment_binary], "android-alignment-elf", 30)
+            alignment_metadata = (output / "android-alignment-elf.log").read_text()
+            alignment_loads = [line for line in alignment_metadata.splitlines() if line.lstrip().startswith("LOAD ")]
+            alignment_needed = re.findall(r"\(NEEDED\).*?\[([^]]+)\]", alignment_metadata)
+            if ("AArch64" not in alignment_metadata or not alignment_loads or
+                any(int(line.split()[-1], 16) < 16384 for line in alignment_loads) or
+                set(alignment_needed) - {"libmaestro_echo.so", "liblog.so", "libm.so", "libdl.so", "libc.so"} or
+                "libmaestro_echo.so" not in alignment_needed or "maestro_echo_capture" not in alignment_metadata):
+                raise RuntimeError("Unexpected Android aligned processor linkage")
+            record["alignmentProbe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(alignment_binary),
+                "androidNeeded": alignment_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in alignment_loads],
+                "deviceOpened": False}
             record["status"] = "cross-compiled-not-executed"
         else:
             binary = build / "maestro-probe" / ("maestro_echo.dll" if args.platform == "windows" else "libmaestro_echo.so")
             executable = build / "maestro-probe" / ("maestro_echo_probe.exe" if args.platform == "windows" else "maestro_echo_probe")
-            for label, expected_cases in (("capture", 20), ("playback", 22)):
+            for label, expected_cases in (("capture", 20), ("playback", 22), ("alignment", 27)):
                 device_executable = build / ("maestro-probe/maestro_" + label + "_probe.exe")
                 run([device_executable], label + "-probe", 30)
                 device_summary = json.loads((output / (label + "-probe.log")).read_text().splitlines()[-1])
@@ -232,6 +246,21 @@ def main():
                     (label == "playback" and device_summary.get("concurrentSourceFrames") != 120000)):
                     raise RuntimeError("Incomplete scripted " + label + " result")
                 record[label + "Probe"] = device_summary
+            alignment_executable = build / "maestro-probe/maestro_alignment_probe.exe"
+            for suffix, option, scope in (("Quality", "--quality", "clock-aligned-quality"), ("Tonal", "--tonal", "clock-aligned-tonal")):
+                label = "aligned-" + suffix.lower()
+                alignment_code = run([alignment_executable, option], label, 180, required=False)
+                detail = json.loads((output / (label + ".log")).read_text().splitlines()[-1])
+                if (alignment_code not in (0, 1) or detail.get("scope") != scope or detail.get("qualityCases") != 3 or
+                    detail.get("status") != ("passed" if alignment_code == 0 else "failed") or
+                    not isinstance(detail.get("failures"), int) or not 0 <= detail["failures"] <= 3 or
+                    (detail["failures"] == 0) != (alignment_code == 0) or
+                    detail.get("deviceOpened") is not False or detail.get("physicalAudio") is not False):
+                    raise RuntimeError("Incomplete clock-aligned audio quality result")
+                record["alignment" + suffix] = detail
+                save()
+                if args.profile == "measured32" and suffix == "Quality" and alignment_code != 0:
+                    raise RuntimeError("Measured clock-aligned broadband regression")
             run([executable], "probe", 90)
             lines = (output / "probe.log").read_text().splitlines()
             summary = json.loads(lines[-1])
@@ -259,7 +288,9 @@ def main():
                 record["speechWavs"].append({"path": str(wave), "sha256": digest(wave)})
                 run([executable, "--speech-wav", wave], "speech-" + str(index), 90)
             record["noiseStress"] = record["qualityDiagnostics"]["noise-stress"]
-            record["openQualityFailures"] = sum(x["failures"] for x in record["qualityDiagnostics"].values())
+            record["openProcessorQualityFailures"] = sum(x["failures"] for x in record["qualityDiagnostics"].values())
+            record["openAlignedQualityFailures"] = record["alignmentQuality"]["failures"] + record["alignmentTonal"]["failures"]
+            record["openQualityFailures"] = record["openProcessorQualityFailures"] + record["openAlignedQualityFailures"]
             required_quality = ("path-changes", "delay-variants") if args.profile == "stock" else ("noise-stress", "onsets")
             if args.profile == "measured32":
                 required_quality = tuple(record["qualityDiagnostics"])

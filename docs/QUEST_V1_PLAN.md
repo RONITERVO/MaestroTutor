@@ -7980,3 +7980,30 @@ provider logic. All-audible reference coverage and actual Quest/Live acceptance
 remain required. This candidate is not selected in the app. The broader shared
 world, collision, regional activation and release gates remain open; device,
 provider and release holds remain in force.
+
+
+### Paired hardware clocks and continuous capture correction — 2026-10-12
+
+The isolated duplex worker now feeds the existing APM ABI from native input/output
+frame contracts. Bounded independent-clock fits provide sample-time estimates;
+upstream sinc resampling preserves capture phase while correcting constant clock
+skew. Actual processing call times contribute to APM's buffer-delay estimate.
+Stale data, identity changes, missing lookahead, overruns and invalid timing cannot
+produce raw/stale microphone output. The original app capture owner is unchanged.
+
+The added coverage comprises 27 contract cases and six 18-second audio diagnostics.
+Three broadband configurations pass for the measured profile, including opposite
+900 ppm clocks and timestamp jitter. Three sustained-tone configurations fail:
+only about .1 dB echo reduction. A direct APM control reproduces the failure without
+the new alignment path. Those failures remain in receipts and CI warnings with
+the original thresholds, alongside all prior processor diagnostics; passing
+broadband cases does not establish full audio quality. The first compilation
+failure (a test's mixed-type auto declaration) and investigation runs are retained.
+
+Next audio work must resolve the tonal limitation or validate an explicit product
+policy, test variable-rate/long-session/lifecycle behaviour, connect the original
+PCM leases and complete audible-source coverage, and measure actual Quest timing
+and speech. Candidate clock limits are assumptions awaiting device evidence.
+Finite-stream drain/flush and app permission/focus hooks remain unimplemented.
+No native backend, production reflections or automatic map scheduling is enabled.
+The broader world/release requirements and device/provider/release holds remain.

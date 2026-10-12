@@ -33,3 +33,10 @@ playback_lib = static_library('maestro_playback', ['PlaybackOutput.cpp', 'Androi
 playback_probe = executable('maestro_playback_probe', 'PlaybackProbe.cpp',
   link_with: playback_lib, dependencies: playback_deps, install: false)
 test('scripted-playback-ownership', playback_probe, timeout: 30)
+
+# Worker-only clock fitting/resampling plus the existing APM ABI. No device opens.
+alignment_lib = static_library('maestro_alignment', ['ClockAlignment.cpp', 'DuplexProcessor.cpp'],
+  dependencies: audio_processing_dep, cpp_args: common_cxxflags, link_with: echo_lib, install: false)
+alignment_probe = executable('maestro_alignment_probe', 'AlignmentProbe.cpp',
+  link_with: [alignment_lib, echo_lib], install: false)
+test('clock-aligned-duplex', alignment_probe, timeout: 30)

@@ -1078,3 +1078,27 @@ Android cross-compilation includes the actual AAudio callback/timestamp function
 The endpoint is outside Unity Assets and does not replace the current audio path.
 Connecting the final mix, original output/capture leases and complete audible-source
 coverage, then verifying real Quest lifecycles and speech, remain promotion gates.
+
+
+## Clock-aligned duplex candidate and tonal failure — 2026-10-12
+
+The isolated native worker now connects the input/output frame contracts to the
+existing APM ABI. It fits separate hardware clocks, derives delay using the actual
+reverse/capture call times, and continuously resamples capture to the render
+cadence using the pinned upstream sinc implementation. Sequence gaps, invalid
+owners, stale clocks, missing input and queue overflow retire the paired epoch.
+The candidate has no device acquisition or app backend selection.
+
+Twenty-seven contract cases and three broadband quality configurations exercise
+constant clock skew up to 1,800 ppm relative, timestamp jitter and actual APM
+processing. The measured profile achieves about 39–49 dB suppression while
+preserving near speech, with modeled delay errors below .65 ms. These results
+assume bounded timestamp error; they are not physical calibration or long-session
+acceptance. See the EchoProcessing guide for exact limits and measurement windows.
+
+Three retained sustained-tone cases fail the same audio gates, reducing echo by
+only about .1 dB. A direct APM control reproduces the failure without clock fitting
+or resampling. The runner reports these as additional quality failures rather
+than replacing them with passing broadband inputs. All thresholds stay unchanged.
+Resolving tonal echo, the shared PCM ownership/lifecycle bridge, final-mix and
+all-audible reference coverage, and actual Quest/Live acceptance remain required.
