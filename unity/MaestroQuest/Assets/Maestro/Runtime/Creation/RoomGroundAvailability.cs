@@ -21,8 +21,11 @@ namespace Maestro.Quest.Creation
     {
         internal JArray GroundDependencies(Vector3 position,float radius,float above,float below)
         {
+            return GroundDependencies(RoomGroundQuery.SupportEnvelope(position,radius,above,below));
+        }
+        internal JArray GroundDependencies(Bounds envelope)
+        {
             var result=new JArray();if(journal==null)return result;
-            var envelope=RoomGroundQuery.SupportEnvelope(position,radius,above,below);
             foreach(var candidate in journal.GroundCandidates()){
                 string state=null;
                 if(dormantNative.TryGetValue(candidate.target,out var dormant)){

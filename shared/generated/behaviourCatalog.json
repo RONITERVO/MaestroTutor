@@ -43987,7 +43987,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundAvailability.cs",
-      "sha256": "3cecd3e38da2a6962d2c63703d84565180ef50efb77c4471ca54f71869c528ea"
+      "sha256": "ce97bccedaedafe19d984474b5ef84b82552f5324c966580a1f407a83773733c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
@@ -44123,7 +44123,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPlacementDependencies.cs",
-      "sha256": "5f50f97db877c3072e0b0254297295d873726472b9bc86894b0b40e13c264ff8"
+      "sha256": "53bb7ecfa4dd6de94e7e808672968305c33521db943a6c6f4e1799a72a481926"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
@@ -44179,7 +44179,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialBounds.cs",
-      "sha256": "166d48061e87b29ef23aee05266dae98a40d50e0ca330108508ebd9a1390f284"
+      "sha256": "06955602c0304ee327a4cc019ff768ee932874c9115c657359dab72c78d5a69a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialIndex.cs",
@@ -44187,11 +44187,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialObservation.cs",
-      "sha256": "cb1e094e408e45cc7cc9045bdf2b89782acfa14bf00a1ac35fba6090ef9d7f11"
+      "sha256": "0a51e7a0c3914f4964001c7b7bea5c7a529049d446cd85665afd948e4018f3b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialPreparation.cs",
       "sha256": "9851d80ec02b0b8238204a5d3be5a7eaceebbf74300bf7532ed321e9f6d5a53f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
+      "sha256": "5ae2a5b18b7d28b9b681b753ecaf93da6540920ae2af2ff3761d72222c76df01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
@@ -44271,7 +44275,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldPlacement.cs",
-      "sha256": "1377aa4980452b615b5b8ee5b0252714dbe97b8d66672e4272ff8a35ef9a2a26"
+      "sha256": "77eaa869351de4d0e86ba877d76bed15a786bd47c9bf6b3cb088adc8dc7d4326"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldTime.cs",
@@ -44547,7 +44551,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "e61732d8f2f053a248bada4621ec207d889def57c172347f9a2bcf2ccba44dd9"
+      "sha256": "d0b97e9260bba0f7c2c0c05a1cdd8405cf5b2b379f989e38ee1e82f50fbf1cc5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",
@@ -44690,6 +44694,10 @@
       "sha256": "7c353736d317c71ba5ecbe1360298f6d50d70eece83fbf3689ec839867f1ed77"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkingPreparation.cs",
+      "sha256": "1a6fd40d64ff62afdd8ad5a92b75fc0ee589ca5095d16a1e197a1f1e296a9e4b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
       "sha256": "1f4ce7f38f053ceeeab974cb1ce9275cd34a6b1d4972a80202b8613a0ef30eb6"
     },
@@ -44738,8 +44746,12 @@
       "sha256": "64ba6fea9c1b65644db6b017f4a25a30f20968ddc4f3aa66f99482d2678e3085"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.Walking.cs",
+      "sha256": "0e769e43141a031fc9216975c5d86f59823f9c661879b1150883bcd64ee2c744"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
-      "sha256": "0d0abccfceb8d34f01c0f56e147e8bcb7546e5c502224f594848ce0e34948e07"
+      "sha256": "749b1819f9599b3df4d7f2d7585ccf274b52691fc10526a116d22eb3d118cd11"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.Placement.cs",
@@ -44747,7 +44759,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.cs",
-      "sha256": "57dc1e622d75e003c5e1878ba9f4aae45f563bce4520f8dc6f90881ebf6431fe"
+      "sha256": "81f7e6386070eec0ebdf12944d88d7349a5006699547168d77522b47b57800bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Maestro.Quest.asmdef",

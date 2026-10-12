@@ -21,13 +21,9 @@ namespace Maestro.Quest.Creation
             var targets=WorldPlacementTargets(target);
             if(!CanAcquireNativeEntities(targets,out bool loading,out error))return false;
             if(loading){error="Prepare the destination ground and obstacles before placing the world";return false;}
-            foreach(var id in targets){
-                var item=Find(id);var model=item?item.GetComponent<CreatedRoomObject>():null;
-                if(Read(id)?.kind==RoomObjectKind.ImportedModel&&(!model||!model.ModelGeometryReady)){error="Wait for destination geometry to finish loading";return false;}
-            }
-            if(GetComponent<WorkspaceViewpoint>().NeedsAuthoredGround&&GroundDependencies(target.position,.2f,.025f,.025f).Count>0){
-                error="Destination ground is unavailable";return false;
-            }
+            UnityEngine.Bounds? ground=GetComponent<WorkspaceViewpoint>().NeedsAuthoredGround?
+                RoomGroundQuery.SupportEnvelope(target.position,.2f,.025f,.025f):null;
+            if(SpatialMovementReady(targets,ground,out error)!=RoomSpatialReadiness.Ready)return false;
             // Preparation only samples and validates; observation never moves bodies.
             return GetComponent<WorkspaceViewpoint>().PreparePlacement(target,out error);
         }

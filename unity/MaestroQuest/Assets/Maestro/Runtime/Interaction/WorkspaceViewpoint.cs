@@ -20,6 +20,7 @@ namespace Maestro.Quest.Interaction
         internal void Initialize(RoomEditor owner,VirtualRoomView roomView,Func<bool> headTracked)
         {
             editor=owner;view=roomView;tracked=headTracked;view.Moved+=OnMoved;
+            view.BindWalking(editor,()=>HeadReady&&!Pending);
             var saved=editor.Viewpoint;
             if(saved.active){pending=saved;recording=true;restoring=editor.RuntimeGate.Hold("Waiting for tracked view to restore your world location");}
             Tick();
@@ -44,8 +45,9 @@ namespace Maestro.Quest.Interaction
             if(view.ReadViewpoint(out var value))editor.RememberViewpoint(value);
         }
         void Update()=>Tick();
-        void OnApplicationPause(bool value){if(value)Capture();paused=value;}
-        void OnApplicationFocus(bool value){if(!value)Capture();focused=value;}
-        void OnDestroy(){if(view)view.Moved-=OnMoved;restoring?.Dispose();restoring=null;}
+        void OnApplicationPause(bool value){if(value){Capture();view?.EndWalking(editor);}paused=value;}
+        void OnApplicationFocus(bool value){if(!value){Capture();view?.EndWalking(editor);}focused=value;}
+        void OnDisable(){if(view)view.EndWalking(editor);}
+        void OnDestroy(){if(view){view.Moved-=OnMoved;view.UnbindWalking(editor);}restoring?.Dispose();restoring=null;}
     }
 }

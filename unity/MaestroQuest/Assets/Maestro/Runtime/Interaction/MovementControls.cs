@@ -85,6 +85,7 @@ namespace Maestro.Quest.Interaction
         void Authoring(string _) => Interrupt();
         public void Interrupt()
         {
+            view?.EndWalking(editor);
             userGate.Reset(); avatarGate.Reset(); Array.Clear(buttonReady,0,buttonReady.Length);
             avatar?.End(Owner); driving=false;
         }
@@ -125,6 +126,7 @@ namespace Maestro.Quest.Interaction
                 if (!view.Move(Direction(userAxis)*preferences.userSpeed*Mathf.Min(deltaTime,.05f))) Say(view.MovementError??"Your path is blocked or lacks accepted ground");
                 else Say("World walking — B/Y or palm Recall brings your book and tools back");
             }
+            else view?.EndWalking(editor);
             for (int i=0;i<4;i++)
             {
                 bool tracked=i == 0 || i == 2 ? frame.leftTracked : frame.rightTracked;

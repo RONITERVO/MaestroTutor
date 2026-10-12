@@ -7,6 +7,14 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation
 {
+    public sealed partial class RoomJournal
+    {
+        internal bool NativeCollisionMetadata(string target,out RoomObjectKind kind,out ScanSpatialPlacement anchor)
+        {
+            kind=default;anchor=null;if(!items.TryGetValue(target,out var data))return false;
+            kind=data.kind;anchor=ScanSpatialPlacement.From(data);return true;
+        }
+    }
     public sealed partial class RoomEditor
     {
         internal static string SpatialSource(RoomObjectData source)
@@ -53,6 +61,17 @@ namespace Maestro.Quest.Creation
             if(!Frame.Read(item.transform,out var position,out var rotation,out var scale))return RoomSpatialBounds.Unknown;
             source="native";var local=RoomSpatialBounds.Capture(item,data);
             return anchor?.Project(this,local)??local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale));
+        }
+        internal RoomSpatialExtent ReadCollisionBounds(string target)
+        {
+            // Dormant extents already use the revision-aware spatial cache. A
+            // missing native object still needs the conservative authored path.
+            var item=Find(target);
+            if(dormantNative.ContainsKey(target)||!item)return ReadSpatialBounds(target,out _).Collision;
+            if(journal==null||!journal.NativeCollisionMetadata(target,out var kind,out var anchor)||
+                !Frame.Read(item.transform,out var position,out var rotation,out var scale))return default;
+            var local=new RoomSpatialBounds{Collision=RoomSpatialBounds.CaptureCollision(item,kind),VisualLayers=-1};
+            return (anchor?.Project(this,local)??local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale))).Collision;
         }
         internal JObject ObserveSpatialBounds(string target)
         {

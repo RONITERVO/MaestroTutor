@@ -8256,3 +8256,56 @@ The full native-room journey and original two-page book journey also pass throug
 real native transport with scripted provider responses. Both client and Editor
 processes exit successfully. No paid provider, headset, signing, deployment or
 Meta operation was used for this change.
+
+
+### Continuous walking retains its ground and corridor — 2026-10-12
+
+The existing world-walking control now acquires native ground and collision
+candidates before each displacement. It uses the same spatial dependency query,
+native preparation lane and residency ownership as shared world relocation.
+A moving corridor covers the full body, every possible vertical substep, raised
+clearance sweeps and support footprint. Unknown collision bounds remain
+conservative dependencies. Known distant geometry stays dormant; area and
+physical-connection closures still govern the actual activation unit.
+
+Loading never queues movement. A later frame re-evaluates the current direction,
+tracked foot and height; only the existing exact accepted-ground and capsule
+queries can move the authored world. Pending upper ground cannot cause a drop
+onto a lower resident surface. Native instances, including imported geometry,
+must be active and ready before they prove clearance. The same readiness check
+also strengthens explicit relocation.
+
+A held input retains the currently needed entities through loading and use.
+Changed dependency sets acquire their replacement interest before releasing the
+old one. Neutral input, manipulation, focus/tracking loss, recovery, world
+placement, invalid movement and workspace retirement cancel that interest.
+A failed or timed-out preparation requires release of the movement stick before
+retrying. Old workspace owners cannot cancel a new workspace's demand. There is
+no saved motion queue, extra world-state copy or new storage migration.
+
+Continuous dependency discovery uses current collision metadata without copying
+large recipes/animation data or traversing visual renderer/skin bounds. Dormant
+objects still use the existing revision-aware spatial cache, and absent or
+unknown geometry never becomes proof of empty space. This removes avoidable
+work; it is not a measured headset performance result.
+
+This increment covers user-controlled walking and explicit relocation. NPC route
+preparation, water-route residency, swept dynamic-body admission, audibility and
+indirect observation still require matching regional contracts. The existing
+whole-world physics gate, 64-object/25-metre limits and disabled automatic
+unloading remain. Per-object real-room collision policies stay independent of
+world presentation. Device/provider/deployment holds remain in force.
+
+Verification: the focused desktop run passes 42 cases. The full run passes
+1,149 EditMode and 1,312 PlayMode cases, with three optional private-asset cases
+skipped. Ten new cases cover upper/lower floors, dormant walls, neutral input,
+inactive geometry, raised corridor dependencies, failed imports, timeout, focus
+loss, invalid input and workspace unbinding. Initial fixture failures and their
+corrections are retained in private evidence.
+
+All 2,894 web/shared tests, lint, production build, generated source contracts,
+core boundaries and integration-driver types pass. Both the full native-room
+journey and original two-page book journey pass using real native transport and
+scripted provider replies; client and Editor exits are verified. All 928 native
+source files match the inputs captured for this run. No headset, paid provider,
+signing, installation, deployment or Meta operation was used.

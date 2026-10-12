@@ -29,7 +29,7 @@ namespace Maestro.Quest.Interaction
         public void Initialize(Transform virtualContent,Transform physicalOrigin,Camera camera,ScannedRoom scanned,RoomPhysicsWorld world)
         { content=virtualContent;entryPosition=content.position;entryRotation=content.rotation;trackingOrigin=physicalOrigin;motion=new RoomWorldMotion(content,world);viewer=camera;scan=scanned;physics=world;
             passthrough=viewer.GetComponent<ARCameraManager>();world?.GetComponent<RoomNavigation>()?.SetVirtualFrame(content); }
-        internal bool ResetWorkspaceFrame(out string error)=>motion.SetPose(entryPosition,entryRotation,out error);
+        internal bool ResetWorkspaceFrame(out string error){EndWalking();return motion.SetPose(entryPosition,entryRotation,out error);}
         bool PhysicalView(out Vector3 foot,out float heading)
         {
             foot=default;heading=0;
@@ -80,7 +80,7 @@ namespace Maestro.Quest.Interaction
             var rotation=Quaternion.AngleAxis(heading-value.yaw,Vector3.up);
             return motion.PreparePose(foot-rotation*value.position,rotation,out error);
         }
-        internal void ApplyPreparedViewpoint()=>motion.ApplyPreparedPose();
+        internal void ApplyPreparedViewpoint(){EndWalking();motion.ApplyPreparedPose();}
         internal Vector3 WorldPosition=>content.position;
         internal Quaternion WorldRotation=>content.rotation;
         public bool Enter() => SetPresentation(1,false);
@@ -95,12 +95,13 @@ namespace Maestro.Quest.Interaction
         public bool Move(Vector3 delta)
         {
             MovementError=null;
-            if(!CanEnter||!float.IsFinite(delta.sqrMagnitude)||delta.sqrMagnitude>.01f)return false;
-            if(!PhysicalView(out var foot,out _)){MovementError="Movement needs a valid tracked physical view";return false;}
-            if(!RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(foot))){MovementError="Movement needs a view within supported world coordinates";return false;}
-            delta.y=0;if(delta.sqrMagnitude<.00000001f)return true;
-            Physics.SyncTransforms();ground.Capture(content);
+            if(!CanEnter||!float.IsFinite(delta.sqrMagnitude)||delta.sqrMagnitude>.01f){EndWalking();return false;}
+            if(!PhysicalView(out var foot,out _)){EndWalking();MovementError="Movement needs a valid tracked physical view";return false;}
+            if(!RoomViewpoint.ValidPosition(new RoomFrame(content).PointToRoom(foot))){EndWalking();MovementError="Movement needs a view within supported world coordinates";return false;}
+            delta.y=0;if(delta.sqrMagnitude<.00000001f){EndWalking();return true;}
             float height=Mathf.Clamp(viewer.transform.position.y-foot.y,.65f,2.2f);
+            if(!WalkingReady(foot,delta,height,out var readinessError)){MovementError=readinessError;return false;}
+            Physics.SyncTransforms();ground.Capture(content);
             int mask=(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment);
             if(!groundMotor.Travel(ground,foot,delta,.2f,height,mask,groundObstacle??=WalkingObstacle,groundPosition??=WalkingPosition,out var destination,out var error)){
                 MovementError=error;return false;
@@ -110,12 +111,12 @@ namespace Maestro.Quest.Interaction
         }
         public bool Turn(float degrees)
         {
-            MovementError=null;if(!CanEnter||(degrees!=-30&&degrees!=30))return false;
+            EndWalking();MovementError=null;if(!CanEnter||(degrees!=-30&&degrees!=30))return false;
             if(!ReadViewpoint(out _)){MovementError="Turning needs a view within supported saved-world coordinates";return false;}
             var turn=Quaternion.AngleAxis(-degrees,Vector3.up);var pivot=viewer.transform.position;
             bool moved=motion.SetPose(pivot+turn*(content.position-pivot),turn*content.rotation,out var error);MovementError=error;if(moved)Moved?.Invoke();return moved;
         }
-        void OnDisable() => Exit();
-        void OnDestroy() => Exit();
+        void OnDisable(){EndWalking();Exit();}
+        void OnDestroy(){walkingPreparation?.Dispose();Exit();}
     }
 }

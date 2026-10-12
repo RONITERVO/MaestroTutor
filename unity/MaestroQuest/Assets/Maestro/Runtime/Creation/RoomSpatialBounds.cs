@@ -73,16 +73,26 @@ namespace Maestro.Quest.Creation
             // reloaded. Cover that rest shape as well as the captured idle pose.
             if(created&&created.Model&&created.ModelGeometryReady)
                 result.Visual.Include(created.Model.LocalBounds,Matrix4x4.identity);
-            if(!item.Grab){result.Collision=default;return result;}
+            result.Collision=CaptureCollision(item,data.kind);
+            return result;
+        }
+        // Continuous movement needs current colliders, not renderers, skin
+        // bounds or a detached copy of every recipe and animation payload.
+        internal static RoomSpatialExtent CaptureCollision(RoomItem item,RoomObjectKind kind)
+        {
+            if(!item||!item.Grab)return default;
+            var created=kind==RoomObjectKind.ImportedModel?item.GetComponent<CreatedRoomObject>():null;
+            if(kind==RoomObjectKind.ImportedModel&&(!created||!created.ModelGeometryReady))return default;
+            var result=RoomSpatialExtent.Empty;var inverse=item.transform.worldToLocalMatrix;
             foreach(var collider in item.Grab.colliders){
-                if(!collider){result.Collision.Known=false;continue;}
+                if(!collider){result.Known=false;continue;}
                 if(collider.isTrigger)continue;
                 var mapping=inverse*collider.transform.localToWorldMatrix;
-                if(collider is BoxCollider box)result.Collision.Include(new Bounds(box.center,box.size),mapping);
-                else if(collider is MeshCollider mesh&&mesh.sharedMesh)result.Collision.Include(mesh.sharedMesh.bounds,mapping);
-                else if(collider is SphereCollider sphere)IncludeRound(ref result.Collision,sphere.center,sphere.radius,mapping);
-                else if(collider is CapsuleCollider capsule)IncludeRound(ref result.Collision,capsule.center,Mathf.Max(capsule.radius,capsule.height*.5f),mapping);
-                else result.Collision.Known=false;
+                if(collider is BoxCollider box)result.Include(new Bounds(box.center,box.size),mapping);
+                else if(collider is MeshCollider mesh&&mesh.sharedMesh)result.Include(mesh.sharedMesh.bounds,mapping);
+                else if(collider is SphereCollider sphere)IncludeRound(ref result,sphere.center,sphere.radius,mapping);
+                else if(collider is CapsuleCollider capsule)IncludeRound(ref result,capsule.center,Mathf.Max(capsule.radius,capsule.height*.5f),mapping);
+                else result.Known=false;
             }
             return result;
         }
