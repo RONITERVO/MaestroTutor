@@ -71,3 +71,29 @@ jobs:
           path: |
             .quest-evidence/echo-native/ci/result.json
             .quest-evidence/echo-native/ci/*.log
+
+  platform-effects:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify platform-effect ownership without devices
+        run: |
+          python -B unity/Tools/EchoProcessing/BuildEffects.py \
+            --jdk "$JAVA_HOME" --output .quest-evidence/echo-effects/ci
+      - name: Preserve platform-effect ownership evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-capture-effects
+          if-no-files-found: error
+          path: |
+            .quest-evidence/echo-effects/ci/result.json
+            .quest-evidence/echo-effects/ci/*.log

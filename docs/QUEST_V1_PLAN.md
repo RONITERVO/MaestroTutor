@@ -8125,3 +8125,32 @@ acceptance must remain distinct. Keep app/Live/STT ownership, actual PCM and all
 source references shared; do not stack two cancellers or silently replace a failed
 candidate with raw input. The app implementation, installed audio policy and broader
 world/release requirements remain unchanged. Existing device/provider holds apply.
+
+
+### Explicit platform-AEC session ownership — 2026-10-12
+
+An isolated Android alternative now uses one allocated AAudio capture session
+with an owned platform AEC, without selecting it for the app. It reuses the
+existing native input/fragment/timestamp boundary. Java checks availability,
+creation, control and enabled state, disables reported NS/AGC effects, and latches
+control/state changes across callbacks. Partial preparation failures release every
+acquired effect. Native capture stops before effects are released, rejects loss
+observed during reads and pending-fragment flush, and never falls back to raw PCM
+or silently opens another microphone. Existing unprocessed/software evaluation
+remains a separate explicit choice; stacking the two is not authorized.
+
+Seventeen scripted C++ and twenty Java ownership scenarios pass locally. The
+Android Java adapter compiles against SDK 35; the JNI/AAudio path cross-links
+ARM64/API 32 with system-only dependencies and 16 KiB alignment. No Android binary
+was executed, no headset queried, and no physical microphone or provider opened.
+The independent CI job now runs the portable ownership suite. These checks do not
+qualify platform availability, all-output echo coverage, speech quality, routing,
+focus recovery, latency or battery cost. The current diagnostic polls effect state
+frequently; runtime cost needs measurement. JNI execution and the original
+`PcmCapture` lease/sink bridge remain unverified/unconnected. No backend is selected.
+
+Keep the device/provider holds and shared-world release scope intact. Next audio
+work is the explicit backend/lease integration and device qualification when
+available, with quiet-speech and original Live/STT behavior preserved. Regional
+world lifetime, collision/navigation/water/audibility and larger-world performance
+remain independent required implementation, not deferred by green audio CI.

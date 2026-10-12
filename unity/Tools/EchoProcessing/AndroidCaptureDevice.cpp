@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-#include "CaptureInput.h"
+#include "CaptureEffects.h"
 #if defined(__ANDROID__)
 #include <aaudio/AAudio.h>
 #include <time.h>
@@ -51,7 +51,8 @@ struct Builder {
     ~Builder() { if (value) AAudioStreamBuilder_delete(value); }
 };
 }
-std::unique_ptr<CaptureDevice> OpenAndroidCapture() {
+namespace {
+std::unique_ptr<CaptureDevice> OpenCapture(CaptureEffectFactory* effects) {
     Builder builder;
     if (AAudio_createStreamBuilder(&builder.value) != AAUDIO_OK || !builder.value) return {};
     AAudioStreamBuilder_setDirection(builder.value, AAUDIO_DIRECTION_INPUT);
@@ -60,7 +61,8 @@ std::unique_ptr<CaptureDevice> OpenAndroidCapture() {
     AAudioStreamBuilder_setFormat(builder.value, AAUDIO_FORMAT_PCM_FLOAT);
     AAudioStreamBuilder_setSharingMode(builder.value, AAUDIO_SHARING_MODE_SHARED);
     AAudioStreamBuilder_setPerformanceMode(builder.value, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
-    AAudioStreamBuilder_setInputPreset(builder.value, AAUDIO_INPUT_PRESET_UNPROCESSED);
+    AAudioStreamBuilder_setInputPreset(builder.value, effects ? AAUDIO_INPUT_PRESET_VOICE_COMMUNICATION : AAUDIO_INPUT_PRESET_UNPROCESSED);
+    AAudioStreamBuilder_setSessionId(builder.value, effects ? AAUDIO_SESSION_ID_ALLOCATE : AAUDIO_SESSION_ID_NONE);
     AAudioStreamBuilder_setPrivacySensitive(builder.value, true);
     OpenStream acquired;
     if (AAudioStreamBuilder_openStream(builder.value, &acquired.value) != AAUDIO_OK || !acquired.value) return {};
@@ -74,9 +76,21 @@ std::unique_ptr<CaptureDevice> OpenAndroidCapture() {
         !AAudioStream_isPrivacySensitive(stream) ||
         AAudioStream_getBufferCapacityInFrames(stream) <= 0 ||
         AAudioStream_getBufferCapacityInFrames(stream) > 24000) return {};
+    if (effects) {
+        const int session = AAudioStream_getSessionId(stream);
+        if (session <= 0) return {};
+        auto effect = effects->Open(session);
+        return GuardCaptureEffects(std::move(owner), std::move(effect));
+    }
     return owner;
 }
 }
+std::unique_ptr<CaptureDevice> OpenAndroidCapture() { return OpenCapture(nullptr); }
+std::unique_ptr<CaptureDevice> OpenAndroidPlatformCapture(CaptureEffectFactory& effects) { return OpenCapture(&effects); }
+}
 #else
-namespace maestro { std::unique_ptr<CaptureDevice> OpenAndroidCapture() { return {}; } }
+namespace maestro {
+std::unique_ptr<CaptureDevice> OpenAndroidCapture() { return {}; }
+std::unique_ptr<CaptureDevice> OpenAndroidPlatformCapture(CaptureEffectFactory&) { return {}; }
+}
 #endif

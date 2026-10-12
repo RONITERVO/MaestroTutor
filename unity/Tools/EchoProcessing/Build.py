@@ -23,7 +23,7 @@ INPUTS = {
 APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253"
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1",
     "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
-    "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
+    "CaptureEffects.h", "CaptureEffects.cpp", "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
     "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "CaptureSession.h", "CaptureSession.cpp", "SessionProbe.cpp", "TerminationProbe.cpp", "AudioFixture.h")
 
 def digest(path):

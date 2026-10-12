@@ -21,7 +21,7 @@ capture_deps = []
 if host_machine.system() == 'android'
   capture_deps += meson.get_compiler('cpp').find_library('aaudio')
 endif
-capture_lib = static_library('maestro_capture', ['CaptureInput.cpp', 'AndroidCaptureDevice.cpp'],
+capture_lib = static_library('maestro_capture', ['CaptureInput.cpp', 'AndroidCaptureDevice.cpp', 'CaptureEffects.cpp'],
   dependencies: capture_deps, install: false)
 capture_probe = executable('maestro_capture_probe', 'CaptureProbe.cpp',
   link_with: capture_lib, dependencies: capture_deps, install: false)

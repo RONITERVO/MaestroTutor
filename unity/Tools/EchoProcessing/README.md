@@ -117,7 +117,7 @@ before conversion to the existing shared `PcmCapture` output. The original brows
 capture owner is unchanged. No permission UI, native app bridge, pause/focus
 integration, clock estimator, drift resampler or native selection is added here.
 
-The runner also executes 20 scripted capture scenarios covering ownership,
+The runner also executes 27 scripted capture scenarios covering ownership,
 asynchronous timestamps, startup/freshness deadlines, partial/empty reads, buffer
 boundaries, startup failure, rollback/gaps, overruns before and during reading,
 invalid samples, disconnects, missing timestamp support, stalled workers and
@@ -401,3 +401,67 @@ retains its `COPYING`, `AUTHORS`, `PATENTS` and embedded third-party notices;
 Abseil retains its Apache-2.0 license and the Meson overlay its `LICENSE.build`.
 Review and package the applicable complete notices before distributing a binary.
 The library includes more than Maestro's own Apache-2.0 wrapper.
+
+
+## Explicit Android platform-effect candidate
+
+`OpenAndroidPlatformCapture` is an isolated alternative to the unprocessed
+factory. It reuses `CaptureInput` and its exact PCM, timestamp, epoch, fragment
+and fault semantics. It requests a fresh AAudio effects session and the
+voice-communication preset, checks the positive returned session ID, and attaches
+one `CaptureEffect` lease before recording can start. The raw factory still
+requests no effects session. Neither is selected by the app.
+
+`PlatformCaptureEffects` uses Android's session-bound AEC. AEC must be reported
+available, successfully created, controllable and enabled. Reported NS/AGC effects
+are explicitly disabled and owned for the same session; failure to create or
+control one rejects preparation. Unavailable optional effects remain absent.
+This only describes effects exposed by those APIs; it does not prove that every
+hardware/vendor preprocessing stage is absent. Initial queried/available/attached
+and enabled masks distinguish unqueried, unavailable and acquired states.
+
+Control/enabled callbacks latch invalidation, including a transient loss followed
+by apparent recovery. Worker checks also query current control/enabled state.
+Exceptions, contradictory readback, start failure and observed loss during a
+read retire capture; affected output is cleared. No raw fallback, silent reopening
+or implicit software-AEC stage exists. Stop closes the microphone before effects.
+Callbacks after release cannot act on a newer session. The original app must
+still supply its single capture lease, permission, focus and cancellation owner.
+
+The JNI factory takes `PlatformCaptureEffects.class` resolved through the app
+class loader. It retains global references, resolves method IDs before effect
+acquisition, attaches/detaches only threads it owns and releases partial
+acquisitions. Calls and destruction must remain on the serialized capture worker
+with a live JVM; native worker attachment failure is terminal. Future packaging
+must preserve these JNI entry points through R8/ProGuard. This polling-heavy
+diagnostic has **no real-time, latency or performance acceptance**. Physical
+routing and callback/IPC cost must be measured before app integration.
+
+Run the independent ownership checks without APM dependencies or downloads:
+
+```powershell
+python -B unity/Tools/EchoProcessing/BuildEffects.py `
+  --jdk '<JDK 17+ root>' `
+  --output .quest-evidence/echo-effects/first-run
+```
+
+Supplying both `--android-jar '<SDK platforms/android-35/android.jar>'` and
+`--ndk '<NDK 27.2.12479018 root>'` also compiles the real Android Java adapter and
+cross-links the JNI/AAudio factory for ARM64/API 32 with 16 KiB alignment. It never
+runs the Android binary. Results record source, class, SDK and binary hashes.
+The CI ownership job executes the portable C++ and Java probes; Android compilation
+is separately recorded local evidence.
+
+Seventeen native scenarios cover preparation, cleanup order, effect loss at
+start/read/timestamp/flush, exact partial PCM and integration with `CaptureInput`.
+Twenty Java scenarios cover complete/partial acquisition, initial effect state,
+control/enable/availability failures, callback races, terminal invalidation and
+independent sessions. Scripted Java backends and native devices are deliberately
+not platform behavior or echo-quality proof. JNI is cross-compiled, not executed.
+
+The next acceptance steps are actual Quest capability and session diagnostics,
+complete Unity/WebView output coverage, quiet speech/barge-in, route/focus changes,
+latency, battery/performance, and parity through the original `PcmCapture` bridge.
+Do not send platform-processed capture through the software AEC candidate; backend
+selection and shared resampling/sink integration remain explicit work. Full-duplex
+release acceptance is still open.

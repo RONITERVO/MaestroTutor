@@ -161,9 +161,11 @@ Android provides a per-session [AcousticEchoCanceler](https://developer.android.
 with device availability and enabled-state queries; creation can return null.
 Its documentation also warns that the platform can enable AEC according to the
 input source. An [AAudio session](https://developer.android.com/ndk/reference/group/audio#aaudiostreambuilder_setsessionid)
-can be allocated for Java audio effects, potentially at higher latency. The current
+can be allocated for Java audio effects, potentially at higher latency. The raw
 isolated `OpenAndroidCapture` requests unprocessed input and allocates no effects
-session, so it does not evaluate that option.
+session. The explicit `OpenAndroidPlatformCapture` candidate now allocates an
+effects session and guards it with Android AEC ownership; its scripted lifecycle
+checks and Android cross-build do not evaluate actual Quest availability or sound.
 
 A platform-owned alternative could reduce custom DSP maintenance, but that is an
 architectural possibility, not a Quest capability or quality finding. Before
