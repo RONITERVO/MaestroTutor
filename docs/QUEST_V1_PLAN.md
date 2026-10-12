@@ -8051,3 +8051,28 @@ The original app lease bridge, scheduled-sink cancellation and last-word behavio
 at final shutdown still require integration and acceptance. All native audio
 candidates stay outside the app; sustained-tone quality, hardware timing, speech,
 complete audible-source coverage and the broader world/release gates stay open.
+
+### Compose native capture and graceful shutdown — 2026-10-12
+
+The candidate `CaptureSession` now owns input, processing and synchronous sink
+admission on one worker. It preserves one microphone and one sink across reads,
+nonterminal flush and graceful finish. Finish completes the accepted prefix using
+bounded real context from that same microphone, then closes input/DSP. If an older
+flush is pending, it completes first and at most one further fence covers newer
+accepted input. Immediate cancellation never drains. Sink failures, input loss,
+invalid references, clock errors and timeout close the input and cannot claim
+successful delivery; cancel during the sink callback prevents subsequent output.
+
+The decision follows 72 repeatable finite-input diagnostics: padding a stopped
+microphone produced substantial false residual echo, including when the reference
+also stopped. A near-only impulse tail is insufficient to choose an EOS policy.
+The diagnostic is recorded separately from quality gates. True finite-recording
+termination remains unsupported in this candidate; no synthetic padding or fake
+hardware timestamps were added to the microphone path.
+
+Twenty-seven composed-owner scenarios now include final-fragment preservation,
+callback cancellation/reentrancy, fault cleanup, total shutdown deadlines and exact
+PCM parity with uninterrupted near-only and trained-echo controls. The caller's
+sole app lease, permission/focus lifecycle, async WebView sink bridge and physical
+AAudio evidence remain required. Existing tone failures still block native backend
+selection. No installed build, provider, deployment or Meta state changed.

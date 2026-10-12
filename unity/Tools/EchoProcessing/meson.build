@@ -45,3 +45,15 @@ test('clock-aligned-duplex', alignment_probe, timeout: 30)
 drain_probe = executable('maestro_drain_probe', 'DrainProbe.cpp',
   link_with: [alignment_lib, echo_lib], install: false)
 test('nonterminal-duplex-drain', drain_probe, timeout: 30)
+
+# Composed input/DSP/sink lifecycle. Permission and application leases stay above it.
+session_lib = static_library('maestro_capture_session', 'CaptureSession.cpp',
+  link_with: [capture_lib, alignment_lib, echo_lib], install: false)
+session_probe = executable('maestro_session_probe', 'SessionProbe.cpp',
+  link_with: [session_lib, capture_lib, alignment_lib, echo_lib], install: false)
+test('scripted-capture-session', session_probe, timeout: 30)
+
+# Characterization only: intentionally zero-extended finite input is NOT the
+# selected graceful-shutdown path. Do not count these outcomes as quality passes.
+termination_probe = executable('maestro_termination_probe', 'TerminationProbe.cpp',
+  link_with: echo_lib, install: false)

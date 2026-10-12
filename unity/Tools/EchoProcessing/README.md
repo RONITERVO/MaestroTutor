@@ -370,6 +370,13 @@ coalescing, timeout, cancellation, resumed PCM parity, 21 backend rate/phase
 combinations and 48 final-fragment/skew combinations through the actual APM.
 The same sources cross-link for Android; execution here remains off-device.
 
+`CaptureSession` composes input, DSP and synchronous sink admission and adds
+bounded graceful shutdown using real microphone context. Its 27 scenarios include
+final fragments, cancellation inside the sink, failure cleanup and exact PCM
+parity against uninterrupted near-only and echo-containing input. Separately,
+72 zero-context termination diagnostics record why padding a stopped microphone
+is not the selected shutdown path; their outcomes are not quality passes.
+
 This is a worker contract, not the original app's integrated `PcmCapture.flush`.
 The lease bridge must serialize capture-fragment handoff, sink delivery and
 cancellation. Finite EOS, partial output and recursive-filter decay need their

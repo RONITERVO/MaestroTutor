@@ -62,8 +62,8 @@ input source position; it is not a latency-corrected output acoustic timestamp.
 
 High-pass and adaptive filter history remains alive across flush. Graceful
 **finite EOS**, fractional final output, tail cutoff and exact effective output
-sample identity need a separate policy before the app can use this for final
-shutdown. Injecting zeroes with invented hardware timestamps while a microphone
+sample identity need a separate policy for truly finite input. The composed live
+capture owner below instead finishes using actual microphone context. Injecting zeroes with invented hardware timestamps while a microphone
 is merely stalled is not that policy. Cancellation continues to discard work.
 
 ## Failure and resource bounds
@@ -96,3 +96,61 @@ cross-link the same worker, probe and DSP with the existing ARM64/API32/16 KiB
 checks; cross-compilation does not execute them on Quest. Existing broadband
 quality gates remain mandatory, and existing tonal failures remain release
 blockers. No app, human-speech or physical-headset acceptance is claimed.
+
+## Composed live capture ownership
+
+`CaptureSession` now owns `CaptureInput` and `DuplexProcessor` on one serialized
+worker. It admits processed PCM to one synchronous sink, then acknowledges that
+same frame. Its `Flush` remains nonterminal. `Finish` requests graceful shutdown:
+it hands off the existing short fragment, completes the required fence using
+**real context from the same still-open microphone**, then closes input and DSP.
+An older pending flush is completed first; if its prefix predates the shutdown
+request, exactly one additional fence covers the newer input. A one-second total
+deadline bounds both phases. There is no loop that continually moves the goal.
+
+`Close` cancels immediately without reading context or draining. This is the path
+for revoked access, focus/session invalidation or an immediate stop request.
+Graceful finish can deliver some newer real microphone samples while preserving
+the requested prefix; it must not be presented as an instantaneous privacy stop.
+A missing reference, starved device, sink refusal/exception or timeout releases
+the input and reports failure instead of pretending the final word was delivered.
+
+The sink copies the 160 PCM samples before returning. It may cancel via `Close`;
+other reentrant operations are rejected. The session rechecks cancellation before
+acknowledgment or another sink call. After successful finish, no more microphone
+reads or sink calls occur. Playback has its own owner and is not closed here.
+The original app lease/permission bridge and asynchronous JS admission still
+need integration; this worker does not acquire permissions or call a provider.
+
+Twenty-seven composed-session scenarios cover the live ownership path, final
+fragments, cancellation during sink admission, reentrancy, sink/device failures,
+failed construction/release, deadlines and clock errors. Both near-only and
+trained-echo shutdown paths must produce exactly the same PCM as an uninterrupted
+control, with only the finishing owner closing its input. The latter preserves
+actual acoustic echo after the shutdown request instead of replacing it with
+zeroes. This is still scripted acquisition, not physical microphone acceptance.
+
+## Why zero-extended finite input is not the shutdown path
+
+`maestro_termination_probe` records 72 generated cases: three capture rates,
+four cutoff phases, echo/near/double-talk, and a continued or truncated speaker
+reference. It runs the actual APM for eleven seconds before truncating the
+microphone input, then examines output after the fixed 10 ms delay plus
+0/10/20/40/100 ms. Microphone zeroes here are deliberately **not** claimed to be
+physical silence in the room. This experiment is retained as a diagnostic,
+not a set of successful quality cases or a newly relaxed quality threshold.
+
+In the local measured32 run, echo-only input followed by zeroes produced peaks
+around -13.4 dBFS with the reference continuing, and -14.1 dBFS even when the
+reference also stopped. The latter still had roughly -20.9 dBFS peak output
+beyond an additional 100 ms. Near-only output decayed much sooner. Consequently,
+a tail rule chosen only from near-only impulses could emit strong residual
+echo as if it were captured speech. Nor does processing arbitrarily many zeroes
+make this an acceptable finite-input speech path.
+
+Fresh source builds retain the diagnostic rows and summary separately from
+quality gates. A future finite-recording backend needs an explicit termination
+contract and acceptance evidence; it must not silently reuse live capture's
+clock metadata, invent a timestamp for padding, or turn this rejected experiment
+into a selected microphone path. The current composed owner needs real live
+context and fails gracefully when it is unavailable.

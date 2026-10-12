@@ -24,7 +24,7 @@ APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35f
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1",
     "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
     "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
-    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "AudioFixture.h")
+    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "CaptureSession.h", "CaptureSession.cpp", "SessionProbe.cpp", "TerminationProbe.cpp", "AudioFixture.h")
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -220,7 +220,7 @@ def main():
                 record[label + "Probe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(device_binary),
                     "androidNeeded": device_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in device_loads],
                     "deviceOpened": False}
-            for label in ("alignment", "drain"):
+            for label in ("alignment", "drain", "session", "termination"):
                 worker_binary = build / ("maestro-probe/maestro_" + label + "_probe")
                 run([readelf, "-h", "-l", "-d", "-Ws", worker_binary], "android-" + label + "-elf", 30)
                 metadata = (output / ("android-" + label + "-elf.log")).read_text()
@@ -238,7 +238,7 @@ def main():
         else:
             binary = build / "maestro-probe" / ("maestro_echo.dll" if args.platform == "windows" else "libmaestro_echo.so")
             executable = build / "maestro-probe" / ("maestro_echo_probe.exe" if args.platform == "windows" else "maestro_echo_probe")
-            for label, expected_cases in (("capture", 27), ("playback", 22), ("alignment", 31), ("drain", 20)):
+            for label, expected_cases in (("capture", 27), ("playback", 22), ("alignment", 31), ("drain", 20), ("session", 27)):
                 device_executable = build / ("maestro-probe/maestro_" + label + "_probe.exe")
                 run([device_executable], label + "-probe", 30)
                 device_summary = json.loads((output / (label + "-probe.log")).read_text().splitlines()[-1])
@@ -264,6 +264,15 @@ def main():
                 save()
                 if suffix == "Quality" and alignment_code != 0:
                     raise RuntimeError("Clock-aligned broadband regression")
+            termination_executable = build / "maestro-probe/maestro_termination_probe.exe"
+            run([termination_executable], "termination-diagnostic", 60)
+            termination = json.loads((output / "termination-diagnostic.log").read_text().splitlines()[-1])
+            if (termination.get("status") != "recorded" or termination.get("terminationCases") != 72 or
+                termination.get("scope") != "finite-input-zero-context-diagnostic" or
+                termination.get("physicalAudio") is not False or termination.get("deviceOpened") is not False):
+                raise RuntimeError("Incomplete finite-input diagnostic")
+            record["terminationDiagnostic"] = termination
+            save()
             run([executable], "probe", 90)
             lines = (output / "probe.log").read_text().splitlines()
             summary = json.loads(lines[-1])
