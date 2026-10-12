@@ -4,13 +4,20 @@
 #include <stdexcept>
 namespace maestro {
 namespace {
+std::unique_ptr<CaptureDevice> SoftwareInput(std::unique_ptr<CaptureDevice> input){
+    if(input&&input->HasPlatformEcho()){
+        input->Close();
+        throw std::invalid_argument("Platform echo input cannot enter the software AEC session");
+    }
+    return input;
+}
 bool Same(const DuplexFlush& a,const DuplexFlush& b){
     return a.request&&a.owner==b.owner&&a.epoch==b.epoch&&a.request==b.request&&a.input_samples==b.input_samples;
 }
 }
 CaptureSession::CaptureSession(std::unique_ptr<CaptureDevice> input,uint64_t epoch,
     MonotonicClock clock,void* clock_context,CaptureSink sink,void* sink_context):
-    input_(std::move(input),epoch),processor_(epoch,clock,clock_context),
+    input_(SoftwareInput(std::move(input)),epoch),processor_(epoch,clock,clock_context),
     clock_(clock),clock_context_(clock_context),sink_(sink),sink_context_(sink_context){
     if(!sink_)throw std::invalid_argument("Capture sink required");
 }

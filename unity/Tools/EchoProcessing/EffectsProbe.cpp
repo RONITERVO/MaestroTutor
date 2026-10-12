@@ -57,7 +57,7 @@ struct Fixture {
 };
 }
 int main() { try {
-    {Fixture f; auto device = f.Open(); Check(device != nullptr && f.s->starts == 0, "prepare never records");
+    {Fixture f; auto device = f.Open(); Check(device != nullptr && f.s->starts == 0 && device->HasPlatformEcho(), "prepare declares platform processing without recording");
     Check(device->Start() && !device->Start(), "start once"); device->Close(); device->Close(); device.reset(); f.Closed();} Done("prepare-start-close");
     {Fixture f; f.s->healthy = false; Check(!f.Open(), "reject disabled or uncontrolled AEC"); f.Closed();} Done("unhealthy-acquisition");
     {Fixture f; Check(!GuardCaptureEffects(std::make_unique<Device>(f.s), {}), "null effect is not raw fallback"); Check(f.s->device_closed, "close input");} Done("missing-effect");

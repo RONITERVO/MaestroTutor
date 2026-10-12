@@ -8137,7 +8137,9 @@ control/state changes across callbacks. Partial preparation failures release eve
 acquired effect. Native capture stops before effects are released, rejects loss
 observed during reads and pending-fragment flush, and never falls back to raw PCM
 or silently opens another microphone. Existing unprocessed/software evaluation
-remains a separate explicit choice; stacking the two is not authorized.
+remains a separate explicit choice. Guarded input declares its processing owner,
+and the software `CaptureSession` rejects platform input before recording or
+constructing a second AEC; its added test raises composed-session coverage to 28.
 
 Seventeen scripted C++ and twenty Java ownership scenarios pass locally. The
 Android Java adapter compiles against SDK 35; the JNI/AAudio path cross-links

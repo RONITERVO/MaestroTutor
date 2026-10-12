@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 #include "CaptureSession.h"
+#include "CaptureEffects.h"
 #include "AudioFixture.h"
 #include <algorithm>
 #include <cmath>
@@ -169,7 +170,27 @@ void FinalFragments(){
     }
     Done("last-accepted-fragment-survives-finish");
 }
+void RejectPlatformEcho(){
+    auto device=std::make_shared<DeviceState>();
+    struct EffectState {int closes=0;bool input_first=false;};
+    auto effect=std::make_shared<EffectState>();
+    struct OwnedEffect final:CaptureEffect {
+        std::shared_ptr<DeviceState> device;std::shared_ptr<EffectState> state;
+        OwnedEffect(std::shared_ptr<DeviceState> d,std::shared_ptr<EffectState> s):device(d),state(s){}
+        ~OwnedEffect()override{Close();}
+        bool Healthy()override{return state->closes==0;}
+        void Close()override{if(!state->closes){++state->closes;state->input_first=device->closes==1;}}
+    };
+    auto guarded=GuardCaptureEffects(std::make_unique<Device>(device),std::make_unique<OwnedEffect>(device,effect));
+    Check(guarded&&guarded->HasPlatformEcho(),"platform processing declared");
+    bool rejected=false;
+    try{CaptureSession bad(std::move(guarded),17,DeviceState::Clock,device.get(),Fixture::Sink,nullptr);}
+    catch(const std::invalid_argument&){rejected=true;}
+    Check(rejected&&device->starts==0&&device->reads==0,"reject double AEC before recording");
+    Check(device->closes==1&&effect->closes==1&&effect->input_first,"rejected input releases in order");
+    Done("platform-echo-cannot-enter-software-aec");
 }
-int main(){try{Contracts();AdditionalContracts();Parity();FinalFragments();EchoContextParity();Check(cases==27,"complete session scenarios");
+}
+int main(){try{RejectPlatformEcho();Contracts();AdditionalContracts();Parity();FinalFragments();EchoContextParity();Check(cases==28,"complete session scenarios");
     std::printf("{\"status\":\"passed\",\"sessionCases\":%d,\"assertions\":%d,\"deviceOpened\":false,\"physicalAudio\":false}\n",cases,checks);return 0;
 }catch(const std::exception& e){std::fprintf(stderr,"FAILED: %s\n",e.what());return 1;}}

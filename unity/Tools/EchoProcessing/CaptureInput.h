@@ -20,6 +20,9 @@ enum class CaptureFault { None, Device, Clock, Gap, Samples, Overflow, Timeout }
 class CaptureDevice {
 public:
     virtual ~CaptureDevice() = default;
+    // Declared processing ownership, not proof that hardware is otherwise raw.
+    // A software-AEC session must reject platform-controlled input.
+    virtual bool HasPlatformEcho() const noexcept { return false; }
     virtual bool Start() = 0;
     virtual int Ready() = 0; // 1 started, 0 starting, negative disconnected/error.
     virtual int Read(float* samples, int capacity) = 0; // Nonblocking, actual count.

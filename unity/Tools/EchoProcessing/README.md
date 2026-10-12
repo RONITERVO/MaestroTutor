@@ -382,7 +382,7 @@ combinations and 48 final-fragment/skew combinations through the actual APM.
 The same sources cross-link for Android; execution here remains off-device.
 
 `CaptureSession` composes input, DSP and synchronous sink admission and adds
-bounded graceful shutdown using real microphone context. Its 27 scenarios include
+bounded graceful shutdown using real microphone context. Its 28 scenarios include
 final fragments, cancellation inside the sink, failure cleanup and exact PCM
 parity against uninterrupted near-only and echo-containing input. Separately,
 72 zero-context termination diagnostics record why padding a stopped microphone
@@ -462,6 +462,8 @@ not platform behavior or echo-quality proof. JNI is cross-compiled, not executed
 The next acceptance steps are actual Quest capability and session diagnostics,
 complete Unity/WebView output coverage, quiet speech/barge-in, route/focus changes,
 latency, battery/performance, and parity through the original `PcmCapture` bridge.
-Do not send platform-processed capture through the software AEC candidate; backend
+The guarded input declares platform processing; `CaptureSession` rejects it
+before constructing software AEC or starting capture. A dedicated composed-session
+case verifies this and ordered cleanup. Backend
 selection and shared resampling/sink integration remain explicit work. Full-duplex
 release acceptance is still open.

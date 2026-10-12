@@ -16,6 +16,7 @@ public:
     GuardedCapture(std::unique_ptr<CaptureDevice> device, std::unique_ptr<CaptureEffect> effect)
         : device_(std::move(device)), effect_(std::move(effect)) {}
     ~GuardedCapture() override { Close(); }
+    bool HasPlatformEcho() const noexcept override { return true; }
     bool Start() override {
         if (started_ || !Check()) return false;
         started_ = true;
