@@ -8076,3 +8076,27 @@ PCM parity with uninterrupted near-only and trained-echo controls. The caller's
 sole app lease, permission/focus lifecycle, async WebView sink bridge and physical
 AAudio evidence remain required. Existing tone failures still block native backend
 selection. No installed build, provider, deployment or Meta state changed.
+
+
+### Reject echo improvements that suppress overlapping input — 2026-10-12
+
+The private APM control removing both narrow-tone adaptation guards passed the
+previous complete generated/synthesized suite, including the seven tone failures.
+Wider qualification nevertheless rejects it: overlapping generated voiced signals
+fall below the existing preservation gates even when echo reduction improves.
+All 27 new stress cases fail that control, compared with 24 on unmodified measured32.
+This does not establish human intelligibility or isolate the internal cause; it
+establishes that passing the earlier fixtures was insufficient for selection.
+
+The shared evaluator now retains all 27 cases and 72 early burst windows, covering
+quiet input, frequency overlap, trained/cold tones, changing reflections and clock
+skew. Every profile records these outcomes in its CI quality total. The same echo,
+near-signal, timing and recovery thresholds remain. The private upstream change is
+not a supported profile, packaged dependency or application behavior. See the
+[qualification decision](../unity/Tools/EchoProcessing/TONAL_DIAGNOSIS.md).
+
+Next work must preserve both sides of simultaneous playback/capture; do not solve
+these failures by silently gating the learner or disabling authored audio. Native
+backend selection, actual speech/Quest timing, app lease integration and complete
+reference coverage remain open. All broader world/release requirements and existing
+device/provider/release holds remain in force.

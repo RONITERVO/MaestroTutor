@@ -99,7 +99,26 @@ float Wave(double sample,bool right=false){
     for(int j=0;j<8;++j)sum+=std::sin(2*pi*(frequencies[j]*t+.11*std::sin((j+1.0)*t+shift))+j*.61+shift);
     return static_cast<float>(.055*(.65+.35*std::sin(2*pi*2.7*t+shift))*sum);
 }
-float Near(double seconds){return static_cast<float>(.16*(.75+.25*std::sin(17*seconds))*(std::sin(2*pi*211*seconds)+.3*std::sin(2*pi*422*seconds)+.15*std::sin(2*pi*844*seconds)));}
+enum class NearSignal { Original, Overlapping, QuietOverlapping, BurstyOverlapping };
+const char* Name(NearSignal signal){
+    switch(signal){case NearSignal::Original:return "original";case NearSignal::Overlapping:return "overlapping-voiced";
+        case NearSignal::QuietOverlapping:return "quiet-overlapping-voiced";case NearSignal::BurstyOverlapping:return "bursty-overlapping-voiced";}
+    throw std::runtime_error("Unknown near signal");
+}
+float Near(double seconds,NearSignal signal){
+    if(signal==NearSignal::Original)return static_cast<float>(.16*(.75+.25*std::sin(17*seconds))*(std::sin(2*pi*211*seconds)+.3*std::sin(2*pi*422*seconds)+.15*std::sin(2*pi*844*seconds)));
+    // This fundamental overlaps one render tone, with independent pitch modulation
+    // and non-overlapping harmonics. It is not a copy of the reference or speech.
+    const double phase=2*pi*(173*seconds+.8*std::sin(2.3*seconds));
+    const double wave=.6*std::sin(phase)+.28*std::sin(2*phase)+.15*std::sin(4*phase)+.08*std::sin(7*phase);
+    const double amplitude=signal==NearSignal::QuietOverlapping?.016:signal==NearSignal::BurstyOverlapping?.04:.16;
+    double envelope=.75+.25*std::sin(17*seconds);
+    if(signal==NearSignal::BurstyOverlapping){
+        const double offset=seconds-std::floor(seconds);
+        envelope=seconds>=6&&offset<.28?std::min(offset/.01,1.0):0;
+    }
+    return static_cast<float>(amplitude*envelope*wave);
+}
 struct Broadband {
     std::vector<float> left,right;
     Broadband():left(18*48000+4096),right(left.size()){
@@ -118,14 +137,15 @@ struct Broadband {
         return static_cast<float>(v[i]*(1-fraction)+v[i+1]*fraction);
     }
 };
-struct Quality { double reduction=0,correlation=0,gain=0,absolute_gain=0,max_delay_error_ms=0;uint64_t clipped=0; };
+struct Quality { double reduction=0,correlation=0,gain=0,absolute_gain=0,max_delay_error_ms=0;
+    double onset_gain=1,onset_correlation=1,onset_baseline_gain=1;int onset_windows=0;uint64_t clipped=0; };
 enum class Pattern { Broadband, Tonal, WarmTonal, WarmTonalPathChange };
 const char* Name(Pattern pattern){
     switch(pattern){case Pattern::Broadband:return "broadband";case Pattern::Tonal:return "cold-tone";
         case Pattern::WarmTonal:return "tone-after-broadband";case Pattern::WarmTonalPathChange:return "tone-after-broadband-path-change";}
     throw std::runtime_error("Unknown signal pattern");
 }
-Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pattern){
+Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pattern,NearSignal signal=NearSignal::Original){
     Broadband broadband;auto sound=[&](double position,bool right=false){
         // Four seconds of broadband history can train the filter before music.
         // Cold-start tones remain an independent requirement, never replaced.
@@ -142,7 +162,7 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
     Time time;DuplexProcessor echo(31,Time::Get,&time),both(31,Time::Get,&time),near(31,Time::Get,&time);
     std::array<float,480> mic_echo{},mic_both{},mic_near{};std::array<float,960> ref{},silence{};
     std::array<int16_t,160> out{};DuplexFrame result;
-    std::vector<double> cancelled,combined,baseline,expected_echo,expected_near;
+    std::vector<double> cancelled,combined,baseline,expected_echo,expected_near,sample_times;
     uint64_t input=0;Quality q;
     for(int frame=0;frame<frames;++frame){
         const double wall=.1+frame*480/rr;time.now=1000000000+static_cast<int64_t>(std::llround(wall*1e9));
@@ -156,7 +176,7 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
         while(input*480<wanted){
             for(int i=0;i<480;++i){const double t=(input*480+i)/cr;
                 const float e=acoustic_echo(t);
-                mic_echo[i]=e;mic_near[i]=Near(t);mic_both[i]=e+mic_near[i];}
+                mic_echo[i]=e;mic_near[i]=Near(t,signal);mic_both[i]=e+mic_near[i];}
             CaptureFrame cf{31,input,static_cast<int64_t>(input*480),cs,time.now,time.now,480};
             Check(echo.Capture(mic_echo.data(),480,cf)==DuplexStatus::Accepted,"quality echo capture");
             Check(both.Capture(mic_both.data(),480,cf)==DuplexStatus::Accepted,"quality mixed capture");
@@ -171,7 +191,7 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
         const auto metadata=result;q.clipped=metadata.clipped_samples;
         Check(echo.AcknowledgeDelivery(result)==DuplexStatus::Accepted,"echo delivered");
         for(int i=0;i<160;++i){cancelled.push_back(out[i]/32768.0);const double t=(metadata.capture_first.position+metadata.capture_first.fraction+i*3*metadata.capture_per_render)/cr;
-            expected_echo.push_back(acoustic_echo(t));expected_near.push_back(Near(t));}
+            expected_echo.push_back(acoustic_echo(t));expected_near.push_back(Near(t,signal));sample_times.push_back(t);}
         const double true_delay=(.08+frame*480/rr-(metadata.capture_first.position+metadata.capture_first.fraction)/cr)*1000;
         q.max_delay_error_ms=std::max(q.max_delay_error_ms,std::abs(metadata.delay.milliseconds-true_delay));
         Check(both.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned double talk");for(auto x:out)combined.push_back(x/32768.0);q.clipped+=result.clipped_samples;
@@ -181,14 +201,50 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
     }
     const int first=(pattern==Pattern::WarmTonalPathChange?11:8)*16000,last=17*16000;double err=0,original=0,bb=0,raw=0,cross=0,cc=0;
     for(int i=first;i<last;++i){err+=cancelled[i]*cancelled[i];original+=expected_echo[i]*expected_echo[i];bb+=baseline[i]*baseline[i];raw+=expected_near[i]*expected_near[i];cross+=combined[i]*baseline[i];cc+=combined[i]*combined[i];}
-    q.reduction=10*std::log10(original/std::max(err,1e-30));q.correlation=cross/std::sqrt(std::max(bb*cc,1e-30));q.gain=cross/std::max(bb,1e-30);q.absolute_gain=std::sqrt(bb/std::max(raw,1e-30));return q;
+    q.reduction=10*std::log10(original/std::max(err,1e-30));q.correlation=cross/std::sqrt(std::max(bb*cc,1e-30));q.gain=cross/std::max(bb,1e-30);q.absolute_gain=std::sqrt(bb/std::max(raw,1e-30));
+    if(signal==NearSignal::BurstyOverlapping){
+        for(int second=pattern==Pattern::WarmTonalPathChange?11:8;second<17;++second){
+            // Use measured source time under skew, not nominal output indices.
+            // Evaluate 80 ms after a conservative 10 ms fixed-DSP allowance.
+            const auto begin=std::lower_bound(sample_times.begin(),sample_times.end(),second+.01)-sample_times.begin();
+            const auto end=std::lower_bound(sample_times.begin(),sample_times.end(),second+.09)-sample_times.begin();
+            Check(end>begin&&end<static_cast<decltype(end)>(sample_times.size()),"complete onset window");
+            double window_cross=0,window_baseline=0,window_combined=0,window_raw=0;
+            for(auto i=begin;i<end;++i){window_cross+=combined[i]*baseline[i];window_baseline+=baseline[i]*baseline[i];window_combined+=combined[i]*combined[i];window_raw+=expected_near[i]*expected_near[i];}
+            Check(window_baseline>0&&window_raw>0,"nonempty near onset");
+            q.onset_gain=std::min(q.onset_gain,window_cross/window_baseline);
+            q.onset_correlation=std::min(q.onset_correlation,window_cross/std::sqrt(std::max(window_baseline*window_combined,1e-30)));
+            q.onset_baseline_gain=std::min(q.onset_baseline_gain,std::sqrt(window_baseline/window_raw));
+            ++q.onset_windows;
+        }
+    }
+    return q;
+}
+bool Pass(const Quality& q){
+    return q.reduction>=15&&q.correlation>=.65&&q.gain>=.45&&q.gain<=1.5&&q.absolute_gain>=.45&&q.absolute_gain<=1.5&&q.max_delay_error_ms<=2&&q.clipped==0;
+}
+int OverlappingSpeechCases(){
+    const double settings[][3]={{0,0,0},{900,-900,20},{-900,900,20}};
+    int failures=0,total=0,onsets=0;
+    for(auto signal:{NearSignal::Overlapping,NearSignal::QuietOverlapping,NearSignal::BurstyOverlapping})
+        for(auto pattern:{Pattern::Tonal,Pattern::WarmTonal,Pattern::WarmTonalPathChange})for(const auto& c:settings){
+            const auto q=AudioCase(c[0],c[1],static_cast<int>(c[2]),pattern,signal);
+            const int expected_onsets=signal==NearSignal::BurstyOverlapping?(pattern==Pattern::WarmTonalPathChange?6:9):0;
+            Check(q.onset_windows==expected_onsets,"complete overlap onset coverage");onsets+=q.onset_windows;
+            const bool pass=Pass(q)&&q.onset_gain>=.45&&q.onset_correlation>=.65&&q.onset_baseline_gain>=.45;
+            ++total;if(!pass)++failures;
+            std::printf("{\"nearSignal\":\"%s\",\"pattern\":\"%s\",\"capturePpm\":%.0f,\"renderPpm\":%.0f,\"timestampJitterUs\":%.0f,\"echoReductionDb\":%.6f,\"nearCorrelation\":%.6f,\"nearGain\":%.6f,\"baselineGain\":%.6f,\"maxDelayErrorMs\":%.6f,\"onsetGain\":%.6f,\"onsetCorrelation\":%.6f,\"onsetBaselineGain\":%.6f,\"onsetWindows\":%d,\"clipped\":%llu,\"status\":\"%s\"}\n",Name(signal),Name(pattern),c[0],c[1],c[2],q.reduction,q.correlation,q.gain,q.absolute_gain,q.max_delay_error_ms,q.onset_gain,q.onset_correlation,q.onset_baseline_gain,q.onset_windows,static_cast<unsigned long long>(q.clipped),pass?"passed":"failed");
+        }
+    Check(total==27&&onsets==72,"complete overlapping voiced-signal matrix");
+    std::printf("{\"status\":\"%s\",\"scope\":\"clock-aligned-overlapping-speech\",\"qualityCases\":27,\"onsetWindows\":72,\"failures\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",failures?"failed":"passed",failures);
+    return failures?1:0;
 }
 int QualityCases(Pattern pattern){
     const double settings[][3]={{0,0,0},{900,-900,20},{-900,900,20}};
     int failures=0;
     std::printf("{\"pattern\":\"%s\",\"measurementStartSeconds\":%d,\"measurementEndSeconds\":17}\n",Name(pattern),pattern==Pattern::WarmTonalPathChange?11:8);
     for(const auto& s:settings){const auto q=AudioCase(s[0],s[1],static_cast<int>(s[2]),pattern);
-        const bool pass=q.reduction>=15&&q.correlation>=.65&&q.gain>=.45&&q.gain<=1.5&&q.absolute_gain>=.45&&q.absolute_gain<=1.5&&q.max_delay_error_ms<=2&&q.clipped==0;
+        const bool pass=Pass(q);
         if(!pass)++failures;
         std::printf("{\"capturePpm\":%.0f,\"renderPpm\":%.0f,\"timestampJitterUs\":%.0f,\"echoReductionDb\":%.6f,\"nearCorrelation\":%.6f,\"nearGain\":%.6f,\"baselineGain\":%.6f,\"maxDelayErrorMs\":%.6f,\"clipped\":%llu,\"status\":\"%s\"}\n",s[0],s[1],s[2],q.reduction,q.correlation,q.gain,q.absolute_gain,q.max_delay_error_ms,static_cast<unsigned long long>(q.clipped),pass?"passed":"failed");
     }
@@ -201,6 +257,7 @@ int main(int argc,char** argv){try{
     if(argc==2&&std::strcmp(argv[1],"--tonal")==0){return QualityCases(Pattern::Tonal);}
     if(argc==2&&std::strcmp(argv[1],"--warm-tonal")==0){return QualityCases(Pattern::WarmTonal);}
     if(argc==2&&std::strcmp(argv[1],"--warm-tonal-path-change")==0){return QualityCases(Pattern::WarmTonalPathChange);}
+    if(argc==2&&std::strcmp(argv[1],"--overlapping-speech")==0){return OverlappingSpeechCases();}
     Check(argc==1,"known command");ClockCases();OwnershipCases();FragmentParity();Check(cases==31,"complete clock/duplex contracts");
     std::printf("{\"status\":\"passed\",\"alignmentCases\":%d,\"assertions\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",cases,checks);return 0;
 }catch(const std::exception& e){std::fprintf(stderr,"FAILED: %s\n",e.what());return 1;}}

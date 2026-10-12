@@ -330,7 +330,18 @@ before music is therefore not an accepted workaround. Capture clipping reports
 the final cumulative counters of all three processors, without counting each
 historical sample repeatedly.
 
-All twelve aligned quality outcomes enter receipts and `openQualityFailures`.
+`--overlapping-speech` adds 27 generated voiced-signal cases: normal and quiet
+continuous signals plus short bursts, each under cold tones, tones after training,
+and changed reflections, with the same three clock configurations. The fundamental
+overlaps one render tone but has independent pitch modulation and harmonics; it
+is not a copied reference or a recording of human speech. Bursts additionally
+check 72 early 80 ms windows after a 10 ms fixed-delay allowance, located by
+measured source time under skew. The original echo/correlation/gain/timing gates
+remain, with minimum onset correlation .65 and gain/baseline gain .45. These cases
+prevent an echo-only improvement from concealing suppression of near-side content.
+They are stress evidence, not intelligibility or actual human-speech acceptance.
+
+All 39 aligned quality outcomes enter receipts and `openQualityFailures`.
 CI hard-gates the established broadband baseline in **every** profile and records
 all tonal/transition failures as warnings and release blockers. No thresholds
 have been reduced. See [the diagnostic decision](TONAL_DIAGNOSIS.md) for the

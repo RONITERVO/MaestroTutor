@@ -30,12 +30,43 @@ This establishes the guards' contribution in these fixtures. It does not establi
 that removing them preserves filter stability or speech in general. In particular,
 repeated/correlated tones do not identify every possible acoustic path. Do not
 replace that uncertainty with a blanket switch or a custom upstream fork based
-on six passing cases.
+on six passing cases. Wider qualification below now demonstrates an unacceptable
+near-signal regression in that control.
 
 The committed runner now retains additional tones-after-broadband and tonal
 path-change cases. The unmodified measured profile fails one and three cases,
 respectively. A four-second training period does not make the later tone or moving
 reflection case reliable. These are additional open failures, not weaker gates.
+
+## Wider qualification rejects the unguarded control
+
+At source checkpoint `1808026a`, the private control disabling both guards passed
+all 127 native lifecycle scenarios, all 40 standalone generated quality cases,
+six local SAPI English/Spanish speech cases, and all twelve aligned broadband/
+tonal quality cases. This stronger result still did not justify selecting it.
+
+A further 27-case generated voiced-signal matrix overlaps the near-side fundamental
+with one render tone, with independent pitch modulation and harmonics. It includes
+normal, quiet (one tenth amplitude) and short burst signals, cold/warm/changed-path
+tones, and nominal/opposed device clocks. The burst cases include early-window
+checks so long-window scores cannot hide attacks being removed. These are generated
+stress inputs, not human speech or a claim about word intelligibility.
+
+The unmodified measured32 control fails 24/27 cases. Disabling both guards fails
+27/27 despite 30.8–44.5 dB echo reduction: whole-window projected near gain falls
+to about .30–.44, below the unchanged .45 floor. Near-only baseline energy gain
+remains about .96. The failing .47–.67 correlations and deficient burst onsets
+reinforce that an echo-only score cannot establish preservation of desired input.
+The experiment does not isolate adaptation from suppression as the mechanism of
+that loss. It rejects the blanket guard removal, not every possible APM solution.
+
+The committed `--overlapping-speech` mode retains this matrix using explicit signal
+parameters and source-time onset windows. `Build.py` requires all 27 outcomes and
+72 onset windows, includes failures in its total, and publishes them in CI for
+every profile. Existing passing requirements and thresholds remain unchanged.
+The private control is not added as a supported profile or shipped upstream patch.
+Its commands, source/binary hashes, restored-source checks and outputs are retained
+in `.quest-evidence/echo-qualification`. No microphone, headset or provider was used.
 
 ## Alternative backend screening
 

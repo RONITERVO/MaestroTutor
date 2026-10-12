@@ -248,18 +248,21 @@ def main():
                     raise RuntimeError("Incomplete scripted " + label + " result")
                 record[label + "Probe"] = device_summary
             alignment_executable = build / "maestro-probe/maestro_alignment_probe.exe"
-            for suffix, option, scope in (("Quality", "--quality", "clock-aligned-quality"), ("Tonal", "--tonal", "clock-aligned-tonal"),
-                                          ("WarmTonal", "--warm-tonal", "clock-aligned-warm-tonal"),
-                                          ("WarmTonalPathChange", "--warm-tonal-path-change", "clock-aligned-warm-tonal-path-change")):
+            for suffix, option, scope, count in (("Quality", "--quality", "clock-aligned-quality", 3), ("Tonal", "--tonal", "clock-aligned-tonal", 3),
+                                          ("WarmTonal", "--warm-tonal", "clock-aligned-warm-tonal", 3),
+                                          ("WarmTonalPathChange", "--warm-tonal-path-change", "clock-aligned-warm-tonal-path-change", 3),
+                                          ("OverlappingSpeech", "--overlapping-speech", "clock-aligned-overlapping-speech", 27)):
                 label = "aligned-" + suffix.lower()
                 alignment_code = run([alignment_executable, option], label, 180, required=False)
                 detail = json.loads((output / (label + ".log")).read_text().splitlines()[-1])
-                if (alignment_code not in (0, 1) or detail.get("scope") != scope or detail.get("qualityCases") != 3 or
+                if (alignment_code not in (0, 1) or detail.get("scope") != scope or detail.get("qualityCases") != count or
                     detail.get("status") != ("passed" if alignment_code == 0 else "failed") or
-                    not isinstance(detail.get("failures"), int) or not 0 <= detail["failures"] <= 3 or
+                    not isinstance(detail.get("failures"), int) or not 0 <= detail["failures"] <= count or
                     (detail["failures"] == 0) != (alignment_code == 0) or
                     detail.get("deviceOpened") is not False or detail.get("physicalAudio") is not False):
                     raise RuntimeError("Incomplete clock-aligned audio quality result")
+                if suffix == "OverlappingSpeech" and detail.get("onsetWindows") != 72:
+                    raise RuntimeError("Incomplete overlapping-signal onset coverage")
                 record["alignment" + suffix] = detail
                 save()
                 if suffix == "Quality" and alignment_code != 0:
@@ -301,7 +304,7 @@ def main():
                 run([executable, "--speech-wav", wave], "speech-" + str(index), 90)
             record["noiseStress"] = record["qualityDiagnostics"]["noise-stress"]
             record["openProcessorQualityFailures"] = sum(x["failures"] for x in record["qualityDiagnostics"].values())
-            record["openAlignedQualityFailures"] = sum(record["alignment" + name]["failures"] for name in ("Quality", "Tonal", "WarmTonal", "WarmTonalPathChange"))
+            record["openAlignedQualityFailures"] = sum(record["alignment" + name]["failures"] for name in ("Quality", "Tonal", "WarmTonal", "WarmTonalPathChange", "OverlappingSpeech"))
             record["openQualityFailures"] = record["openProcessorQualityFailures"] + record["openAlignedQualityFailures"]
             required_quality = ("path-changes", "delay-variants") if args.profile == "stock" else ("noise-stress", "onsets")
             if args.profile == "measured32":
