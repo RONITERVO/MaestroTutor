@@ -43104,11 +43104,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticResidency.cs",
-      "sha256": "80dc19a7ddd5651902d97a3a9874263fffbee676a84002d902cf9e5f9b13c639"
+      "sha256": "0ece36c274e1ec1cf275ddfa78bd332707940d907de51f98878c5a16d28f11d8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticTransfer.cs",
+      "sha256": "2725a8e330ba73ba8a42b1d439ed23a2d38453d34fd001c8a78b8558fcd3faf5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
-      "sha256": "65c5000bf84575bbdd1e4a5c406d53a2e623de36730f81b123ff8f8875b1fb6a"
+      "sha256": "1db06575b38d3e8ac2935ffe45bb12b5a0d0551eb4b7cbdf2d3e78ad00ddd142"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioOutput.cs",
@@ -44056,7 +44060,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "e560c625fb926bbf55b3a9501d114240694e12773749c2bc930063d453e5c26e"
+      "sha256": "42de46b6033ad9f4d92d672efdd99fd92392e49167cc07c9fa905f0114252e4f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
+      "sha256": "8c33f4ea4eb3b972be2618b58c451fa482ff92fcfe922df2d6057984d79a128e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",

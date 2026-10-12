@@ -67,7 +67,8 @@ namespace Maestro.Quest.Creation
         // demand still needs an automatic loading policy. Existing native ownership, audio,
         // animation, physical links and collision admission cannot be bypassed.
         // Every connected area is retired together; a peer never loses its joint.
-        internal bool RetireNativeArea(string area,out string error)
+        internal bool RetireNativeArea(string area,out string error) => RetirePreparedNativeArea(area,null,out error);
+        bool RetirePreparedNativeArea(string area,Dictionary<string,Book.RoomAcoustics.AcousticResidency> prepared,out string error)
         {
             if(!NativeTransitionAvailable(out error))return false;
             var graph=ReadRetention();var members=graph?.Members(area??"");error="The authored area is unavailable";
@@ -90,8 +91,11 @@ namespace Maestro.Quest.Creation
             try{
             // Reserve all derived inputs before changing either native identity.
             // Failure rolls back any transferred input to the still-live object.
-            if(acoustics)foreach(var entry in snapshots.Values)
-                if(!acoustics.TryPrepareResidency(entry.RetiringRoot,transform,out entry.Acoustics,out error))return false;
+            if(acoustics)foreach(var pair in snapshots){
+                if(prepared!=null){
+                    if(!prepared.TryGetValue(pair.Key,out pair.Value.Acoustics)){error="The area's prepared acoustic input is missing";return false;}
+                }else if(!acoustics.TryPrepareResidency(pair.Value.RetiringRoot,transform,out pair.Value.Acoustics,out error))return false;
+            }
             foreach(var entry in snapshots.Values)if(entry.Acoustics!=null&&!entry.Acoustics.Commit()){
                 error="The area's acoustic input changed before retirement";return false;
             }

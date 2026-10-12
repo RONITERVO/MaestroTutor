@@ -38,6 +38,9 @@ namespace Maestro.Quest.Book
         {
             internal RoomAcoustics Owner;
             internal AcousticSurface[] Surfaces;
+            internal AcousticGeometryBinding[] SourceBindings;
+            internal GameObject SourceRoot; internal Transform SourceFrame;
+            internal Matrix4x4 RootPose, FramePose;
             internal RetainedInput[] Inputs;
             internal Entry[] Entries;
             internal bool Committed, Ended, DefinitionCurrent = true;
@@ -70,17 +73,22 @@ namespace Maestro.Quest.Book
                     for(int i=0;i<Inputs.Length;i++){Owner.Register(Inputs[i]);Entries[i]=Owner.entries[Inputs[i]];}
                     Committed=true;return true;
                 }
+                if (SourceRoot && (!SourceFrame || !RootPose.Equals(SourceRoot.transform.localToWorldMatrix)
+                    || !FramePose.Equals(SourceFrame.localToWorldMatrix)
+                    || !SourceRoot.GetComponentsInChildren<AcousticSurface>(true)
+                        .Where(s => s.isActiveAndEnabled && s.Available && s.Mesh).SequenceEqual(Surfaces))) return false;
+                if (!ReferenceEquals(SourceRoot, null) && !SourceRoot) return false;
                 for (int i = 0; i < Surfaces.Length; i++)
                     if (!Surfaces[i] || !Owner.entries.TryGetValue(Surfaces[i], out var current)
-                        || !ReferenceEquals(current, Entries[i]) || current.Retired
-                        || current.Revision != Surfaces[i].Revision || !current.Pose.Equals(Surfaces[i].transform.localToWorldMatrix)) return false;
+                        || !ReferenceEquals(current, Entries[i])
+                        || !SourceBindings[i].Matches(current.GeometryKey, Surfaces[i])) return false;
                 // No SDK destroy/upload and no invalidation: the same native
                 // input remains owned while its renderer is being destroyed.
                 for (int i = 0; i < Surfaces.Length; i++)
                 { Owner.entries.Remove(Surfaces[i]); Owner.entries.Add(Inputs[i], Entries[i]); }
                 // Do not keep destroyed component wrappers (and their importer
                 // graphs) alive through the cache. Rollback resolves the live root.
-                Owner.geometryCatalog=null; Surfaces = null; Committed = true; return true;
+                Owner.geometryCatalog=null; Surfaces = null; SourceBindings = null; SourceRoot = null; SourceFrame = null; Committed = true; return true;
             }
             internal void UpdateDefinition(bool current, Matrix4x4 placement)
             {
@@ -103,7 +111,7 @@ namespace Maestro.Quest.Book
                 for (int i = 0; same && i < Inputs.Length; i++)
                 {
                     var input = Inputs[i]; var surface = surfaces[i];
-                    same = input.Current && !Entries[i].Retired && !surface.Scanned
+                    same = input.Current && Owner.entries.TryGetValue(input, out var current) && ReferenceEquals(current, Entries[i]) && !surface.Scanned
                         && surface.ReflectionBoundary == input.ReflectionBoundary
                         && ReadMesh(surface.Mesh, out var vertices, out var indices, out _)
                         && vertices.SequenceEqual(input.Vertices) && indices.SequenceEqual(input.Indices);
@@ -115,8 +123,12 @@ namespace Maestro.Quest.Book
                         // A newly enabled view may already have an empty entry.
                         // Retire it before returning this exact geometry owner.
                         Owner.Unregister(surfaces[i]); Owner.entries.Remove(Inputs[i]);
-                        var entry = Entries[i]; entry.Revision = surfaces[i].Revision;
-                        if (entry.Handle == IntPtr.Zero) entry.AttemptEpoch = -1;
+                        var entry = Entries[i]; var input = Inputs[i];
+                        // Keep a busy worker's old metadata intact. Only relabel
+                        // an actually matching native payload as the new view.
+                        if (!entry.Retired && entry.Handle != IntPtr.Zero && entry.Revision == input.Revision
+                            && entry.Pose.Equals(input.Pose)) entry.Revision = surfaces[i].Revision;
+                        if (entry.Handle == IntPtr.Zero) { entry.Revision = -1; entry.AttemptEpoch = -1; }
                         Owner.entries.Add(surfaces[i], entry); Owner.geometryCatalog=null;
                     }
                 }
@@ -130,8 +142,8 @@ namespace Maestro.Quest.Book
                     if (Committed) foreach (var input in Inputs) Owner.Unregister(input);
                     Owner.retainedSurfaces -= Inputs.Length; Owner.retainedVertices -= Vertices; Owner.retainedTriangles -= Triangles; Owner.ResidencyEpoch++;
                 }
-                foreach (var input in Inputs) { input.Ended = true; input.Vertices = null; input.Indices = null; input.Frame = null; }
-                Owner = null; Surfaces = null; Inputs = null; Entries = null;
+                foreach (var input in Inputs) { if (input == null) continue; input.Ended = true; input.Vertices = null; input.Indices = null; input.Frame = null; }
+                Owner = null; Surfaces = null; SourceBindings = null; SourceRoot = null; SourceFrame = null; Inputs = null; Entries = null;
             }
         }
         internal bool TryPrepareInputs(AcousticMeshInput[] meshes,Transform frame,Matrix4x4 placement,bool boundary,out AcousticResidency residency,out string error)
@@ -161,6 +173,7 @@ namespace Maestro.Quest.Book
             Synchronize();
             if (!opened) return false;
             var inputs = new RetainedInput[surfaces.Length]; var owned = new Entry[surfaces.Length];
+            var bindings = new AcousticGeometryBinding[surfaces.Length];
             int vertices = 0, triangles = 0;
             var placement = frame.worldToLocalMatrix * root.transform.localToWorldMatrix;
             for (int i = 0; i < surfaces.Length; i++)
@@ -172,7 +185,7 @@ namespace Maestro.Quest.Book
                     || entry.Handle == IntPtr.Zero || entry.VertexData == null || entry.IndexData == null
                     || entry.Revision != surface.Revision || entry.Boundary != surface.ReflectionBoundary
                     || !entry.Pose.Equals(surface.transform.localToWorldMatrix)) return false;
-                owned[i] = entry; vertices += entry.Vertices; triangles += entry.Triangles;
+                owned[i] = entry; bindings[i] = new AcousticGeometryBinding(entry.GeometryKey, surface); vertices += entry.Vertices; triangles += entry.Triangles;
                 inputs[i] = new RetainedInput { Frame = frame, Placement = placement, InitialPlacement = placement,
                     InitialFrame = frame.localToWorldMatrix, InitialWorld = entry.Pose,
                     Local = root.transform.worldToLocalMatrix * entry.Pose, Vertices = entry.VertexData, Indices = entry.IndexData,
@@ -182,7 +195,7 @@ namespace Maestro.Quest.Book
                 || retainedTriangles + triangles > MaximumVirtualTriangles)
             { error = "Retained acoustic geometry budget reached"; return false; }
             retainedSurfaces += inputs.Length; retainedVertices += vertices; retainedTriangles += triangles;
-            residency = new AcousticResidency { Owner = this, Surfaces = surfaces, Inputs = inputs, Entries = owned, Vertices = vertices, Triangles = triangles };
+            residency = new AcousticResidency { Owner = this, Surfaces = surfaces, SourceBindings = bindings, SourceRoot = root, SourceFrame = frame, RootPose = root.transform.localToWorldMatrix, FramePose = frame.localToWorldMatrix, Inputs = inputs, Entries = owned, Vertices = vertices, Triangles = triangles };
             error = null; return true;
         }
     }

@@ -7699,3 +7699,27 @@ Active-view retention still needs bounded CPU acquisition without an existing
 native upload. This increment does not switch the production renderer, enable
 reflections or automatic unloading, enlarge world limits, or establish Quest
 acceptance. The saved world and human/agent capability definitions are unchanged.
+
+### Bounded renderer-independent active-view transfer — 2026-10-12
+
+The internal area-retirement API now has a cooperative CPU preparation path. It
+reserves bounded acoustic memory before copying meshes, keeps the complete live
+area present until admission finishes, and revalidates saved definitions,
+placements, geometry membership and runtime holds before using the existing
+retirement transaction. Cancellation, competing requests and partial preparation
+cannot unload a newer view or discard a winning transfer's geometry. Native map
+workers retain their own older inputs until completion.
+
+This closes the active-view retention dependency on Meta's context and cached
+uploads for the asynchronous API. See [the exact scope](../unity/AUDIO.md#bounded-cpu-transfer-before-native-retirement--2026-10-12).
+Capability semantics and saved state are unchanged. Automatic unloading remains
+disabled; regional ground/collision/water/navigation, audibility and indirect
+observation admission, larger-world budgets and physical acceptance remain open.
+The renderer, production reflection gates and release artifacts are unchanged.
+
+The final complete run passes 1,140 EditMode and 1,278 PlayMode cases (eleven new),
+with three expected private-asset skips, both offline native headless/original-book
+journeys, catalog equality, normal process exits and 917 matching source/mirror
+hashes. Earlier fixture failures and the corrected clean run are retained in
+`.quest-evidence/audio-transfer`. No headset, provider, release-key, deployment
+or Meta action was performed.

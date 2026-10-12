@@ -795,3 +795,54 @@ input; a bounded CPU acquisition fallback remains necessary before a backend
 swap. The candidate renderer is not installed. Production reflections and
 automatic maps remain disabled; the unresolved native worker fault and physical
 Android/Quest/Live acceptance remain open.
+
+### Bounded CPU transfer before native retirement — 2026-10-12
+
+`RoomEditor.RetireNativeArea(area, cancellation)` now prepares acoustic inputs
+asynchronously before adopting the existing retirement transaction. It does not
+require Meta's context, admitted native handles or a previous native upload.
+Header-only mesh admission and copying share the existing preparation window
+(four units per frame or two milliseconds between indivisible units). CPU
+reservations precede payload copies and retain the existing limits: 384 virtual
+surfaces, 98,304 vertices and 49,152 triangles. This bounds batches, not the
+worst-case time of one Unity mesh read.
+
+Every live view stays available while preparation yields. Cancellation, a brief
+runtime hold, changed saved dependencies, placements, acoustic owners or surface
+membership reject the complete transfer. Earlier reservations drain if a later
+object fails. Competing preparations use the same capacity and frame budget;
+adoption revalidates the connected closure before removing any identity.
+Empty objects also retain a membership guard. There is no parallel authored
+scene or change to saved world, actions, events or facts.
+
+CPU publication preserves the exact registered geometry key independently of
+native upload metadata. A busy Meta map worker keeps its older handles until it
+returns; a transferred newer CPU definition never relabels those old inputs as
+current. Restoration can return exact geometry ownership to live views while the
+renderer is unavailable. The synchronous cached overload remains an internal
+fast path; both paths adopt the same retirement transaction.
+
+This is an internal loading prerequisite, not an enabled automatic unload policy
+or installed replacement renderer. Restore-time mesh comparison and native upload
+timing still need their own budgeting work. Production reflections and automatic
+maps remain disabled. The unresolved Meta worker crash, Android/Quest audio,
+capture/Live and performance acceptance remain open.
+
+Eleven new PlayMode cases cover unavailable-renderer retirement/restoration,
+readable payloads and exact identities, cancellation, accepted edits, runtime
+placement, new surface membership, brief holds, capacity refusal/retry, competing
+preparations, partial-area failure and an actual busy native worker. The final
+complete run passes 1,140 EditMode and 1,278 PlayMode cases, with three expected
+private-asset skips. Both native headless and original-book journeys pass with
+local scripted providers and normal client/editor/wrapper exits. All 917 C#
+source/mirror hashes match (913 app files plus four third-party inputs), and the
+native/shared catalog agrees. Its only changes are five runtime source entries.
+
+Evidence is retained in `.quest-evidence/audio-transfer`. Earlier compiler and
+fixture failures remain separate: the construction fixture first exceeded its
+existing size limit; the partial-failure fixture then assumed generated-ID order.
+The corrected fixture selects the last member of the actual closure and retains
+its assertion that earlier reservations existed and were released. The final
+full run has no failures. These are Windows native results, not Android/Quest,
+paid-provider or Store acceptance. The isolated candidate's source inputs and
+prior evaluation/build evidence are unchanged.

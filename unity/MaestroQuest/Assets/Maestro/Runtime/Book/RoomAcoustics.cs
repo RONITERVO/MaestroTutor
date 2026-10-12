@@ -240,19 +240,27 @@ namespace Maestro.Quest.Book
         }
         internal static bool ReadMesh(Mesh mesh, out float[] vertices, out int[] indices, out string issue)
         {
-            vertices = null; indices = null; issue = "Acoustic mesh is unreadable or exceeds its budget";
+            vertices = null; indices = null;
+            if (!ReadMeshCost(mesh, out _, out _, out issue)) return false;
+            var points = mesh.vertices; var triangles = mesh.triangles;
+            vertices = new float[points.Length * 3]; indices = triangles;
+            for (int i = 0; i < points.Length; i++) { vertices[i * 3] = points[i].x; vertices[i * 3 + 1] = points[i].y; vertices[i * 3 + 2] = points[i].z; }
+            return ValidateMeshData(vertices,indices,out issue);
+        }
+        // Header-only admission precedes array allocation in asynchronous retention.
+        internal static bool ReadMeshCost(Mesh mesh, out int vertices, out int triangles, out string issue)
+        {
+            vertices = triangles = 0; issue = "Acoustic mesh is unreadable or exceeds its budget";
             if (!mesh || !mesh.isReadable || mesh.vertexCount < 3 || mesh.vertexCount > MaximumMeshVertices || mesh.subMeshCount < 1 || mesh.subMeshCount > 64) return false;
             ulong count = 0;
             for (int i = 0; i < mesh.subMeshCount; i++)
             {
                 if (mesh.GetTopology(i) != MeshTopology.Triangles || mesh.GetIndexCount(i) % 3 != 0) return false;
                 count += mesh.GetIndexCount(i);
+                if (count > MaximumMeshTriangles * 3) return false;
             }
-            if (count < 3 || count > MaximumMeshTriangles * 3) return false;
-            var points = mesh.vertices; var triangles = mesh.triangles;
-            vertices = new float[points.Length * 3]; indices = triangles;
-            for (int i = 0; i < points.Length; i++) { vertices[i * 3] = points[i].x; vertices[i * 3 + 1] = points[i].y; vertices[i * 3 + 2] = points[i].z; }
-            return ValidateMeshData(vertices,indices,out issue);
+            if (count < 3) return false;
+            vertices = mesh.vertexCount; triangles = (int)(count / 3); issue = null; return true;
         }
         internal static bool ValidateMeshData(float[] vertices,int[] indices,out string issue)
         {
