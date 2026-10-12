@@ -8309,3 +8309,40 @@ journey and original two-page book journey pass using real native transport and
 scripted provider replies; client and Editor exits are verified. All 928 native
 source files match the inputs captured for this run. No headset, paid provider,
 signing, installation, deployment or Meta operation was used.
+
+
+### Liquid availability across native lifetime — 2026-10-12
+
+Finite liquids now distinguish geometric absence from unavailable native input.
+`world.medium` and `object.water.traversal.path` expose the same bounded
+`availability`, `dependencyCount` and `dependencies` fields to book controls,
+programs and the agent. Ready, pending and unavailable describe the required
+cavity placements; native collider readiness, physics admission, ownership and
+each participant's real-room collision policy remain separate requirements.
+
+Missing/inactive vessels remain candidates using their accepted cavity frame and
+full dimensions, including cavities outside the object's artwork. Current native
+poses and retained idle poses are projected through the shared world transform;
+unknown placements remain conservative. Current live rain/pouring quantities take
+precedence over an older saved fill value. Known distant and accepted-empty
+cavities are excluded. The result counts every relevant missing dependency and
+lists the first four stable identities, without copying recipes or animation data.
+
+An incomplete point query reports neither containment nor active water. A nested
+resident pool cannot substitute for an absent inner cavity. Upright swept water
+checks refuse incomplete paths without inventing a blocking-water contact or a
+water detour. Explicit ignore policy remains available for deliberate movement.
+Contact sampling suppresses false crossing/exit events and re-establishes a
+baseline after unavailable input; cached contact/force observations also recheck
+current missing-cavity coverage. Buoyancy never applies a partial outer-water
+response while relevant native input is missing. This module does not own or
+freeze rigid-body gravity; dynamic-body admission remains separate work.
+
+Reads remain passive: no loading, retry, movement, save, quantity change or
+physics start. An existing owned native request, including one queued behind
+another preparation group, reports pending and becomes ready after publication.
+No storage migration, duplicate water simulation or extra agent-only action path
+is introduced. Automatic unloading stays disabled, and the whole-world physics
+gate and existing object/distance limits remain. Regional route acquisition,
+water residency, swept dynamic-body admission and larger-world performance
+acceptance are still required before relaxing those limits.

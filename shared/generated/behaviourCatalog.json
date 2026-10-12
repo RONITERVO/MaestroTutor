@@ -37385,11 +37385,22 @@
             }
           },
           "densityKgM3": "number",
-          "reason": "text"
+          "reason": "text",
+          "availability": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": {
+              "record": {
+                "target": "text",
+                "state": "text",
+                "boundsKnown": "boolean"
+              }
+            }
+          }
         }
       },
       "label": "Liquid medium at a point",
-      "description": "Read finite live liquid at an authored world-coordinate point. Cylindrical/rectangular container geometry and the shared free surface use current pouring/rain quantities, not a second water store. target optionally selects the actor whose real-room readiness applies; empty uses global policy. found is geometric containment; active additionally requires unpaused admitted physics for both actor and medium. Nested or overlapping cavities select the smallest physical cavity, then stable object ID, never added densities. surface is projected along gravity and depth is in physical metres. Logical ml/capacity determine fill fraction; visual scale changes geometric displacement without creating contents. No terrain reservoir, fluid level displacement, route clearance, swimming or automatic mixing is implied.",
+      "description": "Read finite live liquid at an authored world-coordinate point. Cylindrical/rectangular container geometry and the shared free surface use current pouring/rain quantities, not a second water store. target optionally selects the actor whose real-room readiness applies; empty uses global policy. found is geometric containment; active additionally requires unpaused admitted physics for both actor and medium. Nested or overlapping cavities select the smallest physical cavity, then stable object ID, never added densities. surface is projected along gravity and depth is in physical metres. Logical ml/capacity determine fill fraction; visual scale changes geometric displacement without creating contents. No terrain reservoir, fluid level displacement, route clearance, swimming or automatic mixing is implied. Incomplete cavity availability forces found=false and active=false; another resident medium cannot substitute for it. availability is ready when potentially relevant liquid cavities have native placements and current contents. A dormant, inactive or missing vessel is pending while activation is queued/running, otherwise unavailable. Unknown cavity bounds remain dependencies; known distant cavities and accepted empty vessels are excluded. dependencyCount counts all missing relevant cavities; dependencies lists the first four stable IDs, not necessarily the whole set. This passive query never loads or retries an object. Native collider readiness, physics, ownership and each participant's real-room policy are separate requirements.",
       "input": {
         "type": "object",
         "properties": {
@@ -39191,11 +39202,22 @@
           "allowed": "boolean",
           "bodyId": "text",
           "depthMetres": "number",
-          "reason": "text"
+          "reason": "text",
+          "availability": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": {
+              "record": {
+                "target": "text",
+                "state": "text",
+                "boundsKnown": "boolean"
+              }
+            }
+          }
         }
       },
       "label": "Water path inspection",
-      "description": "Read-only continuous liquid check from the target's current upright walking envelope to an authored-room position. It samples current fill levels and per-actor environment admission. allowed proves only water policy, not terrain, obstacle clearance, ownership or a connected route. bodyId is the refusing vessel, or the deepest allowed vessel. No movement or physics start.",
+      "description": "Read-only continuous liquid check from the target's current upright walking envelope to an authored-room position. It samples current fill levels and per-actor environment admission. allowed proves only water policy, not terrain, obstacle clearance, ownership or a connected route. bodyId is the refusing vessel, or the deepest allowed vessel. Unavailable/pending cavities refuse traversal without inventing a blocking-water contact or detour. An explicit ignore policy bypasses the water check and reports ready with no required dependencies. No movement or physics start. availability is ready when potentially relevant liquid cavities have native placements and current contents. A dormant, inactive or missing vessel is pending while activation is queued/running, otherwise unavailable. Unknown cavity bounds remain dependencies; known distant cavities and accepted empty vessels are excluded. dependencyCount counts all missing relevant cavities; dependencies lists the first four stable IDs, not necessarily the whole set. This passive query never loads or retries an object. Native collider readiness, physics, ownership and each participant's real-room policy are separate requirements.",
       "input": {
         "type": "object",
         "properties": {
@@ -43399,7 +43421,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumFacts.cs",
-      "sha256": "c42d03aca1981fc6efe00ff51030b08fabddbd51401004d3a54ca77fe44c870e"
+      "sha256": "fe94dd9eccf7faf8c73c156c0eb595a12174e04450e4497acb874501c6e497b8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelGeometryCapability.cs",
@@ -43555,7 +43577,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
-      "sha256": "ba5b760ff88d9716ebf99ae4d9fe5a2f386bd984304b636aabe8fa3d86eef118"
+      "sha256": "af78cfeeaf4b1f66255c39373ea4661fef40d2a584c70cd8358b5de590c1c734"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowCapability.cs",
@@ -43771,7 +43793,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
-      "sha256": "acd774ae308140d54ff4f747f403b4edc0bfec95ec7dedcfd271e9347699fc79"
+      "sha256": "b6273e80af3d6c7de52e0d1430a2bb98e409703dc23865f3b9ca1b5acbe0f2db"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
@@ -43779,7 +43801,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "a18bb8a7c7f9736344636f12b1f127da2786dfd8efb850dee7b054d2b7f5914a"
+      "sha256": "d61c5ed74fac37032c8f6a3b02369dac389b09d4214a45e9bdcc357014545b51"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -44046,6 +44068,10 @@
       "sha256": "5fc1c35959f4acce129bf80bae55944b56449ec4d8f3a913dac345ebe7ce6b06"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMediumAvailability.cs",
+      "sha256": "56e03c67585fe49195a6ed5b561158eec64ce4f219570a18a179d64fe953b5c5"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelCreation.cs",
       "sha256": "435b6aea369398d71d3c9fd0fa52a821ab66b2e7e5e1e6d2a7fdee0b210e18d8"
     },
@@ -44251,7 +44277,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversalEdits.cs",
-      "sha256": "e55abcf9e550b9cb131a777e43f99ab41fb9ad48bcdc0ba052bfdd22ca6436a6"
+      "sha256": "a70114dfdc78ce1d5bf477af473ca6d59d5611f612c8b2005d7dc242f2ad5eeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",

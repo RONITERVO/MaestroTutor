@@ -32,6 +32,24 @@ it('exposes bounded read-only route queries without claiming swimming or general
  const fact='object.water.traversal.path';
  expect(validateFactArguments(fact,1,{target:'maestro',position:{x:0,y:-2,z:4}})).toBeNull();
  expect(validateFactArguments(fact,1,{target:'book',position:{x:0,y:0,z:0}})).not.toBeNull();
- expect(validFactValue(fact,{allowed:false,bodyId:'a'.repeat(32),depthMetres:.6,reason:'This water is too deep'})).toBe(true);
+ expect(validFactValue(fact,{allowed:false,bodyId:'a'.repeat(32),depthMetres:.6,reason:'This water is too deep',availability:'ready',dependencyCount:0,dependencies:[]})).toBe(true);
  expect(behaviourFact(fact)?.features).toContain('waterTraversal.v1');
+});
+
+it('distinguishes incomplete liquid inputs from a geometrically dry or permitted path',()=>{
+ const fact='object.water.traversal.path';
+ const value={allowed:false,bodyId:'',depthMetres:0,reason:'Liquid geometry is unavailable',availability:'unavailable',dependencyCount:1,dependencies:[{target:'a'.repeat(32),state:'unavailable',boundsKnown:true}]};
+ expect(validFactValue(fact,value)).toBe(true);
+ expect(validFactValue(fact,{...value,availability:123})).toBe(false);
+ expect(validFactValue(fact,{...value,dependencies:[{...value.dependencies[0],boundsKnown:'unknown'}]})).toBe(false);
+ expect(behaviourFact(fact)?.description).toContain('passive');
+});
+
+it('keeps incomplete point samples visible to the shared book and agent fact reader',()=>{
+ const fact='world.medium';
+ const value={worldId:'world',regionId:'room',found:false,active:false,bodyId:'',liquid:'',depthMetres:0,surface:{x:0,y:0,z:0},densityKgM3:0,reason:'Liquid is still loading',availability:'pending',dependencyCount:6,dependencies:Array.from({length:4},(_,i)=>({target:String(i).repeat(32),state:'pending',boundsKnown:false}))};
+ expect(validFactValue(fact,value)).toBe(true);
+ expect(validateFactArguments(fact,1,{position:{x:4,y:1.4,z:0},target:''})).toBeNull();
+ expect(validFactValue(fact,{...value,dependencies:[{target:'missing-state',boundsKnown:false}]})).toBe(false);
+ expect(behaviourFact(fact)?.description).toContain('another resident medium cannot substitute');
 });

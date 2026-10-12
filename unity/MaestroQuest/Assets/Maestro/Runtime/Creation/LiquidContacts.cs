@@ -74,6 +74,8 @@ namespace Maestro.Quest.Creation {
             for(int i=0;i<count;i++){
                 var current=points[i];if(!RoomRecipe.Finite(current)||!environment.CanSimulate(current,item,item)){unknown=true;break;}
                 var previous=authored?editor.Frame.PointToWorld(state.Previous[i]):state.Previous[i];
+                var coverage=new Bounds(current,Vector3.zero);if(previousKnown)coverage.Encapsulate(previous);
+                if(!CapturedMediumAvailability(coverage,id).Ready){unknown=true;break;}
                 if(previousKnown)speed=Mathf.Max(speed,Mathf.Min(30,Vector3.Distance(previous,current)/seconds));
                 if(SampleMedium(current,item,id,in environment,out var medium,out var d,out bool ready)){
                     if(!ready){unknown=true;break;}
@@ -107,7 +109,14 @@ namespace Maestro.Quest.Creation {
             contacts.TryGetValue(id,out var state);bool known=ContactReady&&state?.Known==true&&Time.unscaledTime-state.At<=.2f;
             if(known&&input){var tracked=contactInputs[id=="input:left"?0:1];known=tracked.Tracked&&Time.unscaledTime-tracked.At<=.15f&&tracked.Kind==state.Kind;}
             if(known&&state.Item){var rigid=state.Item.GetComponent<RigidRoomItem>();known=state.Item.isActiveAndEnabled&&(state.Kind=="avatar"?state.Item.GetComponent<MaestroAvatar>()?.ModelBusy==false:rigid&&rigid.GeometryReady&&rigid.MotionRevision==state.Revision);}
-            if(known&&state.BodyId!="")known=vessels.TryGetValue(state.BodyId,out var v)&&v.Item&&v.Rigid&&v.Rigid.GeometryReady&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),state.Item)&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),v.Item);
+            if(known&&state.BodyId!="")known=vessels.TryGetValue(state.BodyId,out var v)&&v.Item&&v.Item.isActiveAndEnabled&&v.Rigid&&v.Rigid.GeometryReady&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),state.Item)&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),v.Item);
+            if(known){
+                CaptureMissingMedia();
+                for(int i=0;i<state.Count&&known;i++){
+                    var sample=input?state.Previous[i]:editor.Frame.PointToWorld(state.Previous[i]);
+                    known=CapturedMediumAvailability(new Bounds(sample,Vector3.zero),id).Ready;
+                }
+            }
             var point=known?state.Point:Vector3.zero;
             return new JObject{["known"]=known,["immersed"]=known&&state.BodyId!="",["bodyId"]=known?state.BodyId:"",["kind"]=state?.Kind??(input?"input":"object"),["liquid"]=known?state.Liquid:"",["depthMetres"]=known?state.Depth:0,["sampleSpeedMetresPerSecond"]=known?state.Speed:0,["surface"]=WorkspaceViewpoint.Point(point),["reason"]=known?"":!ContactReady?"Contact sampling is paused":state?.Reason!=""?state?.Reason??"Not sampled":"Contact sample expired"};
         }

@@ -43,13 +43,14 @@ namespace Maestro.Quest.Creation {
         internal JObject ObserveWaterPath(string id,Vector3 authoredTo){
             var item=Find(id);if(!item||id=="book"||!Frame.Valid||!RoomViewpoint.ValidPosition(authoredTo))return null;
             bool allowed=WaterMotionStep(item,Frame.PointToWorld(authoredTo),out var result);
-            return new JObject{["allowed"]=allowed,["bodyId"]=result.BodyId??"",["depthMetres"]=System.Math.Round(result.Depth/Frame.MetresPerUnit,6),["reason"]=result.Reason??""};
+            return new JObject{["allowed"]=allowed,["bodyId"]=result.BodyId??"",["depthMetres"]=System.Math.Round(result.Depth/Frame.MetresPerUnit,6),["reason"]=result.Reason??"",["availability"]=result.Availability.State??"ready",["dependencyCount"]=result.Availability.Count,["dependencies"]=result.Dependencies??new JArray()};
         }
     }
     internal readonly struct WaterTraversalResult {
         internal readonly string BodyId,Reason;internal readonly float Depth;internal readonly Vector3 Foot;
-        internal WaterTraversalResult(string id,float depth,string reason,Vector3 foot=default){BodyId=id;Depth=depth;Reason=reason;Foot=foot;}
-        internal static WaterTraversalResult Refused(string reason)=>new("",0,reason);
+        internal readonly MediumAvailability Availability;internal readonly JArray Dependencies;
+        internal WaterTraversalResult(string id,float depth,string reason,Vector3 foot=default,MediumAvailability availability=default,JArray dependencies=null){BodyId=id;Depth=depth;Reason=reason;Foot=foot;Availability=availability;Dependencies=dependencies;}
+        internal static WaterTraversalResult Refused(string reason)=>new("",0,reason,availability:new("unavailable",reason));
     }
     public sealed partial class LiquidPouring {
         internal void RouteFootprint(string id,float padding,float height,float footHeight,System.Collections.Generic.List<Vector3> result){
@@ -68,7 +69,10 @@ namespace Maestro.Quest.Creation {
             if(vessels.Count>0&&(!float.IsFinite(Physics.gravity.sqrMagnitude)||Physics.gravity.sqrMagnitude<.01f)){
                 result=WaterTraversalResult.Refused("Water traversal requires a known gravity direction");return false;
             }
-            CaptureMedia(false);using var environment=mediumEnvironment.Begin(world);
+            CaptureMedia(false);
+            var availability=CapturedMediumAvailability(MediumSweep(from,to,radius,height),editor.Identity(actor));
+            if(!availability.Ready){result=new("",0,availability.Reason,availability:availability,dependencies:(JArray)DescribeMediumAvailability(MediumSweep(from,to,radius,height),editor.Identity(actor))["dependencies"]);return false;}
+            using var environment=mediumEnvironment.Begin(world);
             float allowedDepth=Mathf.Min(policy.maxDepthMetres*editor.Frame.MetresPerUnit,height*.6f);
             for(int i=0;i<mediaCount;i++){
                 var medium=media[i];if(medium.Item==actor||!medium.Sweep(from,to,radius,height,out float depth,out var point,out var foot))continue;
