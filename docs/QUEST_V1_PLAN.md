@@ -8346,3 +8346,42 @@ is introduced. Automatic unloading stays disabled, and the whole-world physics
 gate and existing object/distance limits remain. Regional route acquisition,
 water residency, swept dynamic-body admission and larger-world performance
 acceptance are still required before relaxing those limits.
+
+
+### Navigation owns its ground, obstacles and water — 2026-10-12
+
+Native actor navigation now retains the required inputs of both route planning
+and literal movement through the same acquisition lane as shared world actions.
+A route accumulates the inputs discovered by its bounded search; each manual or
+authored step replaces its local corridor. Required water uses accepted cavity
+frames and dimensions, including volumes beyond their artwork. World-space
+query envelopes are projected through the room frame before querying canonical
+collision bounds. Known distant candidates stay out of the request; area and
+physical-connection closures still determine the actual allocation unit.
+
+Availability is checked before sampling support, querying route edges or moving.
+Missing upper ground cannot be replaced by a lower resident floor. Horizontal
+NavMesh snap reach and the motor's raised/substep support bands participate in
+their respective queries. Pending native samples, edges and final validation
+remain incomplete, never cached as an impassable edge or returned as a route.
+The route is replanned after loading or accepted source changes. A failed or
+timed-out load does not retry continuously; release the movement control or stop
+and restart the action. Loading never queues displacement or starts physics.
+Exact ground, body sweeps, water policy and environment containment still decide
+every actual step.
+
+Completed routes keep their input ownership until cancellation, a replacement
+plan or movement completion. Stop, neutral manual input, arrival, authored-motion
+completion, navigation disable/rebinding and workspace/physics retirement release
+that demand. Separate consumers release only their own leases. The existing
+shared `world.region.retention` fact reports navigation and ownership reasons;
+there is no agent-only path, extra saved world or new storage format.
+
+This supplies navigation input ownership, not finished regional simulation. The
+current map still captures the bounded whole-world ground, and global physics
+admission prevents ordinary walking while an authored area is dormant. The
+native acquisition contract is tested independently with physics paused. Local
+map construction and swept dynamic-body/support admission must replace those
+whole-world assumptions before automatic unloading or larger capacities are
+allowed. Per-entity real-room collision choices remain independent of visual
+occlusion and passthrough opacity. Device/provider/release holds remain in force.

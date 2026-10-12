@@ -26,7 +26,7 @@ namespace Maestro.Quest.Avatar
         Vector3 manualDirection;
         float manualAt;
         public bool OwnedBy(string identity) => owner == identity;
-        public void ManualDirection(string identity,Vector3 direction) { if (owner == identity && mode == AvatarSpatialMode.Manual && float.IsFinite(direction.sqrMagnitude)) { manualDirection=Vector3.ClampMagnitude(Vector3.ProjectOnPlane(direction,Vector3.up),1); manualAt=Time.unscaledTime; } }
+        public void ManualDirection(string identity,Vector3 direction) { if (owner == identity && mode == AvatarSpatialMode.Manual && float.IsFinite(direction.sqrMagnitude)) { manualDirection=Vector3.ClampMagnitude(Vector3.ProjectOnPlane(direction,Vector3.up),1); manualAt=Time.unscaledTime;if(manualDirection.sqrMagnitude==0&&navigation)navigation.ReleaseMovementInputs(); } }
         AvatarSpatialMode mode;
         bool paused, focused = true;
         Vector3 pathGoal,followDestination;
@@ -92,7 +92,7 @@ namespace Maestro.Quest.Avatar
         public void Stop()
         {
             if (!Active) return;
-            owner = null; corners = Array.Empty<Vector3>();if(navigation)navigation.CancelFollowRoute();ownershipLease?.Dispose();ownershipLease=null;
+            owner = null; corners = Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs();ownershipLease?.Dispose();ownershipLease=null;
             if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");
@@ -100,7 +100,7 @@ namespace Maestro.Quest.Avatar
         public void SetPreferences(float distance, float speed)
         {
             Distance = Mathf.Clamp(distance,.8f,2.5f); Speed = Mathf.Clamp(speed,.2f,1.2f);
-            nextPath = 0;corners=Array.Empty<Vector3>();if(navigation)navigation.CancelFollowRoute(); Changed?.Invoke();
+            nextPath = 0;corners=Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs(); Changed?.Invoke();
         }
         void ReadPreferences()
         {
@@ -149,6 +149,7 @@ namespace Maestro.Quest.Avatar
             }
             else
             {
+                if(navigation)navigation.ReleaseMovementInputs();
                 if (delta.sqrMagnitude > .01f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(delta),90*dt);
                 Say("Maestro is keeping your chosen distance");
             }
@@ -198,7 +199,7 @@ namespace Maestro.Quest.Avatar
             if(closest<clearance&&!(to.magnitude>=from.magnitude&&closest>=from.magnitude-.001f)){error="Authored motion stopped to keep clear of you";return false;}
             return ClearStep(next,out error,extraHeight);
         }
-        internal void RememberAuthoredPlacement(){if(editor)editor.RememberPlacement("maestro");}
+        internal void RememberAuthoredPlacement(){if(navigation)navigation.ReleaseMovementInputs();if(editor)editor.RememberPlacement("maestro");}
         Func<Collider,bool> walkingObstacle;
         bool ClearStep(Vector3 next,out string blocked,float extraHeight=0)
         {

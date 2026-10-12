@@ -121,7 +121,7 @@ namespace Maestro.Quest.Interaction
         public bool Sample(Vector3 point, float maximumDistance, out Vector3 floor)
         {
             floor = default;
-            if(!Ready||!Creation.RoomRecipe.Finite(point)||!float.IsFinite(maximumDistance)||maximumDistance<0)return false;
+            if(!Ready||!Creation.RoomRecipe.Finite(point)||!float.IsFinite(maximumDistance)||maximumDistance<0||!SampleInputsReady(point,maximumDistance))return false;
             if(PathsPending) {
                 if(!CurrentGround.Sample(point,maximumDistance,maximumDistance,out var current)||
                     !world.ContainsSimulation(current.point+Vector3.up*.1f,actor))return false;
@@ -131,6 +131,7 @@ namespace Maestro.Quest.Interaction
         }
         bool SampleInstalled(Vector3 point,float maximumDistance,out Vector3 floor){
             floor=default;
+            if(!SampleInputsReady(point,maximumDistance))return false;
             if (!NavMesh.SamplePosition(point,out var hit,maximumDistance,Filter) || !world.ContainsSimulation(hit.position + Vector3.up*.1f,actor)) return false;
             // NavMesh is a route approximation. Foot placement uses the accepted
             // collider itself, including its current revision and rendered height.
@@ -140,9 +141,12 @@ namespace Maestro.Quest.Interaction
         public bool DirectStep(Vector3 from,Vector3 to,out Vector3 floor)
         {
             floor=default;
-            if(!Ready)return false;
-            if(PathsPending)return groundMotor.Travel(CurrentGround,from,to-from,radius,height,0,IgnoreObstacle,
-                groundPosition??=GroundPosition,out floor,out _);
+            if(!Ready||!PassiveSegmentInputsReady(from,to,.1f,false))return false;
+            if(PathsPending){
+                RoomWalkingPreparation.Envelopes(from,to,radius,height,out var body,out var ground);
+                return PassiveInputsReady(body,ground,false)&&groundMotor.Travel(CurrentGround,from,to-from,radius,height,0,IgnoreObstacle,
+                    groundPosition??=GroundPosition,out floor,out _);
+            }
             return Sample(from,.1f,out var start) && Sample(to,.08f,out floor) &&
                 Vector3.Distance(new Vector3(to.x,floor.y,to.z),floor) < .025f && !NavMesh.Raycast(start,floor,out _,Filter);
         }
@@ -150,7 +154,9 @@ namespace Maestro.Quest.Interaction
         internal bool Traverse(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3 floor,out string error)
         {
             TraversalBlocker=null;WaterBlocker=null;floor=default;error="No connected accepted ground is available for this step";
-            if(!Ready||!PathsPending&&!DirectStep(from,to,out _))return false;
+            if(!Ready)return false;
+            if(!StepInputsReady(from,to,0,out var inputError)){error=inputError;return false;}
+            if(!PathsPending&&!DirectStep(from,to,out _))return false;
             int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
             bool moved=groundMotor.Travel(CurrentGround,from,to-from,radius,height,mask,obstacle,groundPosition??=GroundPosition,out floor,out error);
             if(!moved)TraversalBlocker=groundMotor.Blocker;
@@ -161,6 +167,7 @@ namespace Maestro.Quest.Interaction
         {
             WaterBlocker=null;TraversalBlocker=null;
             if(!Ready||obstacle==null)return false;
+            if(!StepInputsReady(from,to,extraHeight,out var inputError)){WaterBlocker=inputError;return false;}
             int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
             bool clear=groundMotor.ClearExact(from,to,radius,height+extraHeight,mask,obstacle);TraversalBlocker=clear?null:groundMotor.Blocker;
             return clear&&WaterStep(from,to,height);
@@ -170,7 +177,7 @@ namespace Maestro.Quest.Interaction
             if(!Ready||PathsPending||!Sample(from,.25f,out var start)||!Sample(to,.5f,out var end)||
                 !NavMesh.CalculatePath(start,end,Filter,path)||path.status!=NavMeshPathStatus.PathComplete)return false;
             var corners=path.corners;
-            for(int i=1;i<corners.Length;i++)if(!WaterStep(corners[i-1],corners[i],height))return false;
+            for(int i=1;i<corners.Length;i++)if(!PassiveSegmentInputsReady(corners[i-1],corners[i],.15f,actor&&actor.WaterTraversal.mode!="ignore")||!WaterStep(corners[i-1],corners[i],height))return false;
             return true;
         }
         // Rebuilding keeps only the fresh candidate. Full retirement also drops
@@ -182,7 +189,7 @@ namespace Maestro.Quest.Interaction
             ArtResources.Release(data);data=null;accepted.Clear();
             if(agentType!=-1)NavMesh.RemoveSettings(agentType);agentType=-1;
         }
-        void Clear(){ReleaseMap();candidate.Clear();observedFrame=false;}
+        void Clear(){ReleaseMovementInputs();ReleaseMap();candidate.Clear();observedFrame=false;}
         void ResetBinding(){Clear();configured=false;actor=null;actorBound=false;}
         void LateUpdate(){if((data||PathsPending)&&!ContextAvailable)Clear();}
         void OnEnable(){if(world){world.Changed+=RoomChanged;world.RegisterNavigation(this);}}

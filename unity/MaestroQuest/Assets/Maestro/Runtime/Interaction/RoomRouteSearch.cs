@@ -16,7 +16,7 @@ namespace Maestro.Quest.Interaction {
         sealed class Node {internal Vector3 Point;internal float Cost=float.PositiveInfinity;internal int Parent=-1;internal Vector3[] Incoming;internal bool Expanded;}
         readonly List<Node> nodes=new();readonly Dictionary<long,Vector3[]> edges=new();readonly HashSet<string> liquids=new(StringComparer.Ordinal);
         readonly List<Vector3> candidates=new();readonly List<Vector3> buffer=new();int candidate,active=-1,next=1,validation;
-        readonly EdgeQuery edge;readonly FootprintQuery footprint;readonly SampleQuery sample;readonly SegmentQuery segment;
+        readonly EdgeQuery edge;readonly FootprintQuery footprint;readonly SampleQuery sample;readonly SegmentQuery segment;readonly Func<bool> queryComplete;
         Vector3[] validating;
         internal readonly Vector3 From,To;
         internal Vector3[] Result {get;private set;}
@@ -24,8 +24,8 @@ namespace Maestro.Quest.Interaction {
         internal bool Pending=>Result==null&&Failure==null;
         internal int QueryCount=>edges.Count;
         internal IEnumerable<string> WaterDependencies=>liquids;
-        internal RoomRouteSearch(Vector3 from,Vector3 to,string liquid,Vector3 foot,EdgeQuery edge,FootprintQuery footprint,SampleQuery sample,SegmentQuery segment){
-            From=from;To=to;this.edge=edge;this.footprint=footprint;this.sample=sample;this.segment=segment;
+        internal RoomRouteSearch(Vector3 from,Vector3 to,string liquid,Vector3 foot,EdgeQuery edge,FootprintQuery footprint,SampleQuery sample,SegmentQuery segment,Func<bool> queryComplete=null){
+            From=from;To=to;this.edge=edge;this.footprint=footprint;this.sample=sample;this.segment=segment;this.queryComplete=queryComplete??(()=>true);
             nodes.Add(new(){Point=from,Cost=0});nodes.Add(new(){Point=to});edges[Key(0,1)]=null;
             if(!Discover(liquid,foot))Failure="No supported route around this water is available";
         }
@@ -61,10 +61,12 @@ namespace Maestro.Quest.Interaction {
             while(Pending&&work<QueriesPerTick&&(Stopwatch.GetTimestamp()-began)/(double)Stopwatch.Frequency<.002){
                 if(validation>0){
                     if(validation==validating.Length){Result=validating;return;}
-                    work++;if(!segment(validating[validation-1],validating[validation])){Failure="Water or obstacles changed while the route was planned";return;}validation++;continue;
+                    work++;bool valid=segment(validating[validation-1],validating[validation]);if(!queryComplete())return;
+                    if(!valid){Failure="Water or obstacles changed while the route was planned";return;}validation++;continue;
                 }
                 if(candidate<candidates.Count){
-                    work++;if(sample(candidates[candidate++],out var point))Add(point);
+                    work++;bool supported=sample(candidates[candidate],out var point);if(!queryComplete())return;
+                    candidate++;if(supported)Add(point);
                     if(candidate==candidates.Count)Reopen();continue;
                 }
                 if(active<0){active=Best();next=1;if(active<0){Failure="No supported route around this water is available";return;}}
@@ -74,6 +76,7 @@ namespace Maestro.Quest.Interaction {
                 if(edges.TryGetValue(key,out var saved)){Relax(target,saved);continue;}
                 if(edges.Count==MaximumEdges){Failure="This water route exceeds the supported search work";return;}
                 work++;bool allowed=edge(nodes[active].Point,nodes[target].Point,out var path,out var liquid,out var foot);
+                if(!queryComplete()){next--;return;}
                 edges[key]=allowed?path:null;
                 if(allowed)Relax(target,path);
                 else if(Discover(liquid,foot)){active=-1;next=1;}

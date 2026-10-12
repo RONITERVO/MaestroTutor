@@ -42,5 +42,19 @@ namespace Maestro.Quest.Tests {
             for(int i=0;i<1000&&search.Pending;i++){int before=queried+sampled+validated;search.Tick();Assert.That(queried+sampled+validated-before,Is.LessThanOrEqualTo(RoomRouteSearch.QueriesPerTick));}
             Assert.That(search.Pending,Is.False);Assert.That(search.Result,Is.Null);StringAssert.Contains("changed",search.Failure);Assert.That(validated,Is.GreaterThan(0));
         }
+        [TestCase("sample")][TestCase("edge")][TestCase("validation")]
+        public void IncompleteNativeQueryCannotBecomeARejectedSearchEdge(string phase){
+            bool missing=true,complete=true;int waits=0;
+            bool Check(string at){complete=!(missing&&phase==at);if(!complete)waits++;return complete;}
+            bool Edge(Vector3 a,Vector3 b,out Vector3[] path,out string liquid,out Vector3 foot){path=new[]{a,b};liquid=null;foot=a;return Check("edge");}
+            void Footprint(string id,Vector3 at,List<Vector3> points){points.Add(new Vector3(0,0,1));}
+            bool Sample(Vector3 point,out Vector3 floor){floor=point;return Check("sample");}
+            bool Segment(Vector3 a,Vector3 b)=>Check("validation");
+            var search=new RoomRouteSearch(Vector3.zero,Vector3.right*2,"pool",Vector3.zero,Edge,Footprint,Sample,Segment,()=>complete);
+            for(int i=0;i<20&&waits==0;i++)search.Tick();
+            Assert.That(waits,Is.EqualTo(1));Assert.That(search.Pending,Is.True);Assert.That(search.Result,Is.Null);Assert.That(search.Failure,Is.Null);
+            missing=false;for(int i=0;i<100&&search.Pending;i++)search.Tick();
+            Assert.That(search.Result,Is.Not.Null);Assert.That(search.Failure,Is.Null);
+        }
     }
 }
