@@ -1098,6 +1098,10 @@ try{
    throw new Error('The catch fixture placement did not stabilize within the bounded observation window');
   };
   const catchSettling=await waitForCatchPlacement(true);
+  const physicsInputs=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.physics.inputs',version:1,arguments:{target:catchTarget}}}]);
+  const inputState=physicsInputs.catalog?.value as {state:string;ready:boolean;dependencyCount:number;dependencies:string[]};
+  if(inputState?.state!=='ready'||!inputState.ready||inputState.dependencyCount<inputState.dependencies.length)throw new Error('The native physics input fact must describe the active body before catch');
+  await writeFile(join(directory,'native-physics-inputs.json'),JSON.stringify(physicsInputs,null,2));
   const catchReadyDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.physics.catch',version:1}}]);
   const catchReadyCheck=await execute([{action:'catalog',catalog:{operation:'check',call:catchCall}}]);if(catchReadyCheck.catalog?.available!==true)throw new Error('Native catch readiness differs from the active world');
   const catchWaiting=await execute([{action:'execution',execution:{operation:'start',call:catchCall}}]);const catchRun=catchWaiting.execution?.selected?.id;if(!catchRun||catchWaiting.execution?.selected?.phase!=='preparing')throw new Error('Native catch did not wait for physical contact');

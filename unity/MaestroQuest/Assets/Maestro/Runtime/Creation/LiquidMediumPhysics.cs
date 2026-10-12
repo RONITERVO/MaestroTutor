@@ -45,12 +45,13 @@ namespace Maestro.Quest.Creation {
             CaptureMedia(false);if(mediaCount==0&&missingMedia.Count==0&&mediumQueryIssue==null)return;
             using var environment=mediumEnvironment.Begin(world);
             foreach(var b in mediumBodies.Values){
-                if(!b.Item||!b.Rigid||!b.Rigid.TryReadMotion(out bool available,out _,out _)||!available)continue;
+                if(!b.Item||!b.Rigid||!b.Rigid.TryReadMotion(out bool available,out _,out _))continue;
                 if(b.Revision!=b.Rigid.MotionRevision){b.Displacement.Capture(b.Item);b.Revision=b.Rigid.MotionRevision;}
                 var shape=b.Displacement;if(shape.Count==0){b.Reason=shape.Reason;continue;}
                 float scale=Mathf.Abs(b.Item.transform.lossyScale.x),cell=shape.CellVolume*scale*scale*scale;b.Volume=cell*shape.Count;
                 var availability=CapturedMediumAvailability(MediumBodyCoverage(b),b.Id);
                 if(!availability.Ready){b.Reason=availability.Reason;continue;}
+                if(!available)continue; // Keep the specific missing-medium explanation before the motion guard.
                 Vector3 buoyancy=Vector3.zero,centre=Vector3.zero,drag=Vector3.zero;float weight=0,angular=0;int wet=0;
                 for(int i=0;i<shape.Count;i++){
                     var p=b.Item.transform.TransformPoint(shape.Points[i]);if(!SampleMedium(p,b.Item,b.Id,in environment,out var m,out _,out bool ready)||!ready)continue;
@@ -86,7 +87,7 @@ namespace Maestro.Quest.Creation {
             if(!mediumBodies.TryGetValue(id,out var b)||!b.Item)return null;
             bool active=b.Applied&&!blocked&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen&&world&&world.CanSimulate(b.Item.transform.position,b.Item)&&b.Rigid.TryReadMotion(out bool available,out _,out _)&&available;
             var availability=default(MediumAvailability);
-            if(active){CaptureMissingMedia();availability=CapturedMediumAvailability(MediumBodyCoverage(b),id);active=availability.Ready;}
+            if(b.Displacement.Count>0){CaptureMissingMedia();availability=CapturedMediumAvailability(MediumBodyCoverage(b),id);active&=availability.Ready;}
             return new JObject{["applied"]=active,["submergedFraction"]=b.Submerged,["displacementM3"]=b.Volume,["buoyancyNewtons"]=WorkspaceViewpoint.Point(active?editor.Frame.DirectionToRoom(b.Lift):Vector3.zero),["reason"]=!availability.Ready?availability.Reason:active?b.Reason:b.Applied?"Physics or ownership changed after the last sample":b.Reason};
         }
     }

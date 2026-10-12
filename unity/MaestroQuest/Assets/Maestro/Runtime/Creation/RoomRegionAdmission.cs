@@ -24,6 +24,11 @@ namespace Maestro.Quest.Creation
             }
             return null;
         }
-        internal void RefreshRegionCollision(){if(!applying)PhysicsWorld?.RefreshCollisionAdmission();}
+        internal bool SpatialInputsChanging=>applying;
+        internal void RefreshRegionCollision(){
+            if(applying)return;
+            PhysicsWorld?.RefreshCollisionAdmission();
+            foreach(var item in objects.Values)if(item)item.GetComponent<Interaction.RigidRoomItem>()?.RefreshAfterPublication();
+        }
     }
 }

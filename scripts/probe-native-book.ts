@@ -670,10 +670,11 @@ try{
  };
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
+ const physicsInputs=await readResourceFact('object.physics.inputs','Object physics inputs',{target:ball.id});assert.equal(physicsInputs.state,'inactive');
  const physicsAfter=await readResourceFact('physics.simulation','Room physics state');assert.equal(physicsAfter.running,false);
  await page.getByRole('heading',{name:'Room physics state',exact:true}).scrollIntoViewIfNeeded();
  await page.screenshot({path:join(directory,'book-native-physics.png')});
- await writeFile(join(directory,'book-native-physics.json'),JSON.stringify({boundary:'Original generated book Start/Pause controls, current state guard, completion receipts and actual native simulation state. Synthetic aligned floor; no real scan, provider or headset proof. Dormant loading is covered separately by native regressions.',physicsBefore,physicsStarted,physicsPaused,physicsAfter},null,2));
+ await writeFile(join(directory,'book-native-physics.json'),JSON.stringify({boundary:'Original generated book Start/Pause controls, current state guard, completion receipts and actual native simulation state. Synthetic aligned floor; no real scan, provider or headset proof. Dormant loading is covered separately by native regressions.',physicsBefore,physicsStarted,physicsPaused,physicsInputs,physicsAfter},null,2));
 
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  await page.waitForFunction(()=>window.nativeBookEvidence!().state!.visible===false);

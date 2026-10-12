@@ -41944,6 +41944,44 @@
       "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes immediate selected-ground, imported-collision and lifecycle readiness; an explicit Start may still prepare dormant areas. It is not permission to act, alignment approval or complete resource admission. ready requires selected ground and ready imported collision in the current authored region; read physics.environment for separate scan/virtual observations, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
     },
     {
+      "id": "object.physics.inputs",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "ready": "boolean",
+          "reason": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": "text"
+          },
+          "momentumHeld": "boolean"
+        }
+      },
+      "label": "Object physics inputs",
+      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object. Fixed, held, carried, paused and unavailable owners report inactive. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "example-object"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "physics.environment",
       "version": 1,
       "type": {
@@ -43452,6 +43490,10 @@
       "sha256": "b9504f6d86a3dfc65120a62ac4bc77a6d2ab74db9f01a4d8b65a57df5c97d95d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
+      "sha256": "56fb9bed5b5cb91667f3737bab03e91b0b48c3ebd949a55482e23a23e90e9c41"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
       "sha256": "ba0e0c693eef137f818e75293dd6fb00a6e321b4211610be135ea8065dc82630"
     },
@@ -43801,7 +43843,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "d61c5ed74fac37032c8f6a3b02369dac389b09d4214a45e9bdcc357014545b51"
+      "sha256": "5acf5902305a6d3a3e01aab4ef6eccd07628733af9f0195586540abf2af7d0dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -44125,7 +44167,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNavigationInputs.cs",
-      "sha256": "25adf439211efc56096fdd4bc52028dd5212bb6631d76e9df9f0939f1641e6c7"
+      "sha256": "8f7314c20a03ad6bb0930069de6325bb3143566eede417f09c16214c8e0860bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
@@ -44177,7 +44219,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
-      "sha256": "b20526174194887d7947f91662cebf077865675ea02959a4cd715a4ea2d69049"
+      "sha256": "474509aeee3c37b8a53255517dbd4345a04e7c53f1037c0ece09e925bd9948cc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionEdits.cs",
@@ -44612,8 +44654,12 @@
       "sha256": "78127102dae727ccd5f61b205b0642144a54054a1237f4ec9aba9ff3d563f93d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
+      "sha256": "74570a2a8fe07f5db41a80b85e2aea842e83b24517b2a4556db574b6e1a1c7e6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "23ad4e8442b507d5c9aa33f36e1b43d98ba857cf11b597cf623c18cb566fa433"
+      "sha256": "5cb88713bf91de6206045b440ee8e501c010d80ec44f160fe5ae0955f444bbd9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -44677,7 +44723,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationInputs.cs",
-      "sha256": "7428c0015fae20f31af19a81a7a06da3036239d7e40736e04663a932969e0f8e"
+      "sha256": "2b05ae9d0a92b45f11462c77bd21f4ea42858773e48dc3822721620f36cdb992"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
@@ -44718,6 +44764,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
       "sha256": "cb7c6508160a9295eba75d5d22845a1ccbb085a81afa826bcdabbcb21738c9a2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSpatialInputs.cs",
+      "sha256": "51825807657abbcb00ef45a8ead284137ba274bd0bcbc544b91c885602c5a170"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",
@@ -44945,7 +44995,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "23c18af9398c66591f67395ee0509997b979637d270c1e1c941dd8a68f0b67ec"
+      "sha256": "89aa048fce53d823aae1c746b88e138da89bf53795c3e330437cd918e062385e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -8385,3 +8385,50 @@ map construction and swept dynamic-body/support admission must replace those
 whole-world assumptions before automatic unloading or larger capacities are
 allowed. Per-entity real-room collision choices remain independent of visual
 occlusion and passthrough opacity. Device/provider/release holds remain in force.
+
+
+### Physics owns its local inputs before gravity — 2026-10-12
+
+Rigid-body simulation now shares the native spatial-input owner used by actor
+navigation. Each free solid/bouncy body retains nearby accepted ground,
+collision objects and finite liquid cavities. Its envelope includes the whole
+collider under rotation about the centre of mass, the bounded launch speed,
+gravity and the two bounded liquid accelerations over a 200 ms lookahead, plus
+accepted support columns below it. Offset water cavities use their own frames.
+Unknown or disabled own collision shapes do not become empty geometry.
+
+Admission runs before PhysX and before liquid forces. Missing upper terrain
+cannot borrow a lower scan floor; missing water cannot leave gravity running
+while quietly omitting buoyancy. Passive motion/contact observations also
+recheck inputs. Water inspection preserves the specific missing-medium reason.
+Sleeping bodies retain dependencies. Pause, grip, animation, teleport,
+disable and workspace retirement release that body's ownership;
+other consumers retain their own leases. During preparation only a continuously
+owned body can retain transient momentum. Source changes discard held momentum;
+failed preparation requires a fresh owner and cannot replay an earlier throw.
+
+`object.physics.inputs` is a passive shared catalog fact for user forms,
+programs and delegated tasks: inactive/ready/pending/unavailable, reason,
+dependency count, the first four stable input IDs and transient momentum-held
+state. Reading does not load, start, save or alter motion. The original book
+catalog and native headless journey exercise this same fact.
+
+This is still a prerequisite for regional simulation. Whole-world collision
+admission and running-world retention remain in place. The local envelope is
+not a proof for arbitrary solver impulses, tracked pushers, joint motors,
+connected-body suspension or held/authored sweeps. Those consumers and regional
+navigation-map construction must be covered before removing the global gate or
+enabling unloading. No capacity increase or headset performance claim is made.
+
+Continuous world-frame transfer preserves action identity and transforms retained
+velocity with the authored world, including pending local preparation. Explicit
+object teleport still discards previous motion. Admission is deferred across
+atomic scene reconciliation, so newly created peers are all present before
+readiness is judged. Fixed surfaces retain their ordinary collision events;
+XRI retains held-body setup under the existing whole-world gate. An incomplete
+query cannot become a settled event. Changing pending inputs does not extend
+the preparation deadline, and completion after that deadline is rejected.
+
+Focused preparation/velocity tests explicitly isolate the per-body guard from
+the production whole-world admission rule. They do not establish production
+regional streaming, connected-island or tracked-contact acceptance.

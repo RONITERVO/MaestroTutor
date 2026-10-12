@@ -14,7 +14,7 @@ namespace Maestro.Quest.Interaction
 
     /// <summary>Coordinates PhysX, XRI and animation ownership; never replays an old impulse after interruption.</summary>
     [DefaultExecutionOrder(100)]
-    public sealed class RigidRoomItem : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
+    public sealed partial class RigidRoomItem : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         RoomItem item;
         Rigidbody body;
@@ -31,7 +31,7 @@ namespace Maestro.Quest.Interaction
         public event Action<RoomItem> Settled;
         public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
         void OnCollisionEnter(Collision collision) {
-            if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position,item)||collision.contactCount==0)return;
+            if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position,item)||Dynamic&&!PhysicsInputsAdmitted||collision.contactCount==0)return;
             // Unity may reuse Collision objects. Copy the observation immediately;
             // no callback object or mutable body state enters the program queue.
             var point=collision.GetContact(0).point;float speed=collision.relativeVelocity.magnitude;
@@ -64,7 +64,7 @@ namespace Maestro.Quest.Interaction
         }
         public void Configure(RoomPhysicsWorld source, ItemPhysics value, float mass)
         {
-            if(world!=source||profile!=value||body.mass!=Mathf.Clamp(mass,.05f,20))MotionRevision++;
+            if(world!=source||profile!=value||body.mass!=Mathf.Clamp(mass,.05f,20)){ReleasePhysicsInputs();MotionRevision++;}
             if (world != source) { if (world) world.Changed -= PhysicsChanged; world = source; if (world) world.Changed += PhysicsChanged; }
             profile = value; body.mass = Mathf.Clamp(mass, .05f, 20);
             material.bounciness = value == ItemPhysics.Bouncy ? .72f : .1f;
@@ -82,8 +82,11 @@ namespace Maestro.Quest.Interaction
             Refresh();
         }
         void PhysicsChanged(){MotionRevision++;Refresh();}
-        bool Allowed => Dynamic && geometryReady && owners.Count == 0 && constraints.Count == 0 && world && world.CanSimulate(transform.position,item);
-        void Grabbed(SelectEnterEventArgs _) { MotionRevision++;boundaryActive=false;canceled = false; wasMoving = true; }
+        bool BaseAllowed => isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && constraints.Count == 0 && world && world.CanSimulate(transform.position,item);
+        // Held-body sweeps still use the whole-world gate; XRI retains its body/throw setup.
+        bool PhysicsInputsAdmitted => (item && item.Grab && item.Grab.isSelected) || InputsCurrent;
+        bool Allowed => BaseAllowed && PhysicsInputsAdmitted;
+        void Grabbed(SelectEnterEventArgs _) { ReleasePhysicsInputs();MotionRevision++;boundaryActive=false;canceled = false; wasMoving = true; Refresh(); }
         void Released(SelectExitEventArgs args)
         {
             MotionRevision++;canceled = args.isCanceled;
@@ -93,10 +96,15 @@ namespace Maestro.Quest.Interaction
         public void Refresh()
         {
             if (!body || !item || !item.Grab) return;
+            // Reconciliation configures members before all peers exist. There is
+            // no PhysX step inside publication; recheck the complete accepted set.
+            if(InputEditor?.SpatialInputsChanging==true){refreshAfterPublication=true;return;}
+            refreshAfterPublication=false;
             // The body override affects contacts only; scan geometry remains available
             // for physical placement, visual overlays and independent acoustics.
             int scanBit=1<<RoomPhysicsLayers.Scanned;
             body.excludeLayers=world&&!world.IncludesRealRoom(item)?body.excludeLayers.value|scanBit:body.excludeLayers.value&~scanBit;
+            PreparePhysicsInputs();
             bool allowed = Allowed;
             if(!world||!world.Running||!Dynamic||!geometryReady||AnimationOwned||constraints.Count>0)boundaryActive=false;
             item.Grab.throwOnDetach = allowed && !canceled;
@@ -105,27 +113,33 @@ namespace Maestro.Quest.Interaction
             item.Grab.movementType = allowed ? XRBaseInteractable.MovementType.VelocityTracking : XRBaseInteractable.MovementType.Instantaneous;
             // XRI owns its body setup while held. Changing movementType above updates that setup too.
             if (item.Grab.isSelected) return;
-            if (!allowed) StopVelocity();
+            if (!allowed) ClearBodyVelocity();
             if (!allowed) body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             body.isKinematic = !allowed; body.useGravity = allowed;
             // Speculative CCD also covers rotating/resized primitives and kinematic controller contacts.
             if (allowed) body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             body.interpolation = allowed ? RigidbodyInterpolation.Interpolate : RigidbodyInterpolation.None;
             body.linearDamping = .02f; body.angularDamping = .08f;
+            if(allowed)RestorePreparedMotion();
         }
-        public void StopVelocity()
+        public void StopVelocity(){DiscardPreparedMotion();ClearBodyVelocity();}
+        void ClearBodyVelocity()
         {
             if (body && !body.isKinematic) { body.linearVelocity = Vector3.zero; body.angularVelocity = Vector3.zero; }
         }
         public void Teleported()
         {
-            PlacementRevision++;MotionRevision++;boundaryActive=false;StopVelocity(); canceled = true;
+            ReleasePhysicsInputs();PlacementRevision++;MotionRevision++;boundaryActive=false;StopVelocity(); canceled = true;
             lastGoodPosition = transform.position; lastGoodRotation = transform.rotation;
             if (body) { body.position = transform.position; body.rotation = transform.rotation; }
             Refresh();
         }
         internal void MoveFrame(Creation.RoomFrame before,Creation.RoomFrame after)
         {
+            if(preparedMomentum){
+                preparedVelocity=after.VectorToWorld(before.VectorToRoom(preparedVelocity));
+                preparedSpin=after.DirectionToWorld(before.DirectionToRoom(preparedSpin));
+            }
             lastGoodPosition=after.PointToWorld(before.PointToRoom(lastGoodPosition));
             lastGoodRotation=after.RotationToWorld(before.RotationToRoom(lastGoodRotation));
         }
@@ -139,6 +153,7 @@ namespace Maestro.Quest.Interaction
             if(constraints.Count>0) {error="A physical connection is suspended; inspect its state";return false;}
             if(AnimationOwned) {error="An animation or carried prop owns this object";return false;}
             if(!world||!world.CanSimulate(transform.position,item)) {error="Start physics with the selected ground ready first";return false;}
+            if(!InputsCurrent){error=PhysicsInputStatus;return false;}
             return true;
         }
         // Impulse is in Newton-seconds, in world axes. Reuse the same launch
@@ -157,12 +172,15 @@ namespace Maestro.Quest.Interaction
         }
         public bool Launch(Vector3 velocity, Vector3 angularVelocity)
         {
+            Refresh();
             if (!Allowed || item.Grab.isSelected || !float.IsFinite(velocity.sqrMagnitude) || !float.IsFinite(angularVelocity.sqrMagnitude)) return false;
             canceled = false; Refresh(); body.linearVelocity = Vector3.ClampMagnitude(velocity,15); body.angularVelocity = Vector3.ClampMagnitude(angularVelocity,30); body.WakeUp(); wasMoving = true; return true;
         }
         void FixedUpdate()
         {
             if (!body || !Dynamic) return;
+            PreparePhysicsInputs(); // Before PhysX and the later liquid-force consumer.
+            if(Allowed==body.isKinematic)Refresh();
             // Unsupported dormant items do not stop an otherwise valid region. Only
             // a body that was actually simulating can cross its admitted boundary.
             if (world && world.Running && (boundaryActive||!body.isKinematic) && world.EnvironmentReady(item) && !world.CanSimulate(transform.position,item) && !item.Grab.isSelected)
@@ -178,17 +196,18 @@ namespace Maestro.Quest.Interaction
             // A newly accepted actor may become ready after collider synchronization,
             // even when another profile kept the global world ready throughout.
             if (Allowed == body.isKinematic) Refresh();
+            if(BaseAllowed&&!InputsCurrent){quietSince=Time.unscaledTime;return;} // Preparing is not settling.
             bool moving = !body.isKinematic && !body.IsSleeping() && (body.linearVelocity.sqrMagnitude > .0025f || body.angularVelocity.sqrMagnitude > .01f);
             if (moving) { quietSince = Time.unscaledTime; wasMoving = true; }
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }
         }
-        void OnDisable() { MotionRevision++;boundaryActive=false;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
+        void OnDisable() { ReleasePhysicsInputs();MotionRevision++;boundaryActive=false;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
         bool nativeResourcesReleased;
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
         void OnDestroy()=>ReleaseNativeResources();
         void ReleaseNativeResources()
         {
-            if(nativeResourcesReleased)return;nativeResourcesReleased=true;
+            if(nativeResourcesReleased)return;nativeResourcesReleased=true;ReleasePhysicsInputs();
             if (world) world.Changed -= PhysicsChanged;
             if (item && item.Grab) { item.Grab.firstSelectEntered.RemoveListener(Grabbed); item.Grab.lastSelectExited.RemoveListener(Released); }
             ArtResources.Release(material);

@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests {
             root.transform.SetPositionAndRotation(new(3,2,5),Quaternion.Euler(0,30,0));root.transform.localScale=Vector3.one*1.5f;
             var body=new Bounds(root.transform.TransformPoint(new Vector3(7,1.4f,0)),Vector3.one*.3f);var support=body;
             string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;
-            using var scope=new RoomNavigationInputs(editor,"maestro",()=>true,true);
+            using var scope=new RoomSpatialInputs(editor,"maestro",()=>true,true);
             Assert.That(scope.Require(body,support,true,out error),Is.False);Assert.That(scope.Pending,Is.True);Assert.That(scope.Targets,Does.Contain(pool));Assert.That(scope.Targets,Does.Not.Contain(far));
             yield return NavigationLoadingDone();Assert.That(scope.Require(body,support,true,out error),Is.True,error);
             Assert.That(editor.Find(pool),Is.Not.Null);Assert.That(editor.Find(far),Is.Null);Assert.That(physics.Running,Is.False);
@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator NavigationDemandCancelledFrontierCannotPublishLateOrMoveAnything(){
             string id=editor.Identity(block),area=NativeAreaFor(id);var body=new Bounds(block.transform.position,Vector3.one*2);
             Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);string saved=JsonUtility.ToJson(editor.Snapshot());
-            using var scope=new RoomNavigationInputs(editor,"maestro",()=>true,true);
+            using var scope=new RoomSpatialInputs(editor,"maestro",()=>true,true);
             Assert.That(scope.Require(body,body,false,out error),Is.False);Assert.That(scope.Pending,Is.True);scope.Dispose();
             yield return NavigationLoadingDone();Assert.That(editor.Find(id),Is.Null);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
             Assert.That(editor.ReadRetention().Reasons(id)&RoomRetentionReason.Ownership,Is.EqualTo(RoomRetentionReason.None));
@@ -43,14 +43,30 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator NavigationDemandTimeoutIsBoundedAndRequiresAFreshOwner(){
             string id=editor.Identity(block),area=NativeAreaFor(id);var body=new Bounds(block.transform.position,Vector3.one*2);
             Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);float now=0;
-            using var scope=new RoomNavigationInputs(editor,"maestro",()=>true,true,()=>now);
+            using var scope=new RoomSpatialInputs(editor,"maestro",()=>true,true,()=>now);
             Assert.That(scope.Require(body,body,false,out error),Is.False);now=31;
             Assert.That(scope.Require(body,body,false,out error),Is.False);Assert.That(error,Does.Contain("timed out"));yield return NavigationLoadingDone();
             Assert.That(scope.Require(body,body,false,out error),Is.False);Assert.That(editor.NativeActivationPending,Is.False);Assert.That(editor.Find(id),Is.Null);
         }
+        [UnityTest]public IEnumerator NavigationDemandLateCompletionCannotBypassThePreparationDeadline(){
+            string id=editor.Identity(block);var body=new Bounds(block.transform.position,Vector3.one*2);
+            Assert.That(editor.RetireNativeArea(NativeAreaFor(id),out var error),Is.True,error);float now=0;
+            using var scope=new RoomSpatialInputs(editor,"maestro",()=>true,false,()=>now);
+            Assert.That(scope.Require(body,body,false,out error),Is.False);yield return NavigationLoadingDone();now=31;
+            Assert.That(scope.Require(body,body,false,out error),Is.False);Assert.That(error,Does.Contain("timed out"));
+            Assert.That(editor.ReadRetention().Reasons(id)&RoomRetentionReason.Ownership,Is.EqualTo(RoomRetentionReason.None));
+        }
+        [UnityTest]public IEnumerator NavigationDemandChangingPendingTargetsDoesNotRestartItsDeadline(){
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Second input",new(10,1,0),1,Color.white,out var second,out var error),Is.True,error);
+            string first=editor.Identity(block);var a=new Bounds(block.transform.position,Vector3.one);var b=new Bounds(new(10,1,0),Vector3.one);
+            Assert.That(editor.RetireNativeArea(NativeAreaFor(first),out error),Is.True,error);Assert.That(editor.RetireNativeArea(NativeAreaFor(second),out error),Is.True,error);float now=0;
+            using var scope=new RoomSpatialInputs(editor,"maestro",()=>true,false,()=>now);
+            Assert.That(scope.Require(a,a,false,out error),Is.False);now=20;Assert.That(scope.Require(b,b,false,out error),Is.False);now=31;
+            Assert.That(scope.Require(b,b,false,out error),Is.False);Assert.That(error,Does.Contain("timed out"));yield return NavigationLoadingDone();
+        }
         [UnityTest]public IEnumerator NavigationDemandStaleSourceReleasesOwnershipWithoutBlockingEdits(){
             string id=editor.Identity(block);var body=new Bounds(block.transform.position,Vector3.one*2);
-            using var scope=new RoomNavigationInputs(editor,"maestro",()=>true,true);
+            using var scope=new RoomSpatialInputs(editor,"maestro",()=>true,true);
             Assert.That(scope.Require(body,body,false,out var error),Is.True,error);
             Assert.That(editor.ReadRetention().Reasons(id)&RoomRetentionReason.Ownership,Is.Not.EqualTo(RoomRetentionReason.None));
             Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=2}),Is.True,editor.Status);
@@ -62,7 +78,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Second obstacle",new(-8,1,0),1,Color.white,out var b,out error),Is.True,error);
             NativeAreaFor(a);NativeAreaFor(b);
             var first=new Bounds(new(8,1,0),Vector3.one);var second=new Bounds(new(-8,1,0),Vector3.one);
-            using var route=new RoomNavigationInputs(editor,"maestro",()=>true,true);using var step=new RoomNavigationInputs(editor,"maestro",()=>true,false);
+            using var route=new RoomSpatialInputs(editor,"maestro",()=>true,true);using var step=new RoomSpatialInputs(editor,"maestro",()=>true,false);
             Assert.That(route.Require(first,first,false,out error),Is.True,error);Assert.That(step.Require(first,first,false,out error),Is.True,error);
             Assert.That(route.Require(second,second,false,out error),Is.True,error);Assert.That(step.Require(second,second,false,out error),Is.True,error);
             Assert.That(route.Targets,Does.Contain(a));Assert.That(route.Targets,Does.Contain(b));Assert.That(step.Targets,Does.Not.Contain(a));Assert.That(step.Targets,Does.Contain(b));
