@@ -40,3 +40,8 @@ alignment_lib = static_library('maestro_alignment', ['ClockAlignment.cpp', 'Dupl
 alignment_probe = executable('maestro_alignment_probe', 'AlignmentProbe.cpp',
   link_with: [alignment_lib, echo_lib], install: false)
 test('clock-aligned-duplex', alignment_probe, timeout: 30)
+
+# Same actual APM/clock/resampler path; generated input and scripted sink receipts.
+drain_probe = executable('maestro_drain_probe', 'DrainProbe.cpp',
+  link_with: [alignment_lib, echo_lib], install: false)
+test('nonterminal-duplex-drain', drain_probe, timeout: 30)

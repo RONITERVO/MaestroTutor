@@ -51,7 +51,7 @@ needed by Abseil. Build logs retain warnings from upstream sources.
 For an Android ARM64 cross-build, use the same command with `--platform android`
 and `--ndk C:/path/to/ndk/27.2.12479018`, and a different output directory. The
 runner targets API 32, statically links the C++ runtime, and verifies AArch64,
-the five C exports, system-only dynamic dependencies and 16 KiB load alignment.
+the six C exports, system-only dynamic dependencies and 16 KiB load alignment.
 The Android probe is **compiled but not executed**. This is not an APK, IL2CPP,
 Quest performance, microphone, or Store compatibility test.
 
@@ -359,15 +359,22 @@ The duplex worker admits 1–480 samples per capture handoff with matching metad
 contiguous positions and monotonically increasing chunk sequence. Arbitrary chunk
 boundaries do not change its fixed 10 ms DSP cadence. It still waits for real sinc
 lookahead; a partial handoff does not authorize zero-padding a stalled microphone.
-There are now 27 capture scenarios and 31 clock/duplex scenarios, including exact
+There are 27 capture scenarios and 31 clock/duplex scenarios, including exact
 fragment counts, flush/resume, cancellation and a whole/fragmented PCM comparison.
 
-This is the input boundary needed by the original nonterminal `PcmCapture.flush`
-contract, **not a completed native flush implementation**. A downstream completion
-fence must account for resampler/APM delay before acknowledging that accepted audio
-has reached the original sink. Finite EOS processing and partial DSP output also
-need a distinct contract from cancellation. App lease integration, device behavior
-and acoustic acceptance remain open; no native backend has been selected.
+The worker now supplies the downstream **nonterminal** completion fence in
+[the drain contract](DRAIN_CONTRACT.md). It snapshots the accepted input, waits
+for real alignment context and the backend's fixed processing-delay bound, then
+requires ordered sink-delivery receipts. Twenty additional drain scenarios cover
+coalescing, timeout, cancellation, resumed PCM parity, 21 backend rate/phase
+combinations and 48 final-fragment/skew combinations through the actual APM.
+The same sources cross-link for Android; execution here remains off-device.
+
+This is a worker contract, not the original app's integrated `PcmCapture.flush`.
+The lease bridge must serialize capture-fragment handoff, sink delivery and
+cancellation. Finite EOS, partial output and recursive-filter decay need their
+own termination policy; the fixed delay is not a promise that filter history is
+empty. App/device/acoustic acceptance remains open. No native backend is selected.
 
 ## Dependency notices
 

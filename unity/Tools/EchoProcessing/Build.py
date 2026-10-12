@@ -24,7 +24,7 @@ APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35f
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1",
     "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
     "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp",
-    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "AudioFixture.h")
+    "ClockAlignment.h", "ClockAlignment.cpp", "DuplexProcessor.h", "DuplexProcessor.cpp", "AlignmentProbe.cpp", "DrainProbe.cpp", "AudioFixture.h")
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -202,7 +202,7 @@ def main():
                 raise RuntimeError("Unexpected Android shared-library dependency")
             record["androidNeeded"] = needed
             record["androidLoadAlignment"] = [int(line.split()[-1], 16) for line in loads]
-            for name in ("create", "reset", "render", "capture", "destroy"):
+            for name in ("create", "reset", "render", "capture", "processing_delay", "destroy"):
                 if "maestro_echo_" + name not in symbols:
                     raise RuntimeError("Missing native ABI export")
             for label in ("capture", "playback"):
@@ -220,24 +220,25 @@ def main():
                 record[label + "Probe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(device_binary),
                     "androidNeeded": device_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in device_loads],
                     "deviceOpened": False}
-            alignment_binary = build / "maestro-probe/maestro_alignment_probe"
-            run([readelf, "-h", "-l", "-d", "-Ws", alignment_binary], "android-alignment-elf", 30)
-            alignment_metadata = (output / "android-alignment-elf.log").read_text()
-            alignment_loads = [line for line in alignment_metadata.splitlines() if line.lstrip().startswith("LOAD ")]
-            alignment_needed = re.findall(r"\(NEEDED\).*?\[([^]]+)\]", alignment_metadata)
-            if ("AArch64" not in alignment_metadata or not alignment_loads or
-                any(int(line.split()[-1], 16) < 16384 for line in alignment_loads) or
-                set(alignment_needed) - {"libmaestro_echo.so", "liblog.so", "libm.so", "libdl.so", "libc.so"} or
-                "libmaestro_echo.so" not in alignment_needed or "maestro_echo_capture" not in alignment_metadata):
-                raise RuntimeError("Unexpected Android aligned processor linkage")
-            record["alignmentProbe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(alignment_binary),
-                "androidNeeded": alignment_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in alignment_loads],
-                "deviceOpened": False}
+            for label in ("alignment", "drain"):
+                worker_binary = build / ("maestro-probe/maestro_" + label + "_probe")
+                run([readelf, "-h", "-l", "-d", "-Ws", worker_binary], "android-" + label + "-elf", 30)
+                metadata = (output / ("android-" + label + "-elf.log")).read_text()
+                loads = [line for line in metadata.splitlines() if line.lstrip().startswith("LOAD ")]
+                needed = re.findall(r"\(NEEDED\).*?\[([^]]+)\]", metadata)
+                if ("AArch64" not in metadata or not loads or
+                    any(int(line.split()[-1], 16) < 16384 for line in loads) or
+                    set(needed) - {"libmaestro_echo.so", "liblog.so", "libm.so", "libdl.so", "libc.so"} or
+                    "libmaestro_echo.so" not in needed or "maestro_echo_capture" not in metadata):
+                    raise RuntimeError("Unexpected Android " + label + " processor linkage")
+                record[label + "Probe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(worker_binary),
+                    "androidNeeded": needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in loads],
+                    "deviceOpened": False}
             record["status"] = "cross-compiled-not-executed"
         else:
             binary = build / "maestro-probe" / ("maestro_echo.dll" if args.platform == "windows" else "libmaestro_echo.so")
             executable = build / "maestro-probe" / ("maestro_echo_probe.exe" if args.platform == "windows" else "maestro_echo_probe")
-            for label, expected_cases in (("capture", 27), ("playback", 22), ("alignment", 31)):
+            for label, expected_cases in (("capture", 27), ("playback", 22), ("alignment", 31), ("drain", 20)):
                 device_executable = build / ("maestro-probe/maestro_" + label + "_probe.exe")
                 run([device_executable], label + "-probe", 30)
                 device_summary = json.loads((output / (label + "-probe.log")).read_text().splitlines()[-1])

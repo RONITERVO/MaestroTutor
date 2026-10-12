@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "EchoProcessor.h"
 #include "api/audio/audio_processing.h"
+#include "common_audio/resampler/sinc_resampler.h"
+#include "modules/audio_processing/aec3/aec3_common.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -176,6 +178,18 @@ int maestro_echo_capture(MaestroEcho* owner, uint64_t epoch, uint64_t sequence,
         owner->Clear(); owner->has_render = false; ++owner->capture_sequence;
         return MAESTRO_ECHO_OK;
     } catch (...) { return owner->Fail(MAESTRO_ECHO_DSP_ERROR); }
+}
+int maestro_echo_processing_delay(MaestroEcho* owner, int* samples) {
+    if (samples) *samples = 0;
+    if (!owner || !samples) return MAESTRO_ECHO_INVALID;
+    if (owner->faulted) return MAESTRO_ECHO_RESET_REQUIRED;
+    // APM selects min(input, output) = 16 kHz: no split-band/output resampler.
+    // AEC3's framer and suppression overlap each delay one 64-sample block.
+    // Reserve a full 32-tap input sinc kernel in OUTPUT samples (conservative
+    // for 32/48 -> 16 kHz; no input resampling at 16 kHz). See DRAIN_CONTRACT.md.
+    static_assert(webrtc::kBlockSize == 64 && webrtc::SincResampler::kKernelSize == 32);
+    *samples = 2 * webrtc::kBlockSize + webrtc::SincResampler::kKernelSize;
+    return MAESTRO_ECHO_OK;
 }
 void maestro_echo_destroy(MaestroEcho** owner) {
     if (!owner) return;

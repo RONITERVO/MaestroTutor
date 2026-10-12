@@ -8030,3 +8030,24 @@ delay. Graceful finite EOS must remain separate from cancellation and from live
 input starvation. No flush completion, last-word preservation in the app, hardware
 acceptance or provider acceptance is claimed yet. Native audio remains unselected,
 and tone-quality failures and the broader world/release gates remain open.
+
+### Native nonterminal audio completion fence — 2026-10-12
+
+The candidate duplex worker now snapshots each accepted microphone prefix and
+coalesces overlapping flush requests. Completion waits for real sinc context,
+the pinned DSP's reported fixed processing-delay bound, and ordered acknowledgments
+that the original sink has accepted every required output block. Later input does
+not extend an existing request. Owner-specific receipts reject cross-owner,
+duplicate and out-of-order delivery; a one-second deadline and 50-frame delivery
+limit bound waiting. Close/fault cancel pending tickets and native output.
+
+Twenty new off-device drain scenarios include 21 backend rate/block-phase probes,
+48 final-fragment/clock-skew combinations, and repeated flush/resume with identical
+PCM against an uninterrupted processor. Android cross-compilation alone remains
+insufficient for device acceptance. See the native [drain contract](../unity/Tools/EchoProcessing/DRAIN_CONTRACT.md).
+
+This is nonterminal processing progress, not finite EOS or an empty IIR filter.
+The original app lease bridge, scheduled-sink cancellation and last-word behavior
+at final shutdown still require integration and acceptance. All native audio
+candidates stay outside the app; sustained-tone quality, hardware timing, speech,
+complete audible-source coverage and the broader world/release gates stay open.

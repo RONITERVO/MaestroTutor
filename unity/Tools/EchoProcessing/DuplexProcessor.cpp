@@ -5,12 +5,21 @@
 #include "common_audio/resampler/sinc_resampler.h"
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
 namespace maestro {
 namespace {
 constexpr int frame_size=480, capacity=24000, request_size=128;
+uint64_t NextOwner(){
+    static std::atomic<uint64_t> next{1};
+    auto value=next.load(std::memory_order_relaxed);
+    for(;;){
+        if(value==UINT64_MAX)throw std::overflow_error("Duplex owner identifiers exhausted");
+        if(next.compare_exchange_weak(value,value+1,std::memory_order_relaxed))return value;
+    }
+}
 bool Valid(const float* input,int count){
     if(!input)return false;
     for(int i=0;i<count;++i)if(!std::isfinite(input[i])||std::abs(input[i])>1)return false;
@@ -20,6 +29,10 @@ bool Valid(const float* input,int count){
 struct DuplexProcessor::State final:webrtc::SincResamplerCallback {
     struct RenderBlock { std::array<float,960> samples{};int64_t first=0; };
     uint64_t epoch,cap_sequence=0,render_sequence=0,sequence=0,clipped=0;
+    const uint64_t owner=NextOwner();
+    uint64_t delivered=0,flush_target=0;
+    DuplexFlush flush{};bool flush_ready=false;
+    int latency_frames=0;int64_t flush_started=0;
     MonotonicClock now;void* context;
     HardwareClock capture_clock,render_clock;
     const void* render_owner=nullptr;
@@ -40,7 +53,13 @@ struct DuplexProcessor::State final:webrtc::SincResamplerCallback {
     State(uint64_t generation,MonotonicClock clock,void* user):epoch(generation),now(clock),context(user){
         if(!epoch||!now)throw std::invalid_argument("Duplex requires an epoch and monotonic clock");
         if(maestro_echo_create(48000,2,48000,epoch,&echo)!=MAESTRO_ECHO_OK)throw std::runtime_error("Echo processor unavailable");
-        try{resampler=std::make_unique<webrtc::SincResampler>(1,request_size,this);}
+        try{
+            int delay=0;
+            if(maestro_echo_processing_delay(echo,&delay)!=MAESTRO_ECHO_OK||delay<0||delay>16000)
+                throw std::runtime_error("Echo processing delay unavailable");
+            latency_frames=(delay+159)/160;
+            resampler=std::make_unique<webrtc::SincResampler>(1,request_size,this);
+        }
         catch(...){maestro_echo_destroy(&echo);throw;}
     }
     ~State(){Retire();}
@@ -50,6 +69,20 @@ struct DuplexProcessor::State final:webrtc::SincResamplerCallback {
     }
     DuplexStatus Fail(DuplexFault reason){if(fault==DuplexFault::None)fault=reason;Retire();return DuplexStatus::Faulted;}
     DuplexStatus Status()const{return closed?DuplexStatus::Closed:fault!=DuplexFault::None?DuplexStatus::Faulted:DuplexStatus::Accepted;}
+    FlushStatus FlushState()const{
+        return closed?FlushStatus::Closed:fault!=DuplexFault::None?FlushStatus::Faulted:
+            flush_ready?FlushStatus::Ready:FlushStatus::Pending;
+    }
+    bool CheckFlushDeadline(int64_t current){
+        if(flush.request&&!flush_ready&&current-flush_started>=1000000000){Fail(DuplexFault::FlushTimeout);return false;}
+        return true;
+    }
+    bool CheckFlushClock(){
+        if(!flush.request||flush_ready)return true;
+        int64_t current;
+        if(!ClockNow(current)){Fail(DuplexFault::Clock);return false;}
+        return CheckFlushDeadline(current);
+    }
     // SincResampler invokes this synchronously on the owner worker, not an audio
     // callback. Preflight guarantees full input. Any violation invalidates output.
     void Run(size_t frames,float* destination)override{
@@ -96,6 +129,9 @@ DuplexStatus DuplexProcessor::Process(int16_t* output,int count,DuplexFrame& fra
     auto& s=*state_;if(s.Status()!=DuplexStatus::Accepted)return s.Status();
     if(!output||count!=160)return DuplexStatus::Invalid;
     int64_t analyze;if(!s.ClockNow(analyze))return s.Fail(DuplexFault::Clock);
+    if(!s.CheckFlushDeadline(analyze))return s.Status();
+    if(s.sequence-s.delivered>=50)return s.Fail(DuplexFault::Overflow);
+    if(s.sequence>=UINT64_MAX-static_cast<uint64_t>(s.latency_frames))return s.Fail(DuplexFault::Sequence);
     if(s.first_process<0)s.first_process=analyze;
     if((s.cap_sequence&&!s.capture_clock.Fresh(analyze))||(s.render_sequence&&!s.render_clock.Fresh(analyze))||
        ((!s.cap_sequence||!s.render_sequence)&&analyze-s.first_process>1000000000))return s.Fail(DuplexFault::Clock);
@@ -128,10 +164,45 @@ DuplexStatus DuplexProcessor::Process(int16_t* output,int count,DuplexFrame& fra
     if(maestro_echo_render(s.echo,s.epoch,s.sequence,block.samples.data(),960)!=MAESTRO_ECHO_OK)return s.Fail(DuplexFault::Processing);
     int64_t process;if(!s.ClockNow(process)||!MeasureDelay(s.render_clock,s.capture_clock,{block.first,0},first,analyze,process,delay))return s.Fail(DuplexFault::Clock);
     if(maestro_echo_capture(s.echo,s.epoch,s.sequence,s.resampled.data(),480,delay.milliseconds,output,160)!=MAESTRO_ECHO_OK)return s.Fail(DuplexFault::Processing);
-    frame={s.epoch,s.sequence++,first,block.first,delay,ratio,s.clipped};
+    frame={s.epoch,s.sequence++,first,block.first,delay,ratio,s.clipped,s.owner};
     const double advance=s.source_fraction+480*ratio;const auto whole=static_cast<uint64_t>(std::floor(advance));
     s.source_whole+=whole;s.source_fraction=advance-static_cast<double>(whole);
+    // The alignment sinc is centered on the source cursor. Advance past a full
+    // kernel after the accepted prefix, then let the backend's fixed delay pass.
+    // Frame rounding is conservative; neither operation clears filter history.
+    if(s.flush.request&&!s.flush_ready&&!s.flush_target&&
+       s.source_whole>=s.flush.input_samples+webrtc::SincResampler::kKernelSize){
+        s.flush_target=s.sequence+s.latency_frames;
+    }
     block.samples.fill(0);++s.render_read;return DuplexStatus::Frame;
+}
+DuplexStatus DuplexProcessor::AcknowledgeDelivery(const DuplexFrame& frame){
+    auto& s=*state_;if(s.Status()!=DuplexStatus::Accepted)return s.Status();
+    if(frame.owner!=s.owner||frame.epoch!=s.epoch||frame.sequence!=s.delivered||frame.sequence>=s.sequence)
+        return DuplexStatus::Invalid;
+    if(!s.CheckFlushClock())return s.Status();
+    ++s.delivered;
+    if(s.flush_target&&s.delivered>=s.flush_target)s.flush_ready=true;
+    return DuplexStatus::Accepted;
+}
+FlushStatus DuplexProcessor::BeginFlush(DuplexFlush& ticket){
+    ticket={};auto& s=*state_;if(s.Status()!=DuplexStatus::Accepted)return s.FlushState();
+    if(!s.CheckFlushClock())return s.FlushState();
+    if(s.flush.request&&!s.flush_ready){ticket=s.flush;return FlushStatus::Pending;}
+    if(s.flush.request==UINT64_MAX||s.written>UINT64_MAX-webrtc::SincResampler::kKernelSize){
+        s.Fail(DuplexFault::Sequence);return FlushStatus::Faulted;
+    }
+    int64_t current;
+    if(!s.ClockNow(current)){s.Fail(DuplexFault::Clock);return FlushStatus::Faulted;}
+    s.flush={s.owner,s.epoch,s.flush.request+1,s.written};s.flush_started=current;
+    s.flush_target=0;s.flush_ready=s.written==0;ticket=s.flush;return s.FlushState();
+}
+FlushStatus DuplexProcessor::PollFlush(const DuplexFlush& ticket){
+    auto& s=*state_;if(s.Status()!=DuplexStatus::Accepted)return s.FlushState();
+    if(!ticket.request||ticket.owner!=s.owner||ticket.epoch!=s.epoch||ticket.request!=s.flush.request||
+       ticket.input_samples!=s.flush.input_samples)return FlushStatus::Invalid;
+    if(!s.CheckFlushClock())return s.FlushState();
+    return s.FlushState();
 }
 DuplexFault DuplexProcessor::Fault()const{return state_->fault;}
 void DuplexProcessor::Close(){auto& s=*state_;if(s.closed)return;s.closed=true;s.Retire();}

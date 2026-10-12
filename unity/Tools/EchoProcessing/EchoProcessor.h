@@ -47,6 +47,11 @@ MAESTRO_ECHO_API int maestro_echo_render(MaestroEcho* owner, uint64_t epoch,
 MAESTRO_ECHO_API int maestro_echo_capture(MaestroEcho* owner, uint64_t epoch,
     uint64_t sequence, const float* input, int sample_count, int delay_ms,
     int16_t* output, int output_count);
+// Conservative fixed processing-delay bound in 16 kHz output samples for this
+// pinned backend. Excludes device queues, alignment resampling and IIR decay;
+// not an end-of-stream tail length. Does not consume audio or reset DSP history.
+// Clears a valid result on failure. A faulted owner requires reset.
+MAESTRO_ECHO_API int maestro_echo_processing_delay(MaestroEcho* owner, int* samples);
 // Clears retained scratch, releases DSP, nulls caller's handle. Null is allowed.
 // Copies of the old handle are invalid; caller must fence queued work first.
 MAESTRO_ECHO_API void maestro_echo_destroy(MaestroEcho** owner);

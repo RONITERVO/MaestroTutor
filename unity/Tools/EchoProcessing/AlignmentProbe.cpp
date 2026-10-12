@@ -87,6 +87,7 @@ void FragmentParity(){
         PlaybackFrame rf{31,static_cast<uint64_t>(frame),frame*480};PlaybackClock rc{&time,31,static_cast<uint64_t>(frame+1),rs,time.now,time.now};
         Check(whole.Render(silence.data(),960,rf,rc)==DuplexStatus::Accepted&&fragmented.Render(silence.data(),960,rf,rc)==DuplexStatus::Accepted,"shared render timeline");
         Check(whole.Process(a.data(),160,af)==DuplexStatus::Frame&&fragmented.Process(b.data(),160,bf)==DuplexStatus::Frame,"paired output");
+        Check(whole.AcknowledgeDelivery(af)==DuplexStatus::Accepted&&fragmented.AcknowledgeDelivery(bf)==DuplexStatus::Accepted,"paired sink admission");
         Check(a==b&&af.capture_first.position==bf.capture_first.position&&af.capture_first.fraction==bf.capture_first.fraction&&af.sequence==bf.sequence,"fragment boundaries preserve PCM and sample identity");
     }
     Done("duplex-fragment-output-parity");
@@ -168,12 +169,15 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pat
         Check(near.Render(silence.data(),960,rf,rc)==DuplexStatus::Accepted,"quality baseline reference");
         Check(echo.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned echo frame");
         const auto metadata=result;q.clipped=metadata.clipped_samples;
+        Check(echo.AcknowledgeDelivery(result)==DuplexStatus::Accepted,"echo delivered");
         for(int i=0;i<160;++i){cancelled.push_back(out[i]/32768.0);const double t=(metadata.capture_first.position+metadata.capture_first.fraction+i*3*metadata.capture_per_render)/cr;
             expected_echo.push_back(acoustic_echo(t));expected_near.push_back(Near(t));}
         const double true_delay=(.08+frame*480/rr-(metadata.capture_first.position+metadata.capture_first.fraction)/cr)*1000;
         q.max_delay_error_ms=std::max(q.max_delay_error_ms,std::abs(metadata.delay.milliseconds-true_delay));
         Check(both.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned double talk");for(auto x:out)combined.push_back(x/32768.0);q.clipped+=result.clipped_samples;
+        Check(both.AcknowledgeDelivery(result)==DuplexStatus::Accepted,"quality delivered");
         Check(near.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned near baseline");for(auto x:out)baseline.push_back(x/32768.0);q.clipped+=result.clipped_samples;
+        Check(near.AcknowledgeDelivery(result)==DuplexStatus::Accepted,"baseline delivered");
     }
     const int first=(pattern==Pattern::WarmTonalPathChange?11:8)*16000,last=17*16000;double err=0,original=0,bb=0,raw=0,cross=0,cc=0;
     for(int i=first;i<last;++i){err+=cancelled[i]*cancelled[i];original+=expected_echo[i]*expected_echo[i];bb+=baseline[i]*baseline[i];raw+=expected_near[i]*expected_near[i];cross+=combined[i]*baseline[i];cc+=combined[i]*combined[i];}
