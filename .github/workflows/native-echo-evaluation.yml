@@ -1,0 +1,67 @@
+name: Native echo evaluation
+
+on:
+  pull_request:
+    paths:
+      - 'unity/Tools/EchoProcessing/**'
+      - '.github/workflows/native-echo-evaluation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'unity/Tools/EchoProcessing/**'
+      - '.github/workflows/native-echo-evaluation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-echo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generated-audio:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Prepare pinned evaluation dependencies
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:GITHUB_WORKSPACE '.quest-evidence/echo-native'
+          New-Item -ItemType Directory -Path "$root/cache" -Force | Out-Null
+          python -m pip install --target "$root/tools" --no-deps --only-binary=:all: meson==1.9.1 ninja==1.13.0
+          if($LASTEXITCODE -ne 0){throw 'Build tools failed to install'}
+          $downloads=@{
+            'apm.tar.xz'='https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz'
+            'abseil.tar.gz'='https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz'
+            'overlay.zip'='https://wrapdb.mesonbuild.com/v2/abseil-cpp_20240722.0-3/get_patch'
+          }
+          foreach($file in $downloads.Keys){
+            Invoke-WebRequest -Uri $downloads[$file] -OutFile "$root/cache/$file" -TimeoutSec 90 -MaximumRetryCount 2
+          }
+          # Build.py verifies all three archive hashes before extraction.
+      - name: Compile and test the isolated native processor
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:GITHUB_WORKSPACE '.quest-evidence/echo-native'
+          python unity/Tools/EchoProcessing/Build.py `
+            --apm "$root/cache/apm.tar.xz" --abseil "$root/cache/abseil.tar.gz" `
+            --overlay "$root/cache/overlay.zip" --meson-root "$root/tools" `
+            --ninja "$root/tools/ninja/data/bin/ninja.exe" `
+            --platform windows --output "$root/ci"
+          if($LASTEXITCODE -ne 0){throw 'Native evaluation failed'}
+          $result=Get-Content "$root/ci/result.json" -Raw | ConvertFrom-Json
+          "Eight bounded generated-audio scenarios passed. Noise-heavy double-talk diagnostic: **$($result.noiseStress.status)**. This is an isolated candidate, not speech-quality, Quest, or release acceptance." >> $env:GITHUB_STEP_SUMMARY
+      - name: Preserve native results and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-echo-evaluation
+          if-no-files-found: ignore
+          path: |
+            .quest-evidence/echo-native/ci/result.json
+            .quest-evidence/echo-native/ci/*.log

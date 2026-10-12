@@ -993,3 +993,34 @@ with Chrome installed; CI runs the same compiled fixture. No physical microphone
 or speakers are used. Earlier development-server import stalls are retained and
 excluded from passing evidence; the final probe uses a production-compiled fixture
 and an ephemeral loopback server with a bounded runtime.
+
+
+## Native echo-processing candidate evaluation — 2026-10-12
+
+`Tools/EchoProcessing` now source-builds pinned standalone WebRTC APM 2.1 and its
+matched Abseil dependency. The isolated C ABI accepts explicit paired 10 ms render
+and capture frames, processes actual AEC3, and produces mono PCM16 at 16 kHz.
+It preserves playback samples and requires a fresh epoch after missing/stale
+frames or invalid input. Reset and destruction retire the owned DSP; no native
+microphone or app adapter is selected. See the [reproduction guide](Tools/EchoProcessing/README.md).
+
+Eight generated-audio scenarios pass on Windows, with roughly 21–24 dB echo
+reduction. Offline synthesized English and Spanish pass three additional cases
+each, including mono/stereo double-talk. The separate noise-heavy double-talk
+case FAILS its fixed near-signal gain threshold (.325 versus the minimum .45).
+That failure remains reproducible and explicitly reported in the runner/CI;
+it is not converted into speech acceptance by the passing voiced cases.
+
+The same source cross-compiles with NDK 27.2 for Android ARM64/API 32. ELF checks
+confirm the C exports, system-only shared dependencies and 16 KiB load alignment.
+The Android binary is not executed or packaged into Unity. This work uses no
+physical audio, Quest queries, provider calls, signing, deployment or Meta action.
+Evidence, exact hashes and earlier failed build/probe attempts are retained under
+`.quest-evidence/echo-native`. A dedicated CI workflow runs the bounded Windows
+checks and retains the open quality diagnostic.
+
+Promotion still requires the noise/unvoiced-speech investigation, perceptual and
+near-end onset testing, native microphone ownership, measured clock/delay/drift
+alignment, all-audible-output coverage, pause/permission recovery and actual
+Quest/original-Live acceptance. This candidate cannot clear the separate Meta
+acoustic-map worker crash or enable production reflections/full duplex.

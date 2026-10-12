@@ -7819,3 +7819,32 @@ A compiled Chrome probe verifies real AudioWorklet capture, local trigger handof
 flush and complete track shutdown using generated input with a scripted detector.
 It uses no provider and is now part of web CI. Native capture/echo cancellation is
 still a separate implementation and acceptance task.
+
+
+### Native echo-processing evaluation — 2026-10-12
+
+The next shared audio dependency has an isolated, reproducible implementation:
+`unity/Tools/EchoProcessing` wraps source-built WebRTC APM 2.1 behind a small owned
+C ABI. It processes paired render/capture frames into the existing mono PCM16
+shape; it does not yet acquire a microphone or replace the original capture owner.
+Frame/epoch gaps and invalid audio require an explicit DSP reset, and failed
+capture cannot return stale PCM.
+
+Windows checks pass eight generated-audio scenarios and three synthesized-speech
+cases each for English and Spanish. Echo reduction is about 21–24 dB. A separate
+noise-heavy double-talk case remains FAILED because it suppresses near-end audio
+too much; the dedicated native CI workflow and receipts expose that result.
+Do not count per-frame assertions as thousands of distinct tests or interpret
+passing voiced probes as physical speech-quality acceptance.
+
+The identical candidate source builds for Android ARM64/API 32 with verified
+exports, system-only dynamic dependencies and 16 KiB ELF load alignment. No native
+candidate binary enters the app. No C# or production web behavior changes in this
+increment. Build/probe failures and source hashes are retained in
+`.quest-evidence/echo-native`; device/provider/release holds remain in force.
+
+Next audio work must resolve quality limits and connect the one original capture
+owner with measured timing, drift and gap handling, complete audible references,
+permission/lifecycle recovery and real Quest/Live acceptance. Regional world
+activation, terrain/water/navigation support and remaining release gates remain
+open independently; this audio evaluation does not complete the v1 goal.
