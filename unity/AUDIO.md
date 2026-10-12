@@ -1004,30 +1004,35 @@ It preserves playback samples and requires a fresh epoch after missing/stale
 frames or invalid input. Reset and destruction retire the owned DSP; no native
 microphone or app adapter is selected. See the [reproduction guide](Tools/EchoProcessing/README.md).
 
-The two reproducible evaluation profiles retain eight bounded generated-audio and
-ownership scenarios. The default `stock` profile preserves the prior APM settings.
-The explicit `stationary32` research profile uses longer filters and stationarity
-handling; it is not accepted or selected for the app. Both retain three additional
-steady-state cases each for locally synthesized English and Spanish.
+The three reproducible evaluation profiles retain eight bounded generated-audio
+scenarios plus ownership checks. The default `stock` profile preserves the prior
+APM settings. `stationary32` uses longer filters and stationarity handling.
+`measured32` adds caller-supplied calibrated delay, 4 ms headroom and faster coarse
+adaptation while preserving the long filter. All remain outside the app. Each
+also passes three steady-state cases per locally synthesized English/Spanish voice.
 
-The expanded diagnostics expose a tradeoff: stock processing fails noisy
-near-end audio and all five onset profiles, while the research profile passes
-those checks but fails both abrupt acoustic-path changes. The latter can fall to
-about 2–3 dB echo reduction after an initial recovery. Neither profile is ready for
-native microphone integration. A corrected band-limited acoustic fixture avoids
-inventing microphone aliases in mixed-rate tests; older numerical results remain
-historical and are not directly comparable.
+Stock processing fails noisy near-end audio and all five onset profiles.
+The stationary profile passes those checks but fails both abrupt acoustic-path
+changes and 18 of 24 additional delay/reflection variants. Internal traces showed
+late delay changes resetting a recovered filter, and louder reflections can hide
+weaker direct paths. The measured profile passes all 40 generated scenarios,
+including the same changing paths and supplied-delay errors of -4/0/+4 ms.
+Neither modeled timing nor these finite offsets prove actual Quest calibration,
+continuous drift tolerance, immediate recovery or perceptual speech quality.
 
-CI evaluates both profiles, reports their exact failing quality cases and hard-gates
-their established passing groups. Core contract errors, crashes, missing results
-and regressions fail the run. An explicit quality-failure count remains separate
-from bounded CI success. See the reproduction guide for thresholds and coverage.
-Source hashes and failed attempts are retained in `.quest-evidence/echo-native`
-and `.quest-evidence/echo-quality`. The same source is cross-built for Android
-ARM64/API 32; it is not executed or packaged into Unity.
+CI evaluates all profiles, reports exact failing quality cases and hard-gates
+established passing groups; all measured-profile diagnostics are mandatory.
+Core contract errors, crashes, missing results and regressions fail the run.
+The measured profile records zero known generated-quality failures while physical
+speech and Quest acceptance remain false. See the reproduction guide for thresholds
+and coverage. Source hashes, rejected variants and failed attempts remain in
+`.quest-evidence/echo-native`, `.quest-evidence/echo-quality` and
+`.quest-evidence/echo-path`. A corrected band-limited fixture avoids microphone
+aliasing; historical metrics from before that correction are not directly comparable.
 
-Promotion still requires resolving both quiet/onset preservation and changing-path
-suppression, perceptual speech checks, native microphone ownership, measured
-clock/delay/drift alignment, all-audible-output coverage, pause/permission recovery
-and actual Quest/original-Live acceptance. This candidate cannot clear the separate
-Meta acoustic-map worker crash or enable production reflections/full duplex.
+Promotion still requires native microphone ownership, measured clock/delay/drift
+alignment, all-audible-output coverage, perceptual speech checks, pause/permission
+recovery and actual Quest/original-Live acceptance. Cross-compilation for Android
+ARM64/API 32 is separate from device execution and Unity packaging. This candidate
+cannot clear the separate Meta acoustic-map worker crash or enable production
+reflections/full duplex.

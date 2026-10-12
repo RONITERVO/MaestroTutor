@@ -103,7 +103,7 @@ def main():
     parser.add_argument("--meson-root", type=Path, required=True, help="Local Meson 1.9.1 install directory")
     parser.add_argument("--ninja", type=Path, required=True)
     parser.add_argument("--platform", choices=("windows", "android"), required=True)
-    parser.add_argument("--profile", choices=("stock", "stationary32"), default="stock")
+    parser.add_argument("--profile", choices=("stock", "stationary32", "measured32"), default="stock")
     parser.add_argument("--ndk", type=Path)
     parser.add_argument("--speech-wav", type=Path, action="append", default=[])
     parser.add_argument("--output", type=Path, required=True)
@@ -169,7 +169,7 @@ def main():
         with manifest.open("a", encoding="utf-8") as file:
             file.write("\nsubdir('maestro-probe')\n")
         with (source / "meson_options.txt").open("a", encoding="utf-8") as file:
-            file.write("\noption('maestro_echo_profile', type: 'combo', choices: ['stock', 'stationary32'], value: 'stock')\n")
+            file.write("\noption('maestro_echo_profile', type: 'combo', choices: ['stock', 'stationary32', 'measured32'], value: 'stock')\n")
         build = output / "build"
         meson = [sys.executable, "-m", "mesonbuild.mesonmain"]
         setup = meson + ["setup", build, source, "--wrap-mode=nodownload", "--default-library=static",
@@ -215,7 +215,7 @@ def main():
             # Keep known quality failures visible, while a regression in a
             # profile's established passing cases fails the evaluation itself.
             record["qualityDiagnostics"] = {}
-            for name, cases in (("noise-stress", 1), ("onsets", 5), ("path-changes", 2)):
+            for name, cases in (("noise-stress", 1), ("onsets", 5), ("path-changes", 2), ("delay-variants", 24)):
                 code = run([executable, "--" + name], name, 90, required=False)
                 detail = json.loads((output / (name + ".log")).read_text().splitlines()[-1])
                 expected_status = "passed" if code == 0 else "failed"
@@ -234,7 +234,9 @@ def main():
                 run([executable, "--speech-wav", wave], "speech-" + str(index), 90)
             record["noiseStress"] = record["qualityDiagnostics"]["noise-stress"]
             record["openQualityFailures"] = sum(x["failures"] for x in record["qualityDiagnostics"].values())
-            required_quality = ("path-changes",) if args.profile == "stock" else ("noise-stress", "onsets")
+            required_quality = ("path-changes", "delay-variants") if args.profile == "stock" else ("noise-stress", "onsets")
+            if args.profile == "measured32":
+                required_quality = tuple(record["qualityDiagnostics"])
             record["requiredPassingQuality"] = required_quality
             if any(record["qualityDiagnostics"][name]["status"] != "passed" for name in required_quality):
                 raise RuntimeError("Regression in this profile's required passing quality cases")

@@ -7,13 +7,13 @@
 #include <cmath>
 #include <limits>
 #include <memory>
-#if defined(MAESTRO_ECHO_STATIONARY_EVALUATION)
+#if defined(MAESTRO_ECHO_STATIONARY_EVALUATION) || defined(MAESTRO_ECHO_MEASURED_EVALUATION)
 #include "modules/audio_processing/aec3/echo_canceller3.h"
 #include <optional>
 #include <stdexcept>
 
-// Explicit research profile only. It fails changing-path checks and must not
-// become the default merely because its steady-room onset checks improve.
+// Explicit evaluation profiles only. The stock profile remains the default.
+// Measured-delay processing requires a caller-owned, calibrated timing path.
 namespace {
 class EchoFactory final : public webrtc::EchoControlFactory {
 public:
@@ -30,6 +30,15 @@ public:
         // handling; do not switch to a raw/linear-output bypass.
         config.echo_audibility.use_stationarity_properties = true;
         config.echo_audibility.use_stationarity_properties_at_init = true;
+#if defined(MAESTRO_ECHO_MEASURED_EVALUATION)
+        // Keep the 128 ms paths, but adapt the coarse filter at the rate used by
+        // upstream's multichannel preset. A measured buffer delay preserves weak
+        // early paths and avoids a late correlation-driven reset after recovery.
+        config.filter.coarse.rate = .95f;
+        config.filter.coarse_initial.rate = .95f;
+        config.delay.use_external_delay_estimator = true;
+        config.delay.delay_headroom_samples = 64; // One 4 ms block at 16 kHz.
+#endif
         if (!webrtc::EchoCanceller3Config::Validate(&config))
             throw std::runtime_error("Invalid pinned echo configuration");
         return std::make_unique<webrtc::EchoCanceller3>(config, std::nullopt, rate, render, capture);
@@ -63,7 +72,7 @@ struct MaestroEcho {
         config.pipeline.multi_channel_render = render_channels == 2;
         webrtc::AudioProcessingBuilder builder;
         builder.SetConfig(config);
-#if defined(MAESTRO_ECHO_STATIONARY_EVALUATION)
+#if defined(MAESTRO_ECHO_STATIONARY_EVALUATION) || defined(MAESTRO_ECHO_MEASURED_EVALUATION)
         builder.SetEchoControlFactory(std::make_unique<EchoFactory>());
 #endif
         apm = builder.Create();
@@ -80,6 +89,13 @@ struct MaestroEcho {
     ~MaestroEcho() { Clear(); }
 };
 namespace {
+constexpr int MinimumDelayMs() {
+#if defined(MAESTRO_ECHO_MEASURED_EVALUATION)
+    return 4; // External alignment must not subtract headroom below zero.
+#else
+    return 0;
+#endif
+}
 bool Rate(int rate) { return rate == 16000 || rate == 32000 || rate == 48000; }
 bool Audio(const float* input, int count) {
     if (!input) return false;
@@ -143,7 +159,7 @@ int maestro_echo_capture(MaestroEcho* owner, uint64_t epoch, uint64_t sequence,
     if (epoch != owner->epoch || !owner->has_render || !Sequence(sequence, owner->capture_sequence))
         return owner->Fail(MAESTRO_ECHO_RESET_REQUIRED);
     if (!output || output_count != 160 || sample_count != owner->capture_rate / 100 ||
-        delay_ms < 0 || delay_ms > 500 || !Audio(input, sample_count))
+        delay_ms < MinimumDelayMs() || delay_ms > 500 || !Audio(input, sample_count))
         return owner->Fail(MAESTRO_ECHO_INVALID);
     try {
         const float* in[] = {input};

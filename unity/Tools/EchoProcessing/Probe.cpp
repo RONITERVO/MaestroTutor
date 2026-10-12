@@ -12,6 +12,7 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
+#include <utility>
 namespace {
 int checks = 0;
 void Check(bool value, const char* description) {
@@ -60,9 +61,10 @@ void BandLimit(std::vector<float>& values) {
 }
 struct Signals {
     std::vector<float> left, right, near;
-    bool change_path = false, nonlinear = false;
-    Signals(bool noise_near = false) : left(seconds * base), right(seconds * base), near(seconds * base) {
-        Noise a{0x32455243}, b{0x94376521}, c{0x27182818};
+    bool change_path = false, nonlinear = false, varied_path = false, weak_direct = false;
+    int hardware_delay_ms = 80, supplied_delay_error_ms = 0;
+    Signals(bool noise_near = false, uint32_t seed = 0) : left(seconds * base), right(seconds * base), near(seconds * base) {
+        Noise a{0x32455243 ^ seed}, b{0x94376521 ^ seed}, c{0x27182818 ^ seed};
         for (int i = 0; i < seconds * base; ++i) {
             const double t = static_cast<double>(i) / base;
             // Independent, reproducible broadband sources with speech-like
@@ -79,6 +81,14 @@ struct Signals {
     }
     float At(const std::vector<float>& v, int index) const { return index < 0 ? 0 : v[index]; }
     float Echo(int index, int channels) const {
+        if (varied_path) {
+            const int delay = hardware_delay_ms * (base / 1000) +
+                (change_path && index >= 8 * base ? 15 * (base / 1000) : 0);
+            float value = (weak_direct ? .2f : .5f) * At(left, index - delay)
+                + (weak_direct ? .6f : .2f) * At(left, index - delay - 30 * (base / 1000))
+                + .13f * At(channels == 2 ? right : left, index - delay - 75 * (base / 1000));
+            return nonlinear ? .25f * std::tanh(4 * value) : value;
+        }
         // 80 ms speaker-buffer delay and two later reflected paths.
         const float first = .55f * At(left, index - 3840) + .18f * At(left, index - 5280);
         float value = first + (channels == 2 ? .35f * At(right, index - 4320) : .1f * At(left, index - 6240));
@@ -180,7 +190,7 @@ AudioResult Process(const Signals& signals, int render_rate, int channels, int c
         Check(maestro_echo_render(owner.handle, epoch, sequence, render.data(), static_cast<int>(render.size())) == 0, "render");
         Check(render == unchanged_render, "reference must not alter playback samples");
         Check(maestro_echo_capture(owner.handle, epoch, sequence, capture.data(), static_cast<int>(capture.size()),
-            80, pcm.data(), 160) == 0, "capture");
+            signals.hardware_delay_ms + signals.supplied_delay_error_ms, pcm.data(), 160) == 0, "capture");
         for (int j = 0; j < 160; ++j) {
             const int source = frame * 480 + j * 3, dest = frame * 160 + j;
             output[dest] = pcm[j] / 32768.0f;
@@ -286,6 +296,26 @@ bool PathChange(const Signals& room, const char* name, int rate, int channels, b
                 name, transient, minimum_recovered);
     return minimum_recovered >= 15;
 }
+int DelayVariants() {
+    const Signals independent(false, 0x154d912);
+    int failures = 0;
+    for (const auto& setup : std::array<std::pair<int, bool>, 4>{{{20, false}, {80, true}, {140, false}, {140, true}}}) {
+        for (int channels : {1, 2}) {
+            for (int error : {-4, 0, 4}) {
+                Signals signals = independent;
+                signals.varied_path = true;
+                signals.hardware_delay_ms = setup.first;
+                signals.weak_direct = setup.second;
+                signals.supplied_delay_error_ms = error;
+                const std::string name = "delay-" + std::to_string(setup.first) +
+                    (setup.second ? "-weak-direct-" : "-direct-") + std::to_string(channels) +
+                    "ch-error-" + std::to_string(error);
+                failures += !PathChange(signals, name.c_str(), channels == 1 ? 16000 : 48000, channels, true);
+            }
+        }
+    }
+    return failures;
+}
 void Contracts() {
     MaestroEcho* empty = nullptr;
     Check(maestro_echo_create(44100, 1, 16000, 1, &empty) == MAESTRO_ECHO_INVALID && !empty, "unsupported rate");
@@ -295,7 +325,7 @@ void Contracts() {
     std::array<float,160> input{}; std::array<int16_t,160> output{};
     Owner owner(16000, 1, 16000); auto* original = owner.handle;
     Check(maestro_echo_create(16000, 1, 16000, 1, &owner.handle) == MAESTRO_ECHO_INVALID && owner.handle == original, "do not replace live handle");
-    auto cap = [&](uint64_t epoch, uint64_t seq, int delay = 0) {
+    auto cap = [&](uint64_t epoch, uint64_t seq, int delay = 80) {
         output.fill(1234);
         const int status = maestro_echo_capture(owner.handle, epoch, seq, input.data(), 160, delay, output.data(), 160);
         if (status) Check(std::all_of(output.begin(),output.end(),[](int16_t x){return x == 0;}), "failure output cleared");
@@ -323,12 +353,12 @@ void Contracts() {
     Check(cap(9,0) == MAESTRO_ECHO_INVALID, "infinite microphone input"); input[0] = 0;
     Check(maestro_echo_reset(owner.handle, 10) == 0 && ren(10,0) == 0, "reset for short capture");
     output.fill(1234);
-    Check(maestro_echo_capture(owner.handle,10,0,input.data(),159,0,output.data(),160) == MAESTRO_ECHO_INVALID,
+    Check(maestro_echo_capture(owner.handle,10,0,input.data(),159,80,output.data(),160) == MAESTRO_ECHO_INVALID,
         "short capture rejected");
     Check(std::all_of(output.begin(),output.end(),[](int16_t x){return x==0;}), "malformed capture cannot return stale output");
     Check(maestro_echo_reset(owner.handle, 11) == 0 && ren(11,0) == 0, "reset for output boundary");
     output.fill(1234);
-    Check(maestro_echo_capture(owner.handle,11,0,input.data(),160,0,output.data(),159) == MAESTRO_ECHO_INVALID,
+    Check(maestro_echo_capture(owner.handle,11,0,input.data(),160,80,output.data(),159) == MAESTRO_ECHO_INVALID,
         "short output rejected");
     Check(std::all_of(output.begin(),output.end(),[](int16_t x){return x==1234;}), "do not write wrong-sized output");
     Check(maestro_echo_reset(owner.handle, 12) == 0, "reset for out-of-range render");
@@ -343,6 +373,34 @@ void Contracts() {
     Check(!owner.handle, "destroy nulls handle");
     Check(cap(9,0) == MAESTRO_ECHO_INVALID, "closed handle");
     for (int i = 0; i < 32; ++i) { Owner next(48000,2,48000); }
+#if defined(MAESTRO_ECHO_MEASURED_EVALUATION)
+    {
+        Owner minimum(48000, 2, 48000);
+        std::array<float, 960> render{};
+        std::array<float, 480> capture{};
+        std::array<int16_t, 160> output{};
+        output.fill(123);
+        Check(maestro_echo_render(minimum.handle, 1, 0, render.data(), 960) == 0, "minimum delay render");
+        Check(maestro_echo_capture(minimum.handle, 1, 0, capture.data(), 480, 3, output.data(), 160) == MAESTRO_ECHO_INVALID,
+              "measured delay below headroom rejected");
+        Check(std::all_of(output.begin(), output.end(), [](int16_t x) { return x == 0; }), "invalid measured delay clears PCM");
+        Check(maestro_echo_capture(minimum.handle, 1, 0, capture.data(), 480, 4, output.data(), 160) == MAESTRO_ECHO_RESET_REQUIRED,
+              "invalid measured delay faults the epoch");
+        Check(maestro_echo_reset(minimum.handle, 2) == 0, "reset minimum delay");
+        Check(maestro_echo_render(minimum.handle, 2, 0, render.data(), 960) == 0, "minimum delay render after reset");
+        Check(maestro_echo_capture(minimum.handle, 2, 0, capture.data(), 480, 4, output.data(), 160) == 0,
+              "minimum calibrated delay is processable");
+    }
+#else
+    {
+        Owner zero_delay(16000, 1, 16000);
+        std::array<float, 160> input{};
+        std::array<int16_t, 160> output{};
+        Check(maestro_echo_render(zero_delay.handle, 1, 0, input.data(), 160) == 0, "zero delay render");
+        Check(maestro_echo_capture(zero_delay.handle, 1, 0, input.data(), 160, 0, output.data(), 160) == 0,
+              "internal-estimator profiles preserve zero-delay support");
+    }
+#endif
     std::printf("{\"case\":\"ownership-validation-and-gap-recovery\",\"status\":\"passed\",\"repeatedOwners\":32}\n");
 }
 }
@@ -366,6 +424,12 @@ int main(int argc, char** argv) {
             int failures = !PathChange(signals, "path-change16", 16000, 1, false);
             failures += !PathChange(signals, "nonlinear-path-change48", 48000, 2, true);
             std::printf("{\"status\":\"%s\",\"scope\":\"path-changes-only\",\"audioCases\":2,\"failures\":%d}\n",
+                        failures ? "failed" : "passed", failures);
+            return failures ? 1 : 0;
+        }
+        if (argc == 2 && std::strcmp(argv[1], "--delay-variants") == 0) {
+            const int failures = DelayVariants();
+            std::printf("{\"status\":\"%s\",\"scope\":\"delay-variants-only\",\"audioCases\":24,\"failures\":%d}\n",
                         failures ? "failed" : "passed", failures);
             return failures ? 1 : 0;
         }

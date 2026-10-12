@@ -89,17 +89,32 @@ operations. No allocation-free or hard real-time claim is made for upstream DSP.
 
 The adapter does **not** align clocks, estimate device delay or repair gaps. The
 caller must provide paired frames and APM's hardware-buffer delay estimate. The
-synthetic tests supply an explicit 80 ms model; this is not a Quest calibration.
+synthetic tests supply explicit modeled delays; this is not a Quest calibration.
 
 ## Reproducible profiles and open quality findings
 
 `--profile stock` is the default and keeps the original APM configuration.
-`--profile stationary32` explicitly selects an **unaccepted research profile**:
-32-block (128 ms at 16 kHz) filters and stationarity-aware echo audibility.
-Its private AEC3 header uses the pinned dependency's disabled debug-dump setting.
-Neither profile is installed in Unity. The research profile improves steady-room
-near-end preservation but regresses changing-path suppression, so it must not
-silently replace the default.
+Two opt-in profiles use 32-block (128 ms at 16 kHz) filters and stationarity-aware
+echo audibility, with the pinned dependency's disabled debug-dump setting:
+
+- `--profile stationary32` uses AEC3's internal delay estimator. It improves
+  steady-room near-end preservation but regresses changing-path suppression.
+- `--profile measured32` uses the caller's supplied buffer delay, 4 ms headroom
+  and a .95 coarse adaptation rate. The rate matches the upstream multichannel
+  preset while retaining the longer filter. It passes all current generated
+  quality checks, **conditional on the modeled timing supplied by the probe**.
+
+All three remain outside Unity. The measured profile accepts delay values in
+[4, 500] ms, rejects values below its headroom and faults the epoch on invalid
+input. The other profiles retain [0, 500] ms support. Range validation cannot prove
+that the caller measured the delay correctly. No native timing source is connected.
+
+Private linear-output traces of the internal-estimator profile showed an estimate
+change several seconds after the acoustic path changed, resetting a filter that
+had already recovered. Correlation can also align to a louder later reflection,
+leaving a weaker direct path outside the filter. Measured timing avoids those
+specific failures in these fixtures. Shorter-filter and larger-headroom candidates
+were rejected for other regressions; no upstream DSP source was patched.
 
 The default probe checks eight generated-audio scenarios: mono 16/32 kHz echo,
 stereo 48 kHz echo, mixed 48-to-16 kHz rates, near-only voiced input, mono/stereo
@@ -116,7 +131,7 @@ metrics remain historical evidence, not directly comparable measurements of the
 corrected fixture. This deliberately band-limited test does not establish quality
 throughout the full 48 kHz bandwidth.
 
-The runner and both CI matrix jobs also execute three diagnostic groups:
+The runner and all three CI matrix jobs also execute four diagnostic groups:
 
 - `--noise-stress`: one predominantly noisy near-end double-talk case, with the
   same absolute level/correlation and echo thresholds as the steady-state probe.
@@ -129,31 +144,45 @@ The runner and both CI matrix jobs also execute three diagnostic groups:
   at eight seconds without resetting the DSP. Every one-second window from
   seconds 11 through 16 must retain at least 15 dB suppression. Earlier transient
   windows are reported separately; this is not instantaneous path tracking.
+- `--delay-variants`: 24 configurations use a separate signal seed, 20/80/140 ms
+  hardware delays, weaker direct/louder reflected paths, mono 16 kHz and stereo
+  48 kHz, and supplied-delay errors of -4/0/+4 ms. Each abruptly adds 15 ms to the
+  acoustic path and uses the same per-window recovery threshold. These finite
+  offsets do not establish tolerance to continuous drift, timestamp jitter or
+  arbitrary timing errors.
 
 Current Windows results:
 
-| Profile | Eight steady/ownership scenarios | Noise-heavy double-talk | Five onset profiles | Two changing paths |
-| --- | --- | --- | --- | --- |
-| `stock` (default) | pass | **fail** | **all five fail** | pass |
-| `stationary32` (explicit research) | pass | pass | pass | **both fail** |
+| Profile | Eight core scenarios | Noise-heavy double-talk | Five onset profiles | Two changing paths | 24 delay variants |
+| --- | --- | --- | --- | --- | --- |
+| `stock` (default) | pass | **fail** | **all five fail** | pass | pass |
+| `stationary32` | pass | pass | pass | **both fail** | **18 fail** |
+| `measured32` | pass | pass | pass | pass | pass |
 
 With the corrected fixture, stock noisy near-end gain is about .284 (correlation
-.618), and the quiet-fricative onset minimum gain is .022. The research profile
+.618), and the quiet-fricative onset minimum gain is .022. The stationary profile
 retains at least .860 onset gain across the five profiles, but its changed-path
 suppression drops to about 2–3 dB even after an earlier recovery. Passing quiet
 speech alone would have hidden that regression. Locally synthesized English and
 Spanish also exercise near-only and mono/stereo double-talk for each profile;
-these steady-state comparisons are not perceptual pronunciation acceptance.
+these six additional steady-state comparisons per profile are not perceptual
+pronunciation acceptance. The measured profile passes 40 generated scenarios
+(eight core plus 32 diagnostic configurations), with no lowered threshold.
+Transient echo after a path change remains visible in the logs even when the
+three-second recovery gate passes.
 
 The runner records every quality failure and returns
 `bounded-checks-passed-quality-open` only when core contracts and that profile's
-established passing quality groups remain intact. Stock path checks and research
-noise/onset checks are hard regression gates. Missing results, incomplete groups,
+established passing quality groups remain intact. Stock path/delay checks,
+stationary noise/onset checks, and every measured-profile diagnostic group are
+hard regression gates. Missing results, incomplete groups,
 invalid-frame failures and crashes fail the run. Known failures remain failures,
 with nonzero `openQualityFailures`, explicit CI warnings and retained logs; green
-bounded CI is **not** audio-quality acceptance. No numeric threshold was relaxed.
+bounded CI is **not** audio-quality acceptance. The measured profile records zero
+known generated-quality failures but retains `speechQualityAccepted: false` and
+`questAcceptance: false`. No numeric threshold was relaxed.
 
-Before promotion: resolve the noise/onset versus changing-path tradeoff, validate
+Before promotion: validate measured timing on the actual capture/output path and
 human speech perceptually, connect the existing single capture owner, align
 render/capture clocks with drift and gap handling, cover WebView and other audible
 sources, verify permission/pause/stop lifecycles, and test actual Quest

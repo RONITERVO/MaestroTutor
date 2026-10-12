@@ -38,6 +38,9 @@ MAESTRO_ECHO_API int maestro_echo_render(MaestroEcho* owner, uint64_t epoch,
 // Mono normalized float capture, exactly 10 ms; outputs exactly 160 PCM16 samples.
 // delay_ms is APM's render/capture hardware-buffer delay estimate, NOT a clock
 // alignment implementation. Caller must supply it from its actual capture path.
+// The opt-in measured32 evaluation requires delay_ms in [4, 500] and a calibrated
+// timing source; it does not estimate hardware delay from audio. Other profiles
+// accept [0, 500]. Range validation does not establish calibration or clock sync.
 // Input and output buffers must not overlap.
 // On failure, a valid 160-sample output buffer is cleared, never stale/raw PCM.
 // Missing frames, invalid audio, and DSP errors fault the owner until reset.

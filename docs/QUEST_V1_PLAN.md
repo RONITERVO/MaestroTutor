@@ -7893,3 +7893,39 @@ unchanged. A failed legacy-noise parser check and a Windows long-path compilatio
 failure are retained with the rejected tuning attempts; shorter output paths and
 structured diagnostic results resolve those harness failures without lowering
 quality thresholds.
+
+
+### Measured-delay echo evaluation — 2026-10-12
+
+The isolated APM candidate now has a third explicit profile, `measured32`. It
+retains long filters and stationarity handling, uses a caller-supplied calibrated
+buffer delay with 4 ms headroom, and adapts the coarse filter faster. It does not
+patch upstream DSP, become the default, select a microphone or enter Unity Assets.
+
+Internal traces localized the earlier changing-path regression: a delayed internal
+estimate change reset a filter that had already recovered. Separate weak-direct,
+louder-reflection fixtures exposed another alignment failure. Rejected shorter
+filters and larger headroom remain recorded rather than promoted. The chosen
+candidate passes all 40 generated scenarios: eight core, one noisy double-talk,
+five onset profiles, two changing paths, and 24 additional delay/reflection
+configurations using a separate signal seed and -4/0/+4 ms supplied-delay offsets.
+It also passes six offline synthesized English/Spanish speech cases. These bounded
+results assume modeled timing, allow a three-second post-change recovery interval,
+and do not establish continuous drift tolerance or physical speech quality.
+
+CI retains both earlier profiles as controls. Stock has six quality failures;
+stationary32 has 20 (two original changing paths plus 18 delay variants).
+Every measured-profile group is now a hard regression gate. The final receipt
+retains false physical-speech/Quest acceptance even with zero generated failures.
+The first measured run's ownership fixture still supplied a zero delay, outside
+the new profile's valid [4, 500] ms range. Correcting that incidental test input
+and testing the minimum-delay fault/reset explicitly resolves the harness failure;
+zero-delay support remains tested for the other profiles. No threshold was lowered.
+
+Next audio integration must establish paired capture/render timestamps, measured
+hardware delay, drift/gap policy and full audible-source coverage under the existing
+single capture owner. All permission/lifecycle and real Quest/Live gates remain.
+The shared world, per-entity physical-room collision policy and independent visual,
+navigation and audio policies remain the long-term architecture. Regional world
+activation and other release work remain open independently. No device, provider,
+signing, deployment or Meta operation is part of this evaluation increment.
