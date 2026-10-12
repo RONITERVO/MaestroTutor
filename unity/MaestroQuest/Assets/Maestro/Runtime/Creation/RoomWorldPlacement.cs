@@ -7,14 +7,29 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         internal JObject ObserveWorldViewpoint()=>GetComponent<WorkspaceViewpoint>()?.ObservePlacement();
-        internal bool CanSetWorldViewpoint(string expected,RoomViewpoint target,bool manual,out string error)
+        internal bool CanPrepareWorldViewpoint(string expected,RoomViewpoint target,bool manual,out string error)
         {
             error="World placement is unavailable";
             var placement=GetComponent<WorkspaceViewpoint>();
             if(!placement||target==null||!placement.CanPlace(expected,target,manual,out error))return false;
             if(room.AnyHeld){error="Release held items before placing the world";return false;}
+            error=null;return true;
+        }
+        internal bool CanSetWorldViewpoint(string expected,RoomViewpoint target,bool manual,out string error)
+        {
+            if(!CanPrepareWorldViewpoint(expected,target,manual,out error))return false;
+            var targets=WorldPlacementTargets(target);
+            if(!CanAcquireNativeEntities(targets,out bool loading,out error))return false;
+            if(loading){error="Prepare the destination ground and obstacles before placing the world";return false;}
+            foreach(var id in targets){
+                var item=Find(id);var model=item?item.GetComponent<CreatedRoomObject>():null;
+                if(Read(id)?.kind==RoomObjectKind.ImportedModel&&(!model||!model.ModelGeometryReady)){error="Wait for destination geometry to finish loading";return false;}
+            }
+            if(GetComponent<WorkspaceViewpoint>().NeedsAuthoredGround&&GroundDependencies(target.position,.2f,.025f,.025f).Count>0){
+                error="Destination ground is unavailable";return false;
+            }
             // Preparation only samples and validates; observation never moves bodies.
-            return placement.PreparePlacement(target,out error);
+            return GetComponent<WorkspaceViewpoint>().PreparePlacement(target,out error);
         }
         internal bool SetWorldViewpoint(string expected,RoomViewpoint target,bool manual,out JObject result,out string error)
         {

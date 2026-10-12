@@ -32,6 +32,7 @@ namespace Maestro.Quest.Creation
             // preparing actions and grants that deliberately survive a grip.
             foreach(var owner in Ownership.Observe().owners)foreach(var claim in owner.claims)
                 if(graph.Contains(claim.target))graph.Retain(claim.target,RoomRetentionReason.Ownership);
+            RetainNativeActionInputs(graph);
             var audio=GetComponent<WorldAudio>();
             if(audio)foreach(var target in audio.RetainedTargets())graph.Retain(target,RoomRetentionReason.Audio);
             PhysicsWorld?.RetainNavigation(this,graph);

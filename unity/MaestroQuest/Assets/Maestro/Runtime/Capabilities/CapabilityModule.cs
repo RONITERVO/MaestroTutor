@@ -37,6 +37,10 @@ namespace Maestro.Quest.Programs
         // Explicit native dependencies, independent of action channels and saved-only
         // references. The scheduler acquires these before CanRun; facts never load.
         internal virtual IEnumerable<string> NativeEntities(JObject arguments)=>Array.Empty<string>();
+        // Spatial actions discover dependencies from the canonical world. This is
+        // passive admission, followed by the same native acquisition lifecycle.
+        internal virtual IEnumerable<string> NativeEntities(CapabilityContext context,JObject arguments)=>NativeEntities(arguments);
+        internal virtual bool CanPrepare(CapabilityContext context,JObject arguments,out string error){error=null;return true;}
         public abstract bool CanRun(CapabilityContext context,JObject arguments,out string error);
         public abstract bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error);
     }

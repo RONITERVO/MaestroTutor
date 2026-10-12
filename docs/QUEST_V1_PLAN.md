@@ -8205,3 +8205,54 @@ also pass using scripted responses. The new headless check reads supported and
 unsupported ground through the same native transport as the book. An initial
 probe point exceeded the 25-metre radial world limit; the corrected point is inside
 that scope. Evidence distinguishes this fixture correction from a runtime fix.
+
+
+### Relocation consumes spatial readiness — 2026-10-12
+
+`world.viewpoint.set` now discovers native dependencies at its requested
+location. The destination body envelope includes the maximum admitted tracked
+height; virtual view also includes the whole accepted-ground footprint. These
+are broad-phase requirements only. Unknown collision extents remain candidates,
+including cold imports whose visible bounds cannot prove empty collision space.
+Known distant areas remain dormant. Existing area and physical-connection
+closures still determine the actual unit of activation.
+
+The shared action lifecycle prepares those dependencies before the instant
+placement effect. Native input demand now owns a residency lease through action
+completion or cancellation, independently of edit/animation channel ownership.
+This also closes the gap between successful loading and the next scheduler tick
+for other native actions. Multiple consumers release independently. Leases reuse
+the canonical retention graph and cannot survive a workspace/generation change as
+current demand; they introduce no saved world copy or migration.
+
+Placement guards are checked before loading, during preparation and again before
+effect. Input edits or newly relevant destination entities invalidate an old
+action; narrowing conservative bounds after loading is allowed. Human edits
+remain available. Final accepted-ground, body-clearance and physical-transfer
+checks still run before persistence and again after any earlier save completes.
+Unavailable ground or failed imports cannot become an empty destination. Stop,
+recovery, focus loss, tracking loss and preparation timeout leave placement
+unchanged. The manual World origin control uses the same dependency query and
+native lease; immediate resident operations still complete immediately.
+
+Passive `world.ground` reads remain passive. Relocation does not alter terrain,
+entity definitions, scene revision, motion, physics velocities or view opt-ins.
+This work does not enable automatic unloading, change the whole-world physics
+gate or increase the 64-object/25-metre limits. Continuous regional navigation,
+water routes, swept physics, audio and larger-world performance remain required.
+Device/provider/deployment holds remain in force.
+
+Verification: the full desktop run passes 1,149 EditMode and 1,302 PlayMode
+cases, with only the three optional private-asset tests skipped. Seven new cases
+cover shared relocation over retired terrain, loaded-obstacle refusal, manual
+origin and recovery cancellation, stale guards, changed destination dependencies,
+distant-area exclusion and independent residency owners with human edits.
+Existing concurrency, imports, physics, animation and workspace cases also pass.
+All 2,894 web/shared tests, lint, production build, generated source contracts,
+core boundaries and integration-driver types pass. Earlier new-fixture failures
+were corrected without weakening placement; their reports remain in private
+evidence. No device, provider or production qualification is inferred.
+The full native-room journey and original two-page book journey also pass through
+real native transport with scripted provider responses. Both client and Editor
+processes exit successfully. No paid provider, headset, signing, deployment or
+Meta operation was used for this change.

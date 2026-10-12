@@ -26,7 +26,7 @@ namespace Maestro.Quest.Interaction
         internal bool CanPlace(string expected,RoomViewpoint target,bool manual,out string error)
         {
             error="World location changed; read world.viewpoint again";
-            if(!manual&&expected!=PlacementState())return false;
+            if((!manual||expected!=null)&&expected!=PlacementState())return false;
             if(!HeadReady||Pending){error="Wait for head tracking, focus and saved world restoration";return false;}
             if(!editor||!editor.isActiveAndEnabled||editor.WriteGate.Frozen||editor.RuntimeGate.Held||!editor.CanSaveRoom){
                 error="Finish the workspace operation before placing the world";return false;
@@ -37,6 +37,7 @@ namespace Maestro.Quest.Interaction
             if(target!=null&&(!target.Valid||!target.active)){error="Choose a finite world location within 25 metres and a heading from -180 to 180";return false;}
             error=null;return true;
         }
+        internal bool NeedsAuthoredGround=>view&&view.Active;
         internal bool PreparePlacement(RoomViewpoint target,out string error)=>view.PrepareViewpoint(target,out error);
         internal void ApplyPlacement()
         {
@@ -60,11 +61,30 @@ namespace Maestro.Quest.Interaction
         }
         // Preserve Maestro's independent binding and actor, and both movement opt-ins.
         internal void WorldPlaced(){userGate.Reset();Array.Clear(buttonReady,0,buttonReady.Length);}
-        public void ReturnToWorldOrigin()
+        RoomNativeDemand originDemand;
+        void CancelOriginPlacement(){originDemand?.Dispose();originDemand=null;}
+        public async void ReturnToWorldOrigin()
         {
+            if(originDemand!=null){Say("The world destination is already being prepared");return;}
             var target=new RoomViewpoint{active=true};
-            if(!editor.SetWorldViewpoint(null,target,true,out _,out var error))Say(error);
-            else Say("World origin — activity kept; center your stick before moving");
+            string expected=(string)editor.ObserveWorldViewpoint()?["stateId"];
+            if(!editor.CanPrepareWorldViewpoint(expected,target,true,out var error)){Say(error);return;}
+            using var demand=editor.DemandNativeEntities(editor.WorldPlacementTargets(target),()=>editor.WorldPlacementTargets(target),
+                ()=>this&&isActiveAndEnabled&&editor&&editor.CanPrepareWorldViewpoint(expected,target,true,out _));
+            originDemand=demand;
+            try {
+                if(!demand.Preparation.IsCompleted)Say("Preparing the world destination");
+                // Same 30-second preparation limit as a shared room action.
+                var timeout=System.Threading.Tasks.Task.Delay(30000);
+                if(await System.Threading.Tasks.Task.WhenAny(demand.Preparation,timeout)!=demand.Preparation){
+                    if(ReferenceEquals(originDemand,demand))Say("Destination preparation timed out; try again");return;
+                }
+                if(!ReferenceEquals(originDemand,demand))return;
+                error=demand.Error;
+                if(error==null)editor.SetWorldViewpoint(expected,target,true,out _,out error);
+                if(this&&isActiveAndEnabled)Say(error??"World origin — activity kept; center your stick before moving");
+            } catch(Exception){if(this&&isActiveAndEnabled&&ReferenceEquals(originDemand,demand))Say("The destination could not be prepared; try again");}
+            finally {if(ReferenceEquals(originDemand,demand))originDemand=null;}
         }
     }
 }

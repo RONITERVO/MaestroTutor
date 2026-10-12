@@ -91,6 +91,7 @@ namespace Maestro.Quest.Interaction
         public void Recover()=>Recover(true);
         void Recover(bool invalidate)
         {
+            CancelOriginPlacement();
             bool layersChanged=editor&&editor.ResetLayerPresentation(invalidate);
             bool changed=layersChanged || AvatarEnabled || UserEnabled || view&&view.PresentationChanged;
             Interrupt(); AvatarEnabled=UserEnabled=false;
