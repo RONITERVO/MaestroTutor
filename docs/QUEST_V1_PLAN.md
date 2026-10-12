@@ -7929,3 +7929,26 @@ The shared world, per-entity physical-room collision policy and independent visu
 navigation and audio policies remain the long-term architecture. Regional world
 activation and other release work remain open independently. No device, provider,
 signing, deployment or Meta operation is part of this evaluation increment.
+
+
+### Native microphone ownership and timestamp source — 2026-10-12
+
+The next audio dependency is implemented inside the isolated evaluation: an
+explicitly owned AAudio input device plus a worker-serialized frame assembler.
+It separates hardware timestamps from arrival observations, handles short reads
+without inventing samples, and closes on gaps, overruns, invalid clocks, failed
+startup or disconnect. It starts once and never auto-reopens after failure.
+
+The scripted probe covers 20 ownership/timing scenarios and never opens hardware.
+Android compilation/linkage separately verifies the actual NDK calls. The first
+cross-build caught the guide's unavailable `AAudioStream_getDataFormat` spelling;
+the implementation uses `AAudioStream_getFormat` from the pinned NDK header.
+Failed strict-build and cross-build attempts remain in local evidence. These are
+software-boundary checks, not physical microphone or end-to-end full-duplex proof.
+
+Still required: connect the original sole capture lease and permission/pause/stop
+lifecycle, supply calibrated output timestamps and complete audible-reference
+coverage, align/resample independent clocks with explicit gap handling, then feed
+the existing echo processor and shared PCM consumers. Actual route changes,
+timestamp quality, permissions and speech require Quest/Live acceptance. No app
+capture backend is selected, and device/provider/release holds remain in force.

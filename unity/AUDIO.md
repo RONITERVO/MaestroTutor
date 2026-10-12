@@ -1036,3 +1036,21 @@ recovery and actual Quest/original-Live acceptance. Cross-compilation for Androi
 ARM64/API 32 is separate from device execution and Unity packaging. This candidate
 cannot clear the separate Meta acoustic-map worker crash or enable production
 reflections/full duplex.
+
+
+## Timestamped Android capture boundary — 2026-10-12
+
+The isolated evaluation now includes a native input owner and an Android AAudio
+implementation. It prepares mono/float/48 kHz input, starts explicitly, assembles
+partial reads, and retains hardware frame positions and monotonic timestamps
+separately from observation time. Startup unavailability waits within a deadline;
+invalid timestamps, overrun, sample gaps or disconnects close the device and fault
+the owner. Pending input cannot escape after closure, and nothing reopens itself.
+
+Twenty scripted native cases exercise this ownership/timing boundary without
+opening a microphone. The Android probe cross-links the real AAudio factory and
+timestamp imports but remains unexecuted. See the EchoProcessing reproduction guide
+for requested preset, buffering, freshness limits and thread ownership. No app
+permission or focus hook, native bridge, measured render-clock alignment, drift
+resampling or sole-capture lease integration exists yet. The module therefore
+remains outside the app, with the original browser/Live capture owner unchanged.

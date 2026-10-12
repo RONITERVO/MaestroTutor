@@ -91,6 +91,48 @@ The adapter does **not** align clocks, estimate device delay or repair gaps. The
 caller must provide paired frames and APM's hardware-buffer delay estimate. The
 synthetic tests supply explicit modeled delays; this is not a Quest calibration.
 
+## Native capture input boundary
+
+`CaptureInput` owns one prepared device on one non-real-time worker. Its Android
+implementation explicitly opens AAudio mono/float/48 kHz input, requests the
+unprocessed preset and privacy-sensitive capture, checks the returned format and
+bounds device buffering to half a second. Acquisition requires the caller's
+microphone permission and sole application capture lease; neither is implemented
+by this low-level module. Preparation does not start recording. The unprocessed
+preset is a request, not proof that device preprocessing is absent.
+
+The owner starts once, assembles short nonblocking reads into 480-sample frames,
+and preserves sample positions, epoch/sequence, an AAudio `CLOCK_MONOTONIC`
+hardware timestamp and its observation bracket. It never substitutes callback
+arrival time for a hardware timestamp. Timestamp availability can lag startup:
+the owner waits up to one second rather than returning untimed PCM. Once active,
+half-second freshness/progress limits, monotonicity, sample continuity and overrun
+checks reject stale or discontinuous data. Missing timestamp support, disconnects,
+invalid samples and clock failures retire the device and fault the owner. Closing
+is terminal, releases pending input, and never automatically reacquires hardware.
+
+These frames are raw normalized capture **inside the adapter**, not provider
+input. They still need alignment with a measured render timeline and AEC processing
+before conversion to the existing shared `PcmCapture` output. The original browser
+capture owner is unchanged. No permission UI, native app bridge, pause/focus
+integration, clock estimator, drift resampler or native selection is added here.
+
+The runner also executes 20 scripted capture scenarios covering ownership,
+asynchronous timestamps, startup/freshness deadlines, partial/empty reads, buffer
+boundaries, startup failure, rollback/gaps, overruns before and during reading,
+invalid samples, disconnects, missing timestamp support, stalled workers and
+repeated cleanup. The probe never calls the real Android acquisition factory;
+its Android binary cross-links that factory and AAudio timestamp imports for
+compile/link verification only. Real Android timestamp quality, route changes,
+permission revocation and lifecycle behaviour remain device acceptance work.
+
+API basis: [Android AAudio guide](https://developer.android.com/ndk/guides/audio/aaudio/aaudio)
+and [NDK AAudio reference](https://developer.android.com/ndk/reference/group/audio).
+The pinned NDK 27.2 headers are authoritative for the compiled API; its format
+query is `AAudioStream_getFormat` (the guide's `getDataFormat` example does not
+compile against this NDK). AAudio stream access and close are serialized on the
+owner's worker, as required by the platform's thread-safety contract.
+
 ## Reproducible profiles and open quality findings
 
 `--profile stock` is the default and keeps the original APM configuration.

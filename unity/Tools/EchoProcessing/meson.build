@@ -14,3 +14,15 @@ echo_lib = shared_library('maestro_echo', 'EchoProcessor.cpp',
 echo_probe = executable('maestro_echo_probe', 'Probe.cpp',
   link_with: echo_lib, cpp_args: probe_flags, install: false)
 test('generated-audio-echo', echo_probe, timeout: 90)
+
+# Separate input ownership/timestamp boundary; no app integration or microphone
+# acquisition occurs when running its scripted probe.
+capture_deps = []
+if host_machine.system() == 'android'
+  capture_deps += meson.get_compiler('cpp').find_library('aaudio')
+endif
+capture_lib = static_library('maestro_capture', ['CaptureInput.cpp', 'AndroidCaptureDevice.cpp'],
+  dependencies: capture_deps, install: false)
+capture_probe = executable('maestro_capture_probe', 'CaptureProbe.cpp',
+  link_with: capture_lib, dependencies: capture_deps, install: false)
+test('scripted-capture-ownership', capture_probe, timeout: 30)
