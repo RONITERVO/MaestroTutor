@@ -483,3 +483,75 @@ No Android execution, audio-device output, Quest performance, Live coexistence o
 Store acceptance is claimed. Production geometry/reservation/obstruction/capture
 integration remains open. Reflection output and automatic map scheduling remain
 disabled; the retained Meta map-worker crash remains unresolved.
+
+### Shared room publication and bounded acquisition
+
+`-OwnedLifecycle` now requires **55 passing cases**. The app exposes a passive
+`AcousticGeometryCatalog` from its existing registered acoustic inputs. Transient
+keys survive an active-view/retained-input transfer because the existing owner
+keeps the key. Reading the catalog does not read meshes, upload native geometry,
+load views, start physics or create another saved room. Unchanged descriptions
+reuse the same catalog, while placement, definitions and pending boundaries remain
+separately observable. Publication availability follows room lifetime and focus,
+independently of the current SDK's context or upload success.
+
+The candidate `GeometryBridge` consumes that same contract and the application's
+`RoomPreparationBudget`, both copied by hash into the isolated project. The caller
+can supply the existing shared budget window. Geometry acquisition yields across
+frames, cancels changed definitions before reading more inputs, and uses the latest
+placement without repeatedly cancelling mesh preparation for ordinary movement.
+Unchanged meshes are not reread. Identical values after an owner transfer reuse
+the native mesh and exact instance ID. Stable read failures wait for a definition
+change or explicit retry.
+
+Scan and virtual reservations are checked during acquisition and again before
+publication through one candidate budget definition. Saturating virtual capacity
+does not spend the scan allowance. Excess inputs are reported as omitted without
+unbounded staging reads; changed membership can admit a previously refused input.
+An individual mesh read or native upload remains indivisible. This is not a
+hard real-time bound on the subsequent worker's native upload batch.
+
+A missing required boundary or unavailable room holds reflection output immediately,
+including an already admitted block at final submission. Direct PCM continues;
+while held, incremental reflection updates are not scheduled. Initial graph
+preparation still computes its first response, which remains inaudible under the
+hold. A busy worker retains its existing scene until it returns. Repair publishes
+fresh geometry before wet output becomes eligible again. Disposal cancels pending acquisition, and an audio
+reset cannot reopen the held output. No candidate is enabled in the app yet.
+
+Run `f1ab0b86eb0f` passes all 55 cases with 77 graphs, 93 mesh owners and 94 instance
+owners closed, zero native diagnostics, 33 matching input hashes and normal
+editor/wrapper exits. Four focused app tests also pass against the actual active
+and dormant room lifecycle. The native catalog's actions, events and facts are
+unchanged; four source-provenance entries were refreshed. Full application
+verification also passes: 1,140 EditMode and 1,265 PlayMode cases, three expected
+private-asset skips, native catalog equality, diagnostic gates and normal editor
+exits. Both native headless and original-book journeys pass with local scripted
+providers and client/editor/terminal exit zero. All 914 source/mirror hashes match
+(910 application C# files and four existing third-party inputs). Evidence is
+retained in `.quest-evidence/audio-bridge`.
+
+The current source also passes Android build `a5919eb1ceef`: ARM64/IL2CPP with
+High stripping, zero build errors/warnings, 35 matching input hashes, verified
+native exports/dependencies/static callback and a debug signature. APK SHA-256
+begins `C5773180`; both editor and wrapper exit normally. This compiles the shared
+bridge inputs but does not prove their behavior after player stripping or execute
+the bridge on Android. Actual Android playback remains untested.
+
+The first run `11dc489c4b91` passed 53/54 cases. Its absent-frequency assertion
+picked up finite-window leakage from the continuing dry tone. The corrected test
+measures direct playback, then mutes that dry voice and requires every output
+sample to be exactly zero. Run `1215515165a4` passed all 54 cases before adding
+capacity admission; the final run above retains these stronger silence checks.
+Runtime code did not change for the measurement correction. Failed evidence remains.
+
+Production renderer selection, playback reservations, direct obstruction, shared
+capture, actual Android audio and Quest/Live/performance acceptance remain open.
+Before production integration, publish the presentation and required geometry
+revision as one atomic value and test concurrent pose/geometry changes through
+final submission. The current sequential field writes still need that audit.
+The existing app residency-transfer admission still checks Meta context/handles;
+separate CPU geometry retention from that SDK admission before replacing the
+production backend. A passive catalog alone does not remove that dependency.
+The app's Meta direct path is unchanged; reflection output and automatic map
+scheduling stay disabled, and the retained Meta worker crash remains unresolved.

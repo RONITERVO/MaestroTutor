@@ -9,6 +9,8 @@ namespace Maestro.AudioEvaluation
     internal sealed partial class PreparedGraph
     {
         AcousticFrame presentation;
+        int geometryAllowed=1;
+        internal void SetGeometryReady(bool ready) => Volatile.Write(ref geometryAllowed,ready?1:0);
         long completedRevision, renderedRevision = -1, requiredRevision;
         int simulating, simulations;
         internal long CompletedRevision => Volatile.Read(ref completedRevision);

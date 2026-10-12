@@ -37,7 +37,7 @@ foreach ($file in @(Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'Unity')
     $relative=[IO.Path]::GetRelativePath($PSScriptRoot,$file.FullName).Replace('\','/')
     $record.sourceHashes[$relative]=(Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
 }
-foreach ($relative in @('ProjectSettings/AudioManager.asset','Assets/Maestro/Runtime/Book/SpeechPcmStream.cs','Assets/Maestro/Runtime/Book/AcousticGeometry.cs')) {
+foreach ($relative in @('ProjectSettings/AudioManager.asset','Assets/Maestro/Runtime/Book/SpeechPcmStream.cs','Assets/Maestro/Runtime/Book/AcousticGeometry.cs','Assets/Maestro/Runtime/Book/AcousticGeometryCatalog.cs','Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs')) {
     $record.sourceHashes['app/'+$relative]=(Get-FileHash -LiteralPath (Join-Path $repo ('unity/MaestroQuest/'+$relative)) -Algorithm SHA256).Hash
 }
 function Save-Receipt { $record | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $receipt }
@@ -69,7 +69,7 @@ try {
         if ((Get-FileHash -LiteralPath $inputPath -Algorithm SHA256).Hash -ne $entry.Value) { throw ('Input changed during build: '+$entry.Key) }
     }
     foreach ($copied in Get-ChildItem -LiteralPath (Join-Path $project 'Assets/Evaluation') -Recurse -Filter '*.cs') {
-        $key=if ($copied.Name -in @('SpeechPcmStream.cs','AcousticGeometry.cs')) {'app/Assets/Maestro/Runtime/Book/'+$copied.Name} else {'Unity/'+$copied.Name}
+        $key=if ($copied.Name -in @('SpeechPcmStream.cs','AcousticGeometry.cs','AcousticGeometryCatalog.cs')) {'app/Assets/Maestro/Runtime/Book/'+$copied.Name} elseif ($copied.Name -eq 'RoomPreparationBudget.cs') {'app/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs'} else {'Unity/'+$copied.Name}
         if (!$record.sourceHashes.ContainsKey($key) -or (Get-FileHash -LiteralPath $copied.FullName -Algorithm SHA256).Hash -ne $record.sourceHashes[$key]) { throw ('Prepared source differs: '+$copied.Name) }
     }
     $record.sourceHashesVerified=$record.sourceHashes.Count

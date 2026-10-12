@@ -8,6 +8,14 @@ namespace Maestro.AudioEvaluation
     internal sealed partial class OwnedLifecycle
     {
         AcousticFrame desiredScene;
+        bool geometryReady=true;
+        internal void SetGeometryReady(bool ready)
+        {
+            if(closed)return;
+            geometryReady=ready;Active?.SetGeometryReady(ready);
+        }
+        internal long UpdateGeometry(AcousticSceneData data) => UpdateScene(desiredScene.WithGeometry(data));
+
         long sceneRevision, geometryRevision;
         Task simulation;
         PreparedGraph simulationGraph;
@@ -46,7 +54,7 @@ namespace Maestro.AudioEvaluation
         void ScheduleSimulation()
         {
             var graph = Active;
-            if (closed || Failure != null || simulation != null || graph == null ||
+            if (closed || !geometryReady || Failure != null || simulation != null || graph == null ||
                 (sceneRevision <= graph.CompletedRevision && !graph.NeedsPcmResponse) ||
                 graph.RenderedRevision < graph.CompletedRevision || !graph.TryEnter())
                 return;

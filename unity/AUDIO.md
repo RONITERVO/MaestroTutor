@@ -711,3 +711,35 @@ This is a separate debug-signed probe, not an application package or Android
 runtime acceptance. The 907 app sources remain unchanged. Production integration,
 shared capture, actual Android audio, sustained Quest performance and Live
 acceptance remain required; no reflection gate, release key or device changed.
+
+### Shared geometry publication — 2026-10-12
+
+`RoomAcoustics.DescribeGeometry()` now exposes passive descriptions of its existing
+active and retained inputs. Stable transient keys survive view retirement and
+restoration; the feed is independent of SDK handles and performs no mesh reads,
+uploads or native-view loading. Room lifetime, placements, definitions and pending
+fixed boundaries are explicit without changing the saved world or capability API.
+
+The candidate adapter uses that feed and the shared cooperative preparation budget.
+It coalesces definition changes, reuses unchanged payloads and validates separate
+scan/virtual capacity before allowing staging to grow. Unknown boundaries hold
+wet output at final submission while direct PCM continues. Disposal and device
+reset preserve the hold. Four focused app lifecycle cases and all 55 isolated
+native cases pass, with complete graph/mesh/instance closure and verified input
+hashes. Full application verification passes 1,140 EditMode and 1,265 PlayMode
+cases with three expected private-asset skips, both native headless/original-book
+journeys, native catalog equality and normal process exits. All 914 source/mirror
+hashes match; the journeys use local scripted providers. See the
+[implementation boundary and retained measurement failure](Tools/AudioBackendEvaluation/README.md#shared-room-publication-and-bounded-acquisition).
+
+The current isolated ARM64/IL2CPP debug build also passes with High stripping,
+zero errors/warnings, 35 verified input hashes and normal exits. Native payload
+and callback checks pass; the shared bridge has not executed on Android and
+compilation does not establish behavior after stripping. No app package changed.
+
+This supplies the geometry bridge, not production renderer selection. The current
+Meta direct path remains in use. Its existing residency-transfer admission still
+checks SDK context/handles and needs separation before a backend swap. Atomic
+presentation/revision publication, native upload timing, production reservations,
+obstruction, capture, Android runtime and physical/performance acceptance remain
+gates; production reflections and automatic maps remain disabled.

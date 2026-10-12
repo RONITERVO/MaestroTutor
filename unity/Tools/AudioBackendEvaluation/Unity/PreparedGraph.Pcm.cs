@@ -36,7 +36,7 @@ namespace Maestro.AudioEvaluation
             return result;
         }
         internal bool PcmWetReady(int voice) => Volatile.Read(ref pcm[voice]) is PcmBinding binding
-                                                && binding.Serial <= Volatile.Read(ref responseResets[voice]) &&
+                                                && Volatile.Read(ref geometryAllowed)!=0 && binding.Serial <= Volatile.Read(ref responseResets[voice]) &&
                                                 CompletedRevision >= Volatile.Read(ref requiredRevision);
         internal PcmVoice BindPcm(string id, PcmVoice voice)
         {

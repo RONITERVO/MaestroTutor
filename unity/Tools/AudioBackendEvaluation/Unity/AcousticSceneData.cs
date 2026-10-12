@@ -43,6 +43,13 @@ namespace Maestro.AudioEvaluation
             // transparency must not infer an acoustic material or delete a wall.
             material = new[] { .2f, .2f, .2f, .5f, 0f, 0f, 0f };
         }
+        internal bool SameContent(AcousticMeshData other)
+        {
+            if(other==null||vertices.Length!=other.vertices.Length||triangles.Length!=other.triangles.Length)return false;
+            for(int i=0;i<vertices.Length;i++)if(!vertices[i].Equals(other.vertices[i]))return false;
+            for(int i=0;i<triangles.Length;i++)if(triangles[i]!=other.triangles[i])return false;
+            return true;
+        }
         internal static AcousticMeshData Capture(IAcousticGeometry input)
         {
             if (input == null || !input.Active || !input.HasGeometry)
@@ -111,6 +118,30 @@ namespace Maestro.AudioEvaluation
                 m30=m.m30, m31=m.m31, m32=m.m32, m33=m.m33 };
         }
     }
+    // One admission rule for cooperative acquisition and final scene validation.
+    // Count placements even when several instances share one immutable payload.
+    internal struct AcousticGeometryBudget
+    {
+        int scans,virtuals,scanVertices,virtualVertices,scanTriangles,virtualTriangles;
+        internal bool HasRoom(bool scan) => scan
+            ? scans<128&&scanVertices<=32768-3&&scanTriangles<16384
+            : virtuals<384&&virtualVertices<=98304-3&&virtualTriangles<49152;
+        internal bool Add(AcousticMeshData mesh,bool scan)
+        {
+            if(mesh==null||!HasRoom(scan))return false;
+            if(scan)
+            {
+                if(scanVertices+mesh.VertexCount>32768||scanTriangles+mesh.TriangleCount>16384)return false;
+                scans++;scanVertices+=mesh.VertexCount;scanTriangles+=mesh.TriangleCount;
+            }
+            else
+            {
+                if(virtualVertices+mesh.VertexCount>98304||virtualTriangles+mesh.TriangleCount>49152)return false;
+                virtuals++;virtualVertices+=mesh.VertexCount;virtualTriangles+=mesh.TriangleCount;
+            }
+            return true;
+        }
+    }
     internal sealed class AcousticSceneData
     {
         readonly AcousticMeshPose[] meshes;
@@ -120,17 +151,12 @@ namespace Maestro.AudioEvaluation
         {
             if (inputs == null || inputs.Length > 512) throw new ArgumentException("Acoustic scene budget");
             var ids = new HashSet<string>(StringComparer.Ordinal);
-            int scans=0, virtuals=0, scanVertices=0, virtualVertices=0, scanTriangles=0, virtualTriangles=0;
+            var budget=new AcousticGeometryBudget();
             foreach (var item in inputs)
             {
                 if (item == null || !ids.Add(item.Id)) throw new ArgumentException("Duplicate or missing acoustic identity");
-                if (item.Scanned) { scans++; scanVertices+=item.Mesh.VertexCount; scanTriangles+=item.Mesh.TriangleCount; }
-                else { virtuals++; virtualVertices+=item.Mesh.VertexCount; virtualTriangles+=item.Mesh.TriangleCount; }
+                if (!budget.Add(item.Mesh,item.Scanned)) throw new ArgumentException("Acoustic scene budget");
             }
-            // Preserve the app's separate scan/virtual reservations. Reusing one
-            // mesh does not bypass the limits on placed surface complexity.
-            if (scans>128 || virtuals>384 || scanVertices>32768 || virtualVertices>98304 ||
-                scanTriangles>16384 || virtualTriangles>49152) throw new ArgumentException("Acoustic scene budget");
             meshes = (AcousticMeshPose[])inputs.Clone();
         }
         internal static readonly AcousticSceneData Empty = new AcousticSceneData();

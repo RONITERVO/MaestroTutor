@@ -216,7 +216,7 @@ namespace Maestro.AudioEvaluation
                 var frame = Volatile.Read(ref presentation);
                 parameters.orientation = frame.Listener;
                 long geometryRevision = Volatile.Read(ref requiredRevision);
-                bool geometryReady = revision >= geometryRevision;
+                bool geometryReady = Volatile.Read(ref geometryAllowed)!=0 && revision >= geometryRevision;
                 bool responsesConsumed = true;
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
@@ -257,7 +257,7 @@ namespace Maestro.AudioEvaluation
                 // This acknowledges a callback that began after all native writes
                 // for this revision. No second producer may run before it.
                 BeforeOutput?.Invoke();
-                bool wetCurrent = revision >= Volatile.Read(ref requiredRevision);
+                bool wetCurrent = Volatile.Read(ref geometryAllowed)!=0 && revision >= Volatile.Read(ref requiredRevision);
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
                     var binding = renderedPcm[voice];

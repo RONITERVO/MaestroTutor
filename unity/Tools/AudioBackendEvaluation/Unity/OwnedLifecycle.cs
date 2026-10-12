@@ -95,6 +95,7 @@ namespace Maestro.AudioEvaluation
                     }
                     else
                     {
+                        graph.SetGeometryReady(geometryReady);
                         graph.Present(desiredScene, geometryRevision);
                         Volatile.Write(ref active, graph);
                     }

@@ -42983,6 +42983,10 @@
       "sha256": "f2655221821e23e874f6ef15b6f0211f140c36c691745b7d6020d8038e9cde19"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometryCatalog.cs",
+      "sha256": "e00fca154c50dca3ce3800f6488d53c340cff88c0cac207121835439d8de5720"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticMeshInput.cs",
       "sha256": "52aff39246dbcf0d6df94344603a1fdc11092bccbf1f031d147023fcfe28c372"
     },
@@ -43095,12 +43099,16 @@
       "sha256": "4da4d029406ee11323b3fd395e2cfc6239b5eedcd0d29c1b7cdf1469d6ff13b6"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticPublication.cs",
+      "sha256": "f7c8e236c873ea786d8cec0d15c2b2406680aee68a5ea4afc23c970f17553f50"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticResidency.cs",
-      "sha256": "300cd34a898d205a62634abe834e122aaad0944c5318391e25fce3661370175a"
+      "sha256": "373242b2c6e4153e05ec8808cb5949ef8c933558181beb03bafc32c61b61b00f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
-      "sha256": "e1c93d627ec30e444cebf984151813c9dcd48bfb684ae5ee9589b3d6fa292a17"
+      "sha256": "65c5000bf84575bbdd1e4a5c406d53a2e623de36730f81b123ff8f8875b1fb6a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAudioOutput.cs",

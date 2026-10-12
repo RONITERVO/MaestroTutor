@@ -19,6 +19,7 @@ namespace Maestro.Quest.Book
         const int MaximumUploadsPerFrame = 4;
         internal sealed class Entry
         {
+            internal readonly AcousticGeometryKey GeometryKey=new();
             internal IntPtr Handle;
             internal int Triangles, Vertices, Revision = -1, AttemptEpoch = -1;
             internal bool Scanned;
@@ -64,14 +65,15 @@ namespace Maestro.Quest.Book
 
         internal void Register(IAcousticGeometry surface)
         {
-            if (!entries.ContainsKey(surface)) { if (surface.ReflectionBoundary) StructureChanged(); entries.Add(surface, new Entry()); }
+            if (!entries.ContainsKey(surface)) { geometryCatalog=null; if (surface.ReflectionBoundary) StructureChanged(); entries.Add(surface, new Entry()); }
         }
         internal void Unregister(IAcousticGeometry surface)
         {
-            if (entries.Remove(surface, out var entry)) Release(entry);
+            if (entries.Remove(surface, out var entry)) { geometryCatalog=null; Release(entry); }
         }
         internal void Invalidate(IAcousticGeometry surface)
         {
+            geometryCatalog=null;
             if (surface.ReflectionBoundary) StructureChanged();
             // Direct geometry is retired immediately, or held until a map job
             // returns while source acoustics are disabled through Ready.
@@ -326,9 +328,9 @@ namespace Maestro.Quest.Book
         }
         static void ReleaseLease(object owner) { lock (leaseLock) { if (ReferenceEquals(contextLease, owner)) contextLease = null; } }
         void LateUpdate() { if (!opened) Open(); Synchronize(); }
-        void OnDisable() { AudioSettings.OnAudioConfigurationChanged -= AudioConfigurationChanged; Close(); }
+        void OnDisable() { AudioSettings.OnAudioConfigurationChanged -= AudioConfigurationChanged; Close(); geometryCatalog=null; }
         void AudioConfigurationChanged(bool _) { Close(); Open(); }
-        void OnDestroy() { Close(); entries.Clear(); }
+        void OnDestroy() { Close(); entries.Clear(); geometryCatalog=null; }
         void OnApplicationPause(bool value) { paused = value; if (value) Close(); else Open(); }
         void OnApplicationFocus(bool value) { focused = value; if (!value) Close(); else Open(); }
     }

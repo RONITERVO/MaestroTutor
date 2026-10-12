@@ -61,7 +61,7 @@ namespace Maestro.Quest.Book
                 { Owner.entries.Remove(Surfaces[i]); Owner.entries.Add(Inputs[i], Entries[i]); }
                 // Do not keep destroyed component wrappers (and their importer
                 // graphs) alive through the cache. Rollback resolves the live root.
-                Surfaces = null; Committed = true; return true;
+                Owner.geometryCatalog=null; Surfaces = null; Committed = true; return true;
             }
             internal void UpdateDefinition(bool current, Matrix4x4 placement)
             {
@@ -98,7 +98,7 @@ namespace Maestro.Quest.Book
                         Owner.Unregister(surfaces[i]); Owner.entries.Remove(Inputs[i]);
                         var entry = Entries[i]; entry.Revision = surfaces[i].Revision;
                         if (entry.Handle == IntPtr.Zero) entry.AttemptEpoch = -1;
-                        Owner.entries.Add(surfaces[i], entry);
+                        Owner.entries.Add(surfaces[i], entry); Owner.geometryCatalog=null;
                     }
                 }
                 Dispose();

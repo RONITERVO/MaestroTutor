@@ -30,6 +30,7 @@ namespace Maestro.AudioEvaluation
         }
         AcousticFrame(AcousticFrame original, CoordinateSpace3 listener, CoordinateSpace3[] ownedSources)
         { Geometry = original.Geometry; Listener = listener; sources = ownedSources; }
+        internal AcousticFrame WithGeometry(AcousticSceneData geometry) => new AcousticFrame(geometry,Listener,sources);
         internal AcousticFrame WithListener(CoordinateSpace3 listener)
         {
             Validate(listener);

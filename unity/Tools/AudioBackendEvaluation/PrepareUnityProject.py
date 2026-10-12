@@ -94,8 +94,8 @@ runtime.mkdir(exist_ok=True)
 tests = evaluation / "Tests" if owned else evaluation
 tests.mkdir(exist_ok=True)
 if owned:
-    runtime_files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmControls.cs", "PcmTransformBinding.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "RuntimeAssembly.cs", "NativePlayerProbe.cs"]
-    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs"]
+    runtime_files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmControls.cs", "PcmTransformBinding.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "RuntimeAssembly.cs", "NativePlayerProbe.cs", "GeometryBridge.cs"]
+    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs", "GeometryBridgeTests.cs"]
     for name in runtime_files:
         shutil.copyfile(source / "Unity" / name, runtime / name)
     for name in test_files:
@@ -110,8 +110,9 @@ else:
     "optionalUnityReferences": ["TestAssemblies"]
 }, indent=2), encoding="utf-8")
 if owned:
-    for name in ["SpeechPcmStream.cs", "AcousticGeometry.cs"]:
+    for name in ["SpeechPcmStream.cs", "AcousticGeometry.cs", "AcousticGeometryCatalog.cs"]:
         shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book" / name, runtime / name)
+    shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs", runtime / "RoomPreparationBudget.cs")
     binding = project / "Assets/Plugins/SteamAudio"
     (binding / "Maestro.NativeBinding.asmdef").write_text(json.dumps({"name": "Maestro.NativeBinding"}), encoding="utf-8")
     if not (binding / "Binaries/Windows/x86_64/phonon.dll").exists():

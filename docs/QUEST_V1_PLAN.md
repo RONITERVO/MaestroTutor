@@ -7645,3 +7645,23 @@ checkpoint does not install a renderer, change the 907 application sources, enab
 reflections, use a release key or access Quest/providers. Production geometry,
 reservations, obstruction, shared capture and physical/performance acceptance
 remain open, along with the previously retained Meta map-worker fault.
+
+### Shared acoustic geometry publication — 2026-10-12
+
+The existing room acoustic owner now offers passive geometry descriptions with
+identities preserved through view retirement and restoration. The candidate reads
+this same feed through the shared preparation budget, with early scan/virtual
+capacity admission, cancelled stale work, cached meshes and explicit unknown
+boundaries. Reflection output is held independently of continuing direct speech.
+Four app lifecycle tests and 55 candidate cases pass; see the
+[audio boundary and evidence](../unity/AUDIO.md#shared-geometry-publication--2026-10-12).
+
+The saved world and catalog semantics are unchanged. This does not install the
+candidate renderer, enable reflections or remove the existing Android, capture,
+headset, performance and release gates. Full application regression verification
+passes 1,140 EditMode and 1,265 PlayMode cases with three expected private-asset
+skips, both native headless/original-book journeys, native catalog equality and
+normal process exits. All 914 C# source/mirror hashes match (910 application files
+and four existing third-party inputs). The journeys use local scripted providers.
+The current isolated Android debug candidate compiles with zero errors/warnings
+and verified ARM64/IL2CPP payload. It has not executed on Android or Quest.
