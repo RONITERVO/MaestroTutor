@@ -32,7 +32,7 @@ namespace Maestro.Quest.Creation
             var owner=GetComponentInParent<RoomAcoustics>();if(!owner)return;
             foreach(var pair in dormantNative){
                 var entry=pair.Value;var phase=NativePhase(pair.Key);
-                if(entry.Acoustics?.Admitted==true){if(entry.AcousticPendingOwner)entry.AcousticPendingOwner.SetPreparing(entry,null);entry.AcousticPendingOwner=null;continue;}
+                if(entry.Acoustics?.Published==true){if(entry.AcousticPendingOwner)entry.AcousticPendingOwner.SetPreparing(entry,null);entry.AcousticPendingOwner=null;continue;}
                 int revision=ObjectRevision(pair.Key);RoomObjectData data=null;
                 if(entry.AcousticMetadataRevision!=revision){data=Read(pair.Key);if(data==null)continue;entry.AcousticBoundary=data.physics==ItemPhysics.Fixed;entry.AcousticMetadataRevision=revision;}
                 if(entry.AcousticPendingOwner&&entry.AcousticPendingOwner!=owner)entry.AcousticPendingOwner.SetPreparing(entry,null);

@@ -765,3 +765,33 @@ All 914 application/project C# inputs remain unchanged from the prior full nativ
 and book/headless verification. This does not install the candidate or enable
 reflections. SDK-independent retention, production integration, obstruction,
 capture, native upload timing and physical Android/Quest/Live acceptance remain.
+
+### CPU publication readiness — 2026-10-12
+
+Prepared dormant geometry now finishes its shared pending-boundary state when
+its current CPU arrays are registered under their exact owners. It no longer
+waits for Meta's context, native handles or upload capacity. Renderer-specific
+admission remains separate: native map requests synchronize their inputs and
+refuse missing boundaries, even when another renderer can read the complete CPU
+publication. No native upload, resource release or map-worker lifetime changed.
+
+Two focused native regressions first reproduced a ready boundary remaining
+pending. The identical tests pass after changing only the residency readiness
+check and its caller. They cover a competing room owning Meta's context, actual
+native surface-capacity exhaustion, valid readable retained geometry, placement
+changes, native recovery and view restoration. The catalog's only changes are
+the two runtime source fingerprints; capability definitions are unchanged.
+Evidence is retained in `.quest-evidence/audio-cpu-ready`.
+Full verification passes 1,140 EditMode and 1,267 PlayMode cases, with three
+expected private-asset skips. Native headless and original-book journeys both
+pass using local scripted providers, with normal client/editor exits. All 914
+C# source/mirror hashes and the native/shared catalog agree. An accidentally
+queued duplicate journey was cancelled after these required runs; its separate
+record is retained and excluded from passing evidence.
+
+This separates publication readiness, not all retention admission. Transferring
+an existing view into the retained cache still requires Meta's admitted/cached
+input; a bounded CPU acquisition fallback remains necessary before a backend
+swap. The candidate renderer is not installed. Production reflections and
+automatic maps remain disabled; the unresolved native worker fault and physical
+Android/Quest/Live acceptance remain open.

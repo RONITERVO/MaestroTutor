@@ -43104,7 +43104,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcousticResidency.cs",
-      "sha256": "373242b2c6e4153e05ec8808cb5949ef8c933558181beb03bafc32c61b61b00f"
+      "sha256": "80dc19a7ddd5651902d97a3a9874263fffbee676a84002d902cf9e5f9b13c639"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/RoomAcoustics.cs",
@@ -43840,7 +43840,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAcousticPreparation.cs",
-      "sha256": "08bc0ccfe6bef91d1e5c2773c6e438a16772f1f8c7ad72d37b4dc5972668c1d2"
+      "sha256": "1324f71572326178e09cb7c459c4fe6c91fc128ec67d5fb7937f52114e4bce31"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",

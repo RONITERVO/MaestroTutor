@@ -7681,3 +7681,21 @@ The 914 application/project C# inputs remain unchanged from the preceding full
 verification. Production renderer selection and SDK-independent CPU retention
 admission remain open, along with native upload, capture, Android/Quest/Live and
 performance acceptance. No app reflection gate or release artifact changed.
+
+### Renderer-independent CPU readiness — 2026-10-12
+
+The shared geometry feed no longer keeps a prepared dormant boundary pending
+solely because Meta cannot upload it. Exact registered CPU ownership and current
+definitions determine publication readiness; Meta still checks its own context,
+capacity and missing boundaries before map work. Two unchanged regression tests
+pass after reproducing both unavailable-context and exhausted-capacity failures.
+See [the scope and retained evidence](../unity/AUDIO.md#cpu-publication-readiness--2026-10-12).
+The complete native run passes 1,140 EditMode and 1,267 PlayMode cases with three
+expected private-asset skips, plus both offline headless/original-book journeys.
+All 914 source/mirror hashes match and the required editors/clients exit normally;
+a redundant followup was cancelled and excluded from the passing evidence.
+
+Active-view retention still needs bounded CPU acquisition without an existing
+native upload. This increment does not switch the production renderer, enable
+reflections or automatic unloading, enlarge world limits, or establish Quest
+acceptance. The saved world and human/agent capability definitions are unchanged.

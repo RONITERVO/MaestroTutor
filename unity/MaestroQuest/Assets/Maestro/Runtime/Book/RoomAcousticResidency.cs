@@ -42,7 +42,26 @@ namespace Maestro.Quest.Book
             internal Entry[] Entries;
             internal bool Committed, Ended, DefinitionCurrent = true;
             internal bool Current => !Ended && DefinitionCurrent;
-            internal bool Admitted => Current && Committed && Owner && Owner.ContextOpen && Inputs.All(input => input.Active && Owner.entries.TryGetValue(input,out var entry) && entry.Handle != IntPtr.Zero && !entry.Retired && entry.Revision == input.Revision && entry.Pose.Equals(input.Pose));
+            // Definition readiness belongs to the shared CPU publication. An
+            // SDK may be unavailable, over capacity or finishing old work while
+            // another renderer can already consume these registered inputs.
+            internal bool Published
+            {
+                get
+                {
+                    if (!Current || !Committed || !Owner) return false;
+                    for (int i = 0; i < Inputs.Length; i++)
+                    {
+                        var input = Inputs[i];
+                        if (!input.Active || !input.Current || input.Vertices == null || input.Indices == null
+                            || !Owner.entries.TryGetValue(input, out var entry) || !ReferenceEquals(entry, Entries[i])) return false;
+                    }
+                    return true;
+                }
+            }
+            // Renderer-specific readiness is intentionally stricter. CPU
+            // publication never implies that Meta can use or map its geometry.
+            internal bool Admitted => Published && Owner.ContextOpen && Inputs.All(input => input.Active && Owner.entries.TryGetValue(input,out var entry) && entry.Handle != IntPtr.Zero && !entry.Retired && entry.Revision == input.Revision && entry.Pose.Equals(input.Pose));
             internal int Vertices, Triangles;
             internal bool Commit()
             {
