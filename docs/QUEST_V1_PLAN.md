@@ -8432,3 +8432,58 @@ the preparation deadline, and completion after that deadline is rejected.
 Focused preparation/velocity tests explicitly isolate the per-body guard from
 the production whole-world admission rule. They do not establish production
 regional streaming, connected-island or tracked-contact acceptance.
+
+
+### Connected bodies share physics admission — 2026-10-12
+
+Enabled, unbroken physical connections now determine a moving body's physics
+input group. Area membership and remembered construction layouts do not merge
+solver groups. A fixed anchor is required geometry but does not couple its
+separate moving children; interrupting the anchor still invalidates each
+attached group. Bodies bind explicitly to their accepted room; XRI detaching a
+held object from its transform parent cannot lose that authority. Native view
+retirement clears the binding. Deleted members remain missing identities, and retained broken
+connections preserve their broken state when a native view retires.
+
+The shared preparation lane acquires the union of member geometry, swept ground,
+obstacles and water. Input preparation is independent of joint blocking, avoiding
+the cycle where a suspended joint prevents its own required inputs from loading.
+Every joint checks the group's inputs before admission, and every dynamic member
+checks all required joints before the next PhysX step. Missing members, collision
+shapes, environments or joints cannot leave another member running unconstrained.
+Each member's real-room collision policy remains authoritative. Existing held
+joints still use XRI and the production whole-world contact gate.
+
+Only uninterrupted pending preparation may retain velocity. Grip, teleport,
+animation ownership, geometry/configuration changes and member disable retire
+the group's previous input owners and held momentum. Pause and workspace
+retirement release all affected demand. Breaking or disabling a link separates
+its physical groups; an unrelated consumer retains its own native load. A
+continuous authored-world transfer keeps action identity and transforms each
+member's held velocity. No incomplete group becomes a settled observation.
+
+The existing `object.physics.inputs` catalog fact now includes connected-group
+readiness without another storage format or an agent-only interface. Queries
+share geometry results within a synchronous preparation/observation pass only;
+fresh observations recheck geometry and owned input identities. Missing joints
+and missing members cannot be repaired by reading a fact.
+
+This does not remove whole-world collision admission or running-world retention.
+Automatic unloading remains disabled and the 64-object/25-metre limits remain.
+Tracked/kinematic contact sweeps, arbitrary solver impulses and joint-motor
+bounds, regional navigation construction, larger-world budgets and actual Quest
+performance/immersion acceptance are still required before regional streaming.
+Pending-load fixtures explicitly isolate local admission from the production
+global gate; they are not proof that full regional streaming is ready.
+
+Verification: 77 focused checks, 1,152 EditMode and 1,354 PlayMode tests pass,
+with only three expected optional private-asset skips. The complete native-room
+journey passes 760 observations, including an active connected slider and fixed
+mount; the original-book journey also passes. Both clients and Editors exit
+successfully. The first native journey exposed a new driver query error (saved
+connection definition instead of live state); correcting only that query and
+rerunning both complete journeys leaves all 943 verified C# inputs unchanged.
+Web tests (2,897), lint, build, probe types, boundaries and catalog checks pass.
+The historical Meta audio SDK crash did not reproduce; its cause is unresolved
+and production reflections remain off. These are desktop checks with scripted
+provider responses, not fresh headset or paid-provider acceptance.

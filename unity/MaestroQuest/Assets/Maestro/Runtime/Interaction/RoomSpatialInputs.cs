@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction {
     // A route frontier grows one owned input set. A literal step replaces its
     // set. Neither queues movement or starts physics; exact queries still decide.
+    internal delegate RoomSpatialReadiness SpatialInputCheck(string[] targets,out string error);
     internal sealed class RoomSpatialInputs:IDisposable {
         readonly RoomEditor editor;readonly string actor;readonly Func<bool> admitted;
         readonly bool accumulate;readonly Func<float> clock;readonly string purpose;
@@ -21,11 +22,16 @@ namespace Maestro.Quest.Interaction {
         internal RoomSpatialInputs(RoomEditor editor,string actor,Func<bool> admitted,bool accumulate,Func<float> clock=null,string purpose="Navigation"){
             this.purpose=purpose;this.editor=editor;this.actor=actor;this.admitted=admitted;this.accumulate=accumulate;this.clock=clock??(()=>Time.unscaledTime);
         }
+        bool Owned=>!disposed&&editor&&editor.isActiveAndEnabled&&!editor.RuntimeGate.Held&&!editor.WriteGate.Frozen&&editor.Frame.Valid&&admitted();
         internal bool Require(Bounds body,Bounds ground,bool water,out string error){
+            if(!Owned)return Fail(purpose+" inputs are no longer owned by the active world",out error);
+            return Require(editor.SpatialInputTargets(body,ground,water,actor),
+                (string[] ids,out string issue)=>editor.SpatialInputsReady(ids,body,ground,water,actor,out issue),out error);
+        }
+        internal bool Require(string[] next,SpatialInputCheck check,out string error){
             bool wasPending=Pending;Pending=false;error=Status=failure;if(failure!=null)return false;
             if(wasPending&&clock()>=deadline)return Fail(purpose+" input preparation timed out",out error);
-            if(disposed||!editor||!editor.isActiveAndEnabled||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!editor.Frame.Valid||!admitted())return Fail(purpose+" inputs are no longer owned by the active world",out error);
-            var next=editor.SpatialInputTargets(body,ground,water,actor);
+            if(!Owned)return Fail(purpose+" inputs are no longer owned by the active world",out error);
             if(accumulate)next=next.Concat(targets).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
             if(demand==null||!next.SequenceEqual(targets)){
                 var previous=demand;targets=next;
@@ -37,7 +43,7 @@ namespace Maestro.Quest.Interaction {
                 Pending=true;error=Status="Preparing "+purpose.ToLowerInvariant()+" ground, obstacles and water";return false;
             }
             if(demand.Error is string issue)return Fail(issue,out error);
-            var state=editor.SpatialInputsReady(targets,body,ground,water,actor,out error);
+            var state=check(targets,out error);
             if(state==RoomSpatialReadiness.Unavailable)return Fail(error,out error);
             if(state==RoomSpatialReadiness.Preparing){
                 if(clock()>=deadline)return Fail(purpose+" input preparation timed out",out error);

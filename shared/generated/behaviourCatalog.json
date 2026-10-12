@@ -41959,7 +41959,7 @@
         }
       },
       "label": "Object physics inputs",
-      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object. Fixed, held, carried, paused and unavailable owners report inactive. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
+      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for another member or joint reports unavailable or pending. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
       "input": {
         "type": "object",
         "properties": {
@@ -43491,7 +43491,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
-      "sha256": "56fb9bed5b5cb91667f3737bab03e91b0b48c3ebd949a55482e23a23e90e9c41"
+      "sha256": "0175a86b09323f57f68a0a930958381fcff8f548ae2fa288de46e2edf471f403"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -44027,7 +44027,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "24462e3d785434eb957be82f8a6fe7725787b13e88eb91d831251b6358e69e9e"
+      "sha256": "66c163290c23da64fdfdc27f77b9443f40616d522594ad411057ef8adcf49c15"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -44192,6 +44192,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservationPrediction.cs",
       "sha256": "c85c88dd37b8291e5530349c6af4d144b43235df48c633749b759f4ae55c0f74"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
+      "sha256": "1964c17ebe8f17e5a46cffb534234356c4cb7a390110bbe93fa59432cb32359b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPlacementDependencies.cs",
@@ -44655,11 +44659,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "74570a2a8fe07f5db41a80b85e2aea842e83b24517b2a4556db574b6e1a1c7e6"
+      "sha256": "d746868b3e017685dcf1589f5d300a06a35bb36a3b21a57a664775f4e6a7bce8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "5cb88713bf91de6206045b440ee8e501c010d80ec44f160fe5ae0955f444bbd9"
+      "sha256": "a2723e9f44a2b974be7d77790cd6f61be138cc42bcd5ba4e2147b0bf8894e1fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -44683,7 +44687,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
-      "sha256": "9f6a95248b4607fa8d41b66a62e7acf4374c404d91fabb0deb5298f2167deb73"
+      "sha256": "2953427c6dad406a5e43e8ed310ff267f2dc0d6adaa57a694ca3717b736cbb61"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomDepthOcclusion.cs",
@@ -44767,7 +44771,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSpatialInputs.cs",
-      "sha256": "51825807657abbcb00ef45a8ead284137ba274bd0bcbc544b91c885602c5a170"
+      "sha256": "ed1faabdc93c0d64cdae2c34bf6b87c9918a9ff2bc62611476a18b1aa4c05d64"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",

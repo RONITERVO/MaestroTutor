@@ -35,36 +35,46 @@ namespace Maestro.Quest.Interaction {
         RoomSpatialInputs physicsInputs;
         bool inputsReady=true,preparedMomentum,shapeFailed,refreshAfterPublication;
         Vector3 preparedVelocity,preparedSpin;
-        string inputStatus;
-        RoomEditor InputEditor=>GetComponentInParent<RoomEditor>();
-        bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&BaseAllowed;
-        bool InputsCurrent=>CurrentInputs(out _);
-        bool CurrentInputs(out string error){
+        string inputStatus;string[] inputMembers=Array.Empty<string>();
+        RoomEditor boundInputEditor;bool hasInputBinding;
+        RoomEditor InputEditor=>hasInputBinding?boundInputEditor:GetComponentInParent<RoomEditor>();
+        bool InputBindingAvailable=>!hasInputBinding||boundInputEditor&&boundInputEditor.isActiveAndEnabled&&boundInputEditor.Identity(item)!=null;
+        internal void BindPhysicsInputs(RoomEditor editor){
+            if(hasInputBinding&&ReferenceEquals(boundInputEditor,editor))return;
+            InterruptPhysicsInputs();hasInputBinding=true;boundInputEditor=editor;
+        }
+        bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&PhysicsEnabled;
+        bool InputsCurrent=>InputEditor?InputEditor.PhysicsIslandReady(item,true,out _):CurrentInputs(out _);
+        internal bool CurrentInputs(out string error)=>CurrentInputs(null,out error);
+        internal bool CurrentInputs(PhysicsIslandQuery query,out string error){
             error=inputStatus;var editor=InputEditor;if(!editor)return true;
             if(editor.SpatialInputsChanging){error="The authored geometry is being reconciled";return false;}
             if(!inputsReady||physicsInputs==null||physicsInputs.SourceChanged||editor.RuntimeGate.Held||editor.WriteGate.Frozen)return false;
-            if(!RoomPhysicsSweep.Bounds(item,body,Time.fixedDeltaTime,out var motion,out var ground)){error="Object collision bounds are unavailable";return false;}
-            var actor=editor.Identity(item);var targets=editor.SpatialInputTargets(motion,ground,true,actor);
-            return editor.SpatialInputsReady(targets,motion,ground,true,actor,out error)==RoomSpatialReadiness.Ready;
+            query??=editor.PhysicsInputs(item);
+            if(!query.Members.SequenceEqual(inputMembers)){error="The physical connection group changed";return false;}
+            if(query.Targets.Any(id=>Array.BinarySearch(physicsInputs.Targets,id,StringComparer.Ordinal)<0)){error="The physics input set changed";return false;}
+            return editor.PhysicsInputsReady(query,out error)==RoomSpatialReadiness.Ready;
         }
         internal string PhysicsInputStatus {
-            get {CurrentInputs(out var error);return error??"Physics inputs changed; wait for the next step or restart physics after fixing unavailable inputs";}
+            get {if(CurrentInputs(out var error)&&InputEditor)InputEditor.PhysicsIslandReady(item,true,out error);return error??"Physics inputs changed; wait for the next step or restart physics after fixing unavailable inputs";}
         }
         internal void RefreshAfterPublication(){if(refreshAfterPublication)Refresh();}
         void SetInputsReady(bool value){if(inputsReady!=value)MotionRevision++;inputsReady=value;}
-        void PreparePhysicsInputs(){
+        internal void PreparePhysicsInputs(PhysicsIslandQuery query=null){
             var editor=InputEditor;
-            if(!editor){SetInputsReady(true);return;}
-            if(!InputOwner||editor.RuntimeGate.Held||editor.WriteGate.Frozen){ReleasePhysicsInputs();return;}
+            if(!editor){if(hasInputBinding)ReleasePhysicsInputs();else SetInputsReady(true);return;}
+            if(!InputOwner||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!editor.PhysicsIslandOwned(item)){ReleasePhysicsInputs();return;}
+            query??=editor.PhysicsInputs(item);
+            if(!query.Members.SequenceEqual(inputMembers)){ReleasePhysicsInputs();inputMembers=query.Members;}
             if(shapeFailed)return;
             // A changed accepted source starts a new observation. Do not restore
             // momentum captured against the old geometry or workspace.
-            if(physicsInputs?.SourceChanged==true)ReleasePhysicsInputs();
-            if(!RoomPhysicsSweep.Bounds(item,body,Time.fixedDeltaTime,out var motion,out var ground)){
-                ReleasePhysicsInputs();shapeFailed=true;inputStatus="Object collision bounds are unavailable";return;
+            if(physicsInputs?.SourceChanged==true){ReleasePhysicsInputs();inputMembers=query.Members;}
+            if(query.State==RoomSpatialReadiness.Unavailable){
+                ReleasePhysicsInputs();inputMembers=query.Members;shapeFailed=true;inputStatus=query.Error;return;
             }
-            physicsInputs??=new RoomSpatialInputs(editor,editor.Identity(item),()=>InputOwner,false,purpose:"Physics");
-            bool ready=physicsInputs.Require(motion,ground,true,out inputStatus);
+            physicsInputs??=new RoomSpatialInputs(editor,editor.Identity(item),()=>InputOwner&&editor.PhysicsIslandOwned(item),false,purpose:"Physics");
+            bool ready=physicsInputs.Require(query.Targets,(string[] _,out string error)=>editor.PhysicsInputsReady(query,out error),out inputStatus);
             if(!ready&&physicsInputs.Pending){
                 if(!preparedMomentum&&!body.isKinematic){preparedVelocity=body.linearVelocity;preparedSpin=body.angularVelocity;preparedMomentum=true;}
             }else if(!ready)DiscardPreparedMotion();
@@ -76,7 +86,8 @@ namespace Maestro.Quest.Interaction {
             body.linearVelocity=Vector3.ClampMagnitude(preparedVelocity,15);body.angularVelocity=Vector3.ClampMagnitude(preparedSpin,30);
             DiscardPreparedMotion();body.WakeUp();
         }
-        void ReleasePhysicsInputs(){physicsInputs?.Dispose();physicsInputs=null;shapeFailed=false;DiscardPreparedMotion();inputStatus=null;SetInputsReady(false);}
+        void InterruptPhysicsInputs(){InputEditor?.InterruptPhysicsIsland(item);ReleasePhysicsInputs();}
+        internal void ReleasePhysicsInputs(){physicsInputs?.Dispose();physicsInputs=null;inputMembers=Array.Empty<string>();shapeFailed=false;DiscardPreparedMotion();inputStatus=null;SetInputsReady(false);}
         internal JObject ObservePhysicsInputs(){
             bool active=InputOwner,ready=active&&InputsCurrent;
             string state=!active?"inactive":ready?"ready":physicsInputs?.Pending==true?"pending":"unavailable";

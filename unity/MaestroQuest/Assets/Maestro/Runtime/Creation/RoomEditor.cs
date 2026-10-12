@@ -122,7 +122,7 @@ namespace Maestro.Quest.Creation
         {
             objects.Add(id,item); identities.Add(item,id);item.ConfigureWrites(WriteGate);
             item.GrabStarted += GrabStarted; item.GrabFinished += GrabFinished;
-            var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted+=ContactStarted;
+            var rigid=item.GetComponent<RigidRoomItem>();if(rigid){rigid.BindPhysicsInputs(this);rigid.ContactStarted+=ContactStarted;}
         }
         void ContactStarted(RoomItem item,Collider other,Vector3 point,float speed) {
             string id=Identity(item);if(applying||Ownership.Suspended||id==null||!other)return;
@@ -442,6 +442,7 @@ namespace Maestro.Quest.Creation
 
         void DetachNativeIdentity(string id,RoomItem item)
         {
+            if(item)item.GetComponent<RigidRoomItem>()?.BindPhysicsInputs(null);
             room.Unregister(item);objects.Remove(id);
             if(!ReferenceEquals(item,null))identities.Remove(item);
             if(handOwners.Remove(id,out var held))held.Dispose();
@@ -677,7 +678,7 @@ namespace Maestro.Quest.Creation
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ClearViewCapture();FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
-            foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid)rigid.ContactStarted-=ContactStarted; }
+            foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid){rigid.BindPhysicsInputs(null);rigid.ContactStarted-=ContactStarted;} }
         }
     }
 }

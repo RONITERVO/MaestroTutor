@@ -1188,3 +1188,23 @@ provider acceptance after the current upstream billing block is resolved.
 The headless world-area journey reads `object.presence` for a real creation and an unknown ID, checks canonical revisions, and verifies live coordinate-source metadata on the ordinary object list. The book journey opens the generated fact form, reads the world-owned book's actual native presence and writes `book-native-object-presence.json` plus its screenshot. Both use the same native catalog; neither injects lifecycle state.
 
 PlayMode lifecycle regressions separately deactivate and destroy native instances, then verify canonical reads, live-operation refusal, unchanged saved revisions, exact motion/recipe keys, accepted-edit recovery, deletion/Undo and host-owned book/Maestro handling. The existing missing-room-anchor regression additionally verifies that an intentionally hidden drawing can be repaired or deleted. Shared client tests reject contradictory metadata and preserve older observations without fabricating a presence state. Lossless receipt-context tests preserve presence changes in agent history. This is local native and shared-client evidence, not a paid-provider, headset or regional-streaming acceptance claim.
+
+
+### Physics input ownership coverage
+
+The native-room journey starts physics through the shared catalog, then reads
+`object.physics.inputs` for its free catch ball and a connected spring button.
+The button's cap must be simulating with ready inputs and an active slider joint;
+its fixed mount must stay fixed. Its reported dependency count must cover at
+least its two members. `native-physics-inputs.json` and
+`connected-physics-inputs.json` retain the actual observations. After Pause, the
+button must still be removable as one construction with one Undo.
+
+The original-book journey reads the same fact through its generated form after
+pausing physics and requires inactive state. It does not claim an active connected
+button UI test. Both journeys use real Unity transport, a labelled synthetic
+floor and local scripted provider responses. PlayMode separately covers pending
+connected inputs, real joint breakage, actual XRI grip, interruptions, missing
+members/joints and independent consumers. Pending-load fixtures isolate local
+admission from the production whole-world collision gate. None of these checks
+qualifies regional unloading, headset immersion or paid-provider behavior.

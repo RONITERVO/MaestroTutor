@@ -124,5 +124,12 @@ namespace Maestro.Quest.Tests {
             Assert.That(navigation.FollowRoutePending,Is.False);Assert.That(navigation.FollowRouteStatus,Does.Contain("unavailable"));
             Assert.That(NavigationRetained(pool,RoomRetentionReason.WaterRoute),Is.False);Assert.That(editor.NativeActivationPending,Is.False);yield return null;
         }
+        [UnityTest]public IEnumerator NavigationDemandReleasedOwnerCannotQueryADestroyedWorld(){
+            var local=new GameObject("Retired query world");var retired=local.AddComponent<RoomEditor>();
+            using var inputs=new RoomSpatialInputs(retired,"maestro",()=>true,false);inputs.Dispose();
+            UnityEngine.Object.Destroy(local);yield return null;string error=null;bool ready=true;
+            Assert.DoesNotThrow(()=>ready=inputs.Require(new Bounds(Vector3.zero,Vector3.one),new Bounds(Vector3.zero,Vector3.one),false,out error));
+            Assert.That(ready,Is.False);Assert.That(error,Does.Contain("no longer owned"));
+        }
     }
 }

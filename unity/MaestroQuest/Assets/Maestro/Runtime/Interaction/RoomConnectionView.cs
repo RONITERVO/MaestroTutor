@@ -19,7 +19,7 @@ namespace Maestro.Quest.Interaction
         public float Travel=>HasTravel?definition.Travel(transform,editor.Find(definition.connected).transform):0;
         internal void ResetBreak(){broken=false;Refresh();}
         internal void RestoreBrokenState(bool value){broken=value;Refresh();}
-        void OnJointBreak(float force){if(!admitted||definition==null)return;admitted=false;joint=null;retiring=null;broken=true;rigid?.SetConstraintBlocked(this,false);Phase="broken";Error="Connection broke; align or rearm explicitly to reconnect";editor?.NotifyConnectionBroken(item,definition);}
+        void OnJointBreak(float force){if(!admitted||definition==null)return;editor?.InterruptPhysicsIsland(item);admitted=false;joint=null;retiring=null;broken=true;rigid?.SetConstraintBlocked(this,false);Phase="broken";Error="Connection broke; align or rearm explicitly to reconnect";editor?.NotifyConnectionBroken(item,definition);}
         public float Angle=>definition!=null&&linked?definition.Angle(transform,linked.transform):0;
         public void Apply(RoomEditor source,RoomConnection[] values)
         {
@@ -45,6 +45,8 @@ namespace Maestro.Quest.Interaction
             if(!rigid.Dynamic){Suspend("fixed","Choose solid or bouncy physics for the moving member");return;}
             var world=editor.PhysicsWorld;
             if(!world||!world.CanSimulate(transform.position,item)||!world.CanSimulate(other.transform.position,other)){Suspend("paused");return;}
+            editor.PreparePhysicsIsland(item);
+            if(!editor.PhysicsIslandReady(item,false,out var inputError)){Suspend("loading",inputError??"Preparing connected physics inputs");return;}
             if(ownScale!=transform.lossyScale||otherScale!=other.transform.lossyScale||ownPlacement!=rigid.PlacementRevision||otherPlacement!=otherRigid.PlacementRevision)Retire();
             if(joint){Phase="active";Error="";rigid.SetConstraintBlocked(this,false);return;}
             if(retiring){Suspend("pausing");return;} // Destroy completes at the frame boundary, before another joint is admitted.
