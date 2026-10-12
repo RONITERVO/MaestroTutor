@@ -64,18 +64,21 @@ namespace Maestro.Quest.Programs
         protected MaestroAvatar Avatar;
         protected bool Stopped {get;private set;}
         protected float Duration;
+        protected readonly RoomPlaybackClock Playback=new();
         readonly PropAttachment attachment;
         RigidRoomItem targetRigid,propReservation;
         HeldRoomProp prop;
-        bool acquired;
+        bool acquired,propStarted;
         protected FullBodyOperation(CapabilityContext context,JObject arguments) {
             Context=context;TargetId=(string)arguments["target"];Duration=(float?)arguments["seconds"]??0;
             attachment=AnimationTargets.Attachment(arguments);
         }
         public override float Seconds=>Duration;
+        public override float? RemainingSeconds=>attachment==null||!Playback.Started?null:Playback.Remaining(Duration);
+        void PausePlayback(bool value){if(Avatar)Avatar.PauseOwnedPlayback(this,value);}
         protected bool Acquire(out string error) {
             error=null;Target=Context.Editor.Find(TargetId);Avatar=Target.GetComponent<MaestroAvatar>();
-            acquired=true;
+            acquired=true;Playback.PauseChanged+=PausePlayback;
             if(Avatar) {Avatar.GetComponent<AvatarSpatialMotion>()?.Stop();Avatar.SetEditing(true);}
             targetRigid=Target.GetComponent<RigidRoomItem>();if(targetRigid)targetRigid.SetAnimationOwner(this,true);
             if(attachment==null)return true;
@@ -84,15 +87,16 @@ namespace Maestro.Quest.Programs
             propReservation.SetAnimationOwner(this,true);return true;
         }
         protected bool BeginProp(out string error) {
-            error=null;if(attachment==null)return true;
+            error=null;Playback.Start();if(attachment==null)return true;
+            if(Avatar)Avatar.SetOwnedPlaybackClock(this,()=>Playback.Elapsed);
             if(propReservation) {propReservation.SetAnimationOwner(this,false);propReservation=null;}
-            prop=HeldRoomProp.Begin(Context.Editor,attachment,Duration,out error);return prop;
+            prop=HeldRoomProp.Begin(Context.Editor,attachment,RoomPropAnchor.Avatar(attachment),Duration,Playback,out error);propStarted=prop;return prop;
         }
         public override RuleActionState State(out string error) {
-            error=null;return prop&&!prop.Valid(out error)?RuleActionState.Failed:RuleActionState.Ready;
+            error=null;if(propStarted&&(!prop||!prop.isActiveAndEnabled)){error="The fitted prop was removed or stopped";return RuleActionState.Failed;}if(!Playback.Valid(out error))return RuleActionState.Failed;return prop?prop.Prepare(out error):RuleActionState.Ready;
         }
         public override bool Complete(out string error) {
-            error=null;if(prop) {prop.Finish();error=prop.Error;}return error==null;
+            if(State(out error)!=RuleActionState.Ready){error??="The prop is still preparing";return false;}if(prop) {prop.Finish();error=prop.Error;}return error==null;
         }
         protected virtual void ReleasePlayback() {}
         protected virtual bool RetainPlacement=>false;
@@ -104,7 +108,7 @@ namespace Maestro.Quest.Programs
                 ReleasePlayback();
             } finally {
                 if(acquired) {
-                    if(Avatar)Avatar.SetEditing(false);
+                    Playback.PauseChanged-=PausePlayback;if(Avatar){Avatar.PauseOwnedPlayback(this,false);Avatar.SetOwnedPlaybackClock(this,null);Avatar.SetEditing(false);}
                     if(!preservePlacement&&!RetainPlacement&&Context.Editor&&Context.Editor.Find(TargetId)==Target)Context.Editor.RestorePose(TargetId);
                     if(targetRigid)targetRigid.SetAnimationOwner(this,false);
                 }

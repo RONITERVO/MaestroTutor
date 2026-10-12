@@ -12,7 +12,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class RuleSchedulerTests
+    public sealed partial class RuleSchedulerTests
     {
         static JObject InvocationCall(string capability="animation.play",string target="maestro")=>capability=="time.wait"
             ? new JObject {["id"]=capability,["version"]=1,["arguments"]=new JObject {["seconds"]=1}}

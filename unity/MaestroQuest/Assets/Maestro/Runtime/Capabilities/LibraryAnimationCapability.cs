@@ -40,7 +40,7 @@ namespace Maestro.Quest.Programs
             Task preparation;
             string rigHash,modelHash,loadError;
             bool started,loop;
-            float began;
+
             public LibraryOperation(CapabilityContext context,JObject arguments):base(context,arguments) {authored=(string)arguments["movement"]=="authored";}
             protected override bool RetainPlacement=>authored;
             public override bool Complete(out string error){if(authored&&Avatar&&!Avatar.FinishImportedAt(Duration,out error))return false;return base.Complete(out error);}
@@ -60,7 +60,7 @@ namespace Maestro.Quest.Programs
                 } finally {lease?.Dispose();}
             }
             public override RuleActionState State(out string error) {
-                if(base.State(out error)==RuleActionState.Failed)return RuleActionState.Failed;
+                var state=base.State(out error);if(state!=RuleActionState.Ready)return state;
                 if(started){if(authored&&Avatar&&Avatar.ImportedPlaybackError!=null){error=Avatar.ImportedPlaybackError;return RuleActionState.Failed;}return RuleActionState.Ready;}
                 if(!preparation.IsCompleted)return RuleActionState.Preparing;
                 if(loadError!=null) {error=loadError;return RuleActionState.Failed;}
@@ -74,10 +74,10 @@ namespace Maestro.Quest.Programs
                     if(!Avatar.PlayLibraryMotion(motion,loop,authored)) {error=Avatar.ImportedPlaybackError??"This motion no longer matches Maestro";return RuleActionState.Failed;}
                     motion=null; // Ownership transfers only after successful playback.
                 } else if(!model.SampleMotion(motion,0,loop)) {error="This saved motion cannot play on this object";return RuleActionState.Failed;}
-                began=Time.unscaledTime;started=true;
-                return BeginProp(out error)?RuleActionState.Ready:RuleActionState.Failed;
+                started=true;
+                return BeginProp(out error)?base.State(out error):RuleActionState.Failed;
             }
-            public override void Tick() {if(started&&motion!=null&&model)model.SampleMotion(motion,Time.unscaledTime-began,loop);}
+            public override void Tick() {if(started&&motion!=null&&model)model.SampleMotion(motion,Playback.Elapsed,loop);}
             protected override void ReleasePlayback() {motion?.Dispose();motion=null;if(model)model.Stop();}
         }
     }

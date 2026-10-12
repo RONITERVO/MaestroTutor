@@ -32,6 +32,15 @@ namespace Maestro.Quest.Avatar
             SpeechOutput?.Stop();EndAmbient();gestureLayer?.Stop();walkMotion?.Stop();StopImportedClip();spatialWalking=false;
             if(animator)animator.speed=0;
         }
+        object playbackPauseOwner,playbackClockOwner;float playbackSpeed;Func<float> ownedPlaybackTime;
+        internal void SetOwnedPlaybackClock(object owner,Func<float> time){
+            if(time!=null){if(playbackClockOwner!=null&&!ReferenceEquals(playbackClockOwner,owner))return;playbackClockOwner=owner;ownedPlaybackTime=time;}
+            else if(ReferenceEquals(playbackClockOwner,owner)){playbackClockOwner=null;ownedPlaybackTime=null;}
+        }
+        internal void PauseOwnedPlayback(object owner,bool paused){
+            if(paused){if(playbackPauseOwner!=null)return;playbackPauseOwner=owner;playbackSpeed=animator?animator.speed:1;if(animator)animator.speed=0;}
+            else if(ReferenceEquals(playbackPauseOwner,owner)){playbackPauseOwner=null;if(animator)animator.speed=runtimeGate?.Held==true?0:playbackSpeed;}
+        }
         Animator animator;
         string activity;
         float greetingUntil;
@@ -213,6 +222,7 @@ namespace Maestro.Quest.Avatar
 
         void Update()
         {
+            if(playbackPauseOwner!=null){if(animator)animator.speed=0;return;}
             if(runtimeGate?.Held==true){if(animator)animator.speed=0;return;}
             gestureLayer?.RestoreBase();
             if (Browser) ObserveTutorState(Browser.Snapshot);
@@ -346,11 +356,11 @@ namespace Maestro.Quest.Avatar
         }
         void LateUpdate()
         {
-            if(runtimeGate?.Held==true)return;
+            if(runtimeGate?.Held==true||playbackPauseOwner!=null)return;
             if (!IsImportedClipPlaying || !custom) BlendActivity();
             else {
                 if(ImportedPlaybackError!=null)return;
-                importedTime += Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
+                importedTime = ownedPlaybackTime!=null?ownedPlaybackTime():importedTime+Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
                 if(ImportedDuration<=0)StopClip();
                 else {
                     bool sampled=SampleImportedAt(importedTime);

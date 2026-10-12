@@ -46,7 +46,7 @@ namespace Maestro.Quest.Programs
                 }
                 model.Play(index,loop);return true;
             }
-            public override Maestro.Quest.Rules.RuleActionState State(out string error){if(base.State(out error)==Maestro.Quest.Rules.RuleActionState.Failed)return Maestro.Quest.Rules.RuleActionState.Failed;if(authored&&Avatar&&Avatar.ImportedPlaybackError!=null){error=Avatar.ImportedPlaybackError;return Maestro.Quest.Rules.RuleActionState.Failed;}return Maestro.Quest.Rules.RuleActionState.Ready;}
+            public override Maestro.Quest.Rules.RuleActionState State(out string error){var state=base.State(out error);if(state!=Maestro.Quest.Rules.RuleActionState.Ready)return state;if(authored&&Avatar&&Avatar.ImportedPlaybackError!=null){error=Avatar.ImportedPlaybackError;return Maestro.Quest.Rules.RuleActionState.Failed;}return Maestro.Quest.Rules.RuleActionState.Ready;}
             protected override void ReleasePlayback() {if(model)model.Stop();}
         }
     }

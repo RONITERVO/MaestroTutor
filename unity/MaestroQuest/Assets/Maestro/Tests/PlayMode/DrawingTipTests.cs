@@ -77,7 +77,23 @@ namespace Maestro.Quest.Tests
             var (id,view,patch)=DrawingTipStage();var holder=editor.Find("book");holder.transform.position=new Vector3(3,1,0);var item=editor.Find(id);item.transform.position=holder.transform.position+Vector3.forward*.35f;
             var attachment=new Maestro.Quest.Avatar.PropAttachment(id,"",Maestro.Quest.Rules.PropHand.Right,Maestro.Quest.Rules.PropRelease.Return,Vector3.forward*.35f,Quaternion.identity,1);
             var anchor=new RoomPropAnchor("object","book","",editor.ObjectRevision("book"));var held=HeldRoomProp.Begin(editor,attachment,anchor,10,out var error);Assert.That(held,Is.Not.Null,error);Assert.That(held.Holding,Is.True);
-            PlaceTip(id,patch,-.03f);view.SendMessage("LateUpdate");Assert.That(root.GetComponent<SpatialDrawing>().IsToolDrawing(id),Is.True);PlaceTip(id,patch,.03f);view.SendMessage("LateUpdate");held.End(false);view.SendMessage("LateUpdate");Assert.That(editor.Read(editor.Identity(block)).surfaces[0].strokes.Length,Is.EqualTo(1));Assert.That(editor.DrawingMode,Is.False);yield return null;
+            foreach(float x in new[]{-.03f,.03f}){
+                PlaceTip(id,patch,x);holder.transform.rotation=item.transform.rotation;holder.transform.position=item.transform.position-holder.transform.rotation*attachment.Offset;
+                held.SendMessage("LateUpdate");Assert.That(held.Error,Is.Null);Assert.That(held.ContactReady,Is.True);
+                view.SendMessage("LateUpdate");Assert.That(root.GetComponent<SpatialDrawing>().IsToolDrawing(id),Is.True);
+            }
+            held.End(false);view.SendMessage("LateUpdate");Assert.That(editor.Read(editor.Identity(block)).surfaces[0].strokes.Length,Is.EqualTo(1));Assert.That(editor.DrawingMode,Is.False);yield return null;
+        }
+        [UnityTest] public IEnumerator NativeHeldPropRechecksAcceptedSurfaceEditsBeforeContinuing()
+        {
+            var (id,_,patch)=DrawingTipStage();PlaceTip(id,patch,-.03f);var item=editor.Find(id);var holder=editor.Find("book");
+            var attachment=new Maestro.Quest.Avatar.PropAttachment(id,"",Maestro.Quest.Rules.PropHand.Right,Maestro.Quest.Rules.PropRelease.Return,Vector3.forward*.35f,Quaternion.identity,1);
+            holder.transform.rotation=item.transform.rotation;holder.transform.position=item.transform.position-holder.transform.rotation*attachment.Offset;
+            var held=HeldRoomProp.Begin(editor,attachment,new RoomPropAnchor("object","book","",editor.ObjectRevision("book")),10,out var error);Assert.That(held,Is.Not.Null,error);Assert.That(held.ContactReady,Is.True);
+            string surface=editor.Identity(block);Assert.That(RoomContactSweep.Item(item,new Pose(item.transform.position,item.transform.rotation),item.transform.localScale,out var corridor),Is.True);
+            Assert.That(editor.SpatialInputTargets(corridor,corridor,true,id),Does.Contain(surface));var edited=editor.Read(surface);edited.name="Renamed drawing surface";
+            Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{edited},System.Array.Empty<string>(),out error),Is.True,error);Assert.That(held.ContactReady,Is.False,"An accepted dependency edit invalidates the old contact");
+            held.SendMessage("LateUpdate");Assert.That(held.Error,Is.Null);Assert.That(held.ContactReady,Is.True,"The same carrier rechecks current geometry before continuing");held.End(true);yield return null;
         }
         [UnityTest] public IEnumerator SuspendedTipRequiresSeparationAndNeverDrawsOnItsOwnSurface()
         {

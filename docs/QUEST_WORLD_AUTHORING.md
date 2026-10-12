@@ -830,3 +830,25 @@ An imported GLB can have a different default shape from its raw mesh, because of
 The shared `object.model.restBounds` fact reports that default shape in object-local metres with the saved model scale and pivot. Reading it does not load the model or edit the world. The original `object.model.assetBounds` fact still describes static supported geometry; neither fact promises the space occupied by every future animation. Current native geometry remains available through the spatial-bounds fact. Unknown bounds are not empty space. Unsupported import math and VRM-specific deformation remain unknown in the cold resting fact. Animated or otherwise actively used objects continue to be retained independently of their resting bounds.
 
 When a file needs the native fallback importer, fitting measures its loaded resting geometry once. Default deformations still affect its size and placement even when the cold resting fact cannot prove them. This does not turn an unknown fact into a known value or start an animation.
+
+
+### Carried props and preparation
+
+A carried object prepares the ground, obstacles and water along its current path
+before following its holder. While that geometry loads, the object holds its
+last accepted pose and attached drawing or sculpting tips stop editing. It then
+checks the latest holder position; it does not replay the missed movement. A
+throw needs fresh motion after the wait. Accepted edits to nearby dependencies
+are rechecked before contact continues.
+
+When an animation has a fitted prop, their playback time pauses together. A
+standalone hold only owns the carried object and cannot pause an independently
+animated holder. Preparation waits share a 30-second budget; failure or
+cancellation ends the action rather than leaving an unbounded background task.
+
+The shared `object.attachment.inputs` fact reports inactive, ready, pending or
+unavailable contact inputs. Reading it does not load geometry or move anything.
+Ready means that the inputs are available; native collision checks still decide
+whether movement or release is possible. This uses the object's real-room
+collision policy independently of passthrough visibility. It does not provide
+regional unloading or collision envelopes for every animated limb.

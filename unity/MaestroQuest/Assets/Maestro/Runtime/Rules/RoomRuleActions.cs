@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
     /// <summary>One lifecycle host for every native module. No capability IDs, enum dispatch or argument fields.</summary>
-    public sealed partial class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramRoomSpace, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
+    public sealed partial class RoomRuleActions : IRuleActions, IRuleCompletion, IRuleReadiness, IRuleTiming, IRuleInterruptionInfo, IRuleGrabPolicy, IRuleOwnershipSource, IProgramFacts, IProgramFactQueries, IProgramEventWorld, IProgramRoomSpace, IProgramPhysicsWorld, IProgramClockWorld, IProgramAnchorWorld, IProgramAudioWorld, IRuleResults
     {
         readonly CapabilityContext context;
         readonly Dictionary<string,CapabilityOperation> operations=new();
@@ -66,6 +66,7 @@ namespace Maestro.Quest.Rules
             error=null;if(interrupted.TryGetValue(runId,out error))return RuleActionState.Failed;
             return operations.TryGetValue(runId,out var operation)?operation.State(out error):RuleActionState.Ready;
         }
+        public float? RemainingSeconds(string runId)=>operations.TryGetValue(runId,out var operation)?operation.RemainingSeconds:null;
         public void Tick() {foreach(var entry in operations)if(!owned.TryGetValue(entry.Key,out var lease)||lease.Held)entry.Value.Tick();}
         public bool Complete(string runId,out string error) {
             error=null;if(interrupted.Remove(runId,out error))return false;

@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using System.Linq;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Creation;
@@ -30,11 +31,15 @@ namespace Maestro.Quest.Interaction
         PropAttachment attachment;
         Vector3 homePosition,centre;
         Quaternion homeRotation;
-        float radius,began,duration,lastPoseAt;
+        float radius,duration,lastPoseAt;
+        RoomContactInputs inputs;RoomPlaybackClock playback;
         bool holding,requiresRoom,released;
         public string Error { get; private set; }
         public bool Released => released;
         public bool Holding => holding;
+        internal float RemainingSeconds=>playback.Remaining(duration);
+        internal bool ContactReady=>holding&&Error==null&&!playback.Paused&&inputs?.Current(out _)==true;
+        internal JObject ObserveInputs()=>Error!=null?RoomContactInputs.State("unavailable",false,Error):!holding?RoomContactInputs.State("inactive",false,null):inputs?.Observe()??RoomContactInputs.State("unavailable",false,null);
         public string HolderId=>anchor?.HolderId??"";
         public string AnchorKind=>anchor?.Kind??"";
         public string AnchorPart=>anchor?.Part??"";
@@ -60,7 +65,8 @@ namespace Maestro.Quest.Interaction
             return true;
         }
         public static HeldRoomProp Begin(RoomEditor editor,PropAttachment attachment,float duration,out string error)=>Begin(editor,attachment,attachment==null?null:RoomPropAnchor.Avatar(attachment),duration,out error);
-        public static HeldRoomProp Begin(RoomEditor editor,PropAttachment attachment,RoomPropAnchor anchor,float duration,out string error)
+        public static HeldRoomProp Begin(RoomEditor editor,PropAttachment attachment,RoomPropAnchor anchor,float duration,out string error)=>Begin(editor,attachment,anchor,duration,new RoomPlaybackClock(),out error);
+        internal static HeldRoomProp Begin(RoomEditor editor,PropAttachment attachment,RoomPropAnchor anchor,float duration,RoomPlaybackClock playback,out string error)
         {
             if (!CanAttach(editor,attachment,anchor,out error) || attachment == null) return null;
             var item=editor.Find(attachment.ObjectId); var rigid=item.GetComponent<RigidRoomItem>();
@@ -69,12 +75,13 @@ namespace Maestro.Quest.Interaction
             value.anchor=anchor;value.attachment=attachment;
             if(!anchor.Resolve(editor,out value.holder,out value.hand,out error)){Destroy(value);return null;}
             value.homePosition=item.transform.localPosition; value.homeRotation=item.transform.localRotation;
-            value.duration=duration; value.began=Time.unscaledTime; value.requiresRoom=editor.PhysicsWorld && editor.PhysicsWorld.Running;
+            value.duration=duration; value.playback=playback; playback.Start(); value.requiresRoom=editor.PhysicsWorld && editor.PhysicsWorld.Running;
             Physics.SyncTransforms(); var bounds=item.Grab.colliders[0].bounds;
             foreach (var collider in item.Grab.colliders) if (collider && collider.enabled) bounds.Encapsulate(collider.bounds);
             value.centre=item.transform.InverseTransformPoint(bounds.center); value.radius=bounds.extents.magnitude;
             rigid.SetAnimationOwner(value,true); value.holding=true;
-            if (!value.Follow()) { error=value.Error; value.End(false); return null; }
+            value.RenewInputs();
+            if (!value.Follow()&&value.Error!=null) { error=value.Error; value.End(false); return null; }
             return value;
         }
         bool Obstacle(Collider collider,bool includeAvatar) => collider && !collider.isTrigger && !collider.transform.IsChildOf(item.transform) && (includeAvatar || !collider.transform.IsChildOf(holder.transform));
@@ -108,25 +115,47 @@ namespace Maestro.Quest.Interaction
         {
             error=Error; if (error != null) return false;
             if (!holding) return true;
-            if (!editor||editor.RuntimeGate.Held||!item||!item.isActiveAndEnabled||editor.Find(attachment.ObjectId)!=item||!hand||item.Grab.isSelected)
+            if (!editor||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!rigid||!rigid.GeometryReady||!item||!item.isActiveAndEnabled||editor.Find(attachment.ObjectId)!=item||!hand||item.Grab.isSelected)
                 error="Prop action stopped — its holder or item changed";
             else if(!space.TryRead(out _))error=RoomMotionFrame.Changed;
             else if(!anchor.Matches(editor,holder,hand,out error)) {}
             else if (requiresRoom && (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position,item)))
                 error="Prop action stopped — check room alignment and restart physics";
-            if (error != null) Error=error;
+            if (error != null) Fail(error);
             return error == null;
+        }
+        void RenewInputs(){
+            inputs?.Dispose();
+            inputs=new RoomContactInputs(editor,attachment.ObjectId,()=>this&&holding&&Error==null&&item&&editor.Find(attachment.ObjectId)==item&&rigid.GeometryReady&&!item.Grab.isSelected);
+        }
+        RuleActionState Fail(string error){Error=error;inputs?.Dispose();playback?.Pause(this,true);samples.Clear();return RuleActionState.Failed;}
+        internal RuleActionState Prepare(out string error){
+            if(!Valid(out error))return RuleActionState.Failed;
+            if(!playback.Valid(out error))return Fail(error);
+            if(!holding)return RuleActionState.Ready;
+            // Accepted surface edits can invalidate an already loaded corridor.
+            // Renew from the current holder pose; never reuse its throw history
+            // or reset the cumulative preparation budget. Failed loads still stop.
+            if(inputs.SourceChanged){samples.Clear();playback.Pause(this,true);RenewInputs();}
+            float scale=holder.transform.lossyScale.y;
+            var target=new Pose(hand.position+hand.rotation*(attachment.Offset*scale),hand.rotation*attachment.Rotation);
+            if(!RoomContactSweep.Item(item,target,item.transform.localScale,out var sweep)){error="Prop collision bounds changed or are unavailable";return Fail(error);}
+            if(!inputs.Require(sweep,out error)){
+                if(!inputs.Pending)return Fail(error);
+                playback.Pause(this,true);samples.Clear();return RuleActionState.Preparing;
+            }
+            playback.Pause(this,false);return RuleActionState.Ready;
         }
         bool Follow()
         {
-            if (!Valid(out _)) return false;
+            if (Prepare(out _)!=RuleActionState.Ready) return false;
             float now=Time.unscaledTime;
-            if (samples.Count > 0 && now-lastPoseAt > .25f) { Error="Motion was interrupted; try the prop action again"; return false; }
+            if (samples.Count > 0 && now-lastPoseAt > .25f) { Fail("Motion was interrupted; try the prop action again"); return false; }
             float scale=holder.transform.lossyScale.y;
             var position=hand.position+hand.rotation*(attachment.Offset*scale); var rotation=hand.rotation*attachment.Rotation;
             if (!float.IsFinite(position.sqrMagnitude) || !MotionFrame.ValidRotation(rotation) ||
                 requiresRoom && !editor.PhysicsWorld.CanSimulate(position,item) || !Clear(position,rotation,false,true))
-            { Error="Prop path is blocked — adjust its fit, motion or holder placement"; return false; }
+            { Fail("Prop path is blocked — adjust its fit, motion or holder placement"); return false; }
             item.transform.SetPositionAndRotation(position,rotation); body.position=position; body.rotation=rotation;
             var frame=editor.Frame;lastPoseAt=now;
             // Bound history by time as well as count, including fast desktop frames.
@@ -138,39 +167,39 @@ namespace Maestro.Quest.Interaction
         {
             if (!holding || Error != null) return;
             if (!Follow()) return;
-            if (attachment.Release != PropRelease.Return && Time.unscaledTime-began >= duration*attachment.ReleaseAt) Release();
+            if (attachment.Release != PropRelease.Return && playback.Elapsed >= duration*attachment.ReleaseAt) Release();
         }
         public void Finish()
         {
-            if (holding && Error == null && attachment.Release != PropRelease.Return) Release();
+            if (holding && Error == null && attachment.Release != PropRelease.Return){if(Follow())Release();else Error??="The prop is still preparing";}
         }
         bool Release()
         {
-            if (!Valid(out _) || !holding) return false;
+            if (Prepare(out _)!=RuleActionState.Ready || !holding) return false;
             if (!editor.PhysicsWorld || !editor.PhysicsWorld.CanSimulate(item.transform.position,item) || !Clear(item.transform.position,item.transform.rotation,true,false))
-            { Error="Cannot release here — move the prop clear of the holder and room surfaces"; return false; }
+            { Fail("Cannot release here — move the prop clear of the holder and room surfaces"); return false; }
             var frame=editor.Frame;
-            var first=samples[0]; var last=new Sample { Time=Time.unscaledTime,Position=frame.PointToRoom(item.transform.position),Rotation=frame.RotationToRoom(item.transform.rotation) }; float dt=last.Time-first.Time;
-            if (Time.unscaledTime-lastPoseAt > .25f) { Error="Motion was interrupted; try the prop action again"; return false; }
+            var first=samples.Count>0?samples[0]:new Sample{Time=Time.unscaledTime}; var last=new Sample { Time=Time.unscaledTime,Position=frame.PointToRoom(item.transform.position),Rotation=frame.RotationToRoom(item.transform.rotation) }; float dt=last.Time-first.Time;
+            if (Time.unscaledTime-lastPoseAt > .25f) { Fail("Motion was interrupted; try the prop action again"); return false; }
             Vector3 velocity=Vector3.zero,spin=Vector3.zero;
             if (attachment.Release == PropRelease.Throw)
             {
-                if (dt < .02f) { Error="Throw needs more motion before release — choose a later release time"; return false; }
+                if (dt < .02f) { Fail("Throw needs more motion before release — choose a later release time"); return false; }
                 velocity=frame.VectorToWorld((last.Position-first.Position)/dt);
                 var delta=last.Rotation*Quaternion.Inverse(first.Rotation); delta.ToAngleAxis(out float angle,out var axis);
                 if (angle > 180) angle-=360;
                 if (Mathf.Abs(angle) > .001f) spin=frame.DirectionToWorld(axis)*(angle*Mathf.Deg2Rad/dt);
             }
             holding=false; rigid.SetAnimationOwner(this,false);
-            if (!rigid.Launch(velocity,spin)) { holding=true; rigid.SetAnimationOwner(this,true); Error="Room physics could not take ownership of the prop"; return false; }
-            released=true; editor.RememberPlacement(attachment.ObjectId); return true;
+            if (!rigid.Launch(velocity,spin)) { holding=true; rigid.SetAnimationOwner(this,true); Fail("Room physics could not take ownership of the prop"); return false; }
+            released=true;inputs?.Dispose();playback.Pause(this,false); editor.RememberPlacement(attachment.ObjectId); return true;
         }
         public void End(bool preservePlacement)
         {
             preservePlacement|=holder&&holder.Grab.isSelected;
             if (holding && item && !preservePlacement && !item.Grab.isSelected)
             { item.transform.SetLocalPositionAndRotation(homePosition,homeRotation); rigid.Teleported(); }
-            holding=false; if (rigid) rigid.SetAnimationOwner(this,false);
+            holding=false;inputs?.Dispose();playback?.Pause(this,false); if (rigid) rigid.SetAnimationOwner(this,false);
             enabled=false; Destroy(this);
         }
         void OnDisable() { if (holding) End(false); }

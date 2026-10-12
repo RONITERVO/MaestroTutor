@@ -122,9 +122,9 @@ it('accepts included module provenance only for a readable definition and bounds
 });
 
 
-it.each(['object.contact.inputs','controller.contact.inputs'])('accepts native contact ownership and rejects malformed diagnostics for %s',capability=>{
+it.each(['object.contact.inputs','controller.contact.inputs','object.attachment.inputs'])('accepts native contact ownership and rejects malformed diagnostics for %s',capability=>{
  const definition=behaviourFact(capability)!;
- const args=capability==='object.contact.inputs'?{target:'book'}:{hand:'right'};
+ const args=capability==='object.attachment.inputs'?{target:'0'.repeat(32)}:capability==='object.contact.inputs'?{target:'book'}:{hand:'right'};
  const view={operation:'inspect',category:'facts',capability,version:1,arguments:args,definition,available:true,status:'Current inputs',value:{state:'pending',ready:false,reason:'Preparing contact ground',dependencyCount:8,dependencies:['ground','water']}};
  expect(validCatalogView(view)).toBe(true);
  for(const bad of [{state:false},{ready:'false'},{dependencyCount:Infinity},{dependencies:['a',3]},{reason:false}])expect(validCatalogView({...view,value:{...view.value,...bad}})).toBe(false);

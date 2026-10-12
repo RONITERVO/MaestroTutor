@@ -15,6 +15,7 @@ namespace Maestro.Quest.Interaction {
         Bounds sweep;bool sampled,ready,disposed;string issue;
         internal RoomContactInputs(RoomEditor editor,string actor,Func<bool> owned){this.editor=editor;this.actor=actor;this.owned=owned;inputs=new RoomSpatialInputs(editor,actor,owned,false,purpose:"Contact");}
         internal bool SourceChanged=>inputs.SourceChanged;
+        internal bool Pending=>inputs.Pending;
         internal bool Require(Bounds value,out string error){
             sweep=value;sampled=true;
             if(!Valid(value)){Dispose();issue=error="Contact bounds are unavailable";return false;}

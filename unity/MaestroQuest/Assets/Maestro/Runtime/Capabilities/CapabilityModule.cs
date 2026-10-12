@@ -95,6 +95,8 @@ namespace Maestro.Quest.Programs
     public abstract class CapabilityOperation
     {
         public abstract float Seconds {get;}
+        // Opt-in native clock for playback that can wait after it has started.
+        public virtual float? RemainingSeconds=>null;
         public virtual RuleActionState State(out string error) {error=null;return RuleActionState.Ready;}
         public virtual void Tick() {}
         public virtual bool WaitsThroughGrab(string target)=>false;

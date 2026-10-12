@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation
         void LateUpdate()
         {
             bool grabbed=item&&item.Grab&&item.Grab.isSelected;
-            GetComponents(attachments);bool held=grabbed||attachments.Any(p=>p.Holding);
+            GetComponents(attachments);bool held=grabbed||attachments.Any(p=>p.ContactReady);
             Sample(held,grabbed?RoomActorRole.Control:RoomActorRole.Program);
         }
         internal void Sample(bool held,RoomActorRole role)

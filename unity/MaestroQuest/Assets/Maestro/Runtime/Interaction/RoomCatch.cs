@@ -96,6 +96,9 @@ namespace Maestro.Quest.Interaction
             if(Phase=="holding"){
                 string error=null;if(!prop||!prop.Valid(out error)){Fail(error??"The caught prop was removed");return;}
                 if(prop.Released){Phase="dropped";Reason="Caught and dropped through room physics";return;}
+                var state=prop.Prepare(out error);if(state==Rules.RuleActionState.Failed){Fail(error);return;}
+                if(state==Rules.RuleActionState.Preparing){Reason="Caught; preparing required contact geometry";return;}
+                Reason="Physical contact captured; holding before drop";
             }
             if(!reach)return;
             bool available=rigid.TryReadMotion(out var free,out var speed,out _)&&free&&speed<=maxSpeed;

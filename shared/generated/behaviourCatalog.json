@@ -963,7 +963,7 @@
         "authoring.inactive",
         "source.ready"
       ],
-      "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. For recipePart choose source.part, an exact saved track ID. Different local part rotations compose, including parent/child parts; the same part conflicts. Playback starts that track at zero, seconds=0 uses its saved duration, and loop repeats it. Stop/completion holds the last pose and suppresses autoplay for that track until explicit whole-recipe Restart. Other tracks continue. Root physics and the stable whole-object collider remain unchanged; parts are visual joints, not independent rigid bodies. Read object.recipe.pose for live local/world pose. Playback never changes saved keys. For Maestro library/embedded clips, optional movement=authored preserves sampled planar body travel through the scanned room, including loop displacement; omitted/inPlace retains navigation-adjusted hips. Authored travel requires running aligned room physics, level connected floor and clear swept body space. It stops on obstacles, proximity to the user, placement changes or lost readiness, retaining the last accepted placement. Body-proxy checks do not certify individual limb/prop contacts or foot planting. Existing activity/walk assignments remain inPlace. Inspect the selected variant's prerequisites; no automatic source substitution.",
+      "description": "Choose a typed source and channel. Library and embedded sources keep exact motion/model identities. Only built-in gestures currently support upperBody; wholeTarget owns the complete object. For recipePart choose source.part, an exact saved track ID. Different local part rotations compose, including parent/child parts; the same part conflicts. Playback starts that track at zero, seconds=0 uses its saved duration, and loop repeats it. Stop/completion holds the last pose and suppresses autoplay for that track until explicit whole-recipe Restart. Other tracks continue. Root physics and the stable whole-object collider remain unchanged; parts are visual joints, not independent rigid bodies. Read object.recipe.pose for live local/world pose. Playback never changes saved keys. For Maestro library/embedded clips, optional movement=authored preserves sampled planar body travel through the scanned room, including loop displacement; omitted/inPlace retains navigation-adjusted hips. Authored travel requires running aligned room physics, level connected floor and clear swept body space. It stops on obstacles, proximity to the user, placement changes or lost readiness, retaining the last accepted placement. Body-proxy checks do not certify individual limb/prop contacts or foot planting. Existing activity/walk assignments remain inPlace. A fitted prop waits for required local ground, obstacles and water; that wait freezes its owned full-body playback and lifetime for at most 30 cumulative seconds, discards pre-wait throw samples and rechecks the latest hand path. It never pauses an independent holder used by object.hold. Read object.attachment.inputs for native preparation. Inspect the selected variant's prerequisites; no automatic source substitution.",
       "example": {
         "target": "maestro",
         "seconds": 2,
@@ -33231,7 +33231,7 @@
         "authoring.inactive"
       ],
       "minimumProgramVersion": 3,
-      "description": "Wait locally for a small solid/bouncy creation to physically reach an exact root, recipe-part or Maestro-hand socket. The incoming prop stays free while waiting, including user grip/release and throws from other actions. The holder's catch socket is reserved; avatarHand also owns upperBody and uses bounded rotation-only shoulder/elbow reaching on its current visible rig. Recipe/root sockets use their existing motion. offset is the desired collision-volume centre in holder-scale socket axes (not the object's pivot). The enclosing collision radius must be at most 0.3 world metres. Fixed-step relative sweeps detect crossings at radius+gripRadius, reject motion discontinuities and speeds above maxSpeed, and check scanned/object/controller obstruction and head clearance before contact capture. This is assisted catching, not finger physics or guaranteed interception. On contact a native reflex lease takes only the free prop; human grip/control has priority. It holds for holdSeconds then drops using real gravity. A timeout completes with caught=false and phase=missed; caught=true is only observed physical capture, dropped=true only a successful release. Missing/replaced anchors, authoring, pause or lost tracking stop without replay; cancellation keeps an already caught prop at its current placement. Use a version 3 program for per-action claims; legacy programs reserving the incoming prop are refused. No saved catch component or automatic restart. Read object.catch for live attempts and the receipt for terminal outcome; branch on caught instead of assuming success.",
+      "description": "Wait locally for a small solid/bouncy creation to physically reach an exact root, recipe-part or Maestro-hand socket. The incoming prop stays free while waiting, including user grip/release and throws from other actions. The holder's catch socket is reserved; avatarHand also owns upperBody and uses bounded rotation-only shoulder/elbow reaching on its current visible rig. Recipe/root sockets use their existing motion. offset is the desired collision-volume centre in holder-scale socket axes (not the object's pivot). The enclosing collision radius must be at most 0.3 world metres. Fixed-step relative sweeps detect crossings at radius+gripRadius, reject motion discontinuities and speeds above maxSpeed, and check scanned/object/controller obstruction and head clearance before contact capture. This is assisted catching, not finger physics or guaranteed interception. On contact a native reflex lease takes only the free prop; human grip/control has priority. It holds for holdSeconds of playback then drops using real gravity. Required contact geometry can pause that hold for at most 30 cumulative seconds; it never replays old motion. Read object.attachment.inputs while holding for native preparation. A timeout completes with caught=false and phase=missed; caught=true is only observed physical capture, dropped=true only a successful release. Missing/replaced anchors, authoring, pause or lost tracking stop without replay; cancellation keeps an already caught prop at its current placement. Use a version 3 program for per-action claims; legacy programs reserving the incoming prop are refused. No saved catch component or automatic restart. Read object.catch for live attempts and the receipt for terminal outcome; branch on caught instead of assuming success.",
       "example": {
         "target": "00000000000000000000000000000000",
         "holder": {
@@ -33661,7 +33661,7 @@
         "authoring.inactive",
         "release.physicsReady"
       ],
-      "description": "Temporarily carry a loaded creation at an exact recipe part, Maestro hand or object-root anchor. Owns only the prop, so holder animation can run in parallel. Both object IDs must be authorized resources. holder.revision guards root/recipe admission; avatarHand requires the current avatarHash. Optional reach requires the prop origin to be within radius world metres of the fitted anchor on admission; physics=true additionally requires freely simulating solid/bouncy physics. It is rechecked immediately before pickup, so a prior zone event never permits catching a departed/held object. Omitted reach keeps the existing explicit remote-fit behavior. This does not add finger IK or swept catch detection. Read object.anchor for the anchor pose and use an explicit offset (at most one root-scale metre) and unit rotation relative to it. Gripping either object, missing/replaced anchors, room pause and path obstruction stop the action. Self-attachment and nested held-object chains are refused. seconds is the bounded lifetime; return restores the initial prop pose on completion/cancellation, while drop/throw releases at seconds*releaseAt and leaves real physics running. Throw derives velocity from actual recent anchor motion, using the existing 15 m/s and 30 rad/s caps; a stationary anchor is not an aimed throw. Drop/throw needs solid/bouncy physics and aligned running room surfaces, with clearance from the holder on release. Stop or failure never intentionally releases an unreleased prop; grip takeover preserves its current placement. Released motion cannot be undone by cancellation. This is live motion, not a saved constraint or animation edit; no auto-restart. Use object.attachment and the native receipt for the actual outcome.",
+      "description": "Temporarily carry a loaded creation at an exact recipe part, Maestro hand or object-root anchor. Owns only the prop, so holder animation can run in parallel. Both object IDs must be authorized resources. holder.revision guards root/recipe admission; avatarHand requires the current avatarHash. Optional reach requires the prop origin to be within radius world metres of the fitted anchor on admission; physics=true additionally requires freely simulating solid/bouncy physics. It is rechecked immediately before pickup, so a prior zone event never permits catching a departed/held object. Omitted reach keeps the existing explicit remote-fit behavior. This does not add finger IK or swept catch detection. Read object.anchor for the anchor pose and use an explicit offset (at most one root-scale metre) and unit rotation relative to it. Gripping either object, missing/replaced anchors, room pause and path obstruction stop the action. Self-attachment and nested held-object chains are refused. seconds is the playback lifetime; required ground/obstacle/water preparation freezes the prop and its lifetime for at most 30 cumulative seconds, without pausing an independently animated holder. The latest anchor is rechecked after loading and old throw samples are discarded. A prop fitted to a full-body animation instead pauses that owned animation with it.  return restores the initial prop pose on completion/cancellation, while drop/throw releases at seconds*releaseAt and leaves real physics running. Throw derives velocity from actual recent anchor motion, using the existing 15 m/s and 30 rad/s caps; a stationary anchor is not an aimed throw. Drop/throw needs solid/bouncy physics and aligned running room surfaces, with clearance from the holder on release. Stop or failure never intentionally releases an unreleased prop; grip takeover preserves its current placement. Released motion cannot be undone by cancellation. This is live motion, not a saved constraint or animation edit; no auto-restart. Use object.attachment and the native receipt for the actual outcome.",
       "example": {
         "target": "00000000000000000000000000000000",
         "holder": {
@@ -41996,7 +41996,7 @@
         }
       },
       "label": "Held object contact inputs",
-      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. This fact covers an active physical controller/hand grab of a creation; unheld, paused or animation-owned items are inactive. A waiting grab holds its current pose and needs fresh throw samples before release. Scripted attachments use their separate existing ownership.",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. This fact covers an active physical controller/hand grab of a creation; unheld, paused or animation-owned items are inactive. A waiting grab holds its current pose and needs fresh throw samples before release. Scripted attachments use their separate existing ownership.",
       "input": {
         "type": "object",
         "properties": {
@@ -42019,6 +42019,44 @@
       ]
     },
     {
+      "id": "object.attachment.inputs",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "ready": "boolean",
+          "reason": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Carried object contact inputs",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Covers object.hold, fitted animation props and physical catches. Waiting keeps the actual prop in place and discards old throw history; fitted full-body playback shares the wait. This passive read does not follow an anchor, advance playback or prove the release path is clear. A released or retired attachment is inactive; inspect its receipt for the outcome.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "controller.contact.inputs",
       "version": 1,
       "type": {
@@ -42033,7 +42071,7 @@
         }
       },
       "label": "Hand or controller contact inputs",
-      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Select the left or right tracked source. Tracking jumps and recovery inside an object keep the contact volume disabled until a fresh clear pose; they cannot replay a missed push. The visible hand/controller continues tracking.",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Select the left or right tracked source. Tracking jumps and recovery inside an object keep the contact volume disabled until a fresh clear pose; they cannot replay a missed push. The visible hand/controller continues tracking.",
       "input": {
         "type": "object",
         "properties": {
@@ -43119,7 +43157,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/MaestroAvatar.cs",
-      "sha256": "46d45c5a879e02cd0144e686b1021c0cce636b66bee66b3072eff2a3eb89fe0c"
+      "sha256": "76c68c7aa5395f7c52eea2b20aab28e455a16eddd0a3b46b83ae2ffa3ebefba1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/PropAttachment.cs",
@@ -43307,11 +43345,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
-      "sha256": "36bd763255c87ec3b6c7fdb6f3b0f8ad02cc21283d2212f146edb2077d2727f3"
+      "sha256": "eb511e8136d340f3e2738cec561e9e415090383efd6bcd61192b6a4ae95bfee9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
-      "sha256": "e6cbdf4ca34b1414cd94ac0c9ebed5ba442a67a0e9c3e08f08f2cdecc64c37fa"
+      "sha256": "a5fa270bc13f4c1baf44dc35b76f6bf6821c9983e6c0074b3589f742aff67f0b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPosingCapability.cs",
@@ -43351,7 +43389,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "bdb375ef50a22d84c6b69b98642a6378687e42c51ae47e8aff0fa97e4b9aa00f"
+      "sha256": "8de2866b64ee0cfbc540ed013392a459e4f8f2fd1808560ec5b91076a105d90e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
@@ -43371,7 +43409,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
-      "sha256": "6c2283933fb167195c1ce070a3e050bd0086b4e02779f2f396327549cd228241"
+      "sha256": "08c343301acab1fbdb5a78fb6d809590f88ce14ae3bdffcbce71c1c9c2846042"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
@@ -43395,7 +43433,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactInputFacts.cs",
-      "sha256": "166edc748b7f0b3e07b4805b04d1e3e0061695866e47f368355f1877346164d7"
+      "sha256": "054fd38cb230ccb6f0df110d68accdbd6a636dc15ae5f176d78016018bf80575"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
@@ -43463,7 +43501,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EmbeddedAnimationCapability.cs",
-      "sha256": "3ad5bef569449f223dc3426b537f2967310003903677c01bdde5c4412eedf9b1"
+      "sha256": "8717dea5adaf462532a9306455bdf50b906e86d41664455b3b3b7622442ebcc5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
@@ -43487,7 +43525,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
-      "sha256": "ca48bb0bd136f95d0711adac3b7a17b38408e62114d6a6dcedfce3308d2680cf"
+      "sha256": "c5f9dc075f1f4d259fd69190697df669097dff7dc45756d634da111f38a87668"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageImportCapability.cs",
@@ -43515,7 +43553,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
-      "sha256": "921c8e4fe06cdbe6d3e87d11c7d3efa21efe86177a2a330476e9ef1e5acffeae"
+      "sha256": "413e0952375232505b2475436e2d9986b8220f1174cc5129322c778cf2dc3898"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialPackToolCapability.cs",
@@ -43611,7 +43649,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",
-      "sha256": "3d1f77d9271a9ecbac61ba6658551f99b919dbe5199e9e3e64ef425cd911e932"
+      "sha256": "7ac12e0d438bf610958aa449d9ba9ccfb88666464b6250dadd0b6e07ecffeb1f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
@@ -43899,7 +43937,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTipView.cs",
-      "sha256": "a2b203c4bccaec45a613c0efde0d090a26e64be3b186772b2bc77d0b5814c847"
+      "sha256": "31563a2ba43eeb84537fa28f2e120f30aabe52a2c3b5c402a392ace1b35cc728"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -44455,7 +44493,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SculptTipView.cs",
-      "sha256": "d651c300b719d2946161d474b06b693704b76248b268db9850096f3ebbf6658c"
+      "sha256": "47d4026f9afcd69fd417c8fed48da4987b17a202853ee1c8e25acea62bb975a1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
@@ -44695,7 +44733,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
-      "sha256": "d01c4b6b5bc51bd46151cf9e6355ba8b963c1d064595f32b3557b2c9ed87a575"
+      "sha256": "fffa849a6992ad924ead5b95b50772b7887648307b10c4791d6679087d9fea3c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MetaTrackingRig.cs",
@@ -44755,7 +44793,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
-      "sha256": "c05721fdf015db50f6f1d0326018e5e29a9101243b2cc64c348bd0540737ab28"
+      "sha256": "dd28296c270ba5b19fc2ce50bbd33e07cf39d416be4fc6fd7dbd4be633abec16"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionAdmission.cs",
@@ -44771,7 +44809,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomContactInputs.cs",
-      "sha256": "929e8b22ddce36c134ef0836c379335e5de0441f44221bfab9d937c570e83b71"
+      "sha256": "6c7e35b30c23963d501ed93786d9a8df9ce5a5c4a23b3bdadb23966a891df37d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomDepthOcclusion.cs",
@@ -44836,6 +44874,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
       "sha256": "c55f0012ef98ef920e7fb7113d8792034c1d462457feb42079c74466de262540"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPlaybackClock.cs",
+      "sha256": "0b26a1ac7cf87e1f270d81aeefca091593243a38e675df7550be9d6d35e76b5b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPointerHit.cs",
@@ -45087,7 +45129,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "0f912f9636a3ba4e193a09d54cbe01198ce588c910ca5b11eec6d53a1c5fea7e"
+      "sha256": "3b439115f16c95f85457f7c73b7b0acd7b92cf21f26455e21aa56c5d327c5eb4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -45171,7 +45213,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRuleActions.cs",
-      "sha256": "cbe5bf566e19f99545bf46629a5e4fa6bee1bf1d8d2b3cc43ce78a1556202b74"
+      "sha256": "357bab91b3b263266066d0d7e45d197d3cf8afa8cd54215f0fc7836ff9dfc6be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
@@ -45219,7 +45261,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "ccd9268f4121c872104e91daa35f31acadab81edcb89b9c1239c462fba89ecb4"
+      "sha256": "eb67ecf50dc700127f8dcc003ded6423709215d9fc94614f7929fcf76c9df261"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleStorage.cs",

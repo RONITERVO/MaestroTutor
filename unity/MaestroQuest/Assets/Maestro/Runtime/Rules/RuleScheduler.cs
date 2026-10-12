@@ -22,6 +22,7 @@ namespace Maestro.Quest.Rules
     public interface IRuleCompletion { bool Complete(string runId,out string error); }
     public enum RuleActionState { Preparing, Ready, Failed }
     public interface IRuleReadiness { RuleActionState State(string runId,out string error); }
+    public interface IRuleTiming { float? RemainingSeconds(string runId); }
 
     /// <summary>Bounded scheduler; disjoint targets can run concurrently. No user code executes.</summary>
     public sealed partial class RuleScheduler : IProgramFacts, IProgramFactQueries
@@ -33,7 +34,7 @@ namespace Maestro.Quest.Rules
             public RuleBinding Binding;
             public HashSet<string> Targets;
             public BehaviourCatalog.Claim[] Claims=Array.Empty<BehaviourCatalog.Claim>();
-            public float Ends, Duration, PrepareDeadline;
+            public float Ends, Duration, PrepareDeadline, PlaybackDeadline;
             public bool Preparing,Computing,WaitingForChannels,Acquiring,AcquisitionChecked;
             public RuleEntityDemand EntityDemand;public float AcquisitionDeadline;
             public float ChannelDeadline,ChannelPoll;public string ChannelStatus;
@@ -205,7 +206,7 @@ namespace Maestro.Quest.Rules
             bool instant=run.Active.Instant,awaited=run.Active.AwaitCompletion;
             if (!actions.Start(run.Id,run.Active,out float seconds,out var error) || !float.IsFinite(seconds) || (instant||awaited?seconds!=0:seconds<.01f) || seconds > 30)
             { LastError = error ?? "This action has an invalid duration"; Stop(run,false,"failed",LastError); return false; }
-            run.Duration = seconds; run.PrepareDeadline = now+(awaited?Math.Clamp(run.Active.Definition.Module.CompletionTimeoutSeconds,1,600):30);
+            run.Duration = seconds; run.PlaybackDeadline=now+seconds+60; run.PrepareDeadline = now+(awaited?Math.Clamp(run.Active.Definition.Module.CompletionTimeoutSeconds,1,600):30);
             var state = actions is IRuleReadiness readiness ? readiness.State(run.Id,out error) : RuleActionState.Ready;
             if (state == RuleActionState.Failed) { LastError = error ?? "This action could not load"; Stop(run,false,"failed",LastError); return false; }
             if(instant||awaited&&state==RuleActionState.Ready) {
@@ -257,7 +258,20 @@ namespace Maestro.Quest.Rules
                     }
                     run.Preparing=false;run.Ends=now;
                 }
-                if (run.Preparing)
+                // Native clocks preserve elapsed playback across later waits. No
+                // capability IDs or global changes to ordinary timed actions.
+                float? remaining=run.Active?.AwaitCompletion!=true?(actions as IRuleTiming)?.RemainingSeconds(run.Id):null;
+                if(remaining.HasValue) {
+                    string issue=null;var state=actions is IRuleReadiness native?native.State(run.Id,out issue):RuleActionState.Ready;
+                    remaining=((IRuleTiming)actions).RemainingSeconds(run.Id);
+                    if(state==RuleActionState.Failed||!remaining.HasValue||!float.IsFinite(remaining.Value)||remaining<0||remaining>run.Duration+.001f||now>=run.PlaybackDeadline) {
+                        LastError=issue??"The native playback clock stopped or exceeded its bounded lifetime";Stop(run,false,"failed",LastError);continue;
+                    }
+                    run.Preparing=state==RuleActionState.Preparing;
+                    if(run.Preparing)continue;
+                    run.Ends=now+remaining.Value;
+                }
+                else if (run.Preparing)
                 {
                     if (now >= run.PrepareDeadline) { LastError = "The action took too long to load; try again"; Stop(run,false,"failed",LastError); continue; }
                     var state = ((IRuleReadiness)actions).State(run.Id,out var error);
@@ -266,7 +280,7 @@ namespace Maestro.Quest.Rules
                     if (state == RuleActionState.Ready) { run.Preparing = false; run.Ends = now+run.Duration; }
                     continue; // Loading time never consumes any of the requested playback.
                 }
-                if (actions is IRuleReadiness active && active.State(run.Id,out var activeError) == RuleActionState.Failed)
+                if (!remaining.HasValue && actions is IRuleReadiness active && active.State(run.Id,out var activeError) == RuleActionState.Failed)
                 { LastError=activeError ?? "This action stopped because its target changed"; Stop(run,false,"failed",LastError); continue; }
                 if (now < run.Ends) continue;
                 if (actions is IRuleCompletion completion)

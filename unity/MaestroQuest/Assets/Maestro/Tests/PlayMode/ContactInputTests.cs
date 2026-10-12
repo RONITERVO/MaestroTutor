@@ -42,7 +42,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(Mathf.Abs(item.GetComponent<Rigidbody>().linearVelocity.x),Is.LessThan(.1f));Assert.That((string)ContactFact(id)["state"],Is.EqualTo("inactive"));
         }
         [UnityTest]public IEnumerator ContactInputsActualGrabCannotMoveThroughAnUnavailableSweptRegion(){
-            string ground=AvailabilityTerrain(),id=PhysicsInputBall(new(4,.18f,4));ContactStart();var(item,hand)=ContactGrab(id);editor.Find(ground).gameObject.SetActive(false);var before=item.transform.position;
+            string ground=AvailabilityTerrain(),id=PhysicsInputBall(new(4,.13f,4));ContactStart();var(item,hand)=ContactGrab(id);ContactTarget(item,item.transform.position);Assert.That((bool)ContactFact(id)["ready"],Is.True);editor.Find(ground).gameObject.SetActive(false);var before=item.transform.position;
             for(int i=0;i<8;i++){hand.transform.position+=Vector3.right*.02f;yield return new WaitForFixedUpdate();yield return null;}
             Assert.That(Vector3.Distance(before,item.transform.position),Is.LessThan(.01f));Assert.That((bool)ContactFact(id)["ready"],Is.False);Assert.That(item.Grab.throwOnDetach,Is.False);
         }

@@ -8541,3 +8541,62 @@ this complete run uses the final source. The historical Meta audio SDK crash did
 not reproduce; its cause remains unresolved and production reflections remain
 off. These are desktop checks with scripted provider responses; headset and paid
 provider acceptance remain on hold.
+
+
+### Carried-prop input preparation and playback timing — 2026-10-13
+
+Carried creations use the same owned ground/obstacle/water input lane as manual
+contacts. The current prop-to-anchor swept collider envelope is prepared before
+following the anchor. While pending, the prop stays at its accepted pose and
+its playback lifetime freezes; old throw samples are discarded. Resume checks
+the latest anchor and the existing real native clearance checks, without queuing
+missed motion. Throwing immediately after a wait requires enough new motion;
+loading must never replay momentum from before the wait. Drawing/sculpting tips
+on a waiting attachment do not continue editing a surface. Accepted edits to
+already loaded dependencies retire the stale input lease and recheck the latest
+geometry, without resetting the wait budget or reusing old throw samples. Failed
+or cancelled loads still stop the action.
+
+A fitted full-body animation and its prop share a bounded playback clock. The
+scheduler consumes native remaining playback time instead of restarting the
+entire duration or falsely completing during a later wait. Imported avatar
+clips sample that clock, recorded motion uses it, and an owned Animator freezes
+while waiting. A standalone `object.hold` owns only its prop and cannot stop an
+independently animated holder. Multiple preparation consumers share a cumulative
+30-second wait budget; cancellation retires the exact inputs and restores the
+owning avatar's normal playback. Ordinary timed actions keep their existing
+scheduler behavior.
+
+`object.attachment.inputs` is a passive typed catalog fact for these attachments,
+shared by the book, agent and headless clients. It exposes the same bounded
+native-input status as manual contact facts, without moving the prop or loading
+anything. Receipt outcomes still distinguish actual release from planned motion.
+Per-entity real-room collision policies remain authoritative; visual occlusion
+and reality-layer opacity are separate from physical contact.
+
+This increment does not prove future recorded-root or deforming-limb envelopes,
+arbitrary solver impulses, joint motors, regional navigation or large-world
+performance. Root-motion input admission is the next separate consumer. The
+whole-world gate and running-world retention remain, automatic unloading stays
+off, and the current 64-object/25-metre scope remains. Headset and paid-provider
+acceptance remain on hold.
+
+Verification completed for this increment: 12 focused PlayMode and 16 scheduler
+EditMode checks; 1,155 full EditMode and 1,375 full PlayMode checks, with only the
+three expected optional private-file skips. The earlier full run exposed a
+carried-drawing regression. The repaired run includes actual carrier sampling
+and an accepted surface-dependency edit, and passes both checks. Source and
+mirror checks covered all 951 C# files; a trailing-whitespace-only cleanup after
+verification is recorded with token-equivalence evidence.
+
+The actual native-room journey passed 767 observations
+(`b7d55f8ad9294900bf59196daccfe83a`), and the original-book journey passed
+(`1a9228a5980749a6b11b639d5252088d`), each with client/editor exit zero and no paid
+provider. The book retains the attachment fact alongside manual/tracked contact
+observations. Fresh catalog phases and the same ten catch checkpoint states
+refresh the web fixtures; extra settling telemetry remains in the complete
+native trace. All 2,903 web tests across 311 files passed, together with lint,
+build, probe types, boundary checks and catalog/native-export equality. CI is
+tracked on draft PR 248. Local receipts are under
+`.quest-evidence/authored-inputs`. No signing, device, deployment or Meta change
+was made.

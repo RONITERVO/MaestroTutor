@@ -49,7 +49,7 @@ namespace Maestro.Quest.Programs
         PlayableGraph graph;
         ScriptPlayable<RoomMotionPlayable> player;
         protected RoomMotion Motion;
-        float began;
+
         string frameError;
         public RecordedMotionOperation(CapabilityContext context,JObject arguments):base(context,arguments) {}
         public bool Begin(bool loop,out string error) {
@@ -66,7 +66,7 @@ namespace Maestro.Quest.Programs
                 if(!Context.Editor.Frame.Apply(Target.transform,frame.position,frame.rotation,frame.scale)){frameError="The animation room frame changed to an unsupported transform";return;}
                 if(Avatar&&Avatar.PoseRig) {Avatar.PoseRig.SetManual(true);Avatar.PoseRig.Apply(frame.joints);}
             };
-            ScriptPlayableOutput.Create(graph,"Motion").SetSourcePlayable(player);graph.Play();began=Time.unscaledTime;
+            ScriptPlayableOutput.Create(graph,"Motion").SetSourcePlayable(player);graph.Play();
             Evaluate(0);if(frameError!=null){error=frameError;return false;}return BeginProp(out error);
         }
         protected void Evaluate(float time) {if(graph.IsValid()) {player.SetTime(time);graph.Evaluate(0);}}
@@ -74,7 +74,7 @@ namespace Maestro.Quest.Programs
             if(frameError!=null){error=frameError;return Rules.RuleActionState.Failed;}return base.State(out error);
         }
         public override bool Complete(out string error) {if(State(out error)==Rules.RuleActionState.Failed)return false;return base.Complete(out error);}
-        public override void Tick()=>Evaluate(Time.unscaledTime-began);
+        public override void Tick(){if(!Playback.Paused)Evaluate(Playback.Elapsed);}
         protected override void ReleasePlayback() {if(graph.IsValid())graph.Destroy();}
     }
     internal sealed class ThrowRecordingOperation : RecordedMotionOperation
