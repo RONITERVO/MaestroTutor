@@ -36,11 +36,12 @@ jobs:
           python -m pip install --target "$root/tools" --no-deps --only-binary=:all: meson==1.9.1 ninja==1.13.0
           if($LASTEXITCODE -ne 0){throw 'Build tools failed to install'}
           $downloads=@{
-            'apm.tar.xz'='https://freedesktop.org/software/pulseaudio/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.xz'
+            'apm.tar.gz'='https://gstreamer.freedesktop.org/src/mirror/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.gz'
             'abseil.tar.gz'='https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz'
-            'overlay.zip'='https://wrapdb.mesonbuild.com/v2/abseil-cpp_20240722.0-3/get_patch'
+            'overlay.zip'='https://github.com/mesonbuild/wrapdb/releases/download/abseil-cpp_20240722.0-3/abseil-cpp_20240722.0-3_patch.zip'
           }
           foreach($file in $downloads.Keys){
+            Write-Output ("Downloading pinned input: "+$file)
             Invoke-WebRequest -Uri $downloads[$file] -OutFile "$root/cache/$file" -TimeoutSec 90 -MaximumRetryCount 2
           }
           # Build.py verifies all three archive hashes before extraction.
@@ -49,7 +50,7 @@ jobs:
         run: |
           $root=Join-Path $env:GITHUB_WORKSPACE '.quest-evidence/echo-native'
           python unity/Tools/EchoProcessing/Build.py `
-            --apm "$root/cache/apm.tar.xz" --abseil "$root/cache/abseil.tar.gz" `
+            --apm "$root/cache/apm.tar.gz" --abseil "$root/cache/abseil.tar.gz" `
             --overlay "$root/cache/overlay.zip" --meson-root "$root/tools" `
             --ninja "$root/tools/bin/ninja.exe" `
             --platform windows --output "$root/ci"

@@ -20,6 +20,7 @@ INPUTS = {
     "abseil": "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
     "overlay": "12dd8df1488a314c53e3751abd2750cf233b830651d168b6a9f15e7d0cf71f7b",
 }
+APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253"
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1")
 
 def digest(path):
@@ -115,7 +116,7 @@ def main():
     archives = {}
     for name, expected in INPUTS.items():
         path = getattr(args, name).resolve(strict=True)
-        if digest(path) != expected:
+        if digest(path) not in ({expected, APM_MIRROR_SHA256} if name == "apm" else {expected}):
             parser.error("Archive hash mismatch: " + name)
         archives[name] = path
     meson_root = args.meson_root.resolve(strict=True)
@@ -127,7 +128,7 @@ def main():
         parser.error("--ndk is required for Android")
     output.mkdir(parents=True)
     record = dict(version=1, status="running", platform=args.platform, started=time.time(),
-        sourceHashes={name: digest(here / name) for name in SOURCES}, archives=INPUTS,
+        sourceHashes={name: digest(here / name) for name in SOURCES}, archives={name: digest(path) for name, path in archives.items()},
         meson="1.9.1", python=sys.version, ninjaSha256=digest(ninja),
         providerUsed=False, physicalAudio=False, unityIntegration=False,
         questAcceptance=False, speechQualityAccepted=False, commands=[])

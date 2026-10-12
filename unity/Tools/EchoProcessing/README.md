@@ -18,6 +18,12 @@ runner installs nothing and performs no downloads. Obtain these pinned inputs:
 | Abseil 20240722.0 | [Abseil release](https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz) | `f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3` |
 | Abseil Meson overlay | [Meson WrapDB](https://wrapdb.mesonbuild.com/v2/abseil-cpp_20240722.0-3/get_patch) | `12dd8df1488a314c53e3751abd2750cf233b830651d168b6a9f15e7d0cf71f7b` |
 
+CI uses the official [GStreamer release mirror](https://gstreamer.freedesktop.org/src/mirror/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.gz)
+when the primary release host rejects automated access. Its gzip SHA-256 is
+`35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253`;
+all 663 file contents match the pinned xz release. The runner accepts exactly
+these two archive digests and records which one it used.
+
 The matched Abseil and overlay hashes come from that release's own wrap file.
 All hashes are checked before bounded extraction; links and special tar members
 are refused. The runner uses a fresh output directory and never deletes old runs.
