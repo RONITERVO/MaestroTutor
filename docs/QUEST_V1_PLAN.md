@@ -7991,14 +7991,21 @@ skew. Actual processing call times contribute to APM's buffer-delay estimate.
 Stale data, identity changes, missing lookahead, overruns and invalid timing cannot
 produce raw/stale microphone output. The original app capture owner is unchanged.
 
-The added coverage comprises 27 contract cases and six 18-second audio diagnostics.
-Three broadband configurations pass for the measured profile, including opposite
-900 ppm clocks and timestamp jitter. Three sustained-tone configurations fail:
-only about .1 dB echo reduction. A direct APM control reproduces the failure without
-the new alignment path. Those failures remain in receipts and CI warnings with
-the original thresholds, alongside all prior processor diagnostics; passing
-broadband cases does not establish full audio quality. The first compilation
-failure (a test's mixed-type auto declaration) and investigation runs are retained.
+The added coverage comprises 27 contract cases and twelve 18-second audio diagnostics.
+All three broadband configurations pass in every profile, including opposite
+900 ppm clocks and timestamp jitter. Cold sustained tones remain failures, with
+only about .1 dB reduction. A direct APM control reproduces this without alignment.
+Four seconds of broadband training does not resolve it: measured32 fails one of
+three trained-tone cases and all three trained-tone reflection-change cases.
+All original thresholds and the existing three-second recovery allowance remain.
+
+Controlled private builds identify narrow-tone adaptation guards as a cause in
+these fixtures; removing both fixes the small fixture set but is not an accepted
+DSP change. An alternative SpeexDSP adapter also fails drift/reflection cases and
+is not selected. The source-built candidates remain outside the app. See the
+[diagnostic decision](../unity/Tools/EchoProcessing/TONAL_DIAGNOSIS.md) for exact
+controls, limitations and the shared-backend acceptance requirement. No recording,
+headset access or provider request occurred in this investigation.
 
 Next audio work must resolve the tonal limitation or validate an explicit product
 policy, test variable-rate/long-session/lifecycle behaviour, connect the original

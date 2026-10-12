@@ -314,17 +314,26 @@ an absolute baseline-energy check), at most 2 ms delay error, and no clipping.
 Quality is measured over seconds 8–17; these are finite constant-rate-skew tests,
 not arbitrary drift, onset, discontinuity-recovery or perceptual acceptance.
 
-**Sustained tones remain an open release issue.** The original eight-tone fixture
-is retained as three `--tonal` diagnostics with the same thresholds. The measured
+**Sustained tones remain an open release issue.** The eight-tone fixture is
+retained as three `--tonal` diagnostics with the same thresholds. The measured
 profile reduces its echo by only about .1 dB, so all three fail. A direct APM
-control without the new clock/resampler path reproduces that result. Upstream's
-narrow-band adaptation masks are consistent with this finding, but no upstream
-DSP change or definitive acoustic fix is claimed. Broadband success does not
-replace or excuse this failure. All six new quality outcomes are recorded;
-`openQualityFailures` now includes them, alongside the prior standalone failures.
-CI hard-gates the measured broadband cases and preserves tonal failures with a
-warning. They must be resolved or have an explicitly validated product policy
-before promotion; green bounded CI does not approve full-duplex audio.
+control without the new clock/resampler path reproduces that result.
+
+`--warm-tonal` adds four seconds of broadband training before the tones; the same
+three clock configurations are evaluated over seconds 8–17. The measured profile
+still fails one case. `--warm-tonal-path-change` additionally changes the reflection
+at second eight and measures seconds 11–17, preserving the existing three-second
+recovery allowance. All three measured-profile cases fail. Training the filter
+before music is therefore not an accepted workaround. Capture clipping reports
+the final cumulative counters of all three processors, without counting each
+historical sample repeatedly.
+
+All twelve aligned quality outcomes enter receipts and `openQualityFailures`.
+CI hard-gates the established broadband baseline in **every** profile and records
+all tonal/transition failures as warnings and release blockers. No thresholds
+have been reduced. See [the diagnostic decision](TONAL_DIAGNOSIS.md) for the
+controlled upstream investigation and unselected alternative processor. Green
+bounded CI does not approve full-duplex audio.
 
 The source-built Windows runner executes these checks; Android cross-links the
 aligned worker and actual APM library with 16 KiB load alignment but does not run

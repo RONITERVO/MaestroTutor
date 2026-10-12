@@ -89,9 +89,26 @@ struct Broadband {
     }
 };
 struct Quality { double reduction=0,correlation=0,gain=0,absolute_gain=0,max_delay_error_ms=0;uint64_t clipped=0; };
-Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,bool tonal){
-    Broadband broadband;auto sound=[&](double position,bool right=false){return tonal?Wave(position,right):broadband.At(position,right);};
+enum class Pattern { Broadband, Tonal, WarmTonal, WarmTonalPathChange };
+const char* Name(Pattern pattern){
+    switch(pattern){case Pattern::Broadband:return "broadband";case Pattern::Tonal:return "cold-tone";
+        case Pattern::WarmTonal:return "tone-after-broadband";case Pattern::WarmTonalPathChange:return "tone-after-broadband-path-change";}
+    throw std::runtime_error("Unknown signal pattern");
+}
+Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,Pattern pattern){
+    Broadband broadband;auto sound=[&](double position,bool right=false){
+        // Four seconds of broadband history can train the filter before music.
+        // Cold-start tones remain an independent requirement, never replaced.
+        const bool tonal=pattern!=Pattern::Broadband&&(pattern==Pattern::Tonal||position>=4*48000);
+        return tonal?Wave(position,right):broadband.At(position,right);
+    };
     constexpr int frames=1800;const double cr=48000*(1+capture_ppm/1e6),rr=48000*(1+render_ppm/1e6);
+    auto acoustic_echo=[&](double t){
+        // A changed reflection at second eight models an acoustic path change,
+        // not a device-clock change. Allow the existing three-second recovery.
+        const bool changed=pattern==Pattern::WarmTonalPathChange&&t>=8;
+        return (changed?.13f:.55f)*sound((t-.08)*rr)+(changed?.64f:.22f)*sound((t-(changed?.125:.11))*rr,true);
+    };
     Time time;DuplexProcessor echo(31,Time::Get,&time),both(31,Time::Get,&time),near(31,Time::Get,&time);
     std::array<float,480> mic_echo{},mic_both{},mic_near{};std::array<float,960> ref{},silence{};
     std::array<int16_t,160> out{};DuplexFrame result;
@@ -108,7 +125,7 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,bool tonal)
         const auto wanted=static_cast<uint64_t>(std::ceil(frame*480*cr/rr))+960;
         while(input*480<wanted){
             for(int i=0;i<480;++i){const double t=(input*480+i)/cr;
-                const float e=.55f*sound((t-.08)*rr)+.22f*sound((t-.11)*rr,true);
+                const float e=acoustic_echo(t);
                 mic_echo[i]=e;mic_near[i]=Near(t);mic_both[i]=e+mic_near[i];}
             CaptureFrame cf{31,input,static_cast<int64_t>(input*480),cs,time.now,time.now};
             Check(echo.Capture(mic_echo.data(),480,cf)==DuplexStatus::Accepted,"quality echo capture");
@@ -121,33 +138,36 @@ Quality AudioCase(double capture_ppm,double render_ppm,int jitter_us,bool tonal)
         Check(both.Render(ref.data(),960,rf,rc)==DuplexStatus::Accepted,"quality mixed reference");
         Check(near.Render(silence.data(),960,rf,rc)==DuplexStatus::Accepted,"quality baseline reference");
         Check(echo.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned echo frame");
-        const auto metadata=result;
+        const auto metadata=result;q.clipped=metadata.clipped_samples;
         for(int i=0;i<160;++i){cancelled.push_back(out[i]/32768.0);const double t=(metadata.capture_first.position+metadata.capture_first.fraction+i*3*metadata.capture_per_render)/cr;
-            expected_echo.push_back(.55*sound((t-.08)*rr)+.22*sound((t-.11)*rr,true));expected_near.push_back(Near(t));}
+            expected_echo.push_back(acoustic_echo(t));expected_near.push_back(Near(t));}
         const double true_delay=(.08+frame*480/rr-(metadata.capture_first.position+metadata.capture_first.fraction)/cr)*1000;
         q.max_delay_error_ms=std::max(q.max_delay_error_ms,std::abs(metadata.delay.milliseconds-true_delay));
         Check(both.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned double talk");for(auto x:out)combined.push_back(x/32768.0);q.clipped+=result.clipped_samples;
-        Check(near.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned near baseline");for(auto x:out)baseline.push_back(x/32768.0);
+        Check(near.Process(out.data(),160,result)==DuplexStatus::Frame,"quality aligned near baseline");for(auto x:out)baseline.push_back(x/32768.0);q.clipped+=result.clipped_samples;
     }
-    const int first=8*16000,last=17*16000;double err=0,original=0,bb=0,raw=0,cross=0,cc=0;
+    const int first=(pattern==Pattern::WarmTonalPathChange?11:8)*16000,last=17*16000;double err=0,original=0,bb=0,raw=0,cross=0,cc=0;
     for(int i=first;i<last;++i){err+=cancelled[i]*cancelled[i];original+=expected_echo[i]*expected_echo[i];bb+=baseline[i]*baseline[i];raw+=expected_near[i]*expected_near[i];cross+=combined[i]*baseline[i];cc+=combined[i]*combined[i];}
     q.reduction=10*std::log10(original/std::max(err,1e-30));q.correlation=cross/std::sqrt(std::max(bb*cc,1e-30));q.gain=cross/std::max(bb,1e-30);q.absolute_gain=std::sqrt(bb/std::max(raw,1e-30));return q;
 }
-int QualityCases(bool tonal){
+int QualityCases(Pattern pattern){
     const double settings[][3]={{0,0,0},{900,-900,20},{-900,900,20}};
     int failures=0;
-    for(const auto& s:settings){const auto q=AudioCase(s[0],s[1],static_cast<int>(s[2]),tonal);
+    std::printf("{\"pattern\":\"%s\",\"measurementStartSeconds\":%d,\"measurementEndSeconds\":17}\n",Name(pattern),pattern==Pattern::WarmTonalPathChange?11:8);
+    for(const auto& s:settings){const auto q=AudioCase(s[0],s[1],static_cast<int>(s[2]),pattern);
         const bool pass=q.reduction>=15&&q.correlation>=.65&&q.gain>=.45&&q.gain<=1.5&&q.absolute_gain>=.45&&q.absolute_gain<=1.5&&q.max_delay_error_ms<=2&&q.clipped==0;
         if(!pass)++failures;
         std::printf("{\"capturePpm\":%.0f,\"renderPpm\":%.0f,\"timestampJitterUs\":%.0f,\"echoReductionDb\":%.6f,\"nearCorrelation\":%.6f,\"nearGain\":%.6f,\"baselineGain\":%.6f,\"maxDelayErrorMs\":%.6f,\"clipped\":%llu,\"status\":\"%s\"}\n",s[0],s[1],s[2],q.reduction,q.correlation,q.gain,q.absolute_gain,q.max_delay_error_ms,static_cast<unsigned long long>(q.clipped),pass?"passed":"failed");
     }
-    std::printf("{\"status\":\"%s\",\"scope\":\"%s\",\"qualityCases\":3,\"failures\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",failures?"failed":"passed",tonal?"clock-aligned-tonal":"clock-aligned-quality",failures);
+    std::printf("{\"status\":\"%s\",\"scope\":\"%s\",\"qualityCases\":3,\"failures\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",failures?"failed":"passed",pattern==Pattern::Broadband?"clock-aligned-quality":pattern==Pattern::Tonal?"clock-aligned-tonal":pattern==Pattern::WarmTonal?"clock-aligned-warm-tonal":"clock-aligned-warm-tonal-path-change",failures);
     return failures?1:0;
 }
 }
 int main(int argc,char** argv){try{
-    if(argc==2&&std::strcmp(argv[1],"--quality")==0){return QualityCases(false);}
-    if(argc==2&&std::strcmp(argv[1],"--tonal")==0){return QualityCases(true);}
+    if(argc==2&&std::strcmp(argv[1],"--quality")==0){return QualityCases(Pattern::Broadband);}
+    if(argc==2&&std::strcmp(argv[1],"--tonal")==0){return QualityCases(Pattern::Tonal);}
+    if(argc==2&&std::strcmp(argv[1],"--warm-tonal")==0){return QualityCases(Pattern::WarmTonal);}
+    if(argc==2&&std::strcmp(argv[1],"--warm-tonal-path-change")==0){return QualityCases(Pattern::WarmTonalPathChange);}
     Check(argc==1,"known command");ClockCases();OwnershipCases();Check(cases==27,"complete clock/duplex contracts");
     std::printf("{\"status\":\"passed\",\"alignmentCases\":%d,\"assertions\":%d,\"physicalAudio\":false,\"deviceOpened\":false}\n",cases,checks);return 0;
 }catch(const std::exception& e){std::fprintf(stderr,"FAILED: %s\n",e.what());return 1;}}

@@ -247,7 +247,9 @@ def main():
                     raise RuntimeError("Incomplete scripted " + label + " result")
                 record[label + "Probe"] = device_summary
             alignment_executable = build / "maestro-probe/maestro_alignment_probe.exe"
-            for suffix, option, scope in (("Quality", "--quality", "clock-aligned-quality"), ("Tonal", "--tonal", "clock-aligned-tonal")):
+            for suffix, option, scope in (("Quality", "--quality", "clock-aligned-quality"), ("Tonal", "--tonal", "clock-aligned-tonal"),
+                                          ("WarmTonal", "--warm-tonal", "clock-aligned-warm-tonal"),
+                                          ("WarmTonalPathChange", "--warm-tonal-path-change", "clock-aligned-warm-tonal-path-change")):
                 label = "aligned-" + suffix.lower()
                 alignment_code = run([alignment_executable, option], label, 180, required=False)
                 detail = json.loads((output / (label + ".log")).read_text().splitlines()[-1])
@@ -259,8 +261,8 @@ def main():
                     raise RuntimeError("Incomplete clock-aligned audio quality result")
                 record["alignment" + suffix] = detail
                 save()
-                if args.profile == "measured32" and suffix == "Quality" and alignment_code != 0:
-                    raise RuntimeError("Measured clock-aligned broadband regression")
+                if suffix == "Quality" and alignment_code != 0:
+                    raise RuntimeError("Clock-aligned broadband regression")
             run([executable], "probe", 90)
             lines = (output / "probe.log").read_text().splitlines()
             summary = json.loads(lines[-1])
@@ -289,7 +291,7 @@ def main():
                 run([executable, "--speech-wav", wave], "speech-" + str(index), 90)
             record["noiseStress"] = record["qualityDiagnostics"]["noise-stress"]
             record["openProcessorQualityFailures"] = sum(x["failures"] for x in record["qualityDiagnostics"].values())
-            record["openAlignedQualityFailures"] = record["alignmentQuality"]["failures"] + record["alignmentTonal"]["failures"]
+            record["openAlignedQualityFailures"] = sum(record["alignment" + name]["failures"] for name in ("Quality", "Tonal", "WarmTonal", "WarmTonalPathChange"))
             record["openQualityFailures"] = record["openProcessorQualityFailures"] + record["openAlignedQualityFailures"]
             required_quality = ("path-changes", "delay-variants") if args.profile == "stock" else ("noise-stress", "onsets")
             if args.profile == "measured32":

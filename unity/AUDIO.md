@@ -1096,9 +1096,13 @@ preserving near speech, with modeled delay errors below .65 ms. These results
 assume bounded timestamp error; they are not physical calibration or long-session
 acceptance. See the EchoProcessing guide for exact limits and measurement windows.
 
-Three retained sustained-tone cases fail the same audio gates, reducing echo by
-only about .1 dB. A direct APM control reproduces the failure without clock fitting
-or resampling. The runner reports these as additional quality failures rather
-than replacing them with passing broadband inputs. All thresholds stay unchanged.
+The runner retains cold tones, tones after broadband training, and a reflection
+change during those tones, across the same three clock configurations. The
+measured profile fails 3, 1 and 3 cases respectively. All thresholds stay unchanged;
+broadband success cannot substitute for these failures. Controlled private source
+changes isolate the narrow-tone guards, but are not shipped. The screened SpeexDSP
+alternative also fails required scenarios and is not selected. See the
+[diagnostic decision](Tools/EchoProcessing/TONAL_DIAGNOSIS.md).
+
 Resolving tonal echo, the shared PCM ownership/lifecycle bridge, final-mix and
 all-audible reference coverage, and actual Quest/Live acceptance remain required.
