@@ -43067,8 +43067,16 @@
       "sha256": "2f3f9fb29a930db9e294899535596ee79ab054fbf75cddd86358204ecd27cc53"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputBackend.cs",
+      "sha256": "46a14e5ebda191329feea67d9c64bb1694a2da144d14dbc2b8bb000466034948"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.Unity.cs",
+      "sha256": "6bd9ffe56661b527f7cce4bb57f6146080ac62a5244ced6f9fea69462ce70124"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PcmOutputLease.cs",
-      "sha256": "4856df04de5b14d9c0aaa721d691a08961e74a3b4883936ae874321f0025bc97"
+      "sha256": "65d2f4a77acdadbe6a1dca14d1d4942cba7025ee174a93c3398574028ac2274e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/PhysicalBookAction.cs",
@@ -43136,7 +43144,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs",
-      "sha256": "7e90b88c6e950a32de4c375d49ac8ebbba41f82bbdd4c929d668a52a19bf5696"
+      "sha256": "fe6e23be326d31c5ba1fe0c6ac419cb5064e0daaecc98bc3636f5df324464a9e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechSpatializer.cs",

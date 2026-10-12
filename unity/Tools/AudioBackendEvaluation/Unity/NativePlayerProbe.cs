@@ -27,9 +27,12 @@ namespace Maestro.AudioEvaluation
         {
             string output=Path.Combine(Application.persistentDataPath,"native-audio-probe.json");
             var result=await Run();
+            var lease=await PcmLeasePlayerProbe.Run();
+            File.WriteAllText(Path.Combine(Application.persistentDataPath,"native-audio-lease-probe.json"),JsonUtility.ToJson(lease,true));
+            UnityEngine.Debug.Log("MAESTRO_AUDIO_LEASE_PLAYER_PROBE "+JsonUtility.ToJson(lease));
             File.WriteAllText(output,JsonUtility.ToJson(result,true));
             UnityEngine.Debug.Log("MAESTRO_AUDIO_PLAYER_PROBE "+JsonUtility.ToJson(result));
-            Application.Quit(result.status=="passed"?0:1);
+            Application.Quit(result.status=="passed"&&lease.status=="passed"?0:1);
         }
 #endif
         internal static Task<Result> Run() => Task.Run(Execute);

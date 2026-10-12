@@ -846,3 +846,68 @@ its assertion that earlier reservations existed and were released. The final
 full run has no failures. These are Windows native results, not Android/Quest,
 paid-provider or Store acceptance. The isolated candidate's source inputs and
 prior evaluation/build evidence are unchanged.
+
+## Room-scoped PCM backend admission — 2026-10-12
+
+Speech and authored world sounds keep their existing application `PcmOutputLease`.
+Its SDK-independent core now selects an explicit room-scoped `PcmOutputBackend`
+once at admission. Selection and emitter controls run on the Unity main thread;
+producer/audio-callback synchronization stays inside the shared stream and native
+owner. The Unity/Meta direct implementation lives in a separate
+partial file and remains the application default. An absent, disabled or
+unconfigured selected backend refuses admission; it never silently falls back
+or reroutes an already transferred source. Provider generations, saved audio
+bindings, decode reservations, capture policy and event ownership remain with
+their existing callers.
+
+A permanent ownership claim lives on `SpeechPcmStream`, covering aliases across
+the application lease and direct candidate bindings. Rejected aliases cannot
+close the true owner's stream. Failed fresh admissions close their inputs;
+selection loss closes all of its leases, even if one renderer's disposal throws.
+Replacing a selection requires its leases to stop first, and disposing a stale
+selection handle cannot stop the replacement. Source playback and downstream
+renderer completion are both required before a lease reports natural completion.
+
+The isolated candidate adapts that actual core, selector and PCM source, copied
+byte-for-byte. It does not include the Unity/Meta default-adapter partial. Its
+selection borrows the native graph and owns only its voices/anchors: prequeued
+input stays paused until Start, current parent motion follows through LateUpdate,
+and gain, pause, exact Stop, source loss and device reset use the existing native
+ownership path. It adds no dummy per-voice AudioSource. The player probe roots the
+same adapter and app lease for ARM64/IL2CPP High stripping verification, while
+rendering its test signal into private memory rather than device speakers.
+
+This is an evaluated integration boundary, not production renderer promotion.
+The candidate is not installed in the app. Shared capture and Live routing,
+production reservations, direct obstruction, Android runtime/perceptual checks
+and Quest performance acceptance remain required. Production reflections and
+automatic maps remain disabled; the retained Meta map-worker fault is unresolved.
+
+The isolated evaluation passes 64 cases, including seven new lease/player-entry
+cases, with 88 graphs, 105 mesh owners and 106 instance owners closed and zero
+native diagnostics. All 39 recorded inputs and 35 copied C# files match. Its
+Windows listener captures real rendered samples and mutes them before speakers.
+The main-thread player lease entry also passes on Windows.
+
+The separate Android ARM64/IL2CPP development build passes with High stripping,
+zero errors/warnings and 41 matching recorded inputs. Verification finds all four
+lease/adapter/player-entry types in generated IL2CPP and checks 46 required native
+functions, the reverse callback, dependencies, absence of test assemblies and
+exact reproducible stripping of the pinned SDK binary. APK SHA-256 starts
+`7570A6DE`; this APK was not installed or executed on Quest.
+
+Evidence: `.quest-evidence/audio-lease`, candidate run `6845e0194de2`, Android run
+`38988bddbf62`. The earlier 62/63 run `4e2e2e1677b6` is retained: its new tail
+fixture disabled audio processing before the response handshake could complete.
+The corrected fixture waits for readiness while the pre-start source stays
+paused, then takes manual control; the runtime was unchanged for that failure.
+
+The complete app verification passes 1,140 EditMode and 1,285 PlayMode cases,
+including all seven backend-lifetime cases, with three expected private-asset
+skips. Native headless journey `d336708f627b4c7e830d043356bc38c3` and original-book
+journey `0f1becde3bf442bcba64a64fd58b832f` both pass with normal client, editor and
+wrapper exits and local scripted providers. All 920 C# source/mirror hashes match
+(916 app files plus four third-party inputs). Native/shared catalog equality and
+the source gate pass; action/event/fact definitions are unchanged and only four
+runtime source entries change. The focused application run passes 28 cases.
+No headset, paid-provider, release-key, deployment or Meta operation was used.

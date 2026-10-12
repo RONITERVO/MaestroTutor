@@ -7723,3 +7723,35 @@ journeys, catalog equality, normal process exits and 917 matching source/mirror
 hashes. Earlier fixture failures and the corrected clean run are retained in
 `.quest-evidence/audio-transfer`. No headset, provider, release-key, deployment
 or Meta action was performed.
+
+### Shared PCM backend ownership — 2026-10-12
+
+The production speech/world-audio lease now has a room-scoped backend selector and
+a separate unchanged Unity/Meta direct default. The shared source permanently
+rejects a second playback owner without closing the first. Selected-backend loss,
+replacement and cleanup preserve exact ownership; both source and renderer must
+finish before natural completion. The isolated candidate now adapts this actual
+application boundary and follows parent transforms, gain, pause and device reset.
+
+The Android probe includes a main-thread lease entry so High stripping must keep
+the actual adapter/core, in addition to the existing native callback/ABI probe.
+The application still uses Meta direct audio. Capture/Live, production resource
+and obstruction integration, Android runtime and Quest acceptance remain open.
+No reflections, automatic unloading or release services are enabled here.
+See [the audio boundary](../unity/AUDIO.md#room-scoped-pcm-backend-admission--2026-10-12).
+
+The complete app verification passes 1,140 EditMode and 1,285 PlayMode cases,
+including all seven backend-lifetime cases, with three expected private-asset
+skips. Native headless journey `d336708f627b4c7e830d043356bc38c3` and original-book
+journey `0f1becde3bf442bcba64a64fd58b832f` both pass with normal client, editor and
+wrapper exits and local scripted providers. All 920 C# source/mirror hashes match
+(916 app files plus four third-party inputs). Native/shared catalog equality and
+the source gate pass; action/event/fact definitions are unchanged and only four
+runtime source entries change. The focused application run passes 28 cases.
+No headset, paid-provider, release-key, deployment or Meta operation was used.
+
+The isolated candidate passes 64 native cases (seven new) with all owned resources
+closed and zero diagnostics. Its ARM64/IL2CPP High-stripping debug build includes
+the actual lease/adapter entry, with zero errors/warnings and 41 matching inputs.
+Evidence is in `.quest-evidence/audio-lease`; earlier test-fixture failure is
+retained separately. These desktop/build checks are not physical audio acceptance.

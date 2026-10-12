@@ -24,6 +24,16 @@ namespace Maestro.Quest.Book
                 Paused = paused; InputComplete = inputComplete; Closed = closed; }
         }
         readonly object sync = new();
+        object outputOwner;
+        // Permanent ownership for this stream. Claiming an alias must never
+        // close or consume another renderer's input, including across adapters.
+        internal bool TryClaimOutput(object owner)
+        {
+            if(owner==null)throw new ArgumentNullException(nameof(owner));
+            lock(sync){if(outputOwner!=null)return false;outputOwner=owner;return true;}
+        }
+        internal bool OutputOwnedBy(object owner){lock(sync)return owner!=null&&ReferenceEquals(outputOwner,owner);}
+
         readonly float[] samples = new float[Capacity];
         readonly Receipt[] receipts = new Receipt[ReceiptCapacity];
         readonly double startAt, tail;

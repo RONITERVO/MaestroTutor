@@ -30,12 +30,14 @@ namespace Maestro.AudioEvaluation
         internal bool Open => Volatile.Read(ref stopped) == 0;
         // Transfer is permanent for this stream. Reject an alias without closing
         // its real owner; failed admission of a fresh stream always closes it.
-        internal PcmVoice(SpeechPcmStream stream, double tail, float dryGain, float wetGain, PcmSpatialSettings settings)
+        internal PcmVoice(SpeechPcmStream stream, double tail, float dryGain, float wetGain, PcmSpatialSettings settings, object ownership = null)
         {
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             lock (transferred)
             {
                 if (transferred.TryGetValue(stream, out _)) throw new InvalidOperationException("PCM stream already has a renderer owner");
+                if (ownership == null ? !stream.TryClaimOutput(new object()) : !stream.OutputOwnedBy(ownership))
+                    throw new InvalidOperationException("PCM stream already has a renderer owner or its transfer is invalid");
                 transferred.Add(stream, new object());
             }
             this.stream = stream;
@@ -77,9 +79,9 @@ namespace Maestro.AudioEvaluation
         internal PcmVoice BeginPcm(string id, long commandGeneration, double startAt, double tail, float dryGain = 1,
                                    float wetGain = 1) => BeginPcm(id, commandGeneration, new SpeechPcmStream(startAt, tail), tail, dryGain, wetGain);
         internal PcmVoice BeginPcm(string id, long commandGeneration, SpeechPcmStream stream, double outputDelay,
-                                   float dryGain = 1, float wetGain = 1, PcmSpatialSettings settings = null)
+                                   float dryGain = 1, float wetGain = 1, PcmSpatialSettings settings = null, object ownership = null)
         {
-            var voice = new PcmVoice(stream, outputDelay, dryGain, wetGain, settings);
+            var voice = new PcmVoice(stream, outputDelay, dryGain, wetGain, settings, ownership);
             var graph = Active;
             if (closed || generation != commandGeneration || graph == null)
             { voice.Close(); return null; }
