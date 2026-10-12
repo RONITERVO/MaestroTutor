@@ -51,7 +51,7 @@ jobs:
           python unity/Tools/EchoProcessing/Build.py `
             --apm "$root/cache/apm.tar.xz" --abseil "$root/cache/abseil.tar.gz" `
             --overlay "$root/cache/overlay.zip" --meson-root "$root/tools" `
-            --ninja "$root/tools/ninja/data/bin/ninja.exe" `
+            --ninja "$root/tools/bin/ninja.exe" `
             --platform windows --output "$root/ci"
           if($LASTEXITCODE -ne 0){throw 'Native evaluation failed'}
           $result=Get-Content "$root/ci/result.json" -Raw | ConvertFrom-Json

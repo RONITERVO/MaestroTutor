@@ -30,7 +30,7 @@ python unity/Tools/EchoProcessing/Build.py `
   --abseil C:/downloads/abseil-cpp-20240722.0.tar.gz `
   --overlay C:/downloads/abseil-cpp_20240722.0-3_patch.zip `
   --meson-root .quest-evidence/echo-native/tools `
-  --ninja .quest-evidence/echo-native/tools/ninja/data/bin/ninja.exe `
+  --ninja .quest-evidence/echo-native/tools/bin/ninja.exe `
   --platform windows --output .quest-evidence/echo-native/my-windows-run
 ```
 
