@@ -48,9 +48,6 @@ namespace Maestro.Quest.Tests
             var preview=terrain.Copy();for(int i=0;i<81;i++)preview.heights[i]=.49f;editor.Find(terrainId).GetComponent<HeightFieldView>().Preview(preview);
             Assert.That(JToken.DeepEquals(supported,GroundFact(point)),Is.True);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(File.ReadAllText(path),Is.EqualTo(bytes));
             string evidence=Environment.GetEnvironmentVariable("MAESTRO_WORLD_GROUND");
-            if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"ground.json"),new JObject{
-                ["arguments"]=new JObject{["position"]=WorkspaceViewpoint.Point(point),["radius"]=.2},["supported"]=supported,["missing"]=missing,
-                ["capabilities"]=JObject.Parse(RoomAgentWire.Serialize(agent.Observe()))["capabilities"].DeepClone()}.ToString());}
             Assert.That(view.Enter(),Is.True);var physicalHead=room.Viewer.localToWorldMatrix;
             for(int i=0;i<10;i++)Assert.That(view.Move(Vector3.right*.02f),Is.True,view.MovementError);
             editor.GetComponent<WorkspaceViewpoint>().Capture();var expected=editor.Viewpoint.Copy();
@@ -64,7 +61,12 @@ namespace Maestro.Quest.Tests
             Open();yield return ReadyHost();afterContentBuild=null;
             Assert.That(host.Current.Editor.NativeDisplayPending,Is.True);
             Assert.That(host.Current.Editor.Find(terrainId),Is.Null);
-            Assert.That((bool)GroundFact(point)["found"],Is.False);
+            var pending=GroundFact(point);
+            Assert.That((bool)pending["found"],Is.False);Assert.That((string)pending["availability"],Is.EqualTo("pending"));
+            Assert.That((int)pending["dependencyCount"],Is.EqualTo(1));Assert.That((string)pending["dependencies"][0]["target"],Is.EqualTo(terrainId));
+            if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"ground.json"),new JObject{
+                ["arguments"]=new JObject{["position"]=WorkspaceViewpoint.Point(point),["radius"]=.2},["supported"]=supported,["missing"]=missing,["pending"]=pending,
+                ["capabilities"]=JObject.Parse(RoomAgentWire.Serialize(agent.Observe()))["capabilities"].DeepClone()}.ToString());}
             host.Current.Editor.enabled=true;yield return SavedGroundReady(terrainId);
             Assert.That(view.ReadViewpoint(out var restored),Is.True);Assert.That(Vector3.Distance(restored.position,expected.position),Is.LessThan(.001));
             var after=GroundFact(point);Assert.That((string)after["worldId"],Is.EqualTo(doc.world.worldId));Assert.That((bool)after["found"],Is.True);Assert.That((float)after["position"]["y"],Is.EqualTo(.25f).Within(.001));

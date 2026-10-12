@@ -8156,3 +8156,52 @@ work is the explicit backend/lease integration and device qualification when
 available, with quiet-speech and original Live/STT behavior preserved. Regional
 world lifetime, collision/navigation/water/audibility and larger-world performance
 remain independent required implementation, not deferred by green audio CI.
+
+
+### Ground availability across native lifetime — 2026-10-12
+
+`world.ground` now distinguishes `ready`, `pending` and `unavailable`. A saved
+surface awaiting startup/activation or import is not empty space. Relevant missing
+ground makes `found=false`, including when a lower resident floor would otherwise
+pass the support rays. Position and normal remain unavailable placeholders then.
+With `ready` and `found=false`, resident geometry does not satisfy the existing
+slope, step, height and footprint policy; this is not body clearance or a route.
+
+The query uses canonical ground identities and the existing spatial index/native
+residency. Conservative envelopes cover the centre and all footprint rays,
+including their larger vertical band. Unknown bounds remain dependencies; known
+distant ground does not block a local answer. Native envelopes combine visual and
+accepted collision bounds because an uncommitted sculpt preview can be smaller
+than its collider. Saved edits invalidate stale envelopes; metadata preparation
+can resolve their extent without creating geometry. Ordinary props, physical-frame
+surfaces, held/dynamic ground and scans remain outside authored support.
+
+Agent inspection and user programs read the same generated fact contract. The
+result reports the total dependency count and the first four stable IDs with their
+states and bounds knowledge, keeping the value within the existing 1,024-character
+program budget. This list is explicitly incomplete when the count exceeds four.
+Reads do not activate objects, retry failed imports, start physics, change saved
+revisions or write files. They use accepted colliders only when availability is
+complete; envelopes never stand in for actual ground.
+
+This is a prerequisite for regional admission, not automatic streaming. The
+whole-world collision gate and 64-object/25-metre limits remain. Next work must
+consume readiness in regional navigation, water and swept-physics admission,
+retain dependencies while actions use them, and test cancellation and moving
+boundaries before enabling automatic retirement. Device/provider holds and the
+remaining acoustic/production release gates remain unchanged.
+
+Verification: 1,149 EditMode cases passed. The full PlayMode run passed 1,294
+cases and skipped three private-asset cases; one new stress-test fixture exceeded
+the existing four-heightfield limit. After correcting that fixture to mix four
+heightfields and two imported surfaces, all seven focused cases passed, yielding
+1,295 distinct verified PlayMode cases without changing production code. All
+2,894 web/shared tests, lint, production build, generated source contracts, shared
+boundaries and integration-driver type checks passed. This is desktop evidence;
+no headset or paid provider was used.
+
+The complete native-room integration journey and original two-page book journey
+also pass using scripted responses. The new headless check reads supported and
+unsupported ground through the same native transport as the book. An initial
+probe point exceeded the 25-metre radial world limit; the corrected point is inside
+that scope. Evidence distinguishes this fixture correction from a runtime fix.

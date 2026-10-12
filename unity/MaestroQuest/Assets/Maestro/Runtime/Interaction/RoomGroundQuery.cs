@@ -47,6 +47,14 @@ namespace Maestro.Quest.Interaction
             // select the lower floor and walk through the visible geometry.
             return found&&result.normal.y>=MinimumNormal;
         }
+        // Include all eight edge rays, whose heights follow the sampled centre.
+        // A missing surface just beyond the centre's vertical band can still
+        // change footprint support. This is broad-phase evidence only.
+        internal static Bounds SupportEnvelope(Vector3 expected,float radius,float above,float below)
+        {
+            float band=radius*Gradient+MaximumStep+.005f;
+            return new Bounds(expected+Vector3.up*((above-below)*.5f),new Vector3(radius*2,above+below+2*(band+.004f),radius*2));
+        }
         internal bool Support(Vector3 expected,float radius,float above,float below,out Vector3 point,out Vector3 normal,out string error)
         {
             point=normal=default;error="Movement needs accepted ground within the supported slope, step and footprint";

@@ -8,9 +8,12 @@
     "radius": 0.2
   },
   "supported": {
-    "worldId": "5a3681eecb8147c5ad4ab05cbdea53ef",
-    "regionId": "fb61502fd9514f6f88221bf3cd69d1f9",
+    "worldId": "dad3b5bfe61544989336ed379258c71d",
+    "regionId": "717a4bbdbcac430eb1c5912aca188029",
     "found": true,
+    "availability": "ready",
+    "dependencyCount": 0,
+    "dependencies": [],
     "position": {
       "x": 4.0,
       "y": 0.25,
@@ -28,9 +31,12 @@
     "reason": ""
   },
   "missing": {
-    "worldId": "5a3681eecb8147c5ad4ab05cbdea53ef",
-    "regionId": "fb61502fd9514f6f88221bf3cd69d1f9",
+    "worldId": "dad3b5bfe61544989336ed379258c71d",
+    "regionId": "717a4bbdbcac430eb1c5912aca188029",
     "found": false,
+    "availability": "ready",
+    "dependencyCount": 0,
+    "dependencies": [],
     "position": {
       "x": 0.0,
       "y": 0.0,
@@ -47,12 +53,42 @@
     },
     "reason": "Movement needs accepted ground within the supported slope, step and footprint"
   },
+  "pending": {
+    "worldId": "dad3b5bfe61544989336ed379258c71d",
+    "regionId": "717a4bbdbcac430eb1c5912aca188029",
+    "found": false,
+    "availability": "pending",
+    "dependencyCount": 1,
+    "dependencies": [
+      {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "state": "pending",
+        "boundsKnown": false
+      }
+    ],
+    "position": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "normal": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "limits": {
+      "slopeDegrees": 25.0,
+      "stepMetres": 0.1
+    },
+    "reason": "Ground is still loading; inspect dependencies and retry after activation"
+  },
   "capabilities": [
     "physicsSettings.v1",
     "avatarSettings.v1",
     "physicsRun.v1",
     "avatarMotion.v1",
     "avatarWalk.v1",
+    "catalogGuides.v1",
     "motions.v1",
     "avatarActivities.v1",
     "catalog.v1",
@@ -62,6 +98,7 @@
     "terrainTraversal.v1",
     "behaviourPrograms.v3",
     "worldAudio.v1",
+    "audioClips.v1",
     "eventPrograms.v1",
     "eventFields.v1",
     "eventSubscriptions.v1",
@@ -94,6 +131,8 @@
     "objectCopy.v1",
     "drawingEdits.v1",
     "drawingSurfaces.v1",
+    "passthroughWindows.v1",
+    "modelGeometry.v1",
     "curvedDrawingSurfaces.v1",
     "drawingTips.v1",
     "drawingErasers.v1",
@@ -108,6 +147,9 @@
     "physicalSculpting.v1",
     "physicalMaterialTools.v1",
     "containerPouring.v1",
+    "liquidMedium.v1",
+    "liquidContacts.v1",
+    "waterTraversal.v1",
     "containerScooping.v1",
     "physicalConnections.v1",
     "physicalSliders.v1",
@@ -115,6 +157,7 @@
     "connectedBlueprints.v2",
     "creationPrototypes.v1",
     "constructionCapture.v1",
+    "constructionResources.v1",
     "recipeEdits.v1",
     "latheGeometry.v1",
     "extrusionGeometry.v1",
@@ -144,6 +187,15 @@
     "spatialSettings.v1",
     "physicsSimulation.v1",
     "physicsEnvironment.v1",
+    "environmentProfiles.v1",
+    "appearances.v1",
+    "appearanceImages.v1",
+    "chatImages.v1",
+    "visibilityLayers.v1",
+    "worldLighting.v1",
+    "worldRegions.v1",
+    "worldTime.v1",
+    "worldWeather.v1",
     "roomEnvironment.v1",
     "surfacePlacement.v1",
     "scanPlacement.v1",
@@ -154,6 +206,8 @@
     "worldViewpoint.v1",
     "controllerConfiguration.v1",
     "controllerModes.v1",
+    "worldPresentation.v1",
+    "layerPresentation.v1",
     "workspaceMaintenance.v1",
     "workspaceArchiveActivation.v1",
     "workspaceReview.v1",

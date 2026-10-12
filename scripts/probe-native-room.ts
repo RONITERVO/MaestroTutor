@@ -396,6 +396,15 @@ try{
   const snowHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json')).digest('hex');
   const fieldCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Editable snow'}}}}]);
   const fieldId=fieldCreated.execution?.selected?.output?.objectId;if(typeof fieldId!=='string')throw new Error('Height surface creation failed');
+  const groundPosition=fieldCreated.objects.find(object=>object.id===fieldId)!.position;
+  const groundRead=(position:{x:number;y:number;z:number})=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.ground',version:1,arguments:{position,radius:.05}}}]);
+  const groundSupported=await groundRead(groundPosition),groundMissing=await groundRead({x:0,y:24,z:0});
+  type GroundAvailability={found:boolean;availability:string;dependencyCount:number;dependencies:unknown[]};
+  const supportedGround=groundSupported.catalog?.value as GroundAvailability,missingGround=groundMissing.catalog?.value as GroundAvailability;
+  if(!groundSupported.catalog?.available||!supportedGround.found||supportedGround.availability!=='ready'||supportedGround.dependencyCount!==0||supportedGround.dependencies.length!==0)throw new Error('Accepted terrain is not ready through the shared ground fact');
+  if(!groundMissing.catalog?.available||missingGround.found||missingGround.availability!=='ready'||missingGround.dependencyCount!==0)throw new Error('Known unsupported ground was confused with unavailable geometry');
+  if(groundMissing.sceneRevision!==fieldCreated.sceneRevision||groundMissing.physics?.running)throw new Error('Passive ground inspection edited the world or started physics');
+  await writeFile(join(directory,'world-ground.json'),JSON.stringify({boundary:'Real full-app native fact over the shared headless/book transport. Pending/retired/failed geometry is covered separately in PlayMode; no headset or provider proof.',position:groundPosition,supported:groundSupported,missing:groundMissing},null,2));
   const environmentRead=async()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.environment',version:1}}]);
   const environmentBefore=await environmentRead();
   const environmentBeforeValue=environmentBefore.catalog?.value as {stateId:string;realCollisions:boolean;authoredReady:boolean;scanReady:boolean};

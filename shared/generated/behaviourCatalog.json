@@ -41606,6 +41606,17 @@
           "worldId": "text",
           "regionId": "text",
           "found": "boolean",
+          "availability": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": {
+              "record": {
+                "target": "text",
+                "state": "text",
+                "boundsKnown": "boolean"
+              }
+            }
+          },
           "position": {
             "record": {
               "x": "number",
@@ -41630,7 +41641,7 @@
         }
       },
       "label": "Accepted ground near a point",
-      "description": "Inspect accepted authored terrain in this world and region. Input position and output position are authored coordinates in metres; normal uses authored axes. radius is the supported horizontal footprint in metres. The query samples the highest accepted surface within half a metre above/below the point, then eight footprint edges, using the same 25-degree slope and 10-centimetre step policy as walking. Scanned physical surfaces, ordinary props, held/dynamic ground and sculpt previews are not authored ground. found=false means position/normal are unavailable placeholders. This reads collision geometry, not a NavMesh approximation. It does not test body/head clearance, reserve a route, move the viewer, start physics or change terrain. Read world.viewpoint and invoke world.viewpoint.set for an explicit relocation; clearance and current ground are rechecked at execution. Current worlds have one region and 25-metre coordinate bounds.",
+      "description": "Inspect accepted authored terrain in this world and region. Input position and output position are authored coordinates in metres; normal uses authored axes. radius is the supported horizontal footprint in metres. The query samples the highest accepted surface within half a metre above/below the point, then eight footprint edges, using the same 25-degree slope and 10-centimetre step policy as walking. Scanned physical surfaces, ordinary props, held/dynamic ground and sculpt previews are not authored ground. availability is ready only when no potentially relevant saved ground is missing; pending means its native activation/loading is queued or running, and unavailable means at least one dependency is inactive, dormant or failed. dependencyCount counts all relevant incomplete objects; dependencies shows the first four stable object IDs in order, not the entire set; boundsKnown=false conservatively includes unknown extents. Known distant ground is excluded using a conservative envelope of all support rays. Incomplete availability forces found=false even if a lower resident surface exists. With ready and found=false, no resident surface satisfies the query policy. found=false means position/normal are unavailable placeholders. This reads collision geometry, not a NavMesh approximation. This passive read does not activate dependencies, test body/head clearance, reserve a route, move the viewer, start physics or change terrain. Read world.viewpoint and invoke world.viewpoint.set for an explicit relocation; clearance and current ground are rechecked at execution. Current worlds have one region and 25-metre coordinate bounds.",
       "input": {
         "type": "object",
         "properties": {
@@ -43588,7 +43599,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldGroundFacts.cs",
-      "sha256": "5716598c89d58e2eef3e4aad03069957ff8cc1b3eabf6ebc79448080bb04cbab"
+      "sha256": "5978b9d1df7a83f6d3aa8ca2fe9f8f54f9e79b0df4252aec182698130f27317e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldIdentityFacts.cs",
@@ -43973,6 +43984,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
       "sha256": "b0dac44d699fbb7d0a0d75eec358e8aa1e7a8e1a2df9c006482bc0cac7c2ff43"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundAvailability.cs",
+      "sha256": "3cecd3e38da2a6962d2c63703d84565180ef50efb77c4471ca54f71869c528ea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
@@ -44600,7 +44615,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundQuery.cs",
-      "sha256": "e3e597465b99b66da69525c1bb7648fc35b80185b0e817ae6591b71fc7935248"
+      "sha256": "6da637f831550d3086b904f94cde9d719dbd67ea77985930a54e643c7308a1ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomInteraction.cs",
