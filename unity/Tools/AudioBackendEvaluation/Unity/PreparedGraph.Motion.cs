@@ -8,10 +8,29 @@ namespace Maestro.AudioEvaluation
 {
     internal sealed partial class PreparedGraph
     {
-        AcousticFrame presentation;
-        int geometryAllowed=1;
-        internal void SetGeometryReady(bool ready) => Volatile.Write(ref geometryAllowed,ready?1:0);
-        long completedRevision, renderedRevision = -1, requiredRevision;
+        internal Action AfterPresentationPublished; // Isolated publication-boundary race probe.
+        // One control-thread writer publishes the entire immutable presentation.
+        // DSP must never pair a new frame with an old geometry requirement or hold.
+        sealed class PresentationState
+        {
+            internal readonly AcousticFrame Frame;
+            internal readonly long GeometryRevision;
+            internal readonly bool Allowed;
+            internal PresentationState(AcousticFrame frame,long revision,bool allowed)
+            {Frame=frame;GeometryRevision=revision;Allowed=allowed;}
+        }
+        PresentationState presentation;
+        void PublishPresentation(PresentationState next)
+        {
+            Volatile.Write(ref presentation,next);
+            AfterPresentationPublished?.Invoke();
+        }
+        internal void SetGeometryReady(bool ready)
+        {
+            var prior=Volatile.Read(ref presentation);
+            if(prior.Allowed!=ready)PublishPresentation(new PresentationState(prior.Frame,prior.GeometryRevision,ready));
+        }
+        long completedRevision, renderedRevision = -1;
         int simulating, simulations;
         internal long CompletedRevision => Volatile.Read(ref completedRevision);
         internal long RenderedRevision => Volatile.Read(ref renderedRevision);
@@ -20,8 +39,7 @@ namespace Maestro.AudioEvaluation
         internal void Present(AcousticFrame frame, long geometryRevision)
         {
             if (frame == null || frame.SourceCount != VoiceCount) throw new ArgumentException("Acoustic topology changed");
-            Volatile.Write(ref presentation, frame);
-            Volatile.Write(ref requiredRevision, geometryRevision);
+            PublishPresentation(new PresentationState(frame,geometryRevision,Volatile.Read(ref presentation).Allowed));
         }
         // Exactly one worker owns scene/source input mutation. It holds a lease
         // throughout the call. DSP owns only effects and the native IR consumer.

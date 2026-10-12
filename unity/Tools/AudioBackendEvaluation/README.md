@@ -547,11 +547,47 @@ Runtime code did not change for the measurement correction. Failed evidence rema
 
 Production renderer selection, playback reservations, direct obstruction, shared
 capture, actual Android audio and Quest/Live/performance acceptance remain open.
-Before production integration, publish the presentation and required geometry
-revision as one atomic value and test concurrent pose/geometry changes through
-final submission. The current sequential field writes still need that audit.
+The publication race and its atomic fix are covered by the concurrent audit below.
 The existing app residency-transfer admission still checks Meta context/handles;
 separate CPU geometry retention from that SDK admission before replacing the
 production backend. A passive catalog alone does not remove that dependency.
 The app's Meta direct path is unchanged; reflection output and automatic map
 scheduling stay disabled, and the retained Meta worker crash remains unresolved.
+
+### Atomic presentation and concurrent submission
+
+The candidate publishes the frame, required geometry revision and availability
+as one immutable state. Its control thread replaces one reference; readiness,
+DSP and final output each read a coherent state without a publication lock or
+allocation on the audio thread. Geometry changes still fence old reflections.
+Pure orientation changes keep the eligible room response instead of muting it
+just because the presentation reference changed.
+
+A deterministic publication gate reproduced the old race in run `5895c4f2a26b`:
+56/57 cases passed, but a distinct render thread observed the new frame as ready
+before its geometry requirement was written. It rendered obsolete reflected
+samples with block energy `1.25423195066506` where silence was required. The failed
+case and samples remain retained. The initial preflight `0c3a9061816f` stopped at
+compilation because the pinned NUnit lacks `Assert.Multiple`; using its supported
+individual assertions did not change the requirements.
+
+Fixed run `373b02cdbf61` passes all 57 cases with the same test-file hash as the
+failed behavioral run. Only the three renderer publication/consumer files changed
+after reproduction. The publication block is exactly zero, as are blocks held
+between DSP and submission while the control thread changes geometry or closes
+availability. Repair restores real native output; pure listener rotation remains
+audible. All 79 graphs, 96 mesh owners and 97 instance owners close, with zero
+native diagnostics, 34 matching input hashes and normal editor/wrapper exits.
+Evidence is retained in `.quest-evidence/audio-atomic`.
+
+Android build `d75527ac98b8` passes with zero build errors/warnings, ARM64/IL2CPP,
+High stripping and 36 matching input hashes. Native exports, dependencies, static
+callback registration, stripped SDK bytes and the debug signature are verified.
+APK SHA-256 begins `17A79365`; both editor and wrapper exit normally. This is
+compilation/payload evidence, not execution of the concurrency tests on Android.
+
+This is the isolated renderer. All 914 application/project C# inputs remain
+unchanged from the full verification at `33a68d7d`. Production selection,
+SDK-independent retention admission, upload timing, voice reservations, direct
+obstruction, shared capture and physical Android/Quest/Live acceptance remain
+open. The existing Meta direct path and disabled reflection gates are unchanged.

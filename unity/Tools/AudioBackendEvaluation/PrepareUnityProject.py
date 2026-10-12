@@ -95,7 +95,7 @@ tests = evaluation / "Tests" if owned else evaluation
 tests.mkdir(exist_ok=True)
 if owned:
     runtime_files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmControls.cs", "PcmTransformBinding.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "RuntimeAssembly.cs", "NativePlayerProbe.cs", "GeometryBridge.cs"]
-    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs", "GeometryBridgeTests.cs"]
+    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs", "GeometryBridgeTests.cs", "PresentationConcurrencyTests.cs"]
     for name in runtime_files:
         shutil.copyfile(source / "Unity" / name, runtime / name)
     for name in test_files:

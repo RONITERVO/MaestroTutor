@@ -739,7 +739,29 @@ compilation does not establish behavior after stripping. No app package changed.
 
 This supplies the geometry bridge, not production renderer selection. The current
 Meta direct path remains in use. Its existing residency-transfer admission still
-checks SDK context/handles and needs separation before a backend swap. Atomic
-presentation/revision publication, native upload timing, production reservations,
+checks SDK context/handles and needs separation before a backend swap. Native
+upload timing, production reservations,
 obstruction, capture, Android runtime and physical/performance acceptance remain
 gates; production reflections and automatic maps remain disabled.
+
+### Atomic candidate presentation — 2026-10-12
+
+A concurrent native-output test reproduced a publication race: the renderer could
+see a new frame before its required geometry revision, admit the old room response
+and output reflected samples. The candidate now publishes frame, revision and
+availability as one immutable state. DSP readiness and final submission read that
+state coherently; ordinary listener rotation preserves valid output.
+
+The unchanged tests pass after the fix: all 57 cases, 79 graphs, 96 mesh owners
+and 97 instance owners close normally, with zero diagnostics and matching input
+hashes. The previously leaking block and real cross-thread submission cases now
+produce exactly zero samples; repaired geometry restores output. See the
+[reproduction and scope](Tools/AudioBackendEvaluation/README.md#atomic-presentation-and-concurrent-submission).
+The updated ARM64/IL2CPP debug candidate also builds with High stripping, zero
+errors/warnings, 36 matching inputs and verified native payload/signature. Its
+Android runtime and physical audio path remain untested.
+
+All 914 application/project C# inputs remain unchanged from the prior full native
+and book/headless verification. This does not install the candidate or enable
+reflections. SDK-independent retention, production integration, obstruction,
+capture, native upload timing and physical Android/Quest/Live acceptance remain.

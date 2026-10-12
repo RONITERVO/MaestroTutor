@@ -67,7 +67,7 @@ namespace Maestro.AudioEvaluation
             Rate = rate;
             Frame = frame;
             Generation = generation;
-            presentation = initial;
+            presentation = new PresentationState(initial,revision,true);
             completedRevision = revision;
             signal = new float[frame];
             channel = new float[frame];
@@ -136,7 +136,7 @@ namespace Maestro.AudioEvaluation
                 Check(API.iplSourceCreate(simulator, ref sourceSettings, out sources[i]));
                 API.iplSourceAdd(sources[i], simulator);
             }
-            Simulate(presentation, completedRevision);
+            Simulate(presentation.Frame, completedRevision);
             var audio = new SteamAudio.AudioSettings { samplingRate = Rate, frameSize = Frame };
             var hrtfSettings = new HRTFSettings { type = HRTFType.Default, volume = 1 };
             Check(API.iplHRTFCreate(context, ref audio, ref hrtfSettings, out hrtf));
@@ -213,10 +213,11 @@ namespace Maestro.AudioEvaluation
             {
                 long revision = Volatile.Read(ref completedRevision);
                 var parameters = decode;
-                var frame = Volatile.Read(ref presentation);
+                var presented = Volatile.Read(ref presentation);
+                var frame = presented.Frame;
                 parameters.orientation = frame.Listener;
-                long geometryRevision = Volatile.Read(ref requiredRevision);
-                bool geometryReady = Volatile.Read(ref geometryAllowed)!=0 && revision >= geometryRevision;
+                long geometryRevision = presented.GeometryRevision;
+                bool geometryReady = presented.Allowed && revision >= geometryRevision;
                 bool responsesConsumed = true;
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
@@ -257,7 +258,8 @@ namespace Maestro.AudioEvaluation
                 // This acknowledges a callback that began after all native writes
                 // for this revision. No second producer may run before it.
                 BeforeOutput?.Invoke();
-                bool wetCurrent = Volatile.Read(ref geometryAllowed)!=0 && revision >= Volatile.Read(ref requiredRevision);
+                var latest = Volatile.Read(ref presentation);
+                bool wetCurrent = latest.Allowed && revision >= latest.GeometryRevision;
                 for (int voice = 0; voice < VoiceCount; voice++)
                 {
                     var binding = renderedPcm[voice];

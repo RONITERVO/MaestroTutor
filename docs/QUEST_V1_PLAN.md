@@ -7665,3 +7665,19 @@ normal process exits. All 914 C# source/mirror hashes match (910 application fil
 and four existing third-party inputs). The journeys use local scripted providers.
 The current isolated Android debug candidate compiles with zero errors/warnings
 and verified ARM64/IL2CPP payload. It has not executed on Android or Quest.
+
+### Concurrent audio publication — 2026-10-12
+
+The isolated candidate now publishes presentation, geometry requirement and
+availability atomically. A real concurrent DSP test reproduced obsolete reflected
+output before the fix; the unchanged test now requires and observes an exactly
+silent block. Geometry/availability changes during final submission, recovery and
+ordinary head rotation are covered. All 57 candidate cases pass with complete
+native ownership closure. See the [audio evidence](../unity/AUDIO.md#atomic-candidate-presentation--2026-10-12).
+The same candidate passes its ARM64/IL2CPP debug build and native payload checks;
+this does not establish Android concurrency or headset playback acceptance.
+
+The 914 application/project C# inputs remain unchanged from the preceding full
+verification. Production renderer selection and SDK-independent CPU retention
+admission remain open, along with native upload, capture, Android/Quest/Live and
+performance acceptance. No app reflection gate or release artifact changed.
