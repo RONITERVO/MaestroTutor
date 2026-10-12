@@ -671,6 +671,9 @@ try{
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
  const physicsInputs=await readResourceFact('object.physics.inputs','Object physics inputs',{target:ball.id});assert.equal(physicsInputs.state,'inactive');
+ const heldContact=await readResourceFact('object.contact.inputs','Held object contact inputs',{target:ball.id});assert.equal(heldContact.state,'inactive');
+ const trackedContact=await readResourceFact('controller.contact.inputs','Hand or controller contact inputs',{hand:'right'});assert.equal(trackedContact.state,'inactive');
+ await writeFile(join(directory,'book-native-contact-inputs.json'),JSON.stringify({boundary:'Original generated book fact forms observing real Unity with physics paused. No active headset contact or provider acceptance.',heldContact,trackedContact},null,2));
  const physicsAfter=await readResourceFact('physics.simulation','Room physics state');assert.equal(physicsAfter.running,false);
  await page.getByRole('heading',{name:'Room physics state',exact:true}).scrollIntoViewIfNeeded();
  await page.screenshot({path:join(directory,'book-native-physics.png')});

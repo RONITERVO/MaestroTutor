@@ -8487,3 +8487,57 @@ Web tests (2,897), lint, build, probe types, boundaries and catalog checks pass.
 The historical Meta audio SDK crash did not reproduce; its cause is unresolved
 and production reflections remain off. These are desktop checks with scripted
 provider responses, not fresh headset or paid-provider acceptance.
+
+
+### Tracked contact and manual-grab preparation — 2026-10-13
+
+Hand/controller push volumes and physical XRI grabs now acquire their latest
+swept ground, obstacle and water inputs through the same owned native-preparation
+lane as navigation and connected bodies. No displacement is queued during a
+load. A waiting grab keeps its current pose; a waiting push volume is non-solid
+and follows the current tracked source. Rotation, offset colliders and two-hand
+resizing contribute to the conservative grab envelope. The final grab transformer
+runs after XRI's pose calculation and before its target and throw sampling.
+
+Pause, loss of tracking/selection, workspace replacement, geometry changes and
+animation takeover release the relevant owner. Restart needs fresh input; a
+previous throw history must age out before a release can throw again. XRI removes
+its final selector before calling public release listeners, so that final
+readiness read has a synchronous release scope before retiring the lease.
+Tracked jumps and tracking gaps disable the push volume; re-entry inside a
+creation stays non-solid until the hand moves clear. Held-object collider
+exclusions are restored after re-enabling the contact. None of this delays the
+rendered hand/controller pose or adds a flat UI outside the book.
+
+The generated catalog adds passive `object.contact.inputs` and
+`controller.contact.inputs` facts, shared by the book forms, agent and headless
+client. They expose inactive/ready/pending/unavailable, a bounded reason and
+full dependency count plus the first four IDs. Reading never starts a load,
+physics or an edit. The object fact covers physical human grabs of creations;
+scripted attachments remain a separate existing motion owner. Native publication
+refreshes a snapshot of its objects because preparing a released body can
+synchronously activate another required object.
+
+The per-entity environment policy still decides whether scanned floors and walls
+apply. Visual occlusion, passthrough opacity and physical room collision remain
+separate decisions. These local sweeps do not remove whole-world collision
+admission or running-world retention. Authored/attached kinematic motion,
+arbitrary solver impulses and joint-motor bounds, regional navigation, larger
+budgets and actual Quest performance still need acceptance before enabling
+regional unloading. Automatic unloading remains off; the 64-object/25-metre
+scope is unchanged.
+
+Focused verification: 90 PlayMode checks pass, including actual XRI selection,
+release and blocked movement; load cancellation, independent consumers, tracking
+jumps, same-frame source switches, re-entry, pause/restart and replaced geometry. Pending-load fixtures
+isolate local input admission from the production whole-world gate. Full verification passes 1,152 EditMode and 1,367 PlayMode cases with only the
+three expected optional private-asset skips. The complete native-room journey
+passes 766 observations, including the new passive contact facts; the original
+book reads both facts through generated controls. Both clients and Editors exit
+successfully. All 947 C# inputs still match the tested mirror. The 2,901 web tests,
+lint, build, probe types, core boundaries and catalog checks pass. The earlier
+full run was intentionally stopped for the same-frame tracking-switch repair;
+this complete run uses the final source. The historical Meta audio SDK crash did
+not reproduce; its cause remains unresolved and production reflections remain
+off. These are desktop checks with scripted provider responses; headset and paid
+provider acceptance remain on hold.

@@ -1208,3 +1208,22 @@ connected inputs, real joint breakage, actual XRI grip, interruptions, missing
 members/joints and independent consumers. Pending-load fixtures isolate local
 admission from the production whole-world collision gate. None of these checks
 qualifies regional unloading, headset immersion or paid-provider behavior.
+
+
+### Tracked-contact input observations
+
+The native-room journey reads `object.contact.inputs` for its unheld ball and
+`controller.contact.inputs` for both untracked sources. Each must report inactive,
+not ready, and zero owned dependencies. `native-contact-inputs.json` retains all
+three real native observations. The original-book journey reads the same object
+and right-hand facts through generated forms after pausing physics; it writes
+`book-native-contact-inputs.json`. Neither driver pretends to hold a controller.
+
+Active contact is covered separately by PlayMode using real XRI selection,
+transformer callbacks, physical bodies and tracked push volumes. Those checks
+include blocked held movement, latest-target preparation, release without old
+throw samples, paused/replaced geometry, tracking jumps, overlap-safe re-entry
+and independent native-demand owners. The shared-client tests validate the
+exported record types without inventing stricter enum/range wire schemas than
+the catalog exports. This remains desktop scripted-provider evidence, not a new
+headset or paid-provider acceptance run.

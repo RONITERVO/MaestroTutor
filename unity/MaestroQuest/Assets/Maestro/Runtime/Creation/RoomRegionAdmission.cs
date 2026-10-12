@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System.Collections.Generic;
+using System.Linq;
 namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
@@ -28,7 +29,9 @@ namespace Maestro.Quest.Creation
         internal void RefreshRegionCollision(){
             if(applying)return;
             PhysicsWorld?.RefreshCollisionAdmission();
-            foreach(var item in objects.Values)if(item)item.GetComponent<Interaction.RigidRoomItem>()?.RefreshAfterPublication();
+            // Refresh may acquire dormant peers synchronously. Iterate this publication
+            // snapshot; nested activation publishes and refreshes its own objects.
+            foreach(var item in objects.Values.ToArray())if(item)item.GetComponent<Interaction.RigidRoomItem>()?.RefreshAfterPublication();
         }
     }
 }

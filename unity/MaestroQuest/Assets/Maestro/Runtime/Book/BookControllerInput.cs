@@ -30,6 +30,9 @@ namespace Maestro.Quest.Book
         Material pointerMaterial;
         public Transform ControllerAnchor(int index) => hands != null && index >= 0 && index < hands.Length && hands[index].WasTracked && !hands[index].UsingHand && hands[index].Root.activeSelf ? hands[index].Root.transform : null;
 
+        internal Newtonsoft.Json.Linq.JObject ObserveContact(int index)=>hands!=null&&index>=0&&index<hands.Length&&hands[index].Pusher
+            ?hands[index].Pusher.GetComponent<TrackedPusher>().ObserveInputs():RoomContactInputs.State("inactive",false,"No tracked contact source");
+
         sealed class HandInput : IDisposable
         {
             public readonly InputAction Position, Rotation, Tracked, Press, Grip, Restore, Stick, Primary, StickClick;
@@ -93,6 +96,9 @@ namespace Maestro.Quest.Book
 
             public void Cancel()
             {
+                // Source swaps can deactivate/reactivate the aim in one frame.
+                // Retire contact immediately rather than waiting for FixedUpdate.
+                if(Pusher)Pusher.GetComponent<TrackedPusher>().CancelTrackedInput();
                 SetSelect(false); Root.SetActive(false); Beam.SetActive(false); Tip.SetActive(false);
                 Trigger.Cancel(); Squeeze.Cancel(); PageHeld = false; DrawingHeld = false; WasTracked = false;
             }

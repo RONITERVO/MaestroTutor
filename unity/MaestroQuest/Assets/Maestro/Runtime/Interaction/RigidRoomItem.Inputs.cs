@@ -38,10 +38,12 @@ namespace Maestro.Quest.Interaction {
         string inputStatus;string[] inputMembers=Array.Empty<string>();
         RoomEditor boundInputEditor;bool hasInputBinding;
         RoomEditor InputEditor=>hasInputBinding?boundInputEditor:GetComponentInParent<RoomEditor>();
+        internal RoomEditor PhysicsEditor=>InputEditor;
+        internal bool HasPhysicsBinding=>hasInputBinding;
         bool InputBindingAvailable=>!hasInputBinding||boundInputEditor&&boundInputEditor.isActiveAndEnabled&&boundInputEditor.Identity(item)!=null;
         internal void BindPhysicsInputs(RoomEditor editor){
             if(hasInputBinding&&ReferenceEquals(boundInputEditor,editor))return;
-            InterruptPhysicsInputs();hasInputBinding=true;boundInputEditor=editor;
+            grabInputs?.Suspend();InterruptPhysicsInputs();hasInputBinding=true;boundInputEditor=editor;
         }
         bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&PhysicsEnabled;
         bool InputsCurrent=>InputEditor?InputEditor.PhysicsIslandReady(item,true,out _):CurrentInputs(out _);

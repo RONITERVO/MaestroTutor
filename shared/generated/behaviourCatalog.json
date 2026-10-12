@@ -41982,6 +41982,82 @@
       ]
     },
     {
+      "id": "object.contact.inputs",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "ready": "boolean",
+          "reason": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Held object contact inputs",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. This fact covers an active physical controller/hand grab of a creation; unheld, paused or animation-owned items are inactive. A waiting grab holds its current pose and needs fresh throw samples before release. Scripted attachments use their separate existing ownership.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "example-object"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
+      "id": "controller.contact.inputs",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "ready": "boolean",
+          "reason": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Hand or controller contact inputs",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Select the left or right tracked source. Tracking jumps and recovery inside an object keep the contact volume disabled until a fresh clear pose; they cannot replay a missed push. The visible hand/controller continues tracking.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "hand": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          }
+        },
+        "required": [
+          "hand"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "hand": "right"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "physics.environment",
       "version": 1,
       "type": {
@@ -43079,7 +43155,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookControllerInput.cs",
-      "sha256": "5f74a21b6ab0b982a7be1e0ec3f2353c3f0a8a555dd6fb366f88b8da4583547c"
+      "sha256": "d6646e1190b41e52837bc9e28ce6a02b75f940a9f72bf8552f9f33b37d539d1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/BookCoordinates.cs",
@@ -43316,6 +43392,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionSnappingCapability.cs",
       "sha256": "1798d20937e2ef892dfb56255d669ab290ceb11a19dee6990a040c352ae96eaa"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactInputFacts.cs",
+      "sha256": "166edc748b7f0b3e07b4805b04d1e3e0061695866e47f368355f1877346164d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
@@ -44223,7 +44303,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
-      "sha256": "474509aeee3c37b8a53255517dbd4345a04e7c53f1037c0ece09e925bd9948cc"
+      "sha256": "38d47cad3c732bb3415a422724a35114ffd78acf2d7ce494c89675c0d227eacb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionEdits.cs",
@@ -44659,11 +44739,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "d746868b3e017685dcf1589f5d300a06a35bb36a3b21a57a664775f4e6a7bce8"
+      "sha256": "0bb0e04e2ba95cd5b560a8573204726232f5ad38c2eea1dead9b3d39e9870569"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "a2723e9f44a2b974be7d77790cd6f61be138cc42bcd5ba4e2147b0bf8894e1fc"
+      "sha256": "eced74ce4bc2cecd25c11e233ae4a34f43930691452fbdf459f801b6206ac857"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -44690,6 +44770,10 @@
       "sha256": "2953427c6dad406a5e43e8ed310ff267f2dc0d6adaa57a694ca3717b736cbb61"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomContactInputs.cs",
+      "sha256": "929e8b22ddce36c134ef0836c379335e5de0441f44221bfab9d937c570e83b71"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomDepthOcclusion.cs",
       "sha256": "3320045bfce8c60c5ca27de2db769efaf650e32597b382f5625ad2b82c649b9b"
     },
@@ -44700,6 +44784,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
       "sha256": "07a17f358f5776629ba465bdf4d9bab717cdae3d424a774c649b6c969db8ffdf"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGrabContactInputs.cs",
+      "sha256": "68b6aa1975f31b5577f55e1c4498b0a86a65eb99bd708db6ff5bc51ba75f1aec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundMotor.cs",
@@ -44827,7 +44915,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/TrackedPusher.cs",
-      "sha256": "1b0c7c81a5e3fcbb5a8c7362d45ed657bc70b0dad91348c40a4c8ffa8cd32884"
+      "sha256": "261ed141814d39679e9e5cda845e26c5831ccf753d298f89412bf8a6830428ec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomPresentation.cs",
@@ -44999,7 +45087,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "89aa048fce53d823aae1c746b88e138da89bf53795c3e330437cd918e062385e"
+      "sha256": "0f912f9636a3ba4e193a09d54cbe01198ce588c910ca5b11eec6d53a1c5fea7e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

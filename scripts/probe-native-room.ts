@@ -1107,6 +1107,14 @@ try{
   const inputState=physicsInputs.catalog?.value as {state:string;ready:boolean;dependencyCount:number;dependencies:string[]};
   if(inputState?.state!=='ready'||!inputState.ready||inputState.dependencyCount<inputState.dependencies.length)throw new Error('The native physics input fact must describe the active body before catch');
   await writeFile(join(directory,'native-physics-inputs.json'),JSON.stringify(physicsInputs,null,2));
+  const contactInputs=[];
+  for(const [capability,args] of [['object.contact.inputs',{target:catchTarget}],['controller.contact.inputs',{hand:'left'}],['controller.contact.inputs',{hand:'right'}]] as const){
+   const observed=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}]);
+   const value=observed.catalog?.value as {state:string;ready:boolean;dependencyCount:number;dependencies:string[]};
+   if(observed.catalog?.available!==true||value?.state!=='inactive'||value.ready||value.dependencyCount!==0||value.dependencies.length!==0)throw new Error('An untracked native contact must be inactive: '+capability);
+   contactInputs.push(observed);
+  }
+  await writeFile(join(directory,'native-contact-inputs.json'),JSON.stringify({boundary:'Passive real-native catalog observations. No controller source or selected object is simulated by this driver; active contacts are tested in PlayMode.',observations:contactInputs},null,2));
   const connectedTarget=activeButtonIds[1] as string;
   let connectedInputs=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.physics.inputs',version:1,arguments:{target:connectedTarget}}}]);
   const connectedDeadline=Date.now()+10000;
