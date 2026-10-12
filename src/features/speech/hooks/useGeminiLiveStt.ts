@@ -17,7 +17,7 @@ import { debugLogService } from '../../diagnostics';
 import { getGeminiModels } from '../../../core/config/models';
 import { translations } from '../../../core/i18n';
 import { AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
-import { flushCaptureWorkletNode } from '../utils/captureWorkletMessaging';
+import type { PcmCaptureOwner } from '../../../core-sdk/media/pcmCapture';
 import {
   RealtimePcmPacketizer,
   createEmptyRealtimePcmPacketizerStats,
@@ -173,9 +173,8 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
   const sessionRef = useRef<Session | null>(null);
   const speechTriggerAbortRef = useRef<AbortController | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const captureRef = useRef<PcmCaptureOwner | null>(null);
+  const startRequestRef = useRef(0);
   const audioChunksRef = useRef<Int16Array[]>([]);
   const totalAudioSamplesRef = useRef(0);
   const turnAudioSamplesRef = useRef(0);
@@ -328,12 +327,15 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     const preserveRecordedAudio = options?.preserveRecordedAudio === true;
     const status = options?.status || 'stopped';
 
-    const activeCaptureNode = workletNodeRef.current;
-    if (activeCaptureNode) {
-      await flushCaptureWorkletNode(activeCaptureNode);
-      // The flush acknowledgement is now processed; stop accepting more PCM
-      // before waiting for the packetizer's asynchronous Whisper/encode queue.
-      activeCaptureNode.port.onmessage = null;
+    const activeCapture = captureRef.current;
+    captureRef.current = null;
+    if (activeCapture) {
+      try { await activeCapture.flush(); }
+      catch (error) { console.warn('STT capture flush failed:', error); }
+      // Stop accepting input before draining Whisper/encode work. The capture
+      // owner releases its exact hardware even when flushing fails.
+      try { await activeCapture.close(); }
+      catch (error) { console.warn('STT capture close failed:', error); }
     }
     await boundaryClosePromiseRef.current?.catch(() => undefined);
     if (inputPacketizerRef.current) {
@@ -366,30 +368,6 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
     // Invalidate current session to prevent stale callbacks from processing
     currentSessionIdRef.current = 0;
     clearTranscriptUpdateTimer();
-    
-    // Clear worklet message handler FIRST to stop new audio from accumulating
-    if (activeCaptureNode) {
-      activeCaptureNode.port.onmessage = null;
-      try { activeCaptureNode.disconnect(); } catch { /* ignore */ }
-      workletNodeRef.current = null;
-    }
-    
-    // Stop media stream tracks
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => {
-        try { t.stop(); } catch { /* ignore */ }
-      });
-      streamRef.current = null;
-    }
-    
-    // Close audio context
-    if (audioContextRef.current) {
-      const ctx = audioContextRef.current;
-      audioContextRef.current = null;
-      if (ctx.state !== 'closed') {
-        try { await ctx.close(); } catch { /* ignore */ }
-      }
-    }
     
     // Close session
     if (sessionRef.current) {
@@ -426,6 +404,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
   }, [clearTranscriptUpdateTimer, getAudioTelemetrySnapshot, setLiveActivityPhase, setLocalSpeechTriggerPhase, setVadActivity]);
 
   const stop = useCallback(async () => {
+    startRequestRef.current += 1;
     await cleanup({ status: 'stopped' });
     setIsListening(false);
   }, [cleanup]);
@@ -459,6 +438,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
   const start = useCallback(async (languageOrOptions?: string | SttStartOptions) => {
     if (!sessionActivity.isActive()) return;
+    const request = ++startRequestRef.current;
     const opts: SttStartOptions = (
       typeof languageOrOptions === 'string' || languageOrOptions === undefined
         ? { language: languageOrOptions }
@@ -470,8 +450,9 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
       await new Promise(resolve => setTimeout(resolve, 10));
     }
     
+    if (request !== startRequestRef.current) return;
     await cleanup({ status: 'restarted' });
-    if (!sessionActivity.isActive()) return;
+    if (request !== startRequestRef.current || !sessionActivity.isActive()) return;
     
     setError(null);
     setTranscript('');
@@ -528,18 +509,12 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         },
       });
       if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
-      const stream = localSpeechTrigger.microphoneStream;
-      streamRef.current = stream;
-      audioContextRef.current = localSpeechTrigger.capture.audioContext;
-      workletNodeRef.current = localSpeechTrigger.capture.workletNode;
-      audioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
       if (currentSessionIdRef.current !== sessionId) {
         await localSpeechTrigger.capture.close();
-        if (streamRef.current === stream) streamRef.current = null;
-        if (audioContextRef.current === localSpeechTrigger.capture.audioContext) audioContextRef.current = null;
-        if (workletNodeRef.current === localSpeechTrigger.capture.workletNode) workletNodeRef.current = null;
         return;
       }
+      captureRef.current = localSpeechTrigger.capture;
+      audioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
       previewPendingRef.current = true;
       previewSamplesRef.current = 0;
       setSpeechPreviewProgress(3);
@@ -1094,7 +1069,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
       // Replay the confirmed prefix and the samples captured during Whisper,
       // then atomically drain the provider-connection interval into the normal
-      // packetizer. The original worklet continues as the session worklet.
+      // packetizer. The original capture owner continues through the session.
       const confirmedAt = Date.now();
       if (
         speechGateRef.current?.openFromConfirmedTrigger(confirmedAt)
@@ -1116,6 +1091,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
         return;
       }
       const handoff = localSpeechTrigger.capture.transferTo((pcm) => {
+        if (currentSessionIdRef.current !== sessionId) return;
         void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
       });
       audioTelemetryRef.current.connectionHandoffPackets = handoff.bufferedPackets;
@@ -1159,6 +1135,7 @@ export function useGeminiLiveStt(options?: UseGeminiLiveSttOptions): UseGeminiLi
 
   useEffect(() => {
     return () => {
+      startRequestRef.current += 1;
       const detector = localWhisperRef.current;
       void cleanupRef.current()
         .catch((error) => {

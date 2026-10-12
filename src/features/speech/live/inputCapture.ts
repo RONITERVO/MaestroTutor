@@ -17,7 +17,7 @@ import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
 import {
   RealtimePcmPacketizer
 } from '../../../core-sdk/media/realtimePcmPacketizer';
-import { type CaptureWorkletMessage } from '../utils/captureWorkletMessaging';
+import type { PcmCapture } from '../../../core-sdk/media/pcmCapture';
 import {
   type LocalSpeechTriggerResult
 } from '../utils/localSpeechTrigger';
@@ -59,8 +59,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   | 'inputClosedByServerRef' | 'boundaryClosePromiseRef' | 'speechOutputRef'
 >, ports: LiveInputCapturePorts, session: {
   sessionId: number; speechGateEpoch: number; speechGateEnabled: boolean; observerActivity: boolean;
-  localSpeechTrigger: LocalSpeechTriggerResult | null; workletNode: AudioWorkletNode | null;
-  inputSource: MediaStreamAudioSourceNode | null;
+  localSpeechTrigger: LocalSpeechTriggerResult | null; directCapture: PcmCapture | null;
 }) {
   const {
     liveInputContextRef, sessionRef, inputPacketizerRef, pcmCaptureRouterRef,
@@ -74,7 +73,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     inputClosedByServerRef, boundaryClosePromiseRef, speechOutputRef,
   } = state;
   const { ensureInputCodecWorker, setVadActivity, setLocalSpeechTriggerPhase, emitTurnTranscriptUpdate } = ports;
-  const { sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, workletNode, inputSource } = session;
+  const { sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, directCapture } = session;
   let externalPlaybackActive = false, externalPlaybackSettleUntil = 0;
   const isDetectorUnavailable = (now: number) => {
     const detector = observerWhisperRef.current;
@@ -432,25 +431,19 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   };
   const transferCapture = (trigger: LocalSpeechTriggerResult) => {
     const handoff = trigger.capture.transferTo((pcm) => {
+      if (currentSessionIdRef.current !== sessionId) return;
       void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
     });
     inputAudioTelemetryRef.current.connectionHandoffPackets = handoff.bufferedPackets;
     inputAudioTelemetryRef.current.connectionHandoffSamples = handoff.bufferedSamples;
     setLocalSpeechTriggerPhase(null);
   };
-  const attachCaptureNode = () => {
-    if (!workletNode || !inputSource) return;
+  const startCapture = () => {
     // User-started sessions do not have a pre-connect capture to transfer.
-    workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
-      // CRITICAL: Check session is still valid before processing audio
+    directCapture?.start(pcm => {
       if (currentSessionIdRef.current !== sessionId) return;
-
-      const pcm = event.data;
-      if (!(pcm instanceof Int16Array) || !pcm.length) return;
-
       void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
-    };
-    inputSource.connect(workletNode);
+    });
   };
-  return { replayConfirmedCapture, transferCapture, attachCaptureNode };
+  return { replayConfirmedCapture, transferCapture, startCapture };
 }

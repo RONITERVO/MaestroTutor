@@ -17,6 +17,7 @@ import { type AudioCodecWorkerClient } from '../utils/audioCodecWorkerClient';
 import {
   type LocalWhisperClient
 } from '../utils/localWhisperClient';
+import type { PcmCaptureOwner } from '../../../core-sdk/media/pcmCapture';
 import type { SpeechOutput } from '../../../core-sdk/media/speechOutput';
 import { createEmptyInputAudioTelemetry, createEmptyPlaybackTelemetry, type LiveInputAudioTelemetry, type LivePlaybackTelemetry, type LiveTurnTranscriptUpdate, type ModelAudioDecodeJob, type UseGeminiLiveConversationCallbacks } from './types';
 
@@ -32,12 +33,10 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
   const sessionRef = cell<any>(null);
   const liveInputContextRef = cell<LiveInputContext | null>(null);
   const frameIntervalRef = cell<number | null>(null);
-  const inputAudioContextRef = cell<AudioContext | null>(null);
+  const captureRef = cell<PcmCaptureOwner | null>(null);
   const outputAudioContextRef = cell<AudioContext | null>(null);
-  const microphoneStreamRef = cell<MediaStream | null>(null);
   const captureVideoRef = cell<HTMLVideoElement | null>(null);
   const canvasRef = cell<HTMLCanvasElement | null>(null);
-  const workletNodeRef = cell<AudioWorkletNode | null>(null);
   const speechOutputRef = cell<SpeechOutput | null>(null);
   const logRef = cell<ReturnType<typeof debugLogService.logRequest> | null>(null);
   const logFinalizedRef = cell<boolean>(false);
@@ -97,9 +96,9 @@ export function createLiveSessionState(callbacks: UseGeminiLiveConversationCallb
   const callbacksRef = cell(callbacks);
   return {
     speechTriggerActivityTokenRef, vadActivityTokenRef, sessionRef, liveInputContextRef,
-    frameIntervalRef, inputAudioContextRef, outputAudioContextRef,
-    microphoneStreamRef, captureVideoRef, canvasRef,
-    workletNodeRef, speechOutputRef, logRef,
+    frameIntervalRef, captureRef, outputAudioContextRef,
+    captureVideoRef, canvasRef,
+    speechOutputRef, logRef,
     logFinalizedRef, modelRef, pendingUserTurnRef,
     videoUpdateVersionRef, videoFrameInFlightRef, transcriptUpdateTimerRef,
     pendingTranscriptUpdateRef, serverMessageQueueRef, inputCodecWorkerRef,

@@ -7796,3 +7796,26 @@ static callback are verified. APK SHA-256 begins `E6094FF8`. It was not installe
 or executed on Android. Evidence, including two corrected test-fixture failures,
 is retained in `.quest-evidence/audio-reference`; the only post-test launcher
 change removes one trailing space, with its exact executed copy retained.
+
+
+### Original Live/STT capture ownership — 2026-10-12
+
+Direct Live, the local speech trigger and Live STT now share one microphone
+ownership contract instead of passing browser tracks/context/worklet handles
+between consumers. Cancellation, stale acquisitions, handoff, flush and terminal
+release apply to the same capture owner. A platform adapter can therefore feed
+the existing speech gate, packetizer and provider connection without bypassing
+local detection or introducing another conversation transport.
+
+The web/shared suite passes 2,894 cases, including fourteen new ownership cases;
+lint, type checking, production build and core boundary checks pass. See
+[the capture contract and limits](../unity/AUDIO.md#one-capture-owner-for-original-live-and-stt--2026-10-12).
+This is integration preparation: no native canceller or new capture backend is
+installed, and render/microphone alignment, physical/provider acceptance and the
+remaining world/residency/release work stay open. No headset, paid provider,
+release key, deployment or Meta operation was used.
+
+A compiled Chrome probe verifies real AudioWorklet capture, local trigger handoff,
+flush and complete track shutdown using generated input with a scripted detector.
+It uses no provider and is now part of web CI. Native capture/echo cancellation is
+still a separate implementation and acceptance task.

@@ -26,7 +26,7 @@ const setup = (gated = true) => {
   createLiveInputCapture(state, {
     ensureInputCodecWorker: () => ({ encodePcmToBase64: encode }) as any,
     setVadActivity: vi.fn(), setLocalSpeechTriggerPhase: vi.fn(), emitTurnTranscriptUpdate: vi.fn(),
-  }, { sessionId: 1, speechGateEpoch: 0, speechGateEnabled: gated, observerActivity: false, localSpeechTrigger: null, workletNode: null, inputSource: null });
+  }, { sessionId: 1, speechGateEpoch: 0, speechGateEnabled: gated, observerActivity: false, localSpeechTrigger: null, directCapture: null });
   return { state, send, encode, capture: async () => { await state.pcmCaptureRouterRef.current!.push(new Int16Array(1600).fill(1000), 16000, 'device'); await flush(); } };
 };
 

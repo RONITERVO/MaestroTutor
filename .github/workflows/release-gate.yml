@@ -69,6 +69,9 @@ jobs:
         run: npm run lint
       - name: Build production app
         run: npm run build
+      - name: Verify compiled microphone capture in headless Chrome
+        timeout-minutes: 2
+        run: npm run test:capture:browser
       - name: Start the headless CLI contract
         run: |
           npm run verify:release-config

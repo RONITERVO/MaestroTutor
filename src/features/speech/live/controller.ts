@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { PcmCapture } from '../../../core-sdk/media/pcmCapture';
 import { LiveInputContext } from '../../../core-sdk/media/liveInputContext';
 import { createLiveInputCapture } from './inputCapture';
 import { createLiveProviderCallbacks } from './providerCallbacks';
@@ -43,8 +44,8 @@ let liveConversationSessionCounter = 0;
 export function createLiveConversationController(ports: LiveRuntimePorts, callbacks: UseGeminiLiveConversationCallbacks = {}) {
   const state = createLiveSessionState(callbacks);
   const {
-    sessionRef, inputAudioContextRef, outputAudioContextRef,
-    microphoneStreamRef, canvasRef, workletNodeRef,
+    sessionRef, captureRef, outputAudioContextRef,
+    canvasRef,
     speechOutputRef, logRef, logFinalizedRef,
     modelRef, serverMessageQueueRef, currentSessionIdRef,
     speechTriggerAbortRef, currentInputTranscriptionRef,
@@ -66,7 +67,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
   const { startNextModelAudioTurn, ensureInputCodecWorker } = modelAudio;
   const video = ports.createVideo(state);
   const { ensureVideoElementReady, startVideoFrameLoop } = video;
-  const lifecycle = createLiveLifecycle(state, { ...activity, ...telemetry, ...transcripts, ...modelAudio, ...video, flushCaptureWorkletNode: ports.flushCaptureWorkletNode });
+  const lifecycle = createLiveLifecycle(state, { ...activity, ...telemetry, ...transcripts, ...modelAudio, ...video });
   const { cleanup } = lifecycle;
   const failAudio = (message: string, sessionId: number) => {
     if (currentSessionIdRef.current !== sessionId) return;
@@ -86,15 +87,8 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
     getGeminiModels, getAi, debugLogService,
     beginTurnTiming, createLiveUsageTracker, acquireLocalWhisperClient,
     releaseLocalWhisperClient, waitForLocalSpeechTrigger, isNativePlatform,
-    getAudioContextConstructor, getUserMedia, createAudioWorkletNode, createSpeechOutput,
-    createCanvas, FLOAT_TO_INT16_PROCESSOR_URL, FLOAT_TO_INT16_PROCESSOR_NAME,
+    getAudioContextConstructor, openPcmCapture, createSpeechOutput, createCanvas,
   } = ports;
-  const ensureCaptureWorklet = async (ctx: AudioContext) => {
-    if (!ctx.audioWorklet || typeof ctx.audioWorklet.addModule !== 'function') {
-      throw new Error('AudioWorklet is not supported');
-    }
-    await ctx.audioWorklet.addModule(FLOAT_TO_INT16_PROCESSOR_URL);
-  };
   let startRequest = 0;
   const start = async (opts: StartLiveConversationOptions) => {
     const request = ++startRequest;
@@ -149,6 +143,7 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         speechTriggerAbortRef.current = triggerAbort;
         localSpeechTrigger = await waitForLocalSpeechTrigger({
           detector: observerWhisperRef.current!,
+          openCapture: openPcmCapture,
           signal: triggerAbort.signal,
           onPhaseChange: phase => { if (!abortIfInvalidated()) setLocalSpeechTriggerPhase(phase, observerActivity); },
           onCaptureStarted: () => { if (!abortIfInvalidated()) turnTimingRef.current?.markOnce('capture.started'); },
@@ -167,15 +162,13 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
         });
         if (speechTriggerAbortRef.current === triggerAbort) speechTriggerAbortRef.current = null;
         if (abortIfInvalidated()) {
-          await localSpeechTrigger.capture.close({ stopMicrophone: true });
+          await localSpeechTrigger.capture.close();
           return;
         }
         // Transfer ownership immediately. The same graph keeps capturing while
         // video, playback and the paid transport are initialized, so words
         // spoken after Whisper recognizes the prefix cannot fall into a gap.
-        microphoneStreamRef.current = localSpeechTrigger.microphoneStream;
-        inputAudioContextRef.current = localSpeechTrigger.capture.audioContext;
-        workletNodeRef.current = localSpeechTrigger.capture.workletNode;
+        captureRef.current = localSpeechTrigger.capture;
         inputAudioTelemetryRef.current.speechTriggerSamples = localSpeechTrigger.pcm.length;
         if (abortIfInvalidated()) return;
         localSpeechPendingRef.current = true;
@@ -214,28 +207,17 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
 
       // Audio Setup
       const AudioContextCtor: typeof AudioContext = getAudioContextConstructor();
-      const micStream = localSpeechTrigger?.microphoneStream
-        || await getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      if (abortIfInvalidated()) {
-        if (!localSpeechTrigger) micStream.getTracks().forEach(track => { try { track.stop(); } catch { } });
-        return;
-      }
-      microphoneStreamRef.current = micStream;
-      if (abortIfInvalidated()) return;
-
-      let inputSource: MediaStreamAudioSourceNode | null = null;
-      let workletNode = localSpeechTrigger?.capture.workletNode || null;
+      let directCapture: PcmCapture | null = null;
       if (!localSpeechTrigger) {
-        const inputCtx = new AudioContextCtor({ sampleRate: INPUT_SAMPLE_RATE });
-        inputAudioContextRef.current = inputCtx;
-        inputSource = inputCtx.createMediaStreamSource(micStream);
-        await ensureCaptureWorklet(inputCtx);
-        if (abortIfInvalidated()) return;
-        workletNode = createAudioWorkletNode(inputCtx, FLOAT_TO_INT16_PROCESSOR_NAME, {
-          numberOfInputs: 1,
-          numberOfOutputs: 0,
-        });
-        workletNodeRef.current = workletNode;
+        const captureAbort = new AbortController();
+        speechTriggerAbortRef.current = captureAbort;
+        directCapture = await openPcmCapture({ signal: captureAbort.signal });
+        if (speechTriggerAbortRef.current === captureAbort) speechTriggerAbortRef.current = null;
+        if (abortIfInvalidated()) {
+          await directCapture.close();
+          return;
+        }
+        captureRef.current = directCapture;
       }
 
       if (playModelAudio) {
@@ -354,14 +336,14 @@ export function createLiveConversationController(ports: LiveRuntimePorts, callba
       turnTimingRef.current?.mark('provider.connected');
 
       const input = createLiveInputCapture(state, { ensureInputCodecWorker, setVadActivity, setLocalSpeechTriggerPhase, emitTurnTranscriptUpdate }, {
-        sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, workletNode, inputSource,
+        sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, directCapture,
       });
       if (speechGateRef.current && localSpeechTrigger) {
         input.replayConfirmedCapture(localSpeechTrigger, speechGateRef.current);
         if (abortIfInvalidated()) return;
         input.transferCapture(localSpeechTrigger);
       } else {
-        input.attachCaptureNode();
+        input.startCapture();
       }
 
       if (stream && stream.active) {

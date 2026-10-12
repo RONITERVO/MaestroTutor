@@ -950,3 +950,46 @@ cases and its ARM64/IL2CPP High-stripping build. Evidence is retained in
 `.quest-evidence/audio-reference`, with exact input hashes and earlier failed
 fixture attempts. These checks establish the reference's buffer, render and
 ownership behavior; microphone cancellation and Quest acceptance remain open.
+
+
+## One capture owner for original Live and STT — 2026-10-12
+
+The original application now consumes a platform-independent microphone contract:
+prepared mono PCM16 at 16 kHz, one delivery consumer, explicit flush and terminal
+close. The browser adapter alone owns its microphone tracks, AudioContext and
+capture worklet. Direct Live startup, local Whisper pre-connect detection and
+Live STT use that same ownership path; gated capture transfers without opening a
+second microphone. The Live controller supplies its capture factory to the trigger.
+No browser graph handles cross the handoff or remain in session orchestration.
+
+Pending acquisition is cancellable even though browser permission itself is not.
+Late streams and prepared owners close without replacing current capture. Shutdown
+stops delivery before draining downstream packet work; flush failures still release
+the microphone. STT also fences starts that lose to Stop or a newer request before
+acquisition, and cannot overwrite the current owner with a stale trigger. Closing
+a handoff discards its retained PCM and detaches its consumer.
+
+The original speech gates, packetization, context, provider connection, usage and
+transcript handling remain in place. Browser echo-cancellation constraints remain
+requests to the browser; this contract does not establish native echo cancellation.
+No native capture backend is selected. A Quest adapter still needs supported DSP,
+render/capture clock alignment, gap recovery, all-output reference coverage,
+permission/session ownership and physical/provider acceptance. Production reflection
+and microphone gating policies are unchanged.
+
+Verification and local generated-audio evidence are retained in
+`.quest-evidence/echo-processing`. The full web/shared suite passes 2,894 cases
+(14 new capture/ownership cases), lint, type checking and the production build.
+The source boundary guard passes. Existing Unity and Android candidate evidence
+remains separate; this increment changes no C# or native audio binary.
+
+The compiled browser fixture also passes in real headless Chrome with generated
+WAV microphone input: direct capture delivers nonzero PCM, the trigger confirms
+19,200 samples, and the connection handoff preserves 3,200 buffered samples plus
+continuing input. Both real microphone tracks end, no samples arrive after close,
+and no page errors or external requests occur. The detector reply is scripted;
+this is not a Whisper quality or provider test. Run `npm run test:capture:browser`
+with Chrome installed; CI runs the same compiled fixture. No physical microphone
+or speakers are used. Earlier development-server import stalls are retained and
+excluded from passing evidence; the final probe uses a production-compiled fixture
+and an ephemeral loopback server with a bounded runtime.

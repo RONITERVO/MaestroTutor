@@ -11,6 +11,7 @@ const ports = vi.hoisted(() => ({
   trackUsage: vi.fn(), flushUsage: vi.fn(), completeLog: vi.fn(), errorLog: vi.fn(),
   tokens: new Set<string>(),
   cameraConsent: true,
+  captureFactory: null as null | ((...args: any[]) => Promise<any>),
   outputFactory: null as null | ((...args: any[]) => Promise<any>),
 }));
 vi.mock('../../../api/gemini/client', () => ({ getAi: ports.getAi }));
@@ -32,7 +33,7 @@ vi.mock('../live/browserRuntime', async importOriginal => {
   const actual = await importOriginal<typeof import('../live/browserRuntime')>();
   return { ...actual, createBrowserLiveRuntime: (activity: Parameters<typeof actual.createBrowserLiveRuntime>[0]) => {
     const runtime = actual.createBrowserLiveRuntime(activity);
-    return { ...runtime, createSpeechOutput: ports.outputFactory ?? runtime.createSpeechOutput };
+    return { ...runtime, openPcmCapture: ports.captureFactory ?? runtime.openPcmCapture, createSpeechOutput: ports.outputFactory ?? runtime.createSpeechOutput };
   } };
 });
 
@@ -50,7 +51,7 @@ let contexts: FakeAudioContext[];
 let nodes: FakeWorklet[];
 let connections: any[];
 let sessions: ReturnType<typeof makeSession>[];
-let stopTrack: ReturnType<typeof vi.fn>;
+let stopTrack: ReturnType<typeof vi.fn<() => void>>;
 const makeSession = () => ({ close: vi.fn(() => { order.push('session.close'); }), sendRealtimeInput: vi.fn() });
 class FakeAudioContext {
   state = 'running'; sampleRate: number; destination = {}; baseLatency = 0; outputLatency = 0;
@@ -77,7 +78,7 @@ function harness() {
 beforeEach(() => {
   vi.resetAllMocks(); vi.useFakeTimers(); vi.setSystemTime(new Date('2026-09-23T12:00:00Z'));
   order = []; contexts = []; nodes = []; connections = []; sessions = []; ports.tokens.clear(); ports.cameraConsent = true;
-  ports.outputFactory = null;
+  ports.outputFactory = null; ports.captureFactory = null;
   stopTrack = vi.fn(() => { order.push('track.stop'); });
   vi.stubGlobal('AudioContext', FakeAudioContext); vi.stubGlobal('AudioWorkletNode', FakeWorklet);
   Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: ports.getUserMedia } });
@@ -92,6 +93,47 @@ beforeEach(() => {
 afterEach(async () => { cleanup(); await flush(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe('actual Live hook lifecycle before session-controller extraction', () => {
+  it('routes an injected microphone through the original Live packetizer and closes its exact owner', async () => {
+    let input!: (pcm: Int16Array) => void;
+    const capture = { sampleRate: 16000 as const, start: vi.fn(sink => { input = sink; }),
+      flush: vi.fn(async () => {}), close: vi.fn(async () => {}) };
+    ports.captureFactory = vi.fn(async () => capture);
+    const h = harness(); await h.start();
+    expect(contexts).toHaveLength(0); expect(nodes).toHaveLength(0);
+    expect(ports.getUserMedia).not.toHaveBeenCalled(); expect(capture.start).toHaveBeenCalledOnce();
+    input(new Int16Array(1600).fill(800)); await flush(); await advance(120);
+    expect(ports.encode).toHaveBeenCalled();
+    expect(sessions[0].sendRealtimeInput).toHaveBeenCalledWith({ audio: { data: 'AQID', mimeType: 'audio/pcm;rate=16000' } });
+    await act(async () => { await h.result.current.stop(); });
+    expect(capture.flush).toHaveBeenCalledOnce(); expect(capture.close).toHaveBeenCalledOnce();
+    const sent = sessions[0].sendRealtimeInput.mock.calls.length;
+    input(new Int16Array(1600).fill(700)); await flush(); await advance(120);
+    expect(sessions[0].sendRealtimeInput).toHaveBeenCalledTimes(sent);
+    expect(sessions[0].close).toHaveBeenCalledOnce();
+  });
+
+  it('uses the same capture factory for local detection and closes a stale injected owner', async () => {
+    const late = deferred<any>();
+    const old = { start: vi.fn(), flush: vi.fn(), close: vi.fn(async () => {}) };
+    const current = { sampleRate: 16000 as const, start: vi.fn(), flush: vi.fn(), close: vi.fn(async () => {}) };
+    const open = vi.fn().mockReturnValueOnce(late.promise).mockResolvedValue(current);
+    ports.captureFactory = open;
+    const h = harness(); let starting!: Promise<void>;
+    act(() => { starting = h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.USER_CAMERA_LIVE, playModelAudio: false }); });
+    await flush(); await h.start();
+    expect(open.mock.calls[0][0].signal.aborted).toBe(true);
+    late.resolve(old); await act(async () => { await starting; });
+    expect(old.close).toHaveBeenCalledOnce(); expect(old.start).not.toHaveBeenCalled();
+    expect(current.close).not.toHaveBeenCalled();
+    const triggerCapture = { transferTo: vi.fn(() => ({ bufferedPackets: 0, bufferedSamples: 0 })), flush: vi.fn(), close: vi.fn(async () => {}) };
+    ports.trigger.mockResolvedValueOnce({ pcm: new Int16Array(1600), transcript: 'hi', capture: triggerCapture });
+    await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER, gateInputOnSpeech: true, playModelAudio: false }); });
+    expect(ports.trigger.mock.calls[0][0].openCapture).toBe(open);
+    expect(open).toHaveBeenCalledTimes(2);
+    await act(async () => { await h.result.current.stop(); });
+    expect(triggerCapture.close).toHaveBeenCalledOnce(); expect(current.close).toHaveBeenCalledOnce();
+  });
+
   it('uses one injected output without a dry browser copy and waits for its native completion', async () => {
     const done = deferred<'drained' | 'cancelled'>();
     const output = { sampleRate: 24000, write: vi.fn(), reset: vi.fn(), dispose: vi.fn(), read: vi.fn(), drain: vi.fn(async () => 'drained'), finish: vi.fn(() => done.promise) };
@@ -387,7 +429,7 @@ describe('actual Live hook lifecycle before session-controller extraction', () =
   it('transfers confirmed pre-connect capture once and keeps the same microphone graph', async () => {
     const input = new FakeAudioContext({ sampleRate: 16000 }); const node = new FakeWorklet(input, 'capture');
     const transfer = vi.fn(() => ({ bufferedPackets: 1, bufferedSamples: 1600 }));
-    ports.trigger.mockResolvedValue({ transcript: 'Local words', pcm: new Int16Array(1600).fill(500), microphoneStream: { getTracks: () => [{ stop: stopTrack }] }, capture: { audioContext: input, workletNode: node, transferTo: transfer } });
+    ports.trigger.mockResolvedValue({ transcript: 'Local words', pcm: new Int16Array(1600).fill(500), capture: { transferTo: transfer, flush: ports.flushCapture, close: async () => { node.port.onmessage = null; node.disconnect(); stopTrack(); await input.close(); } } });
     const h = harness();
     await act(async () => { await h.result.current.start({ liveOpenTrigger: LIVE_OPEN_TRIGGER.WHISPER_OBSERVER, gateInputOnSpeech: true, playModelAudio: false }); });
     expect(ports.getUserMedia).not.toHaveBeenCalled();
