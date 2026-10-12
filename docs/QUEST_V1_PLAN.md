@@ -7630,3 +7630,18 @@ This does not wire the candidate into production or change canonical storage,
 per-entity room participation, world bounds or automatic residency. The room-owned
 geometry bridge, upload work budget, direct obstruction, capture, Android/AOT and
 Quest/Live acceptance remain required; production reflections stay disabled.
+
+### Candidate Android compilation boundary — 2026-10-12
+
+The isolated audio candidate passes 48 Windows native cases and a fresh ARM64
+IL2CPP build with High stripping. All native owners close on Windows, and the
+APK's required exports, reproducibly stripped library and static reverse callback
+are verified. Recorded source hashes and normal process exits are retained.
+See [the audio evidence and exact limits](../unity/AUDIO.md#candidate-android-aot-build--2026-10-12).
+
+The player probe uses nine synthetic streams and private output buffers; its
+Android execution and real audio-device path remain untested. This compilation
+checkpoint does not install a renderer, change the 907 application sources, enable
+reflections, use a release key or access Quest/providers. Production geometry,
+reservations, obstruction, shared capture and physical/performance acceptance
+remain open, along with the previously retained Meta map-worker fault.

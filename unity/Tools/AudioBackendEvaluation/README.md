@@ -424,3 +424,62 @@ direct obstruction, acoustic-material authoring, capture monitoring, Android/AOT
 sustained performance and physical Quest/Live acceptance remain open. No candidate
 backend is installed in the application, reflections remain disabled, and the
 retained Meta map-worker crash remains unresolved.
+
+### Android ARM64 build and AOT boundary
+
+`-OwnedLifecycle` now requires **48 passing cases**. The extracted candidate has
+separate runtime and test assemblies. Its rooted native log callback is a named
+static method with `MonoPInvokeCallback`, following Unity's
+[AOT callback requirements](https://docs.unity3d.com/6000.3/Documentation/Manual/scripting-restrictions.html).
+Android selects the pinned binding's ARM NEON baseline. No candidate files or
+vendor dependencies are added to the shipping Unity project.
+
+The build-only Android runner uses that same runtime in a fresh ignored project:
+
+```powershell
+./unity/Tools/AudioBackendEvaluation/Run-AndroidProbe.ps1 `
+  -UnityArchive C:/path/to/steamaudio_unity_4.8.1.zip `
+  -Editor C:/path/to/6000.3.24f1/Editor/Unity.exe `
+  -AndroidSdk C:/path/to/Android/Sdk `
+  -AndroidNdk C:/path/to/Android/Sdk/ndk/27.2.12479018 `
+  -Java C:/path/to/jdk-17 `
+  -Python python
+```
+
+It builds `com.maestro.audioprobe`, a development-only ARM64/IL2CPP APK with High
+managed stripping, minimum API 32 and target API 34. It uses ordinary debug
+signing, does not auto-run or install, and does not access the release key.
+The runner rejects another live Unity editor, restores editor toolchain settings,
+retains process/build reports, and verifies that recorded and prepared sources
+remain unchanged. APK verification requires ARM64 libraries, all 46 native
+functions used by the copied runtime, satisfied native dependencies, and the
+registered reverse callback in generated IL2CPP output. The test assembly must
+be absent. The packaged core library must match the pinned SDK after reproducing
+the exact NDK `llvm-strip --strip-unneeded` transformation; arbitrary native-byte
+changes still fail.
+
+The player contains a nine-stream ABI/ownership probe using synthetic PCM and
+private output buffers. It checks finite nonzero native samples, exact completion
+receipts and drained graph/mesh/instance ownership. Its result explicitly records
+no physical playback or provider use. On a future deliberate Android execution
+it writes `native-audio-probe.json` to its persistent-data directory and exits.
+This is not a Unity audio-device or XR perceptual test.
+
+Windows run `a8169aa26eff` passes all 48 cases, including that exact probe and the
+static callback check. All 69 graphs, 78 mesh owners and 79 instance owners close
+with zero native diagnostics; 29 input hashes match. The probe completes all nine
+streams with 43,200 submitted and played samples. Android build `5ce17a52dda5`
+passes with zero build errors/warnings, 31 matching input hashes, normal editor
+and wrapper exits, and verified debug signature. The package SHA-256 begins
+`068F7B73`; full receipts are in `.quest-evidence/audio-android`.
+
+The first Android build `89f8e9319c33` compiled successfully but its original
+verifier failed because symbol stripping changes the SDK library's raw bytes.
+The reproducible strip check passes for those retained bytes, and the complete
+corrected runner passes on the fresh build above. The failed receipt is preserved.
+All 907 application C# sources and ten protected unrelated files are unchanged.
+
+No Android execution, audio-device output, Quest performance, Live coexistence or
+Store acceptance is claimed. Production geometry/reservation/obstruction/capture
+integration remains open. Reflection output and automatic map scheduling remain
+disabled; the retained Meta map-worker crash remains unresolved.

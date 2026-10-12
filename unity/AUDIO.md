@@ -690,3 +690,24 @@ This is a renderer input boundary, not a second persistent scene or automatic
 world streaming. Direct obstruction, material authoring, capture monitoring,
 Android/AOT and Quest/Live acceptance remain open. No application runtime, saved
 schema, capability, reflection gate or device installation changed.
+
+### Candidate Android AOT build — 2026-10-12
+
+The isolated candidate now separates runtime, tests and build tools. Its native
+callback is static and annotated for IL2CPP; ARM uses the pinned NEON baseline.
+The 48-case Windows regression passes with all 69 graphs, 78 mesh owners and 79
+instance owners closed, zero diagnostics, matching source hashes and normal
+exits. A synthetic nine-stream player probe verifies native samples, exact
+completion and ownership without claiming audio-device playback.
+
+A fresh ARM64/IL2CPP development APK builds with High stripping, zero build errors
+or warnings, and 31 matching input hashes. Verification checks all 46 runtime C
+exports, packaged dependencies and generated callback registration. The native
+library exactly matches a reproducibly stripped copy of the pinned SDK. The
+initial verifier failure and corrected full run are retained. See the
+[reproduction instructions and evidence](Tools/AudioBackendEvaluation/README.md#android-arm64-build-and-aot-boundary).
+
+This is a separate debug-signed probe, not an application package or Android
+runtime acceptance. The 907 app sources remain unchanged. Production integration,
+shared capture, actual Android audio, sustained Quest performance and Live
+acceptance remain required; no reflection gate, release key or device changed.

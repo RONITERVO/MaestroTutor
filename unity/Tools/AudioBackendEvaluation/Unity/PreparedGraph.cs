@@ -19,14 +19,21 @@ namespace Maestro.AudioEvaluation
         internal readonly long Generation;
         internal static int Opened, Closed, Diagnostics;
         // Root the reverse-P/Invoke delegate for every context, including a retired one.
-        static readonly LogCallback Log = (level, message) =>
+        static readonly LogCallback Log = LogMessage;
+        [AOT.MonoPInvokeCallback(typeof(LogCallback))]
+        internal static void LogMessage(LogLevel level, string message)
         {
             if (level == LogLevel.Warning || level == LogLevel.Error)
             {
                 Interlocked.Increment(ref Diagnostics);
                 System.Console.Error.WriteLine(message);
             }
-        };
+        }
+#if UNITY_ANDROID && !UNITY_EDITOR
+        internal const SIMDLevel NativeSimd = SIMDLevel.NEON;
+#else
+        internal const SIMDLevel NativeSimd = SIMDLevel.SSE2;
+#endif
         readonly int[] playing = new int[MaximumVoices];
         readonly IntPtr[] sources = new IntPtr[MaximumVoices];
         readonly IntPtr[] reflections = new IntPtr[MaximumVoices];
@@ -102,7 +109,7 @@ namespace Maestro.AudioEvaluation
         }
         void Prepare()
         {
-            var settings = new ContextSettings { version = Constants.kVersion, simdLevel = SIMDLevel.SSE2,
+            var settings = new ContextSettings { version = Constants.kVersion, simdLevel = NativeSimd,
                                                  flags = ContextFlags.Validation, logCallback = Log };
             Check(API.iplContextCreate(ref settings, out context));
             var geometry = new SceneSettings { type = SceneType.Default };

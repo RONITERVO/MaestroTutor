@@ -14,9 +14,10 @@ EXPECTED = "9b7e3689561670e6b4b8e0c579a2d951bb4a0589f7d46c23bc9df923d62940f0"
 archive = Path(sys.argv[1]).resolve()
 project = Path(sys.argv[2]).resolve()
 mode = sys.argv[3] if len(sys.argv) > 3 else "stock"
-if mode not in {"stock", "owned"}:
+if mode not in {"stock", "owned", "android"}:
     raise ValueError("Unknown evaluation mode")
-owned = mode == "owned"
+owned = mode != "stock"
+android = mode == "android"
 source = Path(__file__).resolve().parent
 repo = source.parents[2]
 evidence = repo / ".quest-evidence/audio-unity"
@@ -45,9 +46,10 @@ with tarfile.open(fileobj=package, mode="r:gz") as content:
         if owned and name not in {
             "Assets/Plugins/SteamAudio/Scripts/Runtime/SteamAudio.cs",
             "Assets/Plugins/SteamAudio/Binaries/Windows/x86_64/phonon.dll",
+            *( ["Assets/Plugins/SteamAudio/Binaries/Android/arm64/libphonon.so"] if android else [] ),
         }:
             continue
-        if "/Binaries/" in name and "/Windows/x86_64" not in name:
+        if "/Binaries/" in name and "/Windows/x86_64" not in name and not (android and name.endswith("/Android/arm64/libphonon.so")):
             continue
         if name.endswith(("GPUUtilities.dll", "TrueAudioNext.dll")):
             continue
@@ -85,20 +87,42 @@ packages.mkdir()
     "com.unity.modules.physics": "1.0.0", "com.unity.modules.terrain": "1.0.0",
     "com.unity.modules.imgui": "1.0.0", "com.unity.modules.jsonserialize": "1.0.0"
 }}, indent=2), encoding="utf-8")
-tests = project / "Assets/Evaluation"
-tests.mkdir()
-files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmControls.cs", "PcmTransformBinding.cs", "PcmPresentationTests.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "GeometryAudioTests.cs"] if owned else ["CandidateTests.cs"]
-for name in files:
-    shutil.copyfile(source / "Unity" / name, tests / name)
+evaluation = project / "Assets/Evaluation"
+evaluation.mkdir()
+runtime = evaluation / "Runtime" if owned else evaluation
+runtime.mkdir(exist_ok=True)
+tests = evaluation / "Tests" if owned else evaluation
+tests.mkdir(exist_ok=True)
+if owned:
+    runtime_files = ["NativeDsp.cs", "AcousticFrame.cs", "PreparedGraph.cs", "PreparedGraph.Motion.cs", "OwnedLifecycle.cs", "OwnedLifecycle.Motion.cs", "PcmVoice.cs", "PreparedGraph.Pcm.cs", "PreparedGraph.Tails.cs", "PcmControls.cs", "PcmTransformBinding.cs", "AcousticSceneData.cs", "PreparedGraph.Geometry.cs", "RuntimeAssembly.cs", "NativePlayerProbe.cs"]
+    test_files = ["OwnedLifecycleTests.cs", "MovingAudioTests.cs", "PcmAudioTests.cs", "PcmTailTests.cs", "PcmAdmissionTests.cs", "PcmPresentationTests.cs", "GeometryAudioTests.cs", "NativePlayerTests.cs"]
+    for name in runtime_files:
+        shutil.copyfile(source / "Unity" / name, runtime / name)
+    for name in test_files:
+        shutil.copyfile(source / "Unity" / name, tests / name)
+    (runtime / "Maestro.AudioCandidate.Runtime.asmdef").write_text(json.dumps({
+        "name": "Maestro.AudioCandidate.Runtime", "references": ["Maestro.NativeBinding"]
+    }, indent=2), encoding="utf-8")
+else:
+    shutil.copyfile(source / "Unity/CandidateTests.cs", tests / "CandidateTests.cs")
 (tests / "Maestro.AudioCandidate.Tests.asmdef").write_text(json.dumps({
-    "name": "Maestro.AudioCandidate.Tests", "references": ["Maestro.NativeBinding"] if owned else ["SteamAudioUnity"],
+    "name": "Maestro.AudioCandidate.Tests", "references": ["Maestro.NativeBinding", "Maestro.AudioCandidate.Runtime"] if owned else ["SteamAudioUnity"],
     "optionalUnityReferences": ["TestAssemblies"]
 }, indent=2), encoding="utf-8")
 if owned:
-    shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book/SpeechPcmStream.cs", tests / "SpeechPcmStream.cs")
-    shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometry.cs", tests / "AcousticGeometry.cs")
+    for name in ["SpeechPcmStream.cs", "AcousticGeometry.cs"]:
+        shutil.copyfile(repo / "unity/MaestroQuest/Assets/Maestro/Runtime/Book" / name, runtime / name)
     binding = project / "Assets/Plugins/SteamAudio"
     (binding / "Maestro.NativeBinding.asmdef").write_text(json.dumps({"name": "Maestro.NativeBinding"}), encoding="utf-8")
     if not (binding / "Binaries/Windows/x86_64/phonon.dll").exists():
         raise ValueError("Missing pinned native library")
+if android:
+    editor = evaluation / "Editor"
+    editor.mkdir()
+    shutil.copyfile(source / "Unity/AndroidCandidateBuild.cs", editor / "AndroidCandidateBuild.cs")
+    (editor / "Maestro.AudioCandidate.Editor.asmdef").write_text(json.dumps({
+        "name": "Maestro.AudioCandidate.Editor", "references": [], "includePlatforms": ["Editor"]
+    }, indent=2), encoding="utf-8")
+    if not (binding / "Binaries/Android/arm64/libphonon.so").exists():
+        raise ValueError("Missing pinned ARM64 library")
 print("Prepared isolated Unity project: " + str(project))
