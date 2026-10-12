@@ -8100,3 +8100,28 @@ these failures by silently gating the learner or disabling authored audio. Nativ
 backend selection, actual speech/Quest timing, app lease integration and complete
 reference coverage remain open. All broader world/release requirements and existing
 device/provider/release holds remain in force.
+
+
+### Locate the echo regression and compare alternatives — 2026-10-12
+
+The rejected unguarded APM control already loses overlapping desired input in its
+linear output, before final suppression. Instrumentation preserves every normal
+quality result row; 36 impulse cases establish the linear output's separate 4 ms
+lead. Each comparison uses its own near-only baseline. This rejects weakening the
+final suppressor as the fix and keeps raw/linear bypass out of supported profiles.
+
+Fresh full-rate SpeexDSP controls pass the original twelve aligned cases but fail
+parts of the overlapping-signal and changing-room suites. A longer filter does not
+meet recovery deadlines; the standard residual stage adds a quiet-onset failure;
+a fixed playback-history offset improves some delay cases without completing the
+matrix. No quality threshold, three-second recovery window or authored-audio
+requirement was relaxed. See the [stage and backend evidence](../unity/Tools/EchoProcessing/TONAL_DIAGNOSIS.md).
+
+Before committing to custom DSP maintenance, evaluate platform session processing
+as another implementation of the same single capture owner. Android documents an
+AEC/effects-session route, but its availability, complete output coverage and
+quality on Quest are unverified. Device capability, effect activation and measured
+acceptance must remain distinct. Keep app/Live/STT ownership, actual PCM and all
+source references shared; do not stack two cancellers or silently replace a failed
+candidate with raw input. The app implementation, installed audio policy and broader
+world/release requirements remain unchanged. Existing device/provider holds apply.
