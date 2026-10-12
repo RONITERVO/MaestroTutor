@@ -1,19 +1,15 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 #pragma once
+#include "DeviceAudioClock.h"
 #include <array>
 #include <cstdint>
 #include <memory>
 namespace maestro {
-// Device timestamps retain provenance. They are not callback arrival times and
-// do not by themselves calibrate acoustic latency or align a playback clock.
-struct CaptureStamp {
-    int64_t position = 0, time_ns = 0;
-};
 struct CaptureFrame {
     uint64_t epoch = 0, sequence = 0;
     int64_t first_position = 0;
-    CaptureStamp hardware;
+    DeviceAudioStamp hardware;
     int64_t query_started_ns = 0, query_finished_ns = 0;
 };
 enum class CaptureRead { Waiting, Frame, Invalid, Faulted, Closed };
@@ -26,7 +22,7 @@ public:
     virtual bool Start() = 0;
     virtual int Ready() = 0; // 1 started, 0 starting, negative disconnected/error.
     virtual int Read(float* samples, int capacity) = 0; // Nonblocking, actual count.
-    virtual int Timestamp(CaptureStamp& stamp) = 0; // 1 available, 0 not yet, negative error.
+    virtual int Timestamp(DeviceAudioStamp& stamp) = 0; // 1 available, 0 not yet, negative error.
     virtual int64_t Position() = 0;
     virtual int Xruns() = 0;
     virtual int64_t Now() = 0; // CLOCK_MONOTONIC nanoseconds, same as Timestamp.
@@ -53,7 +49,7 @@ private:
     CaptureRead Fail(CaptureFault reason);
     std::unique_ptr<CaptureDevice> device_;
     std::array<float, Samples> pending_{};
-    CaptureStamp last_stamp_{};
+    DeviceAudioStamp last_stamp_{};
     uint64_t epoch_, sequence_ = 0;
     int pending_count_ = 0, xruns_ = 0;
     int64_t started_ns_ = 0, last_now_ = 0, last_frame_ns_ = 0;

@@ -22,7 +22,7 @@ public:
     int Read(float* samples, int capacity) override {
         return stream_ ? AAudioStream_read(stream_, samples, capacity, 0) : -1;
     }
-    int Timestamp(CaptureStamp& stamp) override {
+    int Timestamp(DeviceAudioStamp& stamp) override {
         if (!stream_) return -1;
         const auto result = AAudioStream_getTimestamp(stream_, CLOCK_MONOTONIC, &stamp.position, &stamp.time_ns);
         if (result == AAUDIO_OK) return 1;

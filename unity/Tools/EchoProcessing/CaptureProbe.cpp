@@ -16,7 +16,7 @@ struct State {
     int starts=0, reads=0, closes=0, destroys=0, ready=1, timestamp=1, xruns=0;
     bool start_ok=true, closed=false, read_error=false, xrun_during_read=false;
     int64_t now=1000000000, position=0, jump_after_read=0;
-    CaptureStamp stamp{480,990000000};
+    DeviceAudioStamp stamp{480,990000000};
     std::vector<int> chunks;
     float sample=.125f;
 };
@@ -36,7 +36,7 @@ public:
         s->now+=s->jump_after_read;
         return count;
     }
-    int Timestamp(CaptureStamp& stamp) override { if(s->timestamp==1) stamp=s->stamp; return s->timestamp; }
+    int Timestamp(DeviceAudioStamp& stamp) override { if(s->timestamp==1) stamp=s->stamp; return s->timestamp; }
     int64_t Position() override { return s->position; }
     int Xruns() override { return s->xruns; }
     int64_t Now() override { return s->now; }

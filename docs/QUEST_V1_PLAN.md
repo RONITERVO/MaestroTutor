@@ -7952,3 +7952,31 @@ coverage, align/resample independent clocks with explicit gap handling, then fee
 the existing echo processor and shared PCM consumers. Actual route changes,
 timestamp quality, permissions and speech require Quest/Live acceptance. No app
 capture backend is selected, and device/provider/release holds remain in force.
+
+
+### Native playback ownership and hardware presentation — 2026-10-12
+
+An isolated callback-based AAudio output now complements the native capture owner.
+It accepts the caller's final stereo mix, preserves its exact callback output for
+echo reference, and uses device frame positions and monotonic presentation stamps.
+Bounded source/reference rings, explicit known silence on producer underfill and
+terminal faults on device gaps prevent unknown audio from being treated as valid
+reference. Shutdown stays on the owning worker and fences the callback before
+releasing sample storage. Already spatialized content opts out of another platform
+spatialization pass.
+
+Twenty-two scripted playback groups cover ownership, variable callback sizes,
+backpressure, silence, timestamp failures, hardware-gated completion, ring wrap,
+concurrent transfer and closure. The 120,000 concurrent source frames are sample
+coverage, not separate tests. Capture's 20 scenarios and AEC quality groups remain
+in the same reproducible runner; Android linkage is separate from execution.
+The initial stress driver incorrectly treated expected shutdown as a failure;
+that attempt remains recorded, and the corrected driver distinguishes it from an
+unexpected callback stop.
+
+Next: establish the shared capture/output clock and measured-delay policy, handle
+drift/gaps, and connect the original PCM owners without duplicate acquisition or
+provider logic. All-audible reference coverage and actual Quest/Live acceptance
+remain required. This candidate is not selected in the app. The broader shared
+world, collision, regional activation and release gates remain open; device,
+provider and release holds remain in force.

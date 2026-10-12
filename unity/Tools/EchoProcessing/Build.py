@@ -22,7 +22,8 @@ INPUTS = {
 }
 APM_MIRROR_SHA256 = "35e86b986d02ea15f3d04741a1a5a735ba399bc0fac0ee089c39480e35fc3253"
 SOURCES = ("EchoProcessor.h", "EchoProcessor.cpp", "Probe.cpp", "meson.build", "Build.py", "Make-SpeechFixtures.ps1",
-    "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp")
+    "CaptureInput.h", "CaptureInput.cpp", "AndroidCaptureDevice.cpp", "CaptureProbe.cpp",
+    "DeviceAudioClock.h", "PlaybackOutput.h", "PlaybackOutput.cpp", "AndroidPlaybackDevice.cpp", "PlaybackProbe.cpp")
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -203,30 +204,34 @@ def main():
             for name in ("create", "reset", "render", "capture", "destroy"):
                 if "maestro_echo_" + name not in symbols:
                     raise RuntimeError("Missing native ABI export")
-            capture_binary = build / "maestro-probe/maestro_capture_probe"
-            run([readelf, "-h", "-l", "-d", "-Ws", capture_binary], "android-capture-elf", 30)
-            capture_metadata = (output / "android-capture-elf.log").read_text()
-            capture_loads = [line for line in capture_metadata.splitlines() if line.lstrip().startswith("LOAD ")]
-            capture_needed = re.findall(r"\(NEEDED\).*?\[([^]]+)\]", capture_metadata)
-            if ("AArch64" not in capture_metadata or not capture_loads or
-                any(int(line.split()[-1], 16) < 16384 for line in capture_loads) or
-                set(capture_needed) - {"libaaudio.so", "liblog.so", "libm.so", "libdl.so", "libc.so"} or
-                "libaaudio.so" not in capture_needed or "AAudioStream_getTimestamp" not in capture_metadata):
-                raise RuntimeError("Unexpected Android capture probe linkage")
-            record["captureProbe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(capture_binary),
-                "androidNeeded": capture_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in capture_loads],
-                "deviceOpened": False}
+            for label in ("capture", "playback"):
+                device_binary = build / ("maestro-probe/maestro_" + label + "_probe")
+                run([readelf, "-h", "-l", "-d", "-Ws", device_binary], "android-" + label + "-elf", 30)
+                device_metadata = (output / ("android-" + label + "-elf.log")).read_text()
+                device_loads = [line for line in device_metadata.splitlines() if line.lstrip().startswith("LOAD ")]
+                device_needed = re.findall(r"\(NEEDED\).*?\[([^]]+)\]", device_metadata)
+                if ("AArch64" not in device_metadata or not device_loads or
+                    any(int(line.split()[-1], 16) < 16384 for line in device_loads) or
+                    set(device_needed) - {"libaaudio.so", "liblog.so", "libm.so", "libdl.so", "libc.so"} or
+                    "libaaudio.so" not in device_needed or "AAudioStream_getTimestamp" not in device_metadata or
+                    (label == "playback" and "AAudioStream_getFramesWritten" not in device_metadata)):
+                    raise RuntimeError("Unexpected Android " + label + " probe linkage")
+                record[label + "Probe"] = {"status": "cross-compiled-not-executed", "binarySha256": digest(device_binary),
+                    "androidNeeded": device_needed, "androidLoadAlignment": [int(line.split()[-1], 16) for line in device_loads],
+                    "deviceOpened": False}
             record["status"] = "cross-compiled-not-executed"
         else:
             binary = build / "maestro-probe" / ("maestro_echo.dll" if args.platform == "windows" else "libmaestro_echo.so")
             executable = build / "maestro-probe" / ("maestro_echo_probe.exe" if args.platform == "windows" else "maestro_echo_probe")
-            capture_executable = build / "maestro-probe/maestro_capture_probe.exe"
-            run([capture_executable], "capture-probe", 30)
-            capture_summary = json.loads((output / "capture-probe.log").read_text().splitlines()[-1])
-            if (capture_summary.get("status") != "passed" or capture_summary.get("captureCases") != 20 or
-                capture_summary.get("deviceOpened") is not False or capture_summary.get("physicalAudio") is not False):
-                raise RuntimeError("Incomplete scripted capture result")
-            record["captureProbe"] = capture_summary
+            for label, expected_cases in (("capture", 20), ("playback", 22)):
+                device_executable = build / ("maestro-probe/maestro_" + label + "_probe.exe")
+                run([device_executable], label + "-probe", 30)
+                device_summary = json.loads((output / (label + "-probe.log")).read_text().splitlines()[-1])
+                if (device_summary.get("status") != "passed" or device_summary.get(label + "Cases") != expected_cases or
+                    device_summary.get("deviceOpened") is not False or device_summary.get("physicalAudio") is not False or
+                    (label == "playback" and device_summary.get("concurrentSourceFrames") != 120000)):
+                    raise RuntimeError("Incomplete scripted " + label + " result")
+                record[label + "Probe"] = device_summary
             run([executable], "probe", 90)
             lines = (output / "probe.log").read_text().splitlines()
             summary = json.loads(lines[-1])

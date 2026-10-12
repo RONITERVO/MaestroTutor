@@ -1054,3 +1054,27 @@ for requested preset, buffering, freshness limits and thread ownership. No app
 permission or focus hook, native bridge, measured render-clock alignment, drift
 resampling or sole-capture lease integration exists yet. The module therefore
 remains outside the app, with the original browser/Live capture owner unchanged.
+
+
+## Timestamped Android playback endpoint — 2026-10-12
+
+The isolated native evaluation now also owns a callback-driven AAudio output for
+an already spatialized stereo/48 kHz final mix. It records the exact callback PCM,
+including known silence during queue underfill, in a bounded reference ring.
+One worker submits audio, drains references and observes hardware presentation;
+the callback only transfers samples and signals faults. Closing fences callbacks
+before clearing storage. Device xruns, gaps, reference overflow and invalid clocks
+retire the endpoint rather than fabricating continuity.
+
+Completion requires hardware presentation to reach the final source frame.
+Callback consumption alone is insufficient; stale, foreign or superseded clock
+observations cannot complete playback. Capture and playback share the platform
+frame/time type, but clock pairing, measured delay and drift correction are still
+separate work. This prevents treating a Unity listener observation as speaker time.
+
+The runner includes 22 scripted playback groups and 120,000-frame concurrent
+transfer, alongside the existing 20 capture cases. Neither opens hardware.
+Android cross-compilation includes the actual AAudio callback/timestamp functions.
+The endpoint is outside Unity Assets and does not replace the current audio path.
+Connecting the final mix, original output/capture leases and complete audible-source
+coverage, then verifying real Quest lifecycles and speech, remain promotion gates.

@@ -133,6 +133,45 @@ query is `AAudioStream_getFormat` (the guide's `getDataFormat` example does not
 compile against this NDK). AAudio stream access and close are serialized on the
 owner's worker, as required by the platform's thread-safety contract.
 
+## Timestamped playback endpoint
+
+`PlaybackOutput` is an optional device endpoint for the caller's final stereo
+float/48 kHz mix. It does not decode or spatialize sources. Its Android adapter
+marks that mix as already spatialized and disables another platform spatialization
+pass (available at the minimum API 32). The application does not select it yet.
+
+One worker owns submission, reference reads, clock queries and shutdown. One
+AAudio callback consumes queued PCM and publishes an exact copy of its output,
+including known zero samples when the producer underfills a callback. Two fixed
+half-second rings provide bounded backpressure. The callback performs no allocation,
+locking, clock query, file/network access or stream shutdown. A full reference ring
+stops the endpoint instead of silently losing reference audio; a device xrun is a
+fatal timing gap, separate from known queue-underfill silence. All faults require
+a new owner and epoch. Close fences callbacks before clearing storage.
+
+Variable callback sizes are assembled into 480-frame references with epoch,
+sequence and device-frame position. `DeviceAudioStamp` is shared with capture and
+retains platform frame/time observations without claiming clock calibration.
+Playback completion requires a fresh hardware presentation timestamp reaching the
+last submitted source sample, not merely callback consumption. Foreign, superseded,
+unavailable and stale observations cannot establish completion. Device disconnect,
+clock rollback, impossible presentation positions or missed timestamp deadlines
+retire the endpoint. Readiness/progress deadlines match the capture boundary.
+
+The playback probe covers 22 scripted scenario groups, including concurrent
+submission/reference transfer of 120,000 ordered source frames and closure with a
+callback in flight. Repeated assertions are not additional test cases. Windows
+runs these alongside the 20 capture cases and AEC evaluation. Android cross-links
+the real callback factory, timestamp and frame-position imports; it does not run
+on a device. No microphone or speaker is opened by either scripted probe.
+
+This endpoint is not yet connected to Unity's final mix or `PcmOutputLease`.
+Hardware route behaviour, callback shutdown and timestamp accuracy still require
+Quest acceptance. Pairing input/output clocks, drift resampling and gap handling
+remain unimplemented, as do complete WebView/platform-audio reference coverage
+and integration with the original sole `PcmCapture` owner. Unity DSP time and a
+monotonic observation alone must not be treated as hardware presentation timing.
+
 ## Reproducible profiles and open quality findings
 
 `--profile stock` is the default and keeps the original APM configuration.

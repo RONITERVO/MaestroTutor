@@ -26,3 +26,10 @@ capture_lib = static_library('maestro_capture', ['CaptureInput.cpp', 'AndroidCap
 capture_probe = executable('maestro_capture_probe', 'CaptureProbe.cpp',
   link_with: capture_lib, dependencies: capture_deps, install: false)
 test('scripted-capture-ownership', capture_probe, timeout: 30)
+
+playback_deps = capture_deps + [dependency('threads')]
+playback_lib = static_library('maestro_playback', ['PlaybackOutput.cpp', 'AndroidPlaybackDevice.cpp'],
+  dependencies: playback_deps, install: false)
+playback_probe = executable('maestro_playback_probe', 'PlaybackProbe.cpp',
+  link_with: playback_lib, dependencies: playback_deps, install: false)
+test('scripted-playback-ownership', playback_probe, timeout: 30)

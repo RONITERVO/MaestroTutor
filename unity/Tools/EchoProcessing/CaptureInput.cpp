@@ -46,7 +46,7 @@ CaptureRead CaptureInput::Read(float* output, int count, CaptureFrame& frame) {
     const int ready = device_->Ready();
     if (ready < 0) return Fail(CaptureFault::Device);
     if (!ready) return stamped_ ? Fail(CaptureFault::Device) : CaptureRead::Waiting;
-    CaptureStamp stamp;
+    DeviceAudioStamp stamp;
     const int result = device_->Timestamp(stamp);
     const int64_t after = device_->Now();
     if (after < before) return Fail(CaptureFault::Clock);
