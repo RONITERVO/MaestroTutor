@@ -24,7 +24,7 @@ namespace Maestro.Quest.Creation
             if(version!=1||!Guid.TryParseExact(id,"N",out _)||name==null||name.Length>80||name.Any(char.IsControl))return false;
             if(kind=="clip") {
                 error="An imported clip needs an exact asset hash, its inspected duration and canonical inactive tone fields";
-                if(!ModelLibrary.ValidHash(assetHash)||!Range(seconds,.03f,30)||wave!="sine"||frequency!=440||endFrequency!=440||attack!=.01f||release!=.04f||seed!=1)return false;
+                if(!ModelLibrary.ValidHash(assetHash)||!Range(seconds,.03f,(float)WaveAudio.MaximumSeconds)||wave!="sine"||frequency!=440||endFrequency!=440||attack!=.01f||release!=.04f||seed!=1)return false;
                 error=null;return true;
             }
             if(!string.IsNullOrEmpty(assetHash)){error="A procedural tone cannot reference an imported clip";return false;}

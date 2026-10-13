@@ -26,6 +26,7 @@ namespace Maestro.Quest.Programs
         public virtual string Domain=>"room";
         public abstract string Duration {get;}
         // Trusted native I/O deadline, never a user-program argument. Animation loading stays at 30s.
+        internal const float MaximumCompletionTimeoutSeconds=660;
         internal virtual float CompletionTimeoutSeconds=>30;
         internal virtual int MaximumCreatedObjects(JObject arguments)=>((JObject)OutputSchema["properties"]).Properties().Count(p=>(string)p.Value["x-resource"]=="object");
         public virtual string Ownership=>Channels.Count==0?"none":"exclusiveTargetAndProp";

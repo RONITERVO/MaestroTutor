@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Maestro.Quest.Avatar;
 using Maestro.Quest.Book;
+using Maestro.Quest.Imports;
 using Maestro.Quest.Interaction;
 using UnityEngine;
 namespace Maestro.Quest.Creation
@@ -35,7 +36,8 @@ namespace Maestro.Quest.Creation
             internal PcmOutputLease Renderer;
             internal AudioSource Output => Renderer?.Source;
             internal SpeechPcmStream Stream => Renderer?.Stream;
-            internal short[] Samples;
+            internal AudioPcmAsset Asset;
+            internal short[] Samples=>Asset?.ResidentSamples;
             internal AudioReservations.Lease Resource;
             internal short[] Producer=new short[SpeechPcmStream.MaxChunk];
             internal bool Complete,Closed;
@@ -66,8 +68,8 @@ namespace Maestro.Quest.Creation
             var v=new Instance {Id=Guid.NewGuid().ToString("N"),Target=target,Emitter=emitter,Source=definition.id,SourceRevision=editor.AudioRevision(definition.id),ObjectRevision=editor.ObjectRevision(target),ProgressAt=Time.realtimeSinceStartupAsDouble,Session=editor.TemporarySessionId,Item=item,Attachment=config.Copy(),Definition=JsonUtility.ToJson(config),CacheKey=JsonUtility.ToJson(definition),Loop=loop,Gain=config.gain};
             try {
                 decoded.TryGetValue(v.CacheKey,out var cached);var recipe=definition.Copy();
-                v.Resource=AudioReservations.Acquire(cached,recipe,new RoomResourceOwner(editor.WorldIdentity,target,"audio"),v.Id,emitter,v.SourceRevision,
-                    cancel=>recipe.kind=="clip"?editor.Sounds.DecodeAsync(recipe.assetHash,cancel,recipe.seconds):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return pcm;},cancel));
+                v.Resource=AudioReservations.AcquireSource(cached,recipe,new RoomResourceOwner(editor.WorldIdentity,target,"audio"),v.Id,emitter,v.SourceRevision,
+                    cancel=>recipe.kind=="clip"?editor.Sounds.PrepareAsync(recipe.assetHash,recipe.seconds,cancel):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return AudioPcmAsset.Resident(pcm);},cancel));
                 decoded[v.CacheKey]=v.Resource.Resource;instances.Add(v.Id,v);Note(v);voice=v;error=null;return true;
             } catch(Exception e){Close(v,e.Message);error="Could not prepare room sound: "+e.Message;return false;}
         }
@@ -81,7 +83,7 @@ namespace Maestro.Quest.Creation
             if(!asset.Pending.IsCompleted)return false;
             if(asset.Pending.IsCanceled||asset.Pending.IsFaulted){_=asset.Pending.Exception;Close(v,"The sound could not be decoded");return false;}
             try {
-                v.Samples=asset.Pending.Result;var config=v.Attachment;
+                v.Asset=asset.Pending.Result;var config=v.Attachment;
                 v.ProgressAt=Time.realtimeSinceStartupAsDouble;
                 v.Renderer=PcmOutputLease.Open(transform,"World sound "+v.Emitter,
                     new SpeechPcmStream(AudioSettings.dspTime+.1,PcmOutputLease.DeviceTail),
@@ -91,11 +93,17 @@ namespace Maestro.Quest.Creation
         }
         void Pump(Instance v)
         {
+            try{PumpAvailable(v);}catch(Exception){Close(v,"The sound source could not supply its next samples");}
+        }
+        void PumpAvailable(Instance v)
+        {
             var state=v.Stream.Read(AudioSettings.dspTime);
             if(state.Faulted||state.Closed){Close(v,"Audio output stopped consuming samples");return;}
-            while((v.Loop||v.Written<v.Samples.Length)&&state.Submitted-state.Played<24000*7) {
-                int count=v.Loop?v.Producer.Length:(int)Math.Min(v.Producer.Length,v.Samples.Length-v.Written);
-                for(int at=0;at<count;){int source=(int)((v.Written+at)%v.Samples.Length),take=Math.Min(count-at,v.Samples.Length-source);Array.Copy(v.Samples,source,v.Producer,at,take);at+=take;}
+            while((v.Loop||v.Written<v.Asset.Frames)&&state.Submitted-state.Played<24000*7) {
+                int count=v.Loop?v.Producer.Length:(int)Math.Min(v.Producer.Length,v.Asset.Frames-v.Written);
+                int source=(int)(v.Written%v.Asset.Frames);
+                count=v.Asset.Read(source,v.Producer,Math.Min(count,v.Asset.Frames-source));
+                if(count==0)break; // Pending disk/decoder work is not EOF.
                 if(!v.Stream.TryWrite(v.Sequence+1,v.Producer,count,AudioSettings.dspTime,out var error)){Close(v,error);return;}
                 v.Sequence++;v.Written+=count;state=v.Stream.Read(AudioSettings.dspTime);
             }
@@ -103,7 +111,7 @@ namespace Maestro.Quest.Creation
             else if(Time.realtimeSinceStartupAsDouble-v.ProgressAt>3){Close(v,"Audio output did not consume its queued samples");return;}
             v.Cursor=state.Played/(double)AudioTone.SampleRate;
             if(v.Phase=="preparing"&&state.Played>0){v.Phase="playing";Note(v);}
-            if(!v.Loop&&v.Written==v.Samples.Length&&!state.InputComplete) {
+            if(!v.Loop&&v.Written==v.Asset.Frames&&!state.InputComplete) {
                 if(!v.Stream.TryComplete(v.Sequence,out var error)){Close(v,error);return;}
                 state=v.Stream.Read(AudioSettings.dspTime);
             }
@@ -148,7 +156,7 @@ namespace Maestro.Quest.Creation
             v.Closed=true;v.Error=error;v.Phase=phase??(v.Complete?"completed":"failed");Note(v);v.Renderer?.Dispose();
             var resource=v.Resource?.Resource;v.Resource?.Dispose();v.Resource=null;
             if(resource!=null&&resource.Retiring&&decoded.TryGetValue(v.CacheKey,out var cached)&&ReferenceEquals(resource,cached))decoded.Remove(v.CacheKey);
-            v.Samples=null;v.Producer=null;v.Renderer=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
+            v.Asset=null;v.Producer=null;v.Renderer=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
         }
         void CloseAll(string reason){foreach(var voice in instances.Values.ToArray())Cancel(voice,reason);}
         void LateUpdate(){foreach(var voice in instances.Values.ToArray())Tick(voice);PruneDecoded();}

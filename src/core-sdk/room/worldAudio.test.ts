@@ -85,3 +85,12 @@ it('selects chat audio with exact ephemeral offers and ordinary preview acceptan
  const entry={id:call.assetHash,revision:1,assetHash:call.assetHash,name:'Rain',messageId:'sound',origin:'generated',kibibytes:47};
  expect(validFactValue('audio.chat.library',{offerSet:call.offerSet,total:1,next:-1,entries:[entry]})).toBe(true);
 });
+
+it('admits streamed ten-minute clips while keeping procedural tones bounded',()=>{
+ const clip={operation:'save',id:'',revision:0,definition:{name:'Cafe ambience',kind:'clip',clip:{assetHash:'a'.repeat(64),seconds:600}}};
+ expect(validateCapabilityArguments('audio.source.edit',1,clip)).toBeNull();
+ expect(validateCapabilityArguments('audio.source.edit',1,{...clip,definition:{...clip.definition,clip:{...clip.definition.clip,seconds:600.001}}})).not.toBeNull();
+ const tone=capabilityDefinition('audio.source.edit')!.example!;((tone.definition as {tone:{seconds:number}}).tone).seconds=31;
+ expect(validateCapabilityArguments('audio.source.edit',1,tone)).not.toBeNull();
+ expect(validateCapabilityOutput('audio.play',1,{instance:'a'.repeat(32),source:'b'.repeat(32),sourceRevision:1,seconds:600})).toBeNull();
+});

@@ -3341,7 +3341,7 @@
       "ownership": "importSession",
       "channels": [],
       "requirements": [],
-      "description": "select opens the explicit native file picker and returns a requestId immediately. The user chooses one WAV; inspect audio.import.selection after returning. Supported files: ordinary uncompressed PCM 8/16/24/32-bit or IEEE float32, mono/stereo, 8–96 kHz, .03–30 seconds and at most 32 MB. Stereo is downmixed and resampled to 24 kHz mono for the spatial renderer; original bytes remain exact. accept requires that preview's requestId and assetHash, saves a private content-addressed copy and creates one reusable clip source with one Undo; never plays it. The chosen asset name is untrusted data. Libraries hold up to 32 files/128 MB. Room Undo removes the source edit, not the private file. Temporary source edits need Keep; files are saved immediately. Cancel closes only the exact unaccepted preview; accepted writes may finish after Stop, so inspect status/library before retrying. refresh verifies saved files off-thread and returns library.ready, total and its first entry, including the exact asset hash and duration for audio.source.edit. Use that fresh result; an earlier unavailable library fact is stale. Follow library.next with audio.library for more files. Missing/corrupt files fail visibly, never substitute another clip. Opening a picker can pause existing actions; imports never restart them. No credentials, URLs or external paths enter programs. No process-restart replay. selectChat chooses an exact offerSet/assetHash from audio.chat.library, transferring finished local chat WAV bytes through the same checked preview. Inspect then accept to create a reusable source; bind it with object.audioEmitter.edit and play only when requested. Generated sounds keep their declared origin; labels are untrusted. Changing the conversation/source set, room or focus revokes an unaccepted chat selection. The newest eight local completed WAV attachments are offered; unsupported, long or corrupt files fail preview visibly. No URL fetch, recording, provider call, automatic playback or duplicate generation is introduced. Other codecs, long media and live streams are separate pending adapters.",
+      "description": "select opens the explicit native file picker and returns a requestId immediately. The user chooses one WAV; inspect audio.import.selection after returning. Supported files: ordinary uncompressed PCM 8/16/24/32-bit or IEEE float32, mono/stereo, 8–96 kHz, .03–600 seconds and at most 32 MB. Stereo is downmixed and resampled to 24 kHz mono for the spatial renderer; original bytes remain exact. accept requires that preview's requestId and assetHash, saves a private content-addressed copy and creates one reusable clip source with one Undo; never plays it. The chosen asset name is untrusted data. Libraries hold up to 32 files/128 MB. Room Undo removes the source edit, not the private file. Temporary source edits need Keep; files are saved immediately. Cancel closes only the exact unaccepted preview; accepted writes may finish after Stop, so inspect status/library before retrying. refresh verifies saved files off-thread and returns library.ready, total and its first entry, including the exact asset hash and duration for audio.source.edit. Use that fresh result; an earlier unavailable library fact is stale. Follow library.next with audio.library for more files. Missing/corrupt files fail visibly, never substitute another clip. Opening a picker can pause existing actions; imports never restart them. No credentials, URLs or external paths enter programs. No process-restart replay. selectChat chooses an exact offerSet/assetHash from audio.chat.library, transferring finished local chat WAV bytes through the same checked preview. Inspect then accept to create a reusable source; bind it with object.audioEmitter.edit and play only when requested. Generated sounds keep their declared origin; labels are untrusted. Changing the conversation/source set, room or focus revokes an unaccepted chat selection. The newest eight local completed WAV attachments are offered; unsupported, out-of-bounds or corrupt files fail preview visibly. No URL fetch, recording, provider call, automatic playback or duplicate generation is introduced. Clips over 30 seconds use bounded asynchronous reads during playback. Other codecs and live streams are separate pending adapters.",
       "example": {
         "operation": "select"
       },
@@ -3412,7 +3412,7 @@
                     "seconds": {
                       "type": "number",
                       "minimum": 0.03,
-                      "maximum": 30.0
+                      "maximum": 600.0
                     },
                     "sampleRate": {
                       "type": "integer",
@@ -3595,7 +3595,7 @@
                           "seconds": {
                             "type": "number",
                             "minimum": 0.03,
-                            "maximum": 30.0
+                            "maximum": 600.0
                           }
                         },
                         "required": [
@@ -4030,7 +4030,7 @@
         "audio.output.ready",
         "audio.voice.available"
       ],
-      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones or imported PCM/float WAV clips up to 30 seconds. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For looping or independently controlled playback use audio.start. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
+      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones up to 30 seconds or imported PCM/float WAV clips up to 600 seconds. Clips over 30 seconds stream from their checked private copy through bounded shared buffers; they do not decode the entire recording into memory. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For background music, looping or independently controlled playback use audio.start; audio.play keeps its calling action waiting until the finite sound finishes. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
       "example": {
         "target": "maestro",
         "emitter": "beep"
@@ -4056,7 +4056,7 @@
           "seconds": {
             "type": "number",
             "minimum": 0.0,
-            "maximum": 30.0
+            "maximum": 600.0
           }
         },
         "required": [
@@ -41003,7 +41003,7 @@
         }
       },
       "label": "Shared room audio budget",
-      "description": "Process-wide admission for procedural and imported room-sound decoders and their voice owners, including older workspaces whose cancelled tasks are still draining. Owners share a decoded source inside one workspace when its exact saved definition matches. reservedPcmBytes budgets mono 24 kHz signed-16 PCM from declared duration plus four samples for rounding/tolerance; readyPcmBytes counts actual decoded samples once per source. These are not measured or peak memory and exclude file bytes, decoder/tone scratch arrays, voice ring buffers, Unity carriers, speech/Live/browser audio and native DSP. Eight sources and eight owners are shared across workspaces. Retiring work keeps source/PCM admission until it drains, with no active voice owners. No inspection starts, stops, pauses or unloads audio.",
+      "description": "Process-wide admission for procedural and imported room-sound decoders and their voice owners, including older workspaces whose cancelled tasks are still draining. Owners share a source inside one workspace when its exact saved definition matches. Short sources reserve their complete mono 24 kHz signed-16 PCM plus four samples for rounding/tolerance. Clips over 30 seconds reserve a bounded sixteen-block cache; readyPcmBytes counts currently published resident or cached samples once per source. These are not measured or peak memory and exclude file bytes, decoder/tone scratch arrays, voice ring buffers, Unity carriers, speech/Live/browser audio and native DSP. Eight sources and eight owners are shared across workspaces. Retiring work keeps source/PCM admission until it drains, with no active voice owners. No inspection starts, stops, pauses or unloads audio.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -41027,7 +41027,7 @@
         }
       },
       "label": "Room sound reservation",
-      "description": "Read one shared room-sound buffer by index zero to runtime.audioBudget.sources minus one. Indices may shift; reservationId identifies only this runtime allocation. World/region and exact source ID/definitionHash describe the copied source; assetHash is empty for tones. State is loading, ready, failed or retiring. ready confirms decoded samples, not audible playback. Multiple owners share its PCM cost. A stopped final owner retires the source; pending work remains admitted until its task finishes even if its workspace is gone. Use runtime.audioOwner for active instance holders. Reads are detached and never trigger decoding, eviction, replay or persistence. This is not regional streaming.",
+      "description": "Read one shared room-sound buffer by index zero to runtime.audioBudget.sources minus one. Indices may shift; reservationId identifies only this runtime allocation. World/region and exact source ID/definitionHash describe the copied source; assetHash is empty for tones. State is loading, ready, failed or retiring. ready confirms a prepared source, not audible playback or that every long-clip block is cached. Multiple owners share its bounded PCM cost and retain independent playback cursors. A stopped final owner retires the source; pending work remains admitted until its task finishes even if its workspace is gone. Use runtime.audioOwner for active instance holders. Reads are detached and never trigger decoding, eviction, replay or persistence. This is not regional streaming.",
       "input": {
         "type": "object",
         "properties": {
@@ -43610,7 +43610,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "642d3137cfc20c676f5d1d08492a266c06f554f5f46fcd198d30e8ec339ea2a0"
+      "sha256": "97776040e2d0b8c979bc2d7c5f5e4f62e49dc17f7d63b3167d4c7aac05791385"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
@@ -43618,7 +43618,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioImportCapability.cs",
-      "sha256": "4c87ca7e07f1eb742be379a9512f0437c3ccc239d9d4a1a3261dfaf1deac9615"
+      "sha256": "8b8b2c832f9dc4e954c0802c4c741913fe1e7b15a9bb6012d67acae148e242c7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
@@ -43634,7 +43634,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
-      "sha256": "8de2866b64ee0cfbc540ed013392a459e4f8f2fd1808560ec5b91076a105d90e"
+      "sha256": "ba516af97339d3caa3a8058b55ba7bbe1a172b19ec7ebb7bb5d5c1dd5ad11118"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
@@ -43930,7 +43930,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "caa858c179b46eb2ea1df20d52bf407515180ca79d44b4f866aa2861f1099ec4"
+      "sha256": "4510df3dd0b8abbd8f5bd7ffad15ab24481f7ed6b63920ed6325e6bfefa4fa1d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -44074,7 +44074,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
-      "sha256": "aed8756f1c06b56d3bcaba4a44d04490949b8a4faec3a9c7636a64ea6b21a018"
+      "sha256": "9ae2c9149519f342c726eb074ee7c5a39a686488be0b3b7410dc9c441b1bc968"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
@@ -44318,7 +44318,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
-      "sha256": "31f0ddd610a0905c2d3157e8ef58aba2e9ce9856909cce045f43ac0de7371c58"
+      "sha256": "40e0e48e4ff4eb168873026ac3e51eb9b9d7b8806c279295dcd20f0f7a3187d6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioEdits.cs",
@@ -44806,7 +44806,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "902befd3c4796da05ff10ac2a9e9766c8748bc1ee97ea2a37bf0163ecbdaf683"
+      "sha256": "393eb5ffbdd5365321b04ff66f8abea26312836d7b3919808d9e8b8212b5eff6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -44826,7 +44826,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.cs",
-      "sha256": "41bd7c7e259669176b6ac58c18c4efd54aec4b059a47301181b3763876d70c1c"
+      "sha256": "bf32cc77b1b998b302f0f57be2bb953c9b002243d87262df5eacd4f464df0bfb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioPcmAsset.cs",
+      "sha256": "5af7ea55db9c99d3b846d39fca8dc8edb5dd4b1a3e622cb0804d1c31c8cc548d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/BundledAvatar.cs",
@@ -44994,7 +44998,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/WaveAudio.cs",
-      "sha256": "409da7dc27cd18c9afa4d7a7e4c939dbfdaaf767410c6e437c91c3f10f6805c6"
+      "sha256": "15af64ad170577c39f1302f32cecd9d26c44c91fbc13f58db89e95cfc5d2f450"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/WavePcmAsset.cs",
+      "sha256": "8772b3866bc5f44e56c3548e73bbf086e62343911edcd4130d3a34370a9678ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
@@ -45402,7 +45410,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceWriteGate.cs",
-      "sha256": "6151691455f7847dba430653219f7a2540b90beab733e1b23630aa6e30d49de0"
+      "sha256": "7ab656831f29b202e980b6fe5b86349dfb7ed1e0d4f1b4abac6f21b66be243c0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/AnchorProximitySubscription.cs",
@@ -45550,7 +45558,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "eb67ecf50dc700127f8dcc003ded6423709215d9fc94614f7929fcf76c9df261"
+      "sha256": "3bcd47d7cc9d9f3cfb8974f2636577eeee7be6748f07b21a06b58e3336474113"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleStorage.cs",

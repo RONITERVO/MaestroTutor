@@ -25,14 +25,14 @@ namespace Maestro.Quest.Creation
             internal readonly long ReservedBytes;
             internal readonly CancellationTokenSource Cancel=new();
             internal readonly List<Lease> Owners=new();
-            internal Task<short[]> Pending;
+            internal Task<AudioPcmAsset> Pending;
             internal volatile bool Retiring;
             internal Entry(RoomAudioDefinition definition,RoomResourceOwner owner,string hash)
             {
                 World=owner.World;Region=owner.Region;Source=definition.id;Kind=definition.kind;AssetHash=definition.assetHash??"";DefinitionHash=hash;
                 // Imported duration is compared within 0.0001 s before decoding.
                 // Four extra samples cover that tolerance and float rounding.
-                ReservedBytes=(checked((long)Math.Ceiling((double)definition.seconds*AudioTone.SampleRate))+4)*sizeof(short);
+                ReservedBytes=definition.kind=="clip"&&definition.seconds>WaveAudio.ResidentSeconds?WavePcmAsset.MaximumPcmBytes:(checked((long)Math.Ceiling((double)definition.seconds*AudioTone.SampleRate))+4)*sizeof(short);
             }
         }
         internal sealed class Lease:IDisposable
@@ -44,7 +44,7 @@ namespace Maestro.Quest.Creation
             internal Lease(Entry value,RoomResourceOwner owner,string instance,string emitter,int revision){Resource=value;Owner=owner;Instance=instance;Emitter=emitter;SourceRevision=revision;}
             public void Dispose()
             {
-                Entry retiring=null;Task<short[]> pending=null;
+                Entry retiring=null;Task<AudioPcmAsset> pending=null;
                 lock(gate){
                     var value=Resource;if(value==null)return;Resource=null;value.Owners.Remove(this);
                     if(value.Owners.Count==0){value.Retiring=true;retiring=value;pending=value.Pending;}
@@ -55,6 +55,8 @@ namespace Maestro.Quest.Creation
         }
         internal static bool VoiceAvailable {get{lock(gate)return entries.Sum(e=>e.Owners.Count)<MaximumOwners;}}
         internal static Lease Acquire(Entry cached,RoomAudioDefinition definition,RoomResourceOwner owner,string instance,string emitter,int revision,Func<CancellationToken,Task<short[]>> loader)
+            =>AcquireSource(cached,definition,owner,instance,emitter,revision,loader==null?null:async cancel=>AudioPcmAsset.Resident(await loader(cancel).ConfigureAwait(false)));
+        internal static Lease AcquireSource(Entry cached,RoomAudioDefinition definition,RoomResourceOwner owner,string instance,string emitter,int revision,Func<CancellationToken,Task<AudioPcmAsset>> loader)
         {
             if(definition==null||!definition.Validate(out _)||owner==null||owner.Role!="audio"||owner.World.Length==0||owner.Region.Length==0||owner.Target.Length==0||
                 !Guid.TryParseExact(instance,"N",out _)||string.IsNullOrEmpty(emitter)||emitter.Length>24||revision<1||loader==null)throw new ArgumentException("Invalid audio resource owner or source");
@@ -75,16 +77,19 @@ namespace Maestro.Quest.Creation
                 var lease=new Lease(entry,owner,instance,emitter,revision);entry.Owners.Add(lease);return lease;
             }
         }
-        static async Task<short[]> Prepare(Func<CancellationToken,Task<short[]>> loader,CancellationToken cancel,long reserved)
+        static async Task<AudioPcmAsset> Prepare(Func<CancellationToken,Task<AudioPcmAsset>> loader,CancellationToken cancel,long reserved)
         {
-            var samples=await loader(cancel).ConfigureAwait(false);
-            if(samples==null||samples.Length==0||samples.LongLength*sizeof(short)>reserved)throw new InvalidOperationException("Decoded sound exceeds its admitted PCM budget");
-            return samples;
+            var asset=await loader(cancel).ConfigureAwait(false);
+            try{
+                cancel.ThrowIfCancellationRequested();
+                if(asset==null||asset.Frames<1||asset.CapacityBytes>reserved||asset.BufferedBytes>asset.CapacityBytes)throw new InvalidOperationException("Decoded sound exceeds its admitted PCM budget");
+                return asset;
+            }catch{if(asset!=null)await asset.Close().ConfigureAwait(false);throw;}
         }
         static async Task Observe(Task task){try{await task.ConfigureAwait(false);}catch(Exception){}}
-        static async Task Drain(Entry entry,Task pending)
+        static async Task Drain(Entry entry,Task<AudioPcmAsset> pending)
         {
-            try{await pending.ConfigureAwait(false);}catch(Exception){}
+            try{var asset=await pending.ConfigureAwait(false);await asset.Close().ConfigureAwait(false);}catch(Exception){}
             finally{lock(gate){entries.Remove(entry);entry.Pending=null;entry.Cancel.Dispose();}}
         }
         internal static JObject ObserveBudget()
@@ -92,11 +97,11 @@ namespace Maestro.Quest.Creation
             lock(gate)return new JObject{["sources"]=entries.Count,["owners"]=entries.Sum(e=>e.Owners.Count),["retiring"]=entries.Count(e=>e.Retiring),
                 ["reservedPcmBytes"]=entries.Sum(e=>e.ReservedBytes),["readyPcmBytes"]=entries.Sum(ReadyBytes),["sourceLimit"]=MaximumSources,["ownerLimit"]=MaximumOwners,["pcmByteLimit"]=MaximumPcmBytes};
         }
-        static long ReadyBytes(Entry entry)=>entry.Pending?.Status==TaskStatus.RanToCompletion?entry.Pending.Result.LongLength*sizeof(short):0;
+        static long ReadyBytes(Entry entry)=>entry.Pending?.Status==TaskStatus.RanToCompletion?entry.Pending.Result.BufferedBytes:0;
         internal static JObject ObserveReservation(int index)
         {
             lock(gate){if(index<0||index>=entries.Count)return null;var e=entries[index];
-                string state=e.Retiring?"retiring":e.Pending.IsCanceled||e.Pending.IsFaulted?"failed":e.Pending.IsCompleted?"ready":"loading";
+                string state=e.Retiring?"retiring":e.Pending.IsCanceled||e.Pending.IsFaulted||(e.Pending.Status==TaskStatus.RanToCompletion&&e.Pending.Result.Failure!=null)?"failed":e.Pending.IsCompleted?"ready":"loading";
                 return new JObject{["reservationId"]=e.Id,["worldId"]=e.World,["regionId"]=e.Region,["sourceId"]=e.Source,["kind"]=e.Kind,["assetHash"]=e.AssetHash,["definitionHash"]=e.DefinitionHash,
                     ["state"]=state,["owners"]=e.Owners.Count,["reservedPcmBytes"]=e.ReservedBytes,["readyPcmBytes"]=ReadyBytes(e)};
             }

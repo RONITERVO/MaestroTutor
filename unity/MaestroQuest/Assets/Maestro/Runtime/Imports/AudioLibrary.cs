@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Persistence;
@@ -53,6 +54,32 @@ namespace Maestro.Quest.Imports {
                 if(expectedSeconds.HasValue&&Math.Abs(asset.Inspection.Seconds-expectedSeconds.Value)>.0001)throw new InvalidDataException("The saved sound duration differs from the exact clip; inspect and save the source again.");
                 return await Task.Run(()=>WaveAudio.Decode(asset.Content,cancel),cancel).ConfigureAwait(false);
             }finally{decoders.Release();}
+        }
+        internal async Task<AudioPcmAsset> PrepareAsync(string hash,float expectedSeconds,CancellationToken cancel=default){
+            if(expectedSeconds<=WaveAudio.ResidentSeconds)return AudioPcmAsset.Resident(await DecodeAsync(hash,cancel,expectedSeconds).ConfigureAwait(false));
+            using var opening=workspace.Write();await decoders.WaitAsync(cancel).ConfigureAwait(false);
+            try{
+                await writes.WaitAsync(cancel).ConfigureAwait(false);
+                try{return await Task.Run(()=>OpenStream(hash,expectedSeconds,cancel),cancel).ConfigureAwait(false);}
+                finally{writes.Release();}
+            }finally{decoders.Release();}
+        }
+        AudioPcmAsset OpenStream(string hash,float expectedSeconds,CancellationToken token){
+            string path=AssetPath(hash);WorkspaceArchive.NoLink(directory);WorkspaceArchive.NoLink(path);
+            FileStream input=null;IDisposable retention=null;
+            try{
+                retention=workspace.RetainRead();input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
+                var info=WaveAudio.Inspect(input,token);
+                if(Math.Abs(info.Seconds-expectedSeconds)>.0001)throw new InvalidDataException("The saved sound duration differs from the exact clip; inspect and save the source again.");
+                using(var digest=IncrementalHash.CreateHash(HashAlgorithmName.SHA256)){
+                    input.Position=0;var buffer=new byte[65536];int count;
+                    while((count=input.Read(buffer,0,buffer.Length))>0){token.ThrowIfCancellationRequested();digest.AppendData(buffer,0,count);}
+                    string actual=BitConverter.ToString(digest.GetHashAndReset()).Replace("-","").ToLowerInvariant();
+                    if(actual!=hash)throw new InvalidDataException("This sound's private copy is damaged. Import the original WAV again.");
+                }
+                var first=WaveAudio.DecodeBlock(input,in info,0,Math.Min(WavePcmAsset.BlockFrames,WaveAudio.OutputFrames(in info)),token);token.ThrowIfCancellationRequested();
+                var result=new WavePcmAsset(input,info,first,decoders,token,retention);input=null;retention=null;return result;
+            }finally{input?.Dispose();retention?.Dispose();}
         }
         public async Task SaveAsync(AudioAsset asset,CancellationToken cancel=default){
             if(asset==null)throw new ArgumentNullException(nameof(asset));using var use=workspace.Write();await writes.WaitAsync(cancel).ConfigureAwait(false);

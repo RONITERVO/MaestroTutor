@@ -1395,3 +1395,11 @@ gain is zero; this tests ownership/consumption, not audible quality. It captures
 edits. Image transfer remains covered in the same journey. These offline cases
 use scripted providers and synthetic assets, with no microphone, real-provider
 or physical headset acceptance.
+
+The chat-audio fixture now lasts 32 seconds to cross the resident-decoding limit.
+The Headless journey still selects and accepts exact chat bytes and undoes its
+source; the original Book attaches that source to an emitter and waits for all
+32 seconds of native PCM consumption at zero gain. Its receipt must report the
+exact source and duration. The timeout follows that finite fixture duration.
+This exercises the streaming path without a provider, microphone or headset,
+and does not establish audible quality or Quest performance.

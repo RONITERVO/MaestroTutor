@@ -9149,3 +9149,56 @@ and read the current sound-definition version. Evidence: `.quest-evidence/chat-s
 No headset, paid-provider, signing, deployment or Meta action was performed.
 Whole-world physics admission, running-world retention, automatic unloading off
 and existing world limits remain unchanged. V1 release work remains active.
+
+
+### Longer WAV recordings share bounded playback — 2026-10-13
+
+Accepted WAV sources now support 0.03–600 seconds within the existing 32 MiB
+file and 32-file/128 MiB private library bounds. Short clips remain resident;
+clips over thirty seconds keep an exact hash-verified file and a shared cache of
+at most sixteen one-second PCM blocks. The same source definition, emitter,
+voice owner, controls, event programs, imports, chat transfer and Undo apply.
+Tones retain their thirty-second limit; saved identities and formats are unchanged.
+
+The global two-worker lane handles file reads and resampling. Every playback has
+its own consumed position, pause state and output ring while sharing source
+blocks. Missing blocks report preparation, never completion. Only native PCM
+consumption and the output tail complete a finite play. Stop cancels the last
+source owner and retains its reservation until pending work and the file close.
+Immutable reader retention allows archive reads and makes workspace retirement
+wait for file closure without counting a playing recording as an active write.
+Existing freeze policies still apply. Eight-source/eight-voice admission and the
+process-wide PCM ceiling remain; each long-source cache reserves 768,000 bytes.
+These counters exclude temporary source reads, per-voice rings and downstream DSP.
+
+The common catalog exposes matching duration and receipt limits. `audio.start`
+starts background music independently of its initiating task; `audio.play` waits
+for the finite sound. Imports never implicitly play. Other codecs, live sources,
+echo/capture coexistence and physical acoustic acceptance remain separate work.
+
+Verification: **1,193 EditMode / 1,461 PlayMode passed**, with three expected
+optional private-asset skips. New coverage compares block/resident resampling,
+bounded file reads and cache eviction, independent playback/pause/resume/stop,
+waiting-worker cancellation, damaged files, archive reads and workspace retirement.
+The native player also consumed the complete thirty-two-second recording.
+
+Fresh Headless `de11d36dce0547c28f16db27eb6a0011` passed with **878 observations**;
+Original Book `0fbe9b706e36476894dfde8c1e5d255e` passed. Both clients/editors exited
+zero. The same thirty-two-second finished chat WAV went through ordinary transfer,
+preview and exact-hash acceptance; the book attached its emitter, consumed all
+samples and undid the edits. Playback used zero gain and its rendered completion
+receipt was inspected. These are scripted-provider/synthetic-asset checks, not
+audible or physical-device acceptance.
+
+**2,925 web tests across 312 files** passed, along with build, lint, probe types,
+asset integrity, prompt ownership and core boundaries. **77 refreshed native-fixture
+consumers** also passed. Native catalog equality
+and all **982 frozen C# hashes** match the source and build mirror. Evidence is
+in `.quest-evidence/streamed-sounds/` and the two owned journey directories.
+The initial focused pause test was corrected to allow already-submitted device
+audio to finish before measuring a fixed paused cursor; the complete run includes
+that correction and an independent resume assertion.
+
+No headset, paid-provider, signing, deployment or Meta work was performed.
+Whole-world physics admission, running-world retention, automatic unloading off
+and the current world limits remain unchanged. V1 release work remains active.

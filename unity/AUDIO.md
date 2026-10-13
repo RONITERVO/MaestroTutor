@@ -74,8 +74,9 @@ samples. A construction module on its own contains references, not embedded audi
 its destination needs the same library assets or a complete workspace transfer.
 
 The first file adapter accepts ordinary RIFF/WAVE PCM 8/16/24/32-bit or IEEE float32,
-mono/stereo, 8–96 kHz, .03–30 seconds and up to 32 MiB. Extensible/compressed WAV,
-MP3/OGG, longer media and live streams need further adapters. The private library
+mono/stereo, 8–96 kHz, .03–600 seconds and up to 32 MiB. Clips over 30 seconds
+use bounded asynchronous sample loading. Extensible/compressed WAV, MP3/OGG
+and live streams need further adapters. The private library
 holds at most 32 files/128 MiB. Original bytes are preserved; playback deliberately
 downmixes stereo and resamples with an anti-aliasing filter to the existing 24 kHz
 mono transport. It is not a stereo music player. Two cancellable decoding workers
@@ -1151,5 +1152,38 @@ The original app still owns generation, managed/BYOK access and its messages.
 There is no second provider client, implicit URL download, recording or automatic
 playback. WAV duration/codec/library/voice limits above still apply: a long or
 invalid WAV may be offered but fails checked preview with a visible reason. More
-codecs, longer media and live sources remain required adapters. This transfer
-implementation is not audible, microphone coexistence or Quest acceptance.
+codecs and live sources remain required adapters. Longer WAV clips now use the
+bounded source described below. This transfer implementation is not audible, microphone coexistence or Quest acceptance.
+
+## Bounded playback for longer WAV recordings
+
+Imported clips may last up to ten minutes within the unchanged 32 MiB file,
+32-file/128 MiB library, eight-source and eight-voice limits. Tones stay limited
+to thirty seconds. Clips at most thirty seconds use the resident decoder; longer
+clips use a held, hash-verified private file and a shared cache of at most sixteen
+one-second PCM blocks. Every voice retains its own consumed position, pause state,
+loop choice and output queue. There is no separate long-sound playback owner.
+
+The same global two-worker decode lane prepares short clips and long-clip blocks.
+Disk reads and low-pass resampling occur off-thread. Global sample indices and
+complete filter support preserve resampling across block boundaries. A cache miss
+returns preparation, never EOF or fabricated progress. Playback feeds only actual
+samples; completion still waits for native consumption and the device tail. File
+or decoder failure is terminal and visible. Stop removes the exact voice; the last
+owner cancels further loading and retains admission until work and the file drain.
+
+`runtime.audioBudget` and `runtime.audioReservation` report reserved cache capacity
+and currently published PCM bytes. They do not report measured peak process memory;
+source-read scratch storage, per-voice rings and downstream DSP remain separate.
+The process-wide PCM ceiling is unchanged. One long-source cache reserves 768,000
+bytes instead of allocating its full recording. A workspace reader pin does not
+make a playing song a write blocker for backup; existing native freeze policies
+still apply. Retirement waits for the file to close.
+
+The source, emitter, playback, control and import schemas remain the same shared
+catalog. Their clip duration bounds and finite playback deadline now agree on
+ten-minute recordings. Use `audio.start` for background music that should outlive
+its starting task; `audio.play` waits for its finite recording to finish. No audio
+is played on import. Existing short sources and saved IDs remain valid. Live input,
+compressed formats, microphone coexistence and physical audibility remain separate
+implementation and acceptance work.

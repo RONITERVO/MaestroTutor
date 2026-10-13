@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Imports;
 using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -19,7 +20,7 @@ namespace Maestro.Quest.Programs
         internal static JObject Key()=>Text("^[a-zA-Z][a-zA-Z0-9_]{0,23}$",24);
         static JObject Format(JObject schema,string format){schema["format"]=format;return schema;}
         internal const string ClipFeature="audioClips.v1";
-        internal static JObject Clip()=>Object(new JObject {["assetHash"]=Text("^[a-f0-9]{64}$",64),["seconds"]=Number(.03,30)});
+        internal static JObject Clip()=>Object(new JObject {["assetHash"]=Text("^[a-f0-9]{64}$",64),["seconds"]=Number(.03,WaveAudio.MaximumSeconds)});
         internal static JObject Source(){
             var tone=Format(Object(new JObject {["name"]=Text("^.{0,80}$",80),["kind"]=Choice("tone"),["tone"]=Object(new JObject {["wave"]=Choice("sine","triangle","noise"),["frequency"]=Number(20,10000),["endFrequency"]=Number(20,10000),["seconds"]=Number(.03,30),["attack"]=Number(.005,2),["release"]=Number(.005,2),["seed"]=Number(1,int.MaxValue,true)})}),"worldAudioSource");
             var clip=Object(new JObject {["name"]=Text("^.{0,80}$",80),["kind"]=Choice("clip"),["clip"]=Clip()});clip["x-features"]=new JArray(ClipFeature);tone["title"]="Generated tone";clip["title"]="Imported WAV clip";
@@ -82,13 +83,13 @@ namespace Maestro.Quest.Programs
         public override string Id=>"audio.play";
         public override string Label=>"Play an object's sound";
         public override string Duration=>"completion";
-        internal override float CompletionTimeoutSeconds=>40;
+        internal override float CompletionTimeoutSeconds=>(float)WaveAudio.MaximumSeconds+30;
         public override string Ownership=>"exclusiveChannels";
         public override IReadOnlyList<string> Channels=>new[]{"audioEmitter"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","audio.emitter.configured","audio.output.ready","audio.voice.available"};
-        public override string Description=>"Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones or imported PCM/float WAV clips up to 30 seconds. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For looping or independently controlled playback use audio.start. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.";
+        public override string Description=>"Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones up to 30 seconds or imported PCM/float WAV clips up to 600 seconds. Clips over 30 seconds stream from their checked private copy through bounded shared buffers; they do not decode the entire recording into memory. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For background music, looping or independently controlled playback use audio.start; audio.play keeps its calling action waiting until the finite sound finishes. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.";
         public override JObject InputSchema=>AudioSchema.Featured(Object(new JObject {["target"]=AudioSchema.Target(),["emitter"]=AudioSchema.Key()}));
-        public override JObject OutputSchema=>Object(new JObject {["instance"]=AudioSchema.Id(),["source"]=AudioSchema.Id(),["sourceRevision"]=Revision(),["seconds"]=Number(0,30)});
+        public override JObject OutputSchema=>Object(new JObject {["instance"]=AudioSchema.Id(),["source"]=AudioSchema.Id(),["sourceRevision"]=Revision(),["seconds"]=Number(0,WaveAudio.MaximumSeconds)});
         public override JObject Example=>new(){["target"]="maestro",["emitter"]="beep"};
         public override BehaviourCatalog.Claim[] Claims(JObject a)=>new[]{new BehaviourCatalog.Claim("audio:"+(string)a["target"]+":"+(string)a["emitter"],"audioEmitter")};
         public override bool CanRun(CapabilityContext c,JObject a,out string error){error="The sound emitter or source is missing";var item=c.Editor?c.Editor.Find((string)a["target"]):null;var emitter=c.Editor?c.Editor.Read((string)a["target"])?.audioEmitters?.FirstOrDefault(e=>e.id==(string)a["emitter"]):null;if(!item||!item.isActiveAndEnabled||emitter==null||c.Editor.ReadAudio(emitter.source)==null)return false;var audio=c.Editor.GetComponent<WorldAudio>();if(audio)return audio.Available(out error);error=null;return true;}

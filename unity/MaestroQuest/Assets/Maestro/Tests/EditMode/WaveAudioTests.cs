@@ -42,7 +42,7 @@ namespace Maestro.Quest.Tests {
             var chunk=File();for(int i=40;i<44;i++)chunk[i]=255;Assert.Throws<InvalidDataException>(()=>WaveAudio.Inspect(chunk));
             var compressed=File();compressed[20]=2;Assert.Throws<InvalidDataException>(()=>WaveAudio.Inspect(compressed));
             Assert.Throws<InvalidDataException>(()=>WaveAudio.Inspect(File(seconds:.01)));
-            Assert.Throws<InvalidDataException>(()=>WaveAudio.Inspect(File(seconds:30.1)));
+            Assert.Throws<InvalidDataException>(()=>WaveAudio.Inspect(File(rate:8000,bits:8,seconds:600.1)));
         }
         [Test] public void OptionalChunksAndOddPaddingAreRespected(){
             var original=File(rate:8000,bits:8,seconds:.030125);var extra=Encoding.ASCII.GetBytes("JUNK").Concat(new byte[]{1,0,0,0,7,0}).ToArray();
