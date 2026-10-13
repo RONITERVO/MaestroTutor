@@ -1,6 +1,10 @@
 # Quest 3 development verification — updated 2026-10-06
 
-Current installed development checkpoint: **D522191F**, with the shared animated
+For the current installed version and active device holds, use the
+[delivery record](QUEST_V1_PLAN.md). Dated entries below describe their own builds;
+they do not establish acceptance of later source.
+
+Historical 2026-10-06 installed checkpoint: **D522191F**, with the shared animated
 icons and optional physical authoring trays hidden at startup. Exact installed
 APK bytes were verified again for the controller-pouring check below. The app is
 stopped; synthetic input and owned forwards are released, and debug properties
@@ -3801,3 +3805,33 @@ frame, then one on a scanned wall's exact surface layer. No ink is required.
 
 Desktop evidence is recorded in `QUEST_AGENT_RELEASE_COVERAGE.md`; it establishes
 source and rendering behavior in the test environment, not physical acceptance.
+
+## Finite grounded walking — pending device acceptance
+
+The 2026-10-13 source adds `object.navigate` to the shared catalog. No new install
+or headset test is implied. Resume this acceptance only after the existing device
+hold is lifted and an appropriate development build is installed.
+
+1. In a checked aligned room with physics explicitly running, create a Box robot
+   and use the book's Walk to a place form. Confirm gradual movement, visible
+   arrival and the matching native result. Repeat with Maestro and the selected
+   walking animation; a creation needs its own authored animation for a gait.
+2. Put a solid obstacle on a route. The body must stop and report failure rather
+   than passing through it or reporting arrival. Check personal clearance while
+   remaining in an open physical area. This body proxy does not certify limb contact.
+3. Use a virtual-only environment profile on a character with accepted virtual
+   ground below the scanned floor. It must follow that ground; another character
+   configured for real-room collisions must retain those collisions. Test shallow
+   water/avoid policies separately from unsupported swimming.
+4. Stop or grip a travelling object, pause physics, or lose tracking. Movement must
+   cease without jumping, and must not resume on its own when readiness returns.
+   Change the viewed world's placement during a permitted walk and confirm that
+   its destination remains fixed in authored coordinates.
+5. Run an animated robot and Maestro together, then several eligible creations.
+   Check frame times, warmth and comfort; the action permits at most four concurrent
+   walks. This limit has desktop admission coverage, not Quest performance proof.
+
+Real managed and BYOK novice requests for this action remain acceptance work under
+the paid-provider hold. Reuse ordinary chat delegation and observations when that
+work resumes; a scripted client or successful action receipt alone is not a claim
+that the model chose the right object, destination or collision policy.

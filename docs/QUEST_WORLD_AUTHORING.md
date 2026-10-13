@@ -1021,3 +1021,48 @@ The current whole-world physics admission and running-world retention remain in
 force. Automatic native unloading stays disabled, and the current 64-object,
 25-metre and four-height-field limits are unchanged. Dense rain-driven level
 updates still require Quest performance acceptance before release.
+
+## Finite grounded travel — 2026-10-13
+
+`object.navigate` adds one shared “Walk to a place” action for Maestro and eligible
+creations. The original book generates its form from the same native catalog the
+agent inspects and programs call. Its destination is an authored foot position;
+its output is the actual root position and travelled distance. It owns locomotion
+(and Maestro gaze) until actual arrival, failure or cancellation. An elapsed timer
+alone cannot produce an arrival receipt. Replaying a completed receipt cannot
+start another journey.
+
+Travel reuses the existing `RoomNavigation`, ground motor, water policy and spatial
+input preparation. It does not start physics or a scan. Per-object environment
+profiles determine whether scanned floor/walls participate: a virtual-only actor
+can travel down virtual terrain below the real floor while another actor still
+uses the room. Moving the viewed world retains the authored destination. Missing
+native inputs hold the last accepted pose without replaying elapsed displacement.
+Solid obstructions stop travel; bounded detours around finite water reuse the
+existing follow route search. This is not general obstacle avoidance or swimming.
+
+Maestro uses the selected walk animation. A created robot can animate its recipe
+parts while its root travels; this action does not automatically invent a gait for
+an arbitrary imported model. Collision uses an upright body proxy sized from
+accepted root colliders, or Maestro's existing proxy, rather than animated limbs.
+Physical anchors, terrain owners, connected assemblies and bodies outside the
+supported dimensions refuse. The original user hand/controller controls retain
+priority. Stop, changed targets, grabs, missing tracking, paused physics and
+workspace replacement end the action at the last accepted placement. Successful
+steps periodically update runtime placement without adding Undo entries per step.
+No walking job resumes merely because saved data is loaded.
+
+Four concurrent walks, a five-minute lifetime, 0.2–1.2 metres/second and the current
+25-metre authored-world boundary keep work bounded. Existing spatial-input waits
+and whole-world physics retention still apply. This adds neither regional
+streaming nor a second navigation or behavior engine. Broader NPC steering,
+animation retargeting/foot planting, swimming and large-world residency remain
+separate work.
+
+Focused native checks cover created and Maestro travel, actual animation,
+interruption, obstacle refusal, water routing, same-place completion, below-room
+travel, moved-world coordinates, passive readiness, lifecycle cleanup and bounded
+concurrency. The shared headless and original-book journeys also exercise creation,
+walking and readback on an explicitly synthetic floor. Their current execution
+results are recorded in the delivery plan; these journeys do not claim physical
+Quest or real-provider acceptance.

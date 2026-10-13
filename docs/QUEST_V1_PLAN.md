@@ -9242,3 +9242,46 @@ scope are in [the release-build guide](QUEST_RELEASE_BUILD.md#compile-only-andro
 No headset, paid-provider, signing, deployment or Meta work was performed.
 Compilation does not establish APK, audible, physical-device or Store acceptance.
 V1 release work remains active.
+
+## Shared finite walking — 2026-10-13
+
+Created characters and Maestro now share `object.navigate`, the native “Walk to a
+place” action. Users and agents use the existing catalog, forms, invocation
+receipts and program interpreter. It walks over accepted ground using the same
+per-object real-room and water rules as following, reports actual arrival and
+stops at the accepted position on interruption. Created-part animation can run
+alongside locomotion; Maestro retains the selected gait. The detailed limits and
+remaining NPC work are in [world authoring](QUEST_WORLD_AUTHORING.md#finite-grounded-travel--2026-10-13).
+
+Verification passed **1,193 EditMode / 1,478 PlayMode checks**, with three expected
+optional private-asset skips. The seventeen new walking regressions include
+tracking loss for a virtual-only actor and a room viewer owned above the active
+workspace. All **985 frozen C# files** match source and mirror.
+
+Fresh Headless `0f451cca67524056809d67c608c181c6` and Original Book
+`cd3a76637a83484bbbe18aba0a1d3f31` passed with zero client/editor exits and no real
+provider calls. They create a robot, use the shared walking action, verify actual
+arrival and remove the fixture with ordinary Undo after paused physics settles.
+Headless captures six intermediate observations and verifies receipt replay cannot
+restart movement. The Book's rendered action form and completion were inspected.
+These are scripted-provider/synthetic-floor checks, not physical acceptance.
+
+**2,925 web tests across 312 files** passed, including the 77 consumers of refreshed
+native fixtures. Lint, probe types, asset integrity and catalog/source equality
+passed. A fresh web build, native browser build/lint, Unity Android export and
+unsigned Gradle compilation passed. Gradle confirmed the unchanged Java suite's
+**128 passed / two skipped** results were up to date. All **22 selected ARM64
+libraries** passed the ELF/16 KiB segment audit. All **148 web files**, the native
+browser AAR and selected library hashes match the staged build. No APK/AAB was
+created; packaging and final ZIP alignment remain separate checks.
+
+Evidence is in `.quest-evidence/grounded-travel/` and the two native journey
+folders. The original journey cleanup encountered a stale revision while paused
+physics saved its final positions; the clients now wait for that existing settling
+boundary before Undo. Native source stayed frozen through the successful rerun.
+The ten protected raw local files and untracked Store work remain untouched.
+
+Headset, paid-provider, signing, deployment and Meta holds remain in place. This
+increment does not change the installed app or establish release acceptance.
+Whole-world physics admission, running-world retention, automatic unloading off
+and the current world limits remain unchanged. V1 release work remains active.

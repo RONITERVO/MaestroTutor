@@ -33495,6 +33495,133 @@
       ]
     },
     {
+      "id": "object.navigate",
+      "version": 1,
+      "label": "Walk to a place",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "walk"
+            ]
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 1.2
+          }
+        },
+        "required": [
+          "target",
+          "mode",
+          "destination",
+          "speed"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "groundedTravel.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "locomotion"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "physics.running",
+        "navigation.floorReady"
+      ],
+      "description": "Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walks share this action budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. Solid obstacles stop rather than inventing a detour; the shared water route search may go around finite water. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
+      "example": {
+        "target": "maestro",
+        "mode": "walk",
+        "destination": {
+          "x": 1,
+          "y": 0,
+          "z": 1
+        },
+        "speed": 0.65
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 600.0
+          }
+        },
+        "required": [
+          "position",
+          "distance"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.hold",
       "version": 1,
       "label": "Hold and release object",
@@ -43638,7 +43765,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "6cd062ce71a354f835f9731be2f851c7b2525e521d48fe8cc58c2c23f167d69b"
+      "sha256": "518f50e1da49b329d01d901e0b756cfe5a1c35c7f39490973f0764eea7384c0a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -43835,6 +43962,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MotionBatchCapability.cs",
       "sha256": "abde149887571e63e822d6f963a599d58e1d19e4dcf6c9d7e9368e4495119f3f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
+      "sha256": "d60fcc61f82e02497e278dfb006bcd8b520ab5d6b78882e88994e5229aec9b23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
@@ -44358,7 +44489,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "17a93944254d2e272771bb48a6ee1d14f1327bfd54e36f56506468f7a411d4bc"
+      "sha256": "9254737752b44ab9a1eff1c0c31b362fba4a8c7a6cc10a9b6fcb4b90b2af672d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -44690,7 +44821,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewerDemand.cs",
-      "sha256": "059d423701bfc7dd27a97208059b5d43c9ac72de1d3e9a6c5cd3bb1e7832bdcf"
+      "sha256": "fbe3c58006d0306deaabf7ba02db16eaae799a6296486f7518c516849f2dac08"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
@@ -45025,6 +45156,10 @@
       "sha256": "d810195dabed86101f1ec66e2ea13070d6e563beec81c4910372752f4e0fd150"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
+      "sha256": "a35806fea775366b48a03dd05ec7c4f34640584c37a1048f1a14c41f20a0cefe"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
       "sha256": "fffa849a6992ad924ead5b95b50772b7887648307b10c4791d6679087d9fea3c"
     },
@@ -45146,7 +45281,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationInputs.cs",
-      "sha256": "2b05ae9d0a92b45f11462c77bd21f4ea42858773e48dc3822721620f36cdb992"
+      "sha256": "ee329c4661ca14406f6f98c47c040fca61c98d0f0a87067268e6f50d5cc8fb89"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",

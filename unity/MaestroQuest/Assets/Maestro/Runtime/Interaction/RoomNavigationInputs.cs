@@ -7,6 +7,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction {
     public sealed partial class RoomNavigation {
         RoomSpatialInputs stepInputs,routeInputs;
+        internal bool MovementInputsPending=>stepInputs?.Pending==true;
         Vector3 inputsGoal;bool inputsGoalKnown;
         RoomEditor InputEditor=>actor?actor.GetComponentInParent<RoomEditor>():null;
         internal void ReleaseMovementInputs(){stepInputs?.Dispose();stepInputs=null;CancelFollowRoute();}

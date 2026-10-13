@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation
         Camera sampledViewer;RoomJournal observationJournal;double viewerSampleTime=double.NaN;
         System.Func<bool> viewerTracked;
         internal void ConfigureObservationTracking(System.Func<bool> tracked){viewerTracked=tracked;ResetViewerDemand();}
-        bool ViewerTrackingReady=>!Ownership.Suspended&&(viewerTracked?.Invoke()??true);
+        internal bool ViewerTrackingReady=>!Ownership.Suspended&&(viewerTracked?.Invoke()??true);
         Camera ActiveViewerCamera(){var camera=Viewer?Viewer.GetComponent<Camera>():null;return camera&&camera.isActiveAndEnabled?camera:null;}
         void LateUpdate()=>TickViewerDemand(Time.unscaledTimeAsDouble);
         internal void TickViewerDemand(double now)

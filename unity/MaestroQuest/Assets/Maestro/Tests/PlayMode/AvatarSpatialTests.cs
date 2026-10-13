@@ -60,9 +60,9 @@ namespace Maestro.Quest.Tests
             Physics.SyncTransforms(); world.SetSurfaces(true,"Synthetic aligned scan"); world.StartPhysics();
             Assert.That(navigation.Prepare(.25f,1.7f,out var error),Is.True,error);
         }
-        void Tutor()
+        void Tutor(bool separateInteraction=false)
         {
-            room = root.AddComponent<RoomInteraction>(); viewer = new GameObject("Tracked test viewer"); viewer.transform.position = new Vector3(0,1.6f,3); room.Viewer = viewer.transform;
+            room = (separateInteraction?physicalRoot:root).AddComponent<RoomInteraction>(); viewer = new GameObject("Tracked test viewer"); viewer.transform.position = new Vector3(0,1.6f,3); room.Viewer = viewer.transform;
             RoomItem Included(string name,Vector3 position)
             {
                 var value = new GameObject(name); value.transform.SetParent(root.transform,false); value.transform.position = position;

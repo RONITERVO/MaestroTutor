@@ -1403,3 +1403,20 @@ source; the original Book attaches that source to an emitter and waits for all
 exact source and duration. The timeout follows that finite fixture duration.
 This exercises the streaming path without a provider, microphone or headset,
 and does not establish audible quality or Quest performance.
+
+## Grounded walking parity
+
+The offline Headless journey creates a fixed Box robot using its pinned starter
+source, discovers/checks `object.navigate`, starts it and polls the existing
+execution receipt. `native-grounded-travel.json` includes intermediate native
+positions and actual arrival. Replaying that same run ID must return the original
+receipt without a new movement owner. Normal Undo removes the test creation after
+physics is paused.
+
+The Book journey independently creates a Box robot through the existing Create
+object form, starts physics, fills the generated Walk to a place form and checks
+the completed native receipt and actual position. It captures
+`book-native-grounded-travel.json` and its rendered form, then pauses physics and
+removes the fixture using Undo. Both paths use an explicitly synthetic floor.
+These checks cover shared client/native execution and the human interface; they
+are not evidence of real-model planning, a physical scan or headset comfort.
