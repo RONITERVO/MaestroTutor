@@ -41968,7 +41968,7 @@
         }
       },
       "label": "Object physics inputs",
-      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for another member or joint reports unavailable or pending. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry: its connected group is held while exact inputs prepare, with no old velocity replay. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
+      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for another member or joint reports unavailable or pending. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry: its dynamic contact/constraint group is held while exact inputs prepare, with no old velocity replay. Grab, animation or teleport cancels the changed actor and its current physical connection group; merely touching another interrupted body does not grant control of it or resume it. Continuing native guard contacts are rechecked without requiring a fresh collision-enter callback. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
       "input": {
         "type": "object",
         "properties": {
@@ -43483,7 +43483,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CatchObjectCapability.cs",
-      "sha256": "08c343301acab1fbdb5a78fb6d809590f88ce14ae3bdffcbce71c1c9c2846042"
+      "sha256": "f69eaf3e045462501a85c33a4d5aed2c1aa84cf0a4be8061fa1ef4e2e5f1134e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
@@ -43683,7 +43683,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
-      "sha256": "bf8e35a71683e2ec8ac7fe34840f0d5547af7b2549aef83560b8946d42bd683f"
+      "sha256": "340199d1bb0a2d67e0aae0f1bac3fc739b86f59c62bdb0ab9f3bd2e55fb587b1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -44207,7 +44207,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
-      "sha256": "e05f2b6f89ce14ae9e3a96d395838ff6a33dcb48234aeaa3de6c912e1d7eacf3"
+      "sha256": "d22b0509323677fb033bd49c258a696f4d0741b15e11af3c6d9a53694ef9820f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -44399,7 +44399,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
-      "sha256": "54bf8baddc9a51d7cb9abf8dbdf6327479169790bfcbe9d6ec13223ebfb1c9d2"
+      "sha256": "d80fc683c0c9fbbb975db6f1aae4404bd12e2adadc8627162a737d7dc46fbb10"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStepRecorder.cs",
@@ -44879,7 +44879,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "7083722235aa3140d3bb8b0031dca376a69a1cba1f6ffecf2c8fd147f861c7de"
+      "sha256": "0bae2a77b58a420192f7744dff0c28aaed196220bda0a25ba696e83bc8934ae0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -44891,7 +44891,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
-      "sha256": "dd28296c270ba5b19fc2ce50bbd33e07cf39d416be4fc6fd7dbd4be633abec16"
+      "sha256": "6f98359642c204f2d5e3d495c32dae75b1c07401fc999ea248cd540383040e9f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionAdmission.cs",

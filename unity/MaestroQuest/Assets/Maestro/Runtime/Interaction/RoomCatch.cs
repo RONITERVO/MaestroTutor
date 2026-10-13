@@ -63,7 +63,7 @@ namespace Maestro.Quest.Interaction
                 if(!RoomCollisionVolume.Read(item,.3f,out volume,out var geometryError)){Fail(geometryError);return;}
             }
             var position=volume.Centre(item,body);var centre=Centre;uint revision=holderRigid?holderRigid.MotionRevision:0;
-            if(!rigid.TryReadMotion(out bool available,out float speed,out _)||!available){sampled=false;Reason="Waiting for the user or other action to release the object";return;}
+            if(!rigid.TryReadMotion(out bool available,out float speed,out _)||!available){sampled=false;Reason=rigid.MotionUnavailableReason;return;}
             if(speed>maxSpeed){sampled=false;Reason="The object exceeds the selected catch speed";return;}
             if(!sampled||motionRevision!=rigid.MotionRevision||holderRevision!=revision||now-sampleAt>.1f||now<=sampleAt){Remember(position,centre,now,revision);return;}
             var frame=editor.Frame;var before=frame.PointToWorld(previousBall);var oldSocket=frame.PointToWorld(previousSocket);

@@ -8,8 +8,8 @@ using UnityEngine;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
         sealed class DormantContact {
-            internal RigidRoomItem Body;internal RoomItem Item;internal string Target;internal int Revision;
-            internal DormantCollisionProxy Proxy;internal uint Generation,Placement;
+            internal RigidRoomItem Body;internal string Actor,Target;internal int Revision;
+            internal DormantCollisionProxy Proxy;internal uint Generation;
             internal RoomJournal Journal;internal Matrix4x4 Frame;internal string[] Members;
         }
         sealed class DormantRecovery:IDisposable {
@@ -29,8 +29,8 @@ namespace Maestro.Quest.Creation {
             var item=body.GetComponent<RoomItem>();if(Identity(item)==null)return;
             if(dormantContacts.Any(c=>c.Body==body&&c.Proxy==proxy))return;
             RecordPhysicsGuard(body);
-            dormantContacts.Add(new(){Body=body,Item=item,Target=proxy.Target,Revision=ObjectRevision(proxy.Target),Proxy=proxy,Generation=proxy.Generation,
-                Placement=body.PlacementRevision,Journal=journal,Frame=transform.localToWorldMatrix,Members=PhysicsStepMembers(body)});
+            dormantContacts.Add(new(){Body=body,Actor=Identity(item),Target=proxy.Target,Revision=ObjectRevision(proxy.Target),Proxy=proxy,Generation=proxy.Generation,
+                Journal=journal,Frame=transform.localToWorldMatrix,Members=PhysicsStepMembers(body)});
         }
         bool RecoveryActor(RigidRoomItem body,RoomItem item,uint placement)=>body&&item&&body.PhysicsEditor==this&&Find(Identity(item))==item&&body.PlacementRevision==placement&&body.ContactTracking&&!item.Grab.isSelected;
         bool RecoveryOwned(DormantRecovery value){
@@ -49,8 +49,18 @@ namespace Maestro.Quest.Creation {
         }
         internal void CancelDormantRecovery(RoomItem item){
             string id=Identity(item);if(id==null)return;
-            dormantContacts.RemoveAll(c=>c.Item==item||c.Members.Contains(id));
-            foreach(var value in dormantRecoveries.Where(r=>r.Members.Contains(id)).ToArray())RemoveDormantRecovery(value);
+            // A current constraint island follows its new owner together. A
+            // transient collision edge does not grant that owner its neighbours.
+            var cancelled=PhysicsIslandMembers(item).Append(id).Where(member=>member==id||journal?.PhysicalDynamic(member)==true).ToHashSet(StringComparer.Ordinal);
+            CancelPhysicsStepActors(cancelled);
+            foreach(var value in dormantRecoveries.ToArray()){
+                foreach(var member in value.Actors.Keys.Where(cancelled.Contains).ToArray()){
+                    var body=value.Actors[member].body;value.Actors.Remove(member);
+                    if(recoveringBodies.TryGetValue(member,out var found)&&ReferenceEquals(found,value))recoveringBodies.Remove(member);
+                    if(body)body.ClearCollisionInterruption();
+                }
+                if(value.Actors.Count==0)RemoveDormantRecovery(value);
+            }
         }
         void ReleaseDormantRecoveries(){CancelPhysicsStep();dormantContacts.Clear();foreach(var value in dormantRecoveries.ToArray())RemoveDormantRecovery(value);}
         void RefuseRecovery(DormantRecovery value,string reason){
@@ -62,17 +72,19 @@ namespace Maestro.Quest.Creation {
             try{
                 var queued=dormantContacts.ToArray();dormantContacts.Clear();
                 foreach(var contact in queued){
-                    if(!ReferenceEquals(contact.Journal,journal)||!RecoveryActor(contact.Body,contact.Item,contact.Placement))continue;
-                    string actor=Identity(contact.Item);if(recoveringBodies.ContainsKey(actor))continue;
-                    var members=PhysicsStepRecoveryMembers(actor,contact.Members.Length>0?contact.Members:PhysicsIslandMembers(contact.Item));
+                    if(!ReferenceEquals(contact.Journal,journal)||!PhysicsWorld||!PhysicsWorld.Running||RuntimeGate.Held||Ownership.Suspended)continue;
+                    var members=PhysicsStepRecoveryMembers(contact.Actor,contact.Members);
+                    var actors=new Dictionary<string,(RigidRoomItem body,uint placement)>(StringComparer.Ordinal);
+                    foreach(var id in members)if(PhysicsStepRecoveryActor(id,out var body))actors[id]=(body,body.PlacementRevision);
+                    if(actors.Count==0||actors.Keys.All(recoveringBodies.ContainsKey))continue;
+                    string actor=actors.Keys.OrderBy(id=>id,StringComparer.Ordinal).First();
                     var previous=dormantRecoveries.Where(r=>r.Members.Intersect(members).Any(id=>recoveringBodies.ContainsKey(id))).ToArray();
-                    if(previous.Length>0){members=members.Concat(previous.SelectMany(r=>r.Members)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();foreach(var old in previous)RemoveDormantRecovery(old);}
-                    var contacts=queued.Where(c=>members.Contains(Identity(c.Item))).ToArray();
+                    if(previous.Length>0){members=members.Concat(previous.SelectMany(r=>r.Members)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();foreach(var old in previous){foreach(var pair in old.Actors)actors[pair.Key]=pair.Value;RemoveDormantRecovery(old);}}
+                    var contacts=queued.Where(c=>members.Contains(c.Actor)).ToArray();
                     var value=new DormantRecovery{Journal=journal,Frame=contact.Frame,Members=members,
                         Targets=members.Concat(contacts.Select(c=>c.Target)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),
                         Reason="Movement stopped at unavailable geometry; preparing nearby objects"};
-                    foreach(var id in members){var peer=Find(id);var rigid=peer?peer.GetComponent<RigidRoomItem>():null;if(rigid&&rigid.Dynamic)value.Actors[id]=(rigid,rigid.PlacementRevision);}
-                    if(value.Actors.Count==0)continue;
+                    foreach(var pair in actors)value.Actors[pair.Key]=pair.Value;
                     // Register the complete hold before refreshing any member/joint.
                     dormantRecoveries.Add(value);foreach(var id in value.Actors.Keys)recoveringBodies[id]=value;
                     foreach(var member in value.Actors.Values)member.body.InterruptAtCollisionGuard();

@@ -33,10 +33,14 @@ namespace Maestro.Quest.Interaction
         Quaternion lastGoodRotation;
         public event Action<RoomItem> Settled;
         public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
-        void OnCollisionStay(Collision collision)=>InputEditor?.RecordPhysicsContact(this,collision.collider);
-        void OnCollisionEnter(Collision collision) {
+        bool RecordCollision(Collision collision) {
             InputEditor?.RecordPhysicsContact(this,collision.collider);
-            if(collision.collider&&collision.collider.GetComponent<Creation.DormantCollisionProxy>() is Creation.DormantCollisionProxy proxy){InputEditor?.QueueDormantContact(this,proxy);return;}
+            if(!collision.collider||collision.collider.GetComponent<Creation.DormantCollisionProxy>() is not Creation.DormantCollisionProxy proxy)return false;
+            InputEditor?.QueueDormantContact(this,proxy);return true;
+        }
+        void OnCollisionStay(Collision collision)=>RecordCollision(collision);
+        void OnCollisionEnter(Collision collision) {
+            if(RecordCollision(collision))return;
             if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position,item)||Dynamic&&!(InputEditor?InputEditor.PhysicsStepDynamic(this):Allowed)||collision.contactCount==0)return;
             // Unity may reuse Collision objects. Copy the observation immediately;
             // no callback object or mutable body state enters the program queue.
@@ -152,6 +156,7 @@ namespace Maestro.Quest.Interaction
             lastGoodPosition=after.PointToWorld(before.PointToRoom(lastGoodPosition));
             lastGoodRotation=after.RotationToWorld(before.RotationToRoom(lastGoodRotation));
         }
+        internal string MotionUnavailableReason => !CanReceivePhysicsAction(out var reason)?reason:"Waiting for object physics to resume";
         public bool CanReceivePhysicsAction(out string error)
         {
             error=null;

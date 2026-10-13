@@ -8927,3 +8927,54 @@ Native Headless journey `1ff40d6e9b634543a16befc633372260` passed with
 zero, using scripted responses and synthetic assets with no paid provider.
 All **966 C# files** match the frozen source and build mirror. Evidence is
 under `.quest-evidence/physics-step`. No new headset acceptance is claimed.
+
+
+### Contact continuity and independent recovery ownership — 2026-10-13
+
+Continuing native guard contact now requeues through OnCollisionStay. A body
+already touching a guard can request recovery after its prior observation was
+cancelled; a fresh collision Enter is not required. Guard callbacks still copy
+observations only and do not create authored collision events.
+
+Grabbing, teleporting or taking animation control cancels recovery for the
+changed actor's current physical constraint island. It does not erase the
+completed native step or resume other free bodies that merely collided with
+that island. Remaining actors retain their hold and independently owned native
+preparation. Pre-step body identity and placement reject replaced/teleported
+owners. Existing fixed-anchor separation and explicit from-rest restart remain.
+
+An active catch now reports the real motion-unavailable reason instead of always
+blaming user/action ownership. Its shared fact sanitizes and bounds display text
+to the existing program-value limit. This avoids turning a legitimate recovery
+reason into a failed fact read. The catch result still requires actual native
+capture, and interrupted preparation is not settlement.
+
+Seven new tests distinguish controlled contact/ownership ordering from actual
+native contact. XRI grips before and after drain, teleport, and connected animation
+takeover leave an incidental free neighbour interrupted and preparing. A native
+sphere pressed into a guard produces Enter then Stay without another Enter.
+That isolated fixture bypasses ordinary preparation between manual steps; it is
+not complete production ownership-handoff evidence. The catch pair uses the same
+actual secondary-body contact with/without a distant guard: the interrupted body
+has zero catches and zero settlements; the uninterrupted control is caught.
+The extended manual collision step is explicitly drained before returning to
+ordinary catch FixedUpdate timing. Passive book/headless observations remain
+separate from active native collision evidence.
+
+Whole-world physics admission, running-world retention, automatic unloading off,
+and the 64-object/25-metre scope remain. Broader grabbed/motor/rotation transitions,
+failed-import recovery, CCD/tunneling, regional navigation, larger-world cost and
+headset acceptance remain open. These tests do not establish seamless streaming.
+
+Verification: **1166 EditMode and 1442 PlayMode tests passed**, with three
+expected optional private-asset skips. The focused run passed **82 PlayMode** and
+**22 scheduler EditMode** tests. **2910 web tests across 311 files**, lint,
+production build, probe TypeScript, core boundaries and catalog checks passed.
+Fresh native catalog/catch fixtures passed **77 checks across three consumers**.
+
+Native Headless journey `76ac69b7303c4c4b8625850d0fcd5cc4` passed with
+766 observations; original Book journey `f221e0b1c57f4bb2a23c043b979db71e` passed.
+Both clients and Unity editors exited zero with local scripted provider responses
+and synthetic assets. All **967 C# files** match the frozen source and build
+mirror. Evidence is under `.quest-evidence/contact-continuity`. No new headset,
+paid-provider, signing, deployment or Meta acceptance is claimed.

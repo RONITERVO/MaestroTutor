@@ -1311,3 +1311,21 @@ the world frame moves. ProgramEditor tests bind the same boolean
 `interrupted` field for collision and break events through visible blocks.
 Fresh book/headless runs still verify interface parity using scripted responses;
 they are not new provider, headset or active collision acceptance.
+
+`ContactContinuityTests.cs` separates contact propagation from ownership. Real
+XRI grips before/after recovery, teleport and animation takeover use a controlled
+contact edge to verify that only the current constraint group changes owner;
+other free participants keep their interruption and preparation. This is distinct
+from the native contact evidence. A sphere pressed into a guard by gravity must
+produce Enter then Stay without a second Enter, and Stay must requeue recovery
+after cancellation. That fixture deliberately bypasses ordinary preparation
+between explicit steps to keep the guard resident; it does not certify a complete
+production ownership transition or continuous collision behavior.
+
+The active catch pair uses the same actual secondary-body contact with and
+without a distant guard. The explicit extended step is drained before returning
+to ordinary frame processing. Automatic FixedUpdate then verifies that the
+interrupted body is neither caught nor reported settled, while the uninterrupted
+control is actually caught. The shared catch fact must remain readable and expose
+a bounded version of the native waiting reason. These are desktop PhysX and
+shared-interface checks, not new device or provider acceptance.

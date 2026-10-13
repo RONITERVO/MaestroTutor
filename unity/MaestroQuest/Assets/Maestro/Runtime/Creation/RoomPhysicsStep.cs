@@ -9,6 +9,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
         sealed class PhysicsStepActor {
+            internal RigidRoomItem Body;internal uint Placement;
             internal string[] Members;
             internal bool Dynamic;
         }
@@ -21,18 +22,20 @@ namespace Maestro.Quest.Creation {
         readonly Dictionary<string,PhysicsStepActor> physicsStepActors=new(StringComparer.Ordinal);
         readonly Dictionary<string,HashSet<string>> physicsStepContacts=new(StringComparer.Ordinal);
         readonly HashSet<string> physicsStepGuards=new(StringComparer.Ordinal);
+        readonly HashSet<string> physicsStepCancelled=new(StringComparer.Ordinal);
         readonly List<PhysicsStepEvent> physicsStepEvents=new();
 
         // This record is independent of normal preparation leases. A native joint
         // break may release those leases before another collision callback runs.
         internal void RememberPhysicsStep(){
+            physicsStepCancelled.Clear();
             foreach(var item in objects.Values)if(item&&item.GetComponent<RigidRoomItem>() is RigidRoomItem body)RememberPhysicsStepBody(body);
         }
         internal void RememberPhysicsStepBody(RigidRoomItem body) {
             if(!body||body.PhysicsEditor!=this)return;
             string id=Identity(body.GetComponent<RoomItem>());if(id==null)return;
             var members=body.CollisionInputMembers;
-            physicsStepActors[id]=new(){Members=members.Length>0?members:PhysicsIslandMembers(Find(id)),Dynamic=body.ContactTracking&&body.Simulating};
+            physicsStepActors[id]=new(){Body=body,Placement=body.PlacementRevision,Members=members.Length>0?members:PhysicsIslandMembers(Find(id)),Dynamic=body.ContactTracking&&body.Simulating};
         }
         void EnsurePhysicsStepGroup(RigidRoomItem body) {
             if(!body||body.PhysicsEditor!=this)return;
@@ -43,6 +46,15 @@ namespace Maestro.Quest.Creation {
                 if(physicsStepActors.ContainsKey(member))continue;
                 var peer=Find(member)?.GetComponent<RigidRoomItem>();if(peer)RememberPhysicsStepBody(peer);
             }
+        }
+        // Ownership cancellation cannot erase an already observed effect on a
+        // different free body. Retain the step, excluding only cancelled actors.
+        void CancelPhysicsStepActors(IEnumerable<string> ids){foreach(var id in ids)if(physicsStepActors.TryGetValue(id,out var actor)&&actor.Dynamic)physicsStepCancelled.Add(id);}
+        bool PhysicsStepRecoveryActor(string id,out RigidRoomItem body){
+            body=null;
+            if(physicsStepCancelled.Contains(id)||!physicsStepActors.TryGetValue(id,out var actor)||!actor.Dynamic)return false;
+            var item=Find(id);if(!RecoveryActor(actor.Body,item,actor.Placement)||item.GetComponent<RigidRoomItem>()!=actor.Body)return false;
+            body=actor.Body;return true;
         }
         internal void BeforePhysicsJointBreak(RigidRoomItem body)=>EnsurePhysicsStepGroup(body);
         internal bool PhysicsStepDynamic(RigidRoomItem body) {
@@ -109,11 +121,11 @@ namespace Maestro.Quest.Creation {
                     PhysicsWorld.SimulationIntent!=value.Intent||RuntimeGate.Held||Ownership.Suspended)value.Observation.Cancel();
                 else value.Observation.Resolve(affected.Contains(value.Source)||value.Other!=null&&affected.Contains(value.Other));
             }
-            physicsStepEvents.Clear();physicsStepActors.Clear();physicsStepContacts.Clear();physicsStepGuards.Clear();
+            physicsStepEvents.Clear();physicsStepActors.Clear();physicsStepContacts.Clear();physicsStepGuards.Clear();physicsStepCancelled.Clear();
         }
         void CancelPhysicsStep() {
             foreach(var value in physicsStepEvents)value.Observation.Cancel();
-            physicsStepEvents.Clear();physicsStepActors.Clear();physicsStepContacts.Clear();physicsStepGuards.Clear();
+            physicsStepEvents.Clear();physicsStepActors.Clear();physicsStepContacts.Clear();physicsStepGuards.Clear();physicsStepCancelled.Clear();
         }
     }
 }

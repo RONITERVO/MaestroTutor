@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Imports;
 using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -53,7 +54,7 @@ namespace Maestro.Quest.Programs
         static ProgramDataType CatchType()=>ProgramDataType.Read(JObject.Parse("{\"record\":{\"target\":\"text\",\"attempts\":{\"list\":{\"record\":{\"holder\":\"text\",\"part\":\"text\",\"phase\":\"text\",\"caught\":\"boolean\",\"reason\":\"text\"}}}}}"));
         public static BehaviourCatalog.FactDefinition Fact()=>new("object.catch",CatchType(),"Live physical catch attempts","Read active attempts for a loaded prop. Waiting does not own the prop, holding means actual contact capture, and missed means timeout. Retired attempts leave this list; their durable one-off receipt remains authoritative. No inference from avatar proximity.",Object(new JObject{["target"]=RecipeEditCapability.Target()}),new JObject{["target"]=new string('0',32)},(context,args)=>{
             string target=(string)args["target"];if(!context.Editor||!context.Editor.Find(target))return null;
-            return ProgramValue.Literal(new JObject{["target"]=target,["attempts"]=new JArray(context.Editor.GetComponentsInChildren<RoomCatch>(true).Where(a=>a.isActiveAndEnabled&&a.TargetId==target).Select(a=>new JObject{["holder"]=a.HolderId,["part"]=a.Part,["phase"]=a.Phase,["caught"]=a.Caught,["reason"]=a.Reason.Length<=256?a.Reason:a.Reason.Substring(0,256)}))},CatchType());
+            return ProgramValue.Literal(new JObject{["target"]=target,["attempts"]=new JArray(context.Editor.GetComponentsInChildren<RoomCatch>(true).Where(a=>a.isActiveAndEnabled&&a.TargetId==target).Select(a=>new JObject{["holder"]=a.HolderId,["part"]=a.Part,["phase"]=a.Phase,["caught"]=a.Caught,["reason"]=ImportObservation.Text(a.Reason)}))},CatchType());
         },features:new[]{Feature});
     }
 }

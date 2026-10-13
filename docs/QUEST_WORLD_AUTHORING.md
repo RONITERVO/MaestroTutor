@@ -899,6 +899,15 @@ to continue from rest. Do not retry an old throw automatically or describe this
 state as a completed catch. Pause, grab, animation control, teleport and ownership
 changes discard prior motion; independent consumers keep their own loads.
 
+Taking control of one object cancels recovery for its current physical connection
+group. Merely touching a different object does not give that owner control over
+it: other affected free objects retain their stopped state and preparation. This
+also applies when ownership changes after a native collision but before its
+observation is processed. A continuing guard contact is checked again on native
+Stay callbacks; recovery does not depend on a new collision Enter. An active
+catch reports the actual waiting reason from the object's physics inputs, so an
+interrupted object is not described as waiting for a user to release it.
+
 This recovery uses the same fact and controls for programs, agents and book
 controls. It is a fallback prerequisite for future regional simulation. Current
 production physics still requires the complete authored collision environment;
