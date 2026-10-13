@@ -18,7 +18,8 @@ not physical Quest acceptance.
 Saved actor water policies now share live liquid geometry across walking and
 recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
 Follow now finds bounded routes around finite water cavities; see [water-aware following](#water-aware-following--2026-10-09).
-Swimming, escape behavior and terrain reservoirs remain open.
+Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
+Swimming, general escape planning and terrain reservoirs remain open.
 Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
@@ -9028,3 +9029,42 @@ full ownership handovers and CCD/solver limits still need further evidence befor
 regional admission changes. Whole-world admission, running-world retention,
 automatic unloading off and the 64-object/25-metre limits remain. Device, paid
 provider, signing, deployment and Meta holds remain. V1 release work is active.
+
+### Grounded shallow-water exits — 2026-10-13
+
+An actor whose policy avoids water can now leave an already-wet shallow position
+by approaching a nearest cavity edge or shallower ground. The whole segment must
+remain within its saved maximum depth and the body-height cap, and cannot deepen
+beyond the body-scaled numerical tolerance. Dry entry, crossing toward a farther
+shore, entering another pool and unavailable liquid inputs still refuse movement.
+Ground and solid clearance remain separate required checks for walking.
+
+This extends the existing per-actor policy and the same live liquid geometry used
+by walking, recorded root movement and passive path facts. There is no additional
+agent-only command or saved format. The catalog explains that a permitted segment
+does not prove the actor has reached dry ground. A zero maximum depth disables
+meaningful shallow egress. Swimming, automatic escape-route planning, arbitrary
+NPC movement and terrain reservoirs remain open.
+
+Verification: **1170 EditMode and 1449 PlayMode tests passed**,
+with 3 expected optional private-asset skips. The focused water set
+passed **13 EditMode / 43 PlayMode** checks. New coverage includes rectangular and
+cylindrical cavities under scale/yaw, actual following out of shallow water,
+unchanged avoid policy, current depth settings, adjacent water, passive facts,
+unavailable native inputs, missing ground and solid obstacles.
+
+Fresh complete-app Headless `2b8822c2c3a24113aa95da3202161b63` passed with
+**789 observations**. Its new six-edit fixture creates a
+real native pool and actor through catalog actions, verifies directional egress,
+depth refusal and dry-entry refusal through passive facts, then undoes the fixture.
+Those queries are separate from the actual walking proof in PlayMode.
+Original Book `d643a26615f440bd82e5f58a357ed569` also passed. Both clients and Unity
+editors exited zero with local scripted provider responses and synthetic assets.
+Fresh native catalog/catch fixtures passed **77 consumer checks**.
+Probe TypeScript and catalog/source checks passed. All **970 C# files**
+match the frozen source and build mirror; the expanded probe also matches its freeze.
+Evidence is under `.quest-evidence/water-egress/`.
+
+Whole-world physics admission, running-world retention, automatic unloading off
+and the 64-object/25-metre limits remain. No new headset, paid-provider, signing,
+deployment or Meta acceptance is claimed. V1 release work remains active.

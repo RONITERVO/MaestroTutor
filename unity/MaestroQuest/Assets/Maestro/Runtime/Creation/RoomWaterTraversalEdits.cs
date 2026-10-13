@@ -77,7 +77,7 @@ namespace Maestro.Quest.Creation {
             for(int i=0;i<mediaCount;i++){
                 var medium=media[i];if(medium.Item==actor||!medium.Sweep(from,to,radius,height,out float depth,out var point,out var foot))continue;
                 string reason=!medium.Item.GetComponent<RigidRoomItem>().GeometryReady||!environment.CanOccupy(point,actor,medium.Item)?"The water or actor environment is unavailable":
-                    policy.mode!="wade"?"This actor avoids water":depth>allowedDepth+.001f?"This water is too deep for the actor to wade; swimming is not available":null;
+                    policy.mode!="wade"&&!medium.ShallowExit(from,to,radius,height,allowedDepth,depth)?"This actor avoids water; shallow exits must approach an edge or shallower ground":depth>allowedDepth+.001f?"This water is too deep for the actor to wade; swimming is not available":null;
                 if(reason!=null){result=new(medium.Id,depth,reason,foot);return false;}
                 if(depth>result.Depth)result=new(medium.Id,depth,null,foot);
             }

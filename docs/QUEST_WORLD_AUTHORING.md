@@ -949,3 +949,25 @@ Catch waiting reasons are bounded display text in both active facts and terminal
 receipts. A timeout still reports `caught=false`; its diagnostic can be stored in
 a program text variable without exceeding that value contract. Exact object and
 holder identities are preserved.
+
+### Shallow-water exits
+
+The same `object.water.traversal.configure` policy applies to manual walking,
+following, recorded root movement and `object.water.traversal.path` inspection.
+An `avoid` actor that is already touching shallow water may move uphill to
+shallower water or toward a nearest boundary of the expanded liquid cavity.
+The entire swept segment must remain within `maxDepthMetres` (also capped at
+60% of walking-body height), without going deeper. Small outward steps work
+while both endpoints are still wet. Heading across the pool to a farther shore,
+entering a different pool or borrowing exit permission from a dry starting point
+is refused. The comparisons include a small body-scaled floating-point tolerance.
+
+The source remains the live measured liquid level and current object/room frame.
+Accepted ground, solid clearance, input availability and per-actor real-room
+participation remain separate requirements. A passive query neither moves an
+actor nor loads missing geometry; `allowed` does not mean it has reached dry
+ground. Following uses its existing planner and every actual step is checked
+again. This is grounded shallow egress, not swimming or a general escape planner;
+obstacles, overlapping water boundaries or excessive depth can still prevent an
+exit. A zero maximum depth disables meaningful shallow egress. Other saved
+settings, water quantity, buoyancy and appearance are unchanged.

@@ -34,6 +34,28 @@ namespace Maestro.Quest.Creation {
             contact=foot+Vector3.up*Mathf.Clamp(depth*.5f,.001f,height);
             return depth>.0001f;
         }
+        // Egress never grants a dry actor permission to enter water, or a
+        // submerged actor permission to walk beyond its wading depth. The whole
+        // segment must stay no deeper than its starting contact. On level ground
+        // it must approach a closest expanded cavity boundary, not cross the pool
+        // toward a farther shore. Movement callers still check ground and solids.
+        internal bool ShallowExit(Vector3 from,Vector3 to,float radius,float height,float maximumDepth,float sweptDepth){
+            float epsilon=Mathf.Max(1e-6f,Mathf.Min(.001f,height*.001f));
+            if(!Sweep(from,from,radius,height,out float startDepth,out _)||
+                sweptDepth>maximumDepth+epsilon||sweptDepth>startDepth+epsilon)return false;
+            var change=to-from;
+            if(Vector3.Dot(Up,change)>epsilon)return true;
+            var local=inverse.MultiplyPoint3x4(from);float closest=float.PositiveInfinity,progress=float.NegativeInfinity;
+            for(int i=0;i<PlaneCount;i++){
+                LocalPlane(i,out var normal,out float limit);var worldNormal=inverse.transpose.MultiplyVector(normal);
+                float horizontal=new Vector2(worldNormal.x,worldNormal.z).magnitude;if(horizontal<1e-6f)continue;
+                float distance=(limit+Support(worldNormal,radius,height)-Vector3.Dot(normal,local))/horizontal;
+                float outward=Vector3.Dot(worldNormal,change)/horizontal;
+                if(distance<closest-epsilon){closest=distance;progress=outward;}
+                else if(distance<=closest+epsilon)progress=Mathf.Max(progress,outward);
+            }
+            return progress>1e-6f;
+        }
         int PlaneCount=>Contents.IsRectangular?6:18;
         void LocalPlane(int index,out Vector3 normal,out float limit){
             if(index<2){normal=index==0?Vector3.down:Vector3.up;limit=index==0?0:Contents.height;return;}

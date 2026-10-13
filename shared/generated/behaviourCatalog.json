@@ -30827,7 +30827,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid stops at water; wade permits depth up to maxDepthMetres in authored-room metres, capped at 60% of walking body height; ignore is for deliberate non-walking movement. Following can plan bounded routes around liquid footprints; manual movement and authored recordings keep their literal paths. Swimming is not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid refuses entry but lets an already-wet actor exit shallow water toward a nearest cavity edge or shallower ground, without going deeper. This exit and wading both obey maxDepthMetres in authored-room metres, capped at 60% of walking body height; wade permits travel within that depth; ignore is for deliberate non-walking movement. Following can plan bounded routes around liquid footprints; manual movement and authored recordings keep their literal paths. This is grounded shallow egress, not swimming or an automatic escape planner; obstacles can still block an exit. Swimming is not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -39178,7 +39178,7 @@
         }
       },
       "label": "Water traversal settings",
-      "description": "Accepted actor policy and exact revision. default resolves to avoid for Maestro and ignore for creations. The saved wading depth is additionally limited by actual body height. This read does not move, swim or alter physics.",
+      "description": "Accepted actor policy and exact revision. default resolves to avoid for Maestro and ignore for creations. The saved wading/avoid-egress depth is additionally limited by actual body height. This read does not move, swim or alter physics.",
       "input": {
         "type": "object",
         "properties": {
@@ -39225,7 +39225,7 @@
         }
       },
       "label": "Water path inspection",
-      "description": "Read-only continuous liquid check from the target's current upright walking envelope to an authored-room position. It samples current fill levels and per-actor environment admission. allowed proves only water policy, not terrain, obstacle clearance, ownership or a connected route. bodyId is the refusing vessel, or the deepest allowed vessel. Unavailable/pending cavities refuse traversal without inventing a blocking-water contact or detour. An explicit ignore policy bypasses the water check and reports ready with no required dependencies. No movement or physics start. availability is ready when potentially relevant liquid cavities have native placements and current contents. A dormant, inactive or missing vessel is pending while activation is queued/running, otherwise unavailable. Unknown cavity bounds remain dependencies; known distant cavities and accepted empty vessels are excluded. dependencyCount counts all missing relevant cavities; dependencies lists the first four stable IDs, not necessarily the whole set. This passive query never loads or retries an object. Native collider readiness, physics, ownership and each participant's real-room policy are separate requirements.",
+      "description": "Read-only continuous liquid check from the target's current upright walking envelope to an authored-room position. It samples current fill levels and per-actor environment admission. An avoid policy permits only an already-wet shallow exit toward a nearest edge or shallower ground, never deeper; allowed does not mean the actor has reached dry ground. allowed proves only water policy, not terrain, obstacle clearance, ownership or a connected route. bodyId is the refusing vessel, or the deepest allowed vessel. Unavailable/pending cavities refuse traversal without inventing a blocking-water contact or detour. An explicit ignore policy bypasses the water check and reports ready with no required dependencies. No movement or physics start. availability is ready when potentially relevant liquid cavities have native placements and current contents. A dormant, inactive or missing vessel is pending while activation is queued/running, otherwise unavailable. Unknown cavity bounds remain dependencies; known distant cavities and accepted empty vessels are excluded. dependencyCount counts all missing relevant cavities; dependencies lists the first four stable IDs, not necessarily the whole set. This passive query never loads or retries an object. Native collider readiness, physics, ownership and each participant's real-room policy are separate requirements.",
       "input": {
         "type": "object",
         "properties": {
@@ -43811,7 +43811,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
-      "sha256": "af78cfeeaf4b1f66255c39373ea4661fef40d2a584c70cd8358b5de590c1c734"
+      "sha256": "164a0c0de8b4d7baef5b0555bfe099ff312961ae0f1f0b28fa9a976b5786cdc0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowCapability.cs",
@@ -44031,7 +44031,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "5dfa542e4db1db094511f5c0148ba64babaaa788102801151b590ec721e59889"
+      "sha256": "1bf69544252f1b9e4cc2fd6fc68f4bb9cd62cdadbb1e5e8eec58eadebc08c363"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
@@ -44535,7 +44535,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversalEdits.cs",
-      "sha256": "a70114dfdc78ce1d5bf477af473ca6d59d5611f612c8b2005d7dc242f2ad5eeb"
+      "sha256": "658545bed3ef4fc0daafbc0fb4b7d0f1f62e8db59a04aa57a5a2bc60228aa950"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",

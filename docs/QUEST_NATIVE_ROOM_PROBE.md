@@ -1342,3 +1342,14 @@ native-impact or headset acceptance. The free participant remains interrupted,
 the failure reaches the visible status and shared fact, and unrelated bodies
 keep running. File repair and independent loading cannot replay the throw;
 explicit Pause/Start resumes without the previous velocity or spin.
+
+`WaterEgressGeometryTests` checks cylindrical and rectangular cavities under
+rotation and scale. `WaterEgressTests` exercises the shared path fact, actual
+Maestro following out of shallow water, existing depth limits, an adjacent pool,
+missing native geometry, ground loss and a blocking wall. Policy inspection does
+not edit saved placement. These cases extend the existing water traversal/route
+suite; they do not establish swimming, arbitrary escape planning or Quest cost.
+The complete native headless journey now creates a temporary pool and box actor
+through normal catalog actions, inspects outward/inward/deeper/cross-pool/dry-entry
+paths, and undoes its six edits. This shared-transport fixture intentionally uses
+placement rather than walking; native movement is covered by the PlayMode case.
