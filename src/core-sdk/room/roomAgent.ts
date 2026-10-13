@@ -35,6 +35,7 @@ export interface RoomCommand {
 }
 export interface RoomAgentState {
   chatImage?: import('../../../shared/chatImages').ChatImageRequest | null;
+  chatAudio?: import('../../../shared/chatAudio').ChatAudioRequest | null;
   capture?:RoomCaptureMetadata|null;
   version: 1; session: string; revision: number; sceneRevision: number; ack: number;
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;

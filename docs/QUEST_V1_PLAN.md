@@ -39,8 +39,10 @@ joint emitters, live streams, and existing events/programs controlling playback.
 See the [shared world audio contract](../unity/AUDIO.md). Native rendering now
 handles procedural and imported bounded WAV sounds with editable emitters, looping
 playback, independent controls and events alongside the separate Maestro speech
-renderer. Longer media, additional codecs, generated-artifact attachment, stream
-adapters and continuous-background-audio/Live coexistence remain implementation gates.
+renderer. Finished local chat WAV attachments now enter the same source/import path; see
+[chat sound attachment](../unity/AUDIO.md#finished-chat-audio-as-a-world-source).
+Longer media, additional codecs, live-stream adapters and continuous-background-
+audio/Live coexistence remain implementation gates.
 The experimental reflection mixer and its map scheduler stay out of the production
 scene until the capture policy handles a mixed scene without indefinitely
 suppressing the user. Direct sound obstruction remains active without map baking.
@@ -9111,3 +9113,39 @@ canceled after both passed, and the wrapper was corrected to avoid repetition.
 Whole-world physics admission, running-world retention, automatic unloading off
 and the 64-object/25-metre/four-height-field limits remain. No headset, paid-provider,
 signing, deployment or Meta action was performed. V1 release work remains active.
+
+### Finished chat sounds become reusable world sources — 2026-10-13
+
+Completed local chat WAV attachments now use `audio.chat.library` and the existing
+`audio.import` preview/acceptance workflow. Exact accepted bytes become reusable
+sound sources for object emitters, buttons and event programs, with ordinary Undo.
+The original app owns generation and messages. Book and headless clients share
+one bounded image/audio transfer implementation; commands retain priority and
+pending image/sound transfers alternate. No second provider client or saved
+format is introduced. Conversation/source/room/focus changes revoke unaccepted
+selections; accepted writes retain the import owner's established completion rules.
+
+WAV codec, .03–30 second, file/library and playback bounds remain explicit.
+Unsupported or corrupt audio fails preview visibly. URLs, pending output, TTS
+caches and private Live recordings are not offered. Other codecs, longer/live
+sources and microphone/audio coexistence remain open adapters and acceptance work.
+
+Verification: **1,184 EditMode / 1,459 PlayMode passed**, with three expected
+optional private-asset skips. Two subsequent changes corrected only sound-related
+copy; hashes verify identical remaining C# and **13 focused editor / 10 focused
+runtime checks** passed on the final source. Final Headless `8f348dd5c05f47a9a0d06e58ecfbfb3d`
+passed with **818 observations**; Original Book
+`80d709b713f3475bb3c152dec09c2be5` passed through actual controls, bounded transfer,
+preview, exact-hash acceptance, emitter attachment, native playback and Undo.
+The Book consumed the complete one-second fixture at gain zero; its screenshot
+was inspected. This proves completion, not audible quality. Both clients/editors
+exited zero with scripted provider responses and synthetic assets.
+
+**1,629 web checks** and **77 refreshed native-fixture consumers** passed, along
+with build, lint, probe types, asset integrity and catalog equality. All **978 final
+C# files** match the frozen inputs and build mirror. The test driver was corrected
+to omit arguments for no-argument facts, await asynchronous acceptance receipts,
+and read the current sound-definition version. Evidence: `.quest-evidence/chat-sounds/`.
+No headset, paid-provider, signing, deployment or Meta action was performed.
+Whole-world physics admission, running-world retention, automatic unloading off
+and existing world limits remain unchanged. V1 release work remains active.

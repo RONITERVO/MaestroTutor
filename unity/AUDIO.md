@@ -8,9 +8,10 @@ providers, account access, generated media and Live conversation.
 
 The current implementation exposes reusable procedural and imported WAV sources, object emitters,
 finite or looping native playback, independent controls and playback events through
-the shared capability catalog. Longer media, other codecs and live stream adapters remain pending. Maestro speech still
-uses its existing native speech session, and artifact music still plays in the
-web app. Room reflection output and its background map scheduler are under
+the shared capability catalog. Longer media, other codecs and live stream adapters remain pending. Finished local chat WAV attachments can now be imported as reusable sources
+through the same checked native preview. Maestro speech still uses its existing
+native speech session; ordinary artifact playback remains in the web app until
+the user or agent explicitly imports, attaches and plays a world sound. Room reflection output and its background map scheduler are under
 development and are not installed by `MaestroRoom`. Direct native obstruction
 remains active without a reflection map. These audio changes have not been
 accepted on the headset.
@@ -63,8 +64,8 @@ accepted on the headset.
   the latest 32 terminal instances are retained. Overflow and expired identities
   fail visibly, so a missed change cannot silently look like successful playback.
 
-Room format 32 stores sources and emitters in the existing journal and temporary-room
-fork; paired snapshots use v31 and portable archives use v30. Construction resource
+Sources and emitters remain in the existing room journal, temporary-room fork,
+paired snapshots and portable archives; this adapter adds no saved format. Construction resource
 bundles preserve their source definitions and remap source IDs together with emitters.
 Asset hashes remain exact. Portable workspaces include the private audio library,
 check payload hashes and WAV metadata, and report missing sound references in export,
@@ -1119,3 +1120,36 @@ is interpreted as silence. See the [input contract](Tools/EchoProcessing/README.
 This boundary does not acknowledge the original app's `PcmCapture.flush` promise:
 a downstream delivery fence and DSP-delay treatment are still needed. No app backend
 selection or end-to-end last-word-preservation claim follows from scripted tests.
+
+## Finished chat audio as a world source
+
+`audio.chat.library` pages the newest eight available, completed local WAV
+attachments in the current conversation after its bookmark. `audio.chat.item`
+resolves one exact hash to its current `offerSet`. Generated audio notes/music and
+user attachments retain declared origin and message identity in the offer. These
+labels are untrusted data. TTS caches, private Live turn recordings, pending music
+chunks, URLs and unsupported local formats are not offered by this adapter.
+
+Use `audio.import` with `operation: "selectChat"`, that `offerSet`, and exact
+`assetHash`. The ordinary import status shows receiving, checking and preview.
+The native WAV parser verifies the original bytes and their hash before preview.
+The ordinary `accept` step saves the private content-addressed file and creates a
+source with one Undo. It does not attach an emitter or play the sound. Existing
+emitter controls, `audio.play`, `audio.start`, buttons and event-driven programs
+then use the same source. Undo removes the source edit while preserving its file.
+The generated book controls provide the same select/load-current/accept actions.
+
+Chat images and sounds share generation fencing, ordered 16 KiB chunks, duplicate
+acknowledgment handling and transfer limits. The unchanged 32 KiB room wire gives
+commands priority and alternates media priority when both transfers are pending.
+Only selected bytes enter native memory. A changed conversation, bookmark, source
+set, room, focus or interrupted transfer revokes an unaccepted chat selection.
+Accepted writes finish under the existing import ownership rules; inspect their
+receipts before retrying. Merely listing or receiving offers changes no room file.
+
+The original app still owns generation, managed/BYOK access and its messages.
+There is no second provider client, implicit URL download, recording or automatic
+playback. WAV duration/codec/library/voice limits above still apply: a long or
+invalid WAV may be offered but fails checked preview with a visible reason. More
+codecs, longer media and live sources remain required adapters. This transfer
+implementation is not audible, microphone coexistence or Quest acceptance.

@@ -75,3 +75,13 @@ it('keeps imported-file discovery within the same bounded book and program value
  expect(validateCapabilityOutput('audio.import',1,receipt)).toBeNull();
  expect(validateCapabilityOutput('audio.import',1,{...receipt,library:page})).not.toBeNull();
 });
+
+it('selects chat audio with exact ephemeral offers and ordinary preview acceptance',()=>{
+ const call={operation:'selectChat',offerSet:'a'.repeat(32),assetHash:'b'.repeat(64)};
+ expect(validateCapabilityArguments('audio.import',1,call)).toBeNull();
+ expect(validateCapabilityArguments('audio.import',1,{...call,assetHash:'https://private/sound.wav'})).not.toBeNull();
+ expect(validateCapabilityArguments('audio.import',1,{...call,bytes:'AAAA'})).not.toBeNull();
+ expect(behaviourFact('audio.chat.library')?.features).toContain('chatAudio.v1');
+ const entry={id:call.assetHash,revision:1,assetHash:call.assetHash,name:'Rain',messageId:'sound',origin:'generated',kibibytes:47};
+ expect(validFactValue('audio.chat.library',{offerSet:call.offerSet,total:1,next:-1,entries:[entry]})).toBe(true);
+});

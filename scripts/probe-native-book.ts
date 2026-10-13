@@ -1,3 +1,4 @@
+import {chatSoundFixture} from './probe-chat-audio';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {chromium,type Browser} from 'playwright-core';
@@ -553,6 +554,27 @@ try{
  assert.equal(acceptedChat.output?.imageHash,chatHash);assert.match(String(acceptedChat.output?.appearanceId),/^[a-f0-9]{32}$/);
  await writeFile(join(directory,'book-chat-image.json'),JSON.stringify({boundary:'Synthetic local PNG in the original chat store, actual Chrome controls/transport and native preview/acceptance. No provider or headset capture.',chatHash,selectedChat,acceptedChat},null,2));
  await page.screenshot({path:join(directory,'book-chat-image.png')});
+ // A finished chat audio attachment follows the same user-visible import owner.
+ const chatSound=chatSoundFixture();await page.evaluate(data=>window.nativeBookChatAudio!(data),chatSound.dataUrl);
+ await openNamedAction('Import a sound together','audio.import');await page.getByLabel('Variant',{exact:true}).selectOption('4');
+ await page.getByRole('button',{name:'Load saved chat sound',exact:true}).click();await page.getByLabel('Choose chat sound',{exact:true}).selectOption(JSON.stringify([chatSound.hash,null]));
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const selectedSound=await runNamedAction('audio.import');
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
+ await page.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page.getByLabel('Search facts',{exact:true}).fill('audio.import.selection');await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:/Sound import status.*audio\.import\.selection/}).click();
+ const soundDeadline=Date.now()+15000;let soundReady=false;
+ while(Date.now()<soundDeadline){const fact=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);if(fact?.operation==='inspect'&&fact.category==='facts'&&fact.capability==='audio.import.selection'&&fact.available&&fact.value&&typeof fact.value==='object'&&'phase' in fact.value&&fact.value.phase==='preview'){soundReady=true;break;}await page.getByRole('button',{name:'Refresh fact',exact:true}).click();await page.waitForTimeout(100);}
+ assert.equal(soundReady,true,'Native chat sound preview must finish before acceptance');
+ await openNamedAction('Import a sound together','audio.import');await page.getByLabel('Variant',{exact:true}).selectOption('1');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ const acceptedSound=await runNamedAction('audio.import');assert.equal(acceptedSound.output!.assetHash,chatSound.hash);
+ await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Load saved sound',exact:true}).click();await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([acceptedSound.output!.sourceId,null]));await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');await page.getByLabel('Action inputs definition gain',{exact:true}).fill('0');
+ const soundAttached=await runNamedAction('object.audioEmitter.edit');
+ await openNamedAction("Play an object's sound",'audio.play');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');const soundPlayed=await runNamedAction('audio.play');assert.equal(soundPlayed.output!.source,acceptedSound.output!.sourceId);assert.ok(Number(soundPlayed.output!.seconds)>=.999);
+ await page.screenshot({path:join(directory,'book-chat-audio.png')});await writeFile(join(directory,'book-chat-audio.json'),JSON.stringify({boundary:'Synthetic finished WAV in original chat, real book selection/preview/acceptance, emitter attachment and native PCM consumption at gain zero. No provider or audible/headset acceptance.',hash:chatSound.hash,selectedSound,acceptedSound,soundAttached,soundPlayed},null,2));
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ for(let i=0;i<2;i++){const before=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);await page.getByRole('button',{name:'Undo',exact:true}).click();await page.waitForFunction(rev=>window.nativeBookEvidence!().state!.sceneRevision>rev,before);}
+ await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  // Bind the accepted chat image, then inspect actual retention through generated fact forms.
  await openNamedAction('Choose object appearance','object.appearance.bind');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();

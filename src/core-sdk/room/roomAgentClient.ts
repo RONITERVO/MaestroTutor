@@ -1,6 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import { ChatImageSource } from './chatImageSource';
+import { ChatAudioSource } from './chatAudioSource';
+import { validChatAudioRequest } from '../../../shared/chatAudio';
 import { validChatImageRequest } from '../../../shared/chatImages';
 import {validRoomCaptureMetadata,validRoomCaptureImage,sameRoomCapture,type RoomCaptureImage} from '../../../shared/roomViewCapture';
 import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
@@ -21,6 +23,8 @@ const integer=(v:unknown,min=0) => typeof v==='number' && Number.isInteger(v) &&
 const id=(v:unknown) => typeof v==='string' && /^[a-f0-9]{32}$/.test(v);
 export class RoomAgentClient {
   readonly chatImages = new ChatImageSource();
+  readonly chatAudio = new ChatAudioSource();
+  private mediaFirst = false;
   private value:RoomAgentState|null=null;
   private clientId=crypto.randomUUID().replace(/-/g,'');
   private rejectedSessions=new Set<string>();
@@ -68,6 +72,7 @@ export class RoomAgentClient {
     if(record(inspection)&&inspection.partId!==undefined&&inspection.partId!==null&&inspection.partId!==''&&(typeof inspection.partId!=='string'||!/^[a-zA-Z0-9_]{1,32}$/.test(inspection.partId)))return false;
     if(input.capture!==undefined&&input.capture!==null&&!validRoomCaptureMetadata(input.capture))return false;
     if(input.chatImage!==undefined&&input.chatImage!==null&&!validChatImageRequest(input.chatImage))return false;
+    if(input.chatAudio!==undefined&&input.chatAudio!==null&&!validChatAudioRequest(input.chatAudio))return false;
     const next=input as unknown as RoomAgentState;
     if(this.rejectedSessions.has(next.session))return false;
     if(this.value?.session===next.session && next.revision<=this.value.revision) return false;
@@ -91,10 +96,16 @@ export class RoomAgentClient {
   }
   snapshot=() => {
     const snapshot = {clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null};
-    if (!this.value?.capabilities?.includes('chatImages.v1')) return snapshot;
-    const images = this.chatImages.snapshot(this.value.chatImage);
-    // Keep the same bounded native wire. A large action takes priority for this poll.
-    return JSON.stringify({...snapshot,images}).length <= 32768 ? {...snapshot,images} : snapshot;
+    const media: {images?: ReturnType<ChatImageSource['snapshot']>; sounds?: ReturnType<ChatAudioSource['snapshot']>} = {};
+    const images=this.value?.capabilities?.includes('chatImages.v1')?this.chatImages.snapshot(this.value.chatImage):undefined;
+    const sounds=this.value?.capabilities?.includes('chatAudio.v1')?this.chatAudio.snapshot(this.value.chatAudio):undefined;
+    // One bounded wire serves actions and both media types. Rotate priority so
+    // concurrent image and audio selections cannot starve one another.
+    this.mediaFirst=!this.mediaFirst;
+    const addImage=()=>{if(images&&JSON.stringify({...snapshot,...media,images}).length<=32768)media.images=images;};
+    const addSound=()=>{if(sounds&&JSON.stringify({...snapshot,...media,sounds}).length<=32768)media.sounds=sounds;};
+    if(this.mediaFirst){addImage();addSound();}else{addSound();addImage();}
+    return {...snapshot,...media};
   };
   lease(allowPendingObservation=false):RoomAgentLease|null {
     if(!this.value || Date.now()-this.lastSeen>3000 || (this.pending && !allowPendingObservation)) return null;

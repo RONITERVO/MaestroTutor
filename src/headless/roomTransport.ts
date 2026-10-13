@@ -4,6 +4,7 @@ import {readFile,writeFile,rename,stat} from 'node:fs/promises';
 import {join,resolve} from 'node:path';
 import {RoomAgentClient} from '../core-sdk/room/roomAgentClient';
 import {chatImageSources} from '../core-sdk/room/chatImageSource';
+import {chatAudioSources} from '../core-sdk/room/chatAudioSource';
 import type {ChatMessage} from '../core/types';
 import type {RoomAgentLease} from '../core-sdk/room/roomAgent';
 
@@ -91,7 +92,7 @@ export class HeadlessRoomTransport {
  }
  private async run(){
   try{while(!this.stopped){
-   if(this.chatSource){const source=this.chatSource();void this.client.chatImages.update(source.scope,chatImageSources(source.messages,source.bookmark));}
+   if(this.chatSource){const source=this.chatSource();void this.client.chatImages.update(source.scope,chatImageSources(source.messages,source.bookmark));void this.client.chatAudio.update(source.scope,chatAudioSources(source.messages,source.bookmark));}
    const snapshot=this.client.snapshot(),envelope=await this.channel.exchange(snapshot);
    if(envelope.state){
     const previous=this.client.getSnapshot().state,state=envelope.state;
@@ -106,5 +107,5 @@ export class HeadlessRoomTransport {
  }
  checkHealth(){if(this.failure)throw this.failure;}
  lease():RoomAgentLease{this.checkHealth();const lease=this.client.lease();if(!lease)throw new Error('The native room is unavailable or busy.');return lease;}
- async close(stopNative=true){this.stopped=true;this.chatSource=undefined;await this.client.chatImages.update('',[]);this.client.cancel();await this.pump;if(stopNative)await this.channel.stop();}
+ async close(stopNative=true){this.stopped=true;this.chatSource=undefined;await this.client.chatImages.update('',[]);await this.client.chatAudio.update('',[]);this.client.cancel();await this.pump;if(stopNative)await this.channel.stop();}
 }

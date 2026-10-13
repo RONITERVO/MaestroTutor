@@ -1376,3 +1376,22 @@ readiness, persistence, copies, reusable prototypes, overflow refusal and failed
 publication. Geometry tests compare clipped volumes with analytic and independently
 integrated values and check full-body sweeps through wet triangles. These desktop
 checks do not claim Quest rendering/performance, real-provider or Store acceptance.
+
+
+## Chat audio authoring parity
+
+The offline Headless journey supplies a finished synthetic WAV through the same
+conversation source used by the headless client. It discovers `audio.chat.library`,
+selects the exact offer, waits for native preview, accepts through `audio.import`,
+reads the resulting source and undoes it. `chat-audio.json` records those receipts.
+The byte transfer and native WAV validation are real; no native library file is
+preseeded for this path.
+
+The original Book journey adds the same WAV to the original chat store, uses the
+generated sound-selection and acceptance controls, attaches the source to a book
+emitter, and runs `audio.play` until native PCM consumption completes. Playback
+gain is zero; this tests ownership/consumption, not audible quality. It captures
+`book-chat-audio.json` and `book-chat-audio.png`, then undoes its source and emitter
+edits. Image transfer remains covered in the same journey. These offline cases
+use scripted providers and synthetic assets, with no microphone, real-provider
+or physical headset acceptance.

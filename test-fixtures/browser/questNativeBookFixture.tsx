@@ -25,6 +25,7 @@ declare global {interface Window {
  nativeBookCredentials?:()=>Promise<{mode:'byok';apiKey:string}|{mode:'managed';session:ManagedAccessSession;appCheckToken:string}>;
  nativeBookStop?:()=>void;
  nativeBookChatImage?:()=>string;
+ nativeBookChatAudio?:(dataUrl:string)=>void;
  maestroNativeExchange?:(snapshot:ReturnType<RoomAgentClient['snapshot']>)=>Promise<{state?:unknown;capture?:unknown}>;
  nativeBookEvidence?:()=>{state:RoomAgentState|null;errors:string[];messages:ReturnType<typeof useMaestroStore.getState>['messages'];agentWorking:boolean;inputBlocked:boolean};
  nativeBookTask?:(id:string)=>ReturnType<typeof roomTaskStore.get>;
@@ -56,6 +57,7 @@ window.nativeBookChatImage=()=>{
  store.addMessage({role:'assistant',text:'Synthetic chat texture fixture.',imageUrl:dataUrl,imageMimeType:'image/png',imageOrigin:'generated',attachmentName:'Chat checker.png'});
  return dataUrl;
 };
+window.nativeBookChatAudio=(dataUrl)=>{store.addMessage({role:'assistant',text:'Synthetic generated rain sound.',imageUrl:dataUrl,imageMimeType:'audio/wav',maestroToolKind:'audio-note',attachmentName:'Chat rain.wav'});};
 const errors:string[]=[];let observed:RoomAgentState|null=null,busy=false;
 window.nativeBookEvidence=()=>({state:observed,errors:[...errors],messages:useMaestroStore.getState().messages,agentWorking:selectIsAgentWorking(useMaestroStore.getState()),inputBlocked:selectIsSending(useMaestroStore.getState())});
 window.nativeBookTask=roomTaskStore.get;

@@ -12,6 +12,7 @@ import {probeWorldWeather} from './probe-world-weather';
 import {probeLiquidMedium} from './probe-liquid-medium';
 import {probeWaterTraversal} from './probe-water-traversal';
 import {probeTerrainWater} from './probe-terrain-water';
+import {probeChatAudio} from './probe-chat-audio';
 import {prepareAgentWaterTraversal,runAgentWaterTraversalProof} from './probe-agent-water-traversal';
 import {prepareAgentLiquidMedium,runAgentLiquidMediumProof} from './probe-agent-liquid-medium';
 import {runAgentWorldTimeProof} from './probe-agent-world-time';
@@ -426,6 +427,7 @@ try{
   await probeLiquidMedium(execute,directory);
   await probeWaterTraversal(execute,directory);
   await probeTerrainWater(execute,directory);
+ await probeChatAudio(transport,execute,directory);
   await probeVisibilityLayers(execute,directory);
   await probeWorldRegions(execute,directory);
 
