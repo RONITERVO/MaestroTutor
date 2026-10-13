@@ -741,6 +741,22 @@ try{
  assert.ok(Math.abs(walkingPosition.x+1)<.02&&Math.abs(walkingPosition.y)<.02&&Math.abs(walkingPosition.z+3)<.02);assert.ok(Number(walkingReceipt.output!.distance)>2);
  await page.getByRole('heading',{name:'Walk to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-travel.png')});
  await writeFile(join(directory,'book-native-grounded-travel.json'),JSON.stringify({boundary:'Original book generated create and walk forms around a solid robot obstacle, with real native arrival, travelled distance and position. Explicit synthetic floor; no provider or headset acceptance.',created:walkingCreated,obstacle:walkingObstacle,receipt:walkingReceipt,position:walkingPosition},null,2));
+ // Put the independent leader farther away with the existing walking form.
+ await openNamedAction('Walk to a place','object.navigate');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(walkingTarget);
+ for(const [axis,value] of Object.entries({x:1,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs speed',{exact:true}).fill('1.2');await runNamedAction('object.navigate');
+ await openNamedAction('Follow someone','object.follow');
+ await page.getByLabel('Leader',{exact:true}).selectOption('1');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(walkingObstacleId);
+ await page.getByLabel('Action inputs leader objectId',{exact:true}).selectOption(walkingTarget);
+ for(const [key,value] of Object.entries({distance:1,speed:1.2,seconds:5}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+ const followingReceipt=await runNamedAction('object.follow');assert.equal(followingReceipt.output!.state,'keepingDistance');assert.ok(Number(followingReceipt.output!.distance)>1.9);
+ const followingPositions=await page.evaluate(({target,leader})=>{const objects=window.nativeBookEvidence!().state!.objects;return {actor:objects.find(o=>o.id===target)!.position,leader:objects.find(o=>o.id===leader)!.position};},{target:walkingObstacleId,leader:walkingTarget});
+ const followingGap=Math.hypot(followingPositions.actor.x-followingPositions.leader.x,followingPositions.actor.z-followingPositions.leader.z);assert.ok(followingGap>=.95&&followingGap<=1.12);
+ await page.getByRole('heading',{name:'Follow someone',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-following.png')});
+ const followingStatus=await readResourceFact('object.navigation','Walking action status',{target:walkingObstacleId});assert.equal(followingStatus.active,false);
+ await writeFile(join(directory,'book-native-grounded-following.json'),JSON.stringify({boundary:'Original book generated follow form, live native following, accepted distance and passive status. Explicit synthetic ground, no provider or headset acceptance.',receipt:followingReceipt,positions:followingPositions,gap:followingGap,status:followingStatus},null,2));
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
  // Observe one quiet placement-capture interval before the one-shot Undo.
  const placementSignature=()=>page!.evaluate(()=>JSON.stringify(window.nativeBookEvidence!().state!.objects.map(o=>[o.id,o.objectRevision,o.position])));

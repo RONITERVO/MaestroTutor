@@ -3855,3 +3855,24 @@ follow the requested direction and stop when that direction is blocked. Check
 several actors, active physics and live object movement for frame-time and thermal
 cost. Conservative bounds do not certify all building interiors or moving crowds.
 Desktop route and client receipts cannot establish these physical outcomes.
+
+## Generic grounded following — pending device acceptance
+
+Device work remains on hold. When authorized, verify the generated “Follow
+someone” form and equivalent user/agent requests for Maestro and a created robot:
+
+1. Follow the user, then an independently walking or hand-held object. Check the
+   requested separation, clear stop feedback and no unexpected movement burst.
+2. Block the route, move the blocker, and observe holding/recovery. A timed run
+   ending while blocked must report blocked rather than claim arrival.
+3. Grab the follower, Stop, lose tracking or remove the leader. Movement must end
+   at the last accepted place and must not resume automatically.
+4. Use virtual-only terrain below the scanned floor for one follower while another
+   retains scanned-room collision. Check slopes, actual body clearance and policies.
+5. Run supported recipe-part animation alongside following. Confirm Maestro's
+   selected gait; arbitrary imported characters currently have no automatic gait.
+6. Observe multiple walking/following actors up to their shared four-action limit,
+   including frame timing and memory on Quest. Desktop timing is not acceptance.
+
+Headless and book probe evidence uses synthetic ground. This entry does not claim
+a new installed APK or physical/provider acceptance.

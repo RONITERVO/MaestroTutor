@@ -9330,3 +9330,58 @@ See [the world contract](QUEST_WORLD_AUTHORING.md#solid-obstacle-detours) for
 bounds and limitations. General interior/crowd planning, foot planting, swimming,
 regional unloading and physical Quest acceptance remain open. Existing headset,
 paid-provider, signing, deployment and Meta holds remain in force. V1 remains active.
+
+## Shared grounded following — 2026-10-13
+
+Created actors and Maestro now share the timed `object.follow` action and passive
+`object.navigation` fact. Following delegates every accepted step to the same
+engine as finite `object.navigate`; it does not add another planner, scheduler or
+saved behavior format. The leader remains independently controllable. Per-object
+real-room/water policy, accepted ground, native preparation and lifecycle rules
+still apply. Detailed semantics and limitations are in
+[world authoring](QUEST_WORLD_AUTHORING.md#shared-grounded-following--2026-10-13).
+
+The focused run passed **46 PlayMode checks**, including twelve new following
+regressions, and three EditMode checks for optional string patterns. Following's
+free-text result exposed a shared validator issue: a JSON-null optional regex was
+being passed to the regex engine. The validator now treats it as absent while
+retaining length, control-character and actual-pattern checks.
+
+The complete native suite passed **1,196 EditMode / 1,498 PlayMode checks**, with
+three expected optional private-asset skips. The first Headless journey then
+caught an omitted `groundedFollowing.v1` advertisement: the connected client
+correctly refused an action the runtime had implemented. The final source adds
+that one feature entry and a handshake regression. It passed **47 focused
+PlayMode checks** and three optional-pattern EditMode checks, then both complete
+integration journeys. The full suite was not rerun after that two-file correction;
+its source hashes and the final hashes are recorded separately. All **992 final
+frozen C# files** match source and mirror.
+
+Final Headless `19357db316614a8b8f95045170a1eb32` and Original Book
+`3c92ed01ab1f4dfea98270621af8be65` passed with zero client/editor exits and no real
+provider calls. Headless independently walks the leader while following runs,
+observes active/inactive status and verifies terminal replay. It records
+18 following observations, about 2.64 metres of accepted travel
+and a 1.014-metre final separation for a one-metre setting. The Book's generated
+form moves the follower about 1.98 metres, with a 1.013-metre final separation.
+Its rendered form/completion were visually inspected. Both retain the earlier
+finite obstacle-detour coverage and remove fixtures through ordinary Undo.
+These are scripted-provider/synthetic-floor checks, not physical acceptance.
+
+**2,926 web checks across 312 files** passed, including the 77 consumers of refreshed
+native catalog/catching fixtures. A final-source native catalog capture also
+passed after the handshake correction. Lint, probe types, catalog/source equality
+and asset integrity passed. Web build, native browser build/lint, Unity Android
+export and unsigned Gradle compilation passed. Gradle confirmed the unchanged
+**128 passed / two skipped Java results** were up to date. All **22 selected ARM64
+libraries** passed the ELF/16 KiB segment audit; all **148 web files**,
+the browser AAR and selected library hashes match the staged build. No APK/AAB
+was created, and this is development-target compilation, not release packaging.
+
+Evidence is in `.quest-evidence/grounded-following/` and the named journey folders.
+The ten protected raw files and untracked Store work remain untouched. Existing
+headset, paid-provider, signing, deployment and Meta holds remain in force.
+Whole-world physics admission, running-world retention, automatic unloading off
+and the current 64-object / 25-metre / four-height-field limits remain unchanged.
+Broader NPC gait/foot planting, interior/crowd navigation, swimming, world streaming
+and physical/provider acceptance remain open. V1 release work remains active.

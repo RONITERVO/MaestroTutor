@@ -33569,7 +33569,7 @@
         "physics.running",
         "navigation.floorReady"
       ],
-      "description": "Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walks share this action budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches fail at the last accepted place. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
+      "description": "Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking/following actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches fail at the last accepted place. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
       "example": {
         "target": "maestro",
         "mode": "walk",
@@ -33618,6 +33618,170 @@
         "required": [
           "position",
           "distance"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.follow",
+      "version": 1,
+      "label": "Follow someone",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "leader": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "user"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "The user"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ]
+                  },
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "objectId"
+                ],
+                "additionalProperties": false,
+                "title": "Another object"
+              }
+            ],
+            "x-discriminators": [
+              "kind"
+            ],
+            "title": "Leader"
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.8,
+            "maximum": 5.0
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.2,
+            "maximum": 1.2
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "target",
+          "leader",
+          "distance",
+          "speed",
+          "seconds"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "groundedFollowing.v1"
+        ]
+      },
+      "duration": "timed",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "locomotion"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "physics.running",
+        "navigation.floorReady"
+      ],
+      "description": "Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported characters currently move their root without an automatic gait, and a separate whole-target imported animation conflicts. Maestro uses its selected gait. This does not invent foot planting, swimming, crowd steering or head/limb posing. Four concurrent walking/following actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data.",
+      "example": {
+        "target": "maestro",
+        "leader": {
+          "kind": "user"
+        },
+        "distance": 1.3,
+        "speed": 0.65,
+        "seconds": 10
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "distance": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 600.0
+          },
+          "state": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 32
+          },
+          "reason": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "position",
+          "distance",
+          "state",
+          "reason"
         ],
         "additionalProperties": false
       }
@@ -42469,6 +42633,50 @@
       ]
     },
     {
+      "id": "object.navigation",
+      "version": 1,
+      "type": {
+        "record": {
+          "active": "boolean",
+          "mode": "text",
+          "state": "text",
+          "reason": "text",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "distance": "number"
+        }
+      },
+      "label": "Walking action status",
+      "description": "Passive state of the current shared object.navigate or object.follow owner, including planning, moving, keepingDistance, arrived, blocked or failed. position is the native root in authored room metres; distance is accepted travel in this operation. Inactive means no shared walking owner (not proof that every other kind of motion has stopped). Legacy Maestro controls and animation use their existing facts. Missing native objects are unavailable. Reading does not load, move, start physics or retry an action.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "groundedFollowing.v1"
+      ]
+    },
+    {
       "id": "physics.environment",
       "version": 1,
       "type": {
@@ -43766,7 +43974,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "518f50e1da49b329d01d901e0b756cfe5a1c35c7f39490973f0764eea7384c0a"
+      "sha256": "8253a5506111544657c5509a04290ca609c58dcbf911cfd943f73739cb74157c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -43881,6 +44089,10 @@
       "sha256": "346b90a17039aa9d18d122d311355c9eef34f91e6245837a262f8212bff0448c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
+      "sha256": "8832d9c589ce5b04a6c3115ac180a6bdd5f3cc46da47ff1c4c503e312b91abb6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
       "sha256": "0d94f529ef5ccac587259c3b7a774001dd9ff1541a2704a8a1e31f09ea863a09"
     },
@@ -43966,7 +44178,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
-      "sha256": "79273247abf4cfc3e9b942341d229aada234d3e5f9ddacaff63ed12986fec203"
+      "sha256": "766d8533c032dc184c29b7d1a5cbf9a2cb962fccd63df893578c9b524d10a6dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
@@ -44490,7 +44702,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "9254737752b44ab9a1eff1c0c31b362fba4a8c7a6cc10a9b6fcb4b90b2af672d"
+      "sha256": "4fce8fe7153a44ef8eab5cdfe23b024b1ba1dbf0c98596f35855ba822c3f89dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -45157,8 +45369,16 @@
       "sha256": "d810195dabed86101f1ec66e2ea13070d6e563beec81c4910372752f4e0fd150"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedFollowing.cs",
+      "sha256": "1d9f8cec94cce1be5b061ca747d9eea772cde7ca931ad7427ac8f61a39dad1b3"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
+      "sha256": "03ed85d32236a3b3cba82d56edd64d94a28c408dd7c76e5c4a13dc07c8715929"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
-      "sha256": "db304f2f593e2b0d308b054f52e1e741a33486a444d7c23cb8c08307c6dd44f4"
+      "sha256": "b29b9d1cc8c7fa70fa983ccfc810097f3db412e0d665cb1e9bb46b4e23aeffe7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
@@ -45566,7 +45786,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "613600acec8d7727865b3377a5ebb1c23752f1863acc312e0f417fecf287f25f"
+      "sha256": "421c59f67a0e655924afd4a37b8898c6ca05c876d49b2fb7129f2ebbd4629a04"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -45578,7 +45798,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "c71b35da307072413b9a49e6c427d24a34a85bcfb5906adad89b45e1756f72c9"
+      "sha256": "aef923949a2d885d52a9d01a7271cdb16dbd1a76a4ed6b9af97930fa232d616a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",

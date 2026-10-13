@@ -1420,3 +1420,22 @@ checks the completed native receipt, longer travelled distance and actual positi
 removes the fixture using Undo. Both paths use an explicitly synthetic floor.
 These checks cover shared client/native execution and the human interface; they
 are not evidence of real-model planning, a physical scan or headset comfort.
+
+## Shared following parity
+
+After finite grounded travel, the offline Headless journey starts `object.follow`
+on one robot and independently walks its exact leader. It reads active
+`object.navigation`, samples both native placements, verifies accepted travel and
+the requested separation, then checks inactive status and terminal receipt replay.
+`native-grounded-following.json` preserves those observations and both receipts.
+
+The Original Book journey repositions the leader using “Walk to a place”, opens
+the generated “Follow someone” form, selects an object leader, and starts the
+timed action. It verifies actual movement, keeping-distance completion and the
+same passive fact. `book-native-grounded-following.json` and the rendered
+`book-native-grounded-following.png` capture this boundary. Both fixtures are
+removed through ordinary Undo after physics pauses and placement settles.
+
+These journeys run against actual Unity with an explicit synthetic floor and
+scripted provider. They establish shared native action/UI parity, not real-model
+choice quality, human locomotion comfort, device tracking or Quest performance.

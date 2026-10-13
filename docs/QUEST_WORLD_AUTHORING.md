@@ -1053,7 +1053,7 @@ workspace replacement end the action at the last accepted placement. Successful
 steps periodically update runtime placement without adding Undo entries per step.
 No walking job resumes merely because saved data is loaded.
 
-Four concurrent walks, a five-minute lifetime, 0.2–1.2 metres/second and the current
+Four concurrent walking/following actions, a five-minute lifetime, 0.2–1.2 metres/second and the current
 25-metre authored-world boundary keep work bounded. Existing spatial-input waits
 and whole-world physics retention still apply. This adds neither regional
 streaming nor a second navigation or behavior engine. Broader NPC steering,
@@ -1097,3 +1097,43 @@ prediction need further work. The actor can report no route even when a more
 sophisticated planner could find one. It must never report arrival from an elapsed
 timer or use that limitation to bypass the selected real-room collision policy.
 Current verification and physical acceptance status are in the delivery record.
+
+## Shared grounded following — 2026-10-13
+
+`object.follow` exposes “Follow someone” through the same catalog, book forms,
+agent calls and visual programs as finite travel. Any eligible created actor can
+follow the tracked user or one exact native object. The follower owns locomotion;
+the leader remains independently movable, including while held. Maestro also
+reserves gaze and retains its selected gait. Recipe-part animations can coexist;
+an imported character does not gain an automatic gait, and whole-target imported
+animation still conflicts with root movement.
+
+Following and `object.navigate` share one ground motor, route planner and four-action
+budget. Both obey the follower's real-room collision and water policies. Thus a
+virtual-only robot can follow on terrain below the real floor without changing
+which surfaces another character uses. This does not change whole-world physics
+admission, running-world retention, automatic unloading or current world limits.
+
+Distance is horizontal foot-to-foot separation. Following approaches when farther
+away and holds within that distance; it does not push a nearby leader away. The
+user's position is projected at the follower's current ground height. An object
+leader uses its current root collider bounds. Only connected accepted ground can
+be traversed: hovering leaders and different floors may be unreachable. There is
+no added crowd avoidance, swimming, head posing or animated-limb collision.
+
+A run lasts 0.1–30 seconds, including waiting for a blocked route. Ordinary program
+loops and events express longer behavior without a second scheduler. A bounded
+retry observes changed destinations and obstacles, never accumulates movement
+while waiting, and never treats elapsed time as arrival. Completion reports the
+actual `state`, `reason`, root position and accepted travelled metres.
+`object.navigation` passively exposes planning, moving, keepingDistance, arrived,
+blocked or failed for the current shared walking owner. Inactive means no shared
+walking owner, not proof that all other motion stopped. Missing objects remain
+unavailable; observation never loads them or starts physics.
+
+Grabbing the follower, Stop, target edits, tracking loss, missing/replaced leaders,
+workspace changes and lost physics end movement at the accepted position. A held
+leader alone does not cancel following. Saved placement survives; an active job
+does not restart from saved data. Focused native regression coverage includes
+these boundaries, obstacle recovery, independent moving leaders, below-room
+following and shared admission. Delivery results are recorded in the v1 plan.

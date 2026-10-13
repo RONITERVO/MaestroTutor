@@ -114,7 +114,7 @@ namespace Maestro.Quest.Programs
                 case "string":
                     if(value.Type!=JTokenType.String)return false;string text=(string)value;
                     if(text.Any(char.IsControl) || schema["maxLength"]!=null && text.Length>(int)schema["maxLength"] ||
-                        schema["pattern"]!=null && !Regex.IsMatch(text,(string)schema["pattern"]) ||
+                        (string)schema["pattern"] is string pattern && !Regex.IsMatch(text,pattern) ||
                         schema["enum"] is JArray choices && !choices.Any(x=>(string)x==text))return false;
                     break;
                 case "boolean":if(value.Type!=JTokenType.Boolean)return false;break;
