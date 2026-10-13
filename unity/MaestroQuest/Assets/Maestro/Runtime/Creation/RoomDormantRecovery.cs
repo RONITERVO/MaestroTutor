@@ -25,11 +25,12 @@ namespace Maestro.Quest.Creation {
         // PhysX callbacks only copy a bounded contact identity. Publication,
         // loading and body changes happen after all callbacks from that step.
         internal void QueueDormantContact(RigidRoomItem body,DormantCollisionProxy proxy){
-            if(!this||!isActiveAndEnabled||applying||!body||body.PhysicsEditor!=this||!body.Simulating||!proxy||proxy.Owner!=this)return;
+            if(!this||!isActiveAndEnabled||applying||!body||body.PhysicsEditor!=this||!PhysicsStepDynamic(body)||!proxy||proxy.Owner!=this)return;
             var item=body.GetComponent<RoomItem>();if(Identity(item)==null)return;
             if(dormantContacts.Any(c=>c.Body==body&&c.Proxy==proxy))return;
+            RecordPhysicsGuard(body);
             dormantContacts.Add(new(){Body=body,Item=item,Target=proxy.Target,Revision=ObjectRevision(proxy.Target),Proxy=proxy,Generation=proxy.Generation,
-                Placement=body.PlacementRevision,Journal=journal,Frame=transform.localToWorldMatrix,Members=body.CollisionInputMembers});
+                Placement=body.PlacementRevision,Journal=journal,Frame=transform.localToWorldMatrix,Members=PhysicsStepMembers(body)});
         }
         bool RecoveryActor(RigidRoomItem body,RoomItem item,uint placement)=>body&&item&&body.PhysicsEditor==this&&Find(Identity(item))==item&&body.PlacementRevision==placement&&body.ContactTracking&&!item.Grab.isSelected;
         bool RecoveryOwned(DormantRecovery value){
@@ -51,7 +52,7 @@ namespace Maestro.Quest.Creation {
             dormantContacts.RemoveAll(c=>c.Item==item||c.Members.Contains(id));
             foreach(var value in dormantRecoveries.Where(r=>r.Members.Contains(id)).ToArray())RemoveDormantRecovery(value);
         }
-        void ReleaseDormantRecoveries(){dormantContacts.Clear();foreach(var value in dormantRecoveries.ToArray())RemoveDormantRecovery(value);}
+        void ReleaseDormantRecoveries(){CancelPhysicsStep();dormantContacts.Clear();foreach(var value in dormantRecoveries.ToArray())RemoveDormantRecovery(value);}
         void RefuseRecovery(DormantRecovery value,string reason){
             value.Inputs?.Dispose();value.Inputs=null;value.Pending=false;
             value.Reason=reason+" Pause then start physics, or grab the object, to retry from rest.";
@@ -63,7 +64,7 @@ namespace Maestro.Quest.Creation {
                 foreach(var contact in queued){
                     if(!ReferenceEquals(contact.Journal,journal)||!RecoveryActor(contact.Body,contact.Item,contact.Placement))continue;
                     string actor=Identity(contact.Item);if(recoveringBodies.ContainsKey(actor))continue;
-                    var members=contact.Members.Length>0?contact.Members:PhysicsIslandMembers(contact.Item);
+                    var members=PhysicsStepRecoveryMembers(actor,contact.Members.Length>0?contact.Members:PhysicsIslandMembers(contact.Item));
                     var previous=dormantRecoveries.Where(r=>r.Members.Intersect(members).Any(id=>recoveringBodies.ContainsKey(id))).ToArray();
                     if(previous.Length>0){members=members.Concat(previous.SelectMany(r=>r.Members)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();foreach(var old in previous)RemoveDormantRecovery(old);}
                     var contacts=queued.Where(c=>members.Contains(Identity(c.Item))).ToArray();
@@ -92,7 +93,7 @@ namespace Maestro.Quest.Creation {
                     else if(value.Inputs.Pending){value.Pending=true;value.Reason="Movement stopped at unavailable geometry; preparing nearby objects";}
                     else RefuseRecovery(value,issue??"Collision preparation could not finish.");
                 }
-            }finally{processingDormantContacts=false;}
+            }finally{CompletePhysicsStep();processingDormantContacts=false;}
         }
         void FixedUpdate()=>ProcessDormantContacts();
     }

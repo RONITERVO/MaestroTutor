@@ -64,8 +64,12 @@ namespace Maestro.Quest.Rules
         void Collided(string id,string otherId,string kind,Vector3 point,float speed) {
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.collided",id))return;
             var frame=editor.Frame;if(!frame.Valid)return;point=frame.PointToRoom(point);
-            var fields=new Newtonsoft.Json.Linq.JObject {["otherId"]=otherId,["otherKind"]=kind,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z};
-            Scheduler.EmitNative("object.collided",id,new Programs.ProgramValue(id),fields,Time.unscaledTime,out _);
+            var fields=new Newtonsoft.Json.Linq.JObject {["otherId"]=otherId,["otherKind"]=kind,["interrupted"]=false,["speed"]=speed,["x"]=point.x,["y"]=point.y,["z"]=point.z};
+            QueuePhysicsEvent("object.collided",id,otherId,fields);
+        }
+        void QueuePhysicsEvent(string name,string source,string other,Newtonsoft.Json.Linq.JObject fields){
+            var observation=new NativePhysicsObservation();
+            if(Scheduler.EmitNativeObservation(name,source,new Programs.ProgramValue(source),fields,Time.unscaledTime,observation,out _))editor.ObservePhysicsEvent(source,other,observation);
         }
         void Caught(string id,string holder,string part,Vector3 point,float speed){
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.caught",id))return;
@@ -74,7 +78,7 @@ namespace Maestro.Quest.Rules
         }
         void ConnectionBroke(string id,string connected,string kind,float force,float torque){
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.connection.broken",id))return;
-            Scheduler.EmitNative("object.connection.broken",id,new Programs.ProgramValue(id),new Newtonsoft.Json.Linq.JObject {["connected"]=connected,["kind"]=kind,["forceLimit"]=force,["torqueLimit"]=torque},Time.unscaledTime,out _);
+            QueuePhysicsEvent("object.connection.broken",id,connected,new Newtonsoft.Json.Linq.JObject {["connected"]=connected,["kind"]=kind,["forceLimit"]=force,["torqueLimit"]=torque,["interrupted"]=false});
         }
         void ContainerPoured(string id,double received,double spilled,int receivers,string liquid){
             if(editor.RuntimeGate.Held||paused||!focused||!isActiveAndEnabled||Scheduler==null||!Scheduler.IsListening("object.container.poured",id))return;

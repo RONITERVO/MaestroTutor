@@ -7,12 +7,21 @@ using Maestro.Quest.Programs;
 using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Rules
 {
+    // Native physics captures the receiver before its solver step is classified.
+    // This receipt can only resolve once and cannot be manufactured by app signals.
+    internal sealed class NativePhysicsObservation {
+        internal bool Ready {get;private set;}
+        internal bool Cancelled {get;private set;}
+        internal bool Interrupted {get;private set;}
+        internal void Resolve(bool interrupted){if(Ready||Cancelled)return;Interrupted=interrupted;Ready=true;}
+        internal void Cancel(){if(!Ready)Cancelled=true;}
+    }
     public sealed partial class RuleScheduler
     {
         // Receivers are captured at emission. An event cannot reach a later wait,
         // including a later wait in the same run, and cannot recurse into a handler.
         sealed class Delivery {public Run Run;public int Serial;}
-        sealed class EventMessage {public Delivery[] Receivers;public ProgramValue Value;public JObject Fields;public float At;public int Depth;}
+        sealed class EventMessage {public Delivery[] Receivers;public ProgramValue Value;public JObject Fields;public float At;public int Depth;public NativePhysicsObservation Observation;}
         readonly Dictionary<string,HashSet<Run>> subscriptions=new(StringComparer.Ordinal);
         readonly Queue<EventMessage> eventQueue=new();
         readonly Run[] watched=new Run[MaximumConcurrent];
@@ -46,13 +55,15 @@ namespace Maestro.Quest.Rules
             listeners.Any(run=>run.Machine.Wait!=null&&(run.Machine.Wait.Source==""||run.Machine.Wait.Source==source));
         // Only native producers call this. The app's signal command still accepts
         // declared user.* scalars and cannot manufacture physics observations.
-        public bool EmitNative(string name,string source,ProgramValue value,JObject fields,float now,out string status) {
+        public bool EmitNative(string name,string source,ProgramValue value,JObject fields,float now,out string status)=>EmitNativeObservation(name,source,value,fields,now,null,out status);
+        internal bool EmitNativeObservation(string name,string source,ProgramValue value,JObject fields,float now,NativePhysicsObservation observation,out string status) {
             var definition=BehaviourCatalog.Event(name);status="Invalid native event";
+            if(observation!=null&&(fields?["interrupted"]?.Type!=JTokenType.Boolean||observation.Ready||observation.Cancelled))return false;
             if(definition==null||definition.HasSubscription||value.Type!=ProgramType.Text||!definition.ValidFields(fields)||
                 (definition.ObjectEvent?!RuleDocument.IsTarget(source)||value.Text!=source:source!=""||value.Text!=definition.Activity))return false;
-            return EnqueueEvent(name,source,value,now,0,out status,fields);
+            return EnqueueEvent(name,source,value,now,0,out status,fields,observation);
         }
-        bool EnqueueEvent(string name,string source,ProgramValue value,float now,int depth,out string status,JObject fields=null)
+        bool EnqueueEvent(string name,string source,ProgramValue value,float now,int depth,out string status,JObject fields=null,NativePhysicsObservation observation=null)
         {
             status="Events are paused";if(suspended||!float.IsFinite(now))return false;
             if(depth>MaximumEventDepth) {status="Event chain limit reached; add a timer or wait for an external event";return false;}
@@ -61,7 +72,7 @@ namespace Maestro.Quest.Rules
                 (run.Machine.Wait.Source==""||run.Machine.Wait.Source==source)).Select(run=>new Delivery {Run=run,Serial=run.WaitSerial}).ToArray():Array.Empty<Delivery>();
             if(recipients.Length==0) {status="Event had no waiting receivers";return true;}
             if(eventQueue.Count>=MaximumEvents) {if(EventsDropped<int.MaxValue)EventsDropped++;status=LastError="Event queue is full; the event was not delivered";return false;}
-            eventQueue.Enqueue(new EventMessage {Receivers=recipients,Value=value,Fields=fields==null?null:(JObject)fields.DeepClone(),At=now,Depth=depth});status="Event queued for "+recipients.Length+" waiting program(s)";return true;
+            eventQueue.Enqueue(new EventMessage {Receivers=recipients,Value=value,Fields=fields==null?null:(JObject)fields.DeepClone(),At=now,Depth=depth,Observation=observation});status="Event queued for "+recipients.Length+" waiting program(s)";return true;
         }
         bool WaitForEvent(Run run,float now)
         {
@@ -113,7 +124,11 @@ namespace Maestro.Quest.Rules
         {
             int count=Math.Min(16,eventQueue.Count);
             for(int i=0;i<count;i++) {
-                var message=eventQueue.Dequeue();
+                var message=eventQueue.Peek();
+                if(message.Observation!=null&&!message.Observation.Ready&&!message.Observation.Cancelled)break;
+                eventQueue.Dequeue();
+                if(message.Observation?.Cancelled==true)continue;
+                if(message.Observation!=null)message.Fields["interrupted"]=message.Observation.Interrupted;
                 foreach(var receiver in message.Receivers) {
                     var run=receiver.Run;
                     if(!running.Contains(run)||run.WaitSerial!=receiver.Serial||run.Machine.Wait?.Event==null||

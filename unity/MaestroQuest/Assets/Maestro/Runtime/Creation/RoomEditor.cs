@@ -13,6 +13,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
+    [RequireComponent(typeof(RoomPhysicsStepRecorder))]
     public sealed partial class RoomEditor : MonoBehaviour
     {
         readonly Dictionary<string, RoomItem> objects = new();

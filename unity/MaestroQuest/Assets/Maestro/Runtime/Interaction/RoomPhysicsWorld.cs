@@ -20,6 +20,7 @@ namespace Maestro.Quest.Interaction
         bool paused,focused=true;
         string stateId=Guid.NewGuid().ToString("N");
         bool Active=>!paused&&focused&&isActiveAndEnabled;
+        internal int SimulationIntent=>startIntentVersion;
         void Notify(bool setupChanged=true,bool readinessOnly=false){if(!readinessOnly){startIntentVersion++;preparingStart=false;}else if(preparingStart)Status="Preparing objects for physics";observedReady=AnySimulationReady;stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();if(setupChanged)SetupChanged?.Invoke();}
         string IdleStatus=>CollisionAdmissionIssue??(AnySimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Add accepted virtual ground before starting physics");
         RoomRuntimeGate runtimeGate;

@@ -33805,7 +33805,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A native physical connection broke while room physics was running. Value/source is its owner object ID. connected is the exact other ID; kind is hinge, fixed or slider; forceLimit and torqueLimit are configured limits, not measured impact or proof of cause. Emitted once per admitted break; pause/Stop/retirement do not emit it and missed events are not replayed. Rearm or align explicitly to reconnect.",
+      "description": "A native physical connection broke while room physics was running. Value/source is its owner object ID. connected is the exact other ID; kind is hinge, fixed or slider; forceLimit and torqueLimit are configured limits, not measured impact or proof of cause. interrupted means the moving contact/connection group reached temporary unavailable geometry in that solver step, not that the guard is proved to have caused this particular break. The observed break stays latched; inspect object.physics.inputs and the joint before recovery. Emitted once per admitted break; pause/Stop/retirement do not emit it and missed events are not replayed. Rearm or align explicitly to reconnect.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -33836,13 +33836,17 @@
             "type": "number",
             "minimum": 0.0,
             "maximum": 10000.0
+          },
+          "interrupted": {
+            "type": "boolean"
           }
         },
         "required": [
           "connected",
           "kind",
           "forceLimit",
-          "torqueLimit"
+          "torqueLimit",
+          "interrupted"
         ],
         "additionalProperties": false
       }
@@ -34834,7 +34838,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point captured in authored room coordinates when the contact begins. A queued point stays in that room after virtual-world movement; it is not a persistent anchor to a real surface. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point captured in authored room coordinates when the contact begins. A queued point stays in that room after virtual-world movement; it is not a persistent anchor to a real surface. interrupted means a moving contact/connection group touched temporary unavailable geometry during that solver step. The real contact is preserved, but do not count it as uninterrupted play or proof of cause; inspect object.physics.inputs and restart from rest. Receivers and the room-space point are captured at contact time; delivery waits until step classification. Shared fixed anchors do not merge independent moving children. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1"
@@ -34855,6 +34859,9 @@
               "controller",
               "environment"
             ]
+          },
+          "interrupted": {
+            "type": "boolean"
           },
           "speed": {
             "type": "number",
@@ -34880,6 +34887,7 @@
         "required": [
           "otherId",
           "otherKind",
+          "interrupted",
           "speed",
           "x",
           "y",
@@ -43483,7 +43491,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConnectionCapability.cs",
-      "sha256": "66a4cb38ae37000e1172cada1edc8699b8fd02ce3838dcc806fd5fc4e24ec97c"
+      "sha256": "a0c6467261393a1c39514f7a590b0bd0c4c2236f4d3aa030e0ba8be8adeb199c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionManipulationCapability.cs",
@@ -44199,7 +44207,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
-      "sha256": "7255458243f2b56baaff16e3f398fc2e7126cb71c4db775b4178ed842b5b768a"
+      "sha256": "e05f2b6f89ce14ae9e3a96d395838ff6a33dcb48234aeaa3de6c912e1d7eacf3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -44219,7 +44227,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "d1bba2a63692b956641f500392dc2cbf5a3ed22747028557cbd2f87738f09bf6"
+      "sha256": "f211560c66884e32b8b751d6f3bc67a555e6c401309574db11171649a219fada"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -44388,6 +44396,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
       "sha256": "1964c17ebe8f17e5a46cffb534234356c4cb7a390110bbe93fa59432cb32359b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
+      "sha256": "54bf8baddc9a51d7cb9abf8dbdf6327479169790bfcbe9d6ec13223ebfb1c9d2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStepRecorder.cs",
+      "sha256": "e6f24e828e13ceea90c2d8feadbb113bfb803aa357d215adf9515d11349c5c71"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPlacementDependencies.cs",
@@ -44863,7 +44879,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "77fc95591ecfdaba647f14288b9a3a8656304739aba1f63ce58a09f75ff98cef"
+      "sha256": "7083722235aa3140d3bb8b0031dca376a69a1cba1f6ffecf2c8fd147f861c7de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -44887,7 +44903,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
-      "sha256": "2953427c6dad406a5e43e8ed310ff267f2dc0d6adaa57a694ca3717b736cbb61"
+      "sha256": "f9ecdb042cdc3e62f45191298e2cb7c74dcffce2a0041716fcd404c2283757de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomContactInputs.cs",
@@ -44955,7 +44971,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "c55f0012ef98ef920e7fb7113d8792034c1d462457feb42079c74466de262540"
+      "sha256": "321aabf9d51293294408b1df18117f44aa865be8c293c48d0e2d1fcdd51a6c23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPlaybackClock.cs",
@@ -45215,7 +45231,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "a139f64311ddc949b327452b452a19a73bc042d104c45f42e869beff8c87b6f9"
+      "sha256": "6989e03eb0dac60a7f8a893f4bb520e7d1c6e65560da46830a326101515f2d25"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -45303,7 +45319,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RoomRules.cs",
-      "sha256": "e18bf665fade5b61f35528c85fbf6f9195c36ab7895308af4fba3f5a2b8e1a98"
+      "sha256": "523e14fae146b1d4da614343d257035af0ca05aedd2a2a8dd5e32e247928007d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleButton.cs",
@@ -45331,7 +45347,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleEvents.cs",
-      "sha256": "5e22e83811a2259354f546122985515561ee49b792a7b63309738eaedb7c4eac"
+      "sha256": "f8441a294b4f46d91a5590e7b42dbb14d089ce949515c0b92131ebb104ca0248"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleInvocations.cs",

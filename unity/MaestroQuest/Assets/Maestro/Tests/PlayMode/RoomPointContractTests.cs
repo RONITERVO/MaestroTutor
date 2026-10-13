@@ -49,11 +49,15 @@ namespace Maestro.Quest.Tests
             var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Use queued contact",program=p.ToString()};
             runtime.Scheduler.Configure(new RuleDocument {sequences=new[]{sequence}});float now=Time.unscaledTime;
             Assert.That(runtime.Scheduler.Trigger(sequence.id,now),Is.True,runtime.Scheduler.LastError);
+            // Match the native producer's running world. This synchronous adapter
+            // test must explicitly complete the step instead of bypassing its queue.
+            physics.SetSurfaces(true,"Aligned queued-contact fixture");physics.StartPhysics();Assert.That(physics.Running,Is.True);
             // Enter at the real native event adapter; the scheduler has not consumed the point yet.
             typeof(RoomRules).GetMethod(callback,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(runtime,
                 new object[]{"book",callback=="Caught"?"maestro":"",callback=="Caught"?"right":"environment",editor.Frame.PointToWorld(roomPoint),.5f});
             var motion=new RoomWorldMotion(root.transform,physics);
             Assert.That(motion.SetPose(new Vector3(-4,0,7),Quaternion.Euler(0,-35,0),out var error),Is.True,error);
+            editor.ProcessDormantContacts();
             runtime.Scheduler.Tick(now+.01f);Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
             runtime.Scheduler.Tick(now+.25f);runtime.Scheduler.Tick(now+.3f);
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero,runtime.Scheduler.LastError);

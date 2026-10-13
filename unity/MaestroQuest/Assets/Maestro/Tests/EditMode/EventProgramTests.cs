@@ -115,7 +115,7 @@ namespace Maestro.Quest.Tests
             actions.Positions["book"]=Vector3.right;s.Tick(1.2f);Assert.That(State(s,"crossings"),Is.EqualTo("0"));Assert.That(State(s,"distance"),Is.EqualTo("0"),"A crossing first observed after the deadline loses to timeout");
         }
         static JObject ContactSource()=>JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-contact.json")));
-        static JObject ContactFields()=>new() {["otherId"]="book",["otherKind"]="object",["speed"]=4d,["x"]=1d,["y"]=2d,["z"]=3d};
+        static JObject ContactFields()=>new() {["otherId"]="book",["otherKind"]="object",["interrupted"]=false,["speed"]=4d,["x"]=1d,["y"]=2d,["z"]=3d};
         [Test] public void ContactFieldsAreTypedDetachedAndCannotBeForgedAsCustomSignals()
         {
             var sequence=Sequence(ContactSource());var s=Scheduler(new Actions(),sequence);
@@ -308,6 +308,36 @@ namespace Maestro.Quest.Tests
             p=Source();Loop(p).Clear();var endless=Sequence(p);var s=Scheduler(new Actions(),endless);Assert.That(s.Trigger(endless.id,0),Is.True);
             for(int i=0;i<2200&&s.RunningCount>0;i++)s.Tick(i*.01f);
             Assert.That(s.Outcomes.Single().phase,Is.EqualTo("failed"));StringAssert.Contains("budget",s.LastError);
+        }
+        static JObject InterruptedContactSource(){
+            var source=ContactSource();((JArray)source["state"]).Add(new JObject{["name"]="interrupted",["initial"]=false});
+            ((JArray)source["functions"][0]["locals"]).Add(new JObject{["name"]="uncertain",["initial"]=false});
+            Loop(source)[0]["fields"]["interrupted"]="uncertain";
+            ((JArray)Loop(source)[1]["then"]).Add(JObject.Parse("{ 'id':'provenance','op':'setState','variable':'interrupted','value':{'var':'uncertain'}}"));return source;
+        }
+        [Test]public void NativePhysicsObservationWaitsForClassificationAndPreservesItsCapturedPayload(){
+            var sequence=Sequence(InterruptedContactSource());var s=Scheduler(new Actions(),sequence);s.Trigger(sequence.id,0);
+            var observation=new NativePhysicsObservation();var fields=ContactFields();
+            Assert.That(s.EmitNativeObservation("object.collided","book",new ProgramValue("book"),fields,.1f,observation,out var error),Is.True,error);
+            fields["speed"]=999;s.Tick(.1f);Assert.That(State(s,"contacts"),Is.EqualTo("0"));Assert.That(s.EventQueueCount,Is.EqualTo(1));
+            observation.Resolve(true);observation.Resolve(false);s.Tick(.2f);
+            Assert.That(State(s,"contacts"),Is.EqualTo("1"));Assert.That(State(s,"interrupted"),Is.EqualTo("True"));Assert.That(State(s,"lastSpeed"),Is.EqualTo("4"));
+            s.Tick(.3f);Assert.That(State(s,"contacts"),Is.EqualTo("1"));
+        }
+        [Test]public void NativePhysicsObservationCancellationDoesNotReplayIntoTheNextWait(){
+            var sequence=Sequence(InterruptedContactSource());var s=Scheduler(new Actions(),sequence);s.Trigger(sequence.id,0);
+            var observation=new NativePhysicsObservation();s.EmitNativeObservation("object.collided","book",new ProgramValue("book"),ContactFields(),.1f,observation,out _);
+            observation.Cancel();observation.Resolve(true);s.Tick(.2f);Assert.That(s.EventQueueCount,Is.Zero);Assert.That(State(s,"contacts"),Is.EqualTo("0"));
+            var next=new NativePhysicsObservation();s.EmitNativeObservation("object.collided","book",new ProgramValue("book"),ContactFields(),.3f,next,out _);next.Resolve(false);s.Tick(.4f);
+            Assert.That(State(s,"contacts"),Is.EqualTo("1"));Assert.That(State(s,"interrupted"),Is.EqualTo("False"));
+        }
+        [Test]public void NativePhysicsObservationKeepsTheOriginalReceiverAndQueueBudget(){
+            var sequence=Sequence(InterruptedContactSource());var s=Scheduler(new Actions(),sequence);s.Trigger(sequence.id,0);
+            var observations=new System.Collections.Generic.List<NativePhysicsObservation>();
+            for(int i=0;i<65;i++){var observation=new NativePhysicsObservation();observations.Add(observation);s.EmitNativeObservation("object.collided","book",new ProgramValue("book"),ContactFields(),.1f,observation,out _);}
+            Assert.That(s.EventQueueCount,Is.EqualTo(64));Assert.That(s.EventsDropped,Is.EqualTo(1));s.Tick(.15f);Assert.That(State(s,"contacts"),Is.EqualTo("0"));
+            foreach(var observation in observations)observation.Resolve(true);for(int i=0;i<4;i++)s.Tick(.2f+i*.1f);
+            Assert.That(State(s,"contacts"),Is.EqualTo("1"),"Later waits cannot receive earlier contacts");Assert.That(s.EventQueueCount,Is.Zero);
         }
     }
 }

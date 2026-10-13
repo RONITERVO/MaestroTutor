@@ -1291,3 +1291,23 @@ admission is unchanged. The shared `object.physics.inputs` fact now reports
 Headless/book observations remain passive interface coverage; native PlayMode
 supplies the active collision evidence. No new headset/provider acceptance is
 claimed by these tests.
+
+
+`PhysicsStepTests.cs` exercises pre-step connection membership in both controlled
+callback orders, an actual native guard impact with a joint break, and an actual
+secondary dynamic contact alongside an unrelated impact. The latter uses a
+resting overlapping body and a moving body with a distant guard; it asserts that
+only the moving body contacts the guard directly. These native tests deliberately
+use an extended explicit simulation interval to exceed ordinary prediction; they
+do not certify a production timestep or CCD behavior. The controlled callback
+order tests are separate from the actual native joint-break evidence.
+
+Additional cases cover shared fixed contacts, late FixedUpdate prop release and
+Pause/Start cancellation of undelivered observations. EditMode scheduler tests
+cover deferred classification, payload copying, captured receiver generations,
+cancellation and queue limits. Queued-contact coordinate tests explicitly complete
+the native step and still place at the originally captured authored point after
+the world frame moves. ProgramEditor tests bind the same boolean
+`interrupted` field for collision and break events through visible blocks.
+Fresh book/headless runs still verify interface parity using scripted responses;
+they are not new provider, headset or active collision acceptance.

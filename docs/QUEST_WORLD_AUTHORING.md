@@ -903,3 +903,28 @@ This recovery uses the same fact and controls for programs, agents and book
 controls. It is a fallback prerequisite for future regional simulation. Current
 production physics still requires the complete authored collision environment;
 automatic regional unloading and larger-world limits are not enabled by it.
+
+
+`object.collided` and `object.connection.broken` include the boolean event field
+`interrupted`. It describes whether either participant belonged to a moving
+contact/constraint group that reached unavailable geometry during that native
+step. It is conservative step provenance, not proof that the guard caused this
+particular contact or break. A real broken connection remains broken and requires
+explicit rearming; the event is not erased or converted into a successful action.
+
+Programs may store this field in a boolean variable and branch before awarding a
+point, scheduling another throw or reporting uninterrupted play. The block editor
+and agent use the same catalog field. `false` does not certify a completed catch
+or clear future path. Direct temporary-guard contacts are never authored collision
+events. Dynamic objects touching in that step share its interruption; a shared
+fixed floor or anchor does not join unrelated moving objects.
+
+Native collision and break listeners are captured when the observation occurs,
+then delivered after that step is classified. Changing the physics intent with
+Pause/Start before classification cancels the unfinished observation. Once
+classified, it follows ordinary captured-listener delivery; a later pause does
+not rewrite the completed collision. Events cannot reach a later wait or escape
+the existing bounded program event queue. The captured contact position and
+payload remain the original observation. Ordinary
+input preparation and `object.physics.inputs.interrupted` remain separate from
+this event detail.

@@ -8883,3 +8883,47 @@ Native Headless journey `c0fd04eb567a4b15a4c46e5117c0dc6c` passed with
 exited zero, using scripted responses and synthetic assets with no paid provider.
 All **963 C# files** match the frozen source and build mirror. Evidence is under
 `.quest-evidence/dormant-recovery`. No new headset acceptance is claimed.
+
+
+### Completed-step provenance for interrupted physics — 2026-10-13
+
+The editor records dynamic state and physical-group membership after fixed-step
+prop/catch ownership changes, before PhysX. Joint-break callbacks may release
+normal preparation leases without losing that record. Dynamic contact edges from
+Enter/Stay callbacks extend the affected group; fixed floors and anchors do not
+couple otherwise independent moving bodies. Recovery retains the completed pose,
+discards momentum and keeps explicit from-rest restart semantics.
+
+Native collision and connection-break events now carry `interrupted`. Original
+listeners and payloads are captured during the callback in the existing bounded
+scheduler queue. Delivery waits for completed-step classification. It marks any
+participant connected to a guard-affected moving group, without claiming the guard
+caused a particular collision or joint break. Genuine contacts remain observable,
+actual broken joints remain latched, and direct guard impacts remain excluded.
+Before classification, Pause/Start intent changes and workspace/lifecycle
+cancellation discard unfinished observations. Classified observations follow
+ordinary captured-listener delivery; later pauses do not rewrite completed
+collisions. An old observation cannot reach a later program wait. The book's
+block editor and agent share the generated event definition.
+
+This closes the prior callback-order/provenance gap for covered native scenarios.
+It does not enable regional physics, seamless solver handoff or automatic
+unloading. CCD/tunneling, persistent guard contacts across ownership transitions,
+failed imports during long recovery, broad motor/rotation behavior, regional
+navigation, large-world cost and device acceptance remain separate gates. Keep
+whole-world admission, running retention and the 64-object/25-metre limits.
+
+Verification: **1166 EditMode and 1435 PlayMode tests passed**, with 3
+expected optional private-asset skips. The focused run passed **55 PlayMode**
+and **22 scheduler EditMode tests**. Both queued collision/catch coordinate cases
+pass after explicitly following native step completion in their synchronous
+adapter harness. **2910 web tests across 311 files**, lint, production
+build, probe TypeScript, core boundaries and catalog checks passed. After fresh
+native captures, **77 checks across 3 fixture consumers** passed.
+
+Native Headless journey `1ff40d6e9b634543a16befc633372260` passed with
+767 observations, and original Book journey
+`6adef5675c4c4bbf9c361cf6724a061f` passed. Both clients and Unity editors exited
+zero, using scripted responses and synthetic assets with no paid provider.
+All **966 C# files** match the frozen source and build mirror. Evidence is
+under `.quest-evidence/physics-step`. No new headset acceptance is claimed.

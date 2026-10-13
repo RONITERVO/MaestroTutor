@@ -179,6 +179,17 @@ it('lets users select typed collision fields through the same canonical blocks a
 
  expect(JSON.parse(h.source()).functions[0].body[0].body[0].fields).toBeUndefined();
 });
+it.each([['object.collided',2],['object.connection.broken',1]])('lets users retain interrupted step provenance from %s in canonical blocks',(event,version)=>{
+ const initial=JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8'));
+ initial.functions[0].locals.push({name:'uncertain',initial:false});
+ const wait=initial.functions[0].body[0].body[0];wait.event=event;wait.version=version;delete wait.fields;
+ const h=harness(initial);h.click('Edit values contact');h.change('Event field interrupted','uncertain');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].body[0]).toMatchObject({event,version,fields:{interrupted:'uncertain'}});
+ expect(parseProgram(h.source()).error).toBeNull();
+ h.click('Edit values contact');h.click('Update draft');
+ expect(JSON.parse(h.source()).functions[0].body[0].body[0].fields).toEqual({interrupted:'uncertain'});
+});
+
 it('keeps new physical events unavailable in editors connected to an older runtime',()=>{
  const source=readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-contact.json','utf8');
  const screen=render(<ProgramEditor source={source} targets={[]} eventsSupported onChange={()=>{}} onEditingChange={()=>{}}/>);
