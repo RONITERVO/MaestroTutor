@@ -3876,3 +3876,24 @@ someone” form and equivalent user/agent requests for Maestro and a created rob
 
 Headless and book probe evidence uses synthetic ground. This entry does not claim
 a new installed APK or physical/provider acceptance.
+
+## Imported character gait checkpoint — 2026-10-14
+
+Desktop-only evidence: the full **1201 EditMode / 1508 PlayMode** suite passed,
+with three optional private-asset skips. A final two-file absent-avatar observation
+correction then passed **77 focused PlayMode** checks,
+with two optional private-model skips, plus fresh native catalog capture. The 997 final C# files match the mirror.
+Exact embedded
+and library selections, full joint/skin sampling, planar root-travel removal,
+blocked/idle restoration, missing clips, tracking loss and deleted-owner cleanup
+are covered. Native Headless **0a17b56e9be54923a7c9c824c201204c** and Book
+**bc57327ec4b64f64b4c3e3966afdcfbf** both pass through their shared action paths.
+The book uses ordinary generated controls. Existing navigation/following and
+chat image/audio import coverage remains in these journeys.
+
+Unsigned Android compilation and the web/native-browser checks pass. This is not
+physical gait, foot planting, performance, acoustic or provider acceptance. The
+source fixture is deliberately a minimal skinned triangle, not a production
+character. No device, paid provider, signing, deployment or Meta operation ran;
+installed and Alpha builds are unchanged. The existing holds and audio-quality
+failures remain open.

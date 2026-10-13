@@ -73,7 +73,8 @@ namespace Maestro.Quest.Tests
             Assert.That(File.Exists(PathFor(RoomSnapshotTransaction.FileName)),Is.True);
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo((committed?after:before).Identity));
         }
-        [TestCase(RoomStorage.FileName,false)][TestCase("program-memory.v1.json",false)][TestCase(RoomStorage.FileName+".backup",true)][TestCase("program-memory.v1.json.backup",true)]
+        static object[][] RecoveryRoomFiles=>new[]{new object[]{RoomStorage.FileName,false},new object[]{RoomStorage.FileName+".backup",true}};
+        [TestCaseSource(nameof(RecoveryRoomFiles))][TestCase("program-memory.v1.json",false)][TestCase("program-memory.v1.json.backup",true)]
         public void RecoveryPreservesUnexpectedPrimariesAndBackupsBeforeAnyFurtherWrite(string file,bool backup)
         {
             var before=Seed();var after=Pair(2);var outside=Pair(7);
@@ -106,9 +107,9 @@ namespace Maestro.Quest.Tests
             finally{release.Set();worker.GetAwaiter().GetResult();}
             Assert.That(RoomSnapshotTransaction.Capture(directory).Identity,Is.EqualTo(after.Identity));
         }
-        static string[] FutureSnapshotRoomFiles=>new[]{"room.v"+(RoomDocument.CurrentVersion+1)+".json","room.v"+(RoomDocument.CurrentVersion+1)+".json.backup"};
+        static string[] UnsupportedSnapshotRoomFiles=>new[]{"room.v"+(RoomDocument.CurrentVersion+1)+".json","room.v"+(RoomDocument.CurrentVersion+1)+".json.backup",RoomStorage.FileName+".pending"};
         [TestCase("room-snapshot.v17.json")][TestCase(RoomSnapshotTransaction.FileName+".snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")][TestCase("program-memory.v1.json.snapshot.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
-        [TestCaseSource(nameof(FutureSnapshotRoomFiles))][TestCase(RoomStorage.FileName+".pending")]
+        [TestCaseSource(nameof(UnsupportedSnapshotRoomFiles))]
         [TestCase("program-memory.v2.json")][TestCase("program-memory.v1.json.pending.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")]
         public void UnrecognizedOrStagedEvidenceIsPreserved(string name)
         {

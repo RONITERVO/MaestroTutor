@@ -52,10 +52,10 @@ namespace Maestro.Quest.Creation
             return new JObject {["revision"]=ObjectRevision("maestro"),["distance"]=System.Math.Round(value.distance,6),["speed"]=System.Math.Round(value.speed,6),["temporary"]=TemporaryRoom,
                 ["live"]=new JObject {["active"]=value.active,["mode"]=value.mode,["status"]=ImportObservation.Text(value.status),["canLook"]=value.canLook,["lookReason"]=ImportObservation.Text(value.lookReason),["canFollow"]=value.canFollow,["followReason"]=ImportObservation.Text(value.followReason)}};
         }
-        internal JObject ObserveWalkClips(string hash,int offset)
+        internal JObject ObserveWalkClips(string hash,int offset,string target="maestro")
         {
-            var avatar=Find("maestro")?.GetComponent<MaestroAvatar>();var model=avatar?avatar.CustomModel:null;
-            if(!ModelLibrary.ValidHash(hash)||offset<0||offset>32||!avatar||avatar.ModelBusy||avatar.ModelHash!=hash||!model||!model.Ready)return null;
+            var data=Read(target);var model=AvatarWalkSelection.Model(this,data);
+            if(!ModelLibrary.ValidHash(hash)||offset<0||offset>32||data?.modelHash!=hash||!model||!model.Ready||model.AssetHash!=hash)return null;
             var entries=new JArray();for(int index=offset;index<System.Math.Min(model.ClipCount,offset+3);index++){
                 double duration=System.Math.Round(model.ClipDuration(index),6);if(!double.IsFinite(duration)||duration<0||duration>1000000)return null;
                 entries.Add(new JObject {["index"]=index,["name"]=ImportObservation.Text(model.ClipName(index)),["duration"]=duration,["selectable"]=duration>=.1});

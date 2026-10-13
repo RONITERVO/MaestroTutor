@@ -29,7 +29,7 @@ namespace Maestro.Quest.Book
         {
             var uses=new List<string>();
             if(rules.Memory?.Ready==true&&rules.Memory.Error==null&&rules.Memory.Snapshot().Retains(id))uses.Add("Remembered behaviour value");
-            if (editor.UsesMotion(id)) uses.Add("Maestro walking");
+            if (editor.UsesMotion(id)) uses.Add("Character walking");
             foreach (var sequence in rules.Snapshot().sequences)
             {
                 if(sequence.Compile(out _)==null)uses.Add("Unavailable program: "+sequence.name+" (references unknown)");

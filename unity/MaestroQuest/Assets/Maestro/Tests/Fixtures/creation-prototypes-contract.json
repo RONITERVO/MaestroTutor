@@ -3804,5 +3804,335 @@
       },
       "scale": 1
     }
+  },
+  {
+    "name": "embedded character gait",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 7,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "model",
+                  "modelHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "walking": {
+                  "source": "embedded",
+                  "clipIndex": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "exact library character gait",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 7,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "model",
+                  "modelHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "walking": {
+                  "source": "library",
+                  "motionId": "cccccccccccccccccccccccccccccccc"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "gait needs prototype seven",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 6,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "model",
+                  "modelHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "walking": {
+                  "source": "embedded",
+                  "clipIndex": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "gait needs imported character",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 7,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "walking": {
+                  "source": "embedded",
+                  "clipIndex": 0
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "gait excludes mixed choices",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 7,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "model",
+                  "modelHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "walking": {
+                  "source": "embedded",
+                  "clipIndex": 0,
+                  "motionId": "cccccccccccccccccccccccccccccccc"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
   }
 ]

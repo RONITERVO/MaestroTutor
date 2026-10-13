@@ -16,7 +16,7 @@ namespace Maestro.Quest.Interaction {
         static readonly List<GroundedMovement> active=new();
         readonly RoomEditor editor;readonly RoomItem item;readonly string target,session;
         Vector3 destination;readonly float speed;readonly string mode;readonly Func<Collider,bool> obstacle;
-        RoomNavigation navigation;MaestroAvatar avatar;RigidRoomItem rigid;
+        RoomNavigation navigation;ImportedObjectWalk gait;MaestroAvatar avatar;RigidRoomItem rigid;
         float radius,height,started,rememberAt,distance;Vector3 localFoot,acceptedPosition,acceptedScale;Quaternion acceptedRotation;
         Vector3[] route=Array.Empty<Vector3>();int corner,lastFrame=-1,revision;uint surfaceRevision;
         bool owned,stopped,arrived;string failure,blocked;
@@ -40,6 +40,8 @@ namespace Maestro.Quest.Interaction {
             if(item.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame==true||item.GetComponentsInChildren<RoomWalkableSurface>(true).Length>0||editor.PhysicsIslandMembers(item).Length>1)return false;
             error="Stop the object's current root animation or attachment before walking";
             if(item.GetComponent<RigidRoomItem>()?.AnimationOwned==true||item.GetComponent<HeldRoomProp>()?.Holding==true)return false;
+            var walk=AvatarWalkSelection.Observe(editor,editor.Identity(item));
+            if(item.GetComponent<CreatedRoomObject>()&&walk!=null&&walk.source!="none"&&!walk.available){error=walk.status;return false;}
             return Body(item,out _,out _,out _,out error);
         }
         internal static bool Body(RoomItem item,out float radius,out float height,out Vector3 foot,out string error){
@@ -68,14 +70,16 @@ namespace Maestro.Quest.Interaction {
             owned=true;active.Add(this);started=Time.realtimeSinceStartup;rememberAt=Time.unscaledTime+1;revision=editor.ObjectRevision(target);
             acceptedPosition=item.transform.localPosition;acceptedRotation=item.transform.localRotation;acceptedScale=item.transform.localScale;
             if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,true);}if(avatar){avatar.SetEditing(true,preserveUpperBody:true);avatar.SpatialWalk(0);}
+            if(!avatar)gait=new ImportedObjectWalk(editor,item);
             return true;
         }
         bool Obstacle(Collider c){
             if(c.transform.IsChildOf(item.transform))return false;
             var held=c.GetComponentInParent<HeldRoomProp>();return !held||!held.Holding||held.HolderId!=target;
         }
-        internal void Fail(string message){failure=message??"Walking became unavailable";Status="failed";if(avatar)avatar.SpatialWalk(0);}
-        void Block(string message){blocked=message??"No accepted walking route is available";Status="blocked";if(avatar)avatar.SpatialWalk(0);}
+        void IdlePose(){if(avatar)avatar.SpatialWalk(0);gait?.Apply(0,0);}
+        internal void Fail(string message){failure=message??"Walking became unavailable";Status="failed";IdlePose();}
+        void Block(string message){blocked=message??"No accepted walking route is available";Status="blocked";IdlePose();}
         internal void Retarget(Vector3 point){
             if(stopped||failure!=null)return;
             if(!RoomRecipe.Finite(point)||point.sqrMagnitude>625){Block("Following destination is outside the authored world bounds");return;}
@@ -98,27 +102,28 @@ namespace Maestro.Quest.Interaction {
             if(!owned||!editor||!editor.isActiveAndEnabled||editor.TemporarySessionId!=session||editor.RuntimeGate.Held||!editor.ViewerTrackingReady||editor.Find(target)!=item||!item||!item.isActiveAndEnabled||item.Grab.isSelected||!navigation||!navigation.Ready||!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){Fail("The walking actor, tracking or physics became unavailable");return;}
             if(editor.ObjectRevision(target)!=revision||Vector3.Distance(item.transform.localPosition,acceptedPosition)>.001f||Quaternion.Angle(item.transform.localRotation,acceptedRotation)>.1f||Vector3.Distance(item.transform.localScale,acceptedScale)>.0001f||avatar&&avatar.ModelBusy){Fail("The walking actor changed; start a new journey from its current position");return;}
             if(Time.realtimeSinceStartup-started>300){Fail("Walking exceeded its five-minute lifetime");return;}
+            if(gait!=null){var readiness=gait.State(out var gaitError);if(readiness==RuleActionState.Failed){Fail(gaitError);return;}if(readiness==RuleActionState.Preparing){Status="preparingAnimation";IdlePose();return;}}
             if(blocked!=null)return;
             var from=Foot;var goal=editor.Frame.PointToWorld(destination);
             if(arrived||Vector3.Distance(from,goal)<.005f){
-                arrived=false;Status="planning";
-                if(navigation.Traverse(from,from,obstacle,out _,out var stationaryError)){arrived=true;Status="arrived";if(avatar)avatar.SpatialWalk(0);}
+                arrived=false;Status="planning";IdlePose();
+                if(navigation.Traverse(from,from,obstacle,out _,out var stationaryError)){arrived=true;Status="arrived";IdlePose();}
                 else if(!navigation.MovementInputsPending)Block(stationaryError);return;
             }
             if(route.Length==0||surfaceRevision!=navigation.SurfaceRevision){
                 if(!navigation.FollowRoute(from,goal,obstacle,out route,avoidSolids:true)){
-                    if(avatar)avatar.SpatialWalk(0);
+                    IdlePose();
                     Status="planning";if(!navigation.FollowRoutePending&&!navigation.PathsPending)Block(navigation.FollowRouteStatus);return;
                 }
                 corner=1;surfaceRevision=navigation.SurfaceRevision;
                 if(route.Length<2){Block("The route has no accepted destination");return;}
             }
             while(corner<route.Length&&Vector3.Distance(from,route[corner])<.005f)corner++;
-            if(corner==route.Length){arrived=true;Status="arrived";if(avatar)avatar.SpatialWalk(0);return;}
+            if(corner==route.Length){arrived=true;Status="arrived";IdlePose();return;}
             float dt=Mathf.Clamp(Time.deltaTime,0,.05f);if(dt==0)return;
             var next=Vector3.MoveTowards(from,route[corner],speed*dt);
             if(!navigation.Traverse(from,next,obstacle,out var floor,out var error)){
-                if(avatar)avatar.SpatialWalk(0);
+                IdlePose();
                 if(!navigation.MovementInputsPending){
                     if(navigation.CanDetourTraversalBlocker){route=Array.Empty<Vector3>();navigation.CancelFollowRoute();}
                     else Block(error);
@@ -132,7 +137,7 @@ namespace Maestro.Quest.Interaction {
             if(!RoomRecipe.Finite(position)||editor.Frame.PointToRoom(position).sqrMagnitude>625){Block("Walking would leave the authored world bounds");return;}
             Status="moving";float moved=Vector3.Distance(from,floor);item.transform.SetPositionAndRotation(position,rotation);distance+=moved;
             acceptedPosition=item.transform.localPosition;acceptedRotation=item.transform.localRotation;
-            if(avatar)avatar.SpatialWalk(moved/dt);
+            if(avatar)avatar.SpatialWalk(moved/dt);else if(gait?.Apply(moved/dt,dt)==false){Fail("The assigned walking animation became unavailable");return;}
             if(Time.unscaledTime>=rememberAt){rememberAt=Time.unscaledTime+1;Remember();}
         }
         internal void Remember(){if(editor&&item&&editor.Find(target)==item&&editor.TemporarySessionId==session){editor.RememberPlacement(target);revision=editor.ObjectRevision(target);}}
@@ -140,7 +145,7 @@ namespace Maestro.Quest.Interaction {
         internal void Stop(bool preservePlacement){
             if(stopped)return;stopped=true;if(!arrived)failure??="Walking was stopped";
             if(navigation){navigation.enabled=false;ArtResources.Release(navigation.gameObject);navigation=null;}
-            if(!owned)return;owned=false;active.Remove(this);if(avatar){avatar.SpatialWalk(0);avatar.SetEditing(false,preserveUpperBody:true);}Remember();if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,false);}
+            gait?.Dispose();gait=null;if(!owned)return;owned=false;active.Remove(this);if(avatar){avatar.SpatialWalk(0);avatar.SetEditing(false,preserveUpperBody:true);}Remember();if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,false);}
         }
     }
 }

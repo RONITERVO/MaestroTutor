@@ -1439,3 +1439,28 @@ removed through ordinary Undo after physics pauses and placement settles.
 These journeys run against actual Unity with an explicit synthetic floor and
 scripted provider. They establish shared native action/UI parity, not real-model
 choice quality, human locomotion comfort, device tracking or Quest performance.
+
+## Imported walking character parity
+
+`-SyntheticGait` adds an explicitly original, minimal 17-bone GLB through the
+normal model library and object-loading path. It is restricted to offline
+Headless/Book journeys, and the standard `Verify-Quest.ps1` command includes it
+in both complete journeys. `scripts/create-walking-character-fixture.mjs` reproduces
+the committed bytes; the clip has travelling hips and independent head/leg
+channels. `gait-fixture.json` records the exact imported hash and target.
+
+Headless reads model geometry and clip facts, places the character, assigns its
+exact embedded clip, and confirms assignment did not start playback. With
+explicitly running physics it walks the character, samples native position and
+gait ownership, and records the terminal receipt in `native-object-walk.json`.
+The Original Book does the same preparation and movement through ordinary
+catalog forms and records `book-native-object-walk-selection.json`, its rendered
+form and `book-native-object-walk.json`. The optional fixture does not change
+provider scenarios or access user models.
+
+These checks establish the shared client/native and human-form paths. Native
+PlayMode tests separately verify actual joint/skin deformation, cancellation of
+source planar travel, library identity, blocked/idle pose restoration, missing
+clip refusal and deletion cleanup. None of these establishes physical headset
+performance, real-provider choice quality, retargeting for arbitrary rigs or
+foot planting.

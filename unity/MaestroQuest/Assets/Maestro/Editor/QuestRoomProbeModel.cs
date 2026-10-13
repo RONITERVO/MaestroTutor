@@ -13,7 +13,7 @@ namespace Maestro.Quest.Editor
         {
             var editor=root.GetComponent<WorkspaceHost>()?.Current?.Editor;
             if(!editor)throw new InvalidOperationException("Open the probe workspace before seeding its model.");
-            var asset=ModelLibrary.Inspect("Original building.glb",ModelLibrary.ReadBounded(path));
+            var asset=ModelLibrary.Inspect(System.IO.Path.GetFileName(path),ModelLibrary.ReadBounded(path));
             editor.Models.SaveAsync(asset).GetAwaiter().GetResult();
             if(!editor.CreateImportedModel(asset.Hash,out var target,out var error))throw new InvalidOperationException(error);
             return new JObject{["hash"]=asset.Hash,["target"]=target,["boundary"]="Explicit original synthetic GLB imported through the real library and object load path. No user asset, file picker or physical headset evidence."};

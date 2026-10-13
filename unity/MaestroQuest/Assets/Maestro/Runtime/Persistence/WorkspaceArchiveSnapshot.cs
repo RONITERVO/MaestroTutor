@@ -67,7 +67,7 @@ namespace Maestro.Quest.Persistence
         static bool HasHash(string path,string prefix,string suffix)=>path.Length==prefix.Length+64+suffix.Length&&path.StartsWith(prefix,StringComparison.Ordinal)&&path.EndsWith(suffix,StringComparison.Ordinal)&&ModelLibrary.ValidHash(path.Substring(prefix.Length,64));
         internal static int Limit(string path)=>path switch {
             ProgramMemoryStore.FileName=>ProgramMemoryDocument.MaximumBytes,
-            RoomStorage.FileName=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
+            _ when path==RoomStorage.FileName=>4*1024*1024,"behaviours.v2.json"=>512*1024,"controls.v2.json"=>8192,
             "avatar-activities.v2.json"=>256*1024,"motions/motions.v2.json"=>16*1024*1024,
             _ when HasHash(path,"images/",".image")=>SurfaceImage.MaximumBytes,
             _ when HasHash(path,"images/",".txt")=>1024,

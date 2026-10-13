@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {probeGroundedTravel,probeGroundedFollowing} from './probe-grounded-travel';
+import {prepareObjectWalk,probeObjectWalk} from './probe-object-walk';
 import {prepareAgentModelGeometry,runAgentModelGeometryProof} from './probe-agent-model-geometry';
 import {probeModelAssetBounds} from './probe-model-asset-bounds';
 import {runAgentWindowProof} from './probe-agent-windows';
@@ -235,6 +236,7 @@ try{
 
  }else{
   await probeModelAssetBounds(execute,directory);
+  const gait=await prepareObjectWalk(execute,directory);
   const catalog=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.create',version:1}}]);
   const definition=catalog.catalog?.definition as {example?:Record<string,unknown>}|undefined;
   if(!definition?.example)throw new Error('The native create capability has no example.');
@@ -1092,6 +1094,7 @@ try{
   await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.simulation.set',version:1,arguments:{operation:'start',stateId:physicsState.stateId}}}}]);
   const walkingTargets=await probeGroundedTravel(execute,directory);
   await probeGroundedFollowing(execute,directory,walkingTargets);
+  await probeObjectWalk(execute,directory,gait);
   // Let ordinary gravity finish before preparing a direct throw. Physics autosave
   // advances object revisions too; a still-falling ball is not a stable fixture.
   // Observe over a full placement-capture interval; never retry a refused launch.

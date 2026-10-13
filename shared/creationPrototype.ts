@@ -10,6 +10,7 @@ type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface extends SurfaceGeometry {version:number;id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype extends PrototypeResources {
+ walking?:{source:'embedded';clipIndex:number}|{source:'library';motionId:string};
  physics:{mode:string;shape?:string};collision?:{shapes:unknown[]};modelGeometry?:{version:number;scaleMode:string;metresPerUnit:number;pivot:string;meshCollision:boolean;walkable:boolean};heightFields?:ReservoirBed[];containers?:ReservoirContainer[];sculptTips?:{part:string;enabled:boolean}[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string;color?:{r:number;g:number;b:number;a:number}}[]};points?:V[];radius?:number};
  windows?:{version:number;id:string;surface:string;shape:string;reveal:number}[];
@@ -21,6 +22,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
  if(!validPrototypeResources(p)||g.recipe?.playing||(p.heightFields?.length??0)>0&&p.physics.mode!=='fixed')return false;
  if(g.kind==='drawing'&&(!hasLength(g.points!)||g.points!.some(v=>length2(v)>100)))return false;
  if(p.containers?.some(c=>c.version===3)&&(p.version??0)<6||!validTerrainReservoirs(p.physics,p.heightFields??[],p.containers??[]))return false;
+ if(p.walking&&((p.version??0)<7||g.kind!=='model'))return false;
  const model=p.modelGeometry;
  if(model){
   const defaults=model.version===1&&model.scaleMode==='fitted'&&model.metresPerUnit===1&&model.pivot==='center'&&!model.meshCollision&&!model.walkable;

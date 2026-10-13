@@ -237,7 +237,8 @@ namespace Maestro.Quest.Tests
             payloads.Remove(motionPath);Assert.Throws<InvalidDataException>(()=>Snapshot());var motions=JObject.Parse(Encoding.UTF8.GetString(documents["motions/motions.v2.json"]));motions["entries"][0]["removed"]=true;motions["entries"][0]["archived"]=true;documents["motions/motions.v2.json"]=Bytes(motions.ToString());
             using var stage=WorkspaceArchive.Stage(new MemoryStream(Archive()),directory);using var restored=new MotionLibrary(Path.Combine(stage.DirectoryPath,"motions"));Assert.That(restored.Inspect(motionId).removed,Is.True);Assert.That(restored.Inspect(motionId).id,Is.EqualTo(motionId));Assert.That(restored.PayloadPresent(motionId),Is.False);Assert.That(stage.Receipt.Summary.MissingMotions,Is.EqualTo(new[]{motionId}));
         }
-        [TestCase("../outside.json")][TestCase("/"+RoomStorage.FileName)][TestCase("models/../../outside.glb")][TestCase(RoomStorage.FileName+".backup")][TestCase("action-receipts.v1.json")][TestCase("MODELS/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.glb")]
+        static string[] UnsafeRoomFiles=>new[]{"/"+RoomStorage.FileName,RoomStorage.FileName+".backup"};
+        [TestCaseSource(nameof(UnsafeRoomFiles))][TestCase("../outside.json")][TestCase("models/../../outside.glb")][TestCase("action-receipts.v1.json")][TestCase("MODELS/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.glb")]
         public void UnknownOrUnsafePathsAreRejectedBeforeStaging(string path)
         {
             var entries=Entries(Archive());entries[path]=Bytes("not accepted");Assert.Throws<InvalidDataException>(()=>WorkspaceArchive.Stage(new MemoryStream(Zip(entries)),directory));NoStages();

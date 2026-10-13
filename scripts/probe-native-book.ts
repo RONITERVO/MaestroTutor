@@ -6,6 +6,7 @@ import {createServer,type ViteDevServer} from 'vite';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
+import {gaitFixture} from './probe-object-walk';
 import {RoomProbeChannel} from '../src/headless/roomTransport';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {roomGuide} from '../shared/prompts/roomguides';
@@ -729,6 +730,26 @@ try{
   for(const [key,value] of Object.entries({x,y:0,z:-3,scale:1}))await page!.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
   return runNamedAction('object.create');
  };
+ const gait=await gaitFixture(directory);
+ if(gait){
+  await openNamedAction('Set imported model geometry','object.model.geometry.set');await page.getByLabel('Action inputs target',{exact:true}).selectOption(gait.target);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page.getByLabel('Action inputs settings pivot',{exact:true}).selectOption('base');await runNamedAction('object.model.geometry.set');
+  await openNamedAction('Arrange or reset objects','object.layout.apply');
+  await page.getByText('Action inputs placements · 1 entries',{exact:true}).click();
+  await page.getByLabel('Action inputs placements 1 target',{exact:true}).selectOption(gait.target);
+  for(const [key,value] of Object.entries({x:-3,y:0,z:-4}))await page.getByLabel('Action inputs placements 1 position '+key,{exact:true}).fill(String(value));
+  for(const [key,value] of Object.entries({x:0,y:0,z:0,w:1}))await page.getByLabel('Action inputs placements 1 rotation '+key,{exact:true}).fill(String(value));
+  await page.getByLabel('Action inputs placements 1 scale',{exact:true}).fill('1');await runNamedAction('object.layout.apply');
+  const before=await readResourceFact('object.walk.settings','Character walking animation',{target:gait.target});
+  const clips=await readResourceFact('object.walk.clips','Character embedded clip choices',{target:gait.target,modelHash:gait.hash,offset:'0'});assert.equal(clips.total,1);
+  await openNamedAction('Choose character walking animation','object.walk.select');await page.getByLabel('Character walking animation',{exact:true}).selectOption('1');
+  await page.getByLabel('Action inputs target',{exact:true}).selectOption(gait.target);await page.getByLabel('Action inputs modelHash',{exact:true}).fill(gait.hash);await page.getByLabel('Action inputs clipIndex',{exact:true}).fill('0');
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  const selected=await runNamedAction('object.walk.select');
+  await page.getByRole('heading',{name:'Choose character walking animation',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-object-walk.png')});
+  await writeFile(join(directory,'book-native-object-walk-selection.json'),JSON.stringify({boundary:'Original generated book forms choose an exact synthetic imported gait through native facts and guarded save; no provider/headset claim.',gait,before,clips,selected},null,2));
+ }
  const walkingCreated=await createWalkingRobot('Book walking robot',-3),walkingTarget=walkingCreated.output!.objectId as string;
  const walkingObstacle=await createWalkingRobot('Book walking obstacle',-2),walkingObstacleId=walkingObstacle.output!.objectId as string;
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
@@ -757,6 +778,14 @@ try{
  await page.getByRole('heading',{name:'Follow someone',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-following.png')});
  const followingStatus=await readResourceFact('object.navigation','Walking action status',{target:walkingObstacleId});assert.equal(followingStatus.active,false);
  await writeFile(join(directory,'book-native-grounded-following.json'),JSON.stringify({boundary:'Original book generated follow form, live native following, accepted distance and passive status. Explicit synthetic ground, no provider or headset acceptance.',receipt:followingReceipt,positions:followingPositions,gap:followingGap,status:followingStatus},null,2));
+ if(gait){
+  await openNamedAction('Walk to a place','object.navigate');await page.getByLabel('Action inputs target',{exact:true}).selectOption(gait.target);
+  for(const [axis,value] of Object.entries({x:-1,y:0,z:-4}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));await page.getByLabel('Action inputs speed',{exact:true}).fill('0.5');
+  const receipt=await runNamedAction('object.navigate');assert.ok(Number(receipt.output!.distance)>1.9);
+  const after=await readResourceFact('object.walk.settings','Character walking animation',{target:gait.target});
+  assert.equal((after.selection as unknown as {playbackStatus:string}).playbackStatus,'inactive');
+  await writeFile(join(directory,'book-native-object-walk.json'),JSON.stringify({boundary:'The book starts actual native grounded movement with its saved imported gait; completion releases pose ownership. No headset/provider or calibrated gait claim.',gait,receipt,after},null,2));
+ }
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
  // Observe one quiet placement-capture interval before the one-shot Undo.
  const placementSignature=()=>page!.evaluate(()=>JSON.stringify(window.nativeBookEvidence!().state!.objects.map(o=>[o.id,o.objectRevision,o.position])));

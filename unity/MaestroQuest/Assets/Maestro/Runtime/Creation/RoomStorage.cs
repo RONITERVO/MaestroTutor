@@ -7,7 +7,7 @@ namespace Maestro.Quest.Creation
 {
     public sealed class RoomStorage
     {
-        public const string FileName="room.v37.json";
+        public static readonly string FileName="room.v"+RoomDocument.CurrentVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)+".json";
         readonly VersionedRoomFile<RoomDocument> file;
         readonly string directory;
         volatile string coordinationError;

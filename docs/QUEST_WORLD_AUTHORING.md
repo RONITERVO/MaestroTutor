@@ -1137,3 +1137,41 @@ leader alone does not cancel following. Saved placement survives; an active job
 does not restart from saved data. Focused native regression coverage includes
 these boundaries, obstacle recovery, independent moving leaders, below-room
 following and shared admission. Delivery results are recorded in the v1 plan.
+
+## Imported character walking poses — 2026-10-14
+
+Created imported humanoids can now use an explicitly assigned gait with both
+`object.navigate` and `object.follow`. `object.walk.settings` reports the exact
+selection and revision; `object.walk.clips` lists the loaded model's embedded
+clips. The shared `object.walk.select` action chooses an embedded clip, an exact
+compatible downloaded library motion, or no walking animation. The generated
+book form and agent/program calls use the same guarded save path.
+
+The navigation body remains authoritative. Only accepted movement steps advance
+the imported animation; the complete source skeleton and blend shapes are
+sampled, and horizontal hip travel is cancelled to keep the image with its body.
+Loading waits before moving. Missing/incompatible choices fail without changing
+the saved choice or selecting an alternative. Blocked, waiting and arrived
+movement restores its starting pose; resuming continues the gait phase. Stop,
+tracking loss and target destruction release ownership and restore the pose.
+
+This first imported gait path needs a supported humanoid rig. It does not infer
+animal/vehicle gait, create leg motion for an unanimated model, calibrate stride
+length, add foot planting or certify limb contacts. Cadence is estimated from
+model height (0.65 m/s at 1.7 m, rate limited to 0.25–2). Source vertical bounce
+remains. Recipe-part animation is still the existing way to animate a procedural
+robot's parts while its root follows. Explicit full-body `animation.play` still
+conflicts with locomotion ownership.
+
+Room format 38 permits the existing exact walking references on imported
+creations. Copies, Undo/Redo, retained saves and archives preserve those identities.
+Reusable prototype version 7 expresses the choice as an optional semantic
+`walking` source; model/motion references and existing sound, appearance and
+collision resources remain retained. Older prototype formats cannot hide a gait.
+Loading, copying and assigning never start movement or playback.
+The active room filename derives from its format version, so transactional saves,
+archives and recovery cannot retain a separately hardcoded older filename.
+
+The shared world limits, physics admission, running-world retention, per-object
+real-room policy and disabled automatic unloading are unchanged. Physical Quest
+comfort, imported-model gait quality and foot contact still need acceptance.

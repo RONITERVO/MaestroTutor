@@ -95,6 +95,12 @@ namespace Maestro.Quest.Tests
             root["animations"]=new JArray(new JObject {["name"]="Authored travel",["samplers"]=new JArray(new JObject {["input"]=2,["output"]=accessors.Count-1}),["channels"]=new JArray(new JObject {["sampler"]=0,["target"]=new JObject {["node"]=1,["path"]="translation"}})});
             root["buffers"][0]["byteLength"]=(int)binary.Length;return Pack(root,binary.ToArray());
         }
+        public static byte[] WalkingCharacter() {
+            var original=HipTravel(2);int jsonLength=BitConverter.ToInt32(original,12);var root=JObject.Parse(Encoding.UTF8.GetString(original,20,jsonLength));
+            var clip=root["animations"][0];((JArray)clip["samplers"]).Add(new JObject{["input"]=2,["output"]=3});
+            foreach(int node in new[]{5,12})((JArray)clip["channels"]).Add(new JObject{["sampler"]=1,["target"]=new JObject{["node"]=node,["path"]="rotation"}});
+            return Pack(root,original.Skip(28+jsonLength).Take((int)root["buffers"][0]["byteLength"]).ToArray());
+        }
         public static byte[] HipPath(float[] times,float[] x,bool cubic=false)
         {
             if(times.Length*(cubic?3:1)!=x.Length)throw new ArgumentException("Matching path keys required (in/value/out triples for cubic)");

@@ -48,7 +48,8 @@ namespace Maestro.Quest.Creation
         public float mass = .5f;
         // Zero preserves the defaults when loading rooms created before movement controls.
         public float followDistance, walkSpeed;
-        // Zero means the included gait; positive values are one-based clips of modelHash.
+        // Zero means the included Maestro gait, or no gait on a created model;
+        // positive values are one-based clips of the exact modelHash.
         public int walkClip;
         public string walkMotionId;
         public bool IsBuiltIn => kind == RoomObjectKind.Book || kind == RoomObjectKind.Maestro;
@@ -58,7 +59,7 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=37;
+        public const int CurrentVersion=38;
         public const int MaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
@@ -84,7 +85,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
@@ -125,9 +126,9 @@ namespace Maestro.Quest.Creation
                 if(version<7&&(item.connections?.Length??0)>0)return Fail("Physical connections require the current room format.",out error);
                 pointCount+=DrawingSurface.PointCount(item);
                 bool mayHaveModel = item.kind == RoomObjectKind.ImportedModel || item.kind == RoomObjectKind.Maestro;
-                if (!string.IsNullOrEmpty(item.walkMotionId) && (version < 2 || item.kind != RoomObjectKind.Maestro || !Guid.TryParseExact(item.walkMotionId,"N",out _) || item.walkClip != 0))
+                if (!string.IsNullOrEmpty(item.walkMotionId) && (version < 2 || !mayHaveModel || item.kind==RoomObjectKind.ImportedModel&&version<38 || !AvatarWalkSelection.ValidId(item.walkMotionId) || item.walkClip != 0))
                     return Fail("The library walking motion reference is invalid.",out error);
-                if (item.walkClip < 0 || item.walkClip > 32 || item.walkClip > 0 && (item.kind != RoomObjectKind.Maestro || !ModelLibrary.ValidHash(item.modelHash)))
+                if (item.walkClip < 0 || item.walkClip > 32 || item.walkClip > 0 && (!mayHaveModel || item.kind==RoomObjectKind.ImportedModel&&version<38 || !ModelLibrary.ValidHash(item.modelHash)))
                     return Fail("The walking clip reference is invalid.",out error);
                 if (!float.IsFinite(item.followDistance) || !float.IsFinite(item.walkSpeed) ||
                     item.followDistance != 0 && (item.kind != RoomObjectKind.Maestro || item.followDistance < .8f || item.followDistance > 2.5f) ||

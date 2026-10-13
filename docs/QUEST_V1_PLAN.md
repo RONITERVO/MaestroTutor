@@ -9385,3 +9385,41 @@ Whole-world physics admission, running-world retention, automatic unloading off
 and the current 64-object / 25-metre / four-height-field limits remain unchanged.
 Broader NPC gait/foot planting, interior/crowd navigation, swimming, world streaming
 and physical/provider acceptance remain open. V1 release work remains active.
+
+## Imported character gait ownership — 2026-10-14
+
+Created humanoid models now share explicit walking selection with the existing
+Maestro selection code and import/motion-library implementation. New
+`object.walk.select`, `object.walk.settings` and `object.walk.clips` entries expose
+it through the catalog, generated book forms and native programs. No new numeric
+rule opcode, provider tool family or independent animation scheduler was added.
+The shared grounded motor owns the clip lease and advances it from accepted
+steps. Missing assets remain exact visible choices; there is no guessed fallback.
+
+Persistence extends existing exact references in room format 38 and semantic
+prototype version 7, including resource-bearing reusable creations. Full imported
+pose sampling preserves all source channels while removing planar hips travel.
+The current path requires a supported humanoid rig and estimates cadence; it
+adds no calibrated foot planting, swimming, crowd behavior or animated limb
+collision. Per-object real-room participation and all current world limits remain
+unchanged. See the authoring contract for the precise boundary.
+
+The full native suite passed **1201 EditMode / 1508 PlayMode** checks, with three
+expected optional private-asset skips. A final two-file correction preserves the
+Maestro observation contract when its native avatar component is absent; final
+source then passed **77 focused PlayMode** checks
+(two optional private-model skips) and a fresh catalog capture. All
+**997 final frozen C# files** match the build mirror. The complete
+native Headless **0a17b56e9be54923a7c9c824c201204c** and Original Book
+**bc57327ec4b64f64b4c3e3966afdcfbf** journeys passed with zero client/editor exits,
+using synthetic assets and scripted providers. They retain all prior checks and
+add exact character gait selection and real native movement. The book form was
+visually inspected. Prototype/resource contracts and current-input annotations
+pass on both sides of the catalog.
+
+The shared web build, Android browser tests/lint, Unity Android export and Gradle
+compile passed without packaging. Gradle retained the unchanged **128 passed /
+two skipped** Java results as up to date; all **22 ARM64 libraries** and
+**148 staged web files** match their checked sources. No headset,
+paid-provider, signing, deployment or Meta work ran. The existing audio-quality
+failures and release acceptance gaps remain open; this is not v1 completion.
