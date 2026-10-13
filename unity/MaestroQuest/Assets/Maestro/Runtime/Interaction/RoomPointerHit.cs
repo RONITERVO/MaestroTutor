@@ -13,6 +13,7 @@ namespace Maestro.Quest.Interaction
             var owner=collider.GetComponentInParent<RoomItem>();return !owner||owner.PointerVisible;
         }
         internal static bool Raycast(Ray ray,out RaycastHit hit,float distance,int layers,QueryTriggerInteraction triggers) {
+            layers&=RoomPhysicsLayers.GeometryQueryMask;
             if(!Physics.Raycast(ray,out hit,distance,layers,triggers))return false;
             if(Visible(hit.collider))return true;
             int count=Physics.RaycastNonAlloc(ray,buffer,distance,layers,triggers);

@@ -135,6 +135,7 @@ namespace Maestro.Quest.Editor
             layers.GetArrayElementAtIndex(9).stringValue = "TrackedPushers";
             layers.GetArrayElementAtIndex(10).stringValue = "LooseItems";
             layers.GetArrayElementAtIndex(11).stringValue = "ScannedEnvironment";
+            layers.GetArrayElementAtIndex(12).stringValue = "PendingCollision";
             tags.ApplyModifiedPropertiesWithoutUndo();
             ConfigureAnimations();
             // A Resources material keeps the dynamically used shader in player builds.

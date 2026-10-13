@@ -8,7 +8,7 @@ namespace Maestro.Quest.Creation
     internal sealed class DrawingSurfaceOcclusion
     {
         const float Epsilon=.0001f;
-        const int Mask=~(1<<RoomPhysicsLayers.Controller);
+        const int Mask=RoomPhysicsLayers.GeometryQueryMask&~(1<<RoomPhysicsLayers.Controller);
         readonly Collider[] overlaps=new Collider[64];
         readonly RaycastHit[] hits=new RaycastHit[64];
         public bool Clear(Ray ray,float distance,Transform owner,Transform tool)

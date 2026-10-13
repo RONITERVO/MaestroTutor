@@ -8786,3 +8786,52 @@ increment. This test-only work does not require repeating the unchanged web/book
 journeys; their complete verification remains recorded above for `652bd77f`.
 Receipts are under `.quest-evidence/solver-sweeps`. Device, paid-provider,
 signing, deployment and Meta holds remain in force.
+
+
+### Dormant collision guards — 2026-10-13
+
+Retiring native objects now keeps a conservative box around their last accepted
+collision extent. The guard is published before the real collider is detached,
+follows accepted placement and world-frame changes, and remains through cancelled
+or failed activation. Successful activation replaces it without a frame gap.
+Deletion, workspace replacement and owner destruction disable it synchronously.
+These guards are runtime resources; they do not change saved objects or revisions.
+
+Unknown collision and known-empty collision remain different. A geometry edit
+disables the stale guard. Preparing visual metadata does not establish physical
+collision: a fresh guard requires accepted collision bounds from rebuilt native
+geometry. This preserves the existing unknown-input refusal rather than using an
+object's appearance as proof of a usable floor or obstacle.
+
+A dedicated native layer lets guards stop rigid items while excluding controller
+contact, pointing, drawing, sculpt packing, liquid queries, ground/navigation,
+weather cover and world-movement geometry. Development ray diagnostics now use
+the same visible-hit path as normal book input. Guard impacts never emit authored
+object collision events; the temporary box has no renderer, selectable identity,
+ground provider or acoustic representation.
+
+`DormantCollisionTests.cs` covers lifecycle replacement, cancellation, placement,
+frame transforms, geometry invalidation, deletion/Undo, workspace replacement,
+known-empty/unknown extents, query filtering and a real native rigid-body impact.
+The production whole-world physics admission gate remains covered and unchanged.
+
+This is a collision-coverage prerequisite, not completed regional simulation.
+Contact-triggered loading, owned connected-island suspension/resume, collision
+handoff, post-step motion guarantees and regional navigation still need native
+evidence before automatic unloading or the whole-world restriction can change.
+The existing 64-object/25-metre limits and all device/provider/release holds remain.
+
+
+Verification: **1163 EditMode and 1417 PlayMode tests passed**,
+with three expected optional private-asset skips. The focused lifecycle/query run
+passed 49 tests, including all ten new guard regressions. **2,907 web tests across
+311 files**, lint, production build, probe TypeScript, core boundaries and catalog
+checks passed. All **961 C# files** match the frozen source and verification mirror.
+
+The real native Headless journey `887eedbb9bd94f30926bd4df986907de`
+passed with 767 observations, and the original Book journey
+`c297fef8a99d41649203e6e3b6cf7895` passed. Both clients and editors
+exited zero. These use scripted provider responses and synthetic assets; they are
+not new headset or paid-provider acceptance. The 76 checks across the three refreshed fixture consumers also passed. Native
+fixtures are refreshed from these runs; verification receipts are under
+`.quest-evidence/dormant-collision`.

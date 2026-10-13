@@ -21,7 +21,7 @@ namespace Maestro.Quest.Interaction
             get {if(!CollisionReady)return false;if(SimulationReady)return true;foreach(var binding in environments)if(binding&&binding.isActiveAndEnabled&&!binding.RealCollisions)return AuthoredReady();return false;}
         }
         public bool SimulationReady => CollisionReady&&(RealCollisions ? SurfacesReady : AuthoredReady());
-        internal int CollisionMask(int mask,RoomItem item=null) => IncludesRealRoom(item) ? mask : mask & ~(1<<RoomPhysicsLayers.Scanned);
+        internal int CollisionMask(int mask,RoomItem item=null) => (IncludesRealRoom(item) ? mask : mask & ~(1<<RoomPhysicsLayers.Scanned)) & RoomPhysicsLayers.GeometryQueryMask;
         bool GatherGround()=>GatherGround(ground);
         internal bool GatherGround(List<RoomWalkableSurface> destination) {
             destination.Clear();

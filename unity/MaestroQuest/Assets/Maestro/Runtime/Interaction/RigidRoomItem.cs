@@ -34,6 +34,7 @@ namespace Maestro.Quest.Interaction
         public event Action<RoomItem> Settled;
         public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
         void OnCollisionEnter(Collision collision) {
+            if(collision.collider&&collision.collider.GetComponent<Creation.DormantCollisionProxy>())return;
             if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position,item)||Dynamic&&!Allowed||collision.contactCount==0)return;
             // Unity may reuse Collision objects. Copy the observation immediately;
             // no callback object or mutable body state enters the program queue.

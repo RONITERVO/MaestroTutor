@@ -61,7 +61,7 @@ namespace Maestro.Quest.Interaction
             }
             frame.GetComponentsInChildren(false,shapes);
             foreach(var own in shapes) {
-                if(!own||!own.enabled||own.isTrigger)continue;
+                if(!own||!own.enabled||own.isTrigger||own.gameObject.layer==RoomPhysicsLayers.Pending)continue;
                 var body=own.attachedRigidbody;
                 if(body&&fixedBodies.TryGetValue(body,out var anchored)&&anchored)continue;
                 var item=body?body.GetComponent<RoomItem>():null;

@@ -1268,3 +1268,12 @@ settings and production input preparation. They establish observed coverage at
 the configured desktop timestep, not universal speed bounds or Quest performance.
 The 2026-10-13 focused run passed 69 related tests, including the 11 new cases.
 See the release plan for measurements and the unchanged regional-loading guard.
+
+
+Dormant collision guards are covered separately by `DormantCollisionTests.cs`.
+A native rigid-body impact must be stopped without an authored collision event;
+all-layer pointer and drawing queries must ignore the guard while still detecting
+real geometry behind it. Cancellation, geometry edits, activation, deletion/Undo
+and workspace replacement verify lifetime and stale-input behavior. These tests
+retain the whole-world physics restriction. Neither the passive book/headless
+journeys nor these guards establish regional simulation or headset performance.

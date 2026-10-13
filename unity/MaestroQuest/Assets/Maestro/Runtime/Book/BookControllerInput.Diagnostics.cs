@@ -35,7 +35,7 @@ namespace Maestro.Quest.Book
             {
                 var ray = new Ray(input.Root.transform.position, input.Root.transform.forward);
                 string hitName = null;
-                if (Router && Physics.Raycast(ray, out var target, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore))
+                if (Router && Interaction.RoomPointerHit.Raycast(ray, out var target, Router.MaximumDistance, Router.InteractionLayers, QueryTriggerInteraction.Ignore))
                     hitName = Path(target.collider.transform);
                 var device = input.Tracked.activeControl?.device;
                 var gripAxis = device?.TryGetChildControl<AxisControl>("grip");

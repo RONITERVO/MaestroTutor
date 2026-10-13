@@ -56,7 +56,7 @@ namespace Maestro.Quest.Creation {
             Editor.ReportStatus("Ball preview — lift or release to save; then grab the ball normally");
         }
         bool PackingSpaceClear(Vector3 position,float size,out string error){
-            Physics.SyncTransforms();int count=Physics.OverlapSphereNonAlloc(position,size,packingOverlaps,~0,QueryTriggerInteraction.Ignore);
+            Physics.SyncTransforms();int count=Physics.OverlapSphereNonAlloc(position,size,packingOverlaps,RoomPhysicsLayers.GeometryQueryMask,QueryTriggerInteraction.Ignore);
             error=count>0?"The packed ball needs clear space above the surface; move the obstruction or choose a smaller amount":null;
             Array.Clear(packingOverlaps,0,packingOverlaps.Length);return error==null;
         }
