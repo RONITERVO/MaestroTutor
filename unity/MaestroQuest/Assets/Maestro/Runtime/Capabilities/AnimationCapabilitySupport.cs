@@ -65,6 +65,8 @@ namespace Maestro.Quest.Programs
         protected bool Stopped {get;private set;}
         protected float Duration;
         protected readonly RoomPlaybackClock Playback=new();
+        protected ImportedMotionPose StartingPose;
+        protected virtual bool PreserveImportedPose=>false;
         readonly PropAttachment attachment;
         RigidRoomItem targetRigid,propReservation;
         HeldRoomProp prop;
@@ -74,12 +76,13 @@ namespace Maestro.Quest.Programs
             attachment=AnimationTargets.Attachment(arguments);
         }
         public override float Seconds=>Duration;
-        public override float? RemainingSeconds=>attachment==null||!Playback.Started?null:Playback.Remaining(Duration);
+        protected virtual bool UsesPlaybackClock=>attachment!=null;
+        public override float? RemainingSeconds=>!UsesPlaybackClock||!Playback.Started?null:Playback.Remaining(Duration);
         void PausePlayback(bool value){if(Avatar)Avatar.PauseOwnedPlayback(this,value);}
         protected bool Acquire(out string error) {
             error=null;Target=Context.Editor.Find(TargetId);Avatar=Target.GetComponent<MaestroAvatar>();
             acquired=true;Playback.PauseChanged+=PausePlayback;
-            if(Avatar) {Avatar.GetComponent<AvatarSpatialMotion>()?.Stop();Avatar.SetEditing(true);}
+            if(Avatar) {if(PreserveImportedPose)StartingPose=Avatar.CaptureImportedMotionPose();Avatar.GetComponent<AvatarSpatialMotion>()?.Stop();Avatar.SetEditing(true);StartingPose?.Restore();if(StartingPose!=null)Avatar.PoseRig.CaptureImportedPose();}
             targetRigid=Target.GetComponent<RigidRoomItem>();if(targetRigid)targetRigid.SetAnimationOwner(this,true);
             if(attachment==null)return true;
             propReservation=Context.Editor.Find(attachment.ObjectId).GetComponent<RigidRoomItem>();
@@ -87,8 +90,9 @@ namespace Maestro.Quest.Programs
             propReservation.SetAnimationOwner(this,true);return true;
         }
         protected bool BeginProp(out string error) {
-            error=null;Playback.Start();if(attachment==null)return true;
-            if(Avatar)Avatar.SetOwnedPlaybackClock(this,()=>Playback.Elapsed);
+            error=null;Playback.Start();
+            if(Avatar&&UsesPlaybackClock)Avatar.SetOwnedPlaybackClock(this,()=>Mathf.Min(Playback.Elapsed,Duration));
+            if(attachment==null)return true;
             if(propReservation) {propReservation.SetAnimationOwner(this,false);propReservation=null;}
             prop=HeldRoomProp.Begin(Context.Editor,attachment,RoomPropAnchor.Avatar(attachment),Duration,Playback,out error);propStarted=prop;return prop;
         }

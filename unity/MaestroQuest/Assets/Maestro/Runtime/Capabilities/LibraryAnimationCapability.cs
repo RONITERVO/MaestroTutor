@@ -43,6 +43,8 @@ namespace Maestro.Quest.Programs
 
             public LibraryOperation(CapabilityContext context,JObject arguments):base(context,arguments) {authored=(string)arguments["movement"]=="authored";}
             protected override bool RetainPlacement=>authored;
+            protected override bool PreserveImportedPose=>authored;
+            protected override bool UsesPlaybackClock=>authored||base.UsesPlaybackClock;
             public override bool Complete(out string error){if(authored&&Avatar&&!Avatar.FinishImportedAt(Duration,out error))return false;return base.Complete(out error);}
             public bool Begin(string motionId,bool loop,out string error) {
                 if(!Acquire(out error))return false;this.loop=loop;
@@ -60,8 +62,9 @@ namespace Maestro.Quest.Programs
                 } finally {lease?.Dispose();}
             }
             public override RuleActionState State(out string error) {
-                var state=base.State(out error);if(state!=RuleActionState.Ready)return state;
-                if(started){if(authored&&Avatar&&Avatar.ImportedPlaybackError!=null){error=Avatar.ImportedPlaybackError;return RuleActionState.Failed;}return RuleActionState.Ready;}
+                var state=base.State(out error);if(state==RuleActionState.Failed)return state;
+                if(started){if(authored&&Avatar){var root=Avatar.AuthoredPlaybackState(Mathf.Min(Playback.Elapsed,Duration),out error);if(root!=RuleActionState.Ready)return root;}return state;}
+                if(state!=RuleActionState.Ready)return state;
                 if(!preparation.IsCompleted)return RuleActionState.Preparing;
                 if(loadError!=null) {error=loadError;return RuleActionState.Failed;}
                 var current=Context.Editor?Context.Editor.Find(TargetId):null;
@@ -71,11 +74,11 @@ namespace Maestro.Quest.Programs
                 {error="The motion target changed while loading; choose it again";return RuleActionState.Failed;}
                 if(Avatar) {
                     if(authored&&!Avatar.CanPlayAuthored(out error))return RuleActionState.Failed;
-                    if(!Avatar.PlayLibraryMotion(motion,loop,authored)) {error=Avatar.ImportedPlaybackError??"This motion no longer matches Maestro";return RuleActionState.Failed;}
+                    if(!Avatar.PlayLibraryMotion(motion,loop,authored,authored?Playback:null,StartingPose)) {error=Avatar.ImportedPlaybackError??"This motion no longer matches Maestro";return RuleActionState.Failed;}
                     motion=null; // Ownership transfers only after successful playback.
                 } else if(!model.SampleMotion(motion,0,loop)) {error="This saved motion cannot play on this object";return RuleActionState.Failed;}
                 started=true;
-                return BeginProp(out error)?base.State(out error):RuleActionState.Failed;
+                return BeginProp(out error)?State(out error):RuleActionState.Failed;
             }
             public override void Tick() {if(started&&motion!=null&&model)model.SampleMotion(motion,Playback.Elapsed,loop);}
             protected override void ReleasePlayback() {motion?.Dispose();motion=null;if(model)model.Stop();}

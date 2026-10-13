@@ -36,17 +36,23 @@ namespace Maestro.Quest.Programs
             ImportedModel model;
             public EmbeddedOperation(CapabilityContext context,JObject arguments):base(context,arguments) {authored=(string)arguments["movement"]=="authored";}
             protected override bool RetainPlacement=>authored;
+            protected override bool PreserveImportedPose=>authored;
+            protected override bool UsesPlaybackClock=>authored||base.UsesPlaybackClock;
             public override bool Complete(out string error){if(authored&&Avatar&&!Avatar.FinishImportedAt(Duration,out error))return false;return base.Complete(out error);}
             public bool Begin(int index,bool loop,out string error) {
                 if(!Acquire(out error))return false;model=AnimationTargets.ClipModel(Target);
                 if(Duration==0)Duration=Mathf.Max(.1f,model.ClipDuration(index));
                 if(Avatar) {
-                    if(Avatar.PlayImportedClip(index,loop,authored))return BeginProp(out error);
+                    if(Avatar.PlayImportedClip(index,loop,authored,authored?Playback:null,StartingPose))return BeginProp(out error);
                     error=Avatar.ImportedPlaybackError??"This motion is unavailable; choose a loaded clip";return false;
                 }
                 model.Play(index,loop);return true;
             }
-            public override Maestro.Quest.Rules.RuleActionState State(out string error){var state=base.State(out error);if(state!=Maestro.Quest.Rules.RuleActionState.Ready)return state;if(authored&&Avatar&&Avatar.ImportedPlaybackError!=null){error=Avatar.ImportedPlaybackError;return Maestro.Quest.Rules.RuleActionState.Failed;}return Maestro.Quest.Rules.RuleActionState.Ready;}
+            public override Maestro.Quest.Rules.RuleActionState State(out string error){
+                var state=base.State(out error);if(state==Maestro.Quest.Rules.RuleActionState.Failed)return state;
+                if(authored&&Avatar){var root=Avatar.AuthoredPlaybackState(Mathf.Min(Playback.Elapsed,Duration),out error);if(root!=Maestro.Quest.Rules.RuleActionState.Ready)return root;}
+                return state;
+            }
             protected override void ReleasePlayback() {if(model)model.Stop();}
         }
     }

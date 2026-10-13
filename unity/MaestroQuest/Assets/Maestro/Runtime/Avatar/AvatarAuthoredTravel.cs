@@ -3,50 +3,78 @@
 using System;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Imports;
+using Maestro.Quest.Interaction;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Avatar
 {
-    /// <summary>Transfers a sampled body's planar displacement to the room proxy without changing its visible pose.</summary>
+    /// <summary>Transfers accepted sampled body travel to the room proxy without changing its visible pose.</summary>
     internal sealed class AvatarAuthoredTravel
     {
         readonly MaestroAvatar avatar;readonly ImportedModel model;readonly AvatarSpatialMotion spatial;
-        readonly RoomMotionFrame space;
+        readonly RoomMotionFrame space;readonly RoomPlaybackClock clock;readonly ImportedMotionPose initial;
         readonly Func<float,bool> sample;readonly Vector3 start,scale,modelPosition;readonly Quaternion rotation;
         readonly Vector3 cycle;readonly float duration;readonly bool loop;
-        Vector3 accepted,compensation;float acceptedTime,rise;
+        RoomContactInputs inputs;Vector3 accepted,compensation;float acceptedTime,rise,pendingTime;
+        bool ended,hasAccepted;
         public string Error {get;private set;}
-        public AvatarAuthoredTravel(MaestroAvatar avatar,ImportedModel model,AvatarSpatialMotion spatial,Func<float,bool> sample,float duration,bool loop)
+        internal bool Preparing {get;private set;}
+        internal float RequestedTime {get;private set;}
+        internal Vector3 BaseModelPosition=>modelPosition;
+        bool Owned=>!ended&&avatar&&avatar.isActiveAndEnabled&&model&&avatar.CustomModel==model&&spatial&&spatial.CanContinueAuthored(out _);
+        public AvatarAuthoredTravel(MaestroAvatar avatar,ImportedModel model,AvatarSpatialMotion spatial,Func<float,bool> sample,float duration,bool loop,RoomPlaybackClock clock=null,ImportedMotionPose initial=null)
         {
-            this.avatar=avatar;this.model=model;this.spatial=spatial;this.sample=sample;this.duration=duration;this.loop=loop;
-            space=spatial.MotionFrame;scale=avatar.transform.lossyScale;modelPosition=model.transform.localPosition;
-            if(!space.TryRead(out var roomFrame)){Error=RoomMotionFrame.Changed;return;}
+            this.avatar=avatar;this.model=model;this.spatial=spatial;this.sample=sample;this.duration=duration;this.loop=loop;this.clock=clock??new RoomPlaybackClock();
+            space=spatial.MotionFrame;scale=avatar.transform.lossyScale;modelPosition=model.transform.localPosition;this.initial=initial??new ImportedMotionPose(model,modelPosition);
+            this.clock.Start();Renew();
+            if(!space.TryRead(out var roomFrame)){Fail(RoomMotionFrame.Changed);return;}
             start=accepted=roomFrame.PointToRoom(avatar.transform.position);rotation=roomFrame.RotationToRoom(avatar.transform.rotation);
-            sample(0);var first=Displacement();sample(duration);cycle=Displacement()-first;
+            if(!float.IsFinite(duration)||duration<=0||!sample(0)){Fail("The authored motion can no longer be sampled");return;}
+            var first=Displacement();if(!sample(duration)){Fail("The authored motion can no longer be sampled");return;}cycle=Displacement()-first;Restore();
         }
+        void Renew(){inputs?.Dispose();inputs=new RoomContactInputs(spatial.AuthoredEditor,"maestro",()=>Owned);}
         Vector3 Displacement()=>Vector3.ProjectOnPlane(avatar.PoseRig.ImportedHipOffset,Vector3.up);
         public bool Sample(float time)
         {
-            if(Error!=null)return false;
+            if(Error!=null||ended)return false;
+            if(!Owned)return Fail("Authored motion lost its target, tracking or room readiness");
             if(!space.TryRead(out var roomFrame))return Fail(RoomMotionFrame.Changed);
-            if(!spatial.CanContinueAuthored(out var error))return Fail(error);
+            if(!clock.Valid(out var error))return Fail(error);
             var frame=avatar.transform;
             if(Vector3.Distance(roomFrame.PointToRoom(frame.position),accepted)*roomFrame.MetresPerUnit>.002f||Quaternion.Angle(roomFrame.RotationToRoom(frame.rotation),rotation)>.01f||Vector3.Distance(frame.lossyScale,scale)>.0001f)return Fail("Authored motion stopped because Maestro's placement or size changed");
+            // A pending pose owns its sample time. A later caller cannot queue a
+            // jump through the waiting interval or skip the final requested pose.
+            if(Preparing)time=pendingTime;
+            RequestedTime=time;
+            if(!float.IsFinite(time)||time<0||time/duration>int.MaxValue)return Fail("The authored sample time is unavailable");
             float at=loop?time%duration:Mathf.Min(time,duration);int cycles=loop?(int)Math.Floor(time/duration):0;
             model.transform.localPosition=modelPosition;
             if(!sample(at))return Fail("The authored motion can no longer be sampled");
             var offset=Displacement();float nextRise=Mathf.Max(0,avatar.PoseRig.ImportedHipOffset.y)*scale.y;
             var next=roomFrame.PointToWorld(start)+frame.TransformVector(offset+cycle*cycles);
-            if(!spatial.TryAuthoredStep(next,Mathf.Max(rise,nextRise),out error)){
-                // Restore the last accepted sample before exposing an error to the owner.
-                sample(acceptedTime);model.transform.localPosition=modelPosition+compensation;avatar.PoseRig.CaptureImportedPose();return Fail(error);
+            RoomWalkingPreparation.Envelopes(frame.position,next,.25f*scale.y,1.7f*scale.y+Mathf.Max(rise,nextRise),out var body,out var ground);
+            if(inputs.SourceChanged){clock.Pause(this,true);spatial.ReleaseAuthoredInputs();Renew();}
+            if(!inputs.Require(body,ground,avatar.GetComponent<RoomItem>().WaterTraversal.mode!="ignore",out error)){
+                if(!inputs.Pending)return Fail(error);
+                Preparing=true;pendingTime=time;clock.Pause(this,true);Restore();return false;
             }
+            Preparing=false;clock.Pause(this,false);
+            // A fitted prop can independently hold the same playback clock.
+            if(clock.Paused){Restore();return false;}
+            if(!spatial.TryAuthoredStep(next,Mathf.Max(rise,nextRise),out error))return Fail(error);
             frame.position=next;
-            // Counter-translate the model container. All nodes, including unexposed joints,
-            // keep the original sampled world pose while the room proxy follows the body.
+            // Counter-translation preserves every sampled node, including joints
+            // not exposed by the posing UI and the original deformed mesh.
             compensation=-offset;model.transform.localPosition=modelPosition+compensation;
-            accepted=roomFrame.PointToRoom(next);acceptedTime=at;rise=nextRise;avatar.PoseRig.CaptureImportedPose();return true;
+            accepted=roomFrame.PointToRoom(next);acceptedTime=at;rise=nextRise;hasAccepted=true;avatar.PoseRig.CaptureImportedPose();return true;
         }
-        bool Fail(string error){Error=error;return false;}
-        public void End(){if(model)model.transform.localPosition=modelPosition;if(spatial)spatial.RememberAuthoredPlacement();}
+        void Restore(){
+            if(!model||!model.Ready||!avatar||!avatar.PoseRig||avatar.CustomModel!=model)return;
+            if(hasAccepted){sample(acceptedTime);model.transform.localPosition=modelPosition+compensation;}else initial.Restore();
+            avatar.PoseRig.CaptureImportedPose();
+        }
+        bool Fail(string error){Restore();Error=error;Preparing=false;inputs?.Dispose();if(spatial)spatial.ReleaseAuthoredInputs();clock.Pause(this,true);return false;}
+        internal JObject Observe()=>ended?RoomContactInputs.State("inactive",false,null):Error!=null?RoomContactInputs.State("unavailable",false,Error):inputs.Observe();
+        public void End(){if(ended)return;ended=true;inputs?.Dispose();clock.Pause(this,false);if(model)model.transform.localPosition=modelPosition;if(spatial)spatial.RememberAuthoredPlacement();}
     }
 }

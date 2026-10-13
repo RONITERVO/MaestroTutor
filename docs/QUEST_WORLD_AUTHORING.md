@@ -861,3 +861,12 @@ Waiting pauses playback time; Stop cancels the pending work. The shared
 This confirms required geometry is present, not that every recorded pose or
 animated limb has a collision-free path. Imported clip travel uses its own
 existing movement checks.
+
+
+For explicit authored travel from an imported Maestro clip, required native
+ground, obstacles and water prepare before the movement query. Waiting keeps the
+last accepted full pose and does not consume the action's playback time. Fitted
+props share that same bounded wait. Stop cancels pending work. Read
+`avatar.authored.inputs` to inspect preparation without starting playback or
+loading geometry. Ready is input availability; the normal supported-ground,
+body-clearance, viewer-distance and water checks still apply.

@@ -1242,3 +1242,10 @@ check must report inactive. Active preparation, complete recorded path bounds,
 time preservation and program/manual-preview cancellation are covered in
 PlayMode; this observation alone does not claim end-to-end active recorded
 playback in the book or a headset/provider acceptance run.
+
+
+The native-room and original-book journeys also read `avatar.authored.inputs`
+with no authored clip active. This is a passive catalog/generated-form check;
+active start/later waits, exact pose retention, clock preservation and cancellation
+are tested separately in PlayMode. Neither observation proves headset contact,
+all skipped source keys or deforming-limb collision behavior.

@@ -8645,3 +8645,51 @@ tests across 311 files passed, alongside lint, production build, probe types,
 core boundaries and catalog checks. Local receipts are under
 `.quest-evidence/recorded-inputs`. Headset, paid-provider, signing, deployment and
 Meta operations remain on hold. Draft PR 248 tracks exact-head CI.
+
+
+### Imported authored-motion input preparation — 2026-10-13
+
+Explicit authored travel from embedded clips and exact library motions now owns
+native preparation before the existing navigation and body-clearance queries.
+Eligibility and passive observations do not activate saved geometry. A pending
+sample preserves its exact requested time, last accepted placement and full
+imported pose. Initial cycle sampling is also restored, including imported nodes
+outside the posing editor and blend-shape weights. A later caller cannot turn a
+pending sample into a queued jump through elapsed time.
+
+The native owner uses separate walking-body and ground envelopes and the actor's
+water and real-room participation policies. Accepted dependency changes renew
+inputs; failed loads, loss of target/tracking/readiness, invalid room transforms
+and the cumulative wait budget fail the action. Stop releases the exact demand.
+Embedded/library actions share their playback clock with fitted props; native
+readiness polling can resume an owned animation while its presentation is paused.
+The scheduler still receives remaining playback time and cannot finish a pending
+final sample. Direct authored playback uses the same native preparation owner.
+
+`avatar.authored.inputs` is a bounded passive fact in the same catalog used by the
+book, agents and headless clients. Ready describes input availability; subsequent
+supported-ground, viewer-distance, swept-body and water checks decide movement.
+The current body proxy does not establish individual limb/prop contact or prove
+every skipped source key. The production whole-world collision gate, running
+retention, 64-object/25-metre limit and disabled automatic unloading remain.
+
+Verification completed: 88 focused PlayMode and 16 scheduler EditMode checks;
+1,155 full EditMode and 1,389 full PlayMode checks, with only the three expected
+optional private-asset skips. All 955 C# files match the frozen source and
+receipt-owned mirror, and the bundled catalog equals the native export.
+
+The actual native-room journey passed 764 observations
+(`7369b3bccc944ffda49e3d9666c0eac6`). The original-book journey passed
+(`7908fffe663440fea51276ffe9975c01`), including the generated authored-input fact
+form. Both clients and Unity editors exited zero, without paid providers. The
+first book attempt exposed a driver assumption: an explicit empty input schema
+still requires clicking Read fact. The driver now follows the visible form, and
+the complete book journey passed on rerun. Active authored preparation, exact
+pose handoff, cancellation and timeout are established by PlayMode checks;
+the book observation establishes the real generated form's inactive result.
+
+Fresh native catalog phases and the same ten catch checkpoints refresh the web
+fixtures. All 2,907 web tests across 311 files passed, along with lint, production
+build, probe types, core boundaries and catalog checks. Local receipts are under
+`.quest-evidence/imported-inputs`. Headset, paid-provider, signing, deployment and
+Meta operations remain on hold. Draft PR 248 tracks exact-head CI.

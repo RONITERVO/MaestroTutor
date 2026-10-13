@@ -281,49 +281,60 @@ namespace Maestro.Quest.Avatar
         public void SetWalkClip(int index) { walkClip = index; walkMotion?.Configure(null,null); }
         public void SetWalkReference(int index,string id,MotionLibrary library) { walkClip = index; walkMotion?.Configure(library,id); }
         public void SetImportedPlaybackRate(float rate) { if (float.IsFinite(rate)) importedSpeed = Mathf.Clamp(rate,.25f,2); }
-        public bool PlayImportedClip(int index, bool loop,bool authored=false)
+        public bool PlayImportedClip(int index,bool loop,bool authored=false)=>PlayImportedClip(index,loop,authored,null);
+        internal bool PlayImportedClip(int index,bool loop,bool authored,RoomPlaybackClock clock,ImportedMotionPose initial=null)
         {
             if (runtimeGate?.Held==true||ModelBusy || !custom || index < 0 || index >= custom.ClipCount || custom.ClipDuration(index) <= 0) return false;
             if(authored&&!CanPlayAuthored(out _))return false;
-            StopImportedClip(); custom.Stop();ImportedPlaybackError=null;
+            if(authored)initial??=CaptureImportedMotionPose();
+            StopImportedClip();custom.Stop();if(initial!=null)custom.transform.localPosition=initial.BasePosition;ImportedPlaybackError=null;
             importedClip = index; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
-            return BeginImportedSample(authored);
+            return BeginImportedSample(authored,clock,initial);
         }
         // Ownership of the lease transfers only on success; Stop always releases it.
-        public bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop,bool authored=false)
+        public bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop,bool authored=false)=>PlayLibraryMotion(motion,loop,authored,null);
+        internal bool PlayLibraryMotion(MotionLibrary.Lease motion,bool loop,bool authored,RoomPlaybackClock clock,ImportedMotionPose initial=null)
         {
-            activityMotion?.Cancel(); return StartLibraryMotion(motion,loop,false,authored);
+            activityMotion?.Cancel();return StartLibraryMotion(motion,loop,false,authored,clock,initial);
         }
         internal bool PlayActivityMotion(MotionLibrary.Lease motion,bool loop)
         {
             if(runtimeGate?.Held==true)return false;BeginActivityBlend(); return StartLibraryMotion(motion,loop,true);
         }
-        bool StartLibraryMotion(MotionLibrary.Lease motion,bool loop,bool ambient,bool authored=false)
+        bool StartLibraryMotion(MotionLibrary.Lease motion,bool loop,bool ambient,bool authored=false,RoomPlaybackClock clock=null,ImportedMotionPose initial=null)
         {
             if (runtimeGate?.Held==true||ModelBusy || !custom || motion == null || !motion.Clip || motion.RigHash != custom.MotionRigHash) return false;
             if(authored&&!CanPlayAuthored(out _))return false;
-            StopClip(); custom.Stop();ImportedPlaybackError=null; libraryMotion = motion; activityPlayback=ambient; importedLoop = loop; importedTime = 0; importedSpeed = 1;
+            if(authored)initial??=CaptureImportedMotionPose();
+            StopClip();custom.Stop();if(initial!=null)custom.transform.localPosition=initial.BasePosition;ImportedPlaybackError=null; libraryMotion = motion; activityPlayback=ambient; importedLoop = loop; importedTime = 0; importedSpeed = 1;
             PoseRig.SetManual(true); activity = "imported";
-            if(BeginImportedSample(authored))return true;
+            if(BeginImportedSample(authored,clock,initial))return true;
             // A failed start leaves disposal to the caller.
             libraryMotion=null;return false;
         }
-        bool BeginImportedSample(bool authored)
+        internal ImportedMotionPose CaptureImportedMotionPose()=>custom&&custom.Ready?new ImportedMotionPose(custom,authoredTravel?.BaseModelPosition??custom.transform.localPosition):null;
+        bool BeginImportedSample(bool authored,RoomPlaybackClock clock,ImportedMotionPose initial)
         {
-            if(authored)authoredTravel=new AvatarAuthoredTravel(this,custom,GetComponent<AvatarSpatialMotion>(),SampleRawImported,ImportedDuration,importedLoop);
-            if(SampleImportedAt(0))return true;
+            if(authored)authoredTravel=new AvatarAuthoredTravel(this,custom,GetComponent<AvatarSpatialMotion>(),SampleRawImported,ImportedDuration,importedLoop,clock,initial);
+            if(SampleImportedAt(0)||authoredTravel?.Preparing==true)return true;
             authoredTravel?.End();authoredTravel=null;custom.Stop();importedClip=-1;return false;
         }
         bool SampleRawImported(float time)=>libraryMotion!=null?custom.SampleMotion(libraryMotion,time,false):custom.SampleClip(importedClip,time,false);
         internal bool SampleImportedAt(float time)
         {
             if(!IsImportedClipPlaying||!custom||!float.IsFinite(time)||time<0)return false;
-            if(authoredTravel!=null){if(authoredTravel.Sample(time))return true;ImportedPlaybackError=authoredTravel.Error;return false;}
+            if(authoredTravel!=null){bool applied=authoredTravel.Sample(time);importedTime=authoredTravel.RequestedTime;ImportedPlaybackError=authoredTravel.Error;return applied;}
             if(!SampleRawImported(importedLoop?time%ImportedDuration:Mathf.Min(time,ImportedDuration)))return false;
             PoseRig.CaptureImportedPose();return true;
         }
-        internal bool FinishImportedAt(float time,out string error){if(authoredTravel!=null&&ImportedPlaybackError==null)SampleImportedAt(time);error=ImportedPlaybackError;return error==null;}
+        internal Rules.RuleActionState AuthoredPlaybackState(float time,out string error){
+            if(authoredTravel!=null&&ImportedPlaybackError==null)SampleImportedAt(time);
+            error=ImportedPlaybackError;
+            return error!=null?Rules.RuleActionState.Failed:authoredTravel?.Preparing==true?Rules.RuleActionState.Preparing:Rules.RuleActionState.Ready;
+        }
+        internal Newtonsoft.Json.Linq.JObject ObserveAuthoredInputs()=>authoredTravel?.Observe()??RoomContactInputs.State("inactive",false,null);
+        internal bool FinishImportedAt(float time,out string error)=>AuthoredPlaybackState(time,out error)==Rules.RuleActionState.Ready;
         float ImportedDuration => libraryMotion != null ? (libraryMotion.Clip ? libraryMotion.Clip.length : 0) : custom.ClipDuration(importedClip);
         public void StopImportedClip() { activityMotion?.Cancel(); activityBlend=null; StopClip(); }
         internal void StopActivityMotion(bool blend)
@@ -360,7 +371,7 @@ namespace Maestro.Quest.Avatar
             if (!IsImportedClipPlaying || !custom) BlendActivity();
             else {
                 if(ImportedPlaybackError!=null)return;
-                importedTime = ownedPlaybackTime!=null?ownedPlaybackTime():importedTime+Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
+                if(authoredTravel?.Preparing!=true)importedTime=ownedPlaybackTime!=null?ownedPlaybackTime():importedTime+Mathf.Min(Time.deltaTime,.05f)*importedSpeed;
                 if(ImportedDuration<=0)StopClip();
                 else {
                     bool sampled=SampleImportedAt(importedTime);

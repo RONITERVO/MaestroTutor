@@ -172,24 +172,23 @@ namespace Maestro.Quest.Avatar
             if (Time.unscaledTime >= nextRemember) { nextRemember=Time.unscaledTime+1; editor.RememberPlacement("maestro"); }
         }
         internal RoomMotionFrame MotionFrame => new(editor?editor.transform:null);
+        internal RoomEditor AuthoredEditor=>editor;
+        internal void ReleaseAuthoredInputs(){if(navigation)navigation.ReleaseMovementInputs();}
         internal bool CanBeginAuthored(out string error)
         {
-            error="Room navigation is unavailable";if(!editor||!navigation)return false;
+            error="Room navigation is unavailable";
+            if(!editor||!navigation||!isActiveAndEnabled)return false;
             if(!CanBegin(AvatarSpatialMode.Manual,out error))return false;
-            float scale=transform.lossyScale.y;
-            if(!navigation||!navigation.Prepare(.25f*scale,1.7f*scale,out error,item)){error??="Room navigation is unavailable";return false;}
-            if(!navigation.Sample(transform.position,.08f,out _)){error="Place Maestro on a supported walking surface before authored travel";return false;}
+            if(!editor.PhysicsWorld.EnvironmentReady(item)){error="Authored motion needs ready room alignment and its selected ground policy";return false;}
+            // Readiness checks never acquire geometry. The playback owner prepares
+            // native inputs before the exact navigation/clearance queries below.
             return true;
         }
-        internal bool CanContinueAuthored(out string error)
-        {
-            error=null;
-            if(!CanBegin(AvatarSpatialMode.Manual,out error))return false;
-            if(!navigation||!navigation.Ready){error="Authored motion stopped — check room alignment and Start physics again";return false;}
-            return true;
-        }
+        internal bool CanContinueAuthored(out string error)=>CanBeginAuthored(out error);
         internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)
         {
+            float scale=transform.lossyScale.y;
+            if(!navigation.Prepare(.25f*scale,1.7f*scale,out error,item))return false;
             error="Authored motion blocked — no supported ground for this authored foot position";
             if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(transform.position,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
             // Respect the user's space along the whole step, including a clip with discontinuous keys.

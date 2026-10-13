@@ -396,7 +396,10 @@ try{
   await page!.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page!.getByLabel('Search facts',{exact:true}).fill(id);await page!.getByRole('button',{name:'Search',exact:true}).click();
   await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
   for(const [name,value] of Object.entries(args)){const field=page!.getByLabel('Fact inputs '+name,{exact:true});if(await field.evaluate(element=>element.tagName==='SELECT'))await field.selectOption(value);else await field.fill(value);}
-  if(Object.keys(args).length)await page!.getByRole('button',{name:'Read fact',exact:true}).click();
+  await page!.getByLabel('Current fact value',{exact:true}).waitFor();
+  // An explicit input schema still requires submission when it has no fields.
+  const readFact=page!.getByRole('button',{name:'Read fact',exact:true});
+  if(await readFact.count())await readFact.click();
   await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
   return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Resource fact missing');return c.value as Record<string,string|number>;});
  };
@@ -675,7 +678,8 @@ try{
  const trackedContact=await readResourceFact('controller.contact.inputs','Hand or controller contact inputs',{hand:'right'});assert.equal(trackedContact.state,'inactive');
  const carriedContact=await readResourceFact('object.attachment.inputs','Carried object contact inputs',{target:ball.id});assert.equal(carriedContact.state,'inactive');
  const recordedContact=await readResourceFact('object.recording.inputs','Recorded playback inputs',{target:ball.id});assert.equal(recordedContact.state,'inactive');
- await writeFile(join(directory,'book-native-contact-inputs.json'),JSON.stringify({boundary:'Original generated book fact forms observing real Unity with physics paused. No active headset contact or provider acceptance.',heldContact,trackedContact,carriedContact,recordedContact},null,2));
+ const authoredContact=await readResourceFact('avatar.authored.inputs','Authored avatar inputs',{});assert.equal(authoredContact.state,'inactive');
+ await writeFile(join(directory,'book-native-contact-inputs.json'),JSON.stringify({boundary:'Original generated book fact forms observing real Unity with physics paused. No active headset contact or provider acceptance.',heldContact,trackedContact,carriedContact,recordedContact,authoredContact},null,2));
  const physicsAfter=await readResourceFact('physics.simulation','Room physics state');assert.equal(physicsAfter.running,false);
  await page.getByRole('heading',{name:'Room physics state',exact:true}).scrollIntoViewIfNeeded();
  await page.screenshot({path:join(directory,'book-native-physics.png')});

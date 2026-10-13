@@ -12,21 +12,22 @@ namespace Maestro.Quest.Interaction {
     internal sealed class RoomContactInputs:IDisposable {
         readonly RoomEditor editor;readonly string actor;readonly Func<bool> owned;
         readonly RoomSpatialInputs inputs;
-        Bounds sweep;bool sampled,ready,disposed;string issue;
+        Bounds body,ground;bool water,sampled,ready,disposed;string issue;
         internal RoomContactInputs(RoomEditor editor,string actor,Func<bool> owned){this.editor=editor;this.actor=actor;this.owned=owned;inputs=new RoomSpatialInputs(editor,actor,owned,false,purpose:"Contact");}
         internal bool SourceChanged=>inputs.SourceChanged;
         internal bool Pending=>inputs.Pending;
-        internal bool Require(Bounds value,out string error){
-            sweep=value;sampled=true;
-            if(!Valid(value)){Dispose();issue=error="Contact bounds are unavailable";return false;}
-            ready=inputs.Require(value,value,true,out issue);error=issue;return ready;
+        internal bool Require(Bounds value,out string error)=>Require(value,value,true,out error);
+        internal bool Require(Bounds body,Bounds ground,bool water,out string error){
+            this.body=body;this.ground=ground;this.water=water;sampled=true;
+            if(!Valid(body)||!Valid(ground)){Dispose();issue=error="Contact bounds are unavailable";return false;}
+            ready=inputs.Require(body,ground,water,out issue);error=issue;return ready;
         }
         internal bool Current(out string error){
             error=issue;
             if(disposed||!sampled||!ready||!editor||!editor.isActiveAndEnabled||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!owned()||inputs.SourceChanged)return false;
-            var latest=editor.SpatialInputTargets(sweep,sweep,true,actor);
+            var latest=editor.SpatialInputTargets(body,ground,water,actor);
             if(latest.Any(id=>Array.BinarySearch(inputs.Targets,id,StringComparer.Ordinal)<0)){error="The contact input set changed";return false;}
-            return editor.SpatialInputsReady(inputs.Targets,sweep,sweep,true,actor,out error)==RoomSpatialReadiness.Ready;
+            return editor.SpatialInputsReady(inputs.Targets,body,ground,water,actor,out error)==RoomSpatialReadiness.Ready;
         }
         internal JObject Observe(){bool current=Current(out var error);return State(current?"ready":inputs.Pending?"pending":"unavailable",current,error,inputs.Targets);}
         internal static JObject State(string state,bool ready,string reason,string[] targets=null)=>new(){["state"]=state,["ready"]=ready,["reason"]=ImportObservation.Text(reason),["dependencyCount"]=targets?.Length??0,["dependencies"]=new JArray((targets??Array.Empty<string>()).Take(4))};
