@@ -1406,16 +1406,16 @@ and does not establish audible quality or Quest performance.
 
 ## Grounded walking parity
 
-The offline Headless journey creates a fixed Box robot using its pinned starter
-source, discovers/checks `object.navigate`, starts it and polls the existing
-execution receipt. `native-grounded-travel.json` includes intermediate native
-positions and actual arrival. Replaying that same run ID must return the original
-receipt without a new movement owner. Normal Undo removes the test creation after
-physics is paused.
+The offline Headless journey creates a fixed Box robot and a second robot that
+blocks the straight route, using their pinned starter source. It discovers/checks
+`object.navigate`, starts it and polls the existing execution receipt. `native-grounded-travel.json` includes intermediate native
+positions, a lateral detour around the solid robot and actual arrival. Replaying that same run ID must return the original
+receipt without a new movement owner. Two ordinary Undo actions remove the two
+test creations after physics is paused and placement has settled.
 
-The Book journey independently creates a Box robot through the existing Create
-object form, starts physics, fills the generated Walk to a place form and checks
-the completed native receipt and actual position. It captures
+The Book journey independently creates both Box robots through the existing
+Create object form, starts physics, fills the generated Walk to a place form and
+checks the completed native receipt, longer travelled distance and actual position. It captures
 `book-native-grounded-travel.json` and its rendered form, then pauses physics and
 removes the fixture using Undo. Both paths use an explicitly synthetic floor.
 These checks cover shared client/native execution and the human interface; they

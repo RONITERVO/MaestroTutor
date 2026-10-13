@@ -721,22 +721,26 @@ try{
   await page!.getByLabel('Action inputs operation',{exact:true}).selectOption(operation);
   return runNamedAction('physics.simulation.set');
  };
- await openNamedAction('Create object','object.create');
- await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});
- await page.getByLabel('Action inputs templateHash',{exact:true}).selectOption({label:'Box robot'});
- await page.getByLabel('Action inputs name',{exact:true}).fill('Book walking robot');
- for(const [key,value] of Object.entries({x:-3,y:0,z:-3,scale:1}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
- const walkingCreated=await runNamedAction('object.create'),walkingTarget=walkingCreated.output!.objectId as string;
+ const createWalkingRobot=async(name:string,x:number)=>{
+  await openNamedAction('Create object','object.create');
+  await page!.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});
+  await page!.getByLabel('Action inputs templateHash',{exact:true}).selectOption({label:'Box robot'});
+  await page!.getByLabel('Action inputs name',{exact:true}).fill(name);
+  for(const [key,value] of Object.entries({x,y:0,z:-3,scale:1}))await page!.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+  return runNamedAction('object.create');
+ };
+ const walkingCreated=await createWalkingRobot('Book walking robot',-3),walkingTarget=walkingCreated.output!.objectId as string;
+ const walkingObstacle=await createWalkingRobot('Book walking obstacle',-2),walkingObstacleId=walkingObstacle.output!.objectId as string;
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
  await openNamedAction('Walk to a place','object.navigate');
  await page.getByLabel('Action inputs target',{exact:true}).selectOption(walkingTarget);
- for(const [axis,value] of Object.entries({x:-2.4,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
+ for(const [axis,value] of Object.entries({x:-1,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
  await page.getByLabel('Action inputs speed',{exact:true}).fill('0.65');
  const walkingReceipt=await runNamedAction('object.navigate');
  const walkingPosition=await page.evaluate(id=>window.nativeBookEvidence!().state!.objects.find(o=>o.id===id)!.position,walkingTarget);
- assert.ok(Math.abs(walkingPosition.x+2.4)<.02&&Math.abs(walkingPosition.y)<.02&&Math.abs(walkingPosition.z+3)<.02);assert.ok(Number(walkingReceipt.output!.distance)>.58);
+ assert.ok(Math.abs(walkingPosition.x+1)<.02&&Math.abs(walkingPosition.y)<.02&&Math.abs(walkingPosition.z+3)<.02);assert.ok(Number(walkingReceipt.output!.distance)>2);
  await page.getByRole('heading',{name:'Walk to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-travel.png')});
- await writeFile(join(directory,'book-native-grounded-travel.json'),JSON.stringify({boundary:'Original book generated create and walk forms with real native arrival and position. Explicit synthetic floor; no provider or headset acceptance.',created:walkingCreated,receipt:walkingReceipt,position:walkingPosition},null,2));
+ await writeFile(join(directory,'book-native-grounded-travel.json'),JSON.stringify({boundary:'Original book generated create and walk forms around a solid robot obstacle, with real native arrival, travelled distance and position. Explicit synthetic floor; no provider or headset acceptance.',created:walkingCreated,obstacle:walkingObstacle,receipt:walkingReceipt,position:walkingPosition},null,2));
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
  // Observe one quiet placement-capture interval before the one-shot Undo.
  const placementSignature=()=>page!.evaluate(()=>JSON.stringify(window.nativeBookEvidence!().state!.objects.map(o=>[o.id,o.objectRevision,o.position])));
@@ -745,8 +749,8 @@ try{
   assert.ok(Date.now()<placementDeadline,'Paused native placement did not settle');await new Promise(resolve=>setTimeout(resolve,150));
   const current=await placementSignature();if(current!==placementBefore)quietAt=Date.now();placementBefore=current;
  }
- await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Undo',exact:true}).first().click();
- await page.waitForFunction(id=>!window.nativeBookEvidence!().state!.objects.some(o=>o.id===id),walkingTarget);
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ for(const target of [walkingObstacleId,walkingTarget]){await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(id=>!window.nativeBookEvidence!().state!.objects.some(o=>o.id===id),target);}
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  const physicsInputs=await readResourceFact('object.physics.inputs','Object physics inputs',{target:ball.id});assert.equal(physicsInputs.state,'inactive');
  const heldContact=await readResourceFact('object.contact.inputs','Held object contact inputs',{target:ball.id});assert.equal(heldContact.state,'inactive');

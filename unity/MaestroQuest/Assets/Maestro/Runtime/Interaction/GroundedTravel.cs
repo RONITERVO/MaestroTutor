@@ -80,7 +80,7 @@ namespace Maestro.Quest.Interaction {
                 else if(!navigation.MovementInputsPending)Fail(stationaryError);return;
             }
             if(route.Length==0||surfaceRevision!=navigation.SurfaceRevision){
-                if(!navigation.FollowRoute(from,goal,obstacle,out route)){
+                if(!navigation.FollowRoute(from,goal,obstacle,out route,avoidSolids:true)){
                     if(avatar)avatar.SpatialWalk(0);
                     if(!navigation.FollowRoutePending&&!navigation.PathsPending)Fail(navigation.FollowRouteStatus);return;
                 }
@@ -93,7 +93,10 @@ namespace Maestro.Quest.Interaction {
             var next=Vector3.MoveTowards(from,route[corner],speed*dt);
             if(!navigation.Traverse(from,next,obstacle,out var floor,out var error)){
                 if(avatar)avatar.SpatialWalk(0);
-                if(!navigation.MovementInputsPending)Fail(error);return;
+                if(!navigation.MovementInputsPending){
+                    if(navigation.CanDetourTraversalBlocker){route=Array.Empty<Vector3>();navigation.CancelFollowRoute();}
+                    else Fail(error);
+                }return;
             }
             var user=editor.Viewer.position;var a=Vector3.ProjectOnPlane(from-user,Vector3.up);var b=Vector3.ProjectOnPlane(floor-user,Vector3.up);var step=b-a;
             float closest=(a+step*(step.sqrMagnitude<1e-8f?0:Mathf.Clamp01(-Vector3.Dot(a,step)/step.sqrMagnitude))).magnitude;

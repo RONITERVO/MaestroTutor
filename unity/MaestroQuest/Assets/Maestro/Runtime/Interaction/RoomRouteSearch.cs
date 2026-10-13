@@ -8,13 +8,13 @@ namespace Maestro.Quest.Interaction {
     // One transient route request. Native queries and candidate sampling are
     // cooperative; no result outlives its caller's geometry/policy identity.
     internal sealed class RoomRouteSearch {
-        internal delegate bool EdgeQuery(Vector3 from,Vector3 to,out Vector3[] path,out string liquid,out Vector3 foot);
-        internal delegate void FootprintQuery(string liquid,Vector3 reference,List<Vector3> points);
+        internal delegate bool EdgeQuery(Vector3 from,Vector3 to,out Vector3[] path,out string blocker,out Vector3 foot);
+        internal delegate void FootprintQuery(string blocker,Vector3 reference,List<Vector3> points);
         internal delegate bool SampleQuery(Vector3 point,out Vector3 floor);
         internal delegate bool SegmentQuery(Vector3 from,Vector3 to);
         internal const int QueriesPerTick=4,MaximumEdges=2048,MaximumNodes=546,MaximumCorners=128;
         sealed class Node {internal Vector3 Point;internal float Cost=float.PositiveInfinity;internal int Parent=-1;internal Vector3[] Incoming;internal bool Expanded;}
-        readonly List<Node> nodes=new();readonly Dictionary<long,Vector3[]> edges=new();readonly HashSet<string> liquids=new(StringComparer.Ordinal);
+        readonly List<Node> nodes=new();readonly Dictionary<long,Vector3[]> edges=new();readonly HashSet<string> blockers=new(StringComparer.Ordinal);
         readonly List<Vector3> candidates=new();readonly List<Vector3> buffer=new();int candidate,active=-1,next=1,validation;
         readonly EdgeQuery edge;readonly FootprintQuery footprint;readonly SampleQuery sample;readonly SegmentQuery segment;readonly Func<bool> queryComplete;
         Vector3[] validating;
@@ -23,30 +23,30 @@ namespace Maestro.Quest.Interaction {
         internal string Failure {get;private set;}
         internal bool Pending=>Result==null&&Failure==null;
         internal int QueryCount=>edges.Count;
-        internal IEnumerable<string> WaterDependencies=>liquids;
-        internal RoomRouteSearch(Vector3 from,Vector3 to,string liquid,Vector3 foot,EdgeQuery edge,FootprintQuery footprint,SampleQuery sample,SegmentQuery segment,Func<bool> queryComplete=null){
+        internal IEnumerable<string> BlockerDependencies=>blockers;
+        internal RoomRouteSearch(Vector3 from,Vector3 to,string blocker,Vector3 foot,EdgeQuery edge,FootprintQuery footprint,SampleQuery sample,SegmentQuery segment,Func<bool> queryComplete=null){
             From=from;To=to;this.edge=edge;this.footprint=footprint;this.sample=sample;this.segment=segment;this.queryComplete=queryComplete??(()=>true);
             nodes.Add(new(){Point=from,Cost=0});nodes.Add(new(){Point=to});edges[Key(0,1)]=null;
-            if(!Discover(liquid,foot))Failure="No supported route around this water is available";
+            if(!Discover(blocker,foot))Failure="No supported route around the blocking water or object is available";
         }
         static long Key(int a,int b)=>((long)a<<32)|(uint)b;
         bool Discover(string id,Vector3 reference){
-            if(string.IsNullOrEmpty(id)||!liquids.Add(id))return false;
+            if(string.IsNullOrEmpty(id)||!blockers.Add(id))return false;
             buffer.Clear();footprint(id,reference,buffer);candidates.AddRange(buffer);return buffer.Count>0;
         }
         void Reopen(){foreach(var n in nodes)if(float.IsFinite(n.Cost))n.Expanded=false;active=-1;next=1;}
         void Add(Vector3 point){
             foreach(var n in nodes)if((n.Point-point).sqrMagnitude<.000001f)return;
-            if(nodes.Count==MaximumNodes){Failure="This water route exceeds the supported search size";return;}nodes.Add(new(){Point=point});
+            if(nodes.Count==MaximumNodes){Failure="This walking route exceeds the supported search size";return;}nodes.Add(new(){Point=point});
         }
         int Best(){int best=-1;float cost=float.PositiveInfinity;for(int i=0;i<nodes.Count;i++){var n=nodes[i];float value=n.Cost+Vector3.Distance(n.Point,To);if(!n.Expanded&&value<cost){best=i;cost=value;}}return best;}
         void Finish(){
             var chain=new List<int>();int cursor=1;
             while(cursor>0&&chain.Count<nodes.Count){chain.Add(cursor);cursor=nodes[cursor].Parent;}
-            if(cursor!=0){Failure="The water route could not be reconstructed";return;}
+            if(cursor!=0){Failure="The walking route could not be reconstructed";return;}
             var points=new List<Vector3>{From};
             for(int i=chain.Count-1;i>=0;i--)foreach(var p in nodes[chain[i]].Incoming){if((p-points[^1]).sqrMagnitude>.000001f)points.Add(p);}
-            if(points.Count>MaximumCorners){Failure="The water route has too many turns";return;}
+            if(points.Count>MaximumCorners){Failure="The walking route has too many turns";return;}
             validating=points.ToArray();validation=1;
         }
         void Relax(int target,Vector3[] path){
@@ -69,17 +69,17 @@ namespace Maestro.Quest.Interaction {
                     candidate++;if(supported)Add(point);
                     if(candidate==candidates.Count)Reopen();continue;
                 }
-                if(active<0){active=Best();next=1;if(active<0){Failure="No supported route around this water is available";return;}}
+                if(active<0){active=Best();next=1;if(active<0){Failure="No supported route around the blocking water or object is available";return;}}
                 if(next==nodes.Count){nodes[active].Expanded=true;active=-1;continue;}
                 int target=next++;if(target==active)continue;
                 long key=Key(active,target);
                 if(edges.TryGetValue(key,out var saved)){Relax(target,saved);continue;}
-                if(edges.Count==MaximumEdges){Failure="This water route exceeds the supported search work";return;}
-                work++;bool allowed=edge(nodes[active].Point,nodes[target].Point,out var path,out var liquid,out var foot);
+                if(edges.Count==MaximumEdges){Failure="This walking route exceeds the supported search work";return;}
+                work++;bool allowed=edge(nodes[active].Point,nodes[target].Point,out var path,out var blocker,out var foot);
                 if(!queryComplete()){next--;return;}
                 edges[key]=allowed?path:null;
                 if(allowed)Relax(target,path);
-                else if(Discover(liquid,foot)){active=-1;next=1;}
+                else if(Discover(blocker,foot)){active=-1;next=1;}
             }
         }
     }

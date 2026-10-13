@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests {
             }finally{travel.Stop(false);}var stopped=item.transform.position;for(int i=0;i<5;i++){travel.Tick();yield return null;}Assert.That(item.transform.position,Is.EqualTo(stopped));Assert.That(editor.Read("maestro").position.x,Is.EqualTo(stopped.x).Within(.001f));
         }
         [UnityTest]public IEnumerator GroundedTravelCannotReportArrivalAcrossASolidObstacle(){
-            WalkingScene();var wall=Surface(new(.65f,.8f,0),new(.06f,1.6f,2));Physics.SyncTransforms();var travel=new GroundedTravel(editor,editor.Find("maestro"),new(1.2f,0,0),1.2f);
+            WalkingScene();var wall=Surface(new(.65f,.8f,0),new(.06f,1.6f,14));Physics.SyncTransforms();var travel=new GroundedTravel(editor,editor.Find("maestro"),new(1.2f,0,0),1.2f);
             try{Assert.That(travel.Begin(out var error),Is.True,error);var state=RuleActionState.Preparing;for(int i=0;i<160&&state==RuleActionState.Preparing;i++){state=travel.State(out error);yield return null;}
                 Assert.That(state,Is.EqualTo(RuleActionState.Failed),error);Assert.That(avatar.transform.position.x,Is.LessThan(.4f));Assert.That(travel.Complete(out _),Is.False);
             }finally{travel.Stop(false);}

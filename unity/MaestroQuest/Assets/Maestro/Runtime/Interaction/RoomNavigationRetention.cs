@@ -28,7 +28,10 @@ namespace Maestro.Quest.Interaction
             accepted.Retain(editor,graph);candidate.Retain(editor,graph);
             if(InputEditor==editor){stepInputs?.Retain(graph);routeInputs?.Retain(graph);}
             if(routeSearch?.Pending==true&&actor&&actor.GetComponentInParent<RoomEditor>()==editor)
-                foreach(var id in routeSearch.WaterDependencies)graph.Retain(id,RoomRetentionReason.WaterRoute);
+                foreach(var id in routeSearch.BlockerDependencies){
+                    if(solidRouteBodies.TryGetValue(id,out var body)){if(body.Editor==editor&&body.Target!=null)graph.Retain(body.Target,RoomRetentionReason.Navigation);}
+                    else graph.Retain(id,RoomRetentionReason.WaterRoute);
+                }
         }
     }
 }

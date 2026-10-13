@@ -3835,3 +3835,23 @@ Real managed and BYOK novice requests for this action remain acceptance work und
 the paid-provider hold. Reuse ordinary chat delegation and observations when that
 work resumes; a scripted client or successful action receipt alone is not a claim
 that the model chose the right object, destination or collision policy.
+
+## Solid route detours — pending device acceptance
+
+The shared planner now attempts bounded detours around props for finite walking
+and after following encounters a blocked step. The installed checkpoint predates
+this source. Keep device testing on hold until explicitly resumed.
+
+On an aligned room with physics running, test both Maestro and a created robot
+walking around a stationary prop. Confirm visible clearance and arrival. Move a
+prop into an already accepted route and confirm the actor holds its position while
+replanning, then passes around it without a jump. Put the destination inside an
+object and verify a clear refusal, with no movement into the object. Stop or grip
+the actor during planning and confirm that it stays stopped.
+
+Repeat with finite water and a prop near its edge, a doorway, a real-room obstacle,
+and a virtual-only actor below the real floor. Manual stick movement must still
+follow the requested direction and stop when that direction is blocked. Check
+several actors, active physics and live object movement for frame-time and thermal
+cost. Conservative bounds do not certify all building interiors or moving crowds.
+Desktop route and client receipts cannot establish these physical outcomes.

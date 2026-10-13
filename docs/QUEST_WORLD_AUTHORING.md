@@ -1038,8 +1038,9 @@ profiles determine whether scanned floor/walls participate: a virtual-only actor
 can travel down virtual terrain below the real floor while another actor still
 uses the room. Moving the viewed world retains the authored destination. Missing
 native inputs hold the last accepted pose without replaying elapsed displacement.
-Solid obstructions stop travel; bounded detours around finite water reuse the
-existing follow route search. This is not general obstacle avoidance or swimming.
+Bounded detours around finite water and solid objects reuse the existing route
+search. Unsupported destinations and exhausted searches stop travel. This does
+not implement swimming or complete crowd/interior navigation.
 
 Maestro uses the selected walk animation. A created robot can animate its recipe
 parts while its root travels; this action does not automatically invent a gait for
@@ -1066,3 +1067,33 @@ concurrency. The shared headless and original-book journeys also exercise creati
 walking and readback on an explicitly synthetic floor. Their current execution
 results are recorded in the delivery plan; these journeys do not claim physical
 Quest or real-provider acceptance.
+
+## Solid obstacle detours
+
+Finite walking plans against current solid objects as well as water. Following
+can approach normally, then uses the same planner after a prop blocks its next
+step. Manual stick movement continues to follow the requested direction and stops
+at a blocked step. A finite journey replans when a new solid object blocks an
+already accepted path; it never advances through that object while planning.
+
+The planner expands a body's conservative horizontal bounds by the actor radius
+and clearance, samples supported candidate points, and checks route edges against
+live collision geometry and water policy. Up to 64 discovered solid bodies share
+the existing 546-node, 2,048-edge and 128-corner limits. A tick performs at most four
+candidate, edge or validation operations with a two-millisecond cooperative work
+budget between operations. One operation can contain several native queries and
+can exceed that target; this is not a hard real-time guarantee. Pending inputs
+still use shared native preparation. Moved/disabled obstacles retire pending candidates, final paths are
+revalidated, and every actual step still uses the ground motor.
+
+Discovered solids retain their canonical object owners while a search is pending;
+transient collider keys are never saved identities. Cancellation and world changes
+release those references through the existing navigation owner. No saved format,
+new user control, second planner or automatic region unloading is added.
+
+This is conservative local routing. A non-walkable concave collider's outer
+bounds may not yield useful interior waypoints; packed crowds and moving-obstacle
+prediction need further work. The actor can report no route even when a more
+sophisticated planner could find one. It must never report arrival from an elapsed
+timer or use that limitation to bypass the selected real-room collision policy.
+Current verification and physical acceptance status are in the delivery record.

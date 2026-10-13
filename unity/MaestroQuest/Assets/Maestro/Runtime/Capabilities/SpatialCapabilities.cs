@@ -48,6 +48,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"avatar.follow.user";
         public override string Label=>"Follow user";
+        public override string Description=>"Follow the tracked user on accepted ground at the saved distance and speed while this timed action owns locomotion and gaze. Uses the actor's real-room and water policies. Every step checks current support and body clearance. A blocked step may start a bounded detour around props and finite water; preparation holds the last accepted position. Occupied goals or exhausted searches wait for a changed situation without crossing obstacles. Conservative bounds do not guarantee passage through every building interior or crowd. Stop, grabbing, lost tracking or lost physics end following; this does not start physics or scan the room.";
         protected override AvatarSpatialMode Mode=>AvatarSpatialMode.Follow;
         public override IReadOnlyList<string> Channels=>new[] {"locomotion","gaze"};
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","avatar.spatialReady","physics.running","navigation.floorReady"};

@@ -9285,3 +9285,48 @@ Headset, paid-provider, signing, deployment and Meta holds remain in place. This
 increment does not change the installed app or establish release acceptance.
 Whole-world physics admission, running-world retention, automatic unloading off
 and the current world limits remain unchanged. V1 release work remains active.
+
+## Shared solid-obstacle routing — 2026-10-13
+
+Finite `object.navigate` journeys and blocked Maestro following now share bounded
+solid-object detours with the existing water search. Current collider bounds
+provide candidate waypoints; accepted ground, current body clearance and water
+policy still decide each edge and actual step. An occupied destination fails
+before candidate expansion. A new obstruction during finite travel requests a
+new route from the accepted position. Manual stick movement keeps its direct
+requested direction. Pending solid dependencies retain canonical object identities.
+
+The eight new native regressions plus existing walking, water and manual-clearance
+checks passed **34 focused checks**. The full run passed **1,193 EditMode / 1,486
+PlayMode checks**, with three expected optional private-asset skips. All **987
+frozen C# files** match source and mirror. An early occupied-destination check
+avoids an unnecessary broad search.
+
+Fresh Headless `0232fdd3a42447f7a20d3ccdd766efd0` and Original Book
+`8ee247d6aeda450c9753eab50af90bd6` passed with zero client/editor exits and no
+real provider calls. Both create a walking robot and an independent solid robot
+on its direct route, invoke the same native action, verify actual arrival and
+remove both creations with ordinary Undo. The two-metre direct journey takes
+about 2.69 metres around the obstacle. Headless records 21 observations, including
+more than half a metre of lateral displacement, and confirms receipt replay
+cannot restart it. The book's rendered action form and completion were inspected.
+These are scripted-provider/synthetic-floor checks, not physical acceptance.
+
+**2,925 web tests across 312 files** passed, including 77 consumers of refreshed
+native fixtures. Lint, probe types, asset integrity and catalog/source equality
+passed. The web build, native browser build/lint, Unity Android export and unsigned
+Gradle compilation passed. Gradle confirmed the unchanged Java suite's **128
+passed / two skipped** results were up to date. All **22 selected ARM64 libraries**
+passed the ELF/16 KiB segment audit. All **148 web files**, the browser AAR and the
+selected library hashes match the staged build. No APK/AAB was created; packaging
+and final ZIP alignment remain separate checks.
+
+Evidence is in `.quest-evidence/solid-routes/` and the two native journey folders.
+The ten protected raw local files and untracked Store work remain untouched.
+Whole-world physics admission, running-world retention, automatic unloading off
+and the current world limits remain unchanged.
+
+See [the world contract](QUEST_WORLD_AUTHORING.md#solid-obstacle-detours) for
+bounds and limitations. General interior/crowd planning, foot planting, swimming,
+regional unloading and physical Quest acceptance remain open. Existing headset,
+paid-provider, signing, deployment and Meta holds remain in force. V1 remains active.

@@ -33492,7 +33492,8 @@
         "avatar.spatialReady",
         "physics.running",
         "navigation.floorReady"
-      ]
+      ],
+      "description": "Follow the tracked user on accepted ground at the saved distance and speed while this timed action owns locomotion and gaze. Uses the actor's real-room and water policies. Every step checks current support and body clearance. A blocked step may start a bounded detour around props and finite water; preparation holds the last accepted position. Occupied goals or exhausted searches wait for a changed situation without crossing obstacles. Conservative bounds do not guarantee passage through every building interior or crowd. Stop, grabbing, lost tracking or lost physics end following; this does not start physics or scan the room."
     },
     {
       "id": "object.navigate",
@@ -33568,7 +33569,7 @@
         "physics.running",
         "navigation.floorReady"
       ],
-      "description": "Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walks share this action budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. Solid obstacles stop rather than inventing a detour; the shared water route search may go around finite water. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
+      "description": "Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walks share this action budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches fail at the last accepted place. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
       "example": {
         "target": "maestro",
         "mode": "walk",
@@ -41865,7 +41866,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending water detours retain discovered liquid sources until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. This does not prove shadow/reflection footprints. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and indirect views, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. This does not prove shadow/reflection footprints. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and indirect views, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -43513,7 +43514,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "9ca0e2eb44cc75b9b18fd41dda59a532a1259f3a327a961cfdb9985c37ade88a"
+      "sha256": "939d899f3484daa3621509907ee99dd6a5b9b4494981f3aad28f1bca8879a390"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -43965,7 +43966,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
-      "sha256": "d60fcc61f82e02497e278dfb006bcd8b520ab5d6b78882e88994e5229aec9b23"
+      "sha256": "79273247abf4cfc3e9b942341d229aada234d3e5f9ddacaff63ed12986fec203"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
@@ -44029,7 +44030,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "0d87d49ed1b0efd9019b1aeadeee675d0a7f409b704fc9e9fddbc8d697abc3a8"
+      "sha256": "2c01cb1f9bc02d9591973c49e11697b5d415ed998da26ab918146bd600c824d0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -44085,7 +44086,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",
-      "sha256": "e52a1b834f628c33151a1a8b050ef06250b6ecb367d0bbbc8ee7db5312a172bc"
+      "sha256": "6207c9ee53a619d15fe7fe526fe87c8bd3dc1e4d3394f8a98d8683aac075127c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
@@ -45157,7 +45158,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
-      "sha256": "a35806fea775366b48a03dd05ec7c4f34640584c37a1048f1a14c41f20a0cefe"
+      "sha256": "db304f2f593e2b0d308b054f52e1e741a33486a444d7c23cb8c08307c6dd44f4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
@@ -45285,11 +45286,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
-      "sha256": "6ed69b5f03b47ece5aab8810ec2b93096fe5c514bac4ddd9ddcb4cdccae70d01"
+      "sha256": "43f8fac589bf1fdc7d05ea624143ddf22e800b50904cb7a7dbce3749de71d9c0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationSolidRoutes.cs",
+      "sha256": "28822e01a6bacce0148e1a922eb3b32d0a9217539d68461813ab1c738cae0501"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
-      "sha256": "bb0777bd7537fd93148568b7d0d1cd1f4093057845835e6f2b6e74e38665b2f5"
+      "sha256": "4897201b85ee902bab085e5e0496fee870c15aee31afd0f5840a0c9cf780a685"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomOwnership.cs",
@@ -45321,7 +45326,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRouteSearch.cs",
-      "sha256": "5a206e0e8fa04bdf6a6a8de3f6031cb84f73aac81a84d30415789fafc4428db0"
+      "sha256": "c1f42865f4c2bf2452eab870af6e28b6ccffbc67df1db0723440d6db865ae8aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRuntimeGate.cs",

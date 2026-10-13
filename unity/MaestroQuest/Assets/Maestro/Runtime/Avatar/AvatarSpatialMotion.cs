@@ -28,7 +28,7 @@ namespace Maestro.Quest.Avatar
         public bool OwnedBy(string identity) => owner == identity;
         public void ManualDirection(string identity,Vector3 direction) { if (owner == identity && mode == AvatarSpatialMode.Manual && float.IsFinite(direction.sqrMagnitude)) { manualDirection=Vector3.ClampMagnitude(Vector3.ProjectOnPlane(direction,Vector3.up),1); manualAt=Time.unscaledTime;if(manualDirection.sqrMagnitude==0&&navigation)navigation.ReleaseMovementInputs(); } }
         AvatarSpatialMode mode;
-        bool paused, focused = true;
+        bool paused, focused = true, avoidRouteSolids;
         Vector3 pathGoal,followDestination;
         Vector3[] corners = Array.Empty<Vector3>();
         int corner;
@@ -84,7 +84,7 @@ namespace Maestro.Quest.Avatar
             // An acquired takeover already stopped an older actor via the arbiter.
             // A delegated module borrows its scheduler's reservation.
             Stop();ownershipLease=acquired;
-            manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
+            manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; avoidRouteSolids=false; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
             avatar.SetEditing(true,preserveUpperBody:true); avatar.SpatialWalk(0);
             Say(value == AvatarSpatialMode.Manual ? "Maestro stick active — center it to stop" : value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
         }
@@ -92,7 +92,7 @@ namespace Maestro.Quest.Avatar
         public void Stop()
         {
             if (!Active) return;
-            owner = null; corners = Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs();ownershipLease?.Dispose();ownershipLease=null;
+            owner = null; avoidRouteSolids=false; corners = Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs();ownershipLease?.Dispose();ownershipLease=null;
             if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");
@@ -129,7 +129,7 @@ namespace Maestro.Quest.Avatar
                 {
                     nextPath = Time.unscaledTime + .35f;
                     if(!navigation.FollowRoutePending||Vector3.Distance(goal,pathGoal)>.2f){pathGoal=goal;followDestination=goal-delta.normalized*Mathf.Max(0,Distance-.02f);}
-                    corners=navigation.FollowRoute(transform.position,followDestination,walkingObstacle??=BodyObstacle,out var planned)?planned:Array.Empty<Vector3>();corner=1;
+                    corners=navigation.FollowRoute(transform.position,followDestination,walkingObstacle??=BodyObstacle,out var planned,avoidRouteSolids)?planned:Array.Empty<Vector3>();corner=1;
                 }
                 while (corner < corners.Length && Vector3.Distance(transform.position,corners[corner]) < .06f) corner++;
                 if (corner < corners.Length)
@@ -143,7 +143,7 @@ namespace Maestro.Quest.Avatar
                         direction.y = 0; if (direction.sqrMagnitude > .0001f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(direction),120*dt);
                         Say("Following you — Stop or grip Maestro to end");
                     }
-                    else {corners=Array.Empty<Vector3>();nextPath=0;Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);}
+                    else {if(navigation.CanDetourTraversalBlocker)avoidRouteSolids=true;corners=Array.Empty<Vector3>();nextPath=0;Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);}
                 }
                 else Say(!navigation.FollowRoutePending&&navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.FollowRouteStatus??navigation.WaterBlocker??(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor"));
             }
