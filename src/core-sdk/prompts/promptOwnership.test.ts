@@ -79,7 +79,8 @@ describe('prompt ownership', () => {
     expect(imports).toEqual(['./surfaceGeometry','./roomConnection','./creationPrototype','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
     const dependencies: Record<string, string[]> = {
       creationBatch: ['./roomConnection', './creationResources', './creationPrototype'],
-      creationPrototype: ['./surfaceGeometry', './creationResources', './roomConnection'],
+      creationPrototype: ['./surfaceGeometry', './creationResources', './terrainReservoir', './roomConnection'],
+      terrainReservoir: [],
       creationResources: ['./roomConnection'],
       programValues: ['./programLimits'], programLimits: ['./generated/behaviourCatalog.json'], roomConnection: [], surfaceGeometry: [],
     };
