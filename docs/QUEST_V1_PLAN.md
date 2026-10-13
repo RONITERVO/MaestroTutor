@@ -8999,3 +8999,32 @@ Final native fixtures passed **77 consumer checks**. All **967 C# files** match
 the final frozen source and mirror. The full-suite baseline is preserved under
 `.quest-evidence/contact-continuity/first-verified`; final follow-up receipts are
 in `final-verified.json` alongside it. No new device/provider acceptance is claimed.
+
+### Imported recovery failure feedback — 2026-10-13
+
+A missing or damaged local model now ends collision preparation with a visible
+failure message, matching the existing shared `object.physics.inputs` fact.
+Previously the fact reported the failure while the visible status could retain
+preparation or ordinary object-editing text. Failure is published once; saved
+objects remain intact and neither file repair nor an independent owned load
+resumes interrupted movement. Explicit Pause/Start restarts without old speed or
+spin. An incidental contact participant keeps its hold after the other is grabbed;
+unrelated bodies continue running.
+
+Verification: **85 focused PlayMode, 22 scheduler EditMode and 2 native catalog
+capture tests passed**. The two new regressions use real missing/damaged saved
+files, native acquisition and XRI selection with a controlled contact edge; they
+are not new native-impact evidence. Fresh Headless
+`9569e54d993847af9b059b6abdeb0938` (**766 observations**) and original Book
+`8f168f44b55449019e4399ea6a845e42` passed with client/editor exit zero.
+Fresh native fixtures passed **77 web consumer checks**.
+All **968 C# files** match the frozen source and mirror. These journeys use
+scripted provider responses and synthetic assets. The last complete native-suite
+baseline remains `8b64a42f` (1166 EditMode / 1442 PlayMode, 3 optional skips);
+this narrow feedback change received the focused and complete-app checks above.
+
+Unsupported/native importer failures, source/workspace turnover during recovery,
+full ownership handovers and CCD/solver limits still need further evidence before
+regional admission changes. Whole-world admission, running-world retention,
+automatic unloading off and the 64-object/25-metre limits remain. Device, paid
+provider, signing, deployment and Meta holds remain. V1 release work is active.

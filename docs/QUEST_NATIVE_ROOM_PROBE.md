@@ -1334,3 +1334,11 @@ A separate catch-timeout regression injects a long diagnostic into the existing
 attempt and expires its deadline. The real action completes with a missed receipt
 and `caught=false`; its reason must fit the typed program-text binding. This
 controlled value-boundary case is distinct from native collision evidence.
+
+`RecoveryFailureTests.cs` uses real saved model files, native area acquisition
+and XRI selection to test missing and damaged imports during recovery. Its
+contact edge is controlled; these are loading/ownership regressions, not new
+native-impact or headset acceptance. The free participant remains interrupted,
+the failure reaches the visible status and shared fact, and unrelated bodies
+keep running. File repair and independent loading cannot replay the throw;
+explicit Pause/Start resumes without the previous velocity or spin.

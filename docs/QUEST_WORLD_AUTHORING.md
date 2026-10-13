@@ -908,6 +908,13 @@ Stay callbacks; recovery does not depend on a new collision Enter. An active
 catch reports the actual waiting reason from the object's physics inputs, so an
 interrupted object is not described as waiting for a user to release it.
 
+If a required model is missing or damaged, recovery publishes that failure to
+the visible status as well as `object.physics.inputs`. Saved content remains
+intact and no placeholder is published. The remaining interrupted objects stay
+stopped when another participant is grabbed. Repairing the file, or loading it
+for another action, does not retry recovery or replay old movement; explicitly
+restart from rest after fixing the input.
+
 This recovery uses the same fact and controls for programs, agents and book
 controls. It is a fallback prerequisite for future regional simulation. Current
 production physics still requires the complete authored collision environment;

@@ -66,6 +66,7 @@ namespace Maestro.Quest.Creation {
         void RefuseRecovery(DormantRecovery value,string reason){
             value.Inputs?.Dispose();value.Inputs=null;value.Pending=false;
             value.Reason=reason+" Pause then start physics, or grab the object, to retry from rest.";
+            ReportStatus(value.Reason);
         }
         internal void ProcessDormantContacts(){
             if(processingDormantContacts||applying)return;processingDormantContacts=true;
@@ -94,7 +95,7 @@ namespace Maestro.Quest.Creation {
                     else if(stale)RefuseRecovery(value,"Collision inputs changed while movement was interrupted.");
                     else value.Inputs=new RoomSpatialInputs(this,actor,()=>RecoveryOwned(value)&&value.Frame==transform.localToWorldMatrix,false,purpose:"Collision recovery");
                     foreach(var member in value.Actors.Values)member.body.Refresh();
-                    ReportStatus(value.Reason);
+                    if(value.Inputs!=null)ReportStatus(value.Reason);
                 }
                 foreach(var value in dormantRecoveries.ToArray()){
                     if(!RecoveryOwned(value)){RemoveDormantRecovery(value);continue;}
