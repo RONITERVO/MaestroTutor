@@ -7,10 +7,10 @@ namespace Maestro.Quest.Creation {
     // A conservative native barrier is not an authored object or a real contact.
     // It has no renderer, grab component, ground provider or acoustic identity.
     internal sealed class DormantCollisionProxy:MonoBehaviour {
-        internal RoomEditor Owner;internal string Target;
+        internal RoomEditor Owner;internal string Target;internal uint Generation;
     }
     internal sealed class RoomDormantCollision:IDisposable {
-        readonly RoomEditor owner;readonly string target;BoxCollider shape;bool disposed;
+        readonly RoomEditor owner;readonly string target;BoxCollider shape;bool disposed;uint generation;
         internal bool Known {get;private set;}
         internal bool HasBounds {get;private set;}
         internal BoxCollider Shape=>shape;
@@ -19,7 +19,7 @@ namespace Maestro.Quest.Creation {
             if(disposed)return;
             Known=value.Known&&(!value.HasBounds||RoomRecipe.Finite(value.Bounds.center)&&RoomRecipe.Finite(value.Bounds.size)&&value.Bounds.size.x>=0&&value.Bounds.size.y>=0&&value.Bounds.size.z>=0);
             HasBounds=Known&&value.HasBounds;
-            if(!owner||!HasBounds){if(shape)shape.enabled=false;return;}
+            if(!owner||!HasBounds){if(shape&&shape.enabled){shape.enabled=false;shape.GetComponent<DormantCollisionProxy>().Generation=++generation;}return;}
             if(!shape){
                 var root=new GameObject("Pending collision / "+target);root.SetActive(false);root.transform.SetParent(owner.transform,false);
                 root.layer=RoomPhysicsLayers.Pending;var marker=root.AddComponent<DormantCollisionProxy>();marker.Owner=owner;marker.Target=target;
@@ -27,6 +27,7 @@ namespace Maestro.Quest.Creation {
             }
             // A small conservative thickness also represents planar extents.
             var size=value.Bounds.size+Vector3.one*.004f;
+            if(!shape.enabled||shape.center!=value.Bounds.center||shape.size!=size)shape.GetComponent<DormantCollisionProxy>().Generation=++generation;
             if(shape.center!=value.Bounds.center)shape.center=value.Bounds.center;
             if(shape.size!=size)shape.size=size;
             shape.enabled=true;

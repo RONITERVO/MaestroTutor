@@ -33,6 +33,14 @@ namespace Maestro.Quest.Interaction {
     }
     public sealed partial class RigidRoomItem {
         RoomSpatialInputs physicsInputs;
+        bool collisionInterrupted;
+        internal string[] CollisionInputMembers=>inputMembers.ToArray();
+        internal void ClearCollisionInterruption()=>collisionInterrupted=false;
+        internal void InterruptAtCollisionGuard(){
+            // Keep the completed solver pose. Replaying pre-contact velocity would
+            // erase real contacts or repeat a throw from the same physics step.
+            ReleasePhysicsInputs();StopVelocity();collisionInterrupted=true;MotionRevision++;
+        }
         bool inputsReady=true,preparedMomentum,shapeFailed,refreshAfterPublication;
         Vector3 preparedVelocity,preparedSpin;
         string inputStatus;string[] inputMembers=Array.Empty<string>();
@@ -50,6 +58,7 @@ namespace Maestro.Quest.Interaction {
         internal bool CurrentInputs(out string error)=>CurrentInputs(null,out error);
         internal bool CurrentInputs(PhysicsIslandQuery query,out string error){
             error=inputStatus;var editor=InputEditor;if(!editor)return true;
+            if(editor.DormantRecoveryBlocked(item,out _,out error))return false;
             if(editor.SpatialInputsChanging){error="The authored geometry is being reconciled";return false;}
             if(!inputsReady||physicsInputs==null||physicsInputs.SourceChanged||editor.RuntimeGate.Held||editor.WriteGate.Frozen)return false;
             query??=editor.PhysicsInputs(item);
@@ -66,6 +75,7 @@ namespace Maestro.Quest.Interaction {
             var editor=InputEditor;
             if(!editor){if(hasInputBinding)ReleasePhysicsInputs();else SetInputsReady(true);return;}
             if(!InputOwner||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!editor.PhysicsIslandOwned(item)){ReleasePhysicsInputs();return;}
+            if(editor.DormantRecoveryBlocked(item,out _,out var recoveryError)){ReleasePhysicsInputs();inputStatus=recoveryError;return;}
             query??=editor.PhysicsInputs(item);
             if(!query.Members.SequenceEqual(inputMembers)){ReleasePhysicsInputs();inputMembers=query.Members;}
             if(shapeFailed)return;
@@ -88,14 +98,15 @@ namespace Maestro.Quest.Interaction {
             body.linearVelocity=Vector3.ClampMagnitude(preparedVelocity,15);body.angularVelocity=Vector3.ClampMagnitude(preparedSpin,30);
             DiscardPreparedMotion();body.WakeUp();
         }
-        void InterruptPhysicsInputs(){InputEditor?.InterruptPhysicsIsland(item);ReleasePhysicsInputs();}
+        void InterruptPhysicsInputs(){InputEditor?.CancelDormantRecovery(item);InputEditor?.InterruptPhysicsIsland(item);ReleasePhysicsInputs();collisionInterrupted=false;}
         internal void ReleasePhysicsInputs(){physicsInputs?.Dispose();physicsInputs=null;inputMembers=Array.Empty<string>();shapeFailed=false;DiscardPreparedMotion();inputStatus=null;SetInputsReady(false);}
         internal JObject ObservePhysicsInputs(){
             bool active=InputOwner,ready=active&&InputsCurrent;
-            string state=!active?"inactive":ready?"ready":physicsInputs?.Pending==true?"pending":"unavailable";
-            var targets=physicsInputs?.Targets??Array.Empty<string>();
+            bool recoveryPending=false,recovering=InputEditor&&InputEditor.DormantRecoveryBlocked(item,out recoveryPending,out _);
+            string state=!active?"inactive":ready?"ready":physicsInputs?.Pending==true||recovering&&recoveryPending?"pending":"unavailable";
+            var targets=InputEditor?.DormantRecoveryTargets(item)??physicsInputs?.Targets??Array.Empty<string>();
             return new JObject{["state"]=state,["ready"]=ready,["reason"]=ImportObservation.Text(ready?null:active?PhysicsInputStatus:"Physics, geometry or object ownership is unavailable"),
-                ["dependencyCount"]=targets.Length,["dependencies"]=new JArray(targets.Take(4)),["momentumHeld"]=active&&preparedMomentum};
+                ["dependencyCount"]=targets.Length,["dependencies"]=new JArray(targets.Take(4)),["momentumHeld"]=active&&preparedMomentum,["interrupted"]=collisionInterrupted};
         }
     }
 }

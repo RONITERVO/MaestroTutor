@@ -879,3 +879,27 @@ real-room and water policies. Blocked or oversized intervals keep the last accep
 pose; loading keeps the original pending time. An interval is limited to 256
 samples rather than silently dropping keys. These are body-proxy checks; they do
 not certify continuous curves between samples or individual animated limbs.
+
+
+### Physics preparation and interrupted movement
+
+Read `object.physics.inputs` to inspect a solid or bouncy object's required
+geometry. Physically connected moving objects prepare and wait together; merely
+belonging to the same area does not join them. Separate objects attached to a
+fixed anchor can remain independent. Reading this fact never starts physics or
+loads an object. `ready` describes available inputs, not a successful throw or a
+clear future path.
+
+Ordinary `pending` preparation can retain motion in `momentumHeld`. An
+`interrupted` result is different: the solver reached a temporary guard for
+unavailable geometry, so the affected group stops and discards velocity while
+exact geometry prepares. Even when preparation finishes, movement remains stopped.
+Inspect the reason, then explicitly pause and start physics, or grab the object,
+to continue from rest. Do not retry an old throw automatically or describe this
+state as a completed catch. Pause, grab, animation control, teleport and ownership
+changes discard prior motion; independent consumers keep their own loads.
+
+This recovery uses the same fact and controls for programs, agents and book
+controls. It is a fallback prerequisite for future regional simulation. Current
+production physics still requires the complete authored collision environment;
+automatic regional unloading and larger-world limits are not enabled by it.

@@ -41955,11 +41955,12 @@
           "dependencies": {
             "list": "text"
           },
-          "momentumHeld": "boolean"
+          "momentumHeld": "boolean",
+          "interrupted": "boolean"
         }
       },
       "label": "Object physics inputs",
-      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for another member or joint reports unavailable or pending. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
+      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for another member or joint reports unavailable or pending. pending means bounded native preparation; After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry: its connected group is held while exact inputs prepare, with no old velocity replay. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. The current whole-world collision gate still applies.",
       "input": {
         "type": "object",
         "properties": {
@@ -43674,7 +43675,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
-      "sha256": "0175a86b09323f57f68a0a930958381fcff8f548ae2fa288de46e2edf471f403"
+      "sha256": "bf8e35a71683e2ec8ac7fe34840f0d5547af7b2549aef83560b8946d42bd683f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -44194,7 +44195,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantCollision.cs",
-      "sha256": "47ff7c252b6f2199c1c32f723c49e0addb207ef5f4253b16c4b89c649a409976"
+      "sha256": "fb1a6475d11629fe9ab71239e0c0874484a9803c0f4911a710d98d01455bb5ef"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
+      "sha256": "7255458243f2b56baaff16e3f398fc2e7126cb71c4db775b4178ed842b5b768a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -44214,7 +44219,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "a23aa1849d7336358e5c5ef16fa221a410713f7b8f372de806057bba56c6a05e"
+      "sha256": "d1bba2a63692b956641f500392dc2cbf5a3ed22747028557cbd2f87738f09bf6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -44346,7 +44351,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "e83f30382eff9422bc7289f690f9c379d038014a9c2a66901bef3a6d405428ab"
+      "sha256": "8c549850271dcf17ff951d17fab5819015db55ef56601c2344bce1cd6895e9c0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
@@ -44854,11 +44859,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "0bb0e04e2ba95cd5b560a8573204726232f5ad38c2eea1dead9b3d39e9870569"
+      "sha256": "0b049dbeeb4d4212dab5e3f84142d849c471b8e60d870186742c0eb626c55672"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "a610fd5bfa1ce49349cc8f9422daf261952f55b9b7637f2291194672cac62a75"
+      "sha256": "77fc95591ecfdaba647f14288b9a3a8656304739aba1f63ce58a09f75ff98cef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",

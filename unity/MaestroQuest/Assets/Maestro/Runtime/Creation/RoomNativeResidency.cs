@@ -46,7 +46,7 @@ namespace Maestro.Quest.Creation
         internal string NativeActivationError(string target)=>dormantNative.TryGetValue(target,out var entry)?entry.Error:null;
         void SynchronizeNativeResidency(HashSet<string> saved)
         {
-            if(!ReferenceEquals(nativeJournal,journal)){CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantCollisions();dormantNative.Clear();nativeJournal=journal;}
+            if(!ReferenceEquals(nativeJournal,journal)){CancelNativeActivation();ReleaseDormantRecoveries();ReleaseNativeAcoustics();ReleaseDormantCollisions();dormantNative.Clear();nativeJournal=journal;}
             foreach(var id in dormantNative.Keys.Where(id=>!saved.Contains(id)).ToArray()){ReleaseNativeAcoustic(dormantNative[id]);dormantNative[id].CollisionGuard?.Dispose();dormantNative.Remove(id);}
             foreach(var pair in dormantNative){
                 var entry=pair.Value;SynchronizeDormantCollision(pair.Key,entry);int revision=ObjectRevision(pair.Key);

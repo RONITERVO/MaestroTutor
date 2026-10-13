@@ -1277,3 +1277,17 @@ real geometry behind it. Cancellation, geometry edits, activation, deletion/Undo
 and workspace replacement verify lifetime and stale-input behavior. These tests
 retain the whole-world physics restriction. Neither the passive book/headless
 journeys nor these guards establish regional simulation or headset performance.
+
+
+`DormantRecoveryTests.cs` extends guard coverage with a real native impact,
+callback-only queuing, exact target preparation, connected-group interruption,
+independent consumers and fixed-anchor children, multiple contact targets, stale
+geometry, world-frame changes, animation cancellation and explicit restart from
+rest. The actual impact test deliberately exceeds the ordinary fixed-step
+prediction; it is not a production timestep or tunneling guarantee. These tests
+isolate the fallback by overriding admission in their fixture only. Production
+admission is unchanged. The shared `object.physics.inputs` fact now reports
+`interrupted`, separately from ordinary pending preparation and retained momentum.
+Headless/book observations remain passive interface coverage; native PlayMode
+supplies the active collision evidence. No new headset/provider acceptance is
+claimed by these tests.

@@ -131,3 +131,15 @@ it.each(['object.contact.inputs','controller.contact.inputs','object.attachment.
  expect(validCatalogView({...view,available:false,value:null})).toBe(true);
  expect(validCatalogRequest({operation:'inspect',category:'facts',capability,version:1,arguments:args})).toBe(true);
 });
+
+it('preserves collision interruption as an explicit physics-input fact across the web/native boundary',()=>{
+ const capability='object.physics.inputs',definition=behaviourFact(capability)!;
+ const value={state:'unavailable',ready:false,reason:'Geometry ready; resume from rest',dependencyCount:2,dependencies:['ball','wall'],momentumHeld:false,interrupted:true};
+ const view={operation:'inspect',category:'facts',capability,version:1,arguments:{target:'ball'},definition,available:true,status:'Current inputs',value};
+ expect(validCatalogView(view)).toBe(true);
+ expect(validCatalogView({...view,value:{...value,state:'pending',reason:'Preparing geometry'}})).toBe(true);
+ expect(validCatalogView({...view,value:{...value,interrupted:'true'}})).toBe(false);
+ const {interrupted,...missing}=value;expect(interrupted).toBe(true);
+ expect(validCatalogView({...view,value:missing})).toBe(false);
+ expect(definition.description).toContain('resume from rest');
+});

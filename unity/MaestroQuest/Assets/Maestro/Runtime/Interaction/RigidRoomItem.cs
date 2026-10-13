@@ -34,7 +34,7 @@ namespace Maestro.Quest.Interaction
         public event Action<RoomItem> Settled;
         public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
         void OnCollisionEnter(Collision collision) {
-            if(collision.collider&&collision.collider.GetComponent<Creation.DormantCollisionProxy>())return;
+            if(collision.collider&&collision.collider.GetComponent<Creation.DormantCollisionProxy>() is Creation.DormantCollisionProxy proxy){InputEditor?.QueueDormantContact(this,proxy);return;}
             if(ContactStarted==null||!isActiveAndEnabled||!geometryReady||AnimationOwned||!world||!world.CanSimulate(transform.position,item)||Dynamic&&!Allowed||collision.contactCount==0)return;
             // Unity may reuse Collision objects. Copy the observation immediately;
             // no callback object or mutable body state enters the program queue.
@@ -86,7 +86,7 @@ namespace Maestro.Quest.Interaction
             bool changed=owns?owners.Add(owner):owners.Remove(owner);if(changed){grabInputs?.Suspend();InterruptPhysicsInputs();MotionRevision++;}
             Refresh();
         }
-        void PhysicsChanged(){if(!ContactTracking)grabInputs?.Suspend();MotionRevision++;Refresh();}
+        void PhysicsChanged(){if(!ContactTracking){grabInputs?.Suspend();InterruptPhysicsInputs();}MotionRevision++;Refresh();}
         bool PhysicsEnabled => InputBindingAvailable && isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && world && world.CanSimulate(transform.position,item);
         bool BaseAllowed=>PhysicsEnabled&&constraints.Count==0;
         // Held-body sweeps still use the whole-world gate; XRI retains its body/throw setup.

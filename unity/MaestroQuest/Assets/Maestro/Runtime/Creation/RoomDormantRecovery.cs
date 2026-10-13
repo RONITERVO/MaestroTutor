@@ -1,0 +1,99 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Interaction;
+using UnityEngine;
+namespace Maestro.Quest.Creation {
+    public sealed partial class RoomEditor {
+        sealed class DormantContact {
+            internal RigidRoomItem Body;internal RoomItem Item;internal string Target;internal int Revision;
+            internal DormantCollisionProxy Proxy;internal uint Generation,Placement;
+            internal RoomJournal Journal;internal Matrix4x4 Frame;internal string[] Members;
+        }
+        sealed class DormantRecovery:IDisposable {
+            internal RoomJournal Journal;internal Matrix4x4 Frame;internal string[] Members,Targets;
+            internal readonly Dictionary<string,(RigidRoomItem body,uint placement)> Actors=new(StringComparer.Ordinal);
+            internal RoomSpatialInputs Inputs;internal bool Pending=true,Disposed;internal string Reason;
+            public void Dispose(){if(Disposed)return;Disposed=true;Inputs?.Dispose();Inputs=null;}
+        }
+        readonly List<DormantContact> dormantContacts=new();
+        readonly List<DormantRecovery> dormantRecoveries=new();
+        readonly Dictionary<string,DormantRecovery> recoveringBodies=new(StringComparer.Ordinal);
+        bool processingDormantContacts;
+        // PhysX callbacks only copy a bounded contact identity. Publication,
+        // loading and body changes happen after all callbacks from that step.
+        internal void QueueDormantContact(RigidRoomItem body,DormantCollisionProxy proxy){
+            if(!this||!isActiveAndEnabled||applying||!body||body.PhysicsEditor!=this||!body.Simulating||!proxy||proxy.Owner!=this)return;
+            var item=body.GetComponent<RoomItem>();if(Identity(item)==null)return;
+            if(dormantContacts.Any(c=>c.Body==body&&c.Proxy==proxy))return;
+            dormantContacts.Add(new(){Body=body,Item=item,Target=proxy.Target,Revision=ObjectRevision(proxy.Target),Proxy=proxy,Generation=proxy.Generation,
+                Placement=body.PlacementRevision,Journal=journal,Frame=transform.localToWorldMatrix,Members=body.CollisionInputMembers});
+        }
+        bool RecoveryActor(RigidRoomItem body,RoomItem item,uint placement)=>body&&item&&body.PhysicsEditor==this&&Find(Identity(item))==item&&body.PlacementRevision==placement&&body.ContactTracking&&!item.Grab.isSelected;
+        bool RecoveryOwned(DormantRecovery value){
+            if(value.Disposed||!this||!isActiveAndEnabled||!ReferenceEquals(value.Journal,journal)||RuntimeGate.Held||WriteGate.Frozen)return false;
+            foreach(var pair in value.Actors)if(!RecoveryActor(pair.Value.body,Find(pair.Key),pair.Value.placement))return false;
+            return true;
+        }
+        internal bool DormantRecoveryBlocked(RoomItem item,out bool pending,out string reason){
+            pending=false;reason=null;string id=Identity(item);if(id==null||!recoveringBodies.TryGetValue(id,out var value))return false;
+            pending=value.Pending;reason=value.Reason;return true;
+        }
+        internal string[] DormantRecoveryTargets(RoomItem item)=>Identity(item) is string id&&recoveringBodies.TryGetValue(id,out var value)?value.Targets:null;
+        void RemoveDormantRecovery(DormantRecovery value){
+            value.Dispose();dormantRecoveries.Remove(value);
+            foreach(var pair in value.Actors){if(recoveringBodies.TryGetValue(pair.Key,out var found)&&ReferenceEquals(found,value))recoveringBodies.Remove(pair.Key);if(pair.Value.body)pair.Value.body.ClearCollisionInterruption();}
+        }
+        internal void CancelDormantRecovery(RoomItem item){
+            string id=Identity(item);if(id==null)return;
+            dormantContacts.RemoveAll(c=>c.Item==item||c.Members.Contains(id));
+            foreach(var value in dormantRecoveries.Where(r=>r.Members.Contains(id)).ToArray())RemoveDormantRecovery(value);
+        }
+        void ReleaseDormantRecoveries(){dormantContacts.Clear();foreach(var value in dormantRecoveries.ToArray())RemoveDormantRecovery(value);}
+        void RefuseRecovery(DormantRecovery value,string reason){
+            value.Inputs?.Dispose();value.Inputs=null;value.Pending=false;
+            value.Reason=reason+" Pause then start physics, or grab the object, to retry from rest.";
+        }
+        internal void ProcessDormantContacts(){
+            if(processingDormantContacts||applying)return;processingDormantContacts=true;
+            try{
+                var queued=dormantContacts.ToArray();dormantContacts.Clear();
+                foreach(var contact in queued){
+                    if(!ReferenceEquals(contact.Journal,journal)||!RecoveryActor(contact.Body,contact.Item,contact.Placement))continue;
+                    string actor=Identity(contact.Item);if(recoveringBodies.ContainsKey(actor))continue;
+                    var members=contact.Members.Length>0?contact.Members:PhysicsIslandMembers(contact.Item);
+                    var previous=dormantRecoveries.Where(r=>r.Members.Intersect(members).Any(id=>recoveringBodies.ContainsKey(id))).ToArray();
+                    if(previous.Length>0){members=members.Concat(previous.SelectMany(r=>r.Members)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();foreach(var old in previous)RemoveDormantRecovery(old);}
+                    var contacts=queued.Where(c=>members.Contains(Identity(c.Item))).ToArray();
+                    var value=new DormantRecovery{Journal=journal,Frame=contact.Frame,Members=members,
+                        Targets=members.Concat(contacts.Select(c=>c.Target)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),
+                        Reason="Movement stopped at unavailable geometry; preparing nearby objects"};
+                    foreach(var id in members){var peer=Find(id);var rigid=peer?peer.GetComponent<RigidRoomItem>():null;if(rigid&&rigid.Dynamic)value.Actors[id]=(rigid,rigid.PlacementRevision);}
+                    if(value.Actors.Count==0)continue;
+                    // Register the complete hold before refreshing any member/joint.
+                    dormantRecoveries.Add(value);foreach(var id in value.Actors.Keys)recoveringBodies[id]=value;
+                    foreach(var member in value.Actors.Values)member.body.InterruptAtCollisionGuard();
+                    bool stale=contacts.Any(c=>!ReferenceEquals(c.Journal,journal)||ObjectRevision(c.Target)!=c.Revision||c.Frame!=transform.localToWorldMatrix||
+                        NativeEntityDormant(c.Target)&&(!c.Proxy||c.Proxy.Generation!=c.Generation));
+                    if(previous.Length>0)RefuseRecovery(value,"The connected group changed during collision recovery.");
+                    else if(stale)RefuseRecovery(value,"Collision inputs changed while movement was interrupted.");
+                    else value.Inputs=new RoomSpatialInputs(this,actor,()=>RecoveryOwned(value)&&value.Frame==transform.localToWorldMatrix,false,purpose:"Collision recovery");
+                    foreach(var member in value.Actors.Values)member.body.Refresh();
+                    ReportStatus(value.Reason);
+                }
+                foreach(var value in dormantRecoveries.ToArray()){
+                    if(!RecoveryOwned(value)){RemoveDormantRecovery(value);continue;}
+                    if(value.Inputs==null)continue;
+                    if(value.Frame!=transform.localToWorldMatrix){RefuseRecovery(value,"The world moved during collision preparation.");continue;}
+                    bool ready=value.Inputs.Require(value.Targets,(string[] ids,out string error)=>SpatialMovementReady(ids,null,out error),out var issue);
+                    if(ready){if(value.Pending){value.Pending=false;value.Reason="Geometry ready. Movement stopped; pause then start physics, or grab the object, to resume from rest.";ReportStatus(value.Reason);}}
+                    else if(value.Inputs.Pending){value.Pending=true;value.Reason="Movement stopped at unavailable geometry; preparing nearby objects";}
+                    else RefuseRecovery(value,issue??"Collision preparation could not finish.");
+                }
+            }finally{processingDormantContacts=false;}
+        }
+        void FixedUpdate()=>ProcessDormantContacts();
+    }
+}

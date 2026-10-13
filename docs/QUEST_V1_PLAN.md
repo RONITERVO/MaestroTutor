@@ -8815,10 +8815,11 @@ frame transforms, geometry invalidation, deletion/Undo, workspace replacement,
 known-empty/unknown extents, query filtering and a real native rigid-body impact.
 The production whole-world physics admission gate remains covered and unchanged.
 
-This is a collision-coverage prerequisite, not completed regional simulation.
-Contact-triggered loading, owned connected-island suspension/resume, collision
-handoff, post-step motion guarantees and regional navigation still need native
-evidence before automatic unloading or the whole-world restriction can change.
+This establishes collision coverage, not completed regional simulation. The
+following owned-interruption increment adds contact-triggered preparation and an
+explicit restart from rest. Seamless collision handoff, post-step motion
+guarantees and regional navigation still need native evidence before automatic
+unloading or the whole-world restriction can change.
 The existing 64-object/25-metre limits and all device/provider/release holds remain.
 
 
@@ -8835,3 +8836,50 @@ exited zero. These use scripted provider responses and synthetic assets; they ar
 not new headset or paid-provider acceptance. The 76 checks across the three refreshed fixture consumers also passed. Native
 fixtures are refreshed from these runs; verification receipts are under
 `.quest-evidence/dormant-collision`.
+
+
+### Owned interruption after a dormant collision — 2026-10-13
+
+A guard contact now queues the body, target, collision generation, placement,
+world frame and pre-step physical group. The PhysX callback does not load an
+object or mutate a body. The editor drains that queue before the next physics
+step, registers the complete connected-group hold, and acquires the exact native
+inputs through the existing independently owned demand system. Separate moving
+children of a fixed anchor remain independent; several contacts in one connected
+group share its hold and prepare every contacted target.
+
+The completed solver pose is retained, but velocity is discarded. Loading exact
+geometry does not replay an old throw or silently continue an uncertain impact.
+The group stays stopped until an explicit physics Pause then Start, or a grab,
+resumes it from rest. `object.physics.inputs.interrupted` and its reason expose
+the same state to the book, agent and headless clients. Passive reads cannot load
+geometry. Unrelated physical groups continue normally in the isolated native
+regressions; production still requires the whole-world collision gate.
+
+Pause, grip, animation ownership, teleport, geometry changes, deletion and
+workspace retirement invalidate the appropriate recovery owner. Already completed
+loads may remain resident; cancellation is not an instruction to delete reusable
+native geometry. Other consumers retain their own preparation. A source or frame
+change during recovery keeps an explicit interruption rather than claiming stale
+readiness, and a ready lease continues to recheck its accepted inputs.
+
+This does not make a coarse box a faithful surface. Direct guard impacts are not
+authored collision events, but joint breaks or secondary contacts caused by that
+solver step still need an explicit policy and native evidence. CCD/tunneling,
+rapid rotation, seamless collider replacement, regional navigation and the cost
+of guards at large scale remain open. Keep whole-world admission, running-world
+retention, disabled automatic unloading and the 64-object/25-metre limits until
+the end-to-end replacement is proven. Device/provider/release holds are unchanged.
+
+Verification: **1163 EditMode and 1428 PlayMode tests passed**, with three
+expected optional private-asset skips. The focused run passed **44 tests**, including
+11 recovery regressions. **2908 web tests across 311 files**, lint, production
+build, probe TypeScript, core boundaries and catalog checks passed. After fresh
+native captures, **77 checks across three fixture consumers** passed.
+
+Native Headless journey `c0fd04eb567a4b15a4c46e5117c0dc6c` passed with
+766 observations, and original Book journey
+`ceee0e1438794394a62dfe63fb0f1d97` passed. Both clients and Unity editors
+exited zero, using scripted responses and synthetic assets with no paid provider.
+All **963 C# files** match the frozen source and build mirror. Evidence is under
+`.quest-evidence/dormant-recovery`. No new headset acceptance is claimed.

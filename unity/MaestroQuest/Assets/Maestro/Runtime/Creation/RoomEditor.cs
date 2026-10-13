@@ -574,6 +574,7 @@ namespace Maestro.Quest.Creation
         float captureAt;
         void Update()
         {
+            ProcessDormantContacts();
             TickSpatialPreparation();
             TickNativeAcoustics();
             TickNativeDisplay();
@@ -672,10 +673,10 @@ namespace Maestro.Quest.Creation
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
-            ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantCollisions();ClearViewCapture();FinishLiquidPour(out _);
+            ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantRecoveries();ReleaseDormantCollisions();ClearViewCapture();FinishLiquidPour(out _);
             RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid){rigid.BindPhysicsInputs(null);rigid.ContactStarted-=ContactStarted;} }
