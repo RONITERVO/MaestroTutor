@@ -185,25 +185,27 @@ namespace Maestro.Quest.Avatar
             return true;
         }
         internal bool CanContinueAuthored(out string error)=>CanBeginAuthored(out error);
-        internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)
+        internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)=>TryAuthoredStep(transform.position,next,extraHeight,out error);
+        internal bool TryAuthoredStep(Vector3 origin,Vector3 next,float extraHeight,out string error)
         {
             float scale=transform.lossyScale.y;
             if(!navigation.Prepare(.25f*scale,1.7f*scale,out error,item))return false;
             error="Authored motion blocked — no supported ground for this authored foot position";
-            if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(transform.position,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
+            if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(origin,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
             // Respect the user's space along the whole step, including a clip with discontinuous keys.
-            var from=Vector3.ProjectOnPlane(transform.position-room.Viewer.position,Vector3.up);var to=Vector3.ProjectOnPlane(next-room.Viewer.position,Vector3.up);var step=to-from;
+            var from=Vector3.ProjectOnPlane(origin-room.Viewer.position,Vector3.up);var to=Vector3.ProjectOnPlane(next-room.Viewer.position,Vector3.up);var step=to-from;
             float closest=(from+step*(step.sqrMagnitude<.000001f?0:Mathf.Clamp01(-Vector3.Dot(from,step)/step.sqrMagnitude))).magnitude;
             float clearance=Mathf.Max(.6f,.35f*transform.lossyScale.y);
             if(closest<clearance&&!(to.magnitude>=from.magnitude&&closest>=from.magnitude-.001f)){error="Authored motion stopped to keep clear of you";return false;}
-            return ClearStep(next,out error,extraHeight);
+            return ClearStep(origin,next,out error,extraHeight);
         }
         internal void RememberAuthoredPlacement(){if(navigation)navigation.ReleaseMovementInputs();if(editor)editor.RememberPlacement("maestro");}
         Func<Collider,bool> walkingObstacle;
-        bool ClearStep(Vector3 next,out string blocked,float extraHeight=0)
+        bool ClearStep(Vector3 next,out string blocked,float extraHeight=0)=>ClearStep(transform.position,next,out blocked,extraHeight);
+        bool ClearStep(Vector3 origin,Vector3 next,out string blocked,float extraHeight=0)
         {
             blocked="The authored path is blocked";
-            bool clear=navigation.ClearAuthoredStep(transform.position,next,extraHeight,walkingObstacle??=BodyObstacle);
+            bool clear=navigation.ClearAuthoredStep(origin,next,extraHeight,walkingObstacle??=BodyObstacle);
             if(!clear)blocked=navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.WaterBlocker??blocked;return clear;
         }
         bool BodyObstacle(Collider collider)

@@ -35,6 +35,8 @@ namespace Maestro.Quest.Imports
         UnityEngine.Avatar generatedAvatar;
         Animation animationPlayer;
         Bounds rawBounds;
+        ImportedMotionTimeline[] clipTimelines=Array.Empty<ImportedMotionTimeline>();
+        internal ImportedMotionTimeline ClipTimeline(int index)=>index>=0&&index<clipTimelines.Length?clipTimelines[index]:null;
         bool destroyed;
         readonly Dictionary<SkinnedMeshRenderer, float[]> initialWeights = new();
         public bool Ready => instance;
@@ -106,7 +108,7 @@ namespace Maestro.Quest.Imports
                 }
                 else loaded = await GltfUtility.LoadBytesAsync("selected.glb", asset.Bytes, awaitCaller, new IllustratedGltfMaterials());
                 if (!this || destroyed) { DisposeInstance(loaded); ReleaseBudget(); return; }
-                instance = loaded;AssetHash=asset.Hash;
+                instance = loaded;AssetHash=asset.Hash;clipTimelines=info.AnimationTimelines;
                 if (!info.IsAvatar) { generatedAvatar = NamedHumanoid.TryCreate(instance,out var issue); HumanoidIssue = issue; }
                 animationPlayer = instance.GetComponent<Animation>();
                 if (animationPlayer) { animationPlayer.playAutomatically = false; animationPlayer.cullingType = AnimationCullingType.AlwaysAnimate; animationPlayer.Stop(); }
@@ -231,7 +233,7 @@ namespace Maestro.Quest.Imports
                 // different object's slow native import.
                 waitingForImporter.Cancel();ReleaseBudget();
             } else if(loading)reservation?.Mark("retiring");else ReleaseBudget();
-            if(instance)DisposeInstance(instance);instance=null;animationPlayer=null;initialWeights.Clear();
+            if(instance)DisposeInstance(instance);instance=null;animationPlayer=null;initialWeights.Clear();clipTimelines=Array.Empty<ImportedMotionTimeline>();
             ArtResources.Release(generatedAvatar);generatedAvatar=null;
         }
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>Dispose();

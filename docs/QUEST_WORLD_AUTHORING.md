@@ -870,3 +870,12 @@ props share that same bounded wait. Stop cancels pending work. Read
 `avatar.authored.inputs` to inspect preparation without starting playback or
 loading geometry. Ready is input availability; the normal supported-ground,
 body-clearance, viewer-distance and water checks still apply.
+
+Authored imported movement now checks intermediate source keys and cubic component
+turning points, supplemented by 120 Hz body substeps. Required geometry covers
+that sampled interval, including an out-and-back whose endpoints coincide.
+Movement commits only after all sampled segments pass the actor's selected ground,
+real-room and water policies. Blocked or oversized intervals keep the last accepted
+pose; loading keeps the original pending time. An interval is limited to 256
+samples rather than silently dropping keys. These are body-proxy checks; they do
+not certify continuous curves between samples or individual animated limbs.

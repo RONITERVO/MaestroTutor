@@ -8693,3 +8693,52 @@ fixtures. All 2,907 web tests across 311 files passed, along with lint, producti
 build, probe types, core boundaries and catalog checks. Local receipts are under
 `.quest-evidence/imported-inputs`. Headset, paid-provider, signing, deployment and
 Meta operations remain on hold. Draft PR 248 tracks exact-head CI.
+
+### Intermediate authored-motion body paths — 2026-10-13
+
+Embedded and reusable motions now carry a derived timeline from validated source
+bytes. It retains every source key time and cubic component turning point, with
+120 Hz substeps between them. Loop seams retain both source poses, reverse
+sampling traverses the same interval backwards, and fractional loop timestamps
+finish on the exact modulo pose requested by playback. This metadata is derived
+when loading existing files; it introduces no saved format or motion-ID change.
+
+Authored travel samples the bounded interval before moving Maestro. Its combined
+body and ground envelope prepares intermediate obstacles and water through the
+existing owned input lane. Once ready, every sampled segment must pass supported
+ground, viewer-distance, body clearance and the actor's water policy. Only then
+is the final imported pose and placement committed. A failed segment restores the
+last accepted full pose; a waiting interval retains its original requested time.
+Per-entity real-room participation stays authoritative and independent of visual
+occlusion, passthrough and sound.
+
+At most 256 samples are permitted for one interval. An oversized seek or catch-up
+fails without publishing a partial pose or silently dropping source keys. This
+bounds sample/query count, not measured headset frame time. It is a sampled body
+path, not a proof of a fully continuous curve between samples or swept deforming
+limbs. Parent-rotation curves, full limb/prop contacts, regional admission,
+automatic unloading and larger-world budgets still need their own evidence.
+The production whole-world collision gate and current world-size limits remain.
+
+Native regressions exercise subframe out-and-back paths through loaded and dormant
+obstacles, exact library motion identity, reverse traversal, cubic excursions,
+water avoid/ignore policies, complete pose retention and excessive-seek refusal.
+Verification passed: 1,163 EditMode and 1,396 PlayMode tests, with only the three
+expected optional private-asset checks skipped. Focused path, carrier and motion
+checks passed 95 PlayMode tests; the final focused timeline/scheduler/import run
+passed 28 EditMode tests. The full suite includes the final fractional-loop fix.
+All 958 C# files match the frozen source and verification mirror, and the generated
+catalog equals the native export.
+
+The native-room journey passed 768 observations
+(`5f1f5c10db6e45658a838cb430b35188`), and the original-book journey passed
+(`7a55537aa6b54ed08fc0dcef547ce427`). Both clients and Unity editors exited zero.
+These runs use real Unity with synthetic assets and local scripted provider
+responses; they do not establish headset or paid-provider acceptance. Active
+intermediate paths, preparation and refusal are covered by native PlayMode tests.
+
+Fresh native catalog phases and the existing catch checkpoints refresh the web
+fixtures. All 2,907 web tests across 311 files passed, alongside lint, production
+build, probe TypeScript and core boundary checks. Local receipts are under
+`.quest-evidence/authored-path`. Headset, paid-provider, signing, deployment and
+Meta operations remain on hold. Draft PR 248 tracks exact-head CI.

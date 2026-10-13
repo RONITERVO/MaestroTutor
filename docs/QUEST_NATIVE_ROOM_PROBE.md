@@ -1249,3 +1249,12 @@ with no authored clip active. This is a passive catalog/generated-form check;
 active start/later waits, exact pose retention, clock preservation and cancellation
 are tested separately in PlayMode. Neither observation proves headset contact,
 all skipped source keys or deforming-limb collision behavior.
+
+Intermediate authored-path coverage is native PlayMode evidence: real imported
+GLB and exact reusable motions must reject obstacles or avoided water at source
+keys and cubic turning points between coincident endpoints. Dormant intermediate
+geometry must prepare before the interval is checked, and no partial pose may be
+published. Timeline EditMode checks cover loop seams, reverse order, fractional
+loop endpoints and bounded refusal. The existing headless/book facts expose the
+same contract; their inactive observations do not establish active path clearance,
+continuous-curve/limb collision or headset performance.

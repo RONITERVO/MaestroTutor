@@ -23,6 +23,7 @@ namespace Maestro.Quest.Imports
         public ModelAssetBounds AssetBounds {get;private set;}
         public ModelAssetBounds RestBounds {get;private set;}
         internal ModelRestDefaults RestDefaults {get;private set;}
+        internal ImportedMotionTimeline[] AnimationTimelines {get;private set;}=System.Array.Empty<ImportedMotionTimeline>();
 
         // Inspect before asking Unity to allocate meshes, textures or animation curves.
         // This deliberately accepts a documented, self-contained subset of glTF 2.0.
@@ -229,18 +230,25 @@ namespace Maestro.Quest.Imports
             void CheckAnimations()
             {
                 var animations = Array(root, "animations", 32); info.Clips = animations.Count; long keys = 0, curveValues = 0;
+                var timelines=new System.Collections.Generic.List<ImportedMotionTimeline>();
                 foreach (var animation in animations)
                 {
                     var samplers = Array(animation, "samplers", 512); var channels = Array(animation, "channels", 512);
+                    var keyTimes=new System.Collections.Generic.HashSet<float>();
                     foreach (var sampler in samplers)
                     {
                         int input = Index(sampler["input"], accessors.Count), output = Index(sampler["output"], accessors.Count);
                         Require((string)accessors[input]["type"] == "SCALAR" && (int)accessors[input]["componentType"] == 5126);
                         string interpolation = (string)sampler["interpolation"] ?? "LINEAR";
                         Require(new[] { "LINEAR", "STEP", "CUBICSPLINE" }.Contains(interpolation));
-                        double previous = -1; ForValues(accessors[input], value => { Require(value >= 0 && value > previous && value <= 3600, "Animation key times must increase and fit within one hour."); previous = value; });
+                        double previous = -1;var samplerTimes=new System.Collections.Generic.List<float>(); ForValues(accessors[input], value => { Require(value >= 0 && value > previous && value <= 3600, "Animation key times must increase and fit within one hour."); previous = value; keyTimes.Add((float)value);samplerTimes.Add((float)value); });
                         Require(Count(output) % (Count(input) * (interpolation == "CUBICSPLINE" ? 3 : 1)) == 0);
-                        keys += Count(output);
+                        keys += Count(output);Require(keys <= 200000, "Reduce the number of animation keys to 200,000 or fewer.");
+                        if(interpolation=="CUBICSPLINE"){
+                            int length=checked(Count(output)*Components((string)accessors[output]["type"]));Require(length<=800000,"Reduce the number of animated channels or keyframes before importing.");
+                            var values=new float[length];int at=0;ForValues(accessors[output],value=>values[at++]=(float)value);
+                            ImportedMotionTimeline.IncludeCubicExtrema(keyTimes,samplerTimes.ToArray(),values);
+                        }
                     }
                     foreach (var channel in channels)
                     {
@@ -250,7 +258,9 @@ namespace Maestro.Quest.Imports
                         curveValues += (long)(int)output["count"] * Components((string)output["type"]);
                         Require(curveValues <= 800000, "Reduce the number of animated channels or keyframes before importing.");
                     }
+                    timelines.Add(new ImportedMotionTimeline(keyTimes));
                 }
+                info.AnimationTimelines=timelines.ToArray();
                 Require(keys <= 200000, "Reduce the number of animation keys to 200,000 or fewer.");
             }
             int Big16(int at) => bytes[at] * 256 + bytes[at+1];

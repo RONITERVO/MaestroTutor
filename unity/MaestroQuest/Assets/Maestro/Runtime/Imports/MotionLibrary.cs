@@ -62,6 +62,7 @@ namespace Maestro.Quest.Imports
         {
             public MotionEntry Entry;
             public AnimationClip Clip;
+            public ImportedMotionTimeline Timeline;
             public Task Load;
             public int Users;
             public long Used;
@@ -74,6 +75,7 @@ namespace Maestro.Quest.Imports
         {
             MotionLibrary owner; Cached value;
             public AnimationClip Clip => value?.Clip;
+            internal ImportedMotionTimeline Timeline=>value?.Timeline;
             public string RigHash => value?.Entry.rigHash;
             public string Id => value?.Entry.id;
             internal Lease(MotionLibrary owner,Cached value) { this.owner = owner; this.value = value; }
@@ -279,7 +281,7 @@ namespace Maestro.Quest.Imports
             });
             if (disposed) throw new ObjectDisposedException(nameof(MotionLibrary));
             cached.Clip = await MotionClipCompiler.CompileAsync(pack,() => disposed);
-            cached.Clip.name = cached.Entry.name;
+            cached.Clip.name = cached.Entry.name;cached.Timeline=pack.Timeline;
         }
         void Remove(Cached value) { if (cache.TryGetValue(value.Entry.id,out var current) && current == value) cache.Remove(value.Entry.id); ArtResources.Release(value.Clip); value.Clip = null; }
         public void Dispose() { if (disposed) return; disposed = true; foreach (var value in cache.Values.ToArray()) Remove(value); }

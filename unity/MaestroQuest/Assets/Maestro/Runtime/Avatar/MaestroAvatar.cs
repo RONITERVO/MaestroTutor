@@ -316,7 +316,7 @@ namespace Maestro.Quest.Avatar
         internal ImportedMotionPose CaptureImportedMotionPose()=>custom&&custom.Ready?new ImportedMotionPose(custom,authoredTravel?.BaseModelPosition??custom.transform.localPosition):null;
         bool BeginImportedSample(bool authored,RoomPlaybackClock clock,ImportedMotionPose initial)
         {
-            if(authored)authoredTravel=new AvatarAuthoredTravel(this,custom,GetComponent<AvatarSpatialMotion>(),SampleRawImported,ImportedDuration,importedLoop,clock,initial);
+            if(authored)authoredTravel=new AvatarAuthoredTravel(this,custom,GetComponent<AvatarSpatialMotion>(),SampleRawImported,ImportedDuration,importedLoop,libraryMotion?.Timeline??custom.ClipTimeline(importedClip),clock,initial);
             if(SampleImportedAt(0)||authoredTravel?.Preparing==true)return true;
             authoredTravel?.End();authoredTravel=null;custom.Stop();importedClip=-1;return false;
         }

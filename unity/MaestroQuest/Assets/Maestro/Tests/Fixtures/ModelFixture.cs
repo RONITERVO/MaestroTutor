@@ -95,6 +95,17 @@ namespace Maestro.Quest.Tests
             root["animations"]=new JArray(new JObject {["name"]="Authored travel",["samplers"]=new JArray(new JObject {["input"]=2,["output"]=accessors.Count-1}),["channels"]=new JArray(new JObject {["sampler"]=0,["target"]=new JObject {["node"]=1,["path"]="translation"}})});
             root["buffers"][0]["byteLength"]=(int)binary.Length;return Pack(root,binary.ToArray());
         }
+        public static byte[] HipPath(float[] times,float[] x,bool cubic=false)
+        {
+            if(times.Length*(cubic?3:1)!=x.Length)throw new ArgumentException("Matching path keys required (in/value/out triples for cubic)");
+            var original=Mixamo();int jsonLength=BitConverter.ToInt32(original,12);var root=JObject.Parse(Encoding.UTF8.GetString(original,20,jsonLength));
+            using var binary=new MemoryStream();using var writer=new BinaryWriter(binary);writer.Write(original,28+jsonLength,(int)root["buffers"][0]["byteLength"]);
+            var views=(JArray)root["bufferViews"];var accessors=(JArray)root["accessors"];
+            int Add(float[] values,string type,int count){int offset=(int)binary.Position;foreach(float value in values)writer.Write(value);views.Add(new JObject {["buffer"]=0,["byteOffset"]=offset,["byteLength"]=values.Length*4});accessors.Add(new JObject {["bufferView"]=views.Count-1,["componentType"]=5126,["count"]=count,["type"]=type});return accessors.Count-1;}
+            int input=Add(times,"SCALAR",times.Length),output=Add(x.SelectMany((value,index)=>new[]{value,cubic&&index%3!=1?0f:1f,0f}).ToArray(),"VEC3",x.Length);
+            root["animations"]=new JArray(new JObject {["name"]="Authored path",["samplers"]=new JArray(new JObject {["input"]=input,["output"]=output,["interpolation"]=cubic?"CUBICSPLINE":"LINEAR"}),["channels"]=new JArray(new JObject {["sampler"]=0,["target"]=new JObject {["node"]=1,["path"]="translation"}})});
+            root["buffers"][0]["byteLength"]=(int)binary.Length;return Pack(root,binary.ToArray());
+        }
         public static byte[] TranslationMotion(string interpolation, float end = 1)
         {
             var original = Create(); int jsonLength = BitConverter.ToInt32(original,12);

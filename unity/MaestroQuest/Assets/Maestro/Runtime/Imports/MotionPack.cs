@@ -24,6 +24,7 @@ namespace Maestro.Quest.Imports
         public float Duration { get; private set; }
         public bool Short => Duration < .1f;
         internal JObject Document { get; private set; }
+        internal ImportedMotionTimeline Timeline {get;private set;}
         public bool ReverseX => (string)Document["extras"]?["maestroMotion"]?["axis"] == "X";
 
         static JObject Json(byte[] bytes) => JObject.Parse(Encoding.UTF8.GetString(bytes,20,BitConverter.ToInt32(bytes,12)));
@@ -145,10 +146,10 @@ namespace Maestro.Quest.Imports
         public static MotionPack Read(byte[] bytes)
         {
             Require(bytes != null && bytes.Length <= MaximumBytes,"A reusable motion must fit within 8 MB.");
-            ModelInspection.InspectMotion(bytes); var root = Json(bytes);
+            var inspection=ModelInspection.InspectMotion(bytes); var root = Json(bytes);
             var schema = root["extras"]?["maestroMotion"];
             Require(schema is JObject && schema["version"]?.Type == JTokenType.Integer && (int)schema["version"] == 1 && schema["axis"]?.Type == JTokenType.String && new[] { "X","Z" }.Contains((string)schema["axis"]),"Unsupported motion-pack version or axis convention.");
-            var pack = new MotionPack { Bytes = bytes,Hash = ModelLibrary.Hash(bytes),RigHash = Fingerprint(root,bytes),Document = root };
+            var pack = new MotionPack { Bytes = bytes,Hash = ModelLibrary.Hash(bytes),RigHash = Fingerprint(root,bytes),Document = root,Timeline=inspection.AnimationTimelines[0] };
             var animation = root["animations"][0]; var channels = (JArray)animation["channels"];
             Require(channels.Count > 0,"This motion contains no channels."); var targets = new HashSet<string>();
             foreach (var channel in channels)
