@@ -1258,3 +1258,13 @@ published. Timeline EditMode checks cover loop seams, reverse order, fractional
 loop endpoints and bounded refusal. The existing headless/book facts expose the
 same contract; their inactive observations do not establish active path clearance,
 continuous-curve/limb collision or headset performance.
+
+Native physics streaming prerequisites also have solver stress coverage in
+`PhysicsSolverSweepTests.cs`, included by `unity/Tools/Verify-Quest.ps1`.
+`MAESTRO_SOLVER_SWEEP` log records report the pre/post-step bounds audit for ten
+controlled native scenarios; `MAESTRO_SOLVER_AUTOMATIC` observes an impact through
+the normal automatic update loop. These tests use real PhysX, saved connection
+settings and production input preparation. They establish observed coverage at
+the configured desktop timestep, not universal speed bounds or Quest performance.
+The 2026-10-13 focused run passed 69 related tests, including the 11 new cases.
+See the release plan for measurements and the unchanged regional-loading guard.

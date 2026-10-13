@@ -8742,3 +8742,47 @@ fixtures. All 2,907 web tests across 311 files passed, alongside lint, productio
 build, probe TypeScript and core boundary checks. Local receipts are under
 `.quest-evidence/authored-path`. Headset, paid-provider, signing, deployment and
 Meta operations remain on hold. Draft PR 248 tracks exact-head CI.
+
+### Native solver sweep evidence — 2026-10-13
+
+Eleven new native stress cases now compare the actual post-step collider bounds
+with the pre-step input envelope. Ten isolate PhysX with production bodies,
+joints, contact inputs and liquid forces. Another observes the normal automatic
+FixedUpdate/physics loop without replacing input preparation. All 69 related
+physics/contact/connection/medium regressions passed, with no skips. The test
+source and verification mirror match; production runtime and catalog remain
+identical to `652bd77f`.
+
+At the tested 0.02-second physics step on Windows Unity 6000.3.24f1:
+
+| Native case | Peak speed | Largest measured step |
+| --- | ---: | ---: |
+| Opposed bouncy impact, mass ratio 400:1 | 36.44 m/s | 0.451 m |
+| Maximum spring/force slider at scale 4 | 55.00 m/s | 1.100 m |
+| Continuous tracked push, 0.49 m per tick | 26.95 m/s | 0.442 m |
+| Fixed chain with mass ratio 400:1 and spin | 23.70 m/s | 0.646 m |
+
+The chain reached 111.12 rad/s, and a breaking joint reached 38.55 rad/s, despite
+the configured 30 rad/s maximum. All measured collider bounds remained inside
+the existing preparation envelope; the smallest measured margin was 4.768 m.
+The automatic-update impact reproduced the 36.44 m/s observation. Other cases
+cover overlap recovery, sleeping-body wakeup, offset rotating colliders, a hinge
+motor and real buoyancy/drag. This validates these scenarios, not arbitrary solver
+conditions, intermediate continuous paths, larger time steps or headset cost.
+
+The implementation decision is explicit: do not replace the whole-world gate
+with a formula that assumes 15 m/s or 30 rad/s are post-solver bounds. Unity's
+[linear-velocity documentation](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/Rigidbody-maxLinearVelocity.html)
+and these native observations contradict that assumption. The next regional
+admission work must preserve collision coverage even when native solver output
+exceeds the prediction. Investigate conservative dormant collision proxies from
+accepted spatial metadata, with owned loading and suppressed placeholder contact
+events; unknown geometry must remain unavailable. A proxy must not be reported
+as a real surface, ground height or completed interaction. Keep the production
+gate until that safeguard and ownership transitions have native evidence.
+
+No physics limits, unloading behavior or simulation semantics changed in this
+increment. This test-only work does not require repeating the unchanged web/book
+journeys; their complete verification remains recorded above for `652bd77f`.
+Receipts are under `.quest-evidence/solver-sweeps`. Device, paid-provider,
+signing, deployment and Meta holds remain in force.
