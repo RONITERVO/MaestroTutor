@@ -8600,3 +8600,48 @@ build, probe types, boundary checks and catalog/native-export equality. CI is
 tracked on draft PR 248. Local receipts are under
 `.quest-evidence/authored-inputs`. No signing, device, deployment or Meta change
 was made.
+
+
+### Recorded-root input preparation — 2026-10-13
+
+Recorded program playback, recorded throws and the manual animation preview
+share one native-input owner. It prepares the complete bounded recorded root
+path before applying a pose: intermediate keys and loop boundaries are included,
+and the pivot envelope covers every rotation and the largest recorded uniform
+scale. This deliberately loads the bounded recording's input region before
+playback rather than treating an unrendered key as empty space. It is not a
+second copy of the saved world or an automatic unloading policy.
+
+Playback time pauses while required geometry loads. A fitted prop and recorded
+root use the same cumulative wait budget, and completion cannot bypass pending
+root inputs. Manual preview keeps its Play state while preparing and releases
+its exact demand on Stop. A changed room frame, target/ownership loss, failed
+load or expired wait ends playback. Existing water-policy checks run only after
+inputs are ready. Accepted dependency edits recheck the recording's current
+world envelope.
+
+The passive `object.recording.inputs` fact exposes the same bounded status to
+users, agents and headless clients. Observations do not acquire geometry or
+advance playback. Authored imported-clip travel, deforming-limb envelopes,
+solid-path validation for arbitrary recorded poses, skipped-key water traversal
+and general solver/motor envelopes remain separate work. Complete input
+availability must not be confused with proof that the path is collision-free.
+The production whole-world collision gate and running retention still apply;
+automatic unloading and larger-world budgets remain disabled.
+
+Verification completed: 136 focused PlayMode and 16 scheduler EditMode checks;
+1,155 full EditMode and 1,382 full PlayMode checks, with only the three expected
+optional private-asset skips. All 953 C# source files match the frozen source and
+receipt-owned mirror. The bundled catalog equals the native export.
+
+The actual native-room journey passed 766 observations
+(`1f50249455e74f85b0dc192b6b1f26cc`), and the original-book journey passed
+(`1da7b711fa9c4df386628d181db0e6dc`), both with client/editor exit zero and no paid
+provider. The generated book recording-input form reports inactive for an object
+without active playback; active preparation and cancellation are covered by
+PlayMode, not claimed as a headset interaction. Fresh native catalog phases and
+the same ten catch checkpoint states refresh the web fixtures. All 2,905 web
+tests across 311 files passed, alongside lint, production build, probe types,
+core boundaries and catalog checks. Local receipts are under
+`.quest-evidence/recorded-inputs`. Headset, paid-provider, signing, deployment and
+Meta operations remain on hold. Draft PR 248 tracks exact-head CI.

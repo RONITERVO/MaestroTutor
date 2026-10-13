@@ -1108,7 +1108,7 @@ try{
   if(inputState?.state!=='ready'||!inputState.ready||inputState.dependencyCount<inputState.dependencies.length)throw new Error('The native physics input fact must describe the active body before catch');
   await writeFile(join(directory,'native-physics-inputs.json'),JSON.stringify(physicsInputs,null,2));
   const contactInputs=[];
-  for(const [capability,args] of [['object.contact.inputs',{target:catchTarget}],['object.attachment.inputs',{target:catchTarget}],['controller.contact.inputs',{hand:'left'}],['controller.contact.inputs',{hand:'right'}]] as const){
+  for(const [capability,args] of [['object.contact.inputs',{target:catchTarget}],['object.attachment.inputs',{target:catchTarget}],['object.recording.inputs',{target:catchTarget}],['controller.contact.inputs',{hand:'left'}],['controller.contact.inputs',{hand:'right'}]] as const){
    const observed=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}]);
    const value=observed.catalog?.value as {state:string;ready:boolean;dependencyCount:number;dependencies:string[]};
    if(observed.catalog?.available!==true||value?.state!=='inactive'||value.ready||value.dependencyCount!==0||value.dependencies.length!==0)throw new Error('An untracked native contact must be inactive: '+capability);

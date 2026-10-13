@@ -852,3 +852,12 @@ Ready means that the inputs are available; native collision checks still decide
 whether movement or release is possible. This uses the object's real-room
 collision policy independently of passthrough visibility. It does not provide
 regional unloading or collision envelopes for every animated limb.
+
+
+Recorded playback and its manual preview prepare geometry for the whole bounded
+recording before moving, including middle keys that a rendered frame might skip.
+Waiting pauses playback time; Stop cancels the pending work. The shared
+`object.recording.inputs` fact reports that preparation without starting it.
+This confirms required geometry is present, not that every recorded pose or
+animated limb has a collision-free path. Imported clip travel uses its own
+existing movement checks.

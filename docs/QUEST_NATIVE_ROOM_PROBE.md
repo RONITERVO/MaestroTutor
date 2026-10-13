@@ -1235,3 +1235,10 @@ and fresh throw sampling. Fitted recorded animation shares the prop's playback
 clock, including mid-action waits; scheduler tests verify that resuming does not
 restart the duration or complete early. The book observation is passive and
 inactive, so it does not claim an end-to-end pending fitted animation in the UI.
+
+The native-room and original-book contact observations also read
+`object.recording.inputs` for an object with no active recording. That passive
+check must report inactive. Active preparation, complete recorded path bounds,
+time preservation and program/manual-preview cancellation are covered in
+PlayMode; this observation alone does not claim end-to-end active recorded
+playback in the book or a headset/provider acceptance run.

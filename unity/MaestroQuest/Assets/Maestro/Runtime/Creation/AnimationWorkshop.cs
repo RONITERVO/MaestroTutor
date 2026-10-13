@@ -25,6 +25,7 @@ namespace Maestro.Quest.Creation
         PlayableGraph graph;
         ScriptPlayable<RoomMotionPlayable> player;
         RoomMotion preview;
+        RoomPlaybackClock previewClock;RoomRecordedMotionInputs previewInputs;bool previewPreparing;
         int selectedFrame = -1;
         int gestureIndex;
         bool controlling;
@@ -154,7 +155,8 @@ namespace Maestro.Quest.Creation
             graph = PlayableGraph.Create("User animation preview"); graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             player = ScriptPlayable<RoomMotionPlayable>.Create(graph); player.GetBehaviour().Motion = preview; player.GetBehaviour().Apply = Apply;
             var output = ScriptPlayableOutput.Create(graph,"Room motion"); output.SetSourcePlayable(player);
-            playbackError=null;graph.Play(); began = Time.unscaledTime; Say(preview.loop ? "Playing loop — Stop returns to the saved pose" : "Playing — Stop returns to the saved pose");
+            previewClock=new RoomPlaybackClock();previewInputs=RoomRecordedMotionInputs.Begin(editor,target,previewClock,preview,()=>controlling&&IsPlaying);
+            playbackError=null;previewPreparing=false;graph.Play(); Say(preview.loop ? "Playing loop — Stop returns to the saved pose" : "Playing — Stop returns to the saved pose");
         }
         public void ToggleLoop()
         {
@@ -223,6 +225,7 @@ namespace Maestro.Quest.Creation
         void StopPlayback()
         {
             if (!graph.IsValid()) return;
+            if(previewInputs)previewInputs.End();previewInputs=null;previewClock=null;
             graph.Destroy(); preview = null;
             if (target) { target.Grab.enabled = true; editor.RestorePose(targetId); }
             if (avatar) avatar.SetEditing(false);
@@ -262,9 +265,13 @@ namespace Maestro.Quest.Creation
             }
             if (IsPlaying)
             {
-                float time = Time.unscaledTime - began;
+                float time=previewClock.Elapsed;string reason="Recorded preview was removed or stopped";
+                var readiness=previewInputs&&previewInputs.isActiveAndEnabled?previewInputs.Prepare(preview.Sample(time),out reason):Maestro.Quest.Rules.RuleActionState.Failed;
+                if(readiness==Maestro.Quest.Rules.RuleActionState.Failed){Stop();Say(reason);return;}
+                if(readiness==Maestro.Quest.Rules.RuleActionState.Preparing){previewPreparing=true;Say("Preparing the space for playback");return;}
+                if(previewPreparing){previewPreparing=false;Say("Playback resumed");}
                 player.SetTime(time); graph.Evaluate(0);
-                if(playbackError!=null){var reason=playbackError;Stop();Say(reason);return;}
+                if(playbackError!=null){reason=playbackError;Stop();Say(reason);return;}
                 if (!preview.loop && time >= preview.Duration) Stop();
             }
         }

@@ -41996,7 +41996,7 @@
         }
       },
       "label": "Held object contact inputs",
-      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. This fact covers an active physical controller/hand grab of a creation; unheld, paused or animation-owned items are inactive. A waiting grab holds its current pose and needs fresh throw samples before release. Scripted attachments use their separate existing ownership.",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable must not be treated as clear space. Accepted dependency edits may be rechecked by the active owner; failed or cancelled loading requires a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. This fact covers an active physical controller/hand grab of a creation; unheld, paused or animation-owned items are inactive. A waiting grab holds its current pose and needs fresh throw samples before release. Scripted attachments use their separate existing ownership.",
       "input": {
         "type": "object",
         "properties": {
@@ -42033,7 +42033,7 @@
         }
       },
       "label": "Carried object contact inputs",
-      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Covers object.hold, fitted animation props and physical catches. Waiting keeps the actual prop in place and discards old throw history; fitted full-body playback shares the wait. This passive read does not follow an anchor, advance playback or prove the release path is clear. A released or retired attachment is inactive; inspect its receipt for the outcome.",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable must not be treated as clear space. Accepted dependency edits may be rechecked by the active owner; failed or cancelled loading requires a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Covers object.hold, fitted animation props and physical catches. Waiting keeps the actual prop in place and discards old throw history; fitted full-body playback shares the wait. This passive read does not follow an anchor, advance playback or prove the release path is clear. A released or retired attachment is inactive; inspect its receipt for the outcome.",
       "input": {
         "type": "object",
         "properties": {
@@ -42057,6 +42057,44 @@
       ]
     },
     {
+      "id": "object.recording.inputs",
+      "version": 1,
+      "type": {
+        "record": {
+          "state": "text",
+          "ready": "boolean",
+          "reason": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Recorded playback inputs",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable must not be treated as clear space. Accepted dependency edits may be rechecked by the active owner; failed or cancelled loading requires a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Covers recorded animation programs, recorded throws and manual recorded preview. Preparing pauses playback without replaying missed time. Inputs cover the complete bounded recorded root path, including intermediate keys, rotations and scale; they do not prove deforming limbs, solid path clearance or imported clip travel. Reading this fact does not start playback or acquire geometry.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "controller.contact.inputs",
       "version": 1,
       "type": {
@@ -42071,7 +42109,7 @@
         }
       },
       "label": "Hand or controller contact inputs",
-      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable needs a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Select the left or right tracked source. Tracking jumps and recovery inside an object keep the contact volume disabled until a fresh clear pose; they cannot replay a missed push. The visible hand/controller continues tracking.",
+      "description": "Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable must not be treated as clear space. Accepted dependency edits may be rechecked by the active owner; failed or cancelled loading requires a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains. Select the left or right tracked source. Tracking jumps and recovery inside an object keep the contact volume disabled until a fresh clear pose; they cannot replay a missed push. The visible hand/controller continues tracking.",
       "input": {
         "type": "object",
         "properties": {
@@ -43433,7 +43471,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactInputFacts.cs",
-      "sha256": "054fd38cb230ccb6f0df110d68accdbd6a636dc15ae5f176d78016018bf80575"
+      "sha256": "39dd753c8935ded7b104617fb0769a93ca617d99b81aec67c1aaff697941561e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
@@ -43649,7 +43687,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecordedAnimationCapabilities.cs",
-      "sha256": "ca83706c92f160f7bb246b8b33152802f3af6afa2f1c30e0c5fb3e4c8959c3c9"
+      "sha256": "f09221dbdb7d40479b1d93b8ed7845d3b063aca2f3a044a0f292cbbe97859f21"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
@@ -43825,7 +43863,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "dfa7970dd31d7d88f4e637ee68dd6a37b186dd43b5ce6aacbcb7c250738dadf6"
+      "sha256": "09b18217baa1c1bcd71a73b4c0bfec3b2f1eafa3c221ab8432e4fe6e6178d35f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
@@ -44888,6 +44926,10 @@
       "sha256": "2052e92c539db3babe49213f45776d69fcde7859d6aa3d536f1a721330a86ac1"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRecordedMotionInputs.cs",
+      "sha256": "39925edaaa4dcfabbb830804edd563d9acc0953d26c255edc18672ac874c533b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomRouteSearch.cs",
       "sha256": "5a206e0e8fa04bdf6a6a8de3f6031cb84f73aac81a84d30415789fafc4428db0"
     },
@@ -45129,7 +45171,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "3b439115f16c95f85457f7c73b7b0acd7b92cf21f26455e21aa56c5d327c5eb4"
+      "sha256": "db01bc0d30f527adfc94b441095110d179c714438f749bed143c62599928ff30"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

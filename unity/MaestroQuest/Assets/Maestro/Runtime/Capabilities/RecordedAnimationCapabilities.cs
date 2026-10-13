@@ -50,7 +50,8 @@ namespace Maestro.Quest.Programs
         ScriptPlayable<RoomMotionPlayable> player;
         protected RoomMotion Motion;
 
-        string frameError;
+        string frameError;RoomRecordedMotionInputs inputs;
+        public override float? RemainingSeconds=>Playback.Remaining(Duration);
         public RecordedMotionOperation(CapabilityContext context,JObject arguments):base(context,arguments) {}
         public bool Begin(bool loop,out string error) {
             error="The animation needs a valid uniform room frame";
@@ -67,15 +68,30 @@ namespace Maestro.Quest.Programs
                 if(Avatar&&Avatar.PoseRig) {Avatar.PoseRig.SetManual(true);Avatar.PoseRig.Apply(frame.joints);}
             };
             ScriptPlayableOutput.Create(graph,"Motion").SetSourcePlayable(player);graph.Play();
+            inputs=RoomRecordedMotionInputs.Begin(Context.Editor,Target,Playback,Motion,()=>!Stopped&&Context.Editor.Find(TargetId)==Target);
             Evaluate(0);if(frameError!=null){error=frameError;return false;}return BeginProp(out error);
         }
-        protected void Evaluate(float time) {if(graph.IsValid()) {player.SetTime(time);graph.Evaluate(0);}}
-        public override Rules.RuleActionState State(out string error) {
-            if(frameError!=null){error=frameError;return Rules.RuleActionState.Failed;}return base.State(out error);
+        protected void Evaluate(float time) {
+            if(!graph.IsValid()||frameError!=null)return;
+            var state=PrepareRoot(time,out var error);if(state==Rules.RuleActionState.Failed){frameError=error;return;}
+            if(state!=Rules.RuleActionState.Ready||Playback.Paused)return;
+            player.SetTime(time);graph.Evaluate(0);
         }
-        public override bool Complete(out string error) {if(State(out error)==Rules.RuleActionState.Failed)return false;return base.Complete(out error);}
-        public override void Tick(){if(!Playback.Paused)Evaluate(Playback.Elapsed);}
-        protected override void ReleasePlayback() {if(graph.IsValid())graph.Destroy();}
+        Rules.RuleActionState PrepareRoot(float time,out string error){
+            error="Recorded playback was removed or stopped";
+            return inputs&&inputs.isActiveAndEnabled?inputs.Prepare(Motion.Sample(time),out error):Rules.RuleActionState.Failed;
+        }
+        public override Rules.RuleActionState State(out string error) {
+            if(frameError!=null){error=frameError;return Rules.RuleActionState.Failed;}
+            var state=PrepareRoot(Playback.Elapsed,out error);if(state!=Rules.RuleActionState.Ready)return state;return base.State(out error);
+        }
+        public override bool Complete(out string error) {
+            if(State(out error)!=Rules.RuleActionState.Ready)return false;
+            Evaluate(Playback.Elapsed);
+            return State(out error)==Rules.RuleActionState.Ready&&base.Complete(out error);
+        }
+        public override void Tick()=>Evaluate(Playback.Elapsed);
+        protected override void ReleasePlayback() {if(inputs)inputs.End();if(graph.IsValid())graph.Destroy();}
     }
     internal sealed class ThrowRecordingOperation : RecordedMotionOperation
     {
@@ -90,7 +106,7 @@ namespace Maestro.Quest.Programs
             var delta=end.rotation*Quaternion.Inverse(before.rotation);delta.ToAngleAxis(out float angle,out var axis);
             if(angle>180)angle-=360;
             var spin=Mathf.Abs(angle)<.001f?Vector3.zero:axis*(angle*Mathf.Deg2Rad/dt);
-            if(State(out error)==Rules.RuleActionState.Failed)return false;
+            if(State(out error)!=Rules.RuleActionState.Ready)return false;
             var coordinates=Context.Editor.Frame;velocity=coordinates.VectorToWorld(velocity);spin=coordinates.DirectionToWorld(spin);
             Stop(true);
             if(Target.GetComponent<RigidRoomItem>().Launch(velocity,spin))return true;
