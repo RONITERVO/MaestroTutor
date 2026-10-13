@@ -65,7 +65,9 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
     # hang trying to stop it; give build children their own server endpoint.
     Stop-QuestBuildHelper
     $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041'; MAESTRO_QUEST_RELEASE_PROFILE = ''; MAESTRO_QUEST_KEYSTORE = ''; MAESTRO_QUEST_KEY_ALIAS = ''; MAESTRO_QUEST_STORE_PASSWORD = ''; MAESTRO_QUEST_KEY_PASSWORD = '' }
-    $deadline = [DateTime]::UtcNow.AddMinutes(20)
+    # The complete PlayMode suite now exceeds 1,400 cases (~19 minutes).
+    # Keep a bounded deadline with room for slower shared development machines.
+    $deadline = [DateTime]::UtcNow.AddMinutes(30)
     $reportWrittenAt = $null
     $shutdownAt = $null
     $helperStopped = $false

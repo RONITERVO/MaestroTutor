@@ -76,7 +76,7 @@ namespace Maestro.Quest.Programs
                     } else if((string)schema["format"]=="heightFieldDefinition"||(string)schema["format"]=="heightFieldSaved") {
                         var field=JsonUtility.FromJson<RoomHeightField>(obj.ToString());if((string)schema["format"]=="heightFieldDefinition")field.heights=new float[(field.cells+1)*(field.cells+1)];if(!field.Validate(out error))return false;
                     } else if((string)schema["format"]=="containerDefinition") {
-                        if(!ContainerCapability.ReadDefinition(obj).Validate(out error))return false;
+                        if(!ContainerCapability.ValidDefinition(obj,out error))return false;
                     } else if((string)schema["format"]=="containerTransfer"||(string)schema["format"]=="heightFieldTransfer"||(string)schema["format"]=="materialTransfer") {
                         if((string)obj["source"]["target"]==(string)obj["destination"]["target"]){error=path+" needs distinct source and destination";return false;}
                     } else if((string)schema["format"]=="snapPlacement") {

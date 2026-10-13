@@ -7,6 +7,11 @@ namespace Maestro.Quest.Creation {
     /// <summary>Accepted owned geometry, replaced only after preparation succeeds.</summary>
     public sealed class HeightFieldView:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner {
         HeightFieldGeometry geometry;Mesh previewMesh;string encoded;Color tint=Color.white;
+        TerrainLiquidGeometry liquidGeometry;
+        internal TerrainLiquidGeometry LiquidGeometry(float ceiling){
+            if(Accepted==null||!Collision)return null;
+            if(liquidGeometry==null||liquidGeometry.Ceiling!=ceiling)liquidGeometry=new TerrainLiquidGeometry(Accepted,ceiling);return liquidGeometry;
+        }
         RoomResourceOwner resourceOwner=new(null,null,"unscoped");
         internal void ConfigureResourceOwner(RoomResourceOwner owner){if(geometry!=null)throw new InvalidOperationException("Terrain geometry already has an owner");resourceOwner=owner??throw new ArgumentNullException(nameof(owner));}
         internal void Tint(Color color){tint=color;if(geometry!=null){geometry.Tint(color);RoomAppearanceView.VisualsChanged(this);}}
@@ -24,13 +29,13 @@ namespace Maestro.Quest.Creation {
         internal bool Apply(RoomHeightField[] fields,RoomEditPreparation preparation){
             var data=fields?.Length==1?fields[0]:null;
             if(data!=null&&!data.Validate(out var error))throw new ArgumentException(error);
-            string next=data==null?null:JsonUtility.ToJson(data);if(next==encoded)return false;
+            string next=data==null?null:JsonUtility.ToJson(data);if(next==encoded)return false;liquidGeometry=null;
             if(data==null){ReleaseVisual();encoded=null;Accepted=null;return true;}
             var candidate=preparation?.TakeHeightField(resourceOwner.Target,data)??new HeightFieldGeometry(data,resourceOwner);
             var old=geometry;old?.SetActive(false);geometry=candidate;
             geometry.Attach(transform,tint);encoded=next;Accepted=data.Copy();Preview(null);old?.Dispose();RoomAppearanceView.VisualsChanged(this);return true;
         }
-        void ReleaseVisual(){geometry?.Dispose();geometry=null;ArtResources.Release(previewMesh);previewMesh=null;}
+        void ReleaseVisual(){liquidGeometry=null;geometry?.Dispose();geometry=null;ArtResources.Release(previewMesh);previewMesh=null;}
         bool nativeResourcesReleased;
         void OnDestroy()=>ReleaseNativeResources();
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();

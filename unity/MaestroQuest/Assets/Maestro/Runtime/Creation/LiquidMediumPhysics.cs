@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation {
         }
         internal void CaptureMedia(bool requireReadyGeometry=true){
             mediaCount=0;CaptureMissingMedia();var gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f){if(vessels.Count>0)mediumQueryIssue="Liquid queries need a known gravity direction";return;}var up=-gravity.normalized;
-            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||requireReadyGeometry&&!v.Rigid.GeometryReady||v.Live.amountMl<=0)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);}
+            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||requireReadyGeometry&&!v.Rigid.GeometryReady||v.Live.amountMl<=0||v.Live.TerrainFloor&&RoomTerrainReservoir.Native(v.Live,v.Item.transform)==null)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);}
         }
         internal bool SampleMedium(Vector3 point,RoomItem participant,string ignore,out LiquidMediumGeometry chosen,out float depth,out bool ready){
             using var environment=mediumEnvironment.Begin(world);

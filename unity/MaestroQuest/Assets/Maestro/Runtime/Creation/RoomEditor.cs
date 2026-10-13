@@ -194,7 +194,7 @@ namespace Maestro.Quest.Creation
             if(!DrawingTip.ValidateCollection(new RoomObjectData {kind=RoomObjectKind.Assembly,recipe=recipe,drawingTips=drawingTips},out error))return false;
             if(!RoomSnapPoint.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,snapPoints=snapPoints},out error))return false;
             if(Snapshot().objects.Sum(x=>x.snapPoints?.Length??0)+(snapPoints?.Length??0)>RoomSnapPoint.MaximumPerRoom){error="This room has reached its snap-point limit";return false;}
-            if(!RoomContainer.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,containers=containers},out error))return false;
+            if(!RoomContainer.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,containers=containers,heightFields=heightFields,physics=physics==null||physics.mode=="fixed"?ItemPhysics.Fixed:ItemPhysics.Solid},out error))return false;
             if(Snapshot().objects.Sum(x=>x.containers?.Length??0)+(containers?.Length??0)>RoomContainer.MaximumPerRoom){error="Keep at most 16 liquid containers in this room";return false;}
             if(!RoomMaterialStore.ValidateCollection(new RoomObjectData{kind=RoomObjectKind.Assembly,materialStores=materialStores},out error))return false;
             if(Snapshot().objects.Sum(x=>x.materialStores?.Length??0)+(materialStores?.Length??0)>RoomMaterialStore.MaximumPerRoom){error="Keep at most 16 measured material stores in this room";return false;}

@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation {
         Quaternion lastRotation;Vector3 lastUp;float nextRefresh;bool dirty;
         public void Apply(RoomContainer[] containers){
             data=containers?.Length==1?containers[0].Copy():null;dirty=true;
-            if(data==null||data.amountMl<=0){ClearRipples();if(surface)surface.SetActive(false);return;}
+            if(data==null||data.amountMl<=0||data.TerrainFloor&&RoomTerrainReservoir.Native(data,transform)==null){ClearRipples();if(surface)surface.SetActive(false);return;}
             if(!surface){surface=new GameObject("Measured liquid surface");surface.transform.SetParent(transform,false);mesh=new Mesh{name="Bounded liquid level"};mesh.MarkDynamic();surface.AddComponent<MeshFilter>().sharedMesh=mesh;renderer=surface.AddComponent<MeshRenderer>();material=IllustratedMaterials.Create(data.color,0);renderer.sharedMaterial=material;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;}
             surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);
             Refresh();RoomAppearanceView.VisualsChanged(this);
@@ -26,7 +26,13 @@ namespace Maestro.Quest.Creation {
             if(data==null||!surface||data.amountMl<=0)return;
             nextRefresh=Time.unscaledTime+.1f;lastRotation=surface.transform.rotation;dirty=false;
             lastUp=GravityUp;Vector3 normal=surface.transform.InverseTransformDirection(lastUp).normalized;
-            float level=ContainerFlowGeometry.Level(data,normal,data.amountMl/data.capacityMl);
+            var terrain=RoomTerrainReservoir.Native(data,transform);if(data.TerrainFloor&&terrain==null){surface.SetActive(false);ClearRipples();return;}
+            float level=ContainerFlowGeometry.Level(data,normal,data.amountMl/data.capacityMl,terrain);
+            if(terrain!=null){
+                terrain.Surface(normal,level+normal.y*data.height*.5f,vertices,triangles);
+                for(int i=0;i<vertices.Count;i++)vertices[i]-=Vector3.up*(data.height*.5f);
+                PublishMesh(normal);return;
+            }
             int count=data.IsRectangular?4:Segments;
             for(int i=0;i<count;i++){
                 if(data.IsRectangular)bottom[i]=new Vector3((i==0||i==3?-1:1)*data.rectangle.width*.5f,-data.height*.5f,(i<2?-1:1)*data.rectangle.depth*.5f);
@@ -40,8 +46,9 @@ namespace Maestro.Quest.Creation {
             foreach(var point in rim)centre+=point;if(rim.Count>0)centre/=rim.Count;
             rim.Sort((a,b)=>Mathf.Atan2(Vector3.Dot(a-centre,other),Vector3.Dot(a-centre,axis)).CompareTo(Mathf.Atan2(Vector3.Dot(b-centre,other),Vector3.Dot(b-centre,axis))));
             vertices.Clear();triangles.Clear();if(rim.Count>=3){Vector3 middle=Vector3.zero;foreach(var p in rim)middle+=p;vertices.Add(middle/rim.Count);vertices.AddRange(rim);for(int i=0;i<rim.Count;i++){int a=i+1,b=(i+1)%rim.Count+1;triangles.Add(0);triangles.Add(a);triangles.Add(b);}}
-            mesh.Clear();mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);normals.Clear();for(int i=0;i<vertices.Count;i++)normals.Add(normal);mesh.SetNormals(normals);mesh.RecalculateBounds();
+            PublishMesh(normal);
         }
+        void PublishMesh(Vector3 normal){mesh.Clear();mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);normals.Clear();for(int i=0;i<vertices.Count;i++)normals.Add(normal);mesh.SetNormals(normals);mesh.RecalculateBounds();}
         void Edge(Vector3 a,Vector3 b,Vector3 normal,float level){float da=Vector3.Dot(normal,a)-level,db=Vector3.Dot(normal,b)-level;if(da*db>0||Mathf.Abs(da-db)<1e-8f)return;var point=Vector3.LerpUnclamped(a,b,da/(da-db));foreach(var p in rim)if((p-point).sqrMagnitude<1e-12f)return;rim.Add(point);}
         // Kept as the existing display entry point; immersion uses the identical plane.
         internal static float Level(Vector3 normal,float radius,float height,float fraction)=>ContainerFlowGeometry.Level(normal,radius,height,fraction);

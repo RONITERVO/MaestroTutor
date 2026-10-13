@@ -12,14 +12,16 @@ namespace Maestro.Quest.Creation {
     /// <summary>A bounded logical liquid store with an explicitly authored cylinder or rectangular cavity.</summary>
     [Serializable] public sealed class RoomContainer {
         public const int MaximumPerRoom=16;
-        public const double MaximumMillilitres=1000000;
+        public const double MaximumMillilitres=32000000;
         public int version=1;
         public ConnectionFrame frame=new(); // Centre of the bottom; local +Y is the opening.
         public float radius=.04f,height=.1f;
         // An optional rectangular footprint replaces the circular radius. Version 1
-        // remains cylindrical; version 2 is rectangular. No imported shape inference.
+        // remains cylindrical; version 2 is rectangular; version 3 derives its bed from the same owner’s
+        // canonical height field. No imported shape inference.
         public ContainerRectangle rectangle;
-        public bool IsRectangular=>version==2;
+        public bool IsRectangular=>version is 2 or 3;
+        public bool TerrainFloor=>version==3;
         internal float FootprintArea=>IsRectangular?rectangle.width*rectangle.depth:Mathf.PI*radius*radius;
         internal bool ContainsHorizontal(Vector3 point,float inset=1)=>IsRectangular
             ? Mathf.Abs(point.x)<=rectangle.width*.5f*inset&&Mathf.Abs(point.z)<=rectangle.depth*.5f*inset
@@ -35,19 +37,19 @@ namespace Maestro.Quest.Creation {
         public Color color=new(.16f,.55f,.85f,1);
         public RoomContainer Copy()=>new(){version=version,rectangle=rectangle?.Copy(),frame=frame?.Copy(),radius=radius,height=height,capacityMl=capacityMl,amountMl=amountMl,liquid=liquid,fluid=RoomFluid.Effective(fluid).Copy(),color=color};
         public bool Validate(out string error){
-            error="Use a cylindrical v1 or rectangular v2 container, normalized bottom frame, radius 0.005–1 m, rectangular width/depth 0.01–2 m, height 0.01–2 m and contents within capacity (1–1000000 ml)";
-            if(!RoomFluid.Effective(fluid).Valid||version is not (1 or 2)||IsRectangular&&(rectangle==null||!rectangle.Valid)||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
+            error="Use a cylindrical v1, rectangular v2 or terrain-backed v3 container, normalized bottom frame, bounded dimensions and contents within capacity (1–32000000 ml)";
+            if(!RoomFluid.Effective(fluid).Valid||version is not (1 or 2 or 3)||IsRectangular&&(rectangle==null||!(TerrainFloor?float.IsFinite(rectangle.width)&&rectangle.width>=.1f&&rectangle.width<=4&&float.IsFinite(rectangle.depth)&&rectangle.depth>=.1f&&rectangle.depth<=4:rectangle.Valid))||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
             error=null;return true;
         }
         static bool Unit(float n)=>float.IsFinite(n)&&n>=0&&n<=1;
         public static bool ValidateCollection(RoomObjectData owner,out string error){
             var items=owner.containers??Array.Empty<RoomContainer>();error="Use at most one liquid container on a created object";
             if(items.Length>1||owner.IsBuiltIn&&items.Length>0||items.Any(c=>c==null))return false;
-            if(items.Length==1)return items[0].Validate(out error);error=null;return true;
+            if(items.Length==1){if(!items[0].Validate(out error))return false;if(items[0].TerrainFloor)return RoomTerrainReservoir.Validate(owner,items[0],out error);}error=null;return true;
         }
         // Exact identity and colour prevent silently mixing unlike contents. No rounding to float.
         internal static bool Transfer(RoomContainer source,RoomContainer destination,double requested,out double moved,out string error){
-            moved=0;error="Choose two valid containers and a finite positive transfer of at most 1000000 ml";
+            moved=0;error="Choose two valid containers and a finite positive transfer of at most 32000000 ml";
             if(source==null||destination==null||ReferenceEquals(source,destination)||!source.Validate(out _)||!destination.Validate(out _)||!double.IsFinite(requested)||requested<=0||requested>MaximumMillilitres)return false;
             if(destination.amountMl>0&&!source.SameLiquid(destination)){error="Empty the destination or choose matching liquid identity, colour and fluid properties; mixing is not supported";return false;}
             moved=Math.Min(requested,Math.Min(source.amountMl,destination.capacityMl-destination.amountMl));

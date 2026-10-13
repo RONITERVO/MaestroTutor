@@ -15097,7 +15097,7 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 5.0
+                                  "maximum": 6.0
                                 },
                                 "modelGeometry": {
                                   "type": "object",
@@ -16469,6 +16469,13 @@
                                   "items": {
                                     "type": "object",
                                     "properties": {
+                                      "terrainFloor": {
+                                        "type": "boolean",
+                                        "title": "Use this object’s terrain as the floor",
+                                        "x-features": [
+                                          "terrainReservoirs.v1"
+                                        ]
+                                      },
                                       "frame": {
                                         "type": "object",
                                         "properties": {
@@ -16549,12 +16556,12 @@
                                           "width": {
                                             "type": "number",
                                             "minimum": 0.0,
-                                            "maximum": 2.0
+                                            "maximum": 4.0
                                           },
                                           "depth": {
                                             "type": "number",
                                             "minimum": 0.0,
-                                            "maximum": 2.0
+                                            "maximum": 4.0
                                           }
                                         },
                                         "required": [
@@ -16582,12 +16589,12 @@
                                       "capacityMl": {
                                         "type": "number",
                                         "minimum": 1.0,
-                                        "maximum": 1000000.0
+                                        "maximum": 32000000.0
                                       },
                                       "amountMl": {
                                         "type": "number",
                                         "minimum": 0.0,
-                                        "maximum": 1000000.0
+                                        "maximum": 32000000.0
                                       },
                                       "liquid": {
                                         "type": "string",
@@ -16669,7 +16676,7 @@
                                       "version": {
                                         "type": "integer",
                                         "minimum": 1.0,
-                                        "maximum": 2.0
+                                        "maximum": 3.0
                                       }
                                     },
                                     "required": [
@@ -20728,6 +20735,13 @@
               "definition": {
                 "type": "object",
                 "properties": {
+                  "terrainFloor": {
+                    "type": "boolean",
+                    "title": "Use this object’s terrain as the floor",
+                    "x-features": [
+                      "terrainReservoirs.v1"
+                    ]
+                  },
                   "frame": {
                     "type": "object",
                     "properties": {
@@ -20808,12 +20822,12 @@
                       "width": {
                         "type": "number",
                         "minimum": 0.0,
-                        "maximum": 2.0
+                        "maximum": 4.0
                       },
                       "depth": {
                         "type": "number",
                         "minimum": 0.0,
-                        "maximum": 2.0
+                        "maximum": 4.0
                       }
                     },
                     "required": [
@@ -20841,12 +20855,12 @@
                   "capacityMl": {
                     "type": "number",
                     "minimum": 1.0,
-                    "maximum": 1000000.0
+                    "maximum": 32000000.0
                   },
                   "amountMl": {
                     "type": "number",
                     "minimum": 0.0,
-                    "maximum": 1000000.0
+                    "maximum": 32000000.0
                   },
                   "liquid": {
                     "type": "string",
@@ -21030,7 +21044,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration.",
+      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration. With terrainFloor=true, the same fixed object must have one accepted height surface. Its frame, rectangle and capacity are derived from that surface; those input fields are ignored for this mode. height is the opening and must reach every terrain vertex. Capacity is the local geometric volume below the opening; amountMl remains authoritative. Terrain edits reshape the water while preserving amount and refuse overflow: transfer or explicitly remove enough water first. This is one bounded equalized reservoir, not connected rivers or separate-basin flow. Sculpting does not create water; no water volume exists inside the bed. Missing bed geometry refuses interaction. Set terrainFloor=false to deliberately return to an ordinary cavity. Use object.field and object.field.samples to inspect the bed.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -21065,7 +21079,8 @@
             "g": 0.550000011920929,
             "b": 0.85000002384185791,
             "a": 1.0
-          }
+          },
+          "terrainFloor": false
         }
       }
     },
@@ -21151,7 +21166,7 @@
           "amountMl": {
             "type": "number",
             "minimum": 0.001,
-            "maximum": 1000000.0
+            "maximum": 32000000.0
           }
         },
         "required": [
@@ -21194,7 +21209,7 @@
           "transferredMl": {
             "type": "number",
             "minimum": 0.0,
-            "maximum": 1000000.0
+            "maximum": 32000000.0
           }
         },
         "required": [
@@ -33870,12 +33885,12 @@
           "transferredMl": {
             "type": "number",
             "minimum": 0.0,
-            "maximum": 8000000.0
+            "maximum": 256000000.0
           },
           "spilledMl": {
             "type": "number",
             "minimum": 0.0,
-            "maximum": 8000000.0
+            "maximum": 256000000.0
           },
           "receivers": {
             "type": "integer",
@@ -33920,7 +33935,7 @@
           "scoopedMl": {
             "type": "number",
             "minimum": 0.0,
-            "maximum": 8000000.0
+            "maximum": 256000000.0
           },
           "donors": {
             "type": "integer",
@@ -33964,7 +33979,7 @@
           "collectedMl": {
             "type": "number",
             "minimum": 0.0,
-            "maximum": 8000000.0
+            "maximum": 256000000.0
           },
           "temporary": {
             "type": "boolean"
@@ -36716,6 +36731,7 @@
           "configured": "boolean",
           "definition": {
             "record": {
+              "terrainFloor": "boolean",
               "frame": {
                 "record": {
                   "position": {
@@ -36767,7 +36783,7 @@
         }
       },
       "label": "Liquid container and contents",
-      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Both rectangle dimensions are zero for a cylinder; positive dimensions replace radius for a rectangular cavity. Amount/capacity use millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",
+      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Both rectangle dimensions are zero for a cylinder; positive dimensions replace radius for a rectangular cavity. terrainFloor=true binds the cavity to the same object’s canonical height surface; frame/rectangle/capacity are derived and ground edits preserve amount or refuse overflow. Amount/capacity use local millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",
       "input": {
         "type": "object",
         "properties": {
@@ -37217,7 +37233,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, terrain pools, carried fluid mass or mixing. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing.",
       "input": {
         "type": "object",
         "properties": {
@@ -43511,15 +43527,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "06d8d7fb163179534f0fb2f8015b812adac3aa55ae7d023358f76abce9d6fc76"
+      "sha256": "c90e7b66d4f7b7213e85de3b5873d1fbeeaee5e3d367d9a19f0a4cc0d7607921"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "beaeaf4627673a55bf758e3b0484c1d5b1aaa95b456e51b29bce8a2d7e98fc6e"
+      "sha256": "1a2a45c4bca1b9a2cf794c45842553f04228d78b89879654560679b338ba6a83"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
-      "sha256": "e086e6db5c8a2e8218acf11c9166a341564e7389a625c3fdd943671c7cd71db7"
+      "sha256": "d796de37ee1c719acd684bd00f5e0d0dfa31868832b9032c2d19485d76dfd9a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -43543,7 +43559,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "6290da95c6d49855b60dd1035727ca92d911c9029b538f4e779ad7462c9425a7"
+      "sha256": "51a54d58b8cf03c3e6a347368937181e66272438270cfd20a01544ac823052be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -43879,7 +43895,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
-      "sha256": "e14f2201b909e75abc2f7a956e277ea6c3b1f69f90e96ff02d4bbf95d19f7a68"
+      "sha256": "9405b3092b54a56115cbbda784f92d62005aa442aa514b7c1e06abc0a761eebd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
@@ -43947,11 +43963,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "dde8517ea4a3c28dd039cb4212b1859ba7a588d9e8341befeb13db0ed74b603e"
+      "sha256": "5c8a8989557a90de428e61b407324ca0c058caa3625f2ed327397c03b032280b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
-      "sha256": "4e0a1f1542e2446f4734df37d488f2318c93158a260f13f436289bfb6ba31329"
+      "sha256": "cd14ff86b094b8ed74012d7a535a020be77438c27875afa272a00509b80c5eb3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerRipples.cs",
@@ -43959,7 +43975,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerScoopingGeometry.cs",
-      "sha256": "760c449faa11c5d9ffc0f31247ddee4c70fe03f1e0b863957e71b44d9e823a47"
+      "sha256": "10fb5b3078bef1b1a900f683faf69026c0b33a571f0621f2491a9809885cfc2c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
@@ -43979,7 +43995,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "79f1ae5e83c85b2a3d19306be97db1d3032bd200a9944633991966c9fa910151"
+      "sha256": "157a1a14b87cae6211ea22e09addcb5bbe56e46aeb8b4aa530a5dba51bf0a28a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -44023,7 +44039,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
-      "sha256": "202473d39d0d15ed6a7f5e15aace8a79d805f2c8d1caebecdd4c0c25344c1581"
+      "sha256": "b1bb685247298b4ebbd602bc74e44921e81ded1f30d284cb0f21885ec3e89234"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
@@ -44031,15 +44047,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "1bf69544252f1b9e4cc2fd6fc68f4bb9cd62cdadbb1e5e8eec58eadebc08c363"
+      "sha256": "4a1dd16af6afce0cf8208c68a36658a6af8815e87b7f05ab21e1eb6f230b5b27"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "5acf5902305a6d3a3e01aab4ef6eccd07628733af9f0195586540abf2af7d0dc"
+      "sha256": "3b16c3c68a9b5ec3ef64237c493b58c9a8275e718e3f398f7d35c091cf2c6366"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "35fd5e45577089a806be44cc89031d0e78b0077b3098e842f139627152c42a11"
+      "sha256": "098d6a5cf88bab118dca83767eb3e7dda6214df772a41f31a420dd37010e7a6d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -44167,7 +44183,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
-      "sha256": "81be326bff6cf4007a38a4f8a80c43a73642435ce7206ca6ab142513a4dd6fea"
+      "sha256": "3cacc53be024270bff16d8a025233c595c0590f97213b189bd174cdeb84b12a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnection.cs",
@@ -44179,7 +44195,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
-      "sha256": "66df1782f7b63e3aa6e81fb5e17bc0a2f55c536a8c3466920c0cf84f43e52fa0"
+      "sha256": "e69bb57642164bd18eab7870a4d70c445ee96a7b5feb6f637756712eca2f50cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -44187,7 +44203,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "6729b526a3997e4c6e0598bf4d3407cd5f56a5f4b72494ac899641320ca1d73b"
+      "sha256": "1d1464542fd433cffd27ecebbac74943848149291bed196109e48ca50ac85469"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -44199,7 +44215,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "97108c67b62df8beb6d19651e0c6ad4cfc059f465d7238e7029c310ae8704204"
+      "sha256": "52f14ab4707b3d4f379946d9ef88a095bed78dc41495ffd9015fa460fd2eff5d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantCollision.cs",
@@ -44227,7 +44243,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "f211560c66884e32b8b751d6f3bc67a555e6c401309574db11171649a219fada"
+      "sha256": "1a7707edbc52823f22d56fc7c6e7c2fd22d12ef4bcba83b78983e1aaeb40f4ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -44311,7 +44327,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMediumAvailability.cs",
-      "sha256": "56e03c67585fe49195a6ed5b561158eec64ce4f219570a18a179d64fe953b5c5"
+      "sha256": "bbc4a16ec29c58e2a8d147b4958cc06e47e198710b7b32784b12221f1d4ec253"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelCreation.cs",
@@ -44355,7 +44371,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
-      "sha256": "0deb8ee9516d1564509ca906f5b36898a4f94a43c6522073950309df44157328"
+      "sha256": "9a3061bf398a11256f3825484eaf076a8305e815609b35357a599244f789d1a7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
@@ -44483,7 +44499,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "f725291528b53f71cd719faadf29da11687fa5b7244063a32cf8958e81c83d2d"
+      "sha256": "bca97f562a369f03fd6469d24f465823b2083c151e400ed754cd03bb189f984f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -44496,6 +44512,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
       "sha256": "c0734e6925f4da48de92c004d546f7ee45b863860cbaf30417207218b6e746a1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomTerrainReservoir.cs",
+      "sha256": "ccecbfa8847f26da363e4e14eb4c20f8efe68bdb961facf360415884f5090543"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolRecovery.cs",
@@ -44608,6 +44628,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TemporaryMemorySave.cs",
       "sha256": "e416a2eec9fa2ce2819edb7c1550cb525ef45933619fa7b3081e6602fdefcbce"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidGeometry.cs",
+      "sha256": "363f94d257110d3dcf1dfb2066917b010c40e71ec4e5b2e7e47503bb8ff76cc4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
@@ -45099,7 +45123,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "57af172cc204dca66447d1e186d037b8defc0c4d4796437bf57b5ecc0e79ea98"
+      "sha256": "69a0cd6cc3a3066bf50ddf1f4dc5228a1d777f5482443f57dfe21b9991a0d4e1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -45111,7 +45135,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchive.cs",
-      "sha256": "df845c0c3098f29984f77f97ea9838d1f5ea2d66c95b3bfe6aa9da4034052daa"
+      "sha256": "e5baad8056434f2043d054aaa1eb0aa9f3c0b33637469ba23956c2c819ceebbb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceArchiveCapture.cs",
@@ -45243,7 +45267,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "83881a5e37a1981165088f1b96c98a7b62c63ce658a04b993ce0faa48356fe0f"
+      "sha256": "c71b35da307072413b9a49e6c427d24a34a85bcfb5906adad89b45e1756f72c9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",

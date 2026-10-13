@@ -1353,3 +1353,26 @@ The complete native headless journey now creates a temporary pool and box actor
 through normal catalog actions, inspects outward/inward/deeper/cross-pool/dry-entry
 paths, and undoes its six edits. This shared-transport fixture intentionally uses
 placement rather than walking; native movement is covered by the PlayMode case.
+
+
+## Terrain reservoir authoring parity
+
+The offline Headless journey now creates a normal starter surface, resets its
+terrain through `object.field.edit`, and configures water with the existing
+`object.container.edit` action and `terrainFloor=true`. It inspects the derived
+capacity and actual medium above/below the bed, sculpts the ground, verifies the
+unchanged liquid amount, and restores then removes its fixture with ordinary
+Undo. `terrain-water.json` contains native receipts and observations.
+
+The original Book journey uses its generated controls to create a starter surface,
+configure its terrain reservoir, and load the native derived capacity back into
+the form. It captures `book-native-terrain-water.json` and the corresponding PNG,
+then uses the normal Undo controls to remove its changes. No hidden native mutation
+or second authoring interface supplies the result.
+
+Separate PlayMode acceptance covers exact shorelines under tilt, shared hand
+contact/ripples, cup filling and bed obstruction, rain, buoyancy, missing bed
+readiness, persistence, copies, reusable prototypes, overflow refusal and failed
+publication. Geometry tests compare clipped volumes with analytic and independently
+integrated values and check full-body sweeps through wet triangles. These desktop
+checks do not claim Quest rendering/performance, real-provider or Store acceptance.

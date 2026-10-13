@@ -971,3 +971,53 @@ again. This is grounded shallow egress, not swimming or a general escape planner
 obstacles, overlapping water boundaries or excessive depth can still prevent an
 exit. A zero maximum depth disables meaningful shallow egress. Other saved
 settings, water quantity, buoyancy and appearance are unchanged.
+
+
+## Terrain-backed measured water
+
+The same `object.container.edit` action now accepts `definition.terrainFloor=true`.
+The owner must be fixed and have exactly one accepted `RoomHeightField`. There is
+one canonical ground grid and one saved liquid amount. The container does not copy
+the heights or maintain a second water inventory. Its frame, rectangular footprint
+and local capacity derive from the field; `height` is the authored opening plane
+and must be at or above every ground vertex. Inspect `object.container`,
+`object.field` and `object.field.samples` before editing.
+
+The surface remains perpendicular to gravity. The cavity uses the exact terrain
+triangles and the volume between those triangles and the opening; the rendered
+shoreline clips dry ground. Medium samples, whole-body sweeps, contact events,
+buoyancy, immersion filling and gravity pouring use that same prepared geometry.
+Hand/controller ripples draw on the clipped surface. The existing actor water and
+real-room participation policies still apply independently to every participant.
+Water queries do not grant walking clearance through solids or missing ground.
+
+Raising or lowering ground recalculates capacity and water level while preserving
+the saved amount. An edit that would overflow refuses before publication and asks
+the author to transfer or explicitly remove enough liquid first. Successful edits
+publish terrain, liquid and native geometry together and have one Undo. Failed
+saving preserves the accepted shape and amount. Removing the ground while it is
+still a reservoir also refuses; remove the container or explicitly choose an
+ordinary cavity first. Logical measured transfer, physical cup filling, rain and
+saved quantity events use the existing finite-container system.
+
+A terrain reservoir is component v3, a room containing it needs room format 37,
+and reusable prototypes containing it use version 6. Ordinary cylindrical and
+rectangular components retain versions 1 and 2. Shared schema validation refuses
+forged or inconsistent bed/frame/capacity metadata. The local quantity ceiling is
+32 million millilitres, covering a maximum 4 × 4 × 2 m cavity. Quantity remains
+independent of owner/world display scale, matching existing container semantics.
+
+This is a bounded equalized reservoir. Its rectangular perimeter and opening are
+explicit authored cavity boundaries; it does not infer containment from an
+imported landscape or generate surrounding solid walls. Separate disconnected
+basins need separate owners. It does not simulate river flow, pressure, spilling
+across low terrain edges, swimming, aquatic NPCs or water displacement. Follow
+routing conservatively avoids the reservoir's outer footprint; actual movement
+segments still test its wet triangles. General shoreline route planning remains
+open. Missing native bed geometry is unavailable, never silently treated as an
+ordinary rectangular pool; observation does not load it.
+
+The current whole-world physics admission and running-world retention remain in
+force. Automatic native unloading stays disabled, and the current 64-object,
+25-metre and four-height-field limits are unchanged. Dense rain-driven level
+updates still require Quest performance acceptance before release.

@@ -53,7 +53,7 @@ namespace Maestro.Quest.Creation {
             foreach(var v in vessels.Values){
                 if(v.Stream)v.Stream.enabled=false;
                 if(!v.Ready||v.Live.amountMl<=0)continue;
-                double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up);
+                double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up,RoomTerrainReservoir.Native(v.Live,v.Item.transform));
                 double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,up))continue;
                 var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward);if(!physics.CanSimulate(origin,v.Item))continue;var velocity=outward*.15f;
                 var body=v.Body;if(body&&!body.isKinematic)velocity+=Vector3.ClampMagnitude(body.GetPointVelocity(origin),3);
@@ -115,7 +115,7 @@ namespace Maestro.Quest.Creation {
             }
             return false;
         }
-        bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Rigid&&v.Rigid.GeometryReady&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
+        bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
         bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
         void Touch(Vessel v){if(contents.ContainsKey(v.Id))return;original[v.Id]=v.Saved.Copy();contents[v.Id]=v.Live;}
         bool Trace(Vessel source,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){

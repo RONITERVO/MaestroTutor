@@ -10,7 +10,7 @@ namespace Maestro.Quest.Creation {
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object first";return false;}
             data=Pose(Read(target),Find(target).transform);return true;
         }
-        bool ComponentCandidate(RoomObjectData[] replacements,out string error){var next=replacements.ToDictionary(x=>x.id);var candidate=Snapshot();candidate.objects=candidate.objects.Select(x=>next.TryGetValue(x.id,out var replacement)?replacement:x).ToArray();return candidate.Validate(out error);}
+        bool ComponentCandidate(RoomObjectData[] replacements,out string error){foreach(var value in replacements)if(!RoomTerrainReservoir.Normalize(value,out error))return false;var next=replacements.ToDictionary(x=>x.id);var candidate=Snapshot();candidate.objects=candidate.objects.Select(x=>next.TryGetValue(x.id,out var replacement)?replacement:x).ToArray();return candidate.Validate(out error);}
         static RoomLayout ComponentBefore(RoomObjectData[] data)=>new(){placements=data.Select(d=>new ObjectPlacement{target=d.id,position=d.position,rotation=d.rotation,scale=d.scale}).ToArray()};
     }
 }

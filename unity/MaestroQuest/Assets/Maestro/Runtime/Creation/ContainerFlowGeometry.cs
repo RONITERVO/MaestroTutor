@@ -34,10 +34,12 @@ namespace Maestro.Quest.Creation {
             double Paired(double u)=>u<=0?0:u<c?u*u*(u/c):3*u*u-3*u*c+c*c;
             return Math.Clamp((Paired(x)-Paired(x-b)-Paired(x-a))/(6*a*b),0,1);
         }
-        internal static double FractionBelow(RoomContainer c,Vector3 normal,double level)=>c.IsRectangular
-            ? BoxFractionBelow(normal,c.rectangle.width,c.height,c.rectangle.depth,level)
-            : FractionBelow(normal,c.radius,c.height,level);
-        internal static float Level(RoomContainer c,Vector3 normal,double fraction){
+        internal static double FractionBelow(RoomContainer c,Vector3 normal,double level,TerrainLiquidGeometry terrain=null){
+            if(c.TerrainFloor){if(terrain==null)throw new InvalidOperationException("The accepted terrain cavity is unavailable");return terrain.VolumeBelow(normal,level+normal.y*c.height*.5)/terrain.Volume;}
+            return c.IsRectangular?BoxFractionBelow(normal,c.rectangle.width,c.height,c.rectangle.depth,level):FractionBelow(normal,c.radius,c.height,level);
+        }
+        internal static float Level(RoomContainer c,Vector3 normal,double fraction,TerrainLiquidGeometry terrain=null){
+            if(c.TerrainFloor){if(terrain==null)throw new InvalidOperationException("The accepted terrain cavity is unavailable");return terrain.Level(normal,fraction)-normal.y*c.height*.5f;}
             if(!c.IsRectangular)return Level(normal,c.radius,c.height,fraction);
             double extent=c.HorizontalExtent(normal)+c.height*.5*Math.Abs(normal.y),low=-extent,high=extent;
             for(int pass=0;pass<24;pass++){double mid=(low+high)*.5;if(FractionBelow(c,normal,mid)<fraction)low=mid;else high=mid;}
@@ -45,11 +47,11 @@ namespace Maestro.Quest.Creation {
         }
         static double Disk(double x){if(x<=-1)return 0;if(x>=1)return 1;return .5+(Math.Asin(x)+x*Math.Sqrt(1-x*x))/Math.PI;}
         static double Integral(double x){if(x<=-1)return 0;if(x>=1)return x;double root=Math.Sqrt(1-x*x);return x*.5+(x*Math.Asin(x)+root-root*root*root/3)/Math.PI;}
-        internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up) {
+        internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up,TerrainLiquidGeometry terrain=null) {
             var n=Quaternion.Inverse(worldRotation*container.frame.rotation)*up;
             if(n.y<=0)return container.amountMl;
             double lip=n.y*container.height*.5-container.HorizontalExtent(n);
-            return Math.Max(0,container.amountMl-container.capacityMl*FractionBelow(container,n,lip));
+            return Math.Max(0,container.amountMl-container.capacityMl*FractionBelow(container,n,lip,terrain));
         }
         internal static Vector3 Lip(RoomContainer container,Transform root,Vector3 up,out Vector3 outward) {
             var rotation=root.rotation*container.frame.rotation;var n=Quaternion.Inverse(rotation)*up;

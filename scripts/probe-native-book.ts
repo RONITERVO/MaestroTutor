@@ -319,6 +319,34 @@ try{
  assert.equal(await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).inputValue(),'850');
  await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-medium.png')});
  await writeFile(join(directory,'book-native-medium.json'),JSON.stringify({boundary:'Actual original-book fluid authoring, native receipt and current-value reload; no physical buoyancy or provider proof.',medium},null,2));
+ // A user authors the same terrain reservoir through the original book forms.
+ await openNamedAction('Create object','object.create');
+ await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});
+ await page.getByLabel('Action inputs templateHash',{exact:true}).selectOption({label:'Snow patch'});
+ await page.getByLabel('Action inputs name',{exact:true}).fill('Book terrain reservoir');
+ for(const [key,value] of Object.entries({x:4,y:2,z:4,scale:1}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+ const terrainCreated=await runNamedAction('object.create'),terrainTarget=terrainCreated.output!.objectId as string;
+ await openNamedAction('Configure or fill a liquid container','object.container.edit');
+ await page.getByLabel('Action inputs target',{exact:true}).selectOption(terrainTarget);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Include Action inputs definition terrainFloor',{exact:true}).check();
+ await page.getByLabel('Action inputs definition terrainFloor',{exact:true}).selectOption('true');
+ await page.getByLabel('Action inputs definition height',{exact:true}).fill('.3');
+ await page.getByLabel('Action inputs definition amountMl',{exact:true}).fill('50000');
+ const terrainConfigured=await runNamedAction('object.container.edit');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs definition terrainFloor',{exact:true}).inputValue(),'true');
+ const terrainCapacity=Number(await page.getByLabel('Action inputs definition capacityMl',{exact:true}).inputValue());assert.ok(terrainCapacity>50000);
+ await page.getByRole('heading',{name:'Configure or fill a liquid container',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-terrain-water.png')});
+ await writeFile(join(directory,'book-native-terrain-water.json'),JSON.stringify({boundary:'Original book generated controls create a terrain owner and configure its reservoir; native readback derives capacity and keeps the requested amount. No hidden fixture mutation, provider or headset acceptance.',terrainCreated,terrainConfigured,capacityMl:terrainCapacity},null,2));
+ // Cleanup uses the user's normal Undo path, leaving later scenarios unchanged.
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ const terrainRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();
+ await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,terrainRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();
+ await page.waitForFunction(id=>!window.nativeBookEvidence!().state!.objects.some(o=>o.id===id),terrainTarget);
+ await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  await openNamedAction('Blend a visual layer','visibility.layer.present');
  await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
  await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,null]));

@@ -19,7 +19,9 @@ Saved actor water policies now share live liquid geometry across walking and
 recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
 Follow now finds bounded routes around finite water cavities; see [water-aware following](#water-aware-following--2026-10-09).
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
-Swimming, general escape planning and terrain reservoirs remain open.
+Terrain-backed finite reservoirs now share the same liquid inventory and editing
+path; see [terrain water](QUEST_WORLD_AUTHORING.md#terrain-backed-measured-water).
+Swimming and general escape planning remain open.
 Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
@@ -9068,3 +9070,44 @@ Evidence is under `.quest-evidence/water-egress/`.
 Whole-world physics admission, running-world retention, automatic unloading off
 and the 64-object/25-metre limits remain. No new headset, paid-provider, signing,
 deployment or Meta acceptance is claimed. V1 release work remains active.
+
+### Terrain-backed measured water — 2026-10-13
+
+A fixed object with one canonical height field can now use that same surface as
+its reservoir bed through `object.container.edit` with `terrainFloor=true`.
+Frame, footprint and capacity derive from the terrain; liquid amount remains
+explicit saved state. Gravity-relative level, clipped shoreline rendering,
+medium sampling, swept body checks, cup filling, pouring, rain, buoyancy and
+contact/ripple events share the accepted geometry and quantity. Sculpting updates
+capacity while preserving water; an overflow or failed save refuses before
+publication. Undo and reusable prototypes preserve the same contract.
+
+Room format is 37, terrain-container component is v3, and prototypes carrying it
+use v6. Existing non-terrain prototypes remain accepted. Missing native terrain
+reports unavailable rather than inventing a rectangular bed. Reservoirs are
+bounded equalized cavities with an explicit perimeter/opening; those boundaries
+do not create solid walls. Separate basins need separate owners. River flow,
+low-bank spill propagation, displacement, swimming and aquatic NPCs remain open.
+Follow planning conservatively uses the outer footprint, while actual segments
+check wet terrain triangles. Dense rain-level updates still need Quest profiling.
+
+Verification: **1,180 EditMode / 1,455 PlayMode passed**, with three expected
+optional private-asset skips. New coverage includes analytic/independent volumes,
+tilted surfaces, dry ground, swept contacts, cup clearance, rain, buoyancy,
+quantity preservation, overflow/save failure, Undo and prototype validation.
+Fresh Headless `04c70e70f0d747608c94c405baea3fbb` passed with
+**809 observations**, including ordinary catalog creation,
+medium queries, sculpting and Undo. Original Book
+`60d51308f4454ece827183dd34877eb8` passed, including generated controls and native
+readback. Both clients and editors exited zero with scripted provider responses
+and synthetic assets. The rendered shoreline and book screenshots were inspected.
+**1,340 room/book web tests** and **77 refreshed native-fixture consumers** passed,
+as did web build, lint, probe TypeScript and asset integrity. Native catalog
+matches its export; all **974 C# sources** match the frozen inputs and build mirror.
+Evidence: `.quest-evidence/terrain-water/` and the two owned journey directories.
+The complete verifier already runs both journeys; a redundant wrapper rerun was
+canceled after both passed, and the wrapper was corrected to avoid repetition.
+
+Whole-world physics admission, running-world retention, automatic unloading off
+and the 64-object/25-metre/four-height-field limits remain. No headset, paid-provider,
+signing, deployment or Meta action was performed. V1 release work remains active.
