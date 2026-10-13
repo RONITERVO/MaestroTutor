@@ -937,3 +937,8 @@ the existing bounded program event queue. The captured contact position and
 payload remain the original observation. Ordinary
 input preparation and `object.physics.inputs.interrupted` remain separate from
 this event detail.
+
+Catch waiting reasons are bounded display text in both active facts and terminal
+receipts. A timeout still reports `caught=false`; its diagnostic can be stored in
+a program text variable without exceeding that value contract. Exact object and
+holder identities are preserved.

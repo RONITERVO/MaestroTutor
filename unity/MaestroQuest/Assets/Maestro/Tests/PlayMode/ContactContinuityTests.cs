@@ -100,6 +100,19 @@ namespace Maestro.Quest.Tests {
             }finally{Physics.simulationMode=mode;Physics.gravity=gravity;}
             yield return null;
         }
+        [UnityTest]public IEnumerator ContactContinuityCatchTimeoutKeepsLongReasonBindable(){
+            string id=PhysicsInputBall(new(-10,3,-10));var viewer=new GameObject("Catch result viewer");viewer.transform.SetParent(root.transform,false);viewer.transform.position=new(-4,1.6f,0);root.GetComponent<RoomInteraction>().Viewer=viewer.transform;StartRecoveryFixture();
+            var args=BehaviourCatalog.Action("object.physics.catch").Example;args["target"]=id;args["holder"]=new JObject{["kind"]="object",["objectId"]="book",["revision"]=editor.ObjectRevision("book")};
+            Assert.That(runtime.Scheduler.Invoke(new JObject{["id"]="object.physics.catch",["version"]=1,["arguments"]=args},Time.unscaledTime,out var run,out var error),Is.True,error);
+            var attempt=editor.Find("book").GetComponent<RoomCatch>();
+            // Inject a long display diagnostic to isolate the value boundary;
+            // this is a real timeout/result path, not native collision evidence.
+            typeof(RoomCatch).GetProperty(nameof(RoomCatch.Reason)).SetValue(attempt,"Waiting for geometry: "+new string('x',180)+"\nretry");
+            typeof(RoomCatch).GetField("deadline",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).SetValue(attempt,Time.unscaledTime-1);
+            attempt.SendMessage("FixedUpdate");runtime.Scheduler.Tick(Time.unscaledTime+.01f);
+            var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());Assert.That((bool)receipt["output"]["caught"],Is.False);Assert.That((string)receipt["output"]["phase"],Is.EqualTo("missed"));
+            var reason=ProgramValue.Literal(receipt["output"]["reason"],ProgramType.Text);Assert.That((string)reason.Value,Does.StartWith("Waiting for geometry: "));Assert.That(((string)reason.Value).Length,Is.LessThanOrEqualTo(128));yield return null;
+        }
         [UnityTest]public IEnumerator ContactContinuityInterruptedSecondaryBodyCannotCatchOrSettle()=>ContinuityCatch(true);
         [UnityTest]public IEnumerator ContactContinuityMatchingUninterruptedBodyCanCatch()=>ContinuityCatch(false);
     }

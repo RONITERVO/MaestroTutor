@@ -46,7 +46,7 @@ namespace Maestro.Quest.Programs
             public override bool WaitsThroughGrab(string target)=>attempt&&attempt.WaitsThroughGrab(target);
             public override RuleActionState State(out string error){error=attempt.Error??(!attempt?"The catch was removed":null);return error!=null?RuleActionState.Failed:attempt.Finished?RuleActionState.Ready:RuleActionState.Preparing;}
             public override bool Complete(out string error)=>State(out error)==RuleActionState.Ready;
-            public override JObject Result=>new(){["target"]=attempt.TargetId,["holder"]=attempt.HolderId,["phase"]=attempt.Phase,["caught"]=attempt.Caught,["dropped"]=attempt.Dropped,["reason"]=attempt.Reason};
+            public override JObject Result=>new(){["target"]=attempt.TargetId,["holder"]=attempt.HolderId,["phase"]=attempt.Phase,["caught"]=attempt.Caught,["dropped"]=attempt.Dropped,["reason"]=ImportObservation.Text(attempt.Reason)};
             public override string InterruptionStatus=>attempt&&attempt.Caught?"The object was physically caught; cancellation keeps its current placement":null;
             public override void Stop(bool preservePlacement){if(attempt)attempt.End();}
         }

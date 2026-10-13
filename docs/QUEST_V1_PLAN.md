@@ -8976,5 +8976,26 @@ Native Headless journey `76ac69b7303c4c4b8625850d0fcd5cc4` passed with
 766 observations; original Book journey `f221e0b1c57f4bb2a23c043b979db71e` passed.
 Both clients and Unity editors exited zero with local scripted provider responses
 and synthetic assets. All **967 C# files** match the frozen source and build
-mirror. Evidence is under `.quest-evidence/contact-continuity`. No new headset,
+mirror. Evidence is under `.quest-evidence/contact-continuity/first-verified`. No new headset,
 paid-provider, signing, deployment or Meta acceptance is claimed.
+
+
+### Terminal catch diagnostic value boundary — 2026-10-13
+
+Final review extended the same bounded display-text handling from active catch
+facts to completed catch receipts. A long/native diagnostic can no longer break
+a program text binding after a catch times out. Exact target and holder IDs remain
+unchanged. An eighth regression injects a long diagnostic into a real catch
+attempt, expires its deadline, and verifies a completed `missed` receipt with
+`caught=false` and a valid typed text value. This is controlled value-boundary
+coverage, separate from the actual native-contact tests above.
+
+The main change's full suite passed at `8b64a42f`. This subsequent result-only
+correction passed **83 focused PlayMode and 22 scheduler EditMode tests**, followed
+by fresh complete-app Headless `be555b29b0a34a26b290276bbf6c5d18`
+(765 observations) and Book `171cc65f255043adaa609b28113fbf40` journeys.
+Both clients/editors exited zero with scripted responses and synthetic assets.
+Final native fixtures passed **77 consumer checks**. All **967 C# files** match
+the final frozen source and mirror. The full-suite baseline is preserved under
+`.quest-evidence/contact-continuity/first-verified`; final follow-up receipts are
+in `final-verified.json` alongside it. No new device/provider acceptance is claimed.

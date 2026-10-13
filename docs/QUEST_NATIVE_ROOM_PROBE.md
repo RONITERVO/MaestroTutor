@@ -1329,3 +1329,8 @@ interrupted body is neither caught nor reported settled, while the uninterrupted
 control is actually caught. The shared catch fact must remain readable and expose
 a bounded version of the native waiting reason. These are desktop PhysX and
 shared-interface checks, not new device or provider acceptance.
+
+A separate catch-timeout regression injects a long diagnostic into the existing
+attempt and expires its deadline. The real action completes with a missed receipt
+and `caught=false`; its reason must fit the typed program-text binding. This
+controlled value-boundary case is distinct from native collision evidence.
