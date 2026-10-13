@@ -41,8 +41,10 @@ handles procedural and imported bounded WAV sounds with editable emitters, loopi
 playback, independent controls and events alongside the separate Maestro speech
 renderer. Finished local chat WAV attachments now enter the same source/import path; see
 [chat sound attachment](../unity/AUDIO.md#finished-chat-audio-as-a-world-source).
-Longer media, additional codecs, live-stream adapters and continuous-background-
-audio/Live coexistence remain implementation gates.
+WAV recordings now support up to ten minutes within the same bounded file/library
+limits, using a shared PCM cache; see [long-recording playback](../unity/AUDIO.md#bounded-playback-for-longer-wav-recordings).
+Additional codecs, live-stream adapters and continuous-background-audio/Live
+coexistence remain implementation gates.
 The experimental reflection mixer and its map scheduler stay out of the production
 scene until the capture policy handles a mixed scene without indefinitely
 suppressing the user. Direct sound obstruction remains active without map baking.
@@ -9202,3 +9204,41 @@ that correction and an independent resume assertion.
 No headset, paid-provider, signing, deployment or Meta work was performed.
 Whole-world physics admission, running-world retention, automatic unloading off
 and the current world limits remain unchanged. V1 release work remains active.
+
+
+### Current Android target compiles without packaging — 2026-10-13
+
+`Build-QuestDevelopment.ps1 -CompileOnly` now runs the same complete verification,
+web build and Android browser preparation, then exports a fresh development Gradle
+project in the owned mirror. Explicit Gradle tasks compile IL2CPP/native and Java
+code and merge the manifest, assets and native libraries. A dry-run task graph
+rejects signing, installation and application packaging. Release/preparation
+options refuse before release-profile or key access. No APK or AAB is produced.
+
+The final audit verifies explicit ARM64 selection in both modules and every
+selected library's actual AArch64 ELF header and 16 KiB-compatible LOAD segments.
+The receipt includes hashes and alignments. The observed merged intermediate also
+contains five unused ARMv7 vendor dependencies, recorded separately. Final APK
+filtering and ZIP alignment remain packaging checks. The first audit incorrectly
+rejected these intermediate dependencies after compilation had succeeded; its
+correction was verified by rerunning the exact compile branch against the same
+export. Runtime C# and staged inputs did not change during that correction.
+
+Fresh verification passed **1,193 EditMode / 1,461 PlayMode checks**, with three
+expected optional private-asset skips. Headless
+`b243ffa11a1c4c538f1a23a94c58e20e` and Original Book
+`4575a52970624f2d840409e554ec6816` passed with zero client/editor exits and no real
+provider calls. The Book's thirty-two-second native playback completion receipt
+was visually inspected; gain-zero playback is not acoustic acceptance. The web
+build and Android browser compilation/lint succeeded: **128 Java tests passed**,
+two skipped, no test errors and six lint warnings. Android export and the final
+Gradle compile passed; **all 22 selected native libraries** passed the ELF audit.
+
+All **982 frozen C# files** match source and mirror. The 3,828 pre-build input
+hashes remained equal except for the documented post-compile PowerShell audit
+correction and its new helper. Ten protected raw local files remain unchanged.
+Evidence is in `.quest-evidence/android-compile/`; the repeatable command and its
+scope are in [the release-build guide](QUEST_RELEASE_BUILD.md#compile-only-android-verification).
+No headset, paid-provider, signing, deployment or Meta work was performed.
+Compilation does not establish APK, audible, physical-device or Store acceptance.
+V1 release work remains active.

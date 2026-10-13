@@ -12,7 +12,10 @@ namespace Maestro.Quest.Editor
 {
     public static class QuestDevelopmentBuild
     {
-        public static void Build()
+        public static void Build()=>Run(false);
+        public static void Export()=>Run(true);
+
+        static void Run(bool exportOnly)
         {
             QuestProjectSetup.Configure();
             AndroidExternalToolsSettings.sdkRootPath = RequiredDirectory("MAESTRO_ANDROID_SDK");
@@ -20,16 +23,24 @@ namespace Maestro.Quest.Editor
             AndroidExternalToolsSettings.jdkRootPath = RequiredDirectory("MAESTRO_ANDROID_JDK");
             PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.GameActivity;
             PlayerSettings.Android.useCustomKeystore = false;
+            PlayerSettings.Android.keystorePass = string.Empty;
+            PlayerSettings.Android.keyaliasPass = string.Empty;
             EditorUserBuildSettings.buildAppBundle = false;
-            EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
+            EditorUserBuildSettings.exportAsGoogleAndroidProject = exportOnly;
             EditorUserBuildSettings.development = true;
             EditorUserBuildSettings.allowDebugging = false;
             EditorUserBuildSettings.connectProfiler = false;
             PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Android, "MAESTRO_QUEST_DEVELOPMENT");
             if (!File.Exists("Assets/Plugins/Android/MaestroBookBrowser.aar")) throw new InvalidOperationException("Build and stage the native browser AAR first.");
             if (!File.Exists("Assets/StreamingAssets/maestro-web/index.html")) throw new InvalidOperationException("Build and stage the shared Maestro web application first.");
-            var output = Environment.GetEnvironmentVariable("MAESTRO_QUEST_APK");
-            if (string.IsNullOrEmpty(output) || !Path.IsPathFullyQualified(output) || !output.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("MAESTRO_QUEST_APK must be an absolute APK filename.");
+            var output = Environment.GetEnvironmentVariable(exportOnly ? "MAESTRO_QUEST_ANDROID_PROJECT" : "MAESTRO_QUEST_APK");
+            if (string.IsNullOrEmpty(output) || !Path.IsPathFullyQualified(output)) throw new InvalidOperationException("Set an absolute Android output path.");
+            output = Path.GetFullPath(output);
+            if (exportOnly) {
+                string builds = Path.GetFullPath("Builds") + Path.DirectorySeparatorChar;
+                if (!File.Exists(".maestro-build-mirror.json") || !output.StartsWith(builds, StringComparison.OrdinalIgnoreCase) || Directory.Exists(output) || File.Exists(output))
+                    throw new InvalidOperationException("Export to a new directory under the owned build mirror's Builds folder.");
+            } else if (!output.EndsWith(".apk", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("MAESTRO_QUEST_APK must be an absolute APK filename.");
             Directory.CreateDirectory(Path.GetDirectoryName(output));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions {
                 scenes = new[] { QuestProjectSetup.ScenePath }, locationPathName = output,
@@ -41,10 +52,10 @@ namespace Maestro.Quest.Editor
                 package = PlayerSettings.GetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android),
                 size = summary.totalSize, seconds = summary.totalTime.TotalSeconds,
                 errors = summary.totalErrors, warnings = summary.totalWarnings,
-                developmentOnly = true
+                developmentOnly = true, exportOnly = exportOnly
             }, true));
             if (summary.result != BuildResult.Succeeded) throw new InvalidOperationException("Quest development build failed: " + summary.result);
-            Debug.Log("MAESTRO_DEVELOPMENT_APK " + output);
+            Debug.Log((exportOnly ? "MAESTRO_ANDROID_PROJECT " : "MAESTRO_DEVELOPMENT_APK ") + output);
             // Finish this batch explicitly after the successful report is saved.
             // Automatic -quit can stall after a release/development target switch.
             if (Application.isBatchMode) EditorApplication.Exit(0);
@@ -63,7 +74,7 @@ namespace Maestro.Quest.Editor
             public ulong size;
             public double seconds;
             public int errors, warnings;
-            public bool developmentOnly;
+            public bool developmentOnly, exportOnly;
         }
     }
 }

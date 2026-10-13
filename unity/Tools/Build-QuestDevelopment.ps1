@@ -9,7 +9,8 @@ param(
     [switch]$UpdateBehaviourCatalog,
     [switch]$RenderImports,
     [switch]$RenderRecipes,
-    [switch]$RenderRules
+    [switch]$RenderRules,
+    [switch]$CompileOnly
 )
 $ErrorActionPreference = 'Stop'
 try { & (Join-Path $PSScriptRoot 'Build-QuestPackage.ps1') @PSBoundParameters -Channel Development; $global:LASTEXITCODE = 0 }

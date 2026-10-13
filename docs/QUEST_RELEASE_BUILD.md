@@ -660,3 +660,36 @@ browser approval page, Meta/IAM/ingress configuration, authorized deployment and
 provider/Store-channel acceptance remain open. No release build was signed or
 uploaded. See [the account evidence](QUEST_MANAGED_ACCESS.md#verified-account-preparation--2026-10-06)
 and the dedicated-key section above. Earlier checkpoint notes retain their scope.
+
+
+## Compile-only Android verification
+
+Use the development build entry point with `-CompileOnly` to check the current
+Quest target while signing and device work are on hold:
+
+```powershell
+./unity/Tools/Build-QuestDevelopment.ps1 -Editor $Editor -BuildMirror $BuildMirror -AndroidSdk $AndroidSdk -AndroidJdk $AndroidJdk -CompileOnly
+```
+
+The same owned-mirror preparation, complete native tests, original Headless/Book
+journeys, web build, Android browser tests and lint precede the export. Unity
+then exports a new Gradle directory under the mirror's `Builds` folder. This uses
+Unity's [Android project export](https://docs.unity.com/en-us/engine/6000.3/manual/platform-specific/android/building-and-delivering/build-process)
+with the existing development configuration and staged web/browser assets.
+
+The selected Gradle tasks compile the native and Java code and merge the manifest,
+native libraries and assets. A dry-run task graph refuses signing, installation
+and application-packaging tasks before they execute. The output must include the
+compiled IL2CPP library in the ARM64 tree and contain no APK or AAB. Both module
+configurations must explicitly select ARM64. The NDK ELF inspector checks every
+selected native library for AArch64 and 16 KiB-compatible LOAD segments. The
+`maestro-compile.json` receipt records their exact hashes, alignments and selected
+tasks. Other dependency ABIs can remain in the merged intermediate; the receipt
+records those separately and explicitly leaves final-package filtering unverified.
+`CompileOnly` refuses release-channel/preparation options; release key inputs are
+not used. Normal development and release packaging retain their existing paths.
+
+This check is compilation evidence only. It does not validate final APK signing,
+ZIP alignment, Store identity/entitlement, physical rendering, memory/performance,
+audibility or provider access. Actual release packaging and device acceptance
+remain separate gates. No source/test pass by itself establishes Store readiness.

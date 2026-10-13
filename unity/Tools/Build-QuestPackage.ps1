@@ -12,7 +12,8 @@ param(
     [switch]$RenderRules,
     [ValidateSet("Development","Release")][string]$Channel = "Development",
     [string]$ReleaseProfile,
-    [switch]$PrepareOnly
+    [switch]$PrepareOnly,
+    [switch]$CompileOnly
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
@@ -24,6 +25,7 @@ $editorPath = (Resolve-Path -LiteralPath $Editor).Path
 $ndkRoot = Join-Path $sdkRoot 'ndk/27.2.12479018'
 if (!(Test-Path -LiteralPath (Join-Path $ndkRoot 'source.properties'))) { throw 'Install the pinned Android NDK 27.2.12479018.' }
 $release = $Channel -eq 'Release'
+if ($CompileOnly -and ($release -or $PrepareOnly)) { throw 'CompileOnly is a development-target check; it cannot sign or prepare a release.' }
 $profile = $null
 if ($release) {
     if (!$ReleaseProfile) { throw 'Supply a public release profile.' }
@@ -79,7 +81,8 @@ $env:MAESTRO_ANDROID_NDK = $ndkRoot
 $env:MAESTRO_ANDROID_JDK = $jdkRoot
 $stamp = [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss')
 $env:MAESTRO_QUEST_APK = Join-Path $mirrorRoot $(if ($release) { "Builds/MaestroQuest-intermediate-$stamp.apk" } else { 'Builds/MaestroQuest-development.apk' })
-$method = if ($release) { 'Maestro.Quest.Editor.QuestReleaseBuild.Build' } else { 'Maestro.Quest.Editor.QuestDevelopmentBuild.Build' }
+$env:MAESTRO_QUEST_ANDROID_PROJECT = if ($CompileOnly) { Join-Path $mirrorRoot ('Builds/Android-compile-' + $stamp + '-' + [Guid]::NewGuid().ToString('N').Substring(0,8)) } else { '' }
+$method = if ($CompileOnly) { 'Maestro.Quest.Editor.QuestDevelopmentBuild.Export' } elseif ($release) { 'Maestro.Quest.Editor.QuestReleaseBuild.Build' } else { 'Maestro.Quest.Editor.QuestDevelopmentBuild.Build' }
 $childEnvironment = @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041'; MAESTRO_QUEST_RELEASE_PROFILE = ''; MAESTRO_QUEST_STORE_PASSWORD = ''; MAESTRO_QUEST_KEY_PASSWORD = ''; MAESTRO_QUEST_KEYSTORE = ''; MAESTRO_QUEST_KEY_ALIAS = '' }
 if ($release) {
     $profileTarget = Join-Path $mirrorRoot 'Release/profile.json'
@@ -87,7 +90,7 @@ if ($release) {
     Copy-Item -LiteralPath $ReleaseProfile -Destination $profileTarget -Force
     $childEnvironment.MAESTRO_QUEST_RELEASE_PROFILE = $profileTarget
 }
-$buildLog = Join-Path $logRoot $(if ($release) { 'release-build.log' } else { 'development-build.log' })
+$buildLog = Join-Path $logRoot $(if ($CompileOnly) { 'android-export.log' } elseif ($release) { 'release-build.log' } else { 'development-build.log' })
 if (Test-Path -LiteralPath $buildLog) { Remove-Item -LiteralPath $buildLog }
 Stop-QuestBuildHelper
 $process = Start-Process -FilePath $editorPath -ArgumentList @('-batchmode','-force-d3d11','-quit','-buildTarget','Android','-projectPath',('"'+$mirrorRoot+'"'),'-executeMethod',$method,'-logFile',('"'+$buildLog+'"')) -WindowStyle Hidden -PassThru -Environment $childEnvironment
@@ -96,7 +99,7 @@ $reportWrittenAt = $null
 $shutdownAt = $null
 $helperStopped = $false
 try { while (!$process.WaitForExit(1000)) {
-    if (!$reportWrittenAt -and (Test-Path -LiteralPath $buildLog) -and (Select-String -LiteralPath $buildLog -Pattern 'MAESTRO_DEVELOPMENT_APK|MAESTRO_RELEASE_INTERMEDIATE_APK|Batchmode quit successfully invoked' -Quiet)) {
+    if (!$reportWrittenAt -and (Test-Path -LiteralPath $buildLog) -and (Select-String -LiteralPath $buildLog -Pattern 'MAESTRO_ANDROID_PROJECT|MAESTRO_DEVELOPMENT_APK|MAESTRO_RELEASE_INTERMEDIATE_APK|Batchmode quit successfully invoked' -Quiet)) {
         $reportWrittenAt = [DateTime]::UtcNow
     }
     # The APK marker precedes shutdown; do not interrupt a still-working editor.
@@ -114,6 +117,31 @@ try { while (!$process.WaitForExit(1000)) {
 } } finally { Stop-QuestBuildHelper }
 if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $buildLog -Tail 60; throw "Unity Android build failed ($($process.ExitCode))." }
 & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $buildLog
+if ($CompileOnly) {
+    $project = $env:MAESTRO_QUEST_ANDROID_PROJECT
+    $exportReport = [IO.Path]::ChangeExtension($project, '.build.json')
+    if (!(Test-Path -LiteralPath (Join-Path $project 'settings.gradle')) -or !(Test-Path -LiteralPath $exportReport)) { throw 'Unity did not export the expected Android project.' }
+    $report = Get-Content -LiteralPath $exportReport -Raw | ConvertFrom-Json
+    if ($report.result -ne 'Succeeded' -or !$report.exportOnly -or !$report.developmentOnly -or $report.package -ne 'com.maestro.quest.development') { throw 'Unexpected Android export report.' }
+    $gradle = Join-Path (Split-Path -Parent $editorPath) 'Data/PlaybackEngines/AndroidPlayer/Tools/gradle/lib'
+    $launcher = @(Get-ChildItem -LiteralPath $gradle -Filter 'gradle-launcher-*.jar' -File)
+    if ($launcher.Count -ne 1) { throw 'Expected the pinned editor Gradle launcher.' }
+    $java = Join-Path $jdkRoot 'bin/java.exe'
+    $tasks = @(':unityLibrary:externalNativeBuildRelease', ':launcher:compileReleaseJavaWithJavac', ':launcher:processReleaseMainManifest', ':launcher:mergeReleaseNativeLibs', ':launcher:mergeReleaseAssets')
+    $arguments = @('-classpath', $launcher[0].FullName, 'org.gradle.launcher.GradleMain', '-p', $project, '--console=plain', '--no-daemon')
+    $dryLog = Join-Path $logRoot 'android-compile-tasks.log'
+    & $java @arguments @tasks --dry-run *> $dryLog
+    if ($LASTEXITCODE -ne 0) { throw "Android task graph failed; see $dryLog" }
+    if (Select-String -LiteralPath $dryLog -Pattern '(?i)^:[^\s]*(sign|install)[^\s]*\s|^:launcher:(packageRelease|assembleRelease|bundleRelease)\s' -Quiet) { throw 'Compile-only task graph contains signing, installation or application packaging.' }
+    $compileLog = Join-Path $logRoot 'android-compile.log'
+    & $java @arguments @tasks *> $compileLog
+    if ($LASTEXITCODE -ne 0) { throw "Android compilation failed; see $compileLog" }
+    if (@(Get-ChildItem -LiteralPath $project -Recurse -File | Where-Object { $_.Extension -in @('.apk','.aab') }).Count) { throw 'Compile-only unexpectedly produced an installable package.' }
+    & (Join-Path $PSScriptRoot 'Assert-QuestAndroidCompile.ps1') -Project $project -AndroidNdk $ndkRoot -Tasks $tasks
+    Write-Output "Android compilation verified: $project"
+    Write-Output 'No APK, signing, installation, provider calls or Store operations. Packaging and physical acceptance remain separate.'
+    return
+}
 if (!(Test-Path -LiteralPath $env:MAESTRO_QUEST_APK)) { throw 'Unity exited without producing the expected APK.' }
 $output = $env:MAESTRO_QUEST_APK
 & (Join-Path $PSScriptRoot 'Assert-QuestNoStorageProbe.ps1') -Apk $output
