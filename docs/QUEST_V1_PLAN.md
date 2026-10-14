@@ -18,6 +18,8 @@ not physical Quest acceptance.
 Saved actor water policies now share live liquid geometry across walking and
 recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
 Follow now finds bounded routes around finite water cavities; see [water-aware following](#water-aware-following--2026-10-09).
+Shared Maestro attention now supports object and authored-point targets through the
+existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
 Terrain-backed finite reservoirs now share the same liquid inventory and editing
 path; see [terrain water](QUEST_WORLD_AUTHORING.md#terrain-backed-measured-water).
@@ -9725,3 +9727,60 @@ configuration-change and web dependency-allowlist failures are retained with the
 corrections and rerun evidence. No paid provider, headset, signing, deployment or
 Meta action was performed. Other stream adapters, Unity Android network and
 simultaneous background-audio/Live acoustic acceptance remain open.
+
+### Shared Maestro attention — 2026-10-14
+
+The native `avatar.look` action directs the existing head-gaze layer at the
+tracked user, one exact object or an authored room point. Its schema generates
+the original book form; agents and programs invoke the same module. It owns only
+Maestro's gaze channel and observes the focus object without claiming its motion.
+Native dependencies use the existing acquisition lifecycle. Missing/replaced
+targets, unavailable bounds, editing, tracking loss and normal room/model
+boundaries stop the action without a restart. Upper-body gestures remain
+independent; existing walking/whole-body ownership conflicts are preserved.
+
+`avatar.attention` exposes the last sampled focus, authored point and head
+offsets, including range limits and reduced-motion suppression. The completion
+receipt preserves its last sample; passive observation is neutral after Stop.
+This reuses the selected Maestro avatar's canonical/retargeted pose path and
+adds no provider, saved pose, migration or second character controller.
+Arbitrary created NPC gaze, eye/visibility recognition and physical acceptance
+remain separate work. See [the user/agent contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
+
+The broader verification found existing movement fixtures which used a temporary
+0.8 m follow distance while retaining the saved 1.3 m default. A room save could
+reset their expectation mid-run. Those solid/water-route fixtures now use the
+same persisted preference as the product, with explicit save-and-distance checks.
+Original arrival, detour, collision and water-clearance assertions remain.
+Both interrupted full-run logs and the correction record are retained in
+`.quest-evidence/avatar-attention/`. Focused checks passed: 17 EditMode,
+208 avatar/spatial PlayMode, 20 targeted solid/water movement cases and five
+book-field tests.
+
+The complete suite passed: 1,259 EditMode and 1,556 PlayMode tests, with three
+expected optional private-asset skips; 2,958 web tests in 313 files also passed.
+Offline Headless `32cba1a1f3eb4c02a73365577baa3319` and Original Book
+`af423872fa20465aa7b86fda8515259b` passed through the shared catalog, real book
+form, native attention samples, timed completion and stopped observations.
+Headless receipt replay did not restart attention. Native tests independently
+measured an 88.6-degree rendered-head change as the target moved while the body
+remained still. The generated book form screenshot was inspected.
+
+The first full Book attempt encountered a real audio-device configuration change
+during its long-sound check; native audio correctly cancelled playback. One
+unchanged Book-only rerun passed. Its failed log, successful rerun and a guarded
+compile-only continuation authority are retained. That continuation checked the
+frozen source and all completed suite/journey receipts before finishing Android
+stages; it did not repeat the unchanged full native suite.
+
+Unsigned Android export and IL2CPP/Java compilation passed. Browser Java reports
+contain 128 passed/two skipped. All 22 selected ARM64 libraries passed ELF/16 KiB
+checks; all 152 staged web files, browser AAR and selected native hashes match.
+All 2,974 native source inputs remained frozen; 1,111 code/shader files, including
+1,105 C# files, match the tested build mirror. Four setup-generated project
+assets are recorded separately. All 14 protected pre-existing files remain
+unchanged. Catalog provenance, scoped lint and integration-driver type checks
+passed. No APK/AAB was produced.
+
+Physical-headset gaze quality and acceptance remain unverified. V1 is incomplete;
+headset, paid-provider, signing, deployment and Meta holds remain in effect.

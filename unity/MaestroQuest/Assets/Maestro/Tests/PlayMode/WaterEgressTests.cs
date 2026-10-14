@@ -39,7 +39,7 @@ namespace Maestro.Quest.Tests {
     public sealed partial class AvatarSpatialTests {
         [UnityTest]public IEnumerator WaterEgressFollowingActuallyLeavesShallowWaterWithoutChangingAvoidPolicy(){
             WaterBasin();var start=new Vector3(1,0,0);avatar.transform.position=start;Physics.SyncTransforms();
-            viewer.transform.position=new(3.5f,1.6f,0);motion.SetPreferences(.8f,1.2f);
+            viewer.transform.position=new(3.5f,1.6f,0);editor.SetAvatarMovement(.8f,1.2f);
             Assert.That(motion.Begin("Leave shallow water",AvatarSpatialMode.Follow,out var error),Is.True,error);var previous=start;
             try{
                 for(int i=0;i<360&&avatar.transform.position.x<1.7f;i++){

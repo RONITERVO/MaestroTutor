@@ -45,11 +45,14 @@ namespace Maestro.Quest.Tests {
             }finally{walk.Stop(false);}
         }
         [UnityTest]public IEnumerator SolidRouteFollowingRecoversFromAPropOnItsCurrentPath(){
-            WalkingScene();viewer.transform.position=new(3.5f,1.6f,0);motion.SetPreferences(.8f,1.2f);
-            var prop=SolidRouteProp(new(1.6f,.7f,3),new(.6f,1.4f,.8f));motion.SetPreferences(.8f,1.2f);Assert.That(motion.Begin("detour",AvatarSpatialMode.Follow,out var error),Is.True,error);
+            WalkingScene();viewer.transform.position=new(3.5f,1.6f,0);editor.SetAvatarMovement(.8f,1.2f);
+            var prop=SolidRouteProp(new(1.6f,.7f,3),new(.6f,1.4f,.8f));Assert.That(motion.Begin("detour",AvatarSpatialMode.Follow,out var error),Is.True,error);
             try{
                 for(int i=0;i<60&&avatar.transform.position.x<.4f;i++)yield return null;Assert.That(avatar.transform.position.x,Is.GreaterThan(.3f));
                 prop.transform.position=new(1.6f,.7f,0);prop.GetComponent<RigidRoomItem>().Teleported();Physics.SyncTransforms();float lateral=0;
+                // Saving placement broadcasts room changes. Use the same persisted preference as the user,
+                // so this obstacle test cannot silently fall back to the saved 1.3 m default.
+                editor.SaveNow();Assert.That(motion.Distance,Is.EqualTo(.8f));
                 for(int i=0;i<550&&avatar.transform.position.x<2.6f;i++){yield return null;lateral=Mathf.Max(lateral,Mathf.Abs(avatar.transform.position.z));}
                 Assert.That(lateral,Is.GreaterThan(.6f),motion.Status);Assert.That(avatar.transform.position.x,Is.GreaterThan(2.6f),motion.Status);
             }finally{motion.Stop();}

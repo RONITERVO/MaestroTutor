@@ -34789,6 +34789,222 @@
       ]
     },
     {
+      "id": "avatar.look",
+      "version": 1,
+      "label": "Look toward something",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ],
+            "x-resource": "object"
+          },
+          "focus": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "user"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "The user"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ]
+                  },
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "objectId"
+                ],
+                "additionalProperties": false,
+                "title": "An object"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "point"
+                    ]
+                  },
+                  "point": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "kind",
+                  "point"
+                ],
+                "additionalProperties": false,
+                "title": "A place in the world"
+              }
+            ],
+            "x-discriminators": [
+              "kind"
+            ],
+            "title": "Attention"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "target",
+          "focus",
+          "seconds"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "avatarAttention.v1"
+        ]
+      },
+      "duration": "timed",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "gaze"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "avatar.spatialReady"
+      ],
+      "description": "Direct Maestro's existing head-gaze layer toward the tracked user, the live collision-bounds centre of one exact object, or an authored room point. This supports the included and selected compatible Maestro avatar, not arbitrary created character rigs. Object focus follows normal motion and may stay held by the user; it never claims or moves that object. Missing/replaced objects or unavailable bounds end the action. Points follow the authored world when its view moves. Head yaw is limited to 60 degrees and pitch to 30 degrees, with smooth approach; the body never turns or walks for this action. Reduced motion leaves the head unchanged and reports applied=false. The result and avatar.attention report the latest sampled focus and bounded angles, not eye contact, visual recognition, visibility through walls or guaranteed alignment. Gaze coexists with the existing upper-body gesture channel; walking and whole-body animation retain their existing conflicts. Stop, editing, grabbing Maestro, tracking/focus loss and room/model changes end attention. No saved pose, program, automatic restart or new provider request is created.",
+      "example": {
+        "target": "maestro",
+        "focus": {
+          "kind": "object",
+          "objectId": "book"
+        },
+        "seconds": 5
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "focus": {
+            "type": "string",
+            "enum": [
+              "none",
+              "user",
+              "object",
+              "point"
+            ]
+          },
+          "objectId": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 32
+          },
+          "point": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -3.4028234663852886E+38,
+                "maximum": 3.4028234663852886E+38
+              },
+              "y": {
+                "type": "number",
+                "minimum": -3.4028234663852886E+38,
+                "maximum": 3.4028234663852886E+38
+              },
+              "z": {
+                "type": "number",
+                "minimum": -3.4028234663852886E+38,
+                "maximum": 3.4028234663852886E+38
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "yaw": {
+            "type": "number",
+            "minimum": -60.0,
+            "maximum": 60.0
+          },
+          "pitch": {
+            "type": "number",
+            "minimum": -30.0,
+            "maximum": 30.0
+          },
+          "limited": {
+            "type": "boolean"
+          },
+          "applied": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "focus",
+          "objectId",
+          "point",
+          "yaw",
+          "pitch",
+          "limited",
+          "applied"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "avatar.follow.user",
       "version": 1,
       "label": "Follow user",
@@ -44356,6 +44572,53 @@
       ]
     },
     {
+      "id": "avatar.attention",
+      "version": 1,
+      "type": {
+        "record": {
+          "active": "boolean",
+          "focus": "text",
+          "objectId": "text",
+          "point": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "yaw": "number",
+          "pitch": "number",
+          "limited": "boolean",
+          "applied": "boolean"
+        }
+      },
+      "label": "Maestro attention",
+      "description": "Passive latest head-gaze sample from the shared native layer, including legacy Look/Follow controls. point is in authored room metres. active means a gaze owner exists; applied requires a rendered gaze sample with reduced motion off. limited means the requested direction exceeds the head's yaw/pitch bounds. These angles are applied offsets, not eye-contact, occlusion or perceptual quality evidence. An inactive owner reports neutral fields. Reading never starts attention or loads a target.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "enum": [
+              "maestro"
+            ],
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "avatarAttention.v1"
+      ]
+    },
+    {
       "id": "physics.environment",
       "version": 1,
       "type": {
@@ -45404,8 +45667,12 @@
       "sha256": "be347164ab428f13cf8c265993e7fe2d44eafae9a94e692410f33eb855bb4744"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.Attention.cs",
+      "sha256": "dec7d2b7d150c957e483f14d763068a64d0eb919263d8016a5aeb0c7555690a6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "973e1fa3eda6a2b3b6a2cad1965361a201b03f9c11595bbd9e7f2d0edf907869"
+      "sha256": "75d7f0f5fc48b000fbb5338d82c752eeb24b6e085f6163349d7def029b046259"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -45648,6 +45915,10 @@
       "sha256": "dc19d48d44917a733f63968cb530f95ac2096036e702222e71e1679d538ae668"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarAttentionCapability.cs",
+      "sha256": "4789cc903ee013aec413a828f250d08da63ef5070aba98effa0855e6fe84190f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
       "sha256": "e48abe61fc90a9142c154a7197f3e092386dffc4ce509023412c2e3a5fcddf02"
     },
@@ -45661,7 +45932,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "e8e38ef623942a3cde24df1c959b00527bb437c91970ea1b0b3b4d03d91af6d0"
+      "sha256": "ff17b37163a976355a641ea86c224960030930cab050a4b57529af3ac4dea132"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -46409,7 +46680,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "e21802b7876b9b419494ef68448efc2a3e3a4e64b68d2ecad2f72675d098d546"
+      "sha256": "1a7139f9432d2485965ecd111b164346cee961c1e16e457c7ec5c6e06454813e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -47553,7 +47824,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "44a8ff44b980204354b767600e4afed54c27ab882991aa05f50899d012163386"
+      "sha256": "5f4c785c1c8c29a95451cfa29a634025dafe02ffc71c835ad8951a92ae1a553c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

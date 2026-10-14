@@ -45,7 +45,7 @@ namespace Maestro.Quest.Programs
             new ScanDrawingCapability(),new ScanPlacementCapability(),new SurfacePlacementCapability(),new RoomEnvironmentCapability(),new PhysicsSimulationCapability(),new PhysicsEnvironmentCapability(),new EnvironmentProfileSaveCapability(),new EnvironmentProfileRemoveCapability(),new EnvironmentAssignCapability(),new PhysicsImpulseCapability(),
             new PhysicsStopCapability(),new LaunchObjectCapability(),new CatchObjectCapability(),
             new ThrowRecordingCapability(),
-            new LookAtUserCapability(),
+            new LookAtUserCapability(),new AvatarAttentionCapability(),
             new FollowUserCapability(),new NavigateObjectCapability(),new FollowObjectCapability(),new HoldObjectCapability(),
         });
     }

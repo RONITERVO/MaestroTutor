@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(allowed,Is.EqualTo(expected),navigation.FollowRouteStatus);done(points);
         }
         [UnityTest]public IEnumerator WaterRouteFollowingWalksAroundAPoolWithoutCrossingIt(){
-            WaterBasin();yield return NavigationBuilt();viewer.transform.position=new Vector3(3,1.6f,0);motion.SetPreferences(.8f,1.2f);
+            WaterBasin();yield return NavigationBuilt();viewer.transform.position=new Vector3(3,1.6f,0);editor.SetAvatarMovement(.8f,1.2f);
             Assert.That(motion.Begin("around water",AvatarSpatialMode.Follow,out var e),Is.True,e);
             var previous=avatar.transform.position;float lateral=0;uint built=navigation.BuildRevision;
             for(int i=0;i<360&&avatar.transform.position.x<2.1f;i++){
@@ -31,18 +31,19 @@ namespace Maestro.Quest.Tests {
         }
         [UnityTest]public IEnumerator WaterRouteFollowingStopsAtTheChosenDistanceWithABookNearTheUser(){
             WaterBasin();yield return NavigationBuilt();viewer.transform.position=new Vector3(3,1.6f,0);var book=editor.Find("book");book.transform.position=new Vector3(2.9f,1,0);
-            motion.SetPreferences(.8f,1.2f);Assert.That(motion.Begin("stand off",AvatarSpatialMode.Follow,out var e),Is.True,e);
+            editor.SetAvatarMovement(.8f,1.2f);Assert.That(motion.Begin("stand off",AvatarSpatialMode.Follow,out var e),Is.True,e);
             for(int i=0;i<360&&avatar.transform.position.x<2.1f;i++)yield return null;
             Assert.That(avatar.transform.position.x,Is.GreaterThan(2.1f),motion.Status);
             Assert.That(Vector3.ProjectOnPlane(viewer.transform.position-avatar.transform.position,Vector3.up).magnitude,Is.GreaterThanOrEqualTo(.78f));motion.Stop();
         }
         [UnityTest]public IEnumerator WaterRouteReplansWhenWaterMovesAcrossAnAlreadyAcceptedPath(){
             string pool=WaterBasin();yield return NavigationBuilt();var liquid=editor.Find(pool);liquid.transform.position=new Vector3(1.4f,-.2f,3);liquid.GetComponent<RigidRoomItem>().Teleported();
-            viewer.transform.position=new Vector3(3.5f,1.6f,0);motion.SetPreferences(.8f,1.2f);
+            viewer.transform.position=new Vector3(3.5f,1.6f,0);editor.SetAvatarMovement(.8f,1.2f);
             Assert.That(motion.Begin("moving water",AvatarSpatialMode.Follow,out var e),Is.True,e);
             for(int i=0;i<30&&avatar.transform.position.x<.3f;i++)yield return null;
             Assert.That(avatar.transform.position.x,Is.GreaterThan(.1f));uint built=navigation.BuildRevision;
             liquid.transform.position=new Vector3(1.4f,-.2f,0);liquid.GetComponent<RigidRoomItem>().Teleported();Physics.SyncTransforms();
+            editor.SaveNow();Assert.That(motion.Distance,Is.EqualTo(.8f),"Room saves preserve the user-selected following distance");
             var previous=avatar.transform.position;float lateral=0;
             for(int i=0;i<420&&avatar.transform.position.x<2.6f;i++){
                 yield return null;var current=avatar.transform.position;lateral=Mathf.Max(lateral,Mathf.Abs(current.z));

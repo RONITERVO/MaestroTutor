@@ -868,6 +868,17 @@ try{
   assert.equal((after.selection as unknown as {playbackStatus:string}).playbackStatus,'inactive');
   await writeFile(join(directory,'book-native-object-walk.json'),JSON.stringify({boundary:'The book starts actual native grounded movement with its saved imported gait; completion releases pose ownership. No headset/provider or calibrated gait claim.',gait,receipt,after},null,2));
  }
+ await openNamedAction('Look toward something','avatar.look');
+ await page.getByLabel('Attention',{exact:true}).selectOption('2');
+ for(const [axis,value] of Object.entries({x:2,y:1.6,z:2}))await page.getByLabel('Action inputs focus point '+axis,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs seconds',{exact:true}).fill('0.8');
+ const attentionPoint=await runNamedAction('avatar.look');assert.equal(attentionPoint.output!.focus,'point');assert.equal(attentionPoint.output!.applied,true);
+ await page.getByLabel('Attention',{exact:true}).selectOption('1');
+ await page.getByLabel('Action inputs focus objectId',{exact:true}).selectOption('book');
+ const attentionObject=await runNamedAction('avatar.look');assert.equal(attentionObject.output!.objectId,'book');assert.equal(attentionObject.output!.applied,true);
+ await page.getByRole('heading',{name:'Look toward something',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-avatar-attention.png')});
+ const attentionStopped=await readResourceFact('avatar.attention','Maestro attention',{target:'maestro'});assert.equal(attentionStopped.active,false);
+ await writeFile(join(directory,'book-native-avatar-attention.json'),JSON.stringify({boundary:'Original book schema-generated place/object focus controls, actual Unity gaze receipts and passive stopped fact. No provider or headset claim.',point:attentionPoint,object:attentionObject,stopped:attentionStopped},null,2));
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
  // Observe one quiet placement-capture interval before the one-shot Undo.
  const placementSignature=()=>page!.evaluate(()=>JSON.stringify(window.nativeBookEvidence!().state!.objects.map(o=>[o.id,o.objectRevision,o.position])));

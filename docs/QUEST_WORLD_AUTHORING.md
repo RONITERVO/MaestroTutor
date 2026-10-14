@@ -1336,3 +1336,33 @@ undone and reset at room boundaries/editor disable. Changing an emitter's saved
 role follows the normal emitter edit rule: its old playback is cancelled, and a
 new playback uses that role. Volume controls do not enable microphone access or
 make echo cancellation ready.
+
+## Directing Maestro's attention
+
+Use **Look toward something** (`avatar.look`) to choose the user, an exact object,
+or a place in authored room coordinates, for 0.1–30 seconds. The book, agent and
+programs use the same action. It reuses Maestro's existing head layer and supports
+the included avatar and compatible selected Maestro models; it does not yet add
+gaze joints to arbitrary created robots or imported NPCs.
+
+An object focus follows the centre of its available collision bounds, including
+while that object is held or independently moved. Attention owns Maestro's gaze
+channel only. Missing, replaced or unavailable targets end it; they are never
+silently replaced with a similar object. A point moves with the authored world.
+The action turns the head smoothly within 60° yaw and 30° pitch, without walking
+or rotating the body. Upper-body gestures can continue independently. Existing
+walking and whole-body animation conflicts still apply.
+
+Read `avatar.attention` for the last native sample: focus, exact object ID,
+authored point, bounded offsets, and whether the target exceeds the head range.
+`applied` is false with reduced motion or before the first gaze sample. It means a
+head offset was applied, not that Maestro has eye contact or can see through an
+occluding surface. The completion receipt preserves the final sample; after Stop,
+the passive fact becomes inactive. Grabbing Maestro, posing, editing, losing
+tracking/focus, replacing the model or changing rooms interrupts attention.
+Nothing restarts automatically or changes the saved pose.
+
+This attention choice is independent of each actor's real-room collision policy,
+visual occlusion and passthrough opacity. For example, Maestro may look toward a
+robot on lower virtual terrain even when the robot ignores the scanned floor.
+Whether Maestro can walk there is a separate navigation/clearance decision.

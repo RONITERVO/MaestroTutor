@@ -12,7 +12,7 @@ namespace Maestro.Quest.Avatar
 
     /// <summary>Explicitly owned movement; editing, grips, recovery and interruption take priority.</summary>
     [DefaultExecutionOrder(125)]
-    public sealed class AvatarSpatialMotion : MonoBehaviour
+    public sealed partial class AvatarSpatialMotion : MonoBehaviour
     {
         MaestroAvatar avatar;
         RoomItem item;
@@ -84,7 +84,7 @@ namespace Maestro.Quest.Avatar
             // An acquired takeover already stopped an older actor via the arbiter.
             // A delegated module borrows its scheduler's reservation.
             Stop();ownershipLease=acquired;
-            manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; avoidRouteSolids=false; mode = value; yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
+            manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; avoidRouteSolids=false; mode = value; ResetAttention(); yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
             avatar.SetEditing(true,preserveUpperBody:true); avatar.SpatialWalk(0);
             Say(value == AvatarSpatialMode.Manual ? "Maestro stick active — center it to stop" : value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
         }
@@ -92,7 +92,7 @@ namespace Maestro.Quest.Avatar
         public void Stop()
         {
             if (!Active) return;
-            owner = null; avoidRouteSolids=false; corners = Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs();ownershipLease?.Dispose();ownershipLease=null;
+            owner = null; ResetAttention(); avoidRouteSolids=false; corners = Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs();ownershipLease?.Dispose();ownershipLease=null;
             if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");
@@ -232,11 +232,16 @@ namespace Maestro.Quest.Avatar
             if(editor&&editor.RuntimeGate.Held)return;
             if (!Active || mode == AvatarSpatialMode.Manual || !avatar || !room.Viewer) return;
             var head = avatar.PoseRig.CanonicalBone(PoseJoint.Head);
-            var target = transform.InverseTransformDirection(room.Viewer.position-head.position);
+            if(!head){Stop();Say("Maestro head is unavailable");return;}
+            if(!ReadAttention(out var focus,out var error)){Stop();Say(error);return;}
+            var target = transform.InverseTransformDirection(focus-head.position);
             float targetYaw = Mathf.Clamp(Mathf.Atan2(target.x,target.z)*Mathf.Rad2Deg,-60,60);
             float targetPitch = Mathf.Clamp(-Mathf.Atan2(target.y,new Vector2(target.x,target.z).magnitude)*Mathf.Rad2Deg,-30,30);
             float blend = 1-Mathf.Exp(-6*Mathf.Min(Time.deltaTime,.05f));
             yaw = Mathf.Lerp(yaw,targetYaw,blend); pitch = Mathf.Lerp(pitch,targetPitch,blend);
+            attentionPoint=editor.Frame.PointToRoom(focus);attentionSampled=RoomRecipe.Finite(attentionPoint);
+            attentionLimited=Mathf.Abs(Mathf.Atan2(target.x,target.z)*Mathf.Rad2Deg)>60||Mathf.Abs(-Mathf.Atan2(target.y,new Vector2(target.x,target.z).magnitude)*Mathf.Rad2Deg)>30;
+            attentionApplied=!avatar.ReducedMotion;
             if (!avatar.ReducedMotion) head.rotation = Quaternion.AngleAxis(yaw,transform.up)*Quaternion.AngleAxis(pitch,transform.right)*head.rotation;
         }
         void OnApplicationPause(bool value) { paused = value; if (value) Stop(); }

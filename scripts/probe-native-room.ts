@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {probeAvatarAttention} from './probe-avatar-attention';
 import {probeGroundedTravel,probeGroundedFollowing} from './probe-grounded-travel';
 import {prepareObjectWalk,probeObjectWalk} from './probe-object-walk';
 import {prepareAgentModelGeometry,runAgentModelGeometryProof} from './probe-agent-model-geometry';
@@ -1094,6 +1095,7 @@ try{
   const physicsBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.simulation',version:1}}]);
   const physicsState=physicsBefore.catalog?.value as {stateId:string;ready:boolean};if(!physicsState?.ready)throw new Error('The explicitly synthetic probe floor is unavailable');
   await execute([{action:'execution',execution:{operation:'start',call:{id:'physics.simulation.set',version:1,arguments:{operation:'start',stateId:physicsState.stateId}}}}]);
+  await probeAvatarAttention(execute,directory);
   const walkingTargets=await probeGroundedTravel(execute,directory);
   await probeGroundedFollowing(execute,directory,walkingTargets);
   await probeObjectWalk(execute,directory,gait);

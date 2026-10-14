@@ -46,3 +46,17 @@ it('uses the same book variant form for a live endpoint without keeping clip or 
  fireEvent.change(screen.getByLabelText('Sound stream endpoint'),{target:{value:'https://other.example/live.mp3'}});
  expect(onChange).toHaveBeenCalledWith({...draft,stream:{endpoint:'https://other.example/live.mp3'}});
 });
+
+it('lets attention switch between object, place and user without hidden stale targets',()=>{
+ const action=capabilityDefinition('avatar.look')!,call=action.example!,schema=action.input.properties!.focus;
+ const point=changeCapabilityVariant(schema,2,call.focus,[]);point.point={x:2,y:1.6,z:2};
+ expect(point.kind).toBe('point');expect(point).not.toHaveProperty('objectId');
+ expect(validateCapabilityArguments(action.id,action.version,{...call,focus:point})).toBeNull();
+ const onChange=vi.fn(),screen=render(<CapabilityFields label="Focus" schema={schema} value={point} objects={[]} onChange={onChange}/>);
+ fireEvent.change(screen.getByLabelText('Focus point x'),{target:{value:'3'}});
+ expect(onChange).toHaveBeenCalledWith({...point,point:{x:3,y:1.6,z:2}});
+ const person=changeCapabilityVariant(schema,0,point,[]);
+ expect(person).toEqual({kind:'user'});expect(validateCapabilityArguments(action.id,action.version,{...call,focus:person})).toBeNull();
+ const object=changeCapabilityVariant(schema,1,person,[]);object.objectId='book';
+ expect(object).toEqual({kind:'object',objectId:'book'});expect(validateCapabilityArguments(action.id,action.version,{...call,focus:object})).toBeNull();
+});
