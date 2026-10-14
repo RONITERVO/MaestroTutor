@@ -13,10 +13,13 @@ namespace Maestro.Quest.Creation
         internal RoomLight Source;
         internal string Definition,StateId;
         internal bool Enabled,Overridden;
-        internal float Intensity;
+        internal float Intensity,AttachmentReach;
+        internal ScanSpatialPlacement ScanPlacement;
         internal string Color;
         internal UnityEngine.Color Pigment;
-        internal void Synchronize(RoomLight source) {
+        internal void Synchronize(RoomLight source,RoomObjectData owner) {
+            AttachmentReach=RoomLightObservation.AttachmentReach(owner.recipe,source.part);
+            ScanPlacement=ScanSpatialPlacement.From(owner);
             string encoded=JsonUtility.ToJson(source);if(Definition==encoded)return;
             Definition=encoded;Source=source.Copy();Reset();
         }
@@ -34,7 +37,7 @@ namespace Maestro.Quest.Creation
             var present=new HashSet<(string,string)>();
             foreach(var obj in document.objects)foreach(var light in obj.lights){
                 var key=(obj.id,light.id);present.Add(key);
-                if(!lightRuntime.TryGetValue(key,out var state)){state=new RoomLightRuntime();lightRuntime.Add(key,state);}state.Synchronize(light);
+                if(!lightRuntime.TryGetValue(key,out var state)){state=new RoomLightRuntime();lightRuntime.Add(key,state);}state.Synchronize(light,obj);
             }
             foreach(var key in lightRuntime.Keys.Where(k=>!present.Contains(k)).ToArray())lightRuntime.Remove(key);
         }

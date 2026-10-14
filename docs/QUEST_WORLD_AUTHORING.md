@@ -1227,3 +1227,34 @@ the whole-world physics, retention and automatic-unloading policies are unchange
 Native `active` reports an enabled light, not proof of visible illumination,
 shadows, physical alignment or hardware performance. Current evidence and remaining
 acceptance are recorded in the v1 delivery plan.
+
+
+## Lighting dependencies during native loading — 2026-10-14
+
+`world.region.retention` now includes `lighting`. An effective local lamp can
+contribute to the observed world while its owning object is off-screen. Its
+conservative range envelope retains that owner; hard-shadow lamps also retain
+potential casters overlapping the envelope. Disabled and zero-intensity lamp
+controls create no lighting demand. Area membership and physical connections
+still propagate these dependencies through the existing retention graph.
+
+The primary viewer, prediction/grace interval, scoped cameras, dormant display
+preparation and owned virtual captures use the same dependency calculation.
+Captures prepare required inputs and wait for imported shadow geometry. Missing
+assets or unavailable native lamps fail explicitly, preserving an earlier
+published snapshot. A loading model's placeholder is never evidence that its
+final shadow geometry cannot contribute.
+
+These envelopes remain separate from occupied visual/collision bounds. Spot
+lights use enclosing range bounds; recipe attachments include the swept reach of
+ancestor offsets, without copying recipes every frame. Exact scanned-plane
+bindings are reprojected through the shared room frame; intentionally hidden
+unmatched layers do not keep a capture waiting for an impossible lamp or caster.
+Native reads remain passive and do not create lamps, reload assets or edit source.
+
+This is conservative dependency accounting, not a visibility test or proof of
+rendered shadow quality. It can retain more geometry than actually contributes.
+It does not add reflection probes, sun shadows, shadowing from real obstacles,
+automatic unloading or larger scene limits. Whole-world physics admission and
+running-world retention remain mandatory. No room/prototype migration is needed;
+the new reason is transient and the catalog remains the shared interface.

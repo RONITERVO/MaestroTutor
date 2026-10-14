@@ -35,6 +35,10 @@ namespace Maestro.Quest.Creation
             foreach(var lease in observationCameras)if(lease.Camera&&lease.Camera.gameObject.activeInHierarchy){
                 var view=new RoomObservationView(lease.Camera,lease.SourceLayers);if(view.Reliable)captures.Add((lease,view));
             }
+            var directLights=direct!=null?LightViewDependencies(new[]{direct}):new HashSet<string>();
+            var predictedLights=predicted!=null?LightViewDependencies(new[]{predicted}):new HashSet<string>();
+            var captureLights=new Dictionary<ObservationCamera,HashSet<string>>();
+            foreach(var capture in captures)captureLights[capture.owner]=LightViewDependencies(new[]{capture.view});
             foreach(var pair in dormantNative){
                 if(pair.Value.Phase==NativeEntityPhase.Failed)continue;
                 var spatial=ReadDormantSpatial(pair.Key,pair.Value,out _,out var prepared,out var placed);
@@ -42,12 +46,12 @@ namespace Maestro.Quest.Creation
                 // unknown for retention, but do not acquire a useless hidden view.
                 if(!prepared||!placed){viewerDisplayDemand.Remove(pair.Key);continue;}
                 spatial=spatial.Transform(transform.localToWorldMatrix);int revision=ObjectRevision(pair.Key);
-                int priority=direct?.Includes(spatial)==true?(spatial.Visual.Known?0:2):predicted?.Includes(spatial)==true?1:4;
+                int priority=(directLights.Contains(pair.Key)||direct?.Includes(spatial)==true)?(spatial.Visual.Known?0:2):(predictedLights.Contains(pair.Key)||predicted?.Includes(spatial)==true)?1:4;
                 if(priority<4){
                     if(!viewerDisplayDemand.TryGetValue(pair.Key,out var demand))viewerDisplayDemand[pair.Key]=demand=new();
                     demand.Revision=revision;demand.Priority=priority;demand.Until=now+ObservationGrace;
                 }
-                foreach(var capture in captures)if(capture.view.Includes(spatial)){
+                foreach(var capture in captures)if(captureLights[capture.owner].Contains(pair.Key)||capture.view.Includes(spatial)){
                     if(!captureDisplayDemand.TryGetValue(pair.Key,out var demand))captureDisplayDemand[pair.Key]=demand=new();
                     demand.Revision=revision;demand.Priority=spatial.Visual.Known?0:2;demand.Captures.Add(capture.owner);
                 }

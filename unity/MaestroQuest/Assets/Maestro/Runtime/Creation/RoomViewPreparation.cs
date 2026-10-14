@@ -46,7 +46,7 @@ namespace Maestro.Quest.Creation
                         string issue=await load;load=null;Check();if(issue!=null)throw new InvalidOperationException(issue);
                         continue; // The viewer may have turned toward another area.
                     }
-                    if(ViewModelsLoading(camera)){await Task.Yield();continue;}
+                    if(ViewModelsLoading(camera)||LightingViewLoading(camera)){await Task.Yield();continue;}
                     Check();if(!RenderCameraView(camera,out var image,out var error))throw new InvalidOperationException(error);
                     return image;
                 }
@@ -60,6 +60,7 @@ namespace Maestro.Quest.Creation
         string[] MissingViewEntities(Camera camera){
             if(!Frame.Valid)throw new InvalidOperationException("The room coordinate frame is unavailable");
             var view=new RoomObservationView(camera,sourceLayers:-1);var missing=new List<string>();
+            var lighting=LightViewDependencies(new[]{view});
             if(!view.Reliable)throw new InvalidOperationException("The virtual camera projection is unavailable");
             foreach(var pair in dormantNative){
                 if(pair.Key=="book")continue;
@@ -67,7 +68,7 @@ namespace Maestro.Quest.Creation
                 // Missing scan anchors intentionally hide anchored ink in the
                 // viewer too. Unknown geometry remains a capture dependency.
                 if(prepared&&!placed)continue;
-                if(view.Includes(bounds.Transform(transform.localToWorldMatrix)))missing.Add(pair.Key);
+                if(lighting.Contains(pair.Key)||view.Includes(bounds.Transform(transform.localToWorldMatrix)))missing.Add(pair.Key);
             }
             return missing.ToArray();
         }

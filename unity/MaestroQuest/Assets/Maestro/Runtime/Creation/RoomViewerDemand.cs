@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation
             if(sampledViewer!=camera){viewerPrediction.Reset();sampledViewer=camera;}
             if(ViewerTrackingReady)viewerPrediction.Sample(camera.transform.position,camera.transform.rotation,now);else viewerPrediction.Reset();
             var view=PredictedViewerView(now);
-            VisitObservedNative(new[]{view},id=>viewerDemandUntil[id]=now+ObservationGrace);
+            VisitViewDependencies(new[]{view},id=>viewerDemandUntil[id]=now+ObservationGrace);
             foreach(var id in viewerDemandUntil.Keys.Where(id=>!HasSavedObject(id)||viewerDemandUntil[id]<=now).ToArray())viewerDemandUntil.Remove(id);
         }
         RoomObservationView PredictedViewerView(double now)
@@ -41,10 +41,10 @@ namespace Maestro.Quest.Creation
             if(!sampledViewer||camera!=sampledViewer||!ReferenceEquals(observationJournal,journal)){
                 // Startup, viewer replacement or a journal boundary can be read
                 // before LateUpdate. No motion sample is evidence of no demand.
-                VisitObservedNative(new[]{new RoomObservationView(camera,uncertain:true)},id=>graph.Retain(id,RoomRetentionReason.ApproachingView));return;
+                VisitViewDependencies(new[]{new RoomObservationView(camera,uncertain:true)},id=>graph.Retain(id,RoomRetentionReason.ApproachingView));return;
             }
             double now=Time.unscaledTimeAsDouble;
-            VisitObservedNative(new[]{PredictedViewerView(now)},id=>graph.Retain(id,RoomRetentionReason.ApproachingView));
+            VisitViewDependencies(new[]{PredictedViewerView(now)},id=>graph.Retain(id,RoomRetentionReason.ApproachingView));
             foreach(var pair in viewerDemandUntil)if(pair.Value>now)graph.Retain(pair.Key,RoomRetentionReason.RecentObservation);
         }
         void ResetViewerDemand(){sampledViewer=null;observationJournal=null;viewerSampleTime=double.NaN;viewerPrediction.Reset();viewerDemandUntil.Clear();}

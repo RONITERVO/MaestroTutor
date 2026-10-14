@@ -9477,3 +9477,58 @@ physics admission, running-world retention, automatic unloading off and the curr
 residency/streaming, broader shadows, physical performance, real-provider behavior
 and the previously recorded audio/Store acceptance gaps remain open. V1 is active
 and is not release-complete.
+
+
+## Off-screen lighting dependencies — 2026-10-14
+
+An off-screen lamp or shadow caster can affect a visible scene. The shared native
+retention graph now includes a `lighting` reason for effective lamps and potential
+casters in their conservative influence bounds. Viewer prediction, grace periods,
+scoped cameras, dormant display preparation and virtual captures use the same
+calculation. Disabling a lamp or setting zero intensity releases its current
+lighting demand. Influence bounds remain separate from occupied geometry.
+
+Recipe attachments account for ancestor rotation without copying recipes every
+frame. Exact scanned-plane bindings reproject through the common room frame;
+intentionally hidden unmatched layers do not block capture. Captures prepare
+required inputs and wait for pending imported shadow geometry. Missing assets or
+unavailable native lamps fail explicitly and preserve the previous published
+snapshot. Source formats remain room 39 / prototype 8, with no migration.
+
+The complete final native suite passed **1,205 EditMode / 1,528 PlayMode** checks,
+with three expected optional private-asset skips. Eleven new PlayMode cases cover
+indirect dependency, passive readback, effective controls, scoped/predicted views,
+dormant inputs, capture failure/waiting, recipe attachments and scan anchors.
+All **2,735 frozen native inputs**, including **1,009 C# files**, were checked;
+C# and shader hashes match the build mirror. The C# count now also includes four
+ignored vendor files that the previous inventory omitted.
+
+Complete offline Headless **e61d8fa898e34a6a87a8d2d50e6fbaea** and Original Book
+**21aa0e20b4a44f938f96e85481ff30d2** journeys passed with zero client/editor exits.
+Both retain prior checks and verify the lighting reason through shared interfaces.
+The book's one-member area has lighting demand without direct visibility, then
+releases it on lamp switch-off. Its generated inspector was visually checked.
+The initial Headless attempt exposed a probe-only no-input fact argument error;
+that probe was corrected and both journeys rerun. Application/native source did
+not change after the full suite.
+
+**2,940 web tests across 312 files** passed, followed by **77** checks of the freshly
+captured native catalog/catching fixtures. Lint, probe types, catalog/source and
+asset integrity passed. Shared web/browser build, Unity Android export and unsigned
+Gradle compilation passed. Unchanged Java results (**128 passed / two skipped**)
+were confirmed up to date. All **22 selected ARM64 libraries** pass the ELF/16 KiB
+checks; the **148 web files**, browser AAR and native staging hashes match.
+
+Evidence is in `.quest-evidence/light-observation/` and the named journey folders.
+A recorded pre-rerun probe hash had a stale backslash alias alongside its corrected
+slash entry; the audit preserves the original record and verifies the corrected
+pre-rerun hash against both successful journeys. The ten protected raw files and
+four untracked Store files remain byte-for-byte unchanged.
+
+No APK/AAB, headset query/install, paid-provider, signing, deployment or Meta action
+ran. This is conservative residency/preparation accounting and can retain more
+geometry than contributes. Whole-world physics admission and running-world
+retention stay mandatory; automatic unloading stays off and the 64-object /
+25-metre / four-height-field limits remain. Regional streaming, broader shadows,
+physical performance, real-provider behavior and existing audio/Store acceptance
+remain open. V1 remains active and incomplete.

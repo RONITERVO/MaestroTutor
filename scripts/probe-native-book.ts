@@ -471,6 +471,23 @@ try{
  assert.ok(demandReasons.includes('approachingView'),JSON.stringify(viewerDemand));assert.ok(demandReasons.includes('recentObservation'),JSON.stringify(viewerDemand));
  await page.screenshot({path:join(directory,'book-native-viewer-demand.png')});
  await writeFile(join(directory,'book-native-viewer-demand.json'),JSON.stringify({boundary:'Original book placement form and dependency inspector against actual Unity frame-owned viewer demand. No headset or automatic-streaming proof.',viewerPose,viewPosition,viewerDemand},null,2));
+ const lampPosition={x:viewerPose.position.x+Math.cos(viewYaw)*6-Math.sin(viewYaw)*3,y:viewerPose.position.y,z:viewerPose.position.z-Math.sin(viewYaw)*6-Math.cos(viewYaw)*3};
+ await moveObservedBall(lampPosition);
+ await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByLabel('Action inputs settings range',{exact:true}).fill('8');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();await runNamedAction('object.light.edit');
+ const lampDemand=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
+ assert.ok((lampDemand.reasons as unknown as string[]).includes('lighting'),JSON.stringify(lampDemand));
+ assert.ok(!(lampDemand.reasons as unknown as string[]).includes('observation'),'Lamp object is behind the actual native camera');
+ await page.screenshot({path:join(directory,'book-native-light-demand.png')});
+ await openNamedAction('Control a lamp','object.light.control');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs enabled',{exact:true}).selectOption('false');await runNamedAction('object.light.control');
+ const lampReleased=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
+ assert.ok(!(lampReleased.reasons as unknown as string[]).includes('lighting'),JSON.stringify(lampReleased));
+ await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Variant',{exact:true}).selectOption('1');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();await runNamedAction('object.light.edit');
+ await writeFile(join(directory,'book-native-light-demand.json'),JSON.stringify({boundary:'Original book forms and native off-camera illumination dependency; turning a lamp off releases its lighting reason. Conservative demand, no provider/headset or rendered-quality claim.',lampPosition,lampDemand,lampReleased},null,2));
  await moveObservedBall(originalPosition);
 
  const bookPresence=await readResourceFact('object.presence','Object saved and native presence',{target:'book'});

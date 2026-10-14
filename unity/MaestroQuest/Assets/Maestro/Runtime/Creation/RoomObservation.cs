@@ -101,6 +101,7 @@ namespace Maestro.Quest.Creation
             foreach(var lease in observationCameras)if(lease.Camera&&lease.Camera.gameObject.activeInHierarchy)views.Add(new RoomObservationView(lease.Camera,lease.SourceLayers));
             if(views.Count==0)return;
             VisitObservedNative(views,id=>graph.Retain(id,RoomRetentionReason.Observation));
+            foreach(var target in LightViewDependencies(views))graph.Retain(target,RoomRetentionReason.Lighting);
             RetainViewerDemand(graph);
         }
         void VisitObservedNative(IReadOnlyList<RoomObservationView> views,Action<string> retain)

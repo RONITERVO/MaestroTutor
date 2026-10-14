@@ -1464,3 +1464,29 @@ source planar travel, library identity, blocked/idle pose restoration, missing
 clip refusal and deletion cleanup. None of these establishes physical headset
 performance, real-provider choice quality, retargeting for arbitrary rigs or
 foot planting.
+
+
+### Local-light observation parity
+
+The complete Headless journey's `probeObjectLights` uses the accepted
+`world.viewpoint` to create its lamp behind and beside the viewer. It reads the
+shared `world.region.retention` fact before and after transiently switching the
+lamp off. The enabled range must contribute `lighting`; switching off must release
+that reason without changing the saved definition or revision. Existing passive
+readback, reset and Undo/Redo checks remain. Evidence is `object-lights.json`.
+
+The complete Original Book journey repeats the dependency check through generated
+placement, lamp-edit, lamp-control and fact forms. Its one-member area must report
+`lighting` while the lamp's object has no direct `observation` reason, then release
+`lighting` when switched off. It removes the temporary lamp and restores the prop's
+original position. Evidence is `book-native-light-demand.json` and the corresponding
+inspector screenshot. These are ordinary shared-interface paths, with no provider
+or physical-controller impersonation.
+
+Native `LightObservationTests` cover off-screen casters, scoped cameras,
+predictive/grace demand, dormant display reacquisition, incomplete synchronous
+captures, prepared capture loading/failure, unavailable lamps, pending imports,
+animated recipe attachments, and exact/missing scanned-plane bindings. Together
+with rendered point/spot-shadow tests, this separates dependency correctness from
+pixel behavior. It does not prove headset appearance, thermal performance or
+complete regional streaming; those retain their separate acceptance gates.

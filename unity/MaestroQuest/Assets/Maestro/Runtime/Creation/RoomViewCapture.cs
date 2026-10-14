@@ -42,7 +42,7 @@ namespace Maestro.Quest.Creation {
             try{
                 camera=CreateViewCamera();
                 using var observation=ObserveNativeCamera(camera,sourceLayers:-1);
-                if(MissingViewEntities(camera).Length>0||ViewModelsLoading(camera)){
+                if(MissingViewEntities(camera).Length>0||ViewModelsLoading(camera)||LightingViewLoading(camera)){
                     error="The virtual room view is still loading; use an owned capture request";return false;
                 }
                 return RenderCameraView(camera,out result,out error);
