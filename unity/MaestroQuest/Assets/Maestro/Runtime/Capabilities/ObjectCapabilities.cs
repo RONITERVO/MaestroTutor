@@ -135,18 +135,18 @@ namespace Maestro.Quest.Programs
             operation=null;if(!context.Editor.PaintObject((string)arguments["target"],ObjectCapabilityData.Color(arguments),out error))return false;operation=new CompletedCapability();return true;
         }
     }
-    internal sealed class DeleteObjectCapability : NativeTargetCapability
+    internal sealed class DeleteObjectCapability : CapabilityModule
     {
         public override string Id=>"object.delete";
         public override string Label=>"Delete object";
-        public override string Description=>"Remove a user-created object after saving the room. One Undo edit restores its saved geometry and animation data. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail.";
+        public override string Description=>"Remove a user-created object by its saved identity after saving the room, even when its native model is unavailable or dormant. Deletion does not load the target or repair unrelated missing views. Held objects, active animation/authoring and pending native transitions still prevent deletion. Dependent definitions keep their exact references and report the missing target. One Undo edit restores its saved geometry and animation data through normal preparation; unavailable assets remain unavailable. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail.";
         public override string Duration=>"instant";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override JObject InputSchema=>Object(new JObject {["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32))});
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error) {
-            if(!context.Target(arguments,out _,out error,allowInactive:true))return false;
-            return context.Editor.CanEditObject((string)arguments["target"],true,out error,true);
+            error="The room is unavailable";if(!context.Editor)return false;
+            return context.Editor.CanDeleteObject((string)arguments["target"],out error);
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
             operation=null;if(!context.Editor.DeleteObject((string)arguments["target"],out error))return false;operation=new CompletedCapability();return true;

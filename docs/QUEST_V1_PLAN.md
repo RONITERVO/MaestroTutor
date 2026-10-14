@@ -10041,3 +10041,40 @@ target; canonical orphan cleanup without recreating unavailable native content
 remains follow-up work. This does not establish country-scale performance,
 physical headset behavior, provider acceptance or Store readiness.
 Headset, paid-provider, signing, deployment and Meta holds remain; v1 is incomplete.
+
+### Canonical cleanup for unavailable objects — 2026-10-15
+
+The ordinary object.delete action now removes an exact saved creation without
+requiring or loading its native instance. The book form, agent and programs use
+the existing capability, shared owner checks and persisted journal transaction.
+Dormant objects and creations whose native root disappeared can be removed.
+The included book and Maestro remain protected. Held targets, animation and
+authoring ownership, native preparation/retirement, material transfers and
+workspace write/read-only restrictions still apply.
+
+Only objects changed by an accepted edit can recreate missing native views.
+Cleanup, Undo and Redo leave unrelated missing views unavailable. Missing
+imported geometry stays registered with collision admission, so editing a peer
+cannot silently turn unknown geometry into empty space. Cleanup never starts
+physics. Saved connection references remain intact and dependent actors report
+missing inputs until explicitly repaired or restored by Undo.
+
+A failed save preserves source, revisions and history. Undo restores exact
+saved identity, model/animation data and area membership through ordinary native
+preparation; it does not promise unavailable assets will load. Receipt replay
+does not repeat deletion after Undo. No new agent API, storage migration or
+capability argument schema was introduced.
+
+Verification: 17 focused EditMode and 61 PlayMode tests passed, including eight
+new cleanup cases. The complete suites passed 1,259 EditMode and 1,609 PlayMode
+tests with three expected optional private-asset skips. Offline Headless
+ecfd4e2aaf89453d92c50328c219148c and Original Book 697fd9ce0abe4fc99673d89229ebc3fb passed with no provider calls.
+The web suite passed 2958 tests; probe types, asset provenance,
+source and staged-content audits passed. Unsigned Android compilation selected
+22 ARM64 libraries with ELF/16 KiB checks and 152 matching staged web files.
+Browser Java tests passed 128 cases with two skips. All 14 protected files are
+unchanged. No APK/AAB, signing, installation, provider, deployment or Meta work.
+
+Evidence: .quest-evidence/canonical-object-cleanup/. Selective startup,
+navigation-only cold-start demand, conservative retention when a sweep is
+unknown, larger-world capacity and physical acceptance remain open.

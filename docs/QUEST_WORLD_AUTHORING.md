@@ -1425,6 +1425,21 @@ restores it through the existing native acquisition path. Inspecting facts does
 not load it. Retirement is runtime resource management, not deletion, a saved
 edit or a new Undo entry.
 
+`object.delete` uses the saved identity, so users, agents and programs can remove
+a dormant or unavailable creation without loading it first. Active hand,
+animation and authoring owners, native preparation/retirement, workspace write
+holds still prevent deletion. Dependent definitions keep their exact references
+and report the missing target until explicitly repaired or restored by Undo. The included book
+and Maestro remain protected. A failed save leaves the definition and Undo
+history unchanged. Undo restores the exact saved definition through normal
+native preparation; it does not certify that a missing asset can load.
+Completed receipt replay cannot delete an object restored by Undo.
+
+An accepted edit only recreates missing views that belong to that edit. Missing
+peers remain unavailable across cleanup, Undo and Redo. Unknown imported
+geometry keeps the global physics stop until that geometry is restored or
+explicitly removed; cleanup never starts physics itself.
+
 This is an initial active retirement policy within the existing 64-object,
 25-metre world bounds. Physics Start prepares resident free dynamic actors and their connected,
 collision, selected-ground and water dependencies. Unused dormant content stays

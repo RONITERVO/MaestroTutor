@@ -218,22 +218,32 @@ namespace Maestro.Quest.Creation
             if(!CommitPersisted(new[]{item},Array.Empty<string>(),item.kind+" added",false,out error))return false;
             id=item.id;return true;
         }
-        public bool CanEditObject(string id,bool creationOnly,out string error,bool allowScanLayer=false) {
+        public bool CanEditObject(string id,bool creationOnly,out string error,bool allowScanLayer=false)=>
+            CanChangeObject(id,creationOnly,true,allowScanLayer,out error);
+        internal bool CanDeleteObject(string id,out string error) {
+            if(!CanChangeObject(id,true,false,true,out error))return false;
+            if(GetComponent<AnimationWorkshop>()?.ControlsTarget(id)==true){error="Stop authoring this object before deleting it";return false;}
+            if(NativeEntityDormant(id)&&(NativePhase(id)==NativeEntityPhase.Preparing||NativePhase(id)==NativeEntityPhase.Retiring)){
+                error="Wait for this object's native preparation or retirement to finish before deleting it";return false;
+            }
+            return true;
+        }
+        bool CanChangeObject(string id,bool creationOnly,bool requireNative,bool allowScanLayer,out string error) {
             error=null;
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null){error="Room editor is not ready";return false;}
             if(Liquids?.Owns(id)==true){error="Finish pouring or pause room physics before editing this container";return false;}
             if(GetComponent<SpatialSculpting>()?.OwnsMaterial(id)==true){error="Finish or discard the material gesture before editing its carrier";return false;}
             if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
-            var data=Read(id);
-            // Authoring may repair intentionally inactive objects (for example a
-            // scanned drawing whose anchor is missing). Only live actions need
-            // active presence; existing native authoring state is sufficient here.
-            if(!TryGetNativeObject(id,out var item,out error))return false;
+            if(!HasSavedObject(id)){error="This object is not in the saved room; inspect the room first";return false;}
+            var data=Read(id);var item=Find(id);
+            // Cleanup uses canonical identity even when a view is unavailable.
+            // Geometry and placement edits still require native authoring state.
+            if(requireNative&&!TryGetNativeObject(id,out item,out error))return false;
             if(ScanDrawingAnchor.Has(data)&&!allowScanLayer){error="Use the scanned layer controls to change its anchor, or edit its Canvas ink";return false;}
             if(creationOnly&&data.IsBuiltIn){error="Choose a user-created object";return false;}
-            if(item.Grab.isSelected){error="Release this object before editing it";return false;}
-            if(item.GetComponent<RigidRoomItem>()?.AnimationOwned==true){error="An animation or carried prop owns this object";return false;}
+            if(item&&item.Grab.isSelected){error="Release this object before editing it";return false;}
+            if(item&&item.GetComponent<RigidRoomItem>()?.AnimationOwned==true){error="An animation or carried prop owns this object";return false;}
             return true;
         }
         public bool MoveObject(string id,Vector3 position,out string error)=>EditObject(id,false,data=>data.position=position,"Object moved",true,out error);
@@ -245,7 +255,7 @@ namespace Maestro.Quest.Creation
             return CommitPersisted(new[]{data},Array.Empty<string>(),"Object painted",false,out error);
         }
         public bool DeleteObject(string id,out string error) {
-            if(!CanEditObject(id,true,out error,true))return false;
+            if(!CanDeleteObject(id,out error))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),new[]{id},"Object deleted — Undo restores it",false,out error);
         }
         bool EditObject(string id,bool creationOnly,Action<RoomObjectData> change,string message,bool applyPose,out string error) {
@@ -472,6 +482,11 @@ namespace Maestro.Quest.Creation
                 if (!objects.TryGetValue(data.id,out var item)||!item)
                 {
                     if(objects.ContainsKey(data.id))DetachNativeIdentity(data.id,item);
+                    var materialized=changed??poseChanges;
+                    if(materialized!=null&&!materialized.Contains(data.id)){
+                        if(data.kind==RoomObjectKind.ImportedModel)regionModels[data.id]=null;
+                        continue;
+                    }
                     // A lost creation can be rematerialized from canonical data during
                     // an accepted edit. World-owned book/avatar instances belong to
                     // their host and must never become ordinary creation prefabs.
@@ -519,7 +534,7 @@ namespace Maestro.Quest.Creation
         void UpdateSelection()
         {
             ReconcileConstructionSelection();
-            foreach (var pair in objects) { var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelection(pair.Key == selected,constructionMembers.Contains(pair.Key)); }
+            foreach (var pair in objects) { if(!pair.Value)continue; var created = pair.Value.GetComponent<CreatedRoomObject>(); if (created) created.SetSelection(pair.Key == selected,constructionMembers.Contains(pair.Key)); }
             Changed?.Invoke();
         }
         void MarkDirty() { Revision++; dirty = !TemporaryRoom; saveAt = Time.unscaledTime + .5f; }

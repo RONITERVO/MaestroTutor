@@ -31178,7 +31178,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Remove a user-created object after saving the room. One Undo edit restores its saved geometry and animation data. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail."
+      "description": "Remove a user-created object by its saved identity after saving the room, even when its native model is unavailable or dormant. Deletion does not load the target or repair unrelated missing views. Held objects, active animation/authoring and pending native transitions still prevent deletion. Dependent definitions keep their exact references and report the missing target. One Undo edit restores its saved geometry and animation data through normal preparation; unavailable assets remain unavailable. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail."
     },
     {
       "id": "object.collision.edit",
@@ -46150,7 +46150,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "6c96a5691e06f22b9ea0da31010059af9e2f02fde079c09f0e9322b2cbbc0d7c"
+      "sha256": "f23705ee330d3da66dd48955e23b3783bf12e2b18e53a30b6b3fd94f5d675996"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightCapability.cs",
@@ -46718,7 +46718,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "523e2d0c72cc6e2d5fa2daad39ef24dcf342f50ba12b4edaef9f08095719f287"
+      "sha256": "1d1d3e5c055fb8910593e6dbd0b1f95d7ca6b595a1e86d44379e0d5a25d9d945"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -46726,7 +46726,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "347ca82ab297d4bc7fce1397d02ddb241bcecea887e24abfc0e06eda55d7accb"
+      "sha256": "75fa76697206404dc4af1517085eb6fa4b96121386a76748161988df2cbe573d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",

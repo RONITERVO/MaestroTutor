@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(physics.SetRunning(true,out var error),Is.True,error);
             UnityEngine.Object.DestroyImmediate(editor.Find(target).gameObject);editor.RefreshRegionCollision();
             Assert.That(editor.ReadCollisionBounds(target).Known,Is.False);Assert.That(physics.Running,Is.False);Assert.That(editor.ResidentCollisionGuard(target),Is.Null);
-            Assert.That(editor.DeleteObject(target,out error),Is.False,"A missing native target must go through the existing restoration path");Assert.That(editor.Read(target),Is.Not.Null);Assert.That(physics.SetRunning(true,out error),Is.False);yield return null;
+            Assert.That(physics.SetRunning(true,out error),Is.False);Assert.That(editor.DeleteObject(target,out error),Is.True,error);Assert.That(editor.Read(target),Is.Null);Assert.That(physics.Running,Is.False,"Cleanup does not restart physics");Assert.That(physics.SetRunning(true,out error),Is.True,error);yield return null;
         }
         [UnityTest]public IEnumerator ResidentCollisionLocalNavigationInputsRejectTheModelWithoutInvalidatingUnrelatedGround(){
             string target=null;yield return ResidentModelAt(new(4,1,4),id=>target=id);StartIsland();

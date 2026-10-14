@@ -65,10 +65,10 @@ namespace Maestro.Quest.Creation
             try {
                 var changed=edit.ChangedObjects;
                 foreach(var data in edit.Snapshot().objects) {
-                    // Reconciliation can rebuild a lost creation. Admit its geometry before
-                    // accepting history, even when the accepted edit targets a peer.
+                    // Only this edit's objects can materialize. An unrelated lost view
+                    // stays unavailable; cleanup must not retry broken peer geometry.
+                    if(editor.NativeEntityDormant(data.id)||!changed.Contains(data.id))continue;
                     bool missing=!editor.Find(data.id)&&!data.IsBuiltIn;
-                    if(editor.NativeEntityDormant(data.id)||(!changed.Contains(data.id)&&!missing))continue;
                     var before=missing?null:editor.Read(data.id);
                     foreach(var step in prepared.PrepareGeometry(editor,data,before)){}
                 }
