@@ -4134,5 +4134,372 @@
       },
       "scale": 1
     }
+  },
+  {
+    "name": "reusable spotlight",
+    "valid": true,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 8,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "lights": [
+                  {
+                    "version": 1,
+                    "id": "Lamp",
+                    "kind": "spot",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0.2,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "enabled": true,
+                    "color": "#FFF4D6",
+                    "intensity": 1,
+                    "range": 3,
+                    "angle": 60,
+                    "shadows": "hard"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "old prototype cannot hide lamps",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 7,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "lights": [
+                  {
+                    "version": 1,
+                    "id": "Lamp",
+                    "kind": "spot",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0.2,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "enabled": true,
+                    "color": "#FFF4D6",
+                    "intensity": 1,
+                    "range": 3,
+                    "angle": 60,
+                    "shadows": "hard"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "lamp attachment must exist",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 8,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "lights": [
+                  {
+                    "version": 1,
+                    "id": "Lamp",
+                    "kind": "spot",
+                    "part": "Missing",
+                    "position": {
+                      "x": 0,
+                      "y": 0.2,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "enabled": true,
+                    "color": "#FFF4D6",
+                    "intensity": 1,
+                    "range": 3,
+                    "angle": 60,
+                    "shadows": "hard"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
+  },
+  {
+    "name": "point plus spot exceeds shadow faces",
+    "valid": false,
+    "arguments": {
+      "blueprint": {
+        "version": 1,
+        "pieces": [
+          {
+            "slot": "base",
+            "name": "My block",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": 1,
+            "source": {
+              "kind": "prototype",
+              "prototype": {
+                "version": 8,
+                "color": {
+                  "r": 0.3,
+                  "g": 0.7,
+                  "b": 0.9,
+                  "a": 1
+                },
+                "physics": {
+                  "mode": "solid",
+                  "shape": "automatic",
+                  "mass": 0.5
+                },
+                "surfaces": [],
+                "drawingTips": [],
+                "geometry": {
+                  "kind": "block"
+                },
+                "lights": [
+                  {
+                    "version": 1,
+                    "id": "Lamp",
+                    "kind": "spot",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0.2,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "enabled": true,
+                    "color": "#FFF4D6",
+                    "intensity": 1,
+                    "range": 3,
+                    "angle": 60,
+                    "shadows": "hard"
+                  },
+                  {
+                    "version": 1,
+                    "id": "Point",
+                    "kind": "point",
+                    "part": "",
+                    "position": {
+                      "x": 0,
+                      "y": 0.2,
+                      "z": 0
+                    },
+                    "rotation": {
+                      "x": 0,
+                      "y": 0,
+                      "z": 0,
+                      "w": 1
+                    },
+                    "enabled": true,
+                    "color": "#FFF4D6",
+                    "intensity": 1,
+                    "range": 3,
+                    "angle": 60,
+                    "shadows": "hard"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": 1
+    }
   }
 ]

@@ -22,6 +22,7 @@ import {runAgentLightingProof} from './probe-agent-lighting';
 import {runAgentPresentationProof} from './probe-agent-presentation';
 import {probeWorldPresentation} from './probe-world-presentation';
 import {probeWorldLighting} from './probe-world-lighting';
+import {probeObjectLights} from './probe-object-lights';
 import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeWorldRegions} from './probe-world-regions';
@@ -425,6 +426,7 @@ try{
 
   await probeWorldPresentation(execute,directory);
   await probeWorldLighting(execute,directory);
+  await probeObjectLights(execute,directory);
   await probeWorldTime(execute,directory);
   await probeWorldWeather(execute,directory);
   await probeLiquidMedium(execute,directory);

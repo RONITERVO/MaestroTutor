@@ -674,7 +674,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){ResetLightControls();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantRecoveries();ReleaseDormantCollisions();ClearViewCapture();FinishLiquidPour(out _);

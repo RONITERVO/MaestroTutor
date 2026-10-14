@@ -36,6 +36,69 @@ Shader "Maestro/Watercolor"
         Tags { "RenderType"="Opaque" "Queue"="Geometry" "DisableBatching"="True" }
         Pass
         {
+            Name "PIGMENT"
+            Tags { "LightMode"="ForwardBase" }
+            Cull [_SurfaceCull]
+            ZWrite [_ZWrite]
+            Blend [_SrcBlend] [_DstBlend], One OneMinusSrcAlpha
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_fwdbase
+            #pragma multi_compile_instancing
+            #pragma target 3.5
+            #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
+            #include "UnityCG.cginc"
+            #include "MaestroEnvironmentDepth.cginc"
+            #include "MaestroWorldLighting.cginc"
+            #include "WatercolorSurface.cginc"
+            half4 frag(Varying input) : SV_Target {
+                half4 surface = MaestroSurface(input);
+                float face = 1 - _Shading * (1 - saturate(dot(normalize(input.normal), normalize(float3(-.3,.8,-.5)))));
+                return half4(MaestroAtmosphere(surface.rgb * MaestroLight(input.worldNormal, face), input.world), surface.a);
+            }
+            ENDCG
+        }
+        Pass
+        {
+            Name "LOCAL_LIGHT"
+            Tags { "LightMode"="ForwardAdd" }
+            Cull [_SurfaceCull]
+            ZWrite Off
+            Blend One One
+            ColorMask RGB
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_fwdadd_fullshadows
+            #pragma target 3.5
+            #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
+            #include "UnityCG.cginc"
+            #include "Lighting.cginc"
+            #include "AutoLight.cginc"
+            #include "MaestroEnvironmentDepth.cginc"
+            #include "MaestroWorldLighting.cginc"
+            #define MAESTRO_FORWARD_ADD 1
+            #include "WatercolorSurface.cginc"
+            float _MaestroLocalLightingEnabled;
+            half4 frag(Varying input) : SV_Target {
+                // The authored sun remains in the shared day/weather projection.
+                #if defined(DIRECTIONAL) || defined(DIRECTIONAL_COOKIE)
+                    return 0;
+                #else
+                    if (_MaestroLocalLightingEnabled < .5 || _WorldLighting < .5) clip(-1);
+                    half4 surface = MaestroSurface(input);
+                    UNITY_LIGHT_ATTENUATION(attenuation, input, input.world);
+                    float facing = saturate(dot(normalize(input.worldNormal), normalize(UnityWorldSpaceLightDir(input.world))));
+                    float fog = exp(-max(0, _MaestroFogDensity) * length(UnityWorldSpaceViewDir(input.world)));
+                    return half4(surface.rgb * surface.a * _LightColor0.rgb * attenuation * facing * fog, 0);
+                #endif
+            }
+            ENDCG
+        }
+        Pass
+        {
             Name "PENCIL"
             Cull Front
             ZWrite [_ZWrite]
@@ -83,88 +146,33 @@ Shader "Maestro/Watercolor"
         }
         Pass
         {
+            Name "SHADOWCASTER"
+            Tags { "LightMode"="ShadowCaster" }
             Cull [_SurfaceCull]
-            ZWrite [_ZWrite]
-            Blend [_SrcBlend] [_DstBlend], One OneMinusSrcAlpha
+            ZWrite On
+            ZTest LEqual
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma multi_compile_shadowcaster
             #pragma multi_compile_instancing
             #pragma target 3.5
-            #pragma multi_compile _ HARD_OCCLUSION SOFT_OCCLUSION
             #include "UnityCG.cginc"
-            #include "MaestroEnvironmentDepth.cginc"
-            #include "MaestroWorldLighting.cginc"
-            struct Vertex { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; float3 rest : TEXCOORD2; float3 restNormal : TEXCOORD3; float4 color : COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varying { float4 position : SV_POSITION; float2 uv : TEXCOORD0; float3 local : TEXCOORD1; float3 normal : TEXCOORD2; float3 pigmentNormal : TEXCOORD3; float4 color : COLOR; float3 world : TEXCOORD4; float3 worldNormal : TEXCOORD5; UNITY_VERTEX_OUTPUT_STEREO };
-            sampler2D _MainTex;
-            sampler2D _PigmentTex;
-            float4 _MainTex_ST;
-            float4 _Color;
-            float _PatternMode, _PatternPlane;
-            float4 _PatternColor, _PatternCounts, _PatternCoordinates;
-            float _Grain;
-            float _Shading;
-            float _HasRestCoordinates;
-            float _AlphaCutoff, _SurfaceMode, _SurfaceOpacity;
-            float _VisibilityOpacity, _VisibilityRealDepth;
-            float _DecodeBrowserSrgb;
-            float _LiquidRippleCount;
-            float4 _LiquidRipples[8],_LiquidRippleWeights[8];
-            Varying vert(Vertex input)
-            {
-                Varying output;
-                UNITY_SETUP_INSTANCE_ID(input);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-                output.position = UnityObjectToClipPos(input.vertex);
-                output.world = mul(unity_ObjectToWorld, input.vertex).xyz;
-                output.local = lerp(input.vertex.xyz, input.rest, _HasRestCoordinates);
-                output.normal = input.normal;
-                output.worldNormal = UnityObjectToWorldNormal(input.normal);
-                output.pigmentNormal = lerp(input.normal, input.restNormal, _HasRestCoordinates);
-                output.color = input.color;
-                output.uv = TRANSFORM_TEX(input.uv, _MainTex);
-                return output;
+            struct Vertex { float4 vertex:POSITION; float3 normal:NORMAL; float2 uv:TEXCOORD0; float4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct Varying { V2F_SHADOW_CASTER; float2 uv:TEXCOORD1; float alpha:TEXCOORD2; UNITY_VERTEX_OUTPUT_STEREO };
+            sampler2D _MainTex; float4 _MainTex_ST;
+            float _WorldLighting, _SurfaceMode, _SurfaceOpacity, _AlphaCutoff, _VisibilityOpacity;
+            Varying vert(Vertex v) {
+                Varying o; UNITY_SETUP_INSTANCE_ID(v); UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
+                TRANSFER_SHADOW_CASTER_NORMALOFFSET(o);
+                o.uv=TRANSFORM_TEX(v.uv,_MainTex);o.alpha=v.color.a;return o;
             }
-            fixed4 frag(Varying input) : SV_Target
-            {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                if (_VisibilityOpacity <= 0) clip(-1);
-                if (_VisibilityRealDepth > .5) MaestroOccludeEnvironment(input.world);
-                fixed4 surface = tex2D(_MainTex, input.uv);
-                #ifndef UNITY_COLORSPACE_GAMMA
-                if (_DecodeBrowserSrgb > .5) surface.rgb = GammaToLinearSpace(surface.rgb);
-                #endif
-                float alpha = surface.a * (_SurfaceMode > .5 ? _SurfaceOpacity * input.color.a : 1);
-                clip(alpha - _AlphaCutoff);
-                // Object-space pigment remains fixed through head motion and between eyes.
-                float3 weights = abs(normalize(input.pigmentNormal));
-                weights /= max(.001, weights.x + weights.y + weights.z);
-                float dry = dot(weights, float3(tex2D(_PigmentTex,input.local.yz*1.8).r, tex2D(_PigmentTex,input.local.xz*1.8).r, tex2D(_PigmentTex,input.local.xy*1.8).r));
-                float pigment = lerp(1, dry, saturate(_Grain * 8));
-                float face = 1 - _Shading * (1 - saturate(dot(normalize(input.normal), normalize(float3(-.3,.8,-.5)))));
-                float3 color = _Color.rgb;
-                if (_PatternMode > .5) {
-                    float3 local = input.local * _PatternCoordinates.xyz + .5;
-                    float2 uv = _PatternPlane < .5 ? input.uv : _PatternPlane < 1.5 ? local.xy : _PatternPlane < 2.5 ? local.xz : local.yz;
-                    float2 cells = uv * _PatternCounts.xy;
-                    // Integrate alternating cells over the pixel footprint. Distant fine
-                    // patterns average instead of producing hard binary shimmer.
-                    float2 width = max(fwidth(cells), .0001);
-                    float2 wave = 2 * (abs(frac((cells - width * .5) * .5) - .5) - abs(frac((cells + width * .5) * .5) - .5)) / width;
-                    float alternate = _PatternMode < 1.5 ? .5 - .5 * wave.x * wave.y : .5 - .5 * wave.x;
-                    color = lerp(color, _PatternColor.rgb, saturate(alternate));
-                }
-                // Only measured liquid surfaces publish this bounded transient array.
-                // Drawing on the existing clipped mesh keeps rings inside the cavity.
-                float ripple = 0;
-                [loop] for (int i = 0; i < min((int)_LiquidRippleCount, 8); i++) {
-                    float distance = length(input.world - _LiquidRipples[i].xyz);
-                    float width = max(fwidth(distance), .001);
-                    ripple += (1 - smoothstep(.008, .008 + width, abs(distance - _LiquidRipples[i].w))) * _LiquidRippleWeights[i].x;
-                }
-                color = lerp(color, float3(1,1,1), saturate(ripple) * .65);
-                return half4(MaestroAtmosphere(surface.rgb * color * input.color.rgb * pigment * MaestroLight(input.worldNormal, face), input.world), (_SurfaceMode > 1.5 ? alpha : 1) * _VisibilityOpacity);
+            float4 frag(Varying i):SV_Target {
+                // Blend surfaces and faded layers transmit light. Cutouts retain their actual holes.
+                if (_WorldLighting < .5 || _SurfaceMode > 1.5 || _VisibilityOpacity < .999) clip(-1);
+                float alpha=tex2D(_MainTex,i.uv).a * (_SurfaceMode > .5 ? _SurfaceOpacity*i.alpha : 1);
+                clip(alpha-_AlphaCutoff);
+                SHADOW_CASTER_FRAGMENT(i)
             }
             ENDCG
         }

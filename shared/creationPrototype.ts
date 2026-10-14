@@ -14,6 +14,7 @@ export interface CreationPrototype extends PrototypeResources {
  physics:{mode:string;shape?:string};collision?:{shapes:unknown[]};modelGeometry?:{version:number;scaleMode:string;metresPerUnit:number;pivot:string;meshCollision:boolean;walkable:boolean};heightFields?:ReservoirBed[];containers?:ReservoirContainer[];sculptTips?:{part:string;enabled:boolean}[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string;color?:{r:number;g:number;b:number;a:number}}[]};points?:V[];radius?:number};
  windows?:{version:number;id:string;surface:string;shape:string;reveal:number}[];
+ lights?:{version:number;id:string;kind:string;part:string;position:V;rotation:Q;enabled:boolean;color:string;intensity:number;range:number;angle:number;shadows:string}[];
  snapPoints?:{id:string;frame:{position:V}}[];surfaces:Surface[];drawingTips:{enabled:boolean;version:number;mode?:string;part:string;position:V}[];motion?:{loop:boolean;frames:Frame[]};
 }
 const hasLength=(p:V[])=>p.some(v=>(v.x-p[0].x)**2+(v.y-p[0].y)**2+(v.z-p[0].z)**2>.000001);
@@ -39,6 +40,14 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
    if(!hasLength(ink.points)||ink.points.some(v=>length2(v)>100||Math.abs(v.z)>.000001||Math.abs(v.x)+ink.radius>s.width*.5+.000001||Math.abs(v.y)+ink.radius>s.height*.5+.000001))return false;
   }
  }
+ const lights=p.lights??[];
+ if(lights.length>2||lights.length>0&&(p.version??0)<8||new Set(lights.map(l=>l.id)).size!==lights.length)return false;
+ for(const l of lights){
+  if(l.version!==1||! /^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(l.id)||!['point','spot'].includes(l.kind)||!part(l.part)||length2(l.position)>100||!['none','hard'].includes(l.shadows)||! /^#[0-9A-Fa-f]{6}$/.test(l.color))return false;
+  if(!Number.isFinite(l.intensity)||l.intensity<0||l.intensity>4||!Number.isFinite(l.range)||l.range<.1||l.range>8||!Number.isFinite(l.angle)||l.angle<10||l.angle>160||l.kind==='point'&&l.angle!==60)return false;
+  if(Math.abs(length2(l.rotation)+l.rotation.w*l.rotation.w-1)>.01)return false;
+ }
+ if(lights.reduce((sum,l)=>sum+(l.shadows==='hard'?(l.kind==='point'?6:1):0),0)>6)return false;
  const windows=p.windows??[];
  if(windows.length>4||windows.length>0&&(p.version??0)<4||new Set(windows.map(w=>w.id)).size!==windows.length||new Set(windows.map(w=>w.surface)).size!==windows.length||windows.some(w=>w.version!==1||! /^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(w.id)||!['rectangle','ellipse'].includes(w.shape)||!Number.isFinite(w.reveal)||w.reveal<0||w.reveal>1||!p.surfaces.some(s=>s.id===w.surface&&(s.shape??'plane')==='plane')))return false;
  if(p.snapPoints&&(new Set(p.snapPoints.map(s=>s.id)).size!==p.snapPoints.length||p.snapPoints.some(s=>length2(s.frame.position)>100)))return false;

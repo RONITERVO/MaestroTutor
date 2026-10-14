@@ -22,6 +22,23 @@ namespace Maestro.Quest.Editor
     {
         public const string ScenePath = "Assets/Maestro/Scenes/MaestroRoom.unity";
 
+        // Android can start on a different profile than the Editor. These are
+        // rendering requirements, so every selectable profile must retain them.
+        public static void ConfigureQuality()
+        {
+            int current = QualitySettings.GetQualityLevel();
+            try {
+                QualitySettings.ForEach(() => {
+                    QualitySettings.antiAliasing = 4;
+                    QualitySettings.vSyncCount = 0;
+                    QualitySettings.shadows = ShadowQuality.HardOnly;
+                    QualitySettings.shadowResolution = UnityEngine.ShadowResolution.Medium;
+                    QualitySettings.shadowDistance = 20;
+                    QualitySettings.pixelLightCount = 4;
+                });
+            } finally { QualitySettings.SetQualityLevel(current, false); }
+        }
+
         [MenuItem("Maestro/Configure development project")]
         public static void Configure()
         {
@@ -48,9 +65,7 @@ namespace Maestro.Quest.Editor
             if (PlayerSettings.colorSpace != ColorSpace.Linear) PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = false;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
-            QualitySettings.antiAliasing = 4;
-            QualitySettings.vSyncCount = 0;
-            QualitySettings.shadows = ShadowQuality.Disable;
+            ConfigureQuality();
             var playerObject = Resources.FindObjectsOfTypeAll<PlayerSettings>().FirstOrDefault();
             if (playerObject)
             {

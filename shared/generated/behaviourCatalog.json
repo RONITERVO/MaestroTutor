@@ -15171,7 +15171,147 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 7.0
+                                  "maximum": 8.0
+                                },
+                                "lights": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "version": {
+                                        "type": "integer",
+                                        "minimum": 1.0,
+                                        "maximum": 1.0
+                                      },
+                                      "id": {
+                                        "type": "string",
+                                        "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "point",
+                                          "spot"
+                                        ]
+                                      },
+                                      "part": {
+                                        "type": "string",
+                                        "pattern": "^$|^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                                        "maxLength": 32
+                                      },
+                                      "position": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "minimum": -10.0,
+                                            "maximum": 10.0
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "z"
+                                        ],
+                                        "additionalProperties": false,
+                                        "description": "Local offset, Euclidean length at most 10 metres"
+                                      },
+                                      "rotation": {
+                                        "type": "object",
+                                        "properties": {
+                                          "x": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "y": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "z": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          },
+                                          "w": {
+                                            "type": "number",
+                                            "minimum": -1.0,
+                                            "maximum": 1.0
+                                          }
+                                        },
+                                        "required": [
+                                          "x",
+                                          "y",
+                                          "z",
+                                          "w"
+                                        ],
+                                        "additionalProperties": false,
+                                        "format": "unitQuaternion"
+                                      },
+                                      "enabled": {
+                                        "type": "boolean"
+                                      },
+                                      "color": {
+                                        "type": "string",
+                                        "pattern": "^#[0-9A-Fa-f]{6}$",
+                                        "maxLength": 7
+                                      },
+                                      "intensity": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 4.0
+                                      },
+                                      "range": {
+                                        "type": "number",
+                                        "minimum": 0.1,
+                                        "maximum": 8.0
+                                      },
+                                      "angle": {
+                                        "type": "number",
+                                        "minimum": 10.0,
+                                        "maximum": 160.0
+                                      },
+                                      "shadows": {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "hard"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "version",
+                                      "id",
+                                      "kind",
+                                      "part",
+                                      "position",
+                                      "rotation",
+                                      "enabled",
+                                      "color",
+                                      "intensity",
+                                      "range",
+                                      "angle",
+                                      "shadows"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "minItems": 0,
+                                  "maxItems": 2,
+                                  "x-features": [
+                                    "objectLights.v1"
+                                  ]
                                 },
                                 "walking": {
                                   "type": "object",
@@ -25845,6 +25985,682 @@
           "target",
           "revision",
           "window"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.light.edit",
+      "version": 1,
+      "label": "Edit an object lamp",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "save"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "light": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1.0,
+                    "maximum": 1.0
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "point",
+                      "spot"
+                    ]
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^$|^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                    "maxLength": 32
+                  },
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -10.0,
+                        "maximum": 10.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "description": "Local offset, Euclidean length at most 10 metres"
+                  },
+                  "rotation": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      },
+                      "w": {
+                        "type": "number",
+                        "minimum": -1.0,
+                        "maximum": 1.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z",
+                      "w"
+                    ],
+                    "additionalProperties": false,
+                    "format": "unitQuaternion"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "color": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}$",
+                    "maxLength": 7
+                  },
+                  "intensity": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 4.0
+                  },
+                  "range": {
+                    "type": "number",
+                    "minimum": 0.1,
+                    "maximum": 8.0
+                  },
+                  "angle": {
+                    "type": "number",
+                    "minimum": 10.0,
+                    "maximum": 160.0
+                  },
+                  "shadows": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "hard"
+                    ]
+                  }
+                },
+                "required": [
+                  "version",
+                  "kind",
+                  "part",
+                  "position",
+                  "rotation",
+                  "enabled",
+                  "color",
+                  "intensity",
+                  "range",
+                  "angle",
+                  "shadows"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "light",
+              "settings"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.lights",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "objectLights.v1"
+            ],
+            "title": "Save a lamp"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "remove"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 2147483647.0
+              },
+              "light": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "revision",
+              "light"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.lights",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
+            "x-features": [
+              "objectLights.v1"
+            ],
+            "title": "Remove a lamp"
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.created",
+        "target.unheld",
+        "source.revision.current",
+        "storage.writable"
+      ],
+      "description": "Save or remove an exact point/spot lamp on a created object or existing recipe part. Use object.lights for the current revision. Position/rotation use the attachment's local frame; spot beams point along local +Z. Range scales with the attachment. Colours are sRGB hex and intensity is a multiplier. Use world lighting/day-cycle controls for dark surroundings; local lamps add to existing ambient/sun light. enabled controls emission independently of the object's paint opacity or visual layer. No real-camera pixels, book pages or control lettering are relit. Hard shadows come from opaque virtual geometry and texture cutouts; blended/faded surfaces transmit light. Scanned/unscanned real obstacles are not shadow casters. Two lamps per object, four per room, six reserved shadow-map faces total: a point light uses six, a spot uses one, including disabled definitions. This bounds rendering work, not a physical Quest performance guarantee. Use object.light.control for transient on/off, intensity and colour without saving. Saves one Undo; copy and creation prototypes preserve the lamps. Changes do not change collisions, physics or the world clock. Readback confirms the native light state, not physical pixels.",
+      "example": {
+        "operation": "save",
+        "target": "00000000000000000000000000000000",
+        "revision": 1,
+        "light": "Lamp",
+        "settings": {
+          "version": 1,
+          "kind": "point",
+          "part": "",
+          "color": "#FFF4D6",
+          "shadows": "none",
+          "position": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "enabled": true,
+          "intensity": 1.0,
+          "range": 3.0,
+          "angle": 60.0
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "light": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "light"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "object.light.control",
+      "version": 1,
+      "label": "Control a lamp",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "set"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "light": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "intensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 4.0
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "light",
+              "stateId",
+              "enabled",
+              "intensity",
+              "color"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.light",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "light": "light"
+              },
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "x-features": [
+              "objectLights.v1"
+            ],
+            "title": "Set live lamp controls"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "reset"
+                ],
+                "x-static": true
+              },
+              "target": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "light": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "target",
+              "light",
+              "stateId"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "object.light",
+              "version": 1,
+              "arguments": {
+                "target": "target",
+                "light": "light"
+              },
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "x-features": [
+              "objectLights.v1"
+            ],
+            "title": "Restore saved lamp controls"
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "target.loaded",
+        "light.state.current"
+      ],
+      "description": "Set transient enabled, intensity and colour on an existing object lamp, or reset all three to saved defaults. Inspect object.lights then object.light and pass its exact stateId. No room save or Undo entry: a program can react to buttons, time or other events without rewriting its document. Works on a held or moving prop and does not claim its motion channels. Commands are serialized: a competing change invalidates an older stateId. A completed command lasts after its calling program stops; explicitly reset or change it. Source definition changes/removal, Undo of that definition, temporary-room boundaries, room reload/workspace change and disabling the editor reset controls. Ordinary pose/paint edits and renderer recreation preserve them. Tracking/focus suspension hides emission but retains controls until recovery. Copies/prototypes use saved defaults only. Native active state is not proof of illumination or headset performance. This command neither creates a lamp nor changes its attachment, shadow allocation, collision, visual opacity, weather, world time or camera sharing.",
+      "example": {
+        "operation": "set",
+        "target": "00000000000000000000000000000000",
+        "light": "Lamp",
+        "stateId": "00000000000000000000000000000000",
+        "enabled": true,
+        "intensity": 0.5,
+        "color": "#FFE0C0"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "light": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "settings": {
+            "type": "object",
+            "properties": {
+              "version": {
+                "type": "integer",
+                "minimum": 1.0,
+                "maximum": 1.0
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "point",
+                  "spot"
+                ]
+              },
+              "part": {
+                "type": "string",
+                "pattern": "^$|^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+                "maxLength": 32
+              },
+              "position": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -10.0,
+                    "maximum": 10.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -10.0,
+                    "maximum": 10.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -10.0,
+                    "maximum": 10.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false,
+                "description": "Local offset, Euclidean length at most 10 metres"
+              },
+              "rotation": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  },
+                  "w": {
+                    "type": "number",
+                    "minimum": -1.0,
+                    "maximum": 1.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z",
+                  "w"
+                ],
+                "additionalProperties": false,
+                "format": "unitQuaternion"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "intensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 4.0
+              },
+              "range": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 8.0
+              },
+              "angle": {
+                "type": "number",
+                "minimum": 10.0,
+                "maximum": 160.0
+              },
+              "shadows": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "hard"
+                ]
+              }
+            },
+            "required": [
+              "version",
+              "id",
+              "kind",
+              "part",
+              "position",
+              "rotation",
+              "enabled",
+              "color",
+              "intensity",
+              "range",
+              "angle",
+              "shadows"
+            ],
+            "additionalProperties": false
+          },
+          "effective": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean"
+              },
+              "intensity": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 4.0
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "maxLength": 7
+              },
+              "overridden": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "enabled",
+              "intensity",
+              "color",
+              "overridden"
+            ],
+            "additionalProperties": false
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "light",
+          "stateId",
+          "settings",
+          "effective",
+          "active",
+          "reason"
         ],
         "additionalProperties": false
       }
@@ -38684,6 +39500,132 @@
       ]
     },
     {
+      "id": "object.lights",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "lights": {
+            "list": {
+              "record": {
+                "id": "text",
+                "overridden": "boolean",
+                "active": "boolean",
+                "reason": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Object lamps",
+      "description": "Saved lamp IDs and current native emission state. Read object.light with a lamp ID for its exact source and effective controls. Reads are passive. Active does not establish visible illumination, shadows, real-room lighting or headset performance.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "objectLights.v1"
+      ]
+    },
+    {
+      "id": "object.light",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "light": "text",
+          "stateId": "text",
+          "settings": {
+            "record": {
+              "version": "number",
+              "id": "text",
+              "kind": "text",
+              "part": "text",
+              "position": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number"
+                }
+              },
+              "rotation": {
+                "record": {
+                  "x": "number",
+                  "y": "number",
+                  "z": "number",
+                  "w": "number"
+                }
+              },
+              "enabled": "boolean",
+              "color": "text",
+              "intensity": "number",
+              "range": "number",
+              "angle": "number",
+              "shadows": "text"
+            }
+          },
+          "effective": {
+            "record": {
+              "enabled": "boolean",
+              "intensity": "number",
+              "color": "text",
+              "overridden": "boolean"
+            }
+          },
+          "active": "boolean",
+          "reason": "text"
+        }
+      },
+      "label": "Object lamp details",
+      "description": "Saved component, effective controls, exact runtime stateId and native emission status. Unavailable for missing lamps. Read-only: does not refresh, allocate, start a light or change a revision. A renderer can be inactive while its controls are retained. Does not establish rendered pixels or headset performance.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "light": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,31}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "light"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000",
+        "light": "Lamp"
+      },
+      "features": [
+        "factQueries.v1",
+        "objectLights.v1"
+      ]
+    },
+    {
       "id": "object.model.geometry",
       "version": 1,
       "type": {
@@ -44064,7 +45006,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/Watercolor.shader",
-      "sha256": "8f4f8a3e6997def8788143a6025bd559d813aa68c24d8fea493686fa0f031279"
+      "sha256": "d80092c1e0dab489757dc82e1f46c58025edbac1bbeb7894e54f3080f1355aae"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WatercolorSurface.cginc",
+      "sha256": "3c929d05a7fa026b3f6f66b7084a07fb4857b6693e7abedd6242a9b5fc9304d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/WeatherProjection.cs",
@@ -44368,7 +45314,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "98c10691c80968ba0c67d794a9bdc549862b36dc883869db0468a50c7564f959"
+      "sha256": "ebd4ed873f95bda3989adb0553dfc51fea82bba6b0aba3fbc7e4364669a9c5f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -44444,7 +45390,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "c575249145a3de31de8c068df500ec4f87221394829aeed7d9ba7d01274c8dd8"
+      "sha256": "b2c824340cc092d6d476e29e216157ec001c98932ab25bdbe9567925bc4fad2c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -44581,6 +45527,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
       "sha256": "6c96a5691e06f22b9ea0da31010059af9e2f02fde079c09f0e9322b2cbbc0d7c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightCapability.cs",
+      "sha256": "b8ce04b47db238f15a7591ff8cc163f8eb7b46d40dd39176f7687dbb773e995a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightControlCapability.cs",
+      "sha256": "3f18b60b7b3fedded5a91b9ad26e9ad9dafc7fd8a0d94e99210fee42a0be4d66"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectWalkSettingsCapability.cs",
@@ -44892,7 +45846,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "c1aec04db856000fbc0ba3028c8fb377ee21e4da168b40c4d821b55270971180"
+      "sha256": "cdb7ce95629f3e019a97b7b9b8b27de481ea6b2eea448f2ed41fb3ef8273de35"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -45100,7 +46054,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "c6c9b7c66ff6e1bda3325e8477323783789c29c3959d9bf23e4980c69165da45"
+      "sha256": "2cf450108fe2a955e624016de2efbdf070a8cbca03deb5f9a6aef10d5f8478dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -45112,7 +46066,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "c8caab14875a6174e52f6cdbbaca125ee8de0217f26bd4d3998221b5aedf70a7"
+      "sha256": "7688fdb794292de2693a41fed7ec0d9b67df3df164e97b5f43b602b2d704d02e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantCollision.cs",
@@ -45136,11 +46090,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "dbfb22b86ee9ad1517566b1cbae0c7f0db51111bf11fa52607e8f2be0b51f6cc"
+      "sha256": "ae0bbd1005cb9050fcafa38da9dfe083b2883a9db0164cd2a4247b792ab93afa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "1a7707edbc52823f22d56fc7c6e7c2fd22d12ef4bcba83b78983e1aaeb40f4ac"
+      "sha256": "89bbb1668eeb62c09574bad2e5f9c1a291a60bf78966e0fdb9c812c4346bfd99"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -45197,6 +46151,22 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
       "sha256": "50c74349563ac66d437d092432fccaa7256c51c1ddd91d9bdd002c935f91783a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLight.cs",
+      "sha256": "ef6bde82e0bd0bd4af69c7c0ad18e23996da48133a97f3ec18fe3b752bcfc203"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLightEdits.cs",
+      "sha256": "ee26548c15f7bdf97367dbddfaa6b57c2648d989eb9e744daf5b5f09b2989dd1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLightRuntime.cs",
+      "sha256": "43074af3da3bbf623646c4557498b777e0ffaa4b5e48032b2938f228e778afa6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLightView.cs",
+      "sha256": "a3e8c2f1848dbf7b0fd722f8d397fa4a03df2f7d5316f05117a39f1423868344"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLighting.cs",
@@ -45400,7 +46370,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "cf2b2e850cf5beaefee10f7ac4ed4a3730f6771e3df600bbabc26316bea6f5a9"
+      "sha256": "9fbbd020d8372d6271a0268ac3a0d9954b6160921baab0b11528daacde2d5f7d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -45444,7 +46414,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
-      "sha256": "1d40fefb277173ea67cf415d78e6482f3bdf3abb09eb8f01d5d34131f700177d"
+      "sha256": "ba09f74392d8cc05e396f660d9cb86d68c4aaa47f4df21d253df949dfce1b5d5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
@@ -46192,7 +47162,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c2c534d739569f5b7d4e75e6814b5856dcddc388e4158638a565cbe95ba9f845"
+      "sha256": "e6044d2f2a248ec5428af4962147eaf093b6df375c6136513a98a288b8364e7b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

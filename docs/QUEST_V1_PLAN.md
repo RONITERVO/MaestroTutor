@@ -9423,3 +9423,57 @@ two skipped** Java results as up to date; all **22 ARM64 libraries** and
 **148 staged web files** match their checked sources. No headset,
 paid-provider, signing, deployment or Meta work ran. The existing audio-quality
 failures and release acceptance gaps remain open; this is not v1 completion.
+
+## Shared object lamps and lighting controls — 2026-10-14
+
+Point/spot lamps now belong to created or imported objects and named recipe parts.
+The catalog exposes saved editing plus transient enabled/colour/intensity controls,
+with passive list/detail facts. The original book generates the same controls that
+agents and programs use. Runtime overrides have exact state guards, no room writes
+or Undo entries, and survive renderer recreation. Source edits and workspace
+boundaries restore defaults; copies and prototypes preserve only saved definitions.
+Room format 39 and prototype v8 retain exact lamp definitions. The complete contract
+is in [world authoring](QUEST_WORLD_AUTHORING.md#object-lamps-and-transient-controls--2026-10-14).
+
+The shared watercolor shader supports additive local illumination and optional hard
+virtual shadows. Cutouts preserve their holes; blended/faded surfaces transmit
+light. Readable book pages and control text remain independent. This does not add
+sun shadows, coloured glass transmission, relighting of camera pixels or shadows
+from real-room obstacles. Limits are two lamps per object, four per room and six
+reserved shadow-map faces, including disabled definitions. These are admission
+bounds, not measured Quest performance guarantees.
+
+The complete native suite passed **1,204 EditMode / 1,517 PlayMode** checks, with
+three expected optional private-asset skips. Complete Headless
+**801c33ecd27d41be9e873d588968b683** and Original Book
+**877fdbe0ac124e508d63472d5273f234** journeys passed with zero client/editor exits.
+Both use offline scripted providers and retain prior creation, chat media, terrain,
+water, physics, walking and interruption checks. They add saved lamps, live control,
+reset and native readback; Headless also verifies Undo/Redo and passive observation.
+The generated book form and rendered point/spot shadow fixtures were inspected.
+Hard-shadow aliasing remains visible at the bounded 512-pixel resolution.
+
+The Android audit then found that project setup only changed the Editor's current
+quality profile, while Android selected another. The final Editor-only correction
+applies required lighting, four-sample antialiasing and vSync settings to every
+profile while preserving the selection. It passed **37 focused EditMode / 18
+PlayMode** checks, including an inactive-profile regression and rendered shadows.
+All six exported profiles were checked. The runtime and client behavior
+remain unchanged from the complete suite and journeys; those were not repeated
+after the setup-only correction. All **1,003 final C# files** match the build mirror.
+
+**2,940 web checks across 312 files** passed. The **77** consumers of freshly
+captured native catalog/catching fixtures passed again after capture. Lint, probe
+types, catalog/source equality and asset integrity passed. The final web/browser
+build, Unity Android export and unsigned Gradle compilation passed. Unchanged Java
+results (**128 passed / two skipped**) were confirmed up to date. All **22 ARM64
+libraries** pass the ELF/16 KiB audit; web, browser AAR and native staging hashes
+match. No APK/AAB, signing, install, paid-provider, deployment or Meta action ran.
+
+Evidence is in `.quest-evidence/local-lights/` and the named journey folders. The
+ten protected raw files and four untracked Store files remain untouched. Whole-world
+physics admission, running-world retention, automatic unloading off and the current
+64-object / 25-metre / four-height-field limits are unchanged. Regional light
+residency/streaming, broader shadows, physical performance, real-provider behavior
+and the previously recorded audio/Store acceptance gaps remain open. V1 is active
+and is not release-complete.

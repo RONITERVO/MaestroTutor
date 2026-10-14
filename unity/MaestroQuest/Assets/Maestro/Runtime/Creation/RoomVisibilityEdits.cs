@@ -52,6 +52,7 @@ namespace Maestro.Quest.Creation
             return CommitPersisted(new[]{data},Array.Empty<string>(),"Visual layer assigned",false,out error,visualOnly:true);
         }
         void SynchronizeVisibility(RoomDocument document) {
+            SynchronizeLights(document);
             var present=document.visibilityLayers.Select(v=>v.id).ToHashSet();
             foreach(var id in visibleLayers.Keys.Where(id=>!present.Contains(id)).ToArray())visibleLayers.Remove(id);
             foreach(var definition in document.visibilityLayers) {
@@ -60,6 +61,7 @@ namespace Maestro.Quest.Creation
             }
         }
         void ApplyVisibility(RoomObjectData data,RoomItem item,RoomDocument document) {
+            ApplyLights(data,item);
             var windows=item.GetComponent<RoomWindowView>();if(!windows&&data.windows.Length>0)windows=item.gameObject.AddComponent<RoomWindowView>();if(windows)windows.Apply(data,GetComponentInParent<VirtualRoomView>());
             windows?.ConfigureVisibility(data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);
             var view=item.GetComponent<RoomAppearanceView>();

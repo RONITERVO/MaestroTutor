@@ -1175,3 +1175,55 @@ archives and recovery cannot retain a separately hardcoded older filename.
 The shared world limits, physics admission, running-world retention, per-object
 real-room policy and disabled automatic unloading are unchanged. Physical Quest
 comfort, imported-model gait quality and foot contact still need acceptance.
+
+## Object lamps and transient controls — 2026-10-14
+
+Point and spot lamps are components of created objects, including imported props
+and named recipe parts. The same `object.light.edit` action, `object.lights` list
+and `object.light` detail fact serve agents, generated book forms and programs.
+No extra provider tool family or numeric rule opcode is introduced. Stable lamp
+IDs are local to their owning object. Attachment offsets and rotations are local;
+spotlights point along local +Z and range follows uniform attachment scale.
+
+Saved definitions use room format 39 and reusable prototype version 8. Copying,
+construction capture, Undo and temporary-room saving preserve their source.
+Missing recipe parts, invalid rotations, future definitions and excess budgets
+are rejected before publication. Failed durable saves leave the live lights
+unchanged. Native light objects and shader globals follow the existing native
+resource ownership and cleanup path.
+
+`object.light.control` sets transient on/off, colour and intensity, or resets them
+to saved defaults. It writes no room file and adds no Undo entry. Programs can
+combine this instant action with existing events, timers, branches and waits.
+The exact `stateId` from `object.light` guards competing changes; stale controls
+are refused. The command can operate while the lamp's prop is held or moving.
+A completed command remains after its caller stops, until an explicit control or
+reset. It changes neither saved geometry nor the prop's collision/motion policy.
+
+Runtime controls belong to the workspace, not to a rendered GameObject. Renderer
+recreation and unrelated pose/paint edits preserve them. A changed lamp definition,
+its removal/Undo, temporary-room entry/discard, reload, workspace replacement or
+disabling the editor resets them to source defaults. Tracking/focus suspension
+hides emission while retaining controls for recovery. Copies and prototypes use
+saved defaults only. Facts are passive: they allocate no lights, advance no
+simulation and never turn a source on merely by reading it.
+
+The shared watercolor shader accepts additive local illumination and native hard
+virtual shadows. Opaque geometry blocks light; texture-cutout holes transmit it.
+Blended surfaces and faded visual layers transmit local light rather than casting
+invisible opaque shadows. This is not coloured glass transmission or volumetric
+lighting. Authored ambient/sun/day/weather settings remain the existing projection;
+this increment does not add sun shadows. Book pages and control lettering keep
+their readability. It does not relight passthrough camera pixels or cast shadows
+from scanned/unscanned real objects.
+
+Current bounds are two lamps per object, four per room and six reserved shadow-map
+faces (point: six; spot: one). Disabled definitions still reserve their cost.
+Local intensity is 0–4, unscaled range 0.1–8 metres, and a spot cone is 10–160 degrees.
+Shadow maps use 512-pixel faces and the configured 20-metre shadow distance.
+These are admission bounds, not measured Quest frame-time guarantees. Larger
+worlds still need observation-driven light residency alongside regional streaming;
+the whole-world physics, retention and automatic-unloading policies are unchanged.
+Native `active` reports an enabled light, not proof of visible illumination,
+shadows, physical alignment or hardware performance. Current evidence and remaining
+acceptance are recorded in the v1 delivery plan.
