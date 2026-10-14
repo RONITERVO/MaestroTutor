@@ -38,7 +38,7 @@ User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
 See the [shared world audio contract](../unity/AUDIO.md). Native rendering now
 handles procedural sounds and bounded WAV, MP3 and Vorbis imports with editable emitters, looping
-playback, independent controls and events alongside the separate Maestro speech
+playback, independent controls, transient master/role levels and events alongside the separate Maestro speech
 renderer. Finished local chat sound attachments now enter the same source/import path; see
 [chat sound attachment](../unity/AUDIO.md#finished-chat-audio-as-a-world-source).
 WAV recordings now support up to ten minutes within the same bounded file/library
@@ -9664,3 +9664,40 @@ performance and existing provider/Store gates remain open. Production reflection
 stay off. Whole-world physics admission and running-world retention remain in
 force; automatic unloading stays off and the 64-object / 25-metre /
 four-height-field limits are unchanged. V1 remains active and incomplete.
+
+
+## Shared world audio levels — 2026-10-14
+
+`audio.mix` and `audio.mix.control` give the user, agent and event-driven programs
+one guarded interface for master/effects/media/ambience levels. The generated book
+form loads the same exact runtime state ID used by native commands. Levels apply
+to current, preparing, paused and future world sounds, multiplying each instance's
+own gain without restarting it, altering its control revision or rewriting its
+saved emitter. Zero gain continues normal consumption and resource accounting.
+
+This is transient workspace state with no room-format migration, save or Undo.
+Temporary Begin/Discard, reload/workspace replacement and editor disable reset it;
+source/emitter edits and renderer recreation preserve it. Independent speech/web
+players and capture policy remain unchanged. Reflection/AEC quality failures and
+continuous-background-audio/Live acceptance remain unresolved. No automatic
+unloading, world-limit expansion or physical/paid-provider claim is added.
+
+Validation: **1,226 EditMode / 1,543 PlayMode passed**, with three expected
+optional private-asset skips. Complete offline Headless
+`490aa72b0fec4a859432170cba80f3fc` and Original Book
+`67a105cfa10841eeb9069c00d2d4d555` journeys passed with clean client/editor exits.
+The mix form screenshot was checked; both journeys preserve individual voice
+revisions while changing and resetting the same native levels.
+
+**2,952 web tests / 313 files passed** with freshly captured native catalog/catch
+fixtures, plus scoped lint, catalog provenance and integration-driver type checks.
+A concurrent IL2CPP/web run had three >5-second web-test failures; the unchanged
+full suite passed before compilation and after it finished. Both reports are
+retained. No thresholds or assertions were relaxed.
+
+Unsigned Android export/IL2CPP/Gradle compilation passed. Java: 128 passed/two
+skipped. All 22 selected ARM64 libraries pass ELF/16 KiB checks; the 152 staged web
+files, browser AAR and native hashes match. No APK/AAB was produced. All 2,944
+native inputs / 1,090 C# files match the frozen source, and all 14 protected
+pre-existing files remain unchanged. Evidence: `.quest-evidence/audio-role-mix/`.
+V1 remains incomplete; device, provider, signing, deployment and Meta holds remain.

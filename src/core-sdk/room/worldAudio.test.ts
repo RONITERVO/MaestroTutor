@@ -7,7 +7,7 @@ import {behaviourCatalog,behaviourFact} from '../../../shared/behaviourCatalog';
 import {currentInputRequest} from '../../../shared/currentCapabilityInputs';
 
 it('shares sound definitions and playback with both book authoring and agent programs',()=>{
- for(const id of ['audio.source.edit','object.audioEmitter.edit','audio.play','audio.start','audio.control']){
+ for(const id of ['audio.source.edit','object.audioEmitter.edit','audio.play','audio.start','audio.control','audio.mix.control']){
   const definition=capabilityDefinition(id)!;
   expect(definition).not.toBeNull();expect(validateCapabilityArguments(id,1,definition.example)).toBeNull();
  }
@@ -93,4 +93,21 @@ it('admits streamed ten-minute clips while keeping procedural tones bounded',()=
  const tone=capabilityDefinition('audio.source.edit')!.example!;((tone.definition as {tone:{seconds:number}}).tone).seconds=31;
  expect(validateCapabilityArguments('audio.source.edit',1,tone)).not.toBeNull();
  expect(validateCapabilityOutput('audio.play',1,{instance:'a'.repeat(32),source:'b'.repeat(32),sourceRevision:1,seconds:600})).toBeNull();
+});
+
+
+it('shares guarded world role levels without object claims or speech privileges',()=>{
+ const id='audio.mix.control',definition=capabilityDefinition(id)!,args=definition.example!;
+ expect(capabilityResources(id,args)).toEqual([]);
+ expect(currentInputRequest(definition.input,args)).toEqual({operation:'inspect',category:'facts',capability:'audio.mix',version:1});
+ expect(behaviourFact('audio.mix')?.features).toContain('worldAudio.v1');
+ const state={stateId:'a'.repeat(32),master:1,effects:.8,media:.5,ambience:0};
+ expect(validFactValue('audio.mix',state)).toBe(true);
+ expect(validateCapabilityOutput(id,1,state)).toBeNull();
+ expect(validateCapabilityArguments(id,1,{operation:'reset',stateId:state.stateId})).toBeNull();
+ expect(validateCapabilityArguments(id,1,{operation:'reset'})).not.toBeNull();
+ for(const role of ['master','effects','media','ambience'])for(const gain of [-.01,1.01,NaN,Infinity])
+  expect(validateCapabilityArguments(id,1,{...args,[role]:gain})).not.toBeNull();
+ expect(validateCapabilityArguments(id,1,{...args,speech:0})).not.toBeNull();
+ expect(validateCapabilityArguments(id,1,{...args,microphone:true})).not.toBeNull();
 });

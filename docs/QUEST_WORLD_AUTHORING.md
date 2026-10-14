@@ -1317,3 +1317,22 @@ free-bitrate MP3 and compressed WAV need conversion outside the app first.
 Lossy-codec timing depends on available encoder metadata; use WAV for precise
 sample-aligned source material. No remote URL, provider, microphone or live stream
 is opened by this import action. Live-source adapters remain separate work.
+
+
+### Change world sound levels together
+
+Read `audio.mix`, then use `audio.mix.control` with `operation: "set"`, its exact
+`stateId`, and master/effects/media/ambience levels from zero to one. The book's
+**Adjust world sound levels** form loads the same current values. `reset` requires
+only the current state ID and sets every level to one. For example, keep effects
+at one and reduce ambience to 0.2 while discussing an object. Programs can make
+that choice after an event and explicitly restore levels later.
+
+These controls affect authored world sounds. A sound keeps its own gain, pause
+state and position; effective native gain multiplies that gain by master and its
+emitter's role. Muting does not pause, stop or free a sound. Separate conversation
+and web artifact outputs keep their existing controls. Levels are not saved or
+undone and reset at room boundaries/editor disable. Changing an emitter's saved
+role follows the normal emitter edit rule: its old playback is cancelled, and a
+new playback uses that role. Volume controls do not enable microphone access or
+make echo cancellation ready.

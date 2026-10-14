@@ -92,7 +92,7 @@ namespace Maestro.Quest.Creation
             gameObject.AddComponent<AudioImportWorkshop>().Initialize(this);
             storage = new RoomStorage(directory); Models = new ModelLibrary(Path.Combine(directory, "models"),WriteGate,includedAvatar); Motions = new MotionLibrary(Path.Combine(directory,"motions"),WriteGate,includedMotions);
             var loaded = storage.Load(out var message);
-            journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));
+            journal = new RoomJournal(loaded ?? StarterDocument(book, maestro, includedAvatar));ResetAudioMix();
             WorldIdentityReady=loaded!=null&&!loaded.WorldNeedsSave&&!storage.ReadOnly;
             if(!WorldIdentityReady&&!storage.ReadOnly){
                 WorldIdentityReady=storage.PinWorldIdentity(journal.Snapshot(),out var identityError);
@@ -674,7 +674,7 @@ namespace Maestro.Quest.Creation
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){ResetLightControls();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){ResetLightControls();ResetAudioMix();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantRecoveries();ReleaseDormantCollisions();ClearViewCapture();FinishLiquidPour(out _);

@@ -4590,6 +4590,187 @@
       }
     },
     {
+      "id": "audio.mix.control",
+      "version": 1,
+      "label": "Adjust world sound levels",
+      "input": {
+        "type": "object",
+        "x-discriminators": [
+          "operation"
+        ],
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "set"
+                ],
+                "x-static": true
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              },
+              "master": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "effects": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "media": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              },
+              "ambience": {
+                "type": "number",
+                "minimum": 0.0,
+                "maximum": 1.0
+              }
+            },
+            "required": [
+              "operation",
+              "stateId",
+              "master",
+              "effects",
+              "media",
+              "ambience"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "audio.mix",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ],
+                "master": [
+                  "master"
+                ],
+                "effects": [
+                  "effects"
+                ],
+                "media": [
+                  "media"
+                ],
+                "ambience": [
+                  "ambience"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "title": "Set world sound levels",
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "reset"
+                ],
+                "x-static": true
+              },
+              "stateId": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{32}$",
+                "maxLength": 32
+              }
+            },
+            "required": [
+              "operation",
+              "stateId"
+            ],
+            "additionalProperties": false,
+            "x-current": {
+              "fact": "audio.mix",
+              "version": 1,
+              "arguments": {},
+              "fields": {
+                "stateId": [
+                  "stateId"
+                ]
+              },
+              "guards": [
+                "stateId"
+              ]
+            },
+            "title": "Reset world sound levels",
+            "x-features": [
+              "worldAudio.v1"
+            ]
+          }
+        ]
+      },
+      "duration": "instant",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [
+        "room.ready",
+        "audio.mix.current"
+      ],
+      "description": "Set the current world's master, effects, media and ambience levels, or reset all four to one. Read audio.mix and use its exact stateId; concurrent changes and room boundaries invalidate stale requests. Native world-voice gain is its current instance gain multiplied by master and its captured emitter role level. Existing, preparing, paused and future sounds use the same controls. Zero mutes without stopping, pausing, releasing voices or restarting PCM; audio.instance retains its own independent gain and control revision. A completed setting lasts after its program stops. No room save or Undo entry; source/emitter edits and playback renderer recreation preserve these controls. Temporary-room Begin/Discard, room reload/workspace replacement and disabling RoomEditor reset them; copies/exports contain no live mix. Focus or audio-device loss still cancels sounds and retains levels. Unavailable renderers fail through their existing instance lifecycle. Only authored world audio is affected: separate conversation/Live speech and web artifact playback keep their own output ownership. This is volume control, not echo cancellation or a microphone policy, and cannot select a new audio backend, open capture, change acoustic occlusion or prove physical audibility.",
+      "example": {
+        "operation": "set",
+        "stateId": "00000000000000000000000000000000",
+        "master": 1,
+        "effects": 1,
+        "media": 0.5,
+        "ambience": 0.25
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "master": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "effects": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "media": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "ambience": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        },
+        "required": [
+          "stateId",
+          "master",
+          "effects",
+          "media",
+          "ambience"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "time.wait",
       "version": 1,
       "label": "Wait",
@@ -36471,6 +36652,24 @@
   ],
   "facts": [
     {
+      "id": "audio.mix",
+      "version": 1,
+      "type": {
+        "record": {
+          "stateId": "text",
+          "master": "number",
+          "effects": "number",
+          "media": "number",
+          "ambience": "number"
+        }
+      },
+      "label": "World sound levels",
+      "description": "Read the current world's transient master and effects/media/ambience multipliers and exact stateId for audio.mix.control. Defaults are one. Passive: cannot allocate, start, stop, advance or adopt any sound. Instance gain stays separate: effective native gain = instance gain * master * emitter role level. A zero level does not pause consumption or free voice capacity. Does not include separate Maestro speech, web artifacts, device volume, distance attenuation or acoustic effects. Values are controls, not proof of audible output. Room boundaries and editor disable reset levels and invalidate the stateId.",
+      "features": [
+        "worldAudio.v1"
+      ]
+    },
+    {
       "id": "audio.instance",
       "version": 1,
       "type": {
@@ -45297,6 +45496,10 @@
       "sha256": "564d1cdb2b162e045d484678a0eab4ee16e1e4373c8b1e96d8fe16656946fdae"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioMixCapability.cs",
+      "sha256": "0ed1a22e20d8bc1a9db1c594f2a9341ffb1723265d23ccba2a4467d674c786fe"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
       "sha256": "6da71b58bc4b3fb4456447a534c94c02e2d02b3614972f96da6ec657ca708c48"
     },
@@ -45314,7 +45517,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "ebd4ed873f95bda3989adb0553dfc51fea82bba6b0aba3fbc7e4364669a9c5f9"
+      "sha256": "e8e38ef623942a3cde24df1c959b00527bb437c91970ea1b0b3b4d03d91af6d0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -46021,6 +46224,10 @@
       "sha256": "ca895fbd6540bcd97c0d68b1a45bf30212d76df436534a3c248f60812eab976e"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioMix.cs",
+      "sha256": "570abb1eaffc330459ca9bd13d8d4393a232e7776066bf5f8570c67e1250c37b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAuthoredBounds.cs",
       "sha256": "e3827b7c79e6f653e70868f8329ab0008374a5a4ea7db907d17961ff3eb5dede"
     },
@@ -46090,11 +46297,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "ae0bbd1005cb9050fcafa38da9dfe083b2883a9db0164cd2a4247b792ab93afa"
+      "sha256": "c1e6702d821b62ece9e6158e60290f3e66c028f5d5a18fbb08d266df43509363"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "89bbb1668eeb62c09574bad2e5f9c1a291a60bf78966e0fdb9c812c4346bfd99"
+      "sha256": "4b3a88e0389a9780101679a4013368db48145d3b08c94cce42befea3b5f892e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -46522,11 +46729,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Control.cs",
-      "sha256": "b6da08baab8e8d6a5a6186b1adb826452f75242292eb5b7c019b00d6a1c1023a"
+      "sha256": "783cde20d5e0cad291bb0c027ccc8316aff7adf04b940e24f6b8a0a96acd4f36"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "393eb5ffbdd5365321b04ff66f8abea26312836d7b3919808d9e8b8212b5eff6"
+      "sha256": "0ff3a0af3807538809fa3643fd49bd56e0b12c5ddaa6c40123adf803b9084efb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -47174,7 +47381,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "e6044d2f2a248ec5428af4962147eaf093b6df375c6136513a98a288b8364e7b"
+      "sha256": "619720a17fa95c8f4adb503ee1eb4c1f9895d834cd0b2257c35d986afcf24ed3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

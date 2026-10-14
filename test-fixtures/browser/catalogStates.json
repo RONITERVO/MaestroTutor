@@ -4,9 +4,9 @@
     "revision": 3,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -14,12 +14,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -39,7 +39,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -182,7 +182,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -233,36 +233,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -278,6 +249,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -320,7 +320,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -1364,7 +1364,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -1374,9 +1374,9 @@
     "revision": 7,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1384,12 +1384,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -1409,7 +1409,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1424,10 +1424,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "3a93ceb64db44e32b24f12545d793b75",
-          "sequenceId": "3b37a6c721b04627af05775f9dad511f",
+          "id": "a5247ab6569c430c9cd213c652b266c2",
+          "sequenceId": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "phase": "cancelled",
-          "nodeId": "4a7f2c10973341b1b6a8747b0dcb5e1f",
+          "nodeId": "71dd1099aa2146589b385a8f8e71b1d1",
           "status": "Behaviour stopped"
         }
       ]
@@ -1560,7 +1560,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1611,36 +1611,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -1656,6 +1627,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -1698,7 +1698,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -1769,7 +1769,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "0ec70dda7d1742d8872ca7ae12a4829a",
+          "target": "242bfc2809a645ae8356473c808daf53",
           "seconds": 100,
           "loop": false,
           "source": {
@@ -1788,7 +1788,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -1798,9 +1798,9 @@
     "revision": 6,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1808,12 +1808,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -1833,7 +1833,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1848,10 +1848,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "3a93ceb64db44e32b24f12545d793b75",
-          "sequenceId": "3b37a6c721b04627af05775f9dad511f",
+          "id": "a5247ab6569c430c9cd213c652b266c2",
+          "sequenceId": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "phase": "cancelled",
-          "nodeId": "4a7f2c10973341b1b6a8747b0dcb5e1f",
+          "nodeId": "71dd1099aa2146589b385a8f8e71b1d1",
           "status": "Behaviour stopped"
         }
       ]
@@ -1984,7 +1984,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2035,36 +2035,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -2080,6 +2051,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -2122,7 +2122,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -2193,7 +2193,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "0ec70dda7d1742d8872ca7ae12a4829a",
+          "target": "242bfc2809a645ae8356473c808daf53",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -2206,7 +2206,7 @@
       "available": false,
       "occupied": false,
       "resources": [
-        "0ec70dda7d1742d8872ca7ae12a4829a"
+        "242bfc2809a645ae8356473c808daf53"
       ],
       "status": "A required saved object is missing"
     },
@@ -2214,7 +2214,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -2224,9 +2224,9 @@
     "revision": 5,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -2234,12 +2234,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -2259,7 +2259,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2274,14 +2274,14 @@
       "running": [
         {
           "parentRunId": "",
-          "id": "3a93ceb64db44e32b24f12545d793b75",
-          "sequenceId": "3b37a6c721b04627af05775f9dad511f",
+          "id": "a5247ab6569c430c9cd213c652b266c2",
+          "sequenceId": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "preparing": false,
           "waiting": false,
           "waitEvent": "",
           "waitSeconds": 0.0,
           "state": [],
-          "nodeId": "4a7f2c10973341b1b6a8747b0dcb5e1f",
+          "nodeId": "71dd1099aa2146589b385a8f8e71b1d1",
           "functionName": "main",
           "status": "Running",
           "locals": []
@@ -2417,7 +2417,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2428,13 +2428,13 @@
       "error": "",
       "owners": [
         {
-          "id": "3a93ceb64db44e32b24f12545d793b75",
+          "id": "a5247ab6569c430c9cd213c652b266c2",
           "label": "Action 1",
           "role": "program",
           "allowsGrab": false,
           "claims": [
             {
-              "target": "23d72c44c3db447ca503433660e0715b",
+              "target": "0ac08f7844f2408cbca57cf31250d55f",
               "channel": "wholeTarget"
             }
           ]
@@ -2481,7 +2481,36 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
+        "name": "Block",
+        "kind": "Block",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 9,
+        "position": {
+          "x": 0.5237658619880676,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -2497,35 +2526,6 @@
           "r": 0.7647058963775635,
           "g": 0.6000000238418579,
           "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
-        "name": "Block",
-        "kind": "Block",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 9,
-        "position": {
-          "x": 0.5235095024108887,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -2568,7 +2568,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -2639,7 +2639,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "23d72c44c3db447ca503433660e0715b",
+          "target": "0ac08f7844f2408cbca57cf31250d55f",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -2652,7 +2652,7 @@
       "available": false,
       "occupied": true,
       "resources": [
-        "23d72c44c3db447ca503433660e0715b"
+        "0ac08f7844f2408cbca57cf31250d55f"
       ],
       "status": "A running action owns a required animation channel or object"
     },
@@ -2660,7 +2660,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -2670,9 +2670,9 @@
     "revision": 4,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -2680,12 +2680,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -2705,7 +2705,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2848,7 +2848,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2899,36 +2899,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -2944,6 +2915,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -2986,7 +2986,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -3057,7 +3057,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "23d72c44c3db447ca503433660e0715b",
+          "target": "0ac08f7844f2408cbca57cf31250d55f",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -3070,7 +3070,7 @@
       "available": true,
       "occupied": false,
       "resources": [
-        "23d72c44c3db447ca503433660e0715b"
+        "0ac08f7844f2408cbca57cf31250d55f"
       ],
       "status": "Ready now. This check does not reserve or start the action."
     },
@@ -3078,7 +3078,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -3088,9 +3088,9 @@
     "revision": 2,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3098,12 +3098,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -3123,7 +3123,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -3266,7 +3266,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3317,36 +3317,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -3362,6 +3333,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -3404,7 +3404,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -3474,7 +3474,7 @@
       "query": "",
       "offset": 6,
       "pageSize": 6,
-      "total": 131,
+      "total": 132,
       "entries": [
         {
           "id": "audio.control",
@@ -3485,6 +3485,11 @@
           "id": "audio.import",
           "version": 1,
           "label": "Import a sound together"
+        },
+        {
+          "id": "audio.mix.control",
+          "version": 1,
+          "label": "Adjust world sound levels"
         },
         {
           "id": "audio.play",
@@ -3500,20 +3505,15 @@
           "id": "audio.start",
           "version": 1,
           "label": "Start independent room sound"
-        },
-        {
-          "id": "avatar.follow.user",
-          "version": 1,
-          "label": "Follow user"
         }
       ],
-      "status": "Found 131 actions. Search does not run or enable anything."
+      "status": "Found 132 actions. Search does not run or enable anything."
     },
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -3523,9 +3523,9 @@
     "revision": 1,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3533,12 +3533,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -3558,7 +3558,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -3701,7 +3701,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3752,36 +3752,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -3797,6 +3768,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -3839,7 +3839,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -3909,7 +3909,7 @@
       "query": "",
       "offset": 0,
       "pageSize": 6,
-      "total": 131,
+      "total": 132,
       "entries": [
         {
           "id": "animation.author",
@@ -3942,13 +3942,13 @@
           "label": "Save shared appearance"
         }
       ],
-      "status": "Found 131 actions. Search does not run or enable anything."
+      "status": "Found 132 actions. Search does not run or enable anything."
     },
     "execution": {
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }
@@ -3958,9 +3958,9 @@
     "revision": 8,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "dbcccea8d96c4d2e94c09cf9d24a2db0",
+    "session": "d76e18b81a8a419193a76037338ae94d",
     "status": "Room actions ready",
-    "selectedId": "23d72c44c3db447ca503433660e0715b",
+    "selectedId": "0ac08f7844f2408cbca57cf31250d55f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3968,12 +3968,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "fb846e250a4245eea039cc6126c80604",
+      "stateId": "a422ab0a6b0e4a0fb5916e74e45c8cf5",
       "error": "",
       "visible": false,
       "holding": false
@@ -3993,7 +3993,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "3b37a6c721b04627af05775f9dad511f",
+          "id": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -4008,10 +4008,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "3a93ceb64db44e32b24f12545d793b75",
-          "sequenceId": "3b37a6c721b04627af05775f9dad511f",
+          "id": "a5247ab6569c430c9cd213c652b266c2",
+          "sequenceId": "fce15daf3c8a45ceadbaacdfeafcbd11",
           "phase": "cancelled",
-          "nodeId": "4a7f2c10973341b1b6a8747b0dcb5e1f",
+          "nodeId": "71dd1099aa2146589b385a8f8e71b1d1",
           "status": "Behaviour stopped"
         }
       ]
@@ -4144,7 +4144,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "add55ab4ae114944a391b055888eee33",
+      "id": "a45f39aec4014693a98fc1d06c3beb1d",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4195,36 +4195,7 @@
     },
     "objects": [
       {
-        "id": "10def23ec60f4659a4c05bc519a63b36",
-        "name": "Ball",
-        "kind": "Ball",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 7,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "23d72c44c3db447ca503433660e0715b",
+        "id": "0ac08f7844f2408cbca57cf31250d55f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -4240,6 +4211,35 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "60e7167807024d2ba241ef9596b781b0",
+        "name": "Ball",
+        "kind": "Ball",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 7,
+        "position": {
+          "x": 0.6899999976158142,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.7647058963775635,
+          "g": 0.6000000238418579,
+          "b": 0.3137255012989044,
           "a": 1.0
         },
         "animated": false,
@@ -4282,7 +4282,7 @@
         "movement": null
       },
       {
-        "id": "da75258b90fd4b19bd6f5b956a8cb5ab",
+        "id": "e9bcfaee50014bebb3ff68d4deb11c95",
         "name": "Cylinder",
         "kind": "Cylinder",
         "runtimeState": "active",
@@ -4358,7 +4358,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "2f6b3465b56d4ddfbfd53cd2a364204d",
+      "nextRunId": "b58b34fd86ac43ddb487c8af116b01f0",
       "storageError": null,
       "recovery": null
     }

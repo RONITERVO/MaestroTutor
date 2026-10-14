@@ -76,7 +76,7 @@ namespace Maestro.Quest.Creation
                 case "resume" when v.Paused:
                     v.Paused=false;v.ProgressAt=Time.realtimeSinceStartupAsDouble;v.Renderer.SetPaused(false);v.Phase="playing";Note(v);break;
                 case "gain" when v.Gain!=gain:
-                    v.Gain=gain;v.Renderer.SetGain(gain);Note(v);break;
+                    v.Gain=gain;v.Renderer.SetGain(EffectiveGain(v));Note(v);break;
             }
             result=Sample(v);return true;
         }

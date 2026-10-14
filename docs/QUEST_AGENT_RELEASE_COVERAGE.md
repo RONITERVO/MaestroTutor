@@ -3358,3 +3358,20 @@ See the [release-plan evidence and exact limitations](QUEST_V1_PLAN.md#shared-mp
 and [audio import contract](../unity/AUDIO.md#mp3-and-vorbis-normalization--2026-10-14).
 These results do not establish audible Quest quality, Live microphone coexistence,
 real-provider behavior or Store acceptance; live sources remain separate adapters.
+
+
+### Transient world audio mix controls
+
+The same catalog now exposes `audio.mix` and `audio.mix.control` to native actions,
+the book form, headless client and event programs. The state ID fences concurrent
+edits and room boundaries; group levels multiply individual gains without taking
+ownership of voices or writing the room. Existing emitter roles remain saved
+properties. Speech, web artifact playback and capture permissions remain outside
+these world volume controls. Native tests and both offline native journeys cover
+the shared control path; real-provider and headset acceptance remain outstanding.
+
+Verified in this increment: 1,226 EditMode / 1,543 PlayMode passes (three optional
+private-asset skips), both complete offline journeys, 2,952 web tests / 313 files
+with fresh native fixtures, and unsigned Android compilation. The book mix form
+was visually checked. Evidence is in `.quest-evidence/audio-role-mix/`; it also
+retains the concurrent-compiler web failure and unchanged successful idle rerun.

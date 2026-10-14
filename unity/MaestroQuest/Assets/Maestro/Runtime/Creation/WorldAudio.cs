@@ -87,7 +87,7 @@ namespace Maestro.Quest.Creation
                 v.ProgressAt=Time.realtimeSinceStartupAsDouble;
                 v.Renderer=PcmOutputLease.Open(transform,"World sound "+v.Emitter,
                     new SpeechPcmStream(AudioSettings.dspTime+.1,PcmOutputLease.DeviceTail),
-                    config.spatial,v.Gain,96,config.minDistance,config.maxDistance);
+                    config.spatial,EffectiveGain(v),96,config.minDistance,config.maxDistance);
                 Pump(v);if(v.Closed||!Follow(v))return false;v.Renderer.Start();return true;
             } catch(Exception e){Close(v,"Could not start room sound: "+e.Message);return false;}
         }
@@ -145,6 +145,16 @@ namespace Maestro.Quest.Creation
                 rotation=canonical.rotation;position=anchor.position+rotation*Vector3.Scale(root.lossyScale,emitter.position);
             } else {if(!anchor)return false;rotation=anchor.rotation;position=anchor.TransformPoint(emitter.position);}
             error=null;return true;
+        }
+        float EffectiveGain(Instance voice)=>voice.Gain*editor.AudioMixGain(voice.Attachment.role);
+        internal void ApplyMix()
+        {
+            foreach(var voice in instances.Values.ToArray()) {
+                if(!editor||!editor.isActiveAndEnabled||voice.Session!=editor.TemporarySessionId) {Cancel(voice,"The room or sound target became unavailable");continue;}
+                if(voice.Renderer==null)continue; // Preparation reads the latest levels when it opens.
+                try{voice.Renderer.SetGain(EffectiveGain(voice));}
+                catch(Exception){Close(voice,"The audio renderer became unavailable");}
+            }
         }
         // Pending, playing and paused voices all retain their emitting object.
         internal string[] RetainedTargets()=>instances.Values.Where(v=>!v.Closed).Select(v=>v.Target).Distinct(StringComparer.Ordinal).ToArray();

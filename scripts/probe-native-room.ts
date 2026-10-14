@@ -1204,12 +1204,24 @@ try{
    return after;
   };
   const soundPaused=await controlSound('pause');
+  const soundMixBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.mix',version:1}}]);
+  const mixRevision=lease.state().sceneRevision;
+  const soundMixed=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.mix.control',version:1,arguments:{operation:'set',stateId:(factReply(soundMixBefore).value as {stateId:string}).stateId,master:.6,effects:.4,media:.5,ambience:.1}}}}]);
+  if(soundMixed.execution?.selected?.phase!=='completed')throw new Error('Shared audio mix did not complete');
+  const soundMixAfter=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.mix',version:1}}]);
+  const mixValue=factReply(soundMixAfter).value as {stateId:string;master:number;effects:number;media:number;ambience:number};
+  if(Math.abs(mixValue.master-.6)>1e-6||Math.abs(mixValue.effects-.4)>1e-6||Math.abs(mixValue.media-.5)>1e-6||Math.abs(mixValue.ambience-.1)>1e-6||lease.state().sceneRevision!==mixRevision)throw new Error('Mix changed the room or lost its role levels');
+  const pausedAfterMix=await readSound();
+  if((pausedAfterMix.catalog!.value as SoundSample).revision!==(soundPaused.execution!.selected!.output as SoundSample).revision||(pausedAfterMix.catalog!.value as SoundSample).playback.phase!=='paused')throw new Error('World mix changed individual paused sound identity or revision');
   let soundObserved=lease.state();const soundEventDeadline=Date.now()+10000;
   while(Date.now()<soundEventDeadline){soundObserved=await execute([{action:'rules',rule:{action:'inspect',target:soundWatchId}}]);if(soundObserved.rules?.running.find(r=>r.sequenceId===soundWatchId)?.state?.some(v=>v.name==='phase'&&v.value==='paused'))break;await new Promise(r=>setTimeout(r,100));}
   if(!soundObserved.rules?.running.find(r=>r.sequenceId===soundWatchId)?.state?.some(v=>v.name==='phase'&&v.value==='paused'))throw new Error('Native event program did not receive the exact sound pause');
   const soundResumed=await controlSound('resume'),soundGain=await controlSound('gain');
   await new Promise(r=>setTimeout(r,450));const soundContinued=await readSound();
   if((soundContinued.catalog!.value as SoundSample).playback.seconds<=.3)throw new Error('Loop did not continue beyond its finite source duration');
+  const soundMixReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.mix.control',version:1,arguments:{operation:'reset',stateId:mixValue.stateId}}}}]);
+  const resetMix=soundMixReset.execution?.selected?.output;
+  if(soundMixReset.execution?.selected?.phase!=='completed'||!resetMix||['master','effects','media','ambience'].some(key=>resetMix[key]!==1))throw new Error('World mix did not reset without a save');
   const soundStopped=await controlSound('stop'),soundTerminal=await readSound();
   if((soundTerminal.catalog!.value as SoundSample).playback.phase!=='stopped')throw new Error('Sound stop did not retain its terminal receipt');
   const releasedAudio=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.audioBudget',version:1}}]);
@@ -1222,7 +1234,7 @@ try{
   const removed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:lease.state().objects.find(o=>o.id==='book')!.objectRevision,emitter:'probeSound'}}}}]);
   const sourceRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.definition',version:2,arguments:{id:soundId}}}]);
   const cleaned=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]);
-  await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,soundReservation,soundOwnership,releasedAudio,staleAudioOwner,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
+  await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,soundReservation,soundOwnership,releasedAudio,staleAudioOwner,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundMixBefore,soundMixed,soundMixAfter,pausedAfterMix,soundMixReset,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
  }
  const gripBefore=lease.state();
  const gripSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure construction grip snapping',offset:0}}]);

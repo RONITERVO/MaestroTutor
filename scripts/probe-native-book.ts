@@ -536,12 +536,28 @@ try{
   assert.match(String(owner.worldId),/^[a-f0-9]{32}$/);assert.match(String(owner.regionId),/^[a-f0-9]{32}$/);
   assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),observationRevision,'Audio observations must not change the room');
   await page.getByRole('heading',{name:'Room sound owner',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-audio-residency.png')});
+  const mixBefore=await readResourceFact('audio.mix','World sound levels');
+  await openNamedAction('Adjust world sound levels','audio.mix.control');
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('Action inputs stateId',{exact:true}).inputValue(),mixBefore.stateId);
+  for(const [role,value] of Object.entries({master:'.6',effects:'.4',media:'.5',ambience:'.1'}))await page.getByLabel('Action inputs '+role,{exact:true}).fill(value);
+  const mixSet=await runNamedAction('audio.mix.control');
+  await page.screenshot({path:join(directory,'book-native-audio-mix.png')});
+  const mixAfter=await readResourceFact('audio.mix','World sound levels');
+  for(const [role,value] of Object.entries({master:.6,effects:.4,media:.5,ambience:.1}))assert.ok(Math.abs(Number(mixAfter[role])-value)<1e-6);
+  assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),observationRevision,'Mix controls must not save the room');
+  const voiceAfterMix=await readResourceFact('audio.instance','Sound playback instance',{target:'book',instance});
+  assert.equal(voiceAfterMix.revision,started.output!.revision,'Mix controls leave the independent voice revision unchanged');
+  await openNamedAction('Adjust world sound levels','audio.mix.control');await page.getByLabel('Variant',{exact:true}).selectOption('1');
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  const mixReset=await runNamedAction('audio.mix.control');
+  for(const role of ['master','effects','media','ambience'])assert.equal(mixReset.output![role],1);
   await openNamedAction('Control a room sound','audio.control');await page.getByLabel('Variant',{exact:true}).selectOption('2');
   await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs instance',{exact:true}).fill(instance);
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   const stopped=await runNamedAction('audio.control');assert.equal((stopped.output!.playback as {phase:string}).phase,'stopped');
   const released=await readResourceFact('runtime.audioBudget','Shared room audio budget');assert.equal(released.sources,0);assert.equal(released.owners,0);assert.equal(released.readyPcmBytes,0);assert.equal(released.reservedPcmBytes,0);
-  importedSound={boundary:'Synthetic WAV, original book forms, native decoder and PCM consumption, read-only resource ownership, exact-instance stop and final release; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played,started,budget,reservation,owner,stopped,released};
+  importedSound={boundary:'Synthetic WAV, original book forms, native decoder and PCM consumption, read-only resource ownership, exact-instance stop and final release; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played,started,budget,reservation,owner,mixBefore,mixSet,mixAfter,voiceAfterMix,mixReset,stopped,released};
   await writeFile(join(directory,'book-native-imported-sound.json'),JSON.stringify(importedSound,null,2));
  }
  // Optional explicit image fixture follows the original generated forms.

@@ -7,7 +7,7 @@ Maestro's mouth is one emitter in that system. The familiar chat continues to ow
 providers, account access, generated media and Live conversation.
 
 The current implementation exposes reusable procedural and imported WAV/MP3/Vorbis sounds, object emitters,
-finite or looping native playback, independent controls and playback events through
+finite or looping native playback, independent controls, world master/role levels and playback events through
 the shared capability catalog. Clips up to ten minutes use bounded playback; additional codecs and live-stream adapters remain pending. Finished local chat audio attachments can be imported as reusable sources
 through the same checked native preview. Maestro speech still uses its existing
 native speech session; ordinary artifact playback remains in the web app until
@@ -52,6 +52,21 @@ accepted on the headset.
   and resampling phase. Gain is transient; it does not edit the saved emitter.
   Stale controls cannot stop a replacement sound. A stopped or failed sound cannot
   be resumed, and focus/device loss never restarts one automatically.
+- `audio.mix` / `audio.mix.control` expose workspace-owned master, effects,
+  media and ambience multipliers to the same generated book forms, programs and
+  agent. `set` supplies all four 0–1 levels and the observed `stateId`; `reset`
+  returns them to one. Loading current values fills the draft without executing it.
+  Effective renderer gain is instance gain × master × its captured emitter role.
+  Mix changes leave instance identity, gain, revision, pause and PCM phase intact.
+  Zero mutes while consumption and voice admission continue. Preparing and future
+  sounds use the latest levels. These transient controls create no save or Undo
+  entry. Room Begin/Discard, reload/workspace replacement and editor disable reset
+  levels and invalidate previous state IDs, even when values were already one.
+  Source/emitter edits and output recreation preserve the workspace mix. Focus or
+  device loss still cancels playback and preserves levels. A failed renderer ends
+  its own instance without preventing healthy voices from receiving new levels.
+  Separate speech and web artifact players retain their own volumes; these controls
+  do not open capture, solve echo cancellation or change microphone policy.
 - `audio.source.list`, `audio.source.definition`, `object.audioEmitters`,
   `object.audioEmitter` and `audio.playback` expose the same definitions and runtime
   observations to book controls, programs and the agent. Completion/failure belongs
@@ -1232,3 +1247,25 @@ archive, emitters, programs, Undo and short/long playback paths are unchanged.
 Existing WAV imports remain byte-identical. Lossy-format timing depends on encoder
 metadata; use WAV for precise sample-aligned material. Compressed support does
 not establish physical audibility, Live coexistence or new provider acceptance.
+
+## Shared world volume controls — 2026-10-14
+
+`RoomEditor` owns the runtime mix independently of `WorldAudio` voice allocation.
+Reading or changing levels before any sound exists cannot create a playback,
+decoder or microphone owner. A single guarded instant capability applies all four
+levels on Unity's control thread. No new storage format, per-emitter rewriting,
+parallel mixer scheduler or automatic ducking is introduced. Existing event
+programs may explicitly change and restore levels; completing or stopping the
+calling task does not implicitly restore its previous mix.
+
+The native output lease receives the product at voice creation, mix changes and
+individual gain changes. Playback accounting and source/instance ownership remain
+unchanged. A missing native renderer is reported as that instance's failure;
+accepted mix settings are desired levels, never proof of physical audibility.
+
+Native tests cover passive reads, finite bounds, stale/replayed requests, room
+boundaries, source changes, focus recovery, preparing/current/paused voices,
+independent instance gain, output failure isolation, separate output ownership and
+muted finite completion. Both offline native journeys use the shared catalog;
+the book uses its actual generated form and readback. Device and paid-provider
+acceptance remain outstanding under the existing holds.

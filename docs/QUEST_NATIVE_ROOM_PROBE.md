@@ -1505,3 +1505,15 @@ Receipts are `chat-audio-mp3.json`, `chat-audio-vorbis.json`,
 the format suffix, including `book-chat-audio-wav.png` for the original long clip.
 Input fixtures, encoder commands and hashes live under the native test fixtures;
 no provider or private recording participates.
+
+
+### World audio mix parity
+
+The offline Headless journey reads `audio.mix`, changes all four levels while an
+independent sound is paused, verifies its individual revision/phase and the room
+revision are unchanged, resumes it and resets the levels. The Book journey uses
+its generated action/fact forms while a loop is running, loads its current guard
+and values, changes the same levels and resets them. Its `book-native-audio-mix.png`
+capture records the form; both receipts are included in the existing world-audio
+JSON evidence. These muted desktop journeys establish the shared native path,
+not headset audibility, real-provider interpretation or mixed-scene Live quality.
