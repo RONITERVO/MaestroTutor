@@ -118,7 +118,7 @@ namespace Maestro.Quest.Tests {
     }
     internal sealed class ContinuityContactCounter:MonoBehaviour {
         internal int GuardEnters,GuardStays,ItemContacts;
-        void OnCollisionEnter(Collision collision){if(collision.collider.GetComponent<DormantCollisionProxy>())GuardEnters++;else if(collision.collider.GetComponentInParent<RoomItem>())ItemContacts++;}
-        void OnCollisionStay(Collision collision){if(collision.collider.GetComponent<DormantCollisionProxy>())GuardStays++;}
+        void OnCollisionEnter(Collision collision){if(collision.collider.GetComponent<RoomCollisionProxy>())GuardEnters++;else if(collision.collider.GetComponentInParent<RoomItem>())ItemContacts++;}
+        void OnCollisionStay(Collision collision){if(collision.collider.GetComponent<RoomCollisionProxy>())GuardStays++;}
     }
 }

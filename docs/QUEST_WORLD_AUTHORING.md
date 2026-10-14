@@ -937,10 +937,11 @@ restart from rest after fixing the input.
 This recovery uses the same fact and controls for programs, agents and book
 controls. Automatic retirement can release unrelated static areas while physics
 retains its local dependencies. Explicit Start prepares resident free dynamic actors and their local dependencies;
-resident imported-geometry failures retain the global stop.
+resident imported-geometry failures with accepted collision bounds stop dependent
+actors locally. Unknown bounds or placement retain the conservative global stop.
 A boundary interruption uses the same local group hold and restart controls.
 Selective initial scene
-startup, local resident-import failure handling, larger worlds and hardware performance acceptance
+startup, larger worlds and hardware performance acceptance
 remain open.
 
 
@@ -1442,9 +1443,15 @@ Dormant geometry keeps its conservative collision guard. Approaching movement
 prepares the required native inputs; a guard contact interrupts the affected
 dynamic group, prepares its dependencies and requires an explicit restart from
 rest. The engine never treats unknown collision as empty space. The existing
-global stop for unavailable resident imported geometry remains conservative.
+global stop remains for resident imports whose collision bounds or placement
+cannot be proved. Previously accepted collision bounds follow the same native
+identity and current placement while geometry is unavailable. A conservative
+native barrier prevents unpredicted impacts from passing through the missing
+object; it does not emit authored contact events. Dependent actors stop, while
+unrelated actors keep running. Repair requires a new movement owner (grab, or
+pause then start physics); failed momentum is discarded.
 Initial scene startup still admits the bounded room. Selective scene startup,
-fully local resident-import failure handling and larger world capacity remain
+unknown-geometry isolation and larger world capacity remain
 required before claiming country-scale worlds. Preparation
 is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.

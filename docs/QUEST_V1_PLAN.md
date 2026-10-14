@@ -9986,3 +9986,58 @@ project assets are recorded separately. Browser tests report 128 passed/two
 skipped. All 14 protected files remain unchanged. No APK/AAB was produced.
 Evidence: .quest-evidence/selective-physics-start/.
 Headset, paid-provider, signing, deployment and Meta holds remain; v1 is incomplete.
+
+### Local failure handling for accepted resident imports — 2026-10-14
+
+Verified on desktop. A failed resident import no longer pauses unrelated actors
+when its previously accepted collision bounds, native identity, geometry source
+and current placement are still known. The retained value is a collision extent,
+not visual metadata or a second authored definition. Changing geometry, losing
+the native placement, or never having accepted collision geometry keeps the
+conservative global gate. Observation does not load content or publish barriers.
+
+The existing native collision guard now serves both dormant and failed resident
+geometry. Stale model colliders are disabled before PhysX; guard contacts keep
+interruption provenance without becoming authored collision events. Per-consumer
+inputs stop dependent free actors and their physical groups while unrelated
+actors continue. The same local readiness path serves navigation. A support-column
+query alone still does not prove that a traversal is clear.
+
+Repair is not a new movement owner. Failed momentum is discarded; dependent
+bodies and a failed movable import itself stay stopped until grab or explicit
+pause/start. Held and animated objects keep their owners. Cleanup follows object
+deletion, workspace lifetime and native retirement. The shared catalog reports
+the same contract to human controls, agent actions and programs; no storage
+migration or separate agent API is introduced.
+
+Verified on desktop: **1,259 EditMode / 1,601 PlayMode** passed, with
+three expected optional private-asset skips. Focused coverage passed
+**17 EditMode / 124 PlayMode**, including eight new resident-import cases.
+These cover dependent and independent actors, connected groups, failed imported
+bodies themselves, repair from rest, hand/animation ownership, passive bounds,
+changed geometry, lost roots, navigation inputs and real native guard impacts.
+
+Offline Headless **955fda3e4b3c40a38b04cbcac32bbc18** and Original Book **f91a6aac0ead4bda9cfa853f7e29b851**
+journeys passed with zero client/editor exit codes and no provider calls.
+The web suite passed **2,958 tests / 313 files**; fresh native
+catalog/catching fixtures, probe types and asset provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 selected ARM64 libraries
+pass ELF/16 KiB checks; 152 staged web files and the browser AAR match.
+The source audit covers 2,992 native inputs, including
+1,120 code/shader files (1,114 C#);
+four setup-generated project assets are recorded separately.
+Browser tests report 128 passed/two skipped. All 14 protected files remain unchanged.
+No APK/AAB was produced. Evidence: .quest-evidence/local-resident-geometry/.
+
+Selective scene startup, navigation-only cold-start admission, unknown-geometry
+isolation, larger world capacity, physical performance and the remaining v1
+release gates stay open. A failed movable import can still make retirement retain
+all loaded collision content when its own native sweep is unavailable; local simulation
+isolation does not yet prove equally local memory retention. Explicit Start still
+requires its selected free-body dependency set to prepare successfully. If an
+imported native root is destroyed, ordinary Delete still refuses the unavailable
+target; canonical orphan cleanup without recreating unavailable native content
+remains follow-up work. This does not establish country-scale performance,
+physical headset behavior, provider acceptance or Store readiness.
+Headset, paid-provider, signing, deployment and Meta holds remain; v1 is incomplete.

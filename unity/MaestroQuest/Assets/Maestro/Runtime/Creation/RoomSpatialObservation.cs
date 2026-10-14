@@ -60,6 +60,7 @@ namespace Maestro.Quest.Creation
             if(!item){if(TryAuthoredSpatial(data,out var canonical)){source="authored";return anchor?.Project(this,canonical)??canonical.Transform(Matrix4x4.TRS(data.position,data.rotation.normalized,Vector3.one*data.scale));}return RoomSpatialBounds.Unknown;}
             if(!Frame.Read(item.transform,out var position,out var rotation,out var scale))return RoomSpatialBounds.Unknown;
             source="native";var local=RoomSpatialBounds.Capture(item,data);
+            if(data.kind==RoomObjectKind.ImportedModel&&!ResidentGeometryReady(item,item.GetComponent<CreatedRoomObject>())&&TryRetainedResidentCollision(target,out var retained)){local=RoomSpatialBounds.Unknown;local.Collision=retained;source="retained";}
             return anchor?.Project(this,local)??local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale));
         }
         internal RoomSpatialExtent ReadCollisionBounds(string target)
@@ -70,7 +71,9 @@ namespace Maestro.Quest.Creation
             if(dormantNative.ContainsKey(target)||!item)return ReadSpatialBounds(target,out _).Collision;
             if(journal==null||!journal.NativeCollisionMetadata(target,out var kind,out var anchor)||
                 !Frame.Read(item.transform,out var position,out var rotation,out var scale))return default;
-            var local=new RoomSpatialBounds{Collision=RoomSpatialBounds.CaptureCollision(item,kind),VisualLayers=-1};
+            var collision=RoomSpatialBounds.CaptureCollision(item,kind);
+            if(kind==RoomObjectKind.ImportedModel&&!ResidentGeometryReady(item,item.GetComponent<CreatedRoomObject>()))collision=TryRetainedResidentCollision(target,out var retained)?retained:default;
+            var local=new RoomSpatialBounds{Collision=collision,VisualLayers=-1};
             return (anchor?.Project(this,local)??local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale))).Collision;
         }
         internal JObject ObserveSpatialBounds(string target)

@@ -28,7 +28,7 @@ namespace Maestro.Quest.Tests {
         }
         void QueueRecovery(string actor,string target){
             var rigid=editor.Find(actor).GetComponent<RigidRoomItem>();Assert.That(rigid.Simulating,Is.True,PhysicsInputFact(actor).ToString());
-            editor.QueueDormantContact(rigid,editor.DormantCollisionGuard(target).Shape.GetComponent<DormantCollisionProxy>());
+            editor.QueueDormantContact(rigid,editor.DormantCollisionGuard(target).Shape.GetComponent<RoomCollisionProxy>());
         }
         [UnityTest]public IEnumerator DormantRecoveryNativeImpactQueuesWithoutChangingBodiesInsideTheCallback(){
             string actor=PhysicsInputBall(new(-2,3,10)),target=RecoveryObstacle(new(5,3,10),4);StartRecoveryFixture();

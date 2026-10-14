@@ -73,9 +73,12 @@ namespace Maestro.Quest.Tests
             }finally{barrier.Open();first.Dispose();}
             yield return new WaitUntil(()=>load.IsCompleted&&placement.IsCompleted);Assert.IsNull(load.Exception);Assert.IsNull(placement.Exception);
             string id=placement.Result;var view=editor.Find(id).GetComponent<CreatedRoomObject>();Assert.IsTrue(view.ModelGeometryReady);Assert.IsTrue(physics.Running,"Ready geometry transfer cannot introduce a loading pause");
-            var priorState=(string)physics.ObserveSimulation()["stateId"];view.Model.Dispose();Assert.IsTrue(physics.Running);Assert.IsFalse(physics.CanSetSimulation(priorState,true,out error));Assert.IsTrue(physics.Running,"Preflight cannot mutate simulation while reporting changed geometry");Assert.IsFalse(AdmissionCanOccupy(),"A captured scan must not outlive loss of required geometry");yield return null;
-            Assert.IsFalse(physics.Running);Assert.IsFalse(physics.SetRunning(true,out error));Assert.That(error,Does.Contain(id));
-            Assert.IsTrue(editor.DeleteObject(id,out error),error);Assert.IsFalse(physics.Running);Assert.IsTrue(physics.SetRunning(true,out error),error);
+            view.Model.Dispose();Assert.IsTrue(physics.Running);
+            Assert.AreEqual(RoomSpatialReadiness.Unavailable,editor.SpatialMovementReady(new[]{id},null,out error));
+            Assert.IsTrue(editor.ReadCollisionBounds(id).Known,"Accepted extents remain usable without claiming native geometry is ready");
+            Assert.IsTrue(AdmissionCanOccupy(),"This is only a support-column query; local movement admission checks required geometry separately");yield return null;
+            Assert.IsTrue(physics.Running);Assert.IsFalse(view.ModelGeometryReady);Assert.IsNotNull(editor.ResidentCollisionGuard(id));
+            Assert.IsTrue(editor.DeleteObject(id,out error),error);Assert.IsNull(editor.ResidentCollisionGuard(id));Assert.IsTrue(physics.Running);
         }
         [UnityTest] public IEnumerator RegionAdmissionOwnerDisableCannotTurnBoundPhysicsIntoAnUnscopedWorld()
         {

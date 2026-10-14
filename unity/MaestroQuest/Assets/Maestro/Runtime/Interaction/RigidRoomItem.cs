@@ -35,7 +35,7 @@ namespace Maestro.Quest.Interaction
         public event Action<RoomItem,Collider,Vector3,float> ContactStarted;
         bool RecordCollision(Collision collision) {
             InputEditor?.RecordPhysicsContact(this,collision.collider);
-            if(!collision.collider||collision.collider.GetComponent<Creation.DormantCollisionProxy>() is not Creation.DormantCollisionProxy proxy)return false;
+            if(!collision.collider||collision.collider.GetComponent<Creation.RoomCollisionProxy>() is not Creation.RoomCollisionProxy proxy)return false;
             InputEditor?.QueueDormantContact(this,proxy);return true;
         }
         void OnCollisionStay(Collision collision)=>RecordCollision(collision);

@@ -130,7 +130,7 @@ namespace Maestro.Quest.Creation
             if(chosenCollider&&chosenCollider!=originalCollider)ArtResources.Release(chosenCollider);
             chosenCollider=null;customGeometry?.SetActive(false);importedCollision?.SetActive(false);
             Collider[] active;
-            if(importedObject&&!modelGeometryReady)active=System.Array.Empty<Collider>();
+            if(importedObject&&(!ModelGeometryReady||modelCollisionUnavailable))active=System.Array.Empty<Collider>();
             else if(shape==ItemCollider.Automatic&&importedCollision!=null){importedCollision.SetActive(true);active=importedCollision.Colliders;}
             else if(shape==ItemCollider.Automatic&&customGeometry!=null){customGeometry.SetActive(true);active=customGeometry.Colliders;}
             else {

@@ -33548,7 +33548,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start prepares currently resident free dynamic actors and their connected, nearby collision, selected ground and water dependencies, then rechecks the selected environment. Unused dormant content stays unloaded; newly active actors prepare their own inputs before gravity. Fixed, held and animated objects do not initiate preparation, but may be dependencies of a free actor. During preparation it can be cancelled; manual Pause, another accepted start, scan/environment changes, focus loss, workspace changes or changes to captured saved inputs invalidate it. Unrelated saved edits do not cancel preparation. Native readiness changes alone do not create a new user intent. Failed/cancelled preparation never starts physics, even if its assets finish later. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room with every accepted imported object’s collision geometry ready. Pending, failed or lost imported geometry pauses this bounded authored region, even when its scan remains aligned; finishing the load never silently resumes physics. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
+      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start prepares currently resident free dynamic actors and their connected, nearby collision, selected ground and water dependencies, then rechecks the selected environment. Unused dormant content stays unloaded; newly active actors prepare their own inputs before gravity. Fixed, held and animated objects do not initiate preparation, but may be dependencies of a free actor. During preparation it can be cancelled; manual Pause, another accepted start, scan/environment changes, focus loss, workspace changes or changes to captured saved inputs invalidate it. Unrelated saved edits do not cancel preparation. Native readiness changes alone do not create a new user intent. Failed/cancelled preparation never starts physics, even if its assets finish later. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room with provable imported-collision bounds and placement. Unavailable resident imports with previously accepted collision bounds use conservative native guards and stop dependent actors locally; unrelated actors can continue. Unknown bounds or placement still pause this bounded authored region. Explicit Start fails if a required selected dependency cannot prepare. Repair never silently resumes failed motion, including a movable imported object itself. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
       "example": {
         "operation": "start",
         "stateId": "00000000000000000000000000000000"
@@ -37856,7 +37856,7 @@
         }
       },
       "label": "Object spatial bounds",
-      "description": "Read conservative axis-aligned visual and accepted non-trigger collision envelopes in authored room coordinates without loading, saving, editing or acquiring ownership. source is native (sampled instance), retained (value-only geometry captured before intentional retirement), authored (prepared canonical visual geometry, collision unknown), unknown (saved but no prepared envelope), or missing. Each extent has known and hasBounds: only known=true with hasBounds=false proves empty; unknown zero min/max is never empty space. Geometry edits invalidate retained envelopes; bounded room-owned preparation can replace them with authored visual envelopes including selection, surface ink, terrain, container fill and carried material. Recipe rotation tracks use conservative swept bounds. Unsupported imports remain unknown. Scanned ink uses the current exact saved room/anchor and plane fit for every projection, including retired geometry; missing, different, untracked or unsupported scan frames stay unknown rather than reusing an old pose. Preparation can read model bytes but this fact never starts preparation or I/O; root placement reprojects them using the same stopped-pose rule as native activation. Disabled child geometry may be included. Loaded supported skins include envelopes derived from current joints, single-frame morph deltas and the reset pose; reads do not bake meshes or change rendering. Unsupported renderers and pending imports are unknown. These native skin values are not cold-start envelopes for all future animation. Bounds are broad-phase candidates, not exact contact, visibility, walkability, clearance, collision policy, future motion or physics readiness. They do not prove an unloaded model file remains available. No automatic regional streaming is enabled by this read.",
+      "description": "Read conservative axis-aligned visual and accepted non-trigger collision envelopes in authored room coordinates without loading, saving, editing or acquiring ownership. source is native (sampled instance), retained (accepted value-only geometry from intentional retirement or resident geometry loss), authored (prepared canonical visual geometry, collision unknown), unknown (saved but no prepared envelope), or missing. Each extent has known and hasBounds: only known=true with hasBounds=false proves empty; unknown zero min/max is never empty space. Geometry edits invalidate retained envelopes. For dormant objects, bounded room-owned preparation can replace them with authored visual envelopes including selection, surface ink, terrain, container fill and carried material. A failed resident import may retain collision only while its native identity, geometry source and current placement remain provable; this does not mean its native geometry is ready. Recipe rotation tracks use conservative swept bounds. Never-loaded unsupported imports remain unknown. Scanned ink uses the current exact saved room/anchor and plane fit for every projection, including retired geometry; missing, different, untracked or unsupported scan frames stay unknown rather than reusing an old pose. Preparation can read model bytes but this fact never starts preparation or I/O; dormant placement uses the same stopped-pose rule as native activation, while retained resident collision requires its current live placement. Disabled child geometry may be included. Loaded supported skins include envelopes derived from current joints, single-frame morph deltas and the reset pose; reads do not bake meshes or change rendering. Unsupported renderers and new pending imports have unknown visual extents. These native skin values are not cold-start envelopes for all future animation. Bounds are broad-phase candidates, not exact contact, visibility, walkability, clearance, collision policy, future motion or physics readiness. They do not prove an unloaded model file remains available. No automatic regional streaming is enabled by this read.",
       "input": {
         "type": "object",
         "properties": {
@@ -43927,7 +43927,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics retains each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and resident imported-geometry failures retain the global stop. This does not expand the 64-object or spatial limits, promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics retains each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and resident imported-geometry failures with accepted collision bounds stop dependent actors locally. Unknown bounds or placement retain the global stop; repairing geometry does not silently resume failed motion. This does not expand the 64-object or spatial limits, promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -44309,7 +44309,7 @@
         }
       },
       "label": "Room physics state",
-      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes immediate selected-ground, imported-collision and lifecycle readiness; an explicit Start may still prepare dormant dependencies of resident free dynamic actors. It does not activate every saved object. It is not permission to act, alignment approval or complete resource admission. ready requires selected ground and ready imported collision in the current authored region; read physics.environment for separate scan/virtual observations, not a guarantee of a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes immediate selected-ground, room collision and lifecycle admission; an explicit Start must still prepare the required dependencies of resident free dynamic actors. It does not activate every saved object. It is not permission to act, alignment approval or complete resource admission. ready requires selected ground and no unresolved imported-collision bounds or placement in the current authored region. Known unavailable geometry stops dependent actors through local input checks, so room readiness does not guarantee every actor can move. Read object.physics.inputs for individual physics readiness and physics.environment for separate scan/virtual observations; neither room fact guarantees a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
     },
     {
       "id": "object.physics.inputs",
@@ -44328,7 +44328,7 @@
         }
       },
       "label": "Object physics inputs",
-      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for its ground, another member or a joint reports unavailable or pending. In an already running world, an owned free body may acquire dormant local ground while remaining stopped; it never borrows the scan when its policy requires virtual ground. Preparation does not admit gravity, impulses or settlement: current ground columns, complete local inputs and connected joints must all be ready. pending means bounded native preparation. After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry or left its selected ground boundary. Unavailable geometry holds its free dynamic contact/constraint group while exact inputs prepare. A ground-boundary exit restores that group's last accepted poses and holds it; independent bodies keep running. Neither interruption replays old velocity. Grab, animation or teleport cancels the changed actor and its current physical connection group; merely touching another interrupted body does not grant control of it or resume it. Continuing native guard contacts are rechecked without requiring a fresh collision-enter callback. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. Retirement keeps each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unused unrelated areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and unavailable resident imports retain the conservative global stop.",
+      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for its ground, another member or a joint reports unavailable or pending. In an already running world, an owned free body may acquire dormant local ground while remaining stopped; it never borrows the scan when its policy requires virtual ground. Preparation does not admit gravity, impulses or settlement: current ground columns, complete local inputs and connected joints must all be ready. pending means bounded native preparation. After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry or left its selected ground boundary. Unavailable geometry holds its free dynamic contact/constraint group while exact inputs prepare. A ground-boundary exit restores that group's last accepted poses and holds it; independent bodies keep running. Neither interruption replays old velocity. Grab, animation or teleport cancels the changed actor and its current physical connection group; merely touching another interrupted body does not grant control of it or resume it. Continuing native guard contacts are rechecked without requiring a fresh collision-enter callback. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. Retirement keeps each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unused unrelated areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and unavailable resident imports with accepted collision bounds stop dependent actors locally. Unknown bounds or placement retain the conservative global stop. Repair requires a fresh physics owner; it never restores failed motion.",
       "input": {
         "type": "object",
         "properties": {
@@ -44634,7 +44634,7 @@
         }
       },
       "label": "Physics environment",
-      "description": "Read the separate physical scan, authored ground and default-scope simulation readiness. ready additionally requires the accepted region’s imported collision geometry; scanReady and authoredReady remain separate raw ground observations. Individual profile admission is reported by object.environment; physics.simulation reports whether any accepted environment can run. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
+      "description": "Read the separate physical scan, authored ground and default-scope simulation readiness. ready additionally requires an active authored region with no unresolved imported-collision bounds or placement. Known unavailable geometry stops dependent actors through local input checks; room readiness does not guarantee every actor can move. scanReady and authoredReady remain separate raw ground observations. Individual profile admission is reported by object.environment; physics.simulation reports whether any accepted environment can run. This does not verify physical alignment or a clear route, start physics, load a scan or change its collision/visual/acoustic geometry. Physical placement continues to use scanReady even when authored ground is ready. No side effects."
     },
     {
       "id": "object.environment",
@@ -46170,15 +46170,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsEnvironmentCapability.cs",
-      "sha256": "b9504f6d86a3dfc65120a62ac4bc77a6d2ab74db9f01a4d8b65a57df5c97d95d"
+      "sha256": "2ae48979732e1d3ba2bcfa03355143d5fa83fe7c28a879167a82d1fe189bb916"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
-      "sha256": "9102142ac0ea75221703595b4a5d07aa062138685d6c682d11dbee9b64acad32"
+      "sha256": "50657db3d82c21ed306b8542f93e685ac144780eb538a418757f46f924e7754e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
-      "sha256": "7292961bfda8791ff9cefe447bcc9d2b16e4c4236bf105b1731b5aa6fe0f16b9"
+      "sha256": "ca2ff8489a187eb18ed34788f341d733f36c23bf5ac365bbf04c71842d4c8e47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsStartOperation.cs",
@@ -46218,7 +46218,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "facc7f6d791320376e0a2f5aa45e58fa4f8f988eae20baaa0c7642221a20d7e4"
+      "sha256": "8684d0462df3b1d1d66882faf8053651dbfbe8c7b129e90e93bc7d5fc30b7f45"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -46458,11 +46458,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
-      "sha256": "0358c561ab34bd5d43c5acce0781e49acede93204f6b6bb7e8ed484c54c929dd"
+      "sha256": "4c63ee412de6895d4b673e5edfdcbbf6829efaefac03f2b6ec24b2dbaaa15a66"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "a58761193cc99a11cc00cd137473890f81ad9117d565d43d4a5e4e93d9cfe043"
+      "sha256": "6ff6cb0a33099f58c368d5f34808a900402648d4cdd5d3089864a0fdb2f4a953"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -46665,6 +46665,10 @@
       "sha256": "449946bfc240d337d1428b1ffb4b9a02570b490c2df0af5a3951c8c1f09c1bc3"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionGuard.cs",
+      "sha256": "0e0bdba9abedd4c9f3d3899b2c5b1e312d34a164a9088344f8c4ba06a87f8e5b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
       "sha256": "3cacc53be024270bff16d8a025233c595c0590f97213b189bd174cdeb84b12a5"
     },
@@ -46701,12 +46705,8 @@
       "sha256": "21c7da21bf8397152967d23611cba16e0e70b5da0bd6c19a301a3b4f01cae5ff"
     },
     {
-      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantCollision.cs",
-      "sha256": "fb1a6475d11629fe9ab71239e0c0874484a9803c0f4911a710d98d01455bb5ef"
-    },
-    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
-      "sha256": "b78e114ce58c7b14f862cdd66efc384324e117272b9a10d9797e87485c272e94"
+      "sha256": "1dd8b4683ea6afc42798ff46fa8b744d3d7d6633ee17d5f30d301ae80cfb1325"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -46726,7 +46726,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "4b3a88e0389a9780101679a4013368db48145d3b08c94cce42befea3b5f892e5"
+      "sha256": "347ca82ab297d4bc7fce1397d02ddb241bcecea887e24abfc0e06eda55d7accb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -46878,7 +46878,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "f4bd9166921e7e5a0722e3cf4e78a7174a9fe1d24e38f4402b0f4b2dc5a65d1f"
+      "sha256": "b76306b63300fa3be8800d497f085853f22e6d81da1bcf6c555fad4fffcf2bd9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
@@ -46926,7 +46926,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
-      "sha256": "109089b53628e1b7720193daf7891fd01d7a814cb1f85af06b5f5f702aa7ebe1"
+      "sha256": "6afe33d7330b958ce800b7836d3b449fa0537d1d1841bf1f4003e3c97e3f59a7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStepRecorder.cs",
@@ -46958,7 +46958,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
-      "sha256": "8041d2da7ec54aa500f94c59486118bc1ea09fe250fcb2707b025c09bd939b7d"
+      "sha256": "bf5036dec8afdb2d7ec516eabe7cf40ca981e97d44a09fb7923d0c794c9cf388"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionEdits.cs",
@@ -46967,6 +46967,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionRetention.cs",
       "sha256": "42f268ffc6e9328eddffc4bf2f9d4c2d387d3e21c5bd502c633d31b8bd9ac7f7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResidentCollision.cs",
+      "sha256": "22ab62e84ef55dcb5b9b495ee24f6351f8e13e0ba2fcd0f569fead59891146f7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -46998,15 +47002,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialObservation.cs",
-      "sha256": "0a51e7a0c3914f4964001c7b7bea5c7a529049d446cd85665afd948e4018f3b4"
+      "sha256": "b2a58f860d75a4dffd2e8bad716b0c93486c22f481d9aa182449a4c70debf115"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialPreparation.cs",
-      "sha256": "3ec70b5fdcd5e690f65dd0b2f47cd0c717d9b36abd0237259ca2ff3754542980"
+      "sha256": "674121ab14b99c6d821f73c46ed8aac660d6abdab5a40d81c70d06434efb669e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
-      "sha256": "5ae2a5b18b7d28b9b681b753ecaf93da6540920ae2af2ff3761d72222c76df01"
+      "sha256": "ad65440204902474ff4b387ac3c4b37931903ee3e37612097982ea930b623eba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
@@ -47474,7 +47478,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "6add39baca8ba4202e081aee297251690cfea85f1b772ef369f21298e17237a6"
+      "sha256": "cebdad6e8e7f2c167938ed92a1c32e67564507a8a5f6fb597d34d09666f2f6e3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -47902,7 +47906,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/SpatialBoundsFact.cs",
-      "sha256": "fd30b7b6e532bc367205bc32ad2595bac10fb9e1418e47074ef8efb274306a08"
+      "sha256": "e735408bae3fdfc87759e012d77870ca05f4f162ae3dd2fdef8b5fdfafc67214"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/CapabilityQuickEdit.cs",

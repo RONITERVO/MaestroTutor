@@ -9,7 +9,7 @@ namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
         sealed class DormantContact {
             internal RigidRoomItem Body;internal string Actor,Target;internal int Revision;
-            internal DormantCollisionProxy Proxy;internal uint Generation;
+            internal RoomCollisionProxy Proxy;internal uint Generation;
             internal RoomJournal Journal;internal Matrix4x4 Frame;internal string[] Members;
         }
         sealed class PhysicsInterruption:IDisposable {
@@ -24,7 +24,7 @@ namespace Maestro.Quest.Creation {
         bool processingDormantContacts;
         // PhysX callbacks only copy a bounded contact identity. Publication,
         // loading and body changes happen after all callbacks from that step.
-        internal void QueueDormantContact(RigidRoomItem body,DormantCollisionProxy proxy){
+        internal void QueueDormantContact(RigidRoomItem body,RoomCollisionProxy proxy){
             if(!this||!isActiveAndEnabled||applying||!body||body.PhysicsEditor!=this||!PhysicsStepDynamic(body)||!proxy||proxy.Owner!=this)return;
             var item=body.GetComponent<RoomItem>();if(Identity(item)==null)return;
             if(dormantContacts.Any(c=>c.Body==body&&c.Proxy==proxy))return;
@@ -92,7 +92,7 @@ namespace Maestro.Quest.Creation {
                     dormantRecoveries.Add(value);foreach(var id in value.Actors.Keys)recoveringBodies[id]=value;
                     foreach(var member in value.Actors.Values)member.body.InterruptAtCollisionGuard();
                     bool stale=contacts.Any(c=>!ReferenceEquals(c.Journal,journal)||ObjectRevision(c.Target)!=c.Revision||c.Frame!=transform.localToWorldMatrix||
-                        NativeEntityDormant(c.Target)&&(!c.Proxy||c.Proxy.Generation!=c.Generation));
+                        CollisionGuard(c.Target) is RoomCollisionGuard guard&&(!c.Proxy||guard.Shape!=c.Proxy.GetComponent<Collider>()||c.Proxy.Generation!=c.Generation));
                     if(previous.Length>0)RefuseRecovery(value,"The connected group changed during collision recovery.");
                     else if(stale)RefuseRecovery(value,"Collision inputs changed while movement was interrupted.");
                     else value.Inputs=new RoomSpatialInputs(this,actor,()=>RecoveryOwned(value)&&value.Frame==transform.localToWorldMatrix,false,purpose:"Collision recovery");

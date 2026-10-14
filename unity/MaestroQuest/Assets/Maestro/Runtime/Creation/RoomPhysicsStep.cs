@@ -28,6 +28,8 @@ namespace Maestro.Quest.Creation {
         // This record is independent of normal preparation leases. A native joint
         // break may release those leases before another collision callback runs.
         internal void RememberPhysicsStep(){
+            // Publish failure barriers and stop affected free actors before PhysX.
+            RefreshRegionCollision();
             physicsStepCancelled.Clear();
             foreach(var item in objects.Values)if(item&&item.GetComponent<RigidRoomItem>() is RigidRoomItem body)RememberPhysicsStepBody(body);
         }

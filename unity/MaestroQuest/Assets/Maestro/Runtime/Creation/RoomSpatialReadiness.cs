@@ -22,9 +22,9 @@ namespace Maestro.Quest.Creation
                 if(!item||!item.isActiveAndEnabled){error="Required movement geometry is unavailable";return RoomSpatialReadiness.Unavailable;}
                 if(!journal.ImportedEntity(target))continue;
                 var model=item.GetComponent<CreatedRoomObject>();
-                if(model&&model.ModelGeometryReady)continue;
+                if(model&&model.isActiveAndEnabled&&model.ModelGeometryReady)continue;
                 error="Required imported movement geometry is unavailable";
-                if(model&&model.ModelLoading){error="Preparing imported ground and obstacles";return RoomSpatialReadiness.Preparing;}
+                if(!ResidentGeometryLost(target)&&model&&model.isActiveAndEnabled&&model.ModelLoading){error="Preparing imported ground and obstacles";return RoomSpatialReadiness.Preparing;}
                 return RoomSpatialReadiness.Unavailable;
             }
             if(ground.HasValue){

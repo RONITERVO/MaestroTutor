@@ -9,7 +9,18 @@ namespace Maestro.Quest.Creation
     {
         RoomModelGeometry requestedModelGeometry=new(),appliedModelGeometry;
         ImportedCollisionGeometry importedCollision;
-        bool importedObject,modelGeometryReady;
+        bool importedObject,modelGeometryReady,modelCollisionUnavailable;
+        internal void RefreshModelCollisionAvailability(bool available){
+            if(!importedObject||modelCollisionUnavailable==!available)return;
+            modelCollisionUnavailable=!available;
+            // Keep an existing grab owner, but never leave stale native shapes
+            // producing contacts while the accepted model is unavailable.
+            if(!available)foreach(var shape in GetComponent<RoomItem>().Grab.colliders)if(shape)shape.enabled=false;
+            SetCollisionShape(collisionShape,true);
+            // Availability is not a new movement owner. Preserve the local failure
+            // latch until grab or explicit pause/start, including this imported body.
+            GetComponent<RigidRoomItem>().Refresh();
+        }
         ModelGeometryPreparation preparedGeometry;
         internal sealed class ModelGeometryPreparation:System.IDisposable
         {

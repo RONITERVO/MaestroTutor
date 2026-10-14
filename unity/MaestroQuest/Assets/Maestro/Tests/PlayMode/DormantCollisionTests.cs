@@ -41,13 +41,13 @@ namespace Maestro.Quest.Tests {
             editor.Undo();Assert.That(editor.Find(id),Is.Not.Null);Assert.That(guard.Shape,Is.Null);yield return null;Assert.That((bool)shape,Is.False);
         }
         [UnityTest]public IEnumerator DormantCollisionUnknownAndKnownEmptyAreDifferentAndNeverReuseStaleBounds(){
-            using var guard=new RoomDormantCollision(editor,"test-extent");var value=new RoomSpatialExtent{Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),Vector3.one)};
+            using var guard=new RoomCollisionGuard(editor,"test-extent");var value=new RoomSpatialExtent{Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),Vector3.one)};
             guard.Synchronize(value);var shape=guard.Shape;Assert.That(shape.enabled,Is.True);guard.Synchronize(default);Assert.That(guard.Known,Is.False);Assert.That(guard.HasBounds,Is.False);Assert.That(shape.enabled,Is.False);
             guard.Synchronize(RoomSpatialExtent.Empty);Assert.That(guard.Known,Is.True);Assert.That(guard.HasBounds,Is.False);Assert.That(shape.enabled,Is.False);
             guard.Synchronize(value);Assert.That(shape.enabled,Is.True);guard.Dispose();Assert.That(shape.enabled,Is.False);yield return null;
         }
         [UnityTest]public IEnumerator DormantCollisionNativeBarrierBlocksBodiesWithoutPublishingFakeContacts(){
-            RoomPhysicsLayers.Configure();using var guard=new RoomDormantCollision(editor,"test-barrier");guard.Synchronize(new(){Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),new(1,2,1))});
+            RoomPhysicsLayers.Configure();using var guard=new RoomCollisionGuard(editor,"test-barrier");guard.Synchronize(new(){Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),new(1,2,1))});
             var worldRoot=new GameObject("Isolated barrier physics");var projectile=new GameObject("Barrier impact body");var mode=Physics.simulationMode;
             try{
                 var world=worldRoot.AddComponent<RoomPhysicsWorld>();world.SetSurfaces(true,"Synthetic aligned world");world.StartPhysics();projectile.layer=RoomPhysicsLayers.Item;projectile.transform.position=new(6.5f,3,8);
@@ -58,7 +58,7 @@ namespace Maestro.Quest.Tests {
             }finally{Physics.simulationMode=mode;UnityEngine.Object.Destroy(projectile);UnityEngine.Object.Destroy(worldRoot);}yield return null;
         }
         [UnityTest]public IEnumerator DormantCollisionQueriesIgnoreBarriersButStillSeeWorldGeometry(){
-            using var guard=new RoomDormantCollision(editor,"query-barrier");guard.Synchronize(new(){Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),Vector3.one)});
+            using var guard=new RoomCollisionGuard(editor,"query-barrier");guard.Synchronize(new(){Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),Vector3.one)});
             var obstacle=new GameObject("Actual query obstacle");
             try{
                 obstacle.transform.position=new(11,3,8);var shape=obstacle.AddComponent<BoxCollider>();Physics.SyncTransforms();var ray=new Ray(new(6,3,8),Vector3.right);
@@ -97,6 +97,6 @@ namespace Maestro.Quest.Tests {
     }
     internal sealed class DormantCollisionCounter:MonoBehaviour {
         internal int Contacts;
-        void OnCollisionEnter(Collision collision){if(collision.collider.GetComponent<DormantCollisionProxy>())Contacts++;}
+        void OnCollisionEnter(Collision collision){if(collision.collider.GetComponent<RoomCollisionProxy>())Contacts++;}
     }
 }
