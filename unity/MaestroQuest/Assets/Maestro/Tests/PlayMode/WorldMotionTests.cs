@@ -76,7 +76,7 @@ namespace Maestro.Quest.Tests
             p=ball.position;Assert.That(motion.SetPose(Vector3.right,Quaternion.identity,out error),Is.False);Assert.That(error,Does.Contain("clearance"));Assert.That(ball.position,Is.EqualTo(p));Assert.That(content.transform.position,Is.EqualTo(at));
         }
         [UnityTest]public IEnumerator AuthoredNavigationMovesItsInstanceWithoutRebakingAndTrackingStaysFixed() {
-            Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);var build=navigation.BuildRevision;var revision=navigation.SurfaceRevision;var eye=tracking.position;
+            Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);yield return NavigationTestWait.Built(navigation);var build=navigation.BuildRevision;var revision=navigation.SurfaceRevision;var eye=tracking.position;
             for(int i=1;i<=10;i++){Shift(new Vector3(i*.3f,0,-i*.2f),i*5);Assert.That(navigation.Sample(content.transform.TransformPoint(Vector3.right),.2f,out var ground),Is.True);Assert.That(Vector3.Distance(ground,content.transform.TransformPoint(Vector3.right)),Is.LessThan(.05f));Assert.That(navigation.BuildRevision,Is.EqualTo(build));}
             Assert.That(navigation.SurfaceRevision,Is.GreaterThan(revision));Assert.That(tracking.position,Is.EqualTo(eye));yield return null;
         }
@@ -102,7 +102,7 @@ namespace Maestro.Quest.Tests
             var view=root.AddComponent<VirtualRoomView>();view.Initialize(content.transform,root.transform,camera,scan,world);
             var ground=content.GetComponentInChildren<RoomWalkableSurface>();var collider=ground.Collision;var groundRevision=ground.Revision;
             Assert.That(rigid.Launch(new Vector3(.3f,2,0),Vector3.up),Is.True);Shift(new Vector3(2,0,-1),35);
-            Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);var bake=navigation.BuildRevision;
+            Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);yield return NavigationTestWait.Built(navigation);var bake=navigation.BuildRevision;
             var frame=content.transform.localToWorldMatrix;var physical=tracking.localToWorldMatrix;var simulation=world.ObserveSimulation().ToString();
             var velocity=ball.linearVelocity;var angular=ball.angularVelocity;var placement=rigid.PlacementRevision;var motionRevision=rigid.MotionRevision;
             for(int i=0;i<3;i++) {

@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests {
             var walks=new List<GroundedTravel>();try{
                 for(int i=0;i<4;i++){var walk=new GroundedTravel(editor,actors[i],new(-4+i*1.5f,0,-1),.65f);walks.Add(walk);Assert.That(walk.Begin(out var error),Is.True,error);}
                 Assert.That(GroundedTravel.CanBegin(editor,actors[4],out var reason),Is.False);Assert.That(reason,Does.Contain("four"));walks[0].Stop(false);Assert.That(GroundedTravel.CanBegin(editor,actors[4],out reason),Is.True,reason);
-                for(int i=0;i<8;i++){walks[1].Tick();yield return null;}Assert.That(actors[1].transform.position.z,Is.GreaterThan(-1.99f));
+                float deadline=Time.realtimeSinceStartup+10;while(actors[1].transform.position.z<=-1.99f&&Time.realtimeSinceStartup<deadline){walks[1].Tick();yield return null;}Assert.That(actors[1].transform.position.z,Is.GreaterThan(-1.99f));
             }finally{foreach(var walk in walks)walk.Stop(false);}
         }
         [UnityTest]public IEnumerator GroundedTravelReadinessDoesNotBakeAcquireOrEditAndRejectsMissingBodies(){

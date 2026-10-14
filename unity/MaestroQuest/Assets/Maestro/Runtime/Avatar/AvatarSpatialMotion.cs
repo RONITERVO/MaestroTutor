@@ -145,7 +145,7 @@ namespace Maestro.Quest.Avatar
                     }
                     else {if(navigation.CanDetourTraversalBlocker)avoidRouteSolids=true;corners=Array.Empty<Vector3>();nextPath=0;Say(navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):blocked);}
                 }
-                else Say(!navigation.FollowRoutePending&&navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.FollowRouteStatus??navigation.WaterBlocker??(navigation.PathsPending?"Updating the room path — following is still enabled":"No connected path — try Size, or place Maestro on the same clear floor"));
+                else Say(navigation.PathsPending?"Updating the room path — following is still enabled":!navigation.FollowRoutePending&&navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.FollowRouteStatus??navigation.WaterBlocker??"No connected path — try Size, or place Maestro on the same clear floor");
             }
             else
             {
@@ -185,13 +185,17 @@ namespace Maestro.Quest.Avatar
             return true;
         }
         internal bool CanContinueAuthored(out string error)=>CanBeginAuthored(out error);
+        internal bool AuthoredNavigationPending {get;private set;}
+        internal bool AuthoredPathsPending=>navigation&&navigation.PathsPending;
         internal bool TryAuthoredStep(Vector3 next,float extraHeight,out string error)=>TryAuthoredStep(transform.position,next,extraHeight,out error);
         internal bool TryAuthoredStep(Vector3 origin,Vector3 next,float extraHeight,out string error)
         {
-            float scale=transform.lossyScale.y;
+            AuthoredNavigationPending=false;float scale=transform.lossyScale.y;
             if(!navigation.Prepare(.25f*scale,1.7f*scale,out error,item))return false;
             error="Authored motion blocked — no supported ground for this authored foot position";
-            if(!float.IsFinite(next.sqrMagnitude)||!navigation.DirectStep(origin,next,out var floor)||Mathf.Abs(floor.y-next.y)>.03f)return false;
+            if(!float.IsFinite(next.sqrMagnitude))return false;
+            if(!navigation.DirectStep(origin,next,out var floor)){AuthoredNavigationPending=navigation.PathsPending;return false;}
+            if(Mathf.Abs(floor.y-next.y)>.03f)return false;
             // Respect the user's space along the whole step, including a clip with discontinuous keys.
             var from=Vector3.ProjectOnPlane(origin-room.Viewer.position,Vector3.up);var to=Vector3.ProjectOnPlane(next-room.Viewer.position,Vector3.up);var step=to-from;
             float closest=(from+step*(step.sqrMagnitude<.000001f?0:Mathf.Clamp01(-Vector3.Dot(from,step)/step.sqrMagnitude))).magnitude;

@@ -9532,3 +9532,64 @@ retention stay mandatory; automatic unloading stays off and the 64-object /
 25-metre / four-height-field limits remain. Regional streaming, broader shadows,
 physical performance, real-provider behavior and existing audio/Store acceptance
 remain open. V1 remains active and incomplete.
+
+
+## Asynchronous walking-map construction — 2026-10-14
+
+Walking maps now use Unity's asynchronous native builder. Each operation owns
+immutable mesh copies until completion or cancellation drains, with at most two
+native jobs admitted at once. Changed ground retires the old installed map before
+another step; only a result matching current geometry can publish. A completed
+map uses the current physical frame. Pausing, disabling, rebinding or destroying
+its owner cannot let a late completion install into a replacement room.
+
+Current colliders still support bounded direct manual/exact steps while planned
+walking and following wait. Authored animation preserves the first pending sample
+time, pauses the existing clock and restores its accepted pose. When ready, the
+whole sampled interval still passes the same support, user-clearance, solid and
+water checks before any pose commits. The shared authored-input fact preserves
+its dependency detail while reporting a pending map. There is no new action,
+planner, room/prototype format or migration.
+
+The complete final native suite passed **1,205 EditMode / 1,536 PlayMode** checks,
+with the three expected optional private-asset skips. Eight new cases cover
+current-ground traversal, geometry replacement, canceled publication, frame
+relocation, bounded concurrent work, retiring stale routes, pending authored time
+and destruction cleanup. Existing navigation tests now wait for actual map
+completion while retaining collision, route and ownership assertions.
+
+Complete offline Headless **6eb952b923b24fd68862f4e94b723abc** and Original Book
+**ab7f5c09e7584bea85e00958938d38f0** journeys passed with zero client/editor exits.
+Both execute actual native movement using an explicitly selected synthetic gait,
+and report completed travel of approximately two metres through the shared action
+path. They use synthetic assets/scripted providers; they do not establish provider
+or physical-headset acceptance.
+
+All **2,739 frozen native inputs**, including **1,011 C# files**, were checked;
+C# and shader hashes match the build mirror. No native/application implementation
+changed after the complete suites. Refreshed eight native catalog states and twelve
+catch checkpoints; **77** web fixture consumers passed. The unchanged web source
+also retains the preceding **2,940-test / 312-file** local result. Generated/native
+catalog equality and the source catalog check passed.
+
+Shared web/browser build, Unity Android export and unsigned Gradle compilation
+passed. Java results remain **128 passed / two skipped** on unchanged browser
+source. All **22 selected ARM64 libraries** pass the ELF/16 KiB checks; all **148
+web files**, the browser AAR and native staging hashes match. The first Gradle
+attempt ran out of disk space. After preserving their receipts and checking that
+no packages or signing material were present, four obsolete tool-owned unsigned
+compile directories were removed. The same frozen export then compiled and passed
+the audit; no source change or repeated native suite was needed.
+
+Evidence is in `.quest-evidence/async-navigation/` and the named journey folders.
+The ten protected raw files and four untracked Store files remain byte-for-byte
+unchanged. No APK/AAB, headset query/install, paid-provider, signing, deployment
+or Meta action ran.
+
+Geometry collection/copying, map installation and cancellation still have
+main-thread costs. This does not establish physical frame time, fair scheduling
+under perpetual edits, regional streaming, foot planting or release acceptance.
+Whole-world physics admission and running-world retention remain mandatory;
+automatic unloading stays off and the 64-object / 25-metre / four-height-field
+limits remain. Existing provider, audio, performance and Store acceptance gaps
+remain open. V1 is active and incomplete.

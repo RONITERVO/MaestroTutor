@@ -68,7 +68,10 @@ namespace Maestro.Quest.Avatar
             if(clock.Paused){Restore();return false;}
             previous=frame.position;previousRise=rise;
             for(int i=0;i<points.Length;i++){
-                if(!spatial.TryAuthoredStep(previous,points[i],Mathf.Max(previousRise,rises[i]),out error))return Fail(error);
+                if(!spatial.TryAuthoredStep(previous,points[i],Mathf.Max(previousRise,rises[i]),out error)){
+                    if(spatial.AuthoredNavigationPending){Preparing=true;pendingTime=time;clock.Pause(this,true);Restore();return false;}
+                    return Fail(error);
+                }
                 previous=points[i];previousRise=rises[i];
             }
             // Commit only after the whole sampled interval is ready and clear.
@@ -83,7 +86,13 @@ namespace Maestro.Quest.Avatar
             avatar.PoseRig.CaptureImportedPose();
         }
         bool Fail(string error){Restore();Error=error;Preparing=false;inputs?.Dispose();if(spatial)spatial.ReleaseAuthoredInputs();clock.Pause(this,true);return false;}
-        internal JObject Observe()=>ended?RoomContactInputs.State("inactive",false,null):Error!=null?RoomContactInputs.State("unavailable",false,Error):inputs.Observe();
+        internal JObject Observe(){
+            if(ended)return RoomContactInputs.State("inactive",false,null);
+            if(Error!=null)return RoomContactInputs.State("unavailable",false,Error);
+            var state=inputs.Observe();
+            if(Preparing&&spatial&&spatial.AuthoredPathsPending){state["state"]="pending";state["ready"]=false;state["reason"]="Walking paths are preparing";}
+            return state;
+        }
         public void End(){if(ended)return;ended=true;inputs?.Dispose();clock.Pause(this,false);if(model)model.transform.localPosition=modelPosition;if(spatial)spatial.RememberAuthoredPlacement();}
     }
 }

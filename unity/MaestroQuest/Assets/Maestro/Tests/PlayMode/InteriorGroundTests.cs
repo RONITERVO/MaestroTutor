@@ -128,7 +128,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(nav.Sample(new Vector3(-1,height,0),.15f,out var floor),Is.True,$"storey {height}");
                 Assert.That(floor.y,Is.EqualTo(height).Within(.01f));
             }
-            var path=new NavMeshPath();Assert.That(nav.Path(new Vector3(-1,-2,0),new Vector3(2,-2,0),path),Is.True);
+            yield return NavigationTestWait.Built(nav);var path=new NavMeshPath();Assert.That(nav.Path(new Vector3(-1,-2,0),new Vector3(2,-2,0),path),Is.True);
             foreach(var corner in path.corners)Assert.That(corner.y,Is.EqualTo(-2).Within(.06f));
             Assert.That(nav.Path(new Vector3(-1,-2,0),new Vector3(-1,1,0),new NavMeshPath()),Is.False,"No stairs connect these storeys");yield return null;
         }

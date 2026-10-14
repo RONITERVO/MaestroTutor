@@ -1258,3 +1258,32 @@ It does not add reflection probes, sun shadows, shadowing from real obstacles,
 automatic unloading or larger scene limits. Whole-world physics admission and
 running-world retention remain mandatory. No room/prototype migration is needed;
 the new reason is transient and the catalog remains the shared interface.
+
+
+## Walking-map preparation without synchronous baking — 2026-10-14
+
+Walking-map construction now uses Unity's [asynchronous native builder](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/AI.NavMeshBuilder.UpdateNavMeshDataAsync.html).
+The existing navigation owner limits the app to two concurrent native builds.
+Each job holds its own immutable mesh snapshots; edits may replace the original
+geometry while that work finishes. Only a result matching the current accepted
+sources can become a route map. A completed map installs in the current room
+frame, so moving the world cannot publish it at an obsolete physical position.
+Cancellation retires publication immediately and releases native inputs after the
+operation drains. No late completion can resume an action or install in a new room.
+
+The current collision geometry remains authoritative during preparation. Short
+manual and exact steps may continue when their complete support and clearance can
+be checked directly. Planned walking/following waits for a matching map. An
+imported authored animation that needs the map retains its first requested time,
+restores the accepted pose and pauses its existing playback clock. Later requests
+cannot skip the pending interval. The original `avatar.authored.inputs` fact
+reports pending readiness while preserving its native dependency detail. Once
+ready, the same ground, user-clearance, obstacle and water checks decide the whole
+interval before committing a pose. Stop and existing ownership rules still apply.
+
+This extends the navigation system used by the book, agent, programs and manual
+movement; it adds no second planner, new action family or saved format. Source
+collection, mesh snapshotting, map installation and cancellation still have
+main-thread costs. Two jobs is an admission bound, not a measured headset frame-time
+guarantee. Whole-world collision admission, automatic unloading off, current world
+limits, foot planting and physical performance acceptance remain unchanged.

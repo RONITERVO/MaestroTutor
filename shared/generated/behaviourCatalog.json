@@ -45046,7 +45046,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarAuthoredTravel.cs",
-      "sha256": "8e31190e85b7e9cd1ea12e68c097b1b6107963323a559f1dc7f7f27c8429a36a"
+      "sha256": "a8ec17addaf1bda1d28b840c0c7b2343dcdaca1ef730d6f36336a84db10edd58"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarCatchReach.cs",
@@ -45062,7 +45062,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "939d899f3484daa3621509907ee99dd6a5b9b4494981f3aad28f1bca8879a390"
+      "sha256": "973e1fa3eda6a2b3b6a2cad1965361a201b03f9c11595bbd9e7f2d0edf907869"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -46874,7 +46874,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "56e654a766a61fc4f35b8ef9c28babbc43969e32351bdee066f5e8e088e93fdd"
+      "sha256": "ae19e750fb5101a32cf64f68a39d81e6cd6dd62887de3e99dd051197863ac2c4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationBuild.cs",
+      "sha256": "b8e773a37a65032ea71421434026b4549bae30f44b142a9d1511968472d3a149"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
@@ -46886,7 +46890,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
-      "sha256": "43f8fac589bf1fdc7d05ea624143ddf22e800b50904cb7a7dbce3749de71d9c0"
+      "sha256": "142be19277fbf7bc090e96dc1df8a65849df971b1620aa3ac2c2b8dff9dc8e4b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationSolidRoutes.cs",
@@ -46894,7 +46898,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
-      "sha256": "4897201b85ee902bab085e5e0496fee870c15aee31afd0f5840a0c9cf780a685"
+      "sha256": "4cbee8378b8ee00b704df8ac761298b6512c1219ece92419ec7e44512e697bbb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomOwnership.cs",

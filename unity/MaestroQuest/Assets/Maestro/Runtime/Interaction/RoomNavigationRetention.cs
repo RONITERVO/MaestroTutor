@@ -25,7 +25,7 @@ namespace Maestro.Quest.Interaction
             // Observe held snapshots without Ready/Capture: a diagnostic must not
             // bake a map or replace native work. Pending mixed-world traversal uses
             // candidate ground after the previous map has already been retired.
-            accepted.Retain(editor,graph);candidate.Retain(editor,graph);
+            accepted.Retain(editor,graph);candidate.Retain(editor,graph);building.Retain(editor,graph);
             if(InputEditor==editor){stepInputs?.Retain(graph);routeInputs?.Retain(graph);}
             if(routeSearch?.Pending==true&&actor&&actor.GetComponentInParent<RoomEditor>()==editor)
                 foreach(var id in routeSearch.BlockerDependencies){

@@ -87,7 +87,7 @@ namespace Maestro.Quest.Tests
             // collider starts interpenetrating its physical counterpart.
             RealSurface(new Vector3(0,-.1f,12),new Vector3(4,.2f,4));RealPhysics();
             Assert.That(navigation.Prepare(.2f,1.6f,out var error),Is.True,error);
-            var build=navigation.BuildRevision;var path=new UnityEngine.AI.NavMeshPath();
+            yield return NavigationTestWait.Built(navigation);var build=navigation.BuildRevision;var path=new UnityEngine.AI.NavMeshPath();
             Assert.That(navigation.Path(Vector3.zero,Vector3.right,path),Is.True);
             for(int i=1;i<=30;i++) {
                 Shift(new Vector3(i*.01f,0,0),0);
@@ -99,7 +99,7 @@ namespace Maestro.Quest.Tests
                 yield return null;
             }
             yield return new WaitForSecondsRealtime(RoomNavigation.FrameSettleSeconds+.05f);
-            Assert.That(navigation.Path(content.transform.position,content.transform.position+Vector3.right,path),Is.True);
+            yield return NavigationTestWait.Built(navigation);Assert.That(navigation.Path(content.transform.position,content.transform.position+Vector3.right,path),Is.True);
             Assert.That(navigation.PathsPending,Is.False);Assert.That(navigation.BuildRevision,Is.EqualTo(build+1));
             Shift(content.transform.position+Vector3.right*.01f,0);Assert.That(navigation.Ready&&navigation.PathsPending,Is.True);
             world.SetSurfaces(false,"Alignment lost during movement");Assert.That(navigation.Ready,Is.False);Assert.That(navigation.PathsPending,Is.False);

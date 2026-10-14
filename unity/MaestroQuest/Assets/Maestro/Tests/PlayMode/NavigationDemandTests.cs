@@ -117,7 +117,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.True,motion.Status);navigation.enabled=false;Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.False);
         }
         [UnityTest]public IEnumerator NavigationDemandAbsentOffsetCavityRefusesRouteWithoutInventingAWaterDetour(){
-            string pool=WaterBasin();var c=editor.Read(pool).containers[0];c.frame.position=new(-4,.2f,0);
+            string pool=WaterBasin();yield return NavigationBuilt();var c=editor.Read(pool).containers[0];c.frame.position=new(-4,.2f,0);
             Assert.That(editor.EditContainer(pool,editor.ObjectRevision(pool),c,out var error),Is.True,error);
             editor.Find(pool).transform.position=new(4.8f,-.2f,0);editor.Find(pool).gameObject.SetActive(false);
             Assert.That(navigation.FollowRoute(Vector3.zero,new(3,0,0),_=>false,out _),Is.False);

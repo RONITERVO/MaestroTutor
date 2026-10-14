@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(allowed,Is.EqualTo(expected),navigation.FollowRouteStatus);done(points);
         }
         [UnityTest]public IEnumerator WaterRouteFollowingWalksAroundAPoolWithoutCrossingIt(){
-            WaterBasin();viewer.transform.position=new Vector3(3,1.6f,0);motion.SetPreferences(.8f,1.2f);
+            WaterBasin();yield return NavigationBuilt();viewer.transform.position=new Vector3(3,1.6f,0);motion.SetPreferences(.8f,1.2f);
             Assert.That(motion.Begin("around water",AvatarSpatialMode.Follow,out var e),Is.True,e);
             var previous=avatar.transform.position;float lateral=0;uint built=navigation.BuildRevision;
             for(int i=0;i<360&&avatar.transform.position.x<2.1f;i++){
@@ -30,14 +30,14 @@ namespace Maestro.Quest.Tests {
             Assert.That(navigation.BuildRevision,Is.EqualTo(built),"Liquid routing must not rebake accepted ground");motion.Stop();
         }
         [UnityTest]public IEnumerator WaterRouteFollowingStopsAtTheChosenDistanceWithABookNearTheUser(){
-            WaterBasin();viewer.transform.position=new Vector3(3,1.6f,0);var book=editor.Find("book");book.transform.position=new Vector3(2.9f,1,0);
+            WaterBasin();yield return NavigationBuilt();viewer.transform.position=new Vector3(3,1.6f,0);var book=editor.Find("book");book.transform.position=new Vector3(2.9f,1,0);
             motion.SetPreferences(.8f,1.2f);Assert.That(motion.Begin("stand off",AvatarSpatialMode.Follow,out var e),Is.True,e);
             for(int i=0;i<360&&avatar.transform.position.x<2.1f;i++)yield return null;
             Assert.That(avatar.transform.position.x,Is.GreaterThan(2.1f),motion.Status);
             Assert.That(Vector3.ProjectOnPlane(viewer.transform.position-avatar.transform.position,Vector3.up).magnitude,Is.GreaterThanOrEqualTo(.78f));motion.Stop();
         }
         [UnityTest]public IEnumerator WaterRouteReplansWhenWaterMovesAcrossAnAlreadyAcceptedPath(){
-            string pool=WaterBasin();var liquid=editor.Find(pool);liquid.transform.position=new Vector3(1.4f,-.2f,3);liquid.GetComponent<RigidRoomItem>().Teleported();
+            string pool=WaterBasin();yield return NavigationBuilt();var liquid=editor.Find(pool);liquid.transform.position=new Vector3(1.4f,-.2f,3);liquid.GetComponent<RigidRoomItem>().Teleported();
             viewer.transform.position=new Vector3(3.5f,1.6f,0);motion.SetPreferences(.8f,1.2f);
             Assert.That(motion.Begin("moving water",AvatarSpatialMode.Follow,out var e),Is.True,e);
             for(int i=0;i<30&&avatar.transform.position.x<.3f;i++)yield return null;
@@ -52,7 +52,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(navigation.BuildRevision,Is.EqualTo(built));motion.Stop();
         }
         [UnityTest]public IEnumerator WaterRoutePolicyChangeRetiresPendingDetour(){
-            WaterBasin();var end=new Vector3(3,0,0);
+            WaterBasin();yield return NavigationBuilt();var end=new Vector3(3,0,0);
             Assert.That(navigation.FollowRoute(Vector3.zero,end,c=>!c.transform.IsChildOf(avatar.transform),out _),Is.False);
             Assert.That(navigation.FollowRoutePending,Is.True);
             Assert.That(editor.ConfigureWaterTraversal("maestro",editor.ObjectRevision("maestro"),new(){mode="wade",maxDepthMetres=.25f},out var e),Is.True,e);
@@ -60,7 +60,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(navigation.FollowRoutePending,Is.False);Assert.That(points.All(v=>Mathf.Abs(v.z)<.05f),Is.True);yield return null;
         }
         [UnityTest]public IEnumerator WaterRouteCurrentPolicyAndEmptyWaterRestoreTheDirectPathWithoutRebaking(){
-            string pool=WaterBasin();var end=new Vector3(3,0,0);uint built=navigation.BuildRevision;
+            string pool=WaterBasin();yield return NavigationBuilt();var end=new Vector3(3,0,0);uint built=navigation.BuildRevision;
             yield return WaterRoute(Vector3.zero,end,p=>Assert.That(p.Any(v=>Mathf.Abs(v.z)>.6f),Is.True));
             Assert.That(editor.ConfigureWaterTraversal("maestro",editor.ObjectRevision("maestro"),new(){mode="wade",maxDepthMetres=.25f},out var e),Is.True,e);
             yield return WaterRoute(Vector3.zero,end,p=>Assert.That(p.All(v=>Mathf.Abs(v.z)<.05f),Is.True));
@@ -70,7 +70,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(navigation.BuildRevision,Is.EqualTo(built));
         }
         [UnityTest]public IEnumerator WaterRouteDiscoversAnotherPoolAndChecksEveryReturnedSegment(){
-            WaterBasin();Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Second pool",new Vector3(1.8f,-.2f,-.8f),1,Color.white,out var id,out var e),Is.True,e);
+            WaterBasin();yield return NavigationBuilt();Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Second pool",new Vector3(1.8f,-.2f,-.8f),1,Color.white,out var id,out var e),Is.True,e);
             Assert.That(editor.EditContainer(id,editor.ObjectRevision(id),new(){version=2,rectangle=new(){width=1,depth=1},frame=new(){position=new Vector3(0,.2f,0)},height=.3f,capacityMl=300,amountMl=200},out e),Is.True,e);
             yield return WaterRoute(Vector3.zero,new Vector3(4,0,0),points=>{
                 Assert.That(points.Length,Is.GreaterThan(2));
@@ -78,7 +78,7 @@ namespace Maestro.Quest.Tests {
             });
         }
         [UnityTest]public IEnumerator WaterRouteRefusesAnUnderwaterDestinationAndStopCancelsSearch(){
-            WaterBasin();yield return WaterRoute(Vector3.zero,new Vector3(.8f,0,0),p=>Assert.That(p,Is.Empty),false);
+            WaterBasin();yield return NavigationBuilt();yield return WaterRoute(Vector3.zero,new Vector3(.8f,0,0),p=>Assert.That(p,Is.Empty),false);
             StringAssert.Contains("water",navigation.FollowRouteStatus);
             viewer.transform.position=new Vector3(3,1.6f,0);Assert.That(motion.Begin("cancel route",AvatarSpatialMode.Follow,out var e),Is.True,e);
             for(int i=0;i<10&&!navigation.FollowRoutePending;i++)yield return null;
@@ -86,7 +86,7 @@ namespace Maestro.Quest.Tests {
             var position=avatar.transform.position;yield return new WaitForSeconds(.1f);Assert.That(avatar.transform.position,Is.EqualTo(position));
         }
         [UnityTest]public IEnumerator WaterRouteUsesVirtualGroundBelowTheScannedFloorForBothParticipants(){
-            string pool=WaterBasin();world.PausePhysics();
+            string pool=WaterBasin();yield return NavigationBuilt();world.PausePhysics();
             var ground=GameObject.CreatePrimitive(PrimitiveType.Cube);ground.transform.SetParent(root.transform,false);ground.transform.position=new Vector3(0,-2.1f,0);ground.transform.localScale=new Vector3(12,.2f,12);ground.layer=RoomPhysicsLayers.Environment;ground.AddComponent<RoomWalkableSurface>().Publish(ground.GetComponent<Collider>());
             var profile=new RoomEnvironmentProfile{id=Guid.NewGuid().ToString("N"),name="Below-floor actors",realCollisions=false};
             Assert.That(editor.EditEnvironment(profile,profile.id,0,Array.Empty<string>(),out var e),Is.True,e);

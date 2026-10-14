@@ -26,7 +26,7 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator SolidRouteFiniteMaestroWalksAroundAPropWithEveryStepClear(){
             WalkingScene();var prop=SolidRouteProp(new(1.2f,.7f,0),new(.6f,1.4f,.8f));var collision=prop.Grab.colliders.First(c=>c.enabled);
             var walk=new GroundedTravel(editor,editor.Find("maestro"),new(2.4f,0,0),1.2f);var motor=new RoomGroundMotor();float lateral=0;
-            try{Assert.That(walk.Begin(out var error),Is.True,error);var owned=editor.GetComponentsInChildren<RoomNavigation>().Single();uint built=owned.BuildRevision;var previous=avatar.transform.position;var state=RuleActionState.Preparing;
+            try{Assert.That(walk.Begin(out var error),Is.True,error);var owned=editor.GetComponentsInChildren<RoomNavigation>().Single();yield return NavigationTestWait.Built(owned);uint built=owned.BuildRevision;var previous=avatar.transform.position;var state=RuleActionState.Preparing;
                 for(int i=0;i<500&&state==RuleActionState.Preparing;i++){
                     state=walk.State(out error);var current=avatar.transform.position;lateral=Mathf.Max(lateral,Mathf.Abs(current.z));
                     Assert.That(motor.ClearExact(previous,current,.25f,1.7f,1<<collision.gameObject.layer,c=>c==collision),Is.True,"Every accepted step must clear the prop");previous=current;yield return null;
@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests {
             }finally{walk.Stop(false);}
         }
         [UnityTest]public IEnumerator SolidRouteCombinesWaterAndSolidObstaclesWithoutRebaking(){
-            WaterBasin();SolidRouteProp(new(.8f,.7f,-.85f),new(.8f,1.4f,.45f));uint built=navigation.BuildRevision;
+            WaterBasin();yield return NavigationBuilt();SolidRouteProp(new(.8f,.7f,-.85f),new(.8f,1.4f,.45f));uint built=navigation.BuildRevision;
             yield return SolidRoute(Vector3.zero,new(3,0,0),points=>{
                 Assert.That(points.Length,Is.GreaterThan(2));var motor=new RoomGroundMotor();
                 for(int i=1;i<points.Length;i++){
@@ -72,14 +72,14 @@ namespace Maestro.Quest.Tests {
             });Assert.That(navigation.BuildRevision,Is.EqualTo(built));
         }
         [UnityTest]public IEnumerator SolidRouteMovingObstacleInvalidatesPendingCandidates(){
-            WalkingScene();var prop=SolidRouteProp(new(1,.7f,0),new(.5f,1.4f,.8f));Assert.That(navigation.Prepare(.25f,1.7f,out var error,editor.Find("maestro")),Is.True,error);
+            WalkingScene();var prop=SolidRouteProp(new(1,.7f,0),new(.5f,1.4f,.8f));Assert.That(navigation.Prepare(.25f,1.7f,out var error,editor.Find("maestro")),Is.True,error);yield return NavigationBuilt();
             Assert.That(navigation.FollowRoute(Vector3.zero,new(2,0,0),c=>!c.transform.IsChildOf(avatar.transform),out _,true),Is.False);Assert.That(navigation.FollowRoutePending,Is.True);
             prop.transform.position+=Vector3.forward*3;prop.GetComponent<RigidRoomItem>().Teleported();Physics.SyncTransforms();
             yield return SolidRoute(Vector3.zero,new(2,0,0),points=>Assert.That(points.All(p=>Mathf.Abs(p.z)<.05f),Is.True));
         }
         [UnityTest]public IEnumerator SolidRoutePendingDependenciesHaveCanonicalIdentityAndCancelReleasesThem(){
             WalkingScene();var prop=SolidRouteProp(new(1,.7f,0),new(.5f,1.4f,.8f));string id=editor.Identity(prop);
-            Assert.That(navigation.Prepare(.25f,1.7f,out var error,editor.Find("maestro")),Is.True,error);Assert.That(NavigationRetained(id),Is.False);
+            Assert.That(navigation.Prepare(.25f,1.7f,out var error,editor.Find("maestro")),Is.True,error);yield return NavigationBuilt();Assert.That(NavigationRetained(id),Is.False);
             Assert.That(navigation.FollowRoute(Vector3.zero,new(2,0,0),c=>!c.transform.IsChildOf(avatar.transform),out _,true),Is.False);
             Assert.That(NavigationRetained(id),Is.True);Assert.That(NavigationRetained(id,RoomRetentionReason.WaterRoute),Is.False);
             navigation.CancelFollowRoute();Assert.That(navigation.FollowRoutePending,Is.False);Assert.That(NavigationRetained(id),Is.False);yield return null;

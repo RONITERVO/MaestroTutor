@@ -244,7 +244,7 @@ namespace Maestro.Quest.Tests
         {
             var floor = Surface(new Vector3(0,-.1f,0),new Vector3(8,.2f,8));
             var wall = Surface(new Vector3(0,1.5f,0),new Vector3(.15f,3,2)); Ready();
-            var path = new NavMeshPath(); Assert.That(navigation.Path(new Vector3(-2,0,0),new Vector3(2,0,0),path),Is.True);
+            yield return NavigationBuilt();var path = new NavMeshPath(); Assert.That(navigation.Path(new Vector3(-2,0,0),new Vector3(2,0,0),path),Is.True);
             Assert.That(path.corners.Length,Is.GreaterThan(2));
             bool detoured = false; foreach (var corner in path.corners) detoured |= Mathf.Abs(corner.z)>1.1f;
             Assert.That(detoured,Is.True,"The route must clear the scanned wall with body radius");

@@ -23,7 +23,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator TerrainNavigationUsesAcceptedCollisionAndRefreshesAfterEdits()
         {
             Surface(new Vector3(0,-.1f,0),new Vector3(4,.2f,4));
-            var field=Terrain(new Vector3(8,0,0),.2f,out var data); Ready();
+            var field=Terrain(new Vector3(8,0,0),.2f,out var data); Ready();yield return NavigationBuilt();
             Assert.That(navigation.Sample(new Vector3(8,.2f,0),.08f,out var floor),Is.True,"Accepted authored terrain must be a walking source");
             Assert.That(floor.y,Is.EqualTo(.2f).Within(.04f));
             var preview=data.Copy(); preview.heights=Enumerable.Repeat(.4f,81).ToArray(); field.Preview(preview);
@@ -47,7 +47,7 @@ namespace Maestro.Quest.Tests
             try {
                 unrelated.name="Another world's floor"; unrelated.layer=RoomPhysicsLayers.Scanned;
                 unrelated.transform.position=new Vector3(16,-.1f,0); unrelated.transform.localScale=new Vector3(4,.2f,4);
-                Ready(); Assert.That(navigation.Sample(new Vector3(8,.2f,0),.08f,out _),Is.True);
+                Ready();yield return NavigationBuilt(); Assert.That(navigation.Sample(new Vector3(8,.2f,0),.08f,out _),Is.True);
                 Assert.That(navigation.Sample(new Vector3(16,0,0),.08f,out _),Is.False,"No global collider discovery across world owners");
                 var bake=navigation.BuildRevision;
                 physicalRoot.transform.SetPositionAndRotation(new Vector3(0,2,5),Quaternion.Euler(0,45,0));
@@ -65,7 +65,7 @@ namespace Maestro.Quest.Tests
         {
             Tutor(); var field=Terrain(Vector3.zero,.2f,out var data);
             for(int z=0;z<=8;z++)for(int x=0;x<=8;x++)data.heights[z*9+x]=.1f+.3f*z/8;
-            field.Apply(new[]{data}); avatar.transform.position=new Vector3(0,.25f,0); Ready();
+            field.Apply(new[]{data}); avatar.transform.position=new Vector3(0,.25f,0); Ready();yield return NavigationBuilt();
             Assert.That(motion.Begin("terrain walking",AvatarSpatialMode.Manual,out var error),Is.True,error);
             var before=avatar.transform.position;
             for(int i=0;i<30;i++){motion.ManualDirection("terrain walking",Vector3.forward);yield return null;}
@@ -77,7 +77,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator FollowingKeepsOwnershipAcrossMovingMixedGeometryAndResumesAfterSettling()
         {
             Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();
-            var field=Terrain(new Vector3(8,0,0),.2f,out _);navigation.SetVirtualFrame(root.transform);Ready();
+            var field=Terrain(new Vector3(8,0,0),.2f,out _);navigation.SetVirtualFrame(root.transform);Ready();yield return NavigationBuilt();
             Assert.That(motion.Begin("moving world follow",AvatarSpatialMode.Follow,out var error),Is.True,error);
             var build=navigation.BuildRevision;var start=avatar.transform.localPosition;
             for(int i=1;i<=25;i++) {

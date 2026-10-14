@@ -8,7 +8,7 @@ namespace Maestro.Quest.Interaction {
     public sealed partial class RoomNavigation {
         NavMeshPath routeScratch;RoomRouteSearch routeSearch;
         uint routeGeometry;string routeMode;float routeDepth;bool routeChecksBody;Func<Collider,bool> followObstacle,routeObstacle;
-        internal bool FollowRoutePending=>routeSearch?.Pending==true||routeInputs?.Pending==true;
+        internal bool FollowRoutePending=>PathsPending||routeSearch?.Pending==true||routeInputs?.Pending==true;
         internal string FollowRouteStatus {get;private set;}
         internal void CancelFollowRoute(){routeSearch=null;solidRouteBodies.Clear();FollowRouteStatus=null;followObstacle=null;ReleaseRouteInputs();}
         void ReleaseFollowRoute(){CancelFollowRoute();routeScratch?.ClearCorners();routeScratch=null;routeObstacle=null;routeMode=null;routeDepth=0;routeGeometry=0;}
