@@ -1269,3 +1269,53 @@ independent instance gain, output failure isolation, separate output ownership a
 muted finite completion. Both offline native journeys use the shared catalog;
 the book uses its actual generated form and readback. Device and paid-provider
 acceptance remain outstanding under the existing holds.
+
+### Bounded live MP3 source preparation — 2026-10-14
+
+`AudioSampleReader` now supplies the same bounded, mono 24 kHz conversion to
+compressed-file import and the internal `LiveMp3Source` decoder. It keeps a
+rolling source window and exact integer sample positions; it does not accumulate
+a complete recording or depend on a finite duration header for buffer sizing.
+The file importer retains its existing duration and file/library bounds.
+
+The live decoder accepts an exclusively transferred, readable byte stream. It
+opens no URL, provider, microphone or saved room state. Successful admission
+transfers ownership; rejected admission leaves ownership with the caller. An
+alias cannot dispose or replace the true owner's connection. Two admitted live
+sources each retain at most two seconds of output PCM, plus bounded decoder and
+conversion workspaces. Their reservations remain occupied through blocked
+shutdown and unread terminal buffers until closed.
+
+A read returns sample positions and any expired-frame gap. Older buffered samples
+expire when a producer overtakes a consumer; callers must expose the gap and
+resynchronize their output, rather than silently present delayed radio as live.
+Empty input reports buffering until a complete packet boundary actually reaches
+EOF. Truncation, invalid packets and rate/channel changes fail explicitly. Input
+ID3 metadata is limited to 64 KiB; free-bitrate and non-Layer-III MP3 are rejected.
+No decoder search through arbitrary bytes or growing seek index is allowed.
+Cancellation clears unread PCM, interrupts the owned input and awaits decoder
+and connection disposal. No automatic reconnect occurs.
+
+This is source-side preparation, **not an enabled live-radio capability**. The
+source is not connected to `WorldAudio`, the book or the catalog yet. Transport
+connection policy, read deadlines, live output resynchronization, shared runtime
+resource observations and user/agent start/stop controls remain implementation
+gates. Do not save credentials or expose this as a functioning radio before those
+paths and their native/headless acceptance exist. Continuous music with Live
+microphone input and headset acoustic acceptance remain separate open gates.
+
+Desktop verification for this source increment: **1,241 EditMode tests**, including
+15 new live/conversion cases, and **13 targeted native PlayMode import/playback
+tests** passed. Real CBR/VBR and low-rate MP3 fixtures match the existing import
+PCM across fragmented reads. Tests cover buffer expiry, blocked-read cancellation,
+late cancellation after EOF, alias rejection, admission during delayed disposal,
+malformed/changing streams and conversion beyond ten minutes. **226 web tests in
+five audio/catalog files** and catalog provenance checks passed; only source
+provenance changes in the catalog, with executable schemas unchanged.
+
+All 2,954 source inputs were frozen; 1,101 code/shader files match the tested
+mirror, including 1,095 C# files. Existing setup-generated project settings were
+recorded separately. The first native long-clip run received an audio-device-change
+cancellation; its unchanged test passed in both later runs. No test condition was
+relaxed. Evidence is in `.quest-evidence/live-audio-source/`. This increment has no
+new headset, provider, complete book journey or Android package acceptance.

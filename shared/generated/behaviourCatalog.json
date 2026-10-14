@@ -46760,6 +46760,10 @@
       "sha256": "5af7ea55db9c99d3b846d39fca8dc8edb5dd4b1a3e622cb0804d1c31c8cc548d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioSampleReader.cs",
+      "sha256": "219af347b502cdbe9d90f1b56bf8aa95f82c687d8a6a72d2bba3eacf7ff825a9"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/BundledAvatar.cs",
       "sha256": "763ce7823e8c1a29831752606e39bf6f046def3c5385ca79b0f8bcad8d015ffb"
     },
@@ -46781,7 +46785,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/CompressedAudio.cs",
-      "sha256": "14066d6ccd1ab8f2ea3f79d41b0bd6b892001e39218bccdfba0b62612b554d97"
+      "sha256": "857fc2b245ecfeb2010ae519efb398a780f62fe91c9fafa7fb4f4b5905d5e151"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/IllustratedGltfMaterials.cs",
@@ -46852,6 +46856,10 @@
       "sha256": "82f7a7af4153679ac776242a50adac253ee1fd810a6857f64b7f718beb9d04ac"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LiveMp3Source.cs",
+      "sha256": "3caac8a29565c8d51a3bead983bd2421d5f6db1827ca02ce5b703bbc6894b2cb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LocalMotionBatchSource.cs",
       "sha256": "9ce4f3221e9e1aae72cbe441b04577c33f7702eb8f5aad8d0e0f7f5fd5b7a304"
     },
@@ -46918,6 +46926,14 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/MotionPack.cs",
       "sha256": "0036ad1191e897ad3fcd49d74313e726a1de540e0027891e905d304245d406ed"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/Mp3FrameStream.cs",
+      "sha256": "4154e5956b1c21ae007e8b4b3bb5b30e866d967a744b9fd5b31bbf8d0c3792df"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/Mp3Packets.cs",
+      "sha256": "1043b66b798bc95a42348a1c33058c5bc8169ed97eefffc288db209ae76946ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/NamedHumanoid.cs",

@@ -44,7 +44,10 @@ renderer. Finished local chat sound attachments now enter the same source/import
 WAV recordings now support up to ten minutes within the same bounded file/library
 limits, using a shared PCM cache; see [long-recording playback](../unity/AUDIO.md#bounded-playback-for-longer-wav-recordings).
 MP3/Vorbis normalize into the existing private WAV library; see [compressed imports](../unity/AUDIO.md#mp3-and-vorbis-normalization--2026-10-14).
-Additional codecs, live-stream adapters and continuous-background-audio/Live
+A bounded internal live MP3 decoder now shares the file import converter; see
+[live-source preparation](../unity/AUDIO.md#bounded-live-mp3-source-preparation--2026-10-14).
+It is not yet connected to world playback or exposed to users/agents.
+Additional codecs, live-stream connection/output adapters and continuous-background-audio/Live
 coexistence remain implementation gates.
 The experimental reflection mixer and its map scheduler stay out of the production
 scene until the capture policy handles a mixed scene without indefinitely
