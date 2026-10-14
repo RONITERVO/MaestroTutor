@@ -592,8 +592,8 @@ namespace Maestro.Quest.Creation
         {
             ProcessDormantContacts();
             TickSpatialPreparation();
-            TickNativeAcoustics();
             TickNativeDisplay();
+            TickNativeAcoustics();
             TickWorldTime(UnityEngine.Time.unscaledDeltaTime);
             TickLayerPresentation(UnityEngine.Time.unscaledDeltaTime);
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();

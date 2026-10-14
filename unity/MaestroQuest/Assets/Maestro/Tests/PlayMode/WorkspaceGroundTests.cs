@@ -20,12 +20,15 @@ namespace Maestro.Quest.Tests
             return JObject.FromObject(value.Value);
         }
         IEnumerator SavedGroundReady(string target){
-            var editor=host.Current.Editor;float deadline=Time.realtimeSinceStartup+12;
-            while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline)yield return null;
-            Assert.That(editor.NativeDisplayPending,Is.False,"Saved terrain admission did not finish: "+editor.Status);
-            Assert.That(editor.NativePhase(target),Is.EqualTo(NativeEntityPhase.Resident),editor.NativeActivationError(target));
-            Assert.That(editor.Find(target),Is.Not.Null,"A ready workspace shell does not imply resident saved terrain");
-            Assert.That(editor.Find(target).GetComponent<HeightFieldView>()?.Collision,Is.Not.Null);
+            var editor=host.Current.Editor;var camera=WorkspacePreviewCamera(editor.Read(target).position);
+            try{using(editor.ObserveNativeCamera(camera)){
+                float deadline=Time.realtimeSinceStartup+12;
+                do{yield return null;}while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline);
+                Assert.That(editor.NativeDisplayPending,Is.False,"Observed saved terrain admission did not finish: "+editor.Status);
+                Assert.That(editor.NativePhase(target),Is.EqualTo(NativeEntityPhase.Resident),editor.NativeActivationError(target));
+                Assert.That(editor.Find(target),Is.Not.Null,"A ready workspace shell does not imply resident saved terrain");
+                Assert.That(editor.Find(target).GetComponent<HeightFieldView>()?.Collision,Is.Not.Null);
+            }}finally{UnityEngine.Object.Destroy(camera.gameObject);}
         }
         [UnityTest]public IEnumerator AcceptedGroundFactAndWalkedBookmarkSurviveAWorldReload(){
             PhysicalFloor();recoveryHeadTracked=true;room.Viewer.position=new Vector3(4,1.6f,4);
@@ -55,14 +58,15 @@ namespace Maestro.Quest.Tests
             Assert.That(room.Viewer.localToWorldMatrix,Is.EqualTo(physicalHead));Assert.That(editor.TryFlush(out error),Is.True,error);
             string savedDirectory=directory;var closing=host;UnityEngine.Object.Destroy(root);yield return null;while(!closing.Retirement.IsCompleted)yield return null;
             BuildShell(savedDirectory);PhysicalFloor();room.Viewer.SetPositionAndRotation(new Vector3(-3,1.7f,6),Quaternion.Euler(0,73,0));recoveryHeadTracked=true;
-            // Deliberately keep display admission pending after shell readiness.
+            // Disable display admission after shell readiness: saved existence alone
+            // is not an active loading request.
             // Ground queries observe accepted native surfaces, not saved placeholders.
             afterContentBuild=()=>root.GetComponentInChildren<RoomEditor>().enabled=false;
             Open();yield return ReadyHost();afterContentBuild=null;
-            Assert.That(host.Current.Editor.NativeDisplayPending,Is.True);
+            Assert.That(host.Current.Editor.NativeContentPending(terrainId),Is.False);
             Assert.That(host.Current.Editor.Find(terrainId),Is.Null);
             var pending=GroundFact(point);
-            Assert.That((bool)pending["found"],Is.False);Assert.That((string)pending["availability"],Is.EqualTo("pending"));
+            Assert.That((bool)pending["found"],Is.False);Assert.That((string)pending["availability"],Is.EqualTo("unavailable"));
             Assert.That((int)pending["dependencyCount"],Is.EqualTo(1));Assert.That((string)pending["dependencies"][0]["target"],Is.EqualTo(terrainId));
             if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"ground.json"),new JObject{
                 ["arguments"]=new JObject{["position"]=WorkspaceViewpoint.Point(point),["radius"]=.2},["supported"]=supported,["missing"]=missing,["pending"]=pending,

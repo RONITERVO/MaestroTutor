@@ -21,12 +21,25 @@ namespace Maestro.Quest.Tests
             yield return ReadyForActivation();var (_,id)=BeginActivation();yield return FinishActivation(id);AssertActivated(id);
             yield return ReadyReviewOwners();
         }
+        Camera WorkspacePreviewCamera(Vector3 focus)
+        {
+            var go=new GameObject("Owned workspace preview",typeof(Camera));go.transform.SetParent(room.transform,false);
+            go.transform.localPosition=focus+new Vector3(0,2,-5);
+            var camera=go.GetComponent<Camera>();camera.orthographic=true;camera.orthographicSize=10;camera.aspect=1;
+            camera.nearClipPlane=.1f;camera.farClipPlane=100;camera.stereoTargetEye=StereoTargetEyeMask.None;camera.enabled=false;return camera;
+        }
         IEnumerator ReadyReviewOwners()
         {
-            host.Current.Rules.Modules.Flush();float deadline=Time.realtimeSinceStartup+20;
-            while((host.Current.Editor.NativeDisplayPending||host.Current.Editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy)&&Time.realtimeSinceStartup<deadline)yield return null;
-            Assert.That(host.Current.Editor.NativeDisplayPending,Is.False);
-            Assert.That(host.Current.Editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy,Is.False);
+            host.Current.Rules.Modules.Flush();var editor=host.Current.Editor;
+            // These review tests intentionally keep head tracking unavailable.
+            // An owned preview requests content without changing that condition.
+            var camera=WorkspacePreviewCamera(Vector3.zero);
+            try{using(editor.ObserveNativeCamera(camera)){
+                float deadline=Time.realtimeSinceStartup+20;
+                do{yield return null;}while((editor.NativeDisplayPending||editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy)&&Time.realtimeSinceStartup<deadline);
+                Assert.That(editor.NativeDisplayPending,Is.False);
+                Assert.That(editor.Find("maestro").GetComponent<MaestroAvatar>().ModelBusy,Is.False);
+            }}finally{UnityEngine.Object.Destroy(camera.gameObject);}
         }
         string BeginReview()
         {

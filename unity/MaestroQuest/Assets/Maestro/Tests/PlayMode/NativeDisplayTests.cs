@@ -126,7 +126,7 @@ namespace Maestro.Quest.Tests
     }
     public sealed partial class RoomEditorTests
     {
-        [UnityTest] public IEnumerator NativeDisplayStartupPrioritizesPreparedVisibleAreaThenCompletesOtherAreas()
+        [UnityTest] public IEnumerator NativeDisplayStartupLoadsPreparedVisibleAreaAndKeepsOtherAreasDormant()
         {
             var saved=StartupMany();var creations=saved.objects.Where(x=>!x.IsBuiltIn).ToArray();
             foreach(var item in creations)item.position=new Vector3(0,0,-3);var visible=creations.Last();visible.position=new Vector3(0,0,3);
@@ -137,7 +137,7 @@ namespace Maestro.Quest.Tests
             var cameraObject=new GameObject("Startup viewer",typeof(Camera));cameraObject.transform.SetParent(root.transform,false);var camera=cameraObject.GetComponent<Camera>();camera.nearClipPlane=.1f;camera.farClipPlane=10;camera.fieldOfView=60;camera.aspect=1;camera.stereoTargetEye=StereoTargetEyeMask.None;
             root.GetComponent<RoomInteraction>().Viewer=camera.transform;editor.SendMessage("OnApplicationFocus",true);editor.TickNativeDisplay();
             Assert.That(editor.NativePhase(visible.id),Is.EqualTo(NativeEntityPhase.Preparing).Or.EqualTo(NativeEntityPhase.Resident));Assert.That(editor.NativePhase(creations.First().id),Is.EqualTo(NativeEntityPhase.Dormant));
-            yield return StartupFinished();Assert.That(creations.All(x=>editor.Find(x.id)),Is.True);Assert.That(physics.Running,Is.False);
+            yield return StartupFinished();Assert.That(editor.Find(visible.id),Is.Not.Null);Assert.That(creations.Where(x=>x.id!=visible.id).All(x=>!editor.Find(x.id)),Is.True);Assert.That(physics.Running,Is.False);
         }
     }
 }

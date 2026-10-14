@@ -98,7 +98,7 @@ namespace Maestro.Quest.Tests
             editor = root.AddComponent<RoomEditor>();
             var book = root.GetComponentsInChildren<RoomItem>().Single(x => x.name == "book");
             var maestro = root.GetComponentsInChildren<RoomItem>().Single(x => x.name == "maestro");
-            editor.Initialize(room,book,maestro,directory); yield return StartupFinished();
+            editor.Initialize(room,book,maestro,directory); StartupCamera(wide:true); yield return StartupFinished();
             Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(5));
             Assert.That(editor.Snapshot().objects.Count(x => x.kind == RoomObjectKind.Drawing),Is.EqualTo(2));
         }

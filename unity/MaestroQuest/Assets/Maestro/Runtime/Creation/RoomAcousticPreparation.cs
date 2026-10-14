@@ -38,7 +38,7 @@ namespace Maestro.Quest.Creation
                 if(entry.AcousticPendingOwner&&entry.AcousticPendingOwner!=owner)entry.AcousticPendingOwner.SetPreparing(entry,null);
                 owner.SetPreparing(entry,entry.AcousticBoundary);entry.AcousticPendingOwner=owner;
                 if(acousticPreparation!=null||entry.Acoustics?.Current==true||phase is NativeEntityPhase.Preparing or NativeEntityPhase.Retiring
-                    ||startupTargets.Contains(pair.Key)&&phase!=NativeEntityPhase.Failed)continue;
+                    ||NativeContentPending(pair.Key))continue;
                 if(entry.AcousticAttempt==revision&&(entry.AcousticCapacity<0||entry.AcousticCapacity==owner.ResidencyEpoch))continue;
                 entry.Acoustics?.Dispose();entry.Acoustics=null;entry.AcousticAttempt=revision;entry.AcousticCapacity=-1;entry.AcousticIssue=null;
                 data??=Read(pair.Key);acousticDeadline=Time.realtimeSinceStartupAsDouble+120;acousticTimedOut=false;acousticCancellation=new CancellationTokenSource();acousticPreparation=PrepareNativeAcoustics(pair.Key,entry,data,owner,revision,acousticCancellation.Token);
@@ -49,7 +49,7 @@ namespace Maestro.Quest.Creation
             var original=journal;var source=SpatialSource(data.Copy());
             bool Current()=>this&&DisplayReady&&owner&&ReferenceEquals(journal,original)&&dormantNative.TryGetValue(id,out var current)&&ReferenceEquals(current,entry)
                 &&(entry.Phase is NativeEntityPhase.Dormant or NativeEntityPhase.Failed)&&ObjectRevision(id)==revision
-                &&(!startupTargets.Contains(id)||entry.Phase==NativeEntityPhase.Failed);
+                &&!NativeContentPending(id);
             acousticCurrent=Current;
             void Check(){cancellation.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException();}
             try{

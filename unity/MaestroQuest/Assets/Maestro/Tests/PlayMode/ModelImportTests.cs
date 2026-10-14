@@ -382,6 +382,7 @@ namespace Maestro.Quest.Tests
             Assert.That(document.objects.Single(x => x.id == data.id).modelHash, Is.EqualTo(data.modelHash));
             foreach (var value in root.GetComponentsInChildren<CreatedRoomObject>()) UnityEngine.Object.Destroy(value.gameObject); yield return null;
             editor = root.AddComponent<RoomEditor>(); editor.Initialize(room, book, maestro, directory);
+            var restore=editor.AcquireNativeEntities(new[]{data.id},()=>true,System.Threading.CancellationToken.None);yield return new WaitUntil(()=>restore.IsCompleted);Assert.That(restore.Result,Is.Null);
             float startupDeadline=Time.realtimeSinceStartup+12;
             while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<startupDeadline)yield return null;
             Assert.That(editor.NativeDisplayPending,Is.False);Assert.That(editor.Find(data.id),Is.Not.Null);

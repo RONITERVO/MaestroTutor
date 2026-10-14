@@ -10078,3 +10078,44 @@ unchanged. No APK/AAB, signing, installation, provider, deployment or Meta work.
 Evidence: .quest-evidence/canonical-object-cleanup/. Selective startup,
 navigation-only cold-start demand, conservative retention when a sweep is
 unknown, larger-world capacity and physical acceptance remain open.
+
+
+### Selective native startup — 2026-10-15
+
+Saved-room startup now admits observed areas through the same bounded metadata
+and native acquisition path used for dormant reappearance. A tracked viewer,
+predicted/recent view, owned capture or explicit capability supplies demand.
+Independent unseen areas remain dormant. Saved areas and enabled physical
+connections still load together, including the shared unassigned home area.
+Unknown geometry remains conservative; missing exact scan placement does not
+request a hidden display. No native load is evidence of a saved edit or new
+physics intent.
+
+Ground and water distinguish actual preparation from unavailable dormant
+inputs. Acoustic geometry can prepare independently without allocating a full
+object view, deferring to current display/action acquisition. Review suppression
+survives until first display, including a hold that ends while content is still
+offscreen. Failures, timeout and cancellation retain the existing bounded
+retry/ownership behavior. The shared capability catalog changes only five
+native source hashes; IDs, versions, schemas and storage remain unchanged.
+
+Verified on desktop: **1,259 EditMode / 1,617 PlayMode** passed, with three
+expected optional private-asset skips. Focused checks passed **17 EditMode /
+196 PlayMode**, including eight new selective startup cases covering passive
+metadata, independent areas, tracking/capture ownership, explicit acquisition,
+atomic area membership, delayed review, unavailable ground and dormant acoustics.
+
+Offline Headless **1485e4454484485dbee1d5c3b817ddce** and Original Book **54284b62373a4a009b5917a84657954c** passed
+with zero client/editor exit codes and no provider calls. The web suite passed
+**2,958 tests / 313 files**; refreshed native fixtures, probe types and asset
+provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 selected ARM64 libraries
+pass ELF/16 KiB checks; 152 staged web files and the browser AAR match.
+The source audit covers 2,996 native inputs, including
+1,122 code/shader files (1,116 C#); four
+setup-generated project assets are recorded separately. Browser tests report
+128 passed/two skipped. All 14 protected files remain unchanged. No APK/AAB
+was produced. Evidence: .quest-evidence/selective-startup/.
+
+Navigation-only cold-start demand, finer loading groups, unknown-geometry isolation, larger-world capacity and physical acceptance remain open. V1 is incomplete; existing headset/provider/signing/deployment/Meta holds remain.

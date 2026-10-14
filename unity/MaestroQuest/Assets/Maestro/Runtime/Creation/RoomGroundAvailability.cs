@@ -29,7 +29,7 @@ namespace Maestro.Quest.Creation
             foreach(var candidate in journal.GroundCandidates()){
                 string state=null;
                 if(dormantNative.TryGetValue(candidate.target,out var dormant)){
-                    state=dormant.Phase==NativeEntityPhase.Preparing||startupTargets.Contains(candidate.target)?"pending":"unavailable";
+                    state=NativeContentPending(candidate.target)?"pending":"unavailable";
                 }else{
                     var item=Find(candidate.target);
                     if(!item||!item.isActiveAndEnabled)state="unavailable";

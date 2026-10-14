@@ -123,7 +123,7 @@ namespace Maestro.Quest.Tests
     {
         [UnityTest] public IEnumerator ColdAcousticStartupDoesNotDuplicateNativeDisplayPreparation()
         {
-            yield return ReloadForStartup(StartupMany());var audio=root.AddComponent<RoomAcoustics>();Assert.That(audio.Ready,Is.True,audio.Issue);
+            yield return ReloadForStartup(StartupMany());yield return StartupAdmissionStarted();var audio=root.AddComponent<RoomAcoustics>();Assert.That(audio.Ready,Is.True,audio.Issue);
             editor.TickNativeAcoustics();Assert.That(editor.AcousticPreparationPending,Is.False);Assert.That(audio.OmittedCount,Is.GreaterThan(0));
             yield return StartupFinished();for(int i=0;i<16;i++)audio.Synchronize();editor.TickNativeAcoustics();
             Assert.That(audio.OmittedCount,Is.Zero);Assert.That(audio.GeometryCount,Is.GreaterThan(0));Assert.That(audio.RetainedGeometryCount,Is.Zero);

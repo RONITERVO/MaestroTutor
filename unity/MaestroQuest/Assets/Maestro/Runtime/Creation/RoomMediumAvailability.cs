@@ -45,7 +45,7 @@ namespace Maestro.Quest.Creation
             var authored=anchor?.Project(this,local)??local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale));
             return authored.Transform(transform.localToWorldMatrix).Collision;
         }
-        internal bool LiquidNativePending(string id)=>dormantNative.TryGetValue(id,out var entry)&&(entry.Phase==NativeEntityPhase.Preparing||startupTargets.Contains(id)||nativeAcquisitions.Any(job=>!job.Closed&&!job.Cancellation.IsCancellationRequested&&job.Closure.Contains(id)));
+        internal bool LiquidNativePending(string id)=>NativeContentPending(id);
     }
     public sealed partial class LiquidPouring
     {

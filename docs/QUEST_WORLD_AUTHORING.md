@@ -1465,8 +1465,27 @@ native barrier prevents unpredicted impacts from passing through the missing
 object; it does not emit authored contact events. Dependent actors stop, while
 unrelated actors keep running. Repair requires a new movement owner (grab, or
 pause then start physics); failed momentum is discarded.
-Initial scene startup still admits the bounded room. Selective scene startup,
-unknown-geometry isolation and larger world capacity remain
-required before claiming country-scale worlds. Preparation
-is cooperative across frames; this is not a measured Quest frame-time or
+
+Saved-room startup now uses the same observation and acquisition path as
+returning dormant content. A bounded spatial index prepares canonical bounds
+without creating native views. A tracked viewer, its predicted/recent view or an
+owned capture can request an area; an explicit capability can acquire its own
+required inputs without a visible camera. Independent offscreen areas remain
+dormant. Saved area membership and enabled physical connections still define
+atomic loading groups, including the shared unassigned home area. Unknown model
+bounds remain conservative; they are never evidence of empty space. Ink whose
+exact scan plane is unavailable cannot trigger a useless hidden display load.
+
+Dormant existence does not mean preparation is queued. Ground and water report
+actual preparation or unavailable dependencies, and never fabricate support or
+dryness. Dormant acoustic geometry uses its existing bounded preparation path
+independently of the native display, with the same cancellation and ownership
+checks. Viewing content never starts gravity. A review hold suppresses initial
+recipe autoplay even when approval precedes the object's first visible load;
+explicit playback remains a separate action. Source, identity, personal
+placement and Undo history do not change merely because a view loads.
+
+Navigation-only cold-start demand, unknown-geometry isolation, finer loading
+groups and larger world capacity remain required before claiming country-scale
+worlds. Preparation is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.

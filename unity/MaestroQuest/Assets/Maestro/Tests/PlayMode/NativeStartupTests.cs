@@ -16,19 +16,19 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class RoomEditorTests
     {
-        IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null,bool suspend=false)
+        IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null,bool suspend=false,bool observe=true)
         {
             Assert.That(editor.TryFlush(out var error),Is.True,error);
             if(saved!=null)Assert.That(new RoomStorage(directory).Save(saved,out error),Is.True,error);
             UnityEngine.Object.Destroy(root);yield return null;
             root=new GameObject("Reloaded startup");root.AddComponent<XRInteractionManager>();room=root.AddComponent<RoomInteraction>();
             var book=Included("book");var avatar=Included("maestro");physics=root.AddComponent<RoomPhysicsWorld>();
-            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,avatar,directory,physics,gate);if(suspend)editor.SendMessage("OnApplicationFocus",false);
+            editor=root.AddComponent<RoomEditor>();editor.Initialize(room,book,avatar,directory,physics,gate);if(observe)StartupCamera(wide:true);if(suspend)editor.SendMessage("OnApplicationFocus",false);
         }
         IEnumerator StartupFinished()
         {
             float deadline=Time.realtimeSinceStartup+12;
-            while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline)yield return null;
+            do{yield return null;}while(editor.NativeDisplayPending&&Time.realtimeSinceStartup<deadline);
             Assert.That(editor.NativeDisplayPending,Is.False,"Saved-room admission did not finish");
         }
         RoomDocument StartupMany()
@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeDisplayTimeoutDrainsAndNeedsExplicitRetry()
         {
-            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeDisplay();
+            var saved=StartupMany();yield return ReloadForStartup(saved);yield return StartupAdmissionStarted();
             editor.TickNativeDisplay(Time.unscaledTimeAsDouble+RoomEditor.NativeDisplayTimeout+1);
             yield return StartupFinished();Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0));
             Assert.That(editor.Status,Does.Contain("timed out"));for(int i=0;i<3;i++)yield return null;
