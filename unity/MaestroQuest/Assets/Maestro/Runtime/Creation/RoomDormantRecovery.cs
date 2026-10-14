@@ -65,7 +65,8 @@ namespace Maestro.Quest.Creation {
         void ReleaseDormantRecoveries(){CancelPhysicsStep();dormantContacts.Clear();foreach(var value in dormantRecoveries.ToArray())RemoveDormantRecovery(value);}
         void RefuseRecovery(DormantRecovery value,string reason){
             value.Inputs?.Dispose();value.Inputs=null;value.Pending=false;
-            value.Reason=reason+" Pause then start physics, or grab the object, to retry from rest.";
+            // Keep the stopped state and recovery action within the shared short status.
+            value.Reason="Movement stopped. Retry from rest: pause then start physics, or grab. "+reason;
             ReportStatus(value.Reason);
         }
         internal void ProcessDormantContacts(){

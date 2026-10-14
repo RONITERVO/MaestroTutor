@@ -24,8 +24,7 @@ namespace Maestro.Quest.Tests {
         (string ground,string[] members) PendingPhysicsIsland(){
             var ids=PhysicsIslandChain();string ground=AvailabilityTerrain();
             Assert.That(editor.RetireNativeArea(NativeAreaFor(ground),out var error),Is.True,error);
-            // Isolate local admission; the production whole-world gate remains.
-            physics.ConfigureCollisionAdmission(editor,()=>null);StartIsland();
+            StartIsland();
             foreach(var id in ids){
                 var item=editor.Find(id);var body=item.GetComponent<Rigidbody>();body.isKinematic=false;body.linearVelocity=Vector3.right*3;body.angularVelocity=Vector3.zero;
                 item.GetComponent<RigidRoomItem>().Refresh();

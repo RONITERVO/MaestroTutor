@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests {
                     Assert.That((bool)PhysicsInputFact(a)["interrupted"],Is.True);Assert.That(attempt.Reason,Does.Contain("from rest"));
                     Assert.That(BehaviourCatalog.TryRead("object.catch",1,new JObject{["target"]=a},new BehaviourCatalog.FactContext(editor:editor),out var fact),Is.True);
                     var reason=JObject.FromObject(fact.Value)["attempts"][0]["reason"].Value<string>();
-                    Assert.That(reason,Is.EqualTo(Maestro.Quest.Imports.ImportObservation.Text(attempt.Reason)));Assert.That(reason,Does.Contain("Movement stopped"));Assert.That(reason.Length,Is.LessThanOrEqualTo(128));
+                    Assert.That(reason,Is.EqualTo(Maestro.Quest.Imports.ImportObservation.Text(attempt.Reason)));Assert.That(reason,Does.Contain("Movement stopped"));Assert.That(reason,Does.Contain("from rest"),"The shared short status must preserve the recovery action");Assert.That(reason.Length,Is.LessThanOrEqualTo(128));
                 }else{
                     for(int i=0;i<12&&!attempt.Caught;i++)yield return new WaitForFixedUpdate();
                     Assert.That(attempt.Caught,Is.True,"Matching available geometry must permit a real catch: "+attempt.Reason);Assert.That(caught,Is.EqualTo(1));

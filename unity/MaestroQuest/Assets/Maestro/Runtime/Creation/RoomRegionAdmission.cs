@@ -6,15 +6,14 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        // Current authored scope is one bounded region. Saved references remain
-        // valid while loading, but its collision consumers cannot borrow a scan
-        // or another floor as proof that missing authored geometry is available.
+        // Dormant areas use per-consumer spatial admission and conservative
+        // native collision guards. Resident imported geometry still has the
+        // existing global failure gate until its local failure policy is verified.
         readonly Dictionary<string,CreatedRoomObject> regionModels=new();
         string blockedModel,blockedIssue,collisionIssue;
         string RegionCollisionIssue()
         {
             if(!this||!isActiveAndEnabled||journal==null)return "The authored region is unavailable";
-            if(dormantNative.Count>0)return "Authored areas must finish native activation before whole-world collision simulation";
             foreach(var entry in regionModels){
                 var model=entry.Value;
                 if(!model||!model.isActiveAndEnabled||!model.ModelGeometryReady){

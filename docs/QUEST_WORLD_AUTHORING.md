@@ -770,7 +770,7 @@ near the expected view (`approachingView`) and recently viewed
 releasing an area's native contents. These reasons propagate through the same
 area and physical-connection graph as other dependencies. Inspection itself
 does not refresh the timer or load anything. Automatic regional loading remains
-unfinished; current world size and whole-world simulation limits still apply.
+unfinished; current world-size limits and the explicit whole-room Start remain.
 
 
 Starting physics can prepare objects whose saved content is not currently loaded.
@@ -798,7 +798,7 @@ prioritizes areas during startup. Losing tracking or leaving a view does not
 start physics, and a timed-out or broken import waits for an explicit retry.
 Startup still opens the complete bounded saved room. Unused areas can retire
 later under the policy below; startup selection, larger-world streaming and
-per-area running physics remain unfinished.
+fully local physics failure handling remain unfinished.
 
 
 Loaded supported avatars and skinned models expose spatial bounds for their
@@ -1019,8 +1019,9 @@ segments still test its wet triangles. General shoreline route planning remains
 open. Missing native bed geometry is unavailable, never silently treated as an
 ordinary rectangular pool; observation does not load it.
 
-The current whole-world physics admission and running-world retention remain in
-force. Idle areas may retire through the [shared policy](#retiring-unused-areas);
+The explicit physics Start still prepares the bounded world. Running actors
+retain nearby collision, ground and water dependencies; unrelated idle areas may
+retire through the [shared policy](#retiring-unused-areas);
 the current 64-object, 25-metre and four-height-field limits are unchanged. Dense rain-driven level
 updates still require Quest performance acceptance before release.
 
@@ -1057,8 +1058,8 @@ No walking job resumes merely because saved data is loaded.
 
 Four concurrent walking/following actions, a five-minute lifetime, 0.2–1.2 metres/second and the current
 25-metre authored-world boundary keep work bounded. Existing spatial-input waits
-and whole-world physics retention still apply. This adds neither regional
-streaming nor a second navigation or behavior engine. Broader NPC steering,
+and the shared physics dependency retention still apply. This adds no second
+navigation or behavior engine. Broader NPC steering,
 animation retargeting/foot planting, swimming and large-world residency remain
 separate work.
 
@@ -1113,8 +1114,8 @@ animation still conflicts with root movement.
 Following and `object.navigate` share one ground motor, route planner and four-action
 budget. Both obey the follower's real-room collision and water policies. Thus a
 virtual-only robot can follow on terrain below the real floor without changing
-which surfaces another character uses. This does not change whole-world physics
-admission, running-world retention, automatic unloading or current world limits.
+which surfaces another character uses. Residency follows the shared dependency
+policy below; following does not enlarge current world limits.
 
 Distance is horizontal foot-to-foot separation. Following approaches when farther
 away and holds within that distance; it does not push a nearby leader away. The
@@ -1225,7 +1226,7 @@ Local intensity is 0–4, unscaled range 0.1–8 metres, and a spot cone is 10�
 Shadow maps use 512-pixel faces and the configured 20-metre shadow distance.
 These are admission bounds, not measured Quest frame-time guarantees. Larger
 worlds still need observation-driven light residency alongside regional streaming;
-the whole-world physics, retention and automatic-unloading policies are unchanged.
+lighting follows the shared retention and automatic-unloading policy below.
 Native `active` reports an enabled light, not proof of visible illumination,
 shadows, physical alignment or hardware performance. Current evidence and remaining
 acceptance are recorded in the v1 delivery plan.
@@ -1403,10 +1404,21 @@ not load it. Retirement is runtime resource management, not deletion, a saved
 edit or a new Undo entry.
 
 This is an initial active retirement policy within the existing 64-object,
-25-metre world bounds. Physics Start still prepares every saved participant;
-running physics retains the complete collision environment, even for sleeping
-bodies. It cannot unload a floor beneath a running ball. Startup still opens
-the bounded room. Per-area collision admission, selective startup and larger
-world capacity remain required before claiming country-scale worlds. Preparation
+25-metre world bounds. Physics Start still prepares every saved participant.
+Once running, each active dynamic body retains its rotating/swept collision
+envelope, ground, water and connected physical members. Sleeping and pending
+bodies keep their identities and required support; retirement rechecks these
+dependencies at commit rather than relying on the previous physics tick.
+Unrelated unused areas can retire without pausing a ready body elsewhere.
+If an actor's required sweep is unavailable, the environment stays resident.
+
+Dormant geometry keeps its conservative collision guard. Approaching movement
+prepares the required native inputs; a guard contact interrupts the affected
+dynamic group, prepares its dependencies and requires an explicit restart from
+rest. The engine never treats unknown collision as empty space. The existing
+global stop for unavailable resident imported geometry remains conservative.
+Startup and explicit Start still prepare the bounded room. Selective startup,
+fully local import failure/boundary handling and larger world capacity remain
+required before claiming country-scale worlds. Preparation
 is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.

@@ -80,12 +80,15 @@ namespace Maestro.Quest.Tests
             recipe=editor.Find(id).GetComponent<RecipeObject>();Assert.That(recipe.IsPlaying,Is.False);Assert.That(Quaternion.Angle(rotation,recipe.Part(part).localRotation),Is.LessThan(.001f));
             yield return null;Assert.That(recipe.IsPlaying,Is.False);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(saved));
         }
-        [UnityTest] public IEnumerator NativeAreaKeepsDrawingsAndPhysicsRequiresAllAuthoredCollisionUntilRegionalAdmissionExists()
+        [UnityTest] public IEnumerator NativeAreaKeepsDormantDrawingsWhileUnrelatedPhysicsRuns()
         {
-            string id=NewStroke(),area=NativeAreaFor(id),saved=JsonUtility.ToJson(editor.Read(id));physics.SetSurfaces(true,"Ready");physics.StartPhysics();
-            Assert.That(editor.RetireNativeArea(area,out var error),Is.False);physics.PausePhysics();Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
-            Assert.That(physics.SetRunning(true,out error),Is.False);StringAssert.Contains("activation",error);
-            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(saved));Assert.That(physics.Running,Is.False);Assert.That(physics.SetRunning(true,out error),Is.True,error);
+            string id=NewStroke(),area=NativeAreaFor(id);
+            var data=editor.Read(id);data.position=new Vector3(16,2,16);
+            Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},System.Array.Empty<string>(),out var error),Is.True,error);
+            string saved=JsonUtility.ToJson(editor.Read(id));physics.SetSurfaces(true,"Ready");physics.StartPhysics();
+            Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);Assert.That(physics.Running,Is.True);
+            yield return null;Assert.That(editor.Find(id),Is.Null);
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(saved));Assert.That(physics.Running,Is.True);
         }
         [UnityTest] public IEnumerator NativeAreaActiveProgramsAndIndependentAudioKeepNativeTargets()
         {

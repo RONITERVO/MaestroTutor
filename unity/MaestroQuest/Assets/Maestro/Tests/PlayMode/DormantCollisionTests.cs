@@ -89,9 +89,9 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;
             Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.DormantCollisionGuard(id),Is.Null);Assert.That(guard.Shape,Is.Null);Assert.That(!shape||!shape.enabled,Is.True);yield return null;Assert.That((bool)shape,Is.False);
         }
-        [UnityTest]public IEnumerator DormantCollisionDoesNotEnableRegionalPhysicsOrSurviveItsOwner(){
+        [UnityTest]public IEnumerator DormantCollisionAllowsOwnedLocalPreparationButCannotSurviveItsOwner(){
             string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);var guard=editor.DormantCollisionGuard(id);var shape=guard.Shape;
-            physics.SetSurfaces(true,"Aligned scan");Assert.That(physics.SetRunning(true,out error),Is.False);Assert.That(error,Does.Contain("whole-world"));
+            physics.SetSurfaces(true,"Aligned scan");Assert.That(physics.SetRunning(true,out error),Is.True,error);
             UnityEngine.Object.Destroy(root);yield return null;Assert.That((bool)shape,Is.False);Assert.That(guard.Shape,Is.Null);
         }
     }

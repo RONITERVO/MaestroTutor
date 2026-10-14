@@ -95,7 +95,7 @@ namespace Maestro.Quest.Interaction
         void PhysicsChanged(){if(!ContactTracking){grabInputs?.Suspend();InterruptPhysicsInputs();}MotionRevision++;Refresh();}
         bool PhysicsEnabled => InputBindingAvailable && isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && world && world.CanSimulate(transform.position,item);
         bool BaseAllowed=>PhysicsEnabled&&constraints.Count==0;
-        // Held-body sweeps still use the whole-world gate; XRI retains its body/throw setup.
+        // Held-body sweeps own contact inputs; XRI retains its body/throw setup.
         bool PhysicsInputsAdmitted => item&&item.Grab&&item.Grab.isSelected ? (!grabInputs||grabInputs.Ready)&&(!InputEditor||InputEditor.PhysicsIslandReady(item,true,out _)) : InputsCurrent;
         bool Allowed => BaseAllowed && PhysicsInputsAdmitted;
         void Grabbed(SelectEnterEventArgs _) { grabInputs?.Reset();InterruptPhysicsInputs();MotionRevision++;boundaryActive=false;canceled = false; wasMoving = true; Refresh(); }

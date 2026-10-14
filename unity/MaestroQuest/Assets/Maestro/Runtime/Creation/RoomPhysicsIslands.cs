@@ -81,6 +81,24 @@ namespace Maestro.Quest.Creation {
             }
             error=query.ReadError;return query.Result;
         }
+        // Recheck the complete dependency set at retirement, not just at the
+        // previous tick. Pending bodies are kinematic but still own their identity;
+        // sleeping bodies still own support. Unknown actor sweeps cannot prove
+        // that any area is safe to retire.
+        void RetainPhysicsEnvironment(RoomRetentionGraph graph){
+            if(!PhysicsWorld||!PhysicsWorld.Running)return;
+            var visited=new HashSet<string>(StringComparer.Ordinal);
+            foreach(var item in objects.Values){
+                var rigid=item?item.GetComponent<RigidRoomItem>():null;
+                if(!rigid||!rigid.ContactTracking)continue;
+                string id=Identity(item);graph.Retain(id,RoomRetentionReason.Physics);
+                if(visited.Contains(id))continue;
+                var query=PhysicsInputs(item);
+                foreach(var member in query.Members){visited.Add(member);graph.Retain(member,RoomRetentionReason.CollisionEnvironment);}
+                foreach(var target in query.Targets)graph.Retain(target,RoomRetentionReason.CollisionEnvironment);
+                if(query.State==RoomSpatialReadiness.Unavailable)graph.RetainAll(RoomRetentionReason.CollisionEnvironment);
+            }
+        }
         internal void PreparePhysicsIsland(RoomItem item){
             if(preparingPhysicsIsland||applying)return;
             preparingPhysicsIsland=true;

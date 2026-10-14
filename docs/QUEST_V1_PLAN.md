@@ -19,8 +19,10 @@ Saved actor water policies now share live liquid geometry across walking and
 recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
 Follow now finds bounded routes around finite water cavities; see [water-aware following](#water-aware-following--2026-10-09).
 The workspace now schedules retirement of idle, unobserved connected areas; see
-[the retirement contract](QUEST_WORLD_AUTHORING.md#retiring-unused-areas). Whole-world
-physics retention and current capacity remain unchanged; see the [verified desktop checkpoint](#automatic-retirement-of-unused-areas--2026-10-14).
+[the retirement contract](QUEST_WORLD_AUTHORING.md#retiring-unused-areas). Running
+physics now retains each actor and its collision/support dependencies, allowing
+unused static areas to retire; see the [verified desktop checkpoint](#physics-dependency-retention-during-area-retirement--2026-10-14).
+Current capacity, full-room startup and explicit Start remain unchanged.
 Shared Maestro attention now supports object and authored-point targets through the
 existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
@@ -9829,3 +9831,38 @@ Evidence, interrupted logs, exact driver changes and continuation authority are
 retained in `.quest-evidence/area-retirement/`. Selective startup, per-area physics,
 larger worlds and physical loading/performance acceptance remain open. V1 is
 incomplete; headset, paid-provider, signing, deployment and Meta holds remain.
+
+### Physics dependency retention during area retirement — 2026-10-14
+
+Verified on desktop. Automatic retirement now checks the existing
+per-body and physical-island swept collision, ground and water dependencies.
+It retains active, sleeping and pending dynamic identities and the complete
+connected dependency set. Unknown actor sweeps retain the environment instead
+of proving a distant area unused. Dormant areas no longer independently trigger
+the global collision stop; existing per-consumer preparation and conservative
+barriers still apply. A ready body preserves motion when an unrelated static
+area retires or publishes. Interrupted-contact status keeps the stopped state,
+restart-from-rest instruction and primary cause visible in shared short facts.
+
+Scope remains deliberate: explicit shared Start acquires all saved participants;
+resident imported-geometry failures still stop globally; leaving an accepted
+simulation boundary still has the current pause policy. Selective startup,
+local failure/boundary handling, hardware performance and increased capacity
+remain outstanding. Per-entity real-room participation remains independent of
+visual layers, opacity, virtual terrain and these residency decisions.
+
+Verification: **17 focused EditMode / 119 focused PlayMode checks passed**;
+**1,259 complete EditMode / 1,572 complete PlayMode passed**, with three expected
+optional private-asset skips. Tests cover actual ground contacts, approaching
+dormant geometry, sleeping support, pending identities, connected dependencies,
+unknown bounds, fresh retirement queries and interrupted catch/settlement.
+The full web suite passed **2,958 tests / 313 files**; fresh native catalog and
+catching fixtures passed their consumers. Offline Headless and Book journeys
+both passed with zero exit codes and no real provider calls.
+
+Unsigned Android IL2CPP/Java compilation passed with **22 ARM64 libraries** and
+verified 16 KiB ELF alignment. Browser Java reports contain **128 passed / two
+skipped**. All 152 staged web files match, as do the tested native inputs.
+All 14 protected pre-existing files remain unchanged. No APK/AAB was produced.
+Evidence is in `.quest-evidence/regional-physics/`. V1 remains incomplete; no
+headset, paid-provider, signing, deployment or Meta work ran for this checkpoint.

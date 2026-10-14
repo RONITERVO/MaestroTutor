@@ -87,9 +87,6 @@ namespace Maestro.Quest.Tests {
         (string ground,string ball,RigidRoomItem rigid,Rigidbody body) PendingPhysicsInputFixture(){
             string ground=AvailabilityTerrain(),ball=PhysicsInputBall(new(4,1,4));NativeAreaFor(ball);
             Assert.That(editor.RetireNativeArea(NativeAreaFor(ground),out var error),Is.True,error);
-            // Isolate the per-body preparation contract. Production still keeps
-            // whole-world admission; this fixture is not streaming acceptance.
-            physics.ConfigureCollisionAdmission(editor,()=>null);
             physics.SetSurfaces(true,"Isolated local admission fixture");physics.StartPhysics();
             var rigid=editor.Find(ball).GetComponent<RigidRoomItem>();var body=editor.Find(ball).GetComponent<Rigidbody>();
             Assert.That((string)PhysicsInputFact(ball)["state"],Is.EqualTo("pending"));

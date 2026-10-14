@@ -8,9 +8,9 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Interaction {
     // Local preparation covers the full rotating collider envelope, bounded
-    // launch speed, gravity and both bounded liquid accelerations. This is input
-    // ownership, not permission to remove the whole-world gate for constraints,
-    // tracked contacts or other solver impulses.
+    // launch speed, gravity and both bounded liquid accelerations. Physical
+    // islands share their full dependency closure; tracked contacts own separate
+    // swept inputs. Conservative native barriers interrupt unforeseen contacts.
     internal static class RoomPhysicsSweep {
         internal const float LookAhead=.2f;
         internal static bool Bounds(RoomItem item,Rigidbody body,float seconds,out Bounds motion,out Bounds ground){

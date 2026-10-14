@@ -64,11 +64,13 @@ namespace Maestro.Quest.Tests
             var fact=editor.ObserveRegionRetention(area);Assert.That((int)fact["residentCount"],Is.EqualTo(1));Assert.That(fact["reasons"].Values<string>(),Does.Contain("unavailable"));
             Assert.That(editor.DeleteObject(target,out error),Is.True,error);Assert.That((int)editor.ObserveRegionRetention(area)["retainedCount"],Is.Zero);yield return null;
         }
-        [UnityTest] public IEnumerator RegionRetentionHonoursWholeWorldCollisionAndWorkspaceGatesWithoutPersistingThem()
+        [UnityTest] public IEnumerator RegionRetentionHonoursActorCollisionAndWorkspaceGatesWithoutPersistingThem()
         {
             string target=editor.Identity(block),area=NewRegion();Assert.That(AssignRegion(target,area,out var error),Is.True,error);string saved=JsonUtility.ToJson(editor.Snapshot());
             using(var hold=editor.WriteGate.TryFreeze(out error)){Assert.That(hold,Is.Not.Null,error);Assert.That(RetainedFor(target,RoomRetentionReason.WorkspaceBusy),Is.True);}
             Assert.That(RetainedFor(target,RoomRetentionReason.WorkspaceBusy),Is.False);
+            Assert.That(editor.SetItemPhysics(target,new(){mode="solid",shape="box",mass=1}),Is.True);
+            saved=JsonUtility.ToJson(editor.Snapshot());
             physics.SetSurfaces(true,"Test room");physics.StartPhysics();Assert.That(physics.Running,Is.True);Assert.That(RetainedFor(target,RoomRetentionReason.CollisionEnvironment),Is.True);
             physics.PausePhysics();Assert.That(RetainedFor(target,RoomRetentionReason.CollisionEnvironment),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));yield return null;
         }

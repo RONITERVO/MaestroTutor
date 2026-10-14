@@ -71,7 +71,7 @@ namespace Maestro.Quest.Tests {
             var scan=NativePlacementRoom(out var source,out var target);string setup=scan.SetupIdentity;var physics=world.ObserveSimulation()["stateId"].DeepClone();
             Assert.That(modeActions.Execute(PlacementRequest(target),out var error),Is.True,error);Assert.That(source.Rays,Is.Zero);yield return PlacementFinished();
             Assert.That(source.Rays,Is.EqualTo(1));Assert.That(editor.Find(target),Is.Not.Null);Assert.That(editor.Read(target).position.y,Is.LessThan(1.2f));
-            Assert.That(scan.SetupIdentity,Is.EqualTo(setup),"Restoring authored geometry cannot invalidate its own physical-surface request");Assert.That(JToken.DeepEquals(physics,world.ObserveSimulation()["stateId"]),Is.False,"Physics admission still changes when authored geometry becomes available");
+            Assert.That(scan.SetupIdentity,Is.EqualTo(setup),"Restoring authored geometry cannot invalidate its own physical-surface request");Assert.That(JToken.DeepEquals(physics,world.ObserveSimulation()["stateId"]),Is.True,"Restoring dormant geometry must not invalidate unrelated global physics intent");
         }
         [UnityTest] public IEnumerator NativeAuthoringSurfacePlacementStillRejectsRoomChangesWhileItsTargetLoads(){
             var scan=NativePlacementRoom(out var source,out var target);var before=editor.Read(target).position;string setup=scan.SetupIdentity;
