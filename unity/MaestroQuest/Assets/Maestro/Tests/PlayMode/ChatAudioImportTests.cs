@@ -17,6 +17,19 @@ namespace Maestro.Quest.Tests {
   static void AudioSend(AudioImportWorkshop workshop,JObject wire,byte[] bytes){
    while(workshop.Chat.Request()!=null){var request=workshop.Chat.Request();int offset=(int)request["offset"];var chunk=(JObject)wire.DeepClone();chunk["chunk"]=new JObject{["requestId"]=(string)request["requestId"],["assetHash"]=(string)request["assetHash"],["offset"]=offset,["data"]=Convert.ToBase64String(bytes.Skip(offset).Take(ChatAudioTransfer.ChunkBytes).ToArray())};workshop.SyncChat("chat",chunk);}
   }
+  [UnityTest] public IEnumerator CompressedChatAudioAcceptsNormalizedPreviewAndPlaysThroughExistingEmitter(){
+   foreach(string file in new[]{"stereo-vbr.mp3","stereo.ogg"}){
+    var bytes=System.IO.File.ReadAllBytes(System.IO.Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/CompressedAudio",file+".bytes"));var wire=AudioOffers(bytes);wire["offerSet"]=Guid.NewGuid().ToString("N");var workshop=editor.GetComponent<AudioImportWorkshop>();workshop.SyncChat("chat",wire);
+    string original=ModelLibrary.Hash(bytes),id=workshop.SelectChat((string)wire["offerSet"],original);AudioSend(workshop,wire,bytes);
+    double until=Time.realtimeSinceStartupAsDouble+10;while((string)workshop.Observe()["phase"]!="preview"&&Time.realtimeSinceStartupAsDouble<until)yield return null;
+    Assert.AreEqual("preview",(string)workshop.Observe()["phase"],workshop.Observe().ToString());string hash=(string)workshop.Observe()["preview"]["assetHash"];Assert.AreNotEqual(original,hash);Assert.IsFalse(workshop.CanAccept(id,original,out _));Assert.IsTrue(editor.AudioSources().All(x=>x.assetHash!=hash));
+    var accept=workshop.Accept(id,hash,CancellationToken.None);while(!accept.IsCompleted)yield return null;Assert.IsFalse(accept.IsFaulted,accept.Exception?.ToString());string source=(string)accept.Result["sourceId"];
+    WorldEmitter("book",source);var audio=WorldAudio.For(editor);audio.enabled=true;Assert.IsTrue(audio.Begin("book","sound",out var voice,out var error),error);until=Time.realtimeSinceStartupAsDouble+5;while(!voice.Output&&!voice.Closed&&Time.realtimeSinceStartupAsDouble<until)yield return null;
+    Assert.IsNotNull(voice.Output,voice.Error);Assert.That(voice.Samples.Max(),Is.GreaterThan(2000));audio.Cancel(voice);Assert.IsTrue(voice.Closed);yield return null;
+    var saved=editor.Sounds.ReadAsync(hash);while(!saved.IsCompleted)yield return null;Assert.IsFalse(saved.IsFaulted,saved.Exception?.ToString());Assert.AreEqual(24000,saved.Result.Inspection.Rate);Assert.AreEqual(1,saved.Result.Inspection.Channels);audio.enabled=false;
+   }
+   Assert.IsTrue(editor.WriteGate.CanFreeze(out _));
+  }
   [UnityTest] public IEnumerator ChatAudioUsesSamePreviewAcceptanceUndoAndPrivateLibrary(){
    var bytes=SoundFile();var wire=AudioOffers(bytes);var workshop=editor.GetComponent<AudioImportWorkshop>();workshop.SyncChat("chat",wire);
    Assert.IsTrue(BehaviourCatalog.TryRead("audio.chat.library",1,new JObject{["offset"]=0},new BehaviourCatalog.FactContext(editor:editor),out var offers));Assert.AreEqual("generated",(string)((JObject)offers.Value)["entries"][0]["origin"]);

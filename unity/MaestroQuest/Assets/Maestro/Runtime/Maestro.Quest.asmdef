@@ -22,7 +22,9 @@
     "VRM10",
     "UniHumanoid",
     "Unity.Newtonsoft.Json",
-    "Oculus.Platform"
+    "Oculus.Platform",
+    "Maestro.Vendor.NLayer",
+    "Maestro.Vendor.NVorbis"
   ],
   "autoReferenced": true
 }

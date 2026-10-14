@@ -24,6 +24,19 @@ namespace Maestro.Quest.Imports {
         internal static string SafeName(string value)=>new string((value??"Imported sound").Where(c=>!char.IsControl(c)&&c!='<'&&c!='>').Take(80).ToArray());
         internal static AudioAsset Inspect(string name,byte[] bytes,CancellationToken cancel=default)=>new(name,bytes==null?null:(byte[])bytes.Clone(),cancel);
         internal static AudioAsset ReadSelected(string name,string path,CancellationToken token)=>new(name,ReadBounded(path,token),token);
+        internal static async Task<AudioAsset> ImportSelectedAsync(string name,string path,CancellationToken token) {
+            await decoders.WaitAsync(token).ConfigureAwait(false);
+            try{return await Task.Run(()=>new AudioAsset(name,CompressedAudio.Normalize(ReadBounded(path,token),token),token),token).ConfigureAwait(false);}
+            finally{decoders.Release();}
+        }
+        internal static async Task<AudioAsset> ImportChatAsync(string name,byte[] owned,string originalHash,CancellationToken token) {
+            await decoders.WaitAsync(token).ConfigureAwait(false);
+            try{return await Task.Run(()=>{
+                token.ThrowIfCancellationRequested();
+                if(owned==null||owned.Length>WaveAudio.MaximumBytes||ModelLibrary.Hash(owned)!=originalHash)throw new InvalidDataException("The chat sound bytes do not match the selected sound.");
+                return new AudioAsset(name,CompressedAudio.Normalize(owned,token),token);
+            },token).ConfigureAwait(false);}finally{decoders.Release();}
+        }
         static byte[] ReadBounded(string path,CancellationToken cancel){
             WorkspaceArchive.NoLink(path);using var input=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
             if(input.Length<44||input.Length>WaveAudio.MaximumBytes)throw new InvalidDataException("The sound copy is incomplete or exceeds 32 MB.");
@@ -33,9 +46,9 @@ namespace Maestro.Quest.Imports {
         }
         string AssetPath(string hash){if(!ModelLibrary.ValidHash(hash))throw new InvalidDataException("Choose an exact imported sound identity.");return Path.Combine(directory,hash+".wav");}
         AudioAsset ReadCore(string hash,CancellationToken cancel){
-            string path=AssetPath(hash);if(!Directory.Exists(directory)||!File.Exists(path))throw new FileNotFoundException("This sound's private copy is missing. Import the original WAV again.");
+            string path=AssetPath(hash);if(!Directory.Exists(directory)||!File.Exists(path))throw new FileNotFoundException("This sound's private copy is missing. Import the original sound again.");
             WorkspaceArchive.NoLink(directory);var asset=new AudioAsset(ReadName(hash),ReadBounded(path,cancel),cancel);
-            if(asset.Hash!=hash)throw new InvalidDataException("This sound's private copy is damaged. Import the original WAV again.");return asset;
+            if(asset.Hash!=hash)throw new InvalidDataException("This sound's private copy is damaged. Import the original sound again.");return asset;
         }
         string ReadName(string hash){
             string path=Path.Combine(directory,hash+".txt");if(!File.Exists(path))return hash;
@@ -75,7 +88,7 @@ namespace Maestro.Quest.Imports {
                     input.Position=0;var buffer=new byte[65536];int count;
                     while((count=input.Read(buffer,0,buffer.Length))>0){token.ThrowIfCancellationRequested();digest.AppendData(buffer,0,count);}
                     string actual=BitConverter.ToString(digest.GetHashAndReset()).Replace("-","").ToLowerInvariant();
-                    if(actual!=hash)throw new InvalidDataException("This sound's private copy is damaged. Import the original WAV again.");
+                    if(actual!=hash)throw new InvalidDataException("This sound's private copy is damaged. Import the original sound again.");
                 }
                 var first=WaveAudio.DecodeBlock(input,in info,0,Math.Min(WavePcmAsset.BlockFrames,WaveAudio.OutputFrames(in info)),token);token.ThrowIfCancellationRequested();
                 var result=new WavePcmAsset(input,info,first,decoders,token,retention);input=null;retention=null;return result;

@@ -57,7 +57,11 @@ window.nativeBookChatImage=()=>{
  store.addMessage({role:'assistant',text:'Synthetic chat texture fixture.',imageUrl:dataUrl,imageMimeType:'image/png',imageOrigin:'generated',attachmentName:'Chat checker.png'});
  return dataUrl;
 };
-window.nativeBookChatAudio=(dataUrl)=>{store.addMessage({role:'assistant',text:'Synthetic generated rain sound.',imageUrl:dataUrl,imageMimeType:'audio/wav',maestroToolKind:'audio-note',attachmentName:'Chat rain.wav'});};
+window.nativeBookChatAudio=(dataUrl)=>{
+ const mime=/^data:(audio\/(?:wav|mpeg|ogg));base64,/.exec(dataUrl)?.[1];if(!mime)throw new Error('Unsupported synthetic sound fixture');
+ const extension=mime==='audio/mpeg'?'mp3':mime==='audio/ogg'?'ogg':'wav';
+ store.addMessage({role:'assistant',text:'Synthetic generated rain sound.',imageUrl:dataUrl,imageMimeType:mime,maestroToolKind:'audio-note',attachmentName:`Chat rain.${extension}`});
+};
 const errors:string[]=[];let observed:RoomAgentState|null=null,busy=false;
 window.nativeBookEvidence=()=>({state:observed,errors:[...errors],messages:useMaestroStore.getState().messages,agentWorking:selectIsAgentWorking(useMaestroStore.getState()),inputBlocked:selectIsSending(useMaestroStore.getState())});
 window.nativeBookTask=roomTaskStore.get;

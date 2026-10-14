@@ -3339,3 +3339,22 @@ C# inputs remain unchanged. The retained first run's two failures came from sile
 fixtures that still had a distant reflector within the finite response range.
 See [the exact evidence and production limitations](../unity/AUDIO.md#candidate-immutable-geometry-boundary--2026-10-12).
 This remains desktop candidate coverage, not app integration or physical acceptance.
+
+
+### Shared compressed-audio import coverage — 2026-10-14
+
+Completed chat MP3 and Ogg Vorbis now follow the existing sound capability and
+native preview owner. Headless and original-book journeys both verify original
+attachment identity, the normalized preview hash, checked acceptance and Undo.
+The book also attaches each source and waits for native PCM consumption at zero
+gain. A 32-second WAV retains the existing long-clip path; compressed fixtures
+exercise the new import adapter without a provider or private recording.
+
+The final complete suites pass 1,226 EditMode / 1,538 PlayMode checks (three expected
+private-asset skips) and 2,950 web tests across 313 files. Both offline journeys,
+Android IL2CPP compilation and staged-content checks pass. Independent reference
+PCM checks cover MP3 startup/ending preservation and low-rate short blocks.
+See the [release-plan evidence and exact limitations](QUEST_V1_PLAN.md#shared-mp3-and-vorbis-imports--2026-10-14)
+and [audio import contract](../unity/AUDIO.md#mp3-and-vorbis-normalization--2026-10-14).
+These results do not establish audible Quest quality, Live microphone coexistence,
+real-provider behavior or Store acceptance; live sources remain separate adapters.

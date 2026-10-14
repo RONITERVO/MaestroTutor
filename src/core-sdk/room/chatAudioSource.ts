@@ -3,7 +3,7 @@
 import {CHAT_AUDIO_BYTES} from '../../../shared/chatAudio';
 import {ChatMediaSource,type ChatMediaInput} from './chatMediaSource';
 import type {ChatMessage} from '../../core/types';
-const prefix=/^data:audio\/(wav|wave|x-wav);base64,/;
+const prefix=/^data:audio\/(wav|wave|x-wav|mpeg|mp3|x-mp3|ogg|vorbis);base64,/;
 /** Only completed, local attachments from the visible conversation. No URL,
  * provider, microphone, TTS-cache or private Live recording is opened here. */
 export function chatAudioSources(messages:readonly ChatMessage[],bookmark?:string|null):ChatMediaInput[] {
@@ -15,5 +15,5 @@ export function chatAudioSources(messages:readonly ChatMessage[],bookmark?:strin
  }).slice(0,8);
 }
 export class ChatAudioSource extends ChatMediaSource<'assetHash'> {
- constructor(){super({hashKey:'assetHash',minimumBytes:44,maximumBytes:CHAT_AUDIO_BYTES,pattern:/^data:audio\/(wav|wave|x-wav);base64,([A-Za-z0-9+/]+={0,2})$/,fallbackName:'Chat sound'});}
+ constructor(){super({hashKey:'assetHash',minimumBytes:44,maximumBytes:CHAT_AUDIO_BYTES,pattern:/^data:audio\/(wav|wave|x-wav|mpeg|mp3|x-mp3|ogg|vorbis);base64,([A-Za-z0-9+/]+={0,2})$/,fallbackName:'Chat sound'});}
 }

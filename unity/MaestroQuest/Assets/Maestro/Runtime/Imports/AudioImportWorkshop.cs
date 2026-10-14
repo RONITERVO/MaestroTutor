@@ -64,12 +64,11 @@ namespace Maestro.Quest.Imports {
         async Task PrepareChat(byte[] bytes,string name,string expected,CancellationToken token){
             working=true;phase="checking";
             try{
-                var selected=await Task.Run(()=>AudioLibrary.Inspect(name,bytes,token),token);token.ThrowIfCancellationRequested();
+                var selected=await AudioLibrary.ImportChatAsync(name,bytes,expected,token);token.ThrowIfCancellationRequested();
                 if(disposed)return;
-                if(selected.Hash!=expected)throw new System.IO.InvalidDataException("The chat sound bytes do not match the selected sound.");
                 asset=selected;phase="preview";
             }catch(OperationCanceledException){phase="cancelled";asset=null;}
-            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The chat sound could not be decoded. Choose a WAV within the supported bounds.");}
+            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The chat sound could not be decoded. Choose WAV, MP3 or Ogg Vorbis within the supported bounds.");}
             finally{working=false;if(disposed||phase!="preview")End();}
         }
         internal bool CanAccept(string id,string hash,out string issue){
@@ -105,7 +104,7 @@ namespace Maestro.Quest.Imports {
                 string status=(string)value["phase"];
                 if(status is "opening" or "selecting" or "copying"){phase=status=="copying"?status:"selecting";return;}
                 if(status=="cancelled"){Cancel(request);return;}
-                if(status=="failed"){Fail("The selected sound could not be copied. Choose a local WAV file.");ReleasePicker(request);End();return;}
+                if(status=="failed"){Fail("The selected sound could not be copied. Choose a local WAV, MP3 or Ogg Vorbis file.");ReleasePicker(request);End();return;}
                 if(status!="selected")throw new InvalidOperationException();
                 if(paused||!focused)return;
                 string path=ImportWorkshop.SelectedPath((string)value["path"],picker.CacheRoot),name=(string)value["name"];
@@ -114,9 +113,9 @@ namespace Maestro.Quest.Imports {
         }
         async Task Prepare(string path,string name,string id,CancellationToken token){
             working=true;phase="checking";
-            try{var selected=await Task.Run(()=>AudioLibrary.ReadSelected(name,path,token),token);token.ThrowIfCancellationRequested();if(disposed)return;asset=selected;phase="preview";}
+            try{var selected=await AudioLibrary.ImportSelectedAsync(name,path,token);token.ThrowIfCancellationRequested();if(disposed)return;asset=selected;phase="preview";}
             catch(OperationCanceledException){phase="cancelled";asset=null;}
-            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The selected WAV could not be read. Choose it again.");}
+            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The selected sound could not be read. Choose it again.");}
             finally{ReleasePicker(id);working=false;if(disposed||phase!="preview")End();}
         }
         internal async Task<JObject> Accept(string id,string hash,CancellationToken stop){

@@ -27,6 +27,16 @@ namespace Maestro.Quest.Tests {
             writer.Write(System.Text.Encoding.ASCII.GetBytes("RIFF"));writer.Write(36+frames*2);writer.Write(System.Text.Encoding.ASCII.GetBytes("WAVEfmt "));writer.Write(16);writer.Write((short)1);writer.Write((short)1);writer.Write(24000);writer.Write(48000);writer.Write((short)2);writer.Write((short)16);writer.Write(System.Text.Encoding.ASCII.GetBytes("data"));writer.Write(frames*2);
             for(int i=0;i<frames;i++)writer.Write((short)(Math.Sin(i*2*Math.PI*440/24000)*5000));return memory.ToArray();
         }
+        [UnityTest] public IEnumerator CompressedAudioFilePickerUsesCanonicalPreviewAndReleasesSelection(){
+            foreach(string file in new[]{"stereo-vbr.mp3","stereo.ogg"}){
+                using var picker=new SoundPicker();var workshop=editor.GetComponent<AudioImportWorkshop>();workshop.SetPickerForTests(picker);string id=workshop.Select();
+                var bytes=File.ReadAllBytes(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/CompressedAudio",file+".bytes"));picker.Pick(bytes);double until=Time.realtimeSinceStartupAsDouble+10;
+                while((string)workshop.Observe()["phase"]!="preview"&&Time.realtimeSinceStartupAsDouble<until)yield return null;
+                Assert.AreEqual("preview",(string)workshop.Observe()["phase"],workshop.Observe().ToString());Assert.AreEqual(1,picker.Released);string hash=(string)workshop.Observe()["preview"]["assetHash"];Assert.AreNotEqual(ModelLibrary.Hash(bytes),hash);
+                var accepting=workshop.Accept(id,hash,CancellationToken.None);while(!accepting.IsCompleted)yield return null;Assert.IsFalse(accepting.IsFaulted,accepting.Exception?.ToString());Assert.IsNull(editor.GetComponent<WorldAudio>());
+                editor.Undo();Assert.IsNull(editor.ReadAudio((string)accepting.Result["sourceId"]));var saved=editor.Sounds.ReadAsync(hash);while(!saved.IsCompleted)yield return null;Assert.IsFalse(saved.IsFaulted);Assert.AreEqual(24000,saved.Result.Inspection.Rate);Assert.IsTrue(editor.WriteGate.CanFreeze(out _));
+            }
+        }
         [UnityTest] public IEnumerator SoundPickerAcceptsExactPreviewOnceWithoutPlayingAndUndoKeepsFile(){
             using var picker=new SoundPicker();var workshop=editor.GetComponent<AudioImportWorkshop>();workshop.SetPickerForTests(picker);string id=workshop.Select();
             Assert.IsFalse(workshop.CanStart(true,out _));picker.Pick(SoundFile());double deadline=Time.realtimeSinceStartupAsDouble+5;

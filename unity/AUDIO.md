@@ -6,9 +6,9 @@ event-driven playback.
 Maestro's mouth is one emitter in that system. The familiar chat continues to own
 providers, account access, generated media and Live conversation.
 
-The current implementation exposes reusable procedural and imported WAV sources, object emitters,
+The current implementation exposes reusable procedural and imported WAV/MP3/Vorbis sounds, object emitters,
 finite or looping native playback, independent controls and playback events through
-the shared capability catalog. Longer media, other codecs and live stream adapters remain pending. Finished local chat WAV attachments can now be imported as reusable sources
+the shared capability catalog. Clips up to ten minutes use bounded playback; additional codecs and live-stream adapters remain pending. Finished local chat audio attachments can be imported as reusable sources
 through the same checked native preview. Maestro speech still uses its existing
 native speech session; ordinary artifact playback remains in the web app until
 the user or agent explicitly imports, attaches and plays a world sound. Room reflection output and its background map scheduler are under
@@ -21,7 +21,7 @@ accepted on the headset.
 - `audio.source.edit` saves/removes a named source, with a generated stable ID,
   current revision checks and Undo. Source kind `tone` provides sine,
   triangle or seeded noise, a frequency sweep and an attack/release envelope.
-  Kind `clip` references exact imported bytes by SHA-256 and their inspected duration;
+  Kind `clip` references exact private WAV bytes by SHA-256 and their inspected duration;
   it never contains a path, URL, credential or PCM buffer. Source facts use version 2
   and a fixed record with both blocks; only the selected `kind` is executable.
 - `audio.import` uses the shared native file-picker owner. `select` returns before
@@ -75,9 +75,10 @@ its destination needs the same library assets or a complete workspace transfer.
 
 The first file adapter accepts ordinary RIFF/WAVE PCM 8/16/24/32-bit or IEEE float32,
 mono/stereo, 8–96 kHz, .03–600 seconds and up to 32 MiB. Clips over 30 seconds
-use bounded asynchronous sample loading. Extensible/compressed WAV, MP3/OGG
-and live streams need further adapters. The private library
-holds at most 32 files/128 MiB. Original bytes are preserved; playback deliberately
+use bounded asynchronous sample loading. MP3 and Ogg Vorbis now normalize into this
+canonical WAV adapter before preview (see below). Extensible/compressed WAV, other
+codecs and live streams need further adapters. The private library
+holds at most 32 files/128 MiB. Original WAV bytes are preserved; playback deliberately
 downmixes stereo and resamples with an anti-aliasing filter to the existing 24 kHz
 mono transport. It is not a stereo music player. Two cancellable decoding workers
 bound simultaneous input buffers. RIFF sizes, frame alignment, sample format,
@@ -1124,7 +1125,7 @@ selection or end-to-end last-word-preservation claim follows from scripted tests
 
 ## Finished chat audio as a world source
 
-`audio.chat.library` pages the newest eight available, completed local WAV
+`audio.chat.library` pages the newest eight available, completed local WAV, MP3 and Ogg
 attachments in the current conversation after its bookmark. `audio.chat.item`
 resolves one exact hash to its current `offerSet`. Generated audio notes/music and
 user attachments retain declared origin and message identity in the offer. These
@@ -1133,7 +1134,9 @@ chunks, URLs and unsupported local formats are not offered by this adapter.
 
 Use `audio.import` with `operation: "selectChat"`, that `offerSet`, and exact
 `assetHash`. The ordinary import status shows receiving, checking and preview.
-The native WAV parser verifies the original bytes and their hash before preview.
+The native importer verifies the original hash before decoding; compressed sounds
+then receive a canonical WAV preview with its own exact hash. Accept the preview
+hash, which can differ from the chat offer hash.
 The ordinary `accept` step saves the private content-addressed file and creates a
 source with one Undo. It does not attach an emitter or play the sound. Existing
 emitter controls, `audio.play`, `audio.start`, buttons and event-driven programs
@@ -1150,8 +1153,8 @@ receipts before retrying. Merely listing or receiving offers changes no room fil
 
 The original app still owns generation, managed/BYOK access and its messages.
 There is no second provider client, implicit URL download, recording or automatic
-playback. WAV duration/codec/library/voice limits above still apply: a long or
-invalid WAV may be offered but fails checked preview with a visible reason. More
+playback. Duration/codec/library/voice limits above still apply: an unsupported or
+invalid sound may be offered but fails checked preview with a visible reason. More
 codecs and live sources remain required adapters. Longer WAV clips now use the
 bounded source described below. This transfer implementation is not audible, microphone coexistence or Quest acceptance.
 
@@ -1185,5 +1188,47 @@ catalog. Their clip duration bounds and finite playback deadline now agree on
 ten-minute recordings. Use `audio.start` for background music that should outlive
 its starting task; `audio.play` waits for its finite recording to finish. No audio
 is played on import. Existing short sources and saved IDs remain valid. Live input,
-compressed formats, microphone coexistence and physical audibility remain separate
+additional formats, microphone coexistence and physical audibility remain separate
 implementation and acceptance work.
+
+
+## MP3 and Vorbis normalization — 2026-10-14
+
+Native file selection and completed chat attachments accept Layer III MP3
+(CBR/VBR) and single-stream Ogg Vorbis within the same 32 MiB, mono/stereo,
+8–96 kHz and 0.03–600-second limits. Ogg is a container: Opus and other Ogg codecs,
+chained/multiplexed streams and free-bitrate MP3 are not supported. Files are
+identified from their bytes. The Android picker does not trust MIME or extensions.
+
+Pinned managed NLayer 3.0.0 and NVorbis 0.10.5 sources build into the same
+Unity Mono/IL2CPP runtime. MP3 decoding accounts for encoder and synthesis delay,
+including skips across short frames; an 8 kHz short-block region correction
+preserves transients. Independent reference PCM fixtures check complete duration
+and both ends of the sound. Local parser bounds and compatibility patches are
+enumerated with original and LF-normalized shipped hashes in each dependency's
+`UPSTREAM.json`; MIT and additional Fluendo/Xiph notices ship in the book assets. No runtime FFmpeg, provider,
+network decoder or second audio renderer is introduced. Synthetic fixtures record
+FFmpeg authoring commands and hashes; web CI checks dependency and fixture integrity.
+
+Preflight walks complete MP3 frames, or Ogg page checksums, sequence/continuation,
+stream identity and packet completion. Vorbis metadata is capped at 64 KiB per
+comment packet, packets at 256 KiB, codebooks at 65,536 entries / 32 dimensions,
+and aggregate setup tables have a conservative 16 MiB reservation budget. This is
+not a measured total heap guarantee. Invalid ordered books cannot spin without
+progress. Channel, rate and block limits precede decoder allocation.
+
+Two shared decoder slots bound concurrent work. Cancellation and a two-minute
+work deadline apply to preflight, reads and conversion. Streaming float windows
+are downmixed and low-pass resampled into 24 kHz mono 16-bit WAV. Common sample
+rates use exact rational filter phases; unusual rates interpolate at most 2,049
+bounded tables. No full-resolution decoded PCM buffer is retained. Input, output,
+filter tables and decoder scratch remain separate from the playback PCM budget.
+The complete canonical WAV is retained for preview and acceptance, within 32 MiB.
+
+Original chat bytes must match the selected offer's hash before conversion.
+`audio.import.selection.preview.assetHash` then identifies the normalized file;
+`accept` must use that hash. The source definition, private library, workspace
+archive, emitters, programs, Undo and short/long playback paths are unchanged.
+Existing WAV imports remain byte-identical. Lossy-format timing depends on encoder
+metadata; use WAV for precise sample-aligned material. Compressed support does
+not establish physical audibility, Live coexistence or new provider acceptance.

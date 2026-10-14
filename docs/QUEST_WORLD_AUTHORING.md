@@ -1287,3 +1287,33 @@ collection, mesh snapshotting, map installation and cancellation still have
 main-thread costs. Two jobs is an admission bound, not a measured headset frame-time
 guarantee. Whole-world collision admission, automatic unloading off, current world
 limits, foot planting and physical performance acceptance remain unchanged.
+
+
+## Importing reusable sounds
+
+`audio.import` selects a local file or a completed local chat attachment, inspects
+it, then requires explicit acceptance of that preview. Both book forms and agents
+use this same workflow. Acceptance creates a reusable clip source; it does not
+start playback. Bind a source with `object.audioEmitter.edit`, then use `audio.play`
+or a program event to play it. Undo removes the source definition while preserving
+its private library file for reuse.
+
+Supported imports are PCM/float WAV, Layer III MP3 (CBR/VBR) and a single Ogg Vorbis
+stream: mono/stereo, 8–96 kHz, 0.03–600 seconds, up to 32 MiB per selected file.
+MP3 and Vorbis are decoded on at most two workers into 24 kHz mono 16-bit WAV for
+the existing spatial playback system. The preview shows the normalized asset's
+hash, duration and channel/rate metadata. A chat offer's original hash is verified
+before conversion; **accept the preview hash**, which differs for compressed
+files. Existing WAV inputs retain their exact bytes. Saved rooms and archives
+continue to contain only the canonical private WAV files, with the existing
+32-file / 128 MiB library budget and bounded long-clip streaming.
+
+The importer validates complete MP3 frames and Ogg page checksums, sequencing and
+packet bounds before decoding. Vorbis headers have bounded metadata (64 KiB),
+packet sizes (256 KiB), codebooks and a shared 16 MiB conservative setup reservation
+budget. Work is cancellable and stops after two minutes. These are supported-input
+limits, not a promise to repair arbitrary audio. Opus, chained/multiplexed Ogg,
+free-bitrate MP3 and compressed WAV need conversion outside the app first.
+Lossy-codec timing depends on available encoder metadata; use WAV for precise
+sample-aligned source material. No remote URL, provider, microphone or live stream
+is opened by this import action. Live-source adapters remain separate work.

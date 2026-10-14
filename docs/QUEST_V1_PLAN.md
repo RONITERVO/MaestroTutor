@@ -37,12 +37,13 @@ Headset window acceptance, imported surroundings and region streaming remain ope
 User and agent authored audio is accepted v1 scope: reusable sources, object or
 joint emitters, live streams, and existing events/programs controlling playback.
 See the [shared world audio contract](../unity/AUDIO.md). Native rendering now
-handles procedural and imported bounded WAV sounds with editable emitters, looping
+handles procedural sounds and bounded WAV, MP3 and Vorbis imports with editable emitters, looping
 playback, independent controls and events alongside the separate Maestro speech
-renderer. Finished local chat WAV attachments now enter the same source/import path; see
+renderer. Finished local chat sound attachments now enter the same source/import path; see
 [chat sound attachment](../unity/AUDIO.md#finished-chat-audio-as-a-world-source).
 WAV recordings now support up to ten minutes within the same bounded file/library
 limits, using a shared PCM cache; see [long-recording playback](../unity/AUDIO.md#bounded-playback-for-longer-wav-recordings).
+MP3/Vorbis normalize into the existing private WAV library; see [compressed imports](../unity/AUDIO.md#mp3-and-vorbis-normalization--2026-10-14).
 Additional codecs, live-stream adapters and continuous-background-audio/Live
 coexistence remain implementation gates.
 The experimental reflection mixer and its map scheduler stay out of the production
@@ -9593,3 +9594,73 @@ Whole-world physics admission and running-world retention remain mandatory;
 automatic unloading stays off and the 64-object / 25-metre / four-height-field
 limits remain. Existing provider, audio, performance and Store acceptance gaps
 remain open. V1 is active and incomplete.
+
+
+## Shared MP3 and Vorbis imports — 2026-10-14
+
+Native files and finished local chat attachments now accept Layer III MP3 and
+single-stream Ogg Vorbis through the existing sound preview/acceptance owner.
+Original chat bytes must match their selected hash before conversion. Compressed
+inputs normalize to 24 kHz mono 16-bit WAV; acceptance uses the new preview hash.
+Existing WAV bytes, saved source/emitter/program definitions, private libraries,
+archives, Undo and bounded short/long playback retain their current behavior.
+There is no additional provider client, live-stream adapter or automatic playback.
+
+Pinned managed NLayer 3.0.0 and NVorbis 0.10.5 source builds under Mono and IL2CPP.
+Complete frame/container preflight, bounded Vorbis setup tables, cancellation,
+a two-minute deadline and the shared two-worker lane constrain import work.
+Limits remain 32 MiB, mono/stereo, 8–96 kHz and 0.03–600 seconds. Opus, chained Ogg,
+free-bitrate MP3 and compressed WAV remain unsupported. Source pins, original and
+shipped hashes, explicit local patches, synthetic fixture provenance and MIT/BSD
+notices are recorded; web CI checks their integrity. FFmpeg only authored fixtures
+and independent reference PCM and is not an application dependency.
+
+Independent MP3 reference comparisons caught startup synthesis delay and an 8 kHz
+short-block decoding error after the initial duration checks passed. Both were
+fixed before final verification. The earlier full run was interrupted to avoid
+accepting superseded source. Regression checks compare complete PCM duration,
+root-mean-square error and the first/last 20 milliseconds against the independent
+reference output. Lossy-codec timing still depends on encoder metadata; exact
+sample-aligned source material should use WAV.
+
+The final complete native suite passed **1,226 EditMode / 1,538 PlayMode** checks
+with the three expected optional private-asset skips. New cases cover real encoded
+mono/stereo fixtures, low/high rates, independent MP3 output, malformed/truncated
+containers, hostile setup/metadata bounds, cancellation, resampling, private save,
+archive, picker cleanup, chat hash fencing, acceptance, actual PCM playback and
+Undo. All **2,938 frozen native inputs**, including **1,087 C# files**, were checked;
+C# and shader hashes match the build mirror.
+
+Complete offline Headless **41ab7d98fe2f4cc181e3b0906aee9b9a** and Original Book
+**34f9eb329eae4c5f8a32d8808d6b6402** journeys passed with zero client/editor exits.
+Each verifies the existing 32-second WAV and new MP3/Vorbis transfers and accepted
+identities. The original book uses generated forms to accept and attach each
+source, then waits for actual native PCM consumption (32 / 0.6 / 0.6 seconds at
+zero gain) before Undo. The MP3/Vorbis completion screenshots were visually checked.
+These are synthetic local assets and scripted providers, not audible headset or
+real-provider acceptance.
+
+The first packaging-stage web build found an ES-target incompatibility in the
+new vendor-integrity test (`replaceAll`). Its equivalent global-regex replacement
+changed no application/native/journey code. The build resumed after auditing all
+frozen inputs and successful native/journey receipts. Fresh native fixtures and
+the corrected test passed the complete final **2,950 web tests across 313 files**,
+including **77** catalog/catching fixture consumers. Scoped lint, probe types and
+the catalog source check passed. Eight catalog states and twelve catch checkpoints
+were refreshed from the successful native run.
+
+Shared web/browser build, Unity Android export and unsigned Gradle compilation
+passed. Java results remain **128 passed / two skipped** on unchanged browser
+source. All **22 selected ARM64 libraries** pass the ELF/16 KiB checks; all **152
+web files**, browser AAR and native staging hashes match. No APK/AAB was produced.
+Evidence, the interrupted-run history and the test-only continuation receipt are
+in `.quest-evidence/compressed-audio/` and the named journey folders. The ten
+protected raw files and four untracked Store files remain byte-for-byte unchanged.
+
+No headset query/install, paid-provider, signing, deployment or Meta action ran.
+Decoder memory bounds are not measured peak heap or Quest frame-time guarantees.
+Audible quality, microphone coexistence, live sources, other formats, physical
+performance and existing provider/Store gates remain open. Production reflections
+stay off. Whole-world physics admission and running-world retention remain in
+force; automatic unloading stays off and the 64-object / 25-metre /
+four-height-field limits are unchanged. V1 remains active and incomplete.

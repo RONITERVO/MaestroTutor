@@ -1391,7 +1391,7 @@ The original Book journey adds the same WAV to the original chat store, uses the
 generated sound-selection and acceptance controls, attaches the source to a book
 emitter, and runs `audio.play` until native PCM consumption completes. Playback
 gain is zero; this tests ownership/consumption, not audible quality. It captures
-`book-chat-audio.json` and `book-chat-audio.png`, then undoes its source and emitter
+`book-chat-audio.json` and `book-chat-audio-wav.png`, then undoes its source and emitter
 edits. Image transfer remains covered in the same journey. These offline cases
 use scripted providers and synthetic assets, with no microphone, real-provider
 or physical headset acceptance.
@@ -1490,3 +1490,18 @@ animated recipe attachments, and exact/missing scanned-plane bindings. Together
 with rendered point/spot-shadow tests, this separates dependency correctness from
 pixel behavior. It does not prove headset appearance, thermal performance or
 complete regional streaming; those retain their separate acceptance gates.
+
+
+## Compressed chat audio imports
+
+The chat-audio journey also tests synthetic MP3 and Vorbis attachments alongside
+the existing 32-second WAV. Each compressed offer keeps its original input hash;
+native preview must expose a different canonical WAV hash. Headless accepts that
+preview, reads the created source and undoes it. The book loads the same current
+preview through generated controls, accepts, attaches an emitter, waits for real
+native PCM consumption at zero gain, then undoes its source/emitter changes.
+Receipts are `chat-audio-mp3.json`, `chat-audio-vorbis.json`,
+`book-chat-audio-mp3.json` and `book-chat-audio-vorbis.json`. Book screenshots carry
+the format suffix, including `book-chat-audio-wav.png` for the original long clip.
+Input fixtures, encoder commands and hashes live under the native test fixtures;
+no provider or private recording participates.

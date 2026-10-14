@@ -39,3 +39,13 @@ it('multiplexes image and sound chunks fairly within the unchanged native wire l
  expect([first,second].some(x=>x.images?.chunk)).toBe(true);expect([first,second].some(x=>x.sounds?.chunk)).toBe(true);
  expect(client.receive({...state,revision:2,chatAudio:{...state.chatAudio,offset:1}})).toBe(false);
 });
+
+it.each(['mpeg','mp3','x-mp3','ogg','vorbis'])('offers and transfers completed local %s using its original byte hash',async mime=>{
+ const bytes=Uint8Array.from({length:90},(_,i)=>i),input={...source(bytes),dataUrl:source(bytes).dataUrl.replace('audio/wav',`audio/${mime}`)};
+ const offered=chatAudioSources([{id:'compressed',role:'user',timestamp:1,imageUrl:input.dataUrl,attachmentName:'My sound'}]);
+ expect(offered).toHaveLength(1);expect(offered[0].origin).toBe('user-attachment');
+ const host=new ChatAudioSource();await host.update('compressed-chat',offered);const snapshot=host.snapshot(null),hash=createHash('sha256').update(bytes).digest('hex');
+ expect(snapshot.offers[0].assetHash).toBe(hash);
+ const chunk=host.snapshot({requestId:'c'.repeat(32),offerSet:snapshot.offerSet,assetHash:hash,offset:0,bytes:bytes.length}).chunk;
+ expect(Buffer.from(chunk!.data,'base64')).toEqual(Buffer.from(bytes));
+});
