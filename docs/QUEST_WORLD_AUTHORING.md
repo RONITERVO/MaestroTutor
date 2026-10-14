@@ -680,22 +680,23 @@ Deletion and Undo keep object membership together. Copies and portable imports
 start in home. Saves, temporary rooms and workspace export/restore retain exact
 area and creation identities.
 
-These are saved authored areas. They do not yet load or unload independently,
-increase the current world capacity or keep distant regions simulated. The shared
-facts report membership rather than claiming runtime readiness. Regional activation
-and retention are tracked separately in the v1 plan.
+These saved areas also define connected native loading groups. The workspace
+can retire unused groups after viewing grace and restore them when viewed or
+needed by an action. This does not increase current world capacity or keep
+distant regions simulated. Membership facts remain separate from runtime
+readiness; see [retiring unused areas](#retiring-unused-areas).
 
 ### Inspecting an area's current native dependencies
 
 The shared `world.region.retention` fact accepts an authored area ID, or empty `id` for home creations. It reports saved members, active native objects, retained members, missing connection peers and aggregate retention reasons. A sound retains its emitter while preparing, playing or paused; manual/action channel ownership and enabled connections also carry retention across area boundaries. The report is ephemeral and does not edit the world.
 
-`unloadingSupported: false` means these diagnostics are groundwork for regional loading. They do not authorize releasing an area. All creations currently remain in the bounded whole-world runtime, and running physics conservatively retains the collision environment. A missing runtime object is reported as unavailable while its saved entity remains intact.
+`unloadingSupported` reports whether automatic retirement is enabled in this workspace. It does not authorize releasing an area or promise that current dependencies allow it. Running physics still conservatively retains the complete collision environment. A missing runtime object is reported as unavailable while its saved entity remains intact.
 
 ### Saved content versus a loaded object
 
 `object.presence` distinguishes an entity missing from the saved world from saved content whose native instance is unavailable, inactive or active. Read `object.definition` for its saved placement and revision. Drawings, surfaces, collision recipes, recorded animation frames and procedural parts/keys can also be inspected without a live object. Reads do not repair or load it. Active presence alone does not guarantee imported geometry, textures, sound or physics readiness.
 
-The shared object list keeps unavailable saved entities and labels its coordinates with `positionSource: saved` or `live`; use this instead of treating saved placement as observed motion. Shared actions with explicit native dependencies can prepare intentionally dormant objects before their ordinary native checks; the receipt reports loading, failure or completion. An unexpectedly lost instance is still unavailable rather than silently treated as dormant. Combined facts that include playback or effective runtime collision state remain unavailable if their native instance is absent. The whole-world runtime can rebuild an unexpectedly lost creation during an accepted edit or Undo while retaining its ID and content. Intentional retirement is currently an internal, tested mechanism; automatic area unloading remains disabled.
+The shared object list keeps unavailable saved entities and labels its coordinates with `positionSource: saved` or `live`; use this instead of treating saved placement as observed motion. Shared actions with explicit native dependencies can prepare intentionally dormant objects before their ordinary native checks; the receipt reports loading, failure or completion. An unexpectedly lost instance is still unavailable rather than silently treated as dormant. Combined facts that include playback or effective runtime collision state remain unavailable if their native instance is absent. The whole-world runtime can rebuild an unexpectedly lost creation during an accepted edit or Undo while retaining its ID and content. The workspace now schedules intentional retirement through this same mechanism; it never treats an unexpectedly lost object as an intentional unload.
 
 During internal area loading, unfinished objects stay invisible and unavailable
 for picking until the complete connected group is prepared. Cancelling or editing
@@ -795,8 +796,9 @@ When an area is already dormant, looking toward it can bring its connected
 objects back through the same loading system. Available view information also
 prioritizes areas during startup. Losing tracking or leaving a view does not
 start physics, and a timed-out or broken import waits for an explicit retry.
-The current release implementation still opens the complete bounded saved room;
-automatic unloading and larger-world streaming remain unfinished.
+Startup still opens the complete bounded saved room. Unused areas can retire
+later under the policy below; startup selection, larger-world streaming and
+per-area running physics remain unfinished.
 
 
 Loaded supported avatars and skinned models expose spatial bounds for their
@@ -1018,8 +1020,8 @@ open. Missing native bed geometry is unavailable, never silently treated as an
 ordinary rectangular pool; observation does not load it.
 
 The current whole-world physics admission and running-world retention remain in
-force. Automatic native unloading stays disabled, and the current 64-object,
-25-metre and four-height-field limits are unchanged. Dense rain-driven level
+force. Idle areas may retire through the [shared policy](#retiring-unused-areas);
+the current 64-object, 25-metre and four-height-field limits are unchanged. Dense rain-driven level
 updates still require Quest performance acceptance before release.
 
 ## Finite grounded travel — 2026-10-13
@@ -1173,7 +1175,7 @@ The active room filename derives from its format version, so transactional saves
 archives and recovery cannot retain a separately hardcoded older filename.
 
 The shared world limits, physics admission, running-world retention, per-object
-real-room policy and disabled automatic unloading are unchanged. Physical Quest
+real-room policy and [shared retirement guards](#retiring-unused-areas) still apply. Physical Quest
 comfort, imported-model gait quality and foot contact still need acceptance.
 
 ## Object lamps and transient controls — 2026-10-14
@@ -1285,8 +1287,9 @@ This extends the navigation system used by the book, agent, programs and manual
 movement; it adds no second planner, new action family or saved format. Source
 collection, mesh snapshotting, map installation and cancellation still have
 main-thread costs. Two jobs is an admission bound, not a measured headset frame-time
-guarantee. Whole-world collision admission, automatic unloading off, current world
-limits, foot planting and physical performance acceptance remain unchanged.
+guarantee. Whole-world collision admission and current world limits still apply.
+Idle-area retirement respects these navigation dependencies; foot planting and
+physical performance acceptance remain open.
 
 
 ## Importing reusable sounds
@@ -1366,3 +1369,44 @@ This attention choice is independent of each actor's real-room collision policy,
 visual occlusion and passthrough opacity. For example, Maestro may look toward a
 robot on lower virtual terrain even when the robot ignores the scanned floor.
 Whether Maestro can walk there is a separate navigation/clearance decision.
+
+
+## Retiring unused areas
+
+The active workspace checks for unused connected areas after its normal viewer
+sample. It retires at most one group at a time through the existing staged native
+transaction. The primary view must be tracked, current and valid. Predictive
+view bounds and two seconds of recent-view grace prevent an immediate unload
+when the user looks away. A disabled camera, stale tracking, workspace hold or
+pending startup is never treated as evidence that an area is unused.
+
+Viewing, capture readback, effective lamps and their shadow casters, held items,
+owned actions, paused/playing sound, animation, navigation, connections and
+collision dependencies retain their existing native resources. All members of
+an area and connected areas stay together. The book and Maestro remain
+world-owned. These checks repeat during preparation; returning to view, an edit,
+a changed pose or tracking/focus loss cancels the unfinished transaction. Native
+objects remain intact until the whole transaction can commit.
+
+The passive `world.region.retention` report adds `retirementState` and
+`retirementIssue`. States distinguish disabled support, waiting for a reliable
+view, retained dependencies, ready candidates, preparing work, dormant groups
+and failed preparation. A failed attempt retains its loaded objects and does
+not restart every frame. Changed relevant input or renewed demand permits a
+later attempt. Cancellation retains the preparation owner until its resources
+drain, including across immediate disable/re-enable.
+
+Dormant content keeps its exact saved identity and definition, cached placement
+and stopped animation state. Looking back or invoking an ordinary shared action
+restores it through the existing native acquisition path. Inspecting facts does
+not load it. Retirement is runtime resource management, not deletion, a saved
+edit or a new Undo entry.
+
+This is an initial active retirement policy within the existing 64-object,
+25-metre world bounds. Physics Start still prepares every saved participant;
+running physics retains the complete collision environment, even for sleeping
+bodies. It cannot unload a floor beneath a running ball. Startup still opens
+the bounded room. Per-area collision admission, selective startup and larger
+world capacity remain required before claiming country-scale worlds. Preparation
+is cooperative across frames; this is not a measured Quest frame-time or
+headset quality guarantee.

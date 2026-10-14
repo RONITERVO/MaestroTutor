@@ -451,12 +451,6 @@ try{
   await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
   return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Resource fact missing');return c.value as Record<string,string|number>;});
  };
- const areaRetention=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
- assert.equal(areaRetention.memberCount,1);assert.equal(areaRetention.residentCount,1);assert.equal(areaRetention.unloadingSupported,false);
- await page.screenshot({path:join(directory,'book-native-region-retention.png')});
- await writeFile(join(directory,'book-native-region-retention.json'),JSON.stringify({boundary:'Original book fact form and actual native area dependency report; no unloading or provider claim.',areaRetention},null,2));
-
- const originalPosition=await readResourceFact('object.position','Object room position',{target:ball.id});
  const viewerPose=await readResourceFact('world.viewpoint','Your world location') as unknown as {located:boolean;position:{x:number;y:number;z:number};yaw:number};
  assert.equal(viewerPose.located,true);const viewYaw=viewerPose.yaw*Math.PI/180;
  const viewPosition={x:viewerPose.position.x+Math.sin(viewYaw)*3,y:viewerPose.position.y+.8,z:viewerPose.position.z+Math.cos(viewYaw)*3};
@@ -466,11 +460,27 @@ try{
   return runNamedAction('object.position.set');
  };
  await moveObservedBall(viewPosition);
+ const areaRetention=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
+ assert.equal(areaRetention.memberCount,1);assert.equal(areaRetention.residentCount,1);assert.equal(areaRetention.unloadingSupported,true);
+ await page.screenshot({path:join(directory,'book-native-region-retention.png')});
+ await writeFile(join(directory,'book-native-region-retention.json'),JSON.stringify({boundary:'Original book fact form and actual native area dependency report; no unloading or provider claim.',areaRetention},null,2));
+
+ const originalPosition=await readResourceFact('object.position','Object room position',{target:ball.id});
  const viewerDemand=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
  const demandReasons=viewerDemand.reasons as unknown as string[];
  assert.ok(demandReasons.includes('approachingView'),JSON.stringify(viewerDemand));assert.ok(demandReasons.includes('recentObservation'),JSON.stringify(viewerDemand));
  await page.screenshot({path:join(directory,'book-native-viewer-demand.png')});
  await writeFile(join(directory,'book-native-viewer-demand.json'),JSON.stringify({boundary:'Original book placement form and dependency inspector against actual Unity frame-owned viewer demand. No headset or automatic-streaming proof.',viewerPose,viewPosition,viewerDemand},null,2));
+ const behindView={x:viewerPose.position.x-Math.sin(viewYaw)*6,y:viewerPose.position.y+.8,z:viewerPose.position.z-Math.cos(viewYaw)*6};
+ await moveObservedBall(behindView);
+ let retiredArea=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});const retirementDeadline=Date.now()+25000;
+ while(retiredArea.retirementState!=='dormant'&&Date.now()<retirementDeadline){await new Promise(r=>setTimeout(r,250));retiredArea=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});}
+ assert.equal(retiredArea.retirementState,'dormant',JSON.stringify(retiredArea));assert.equal(retiredArea.residentCount,0);
+ await page.screenshot({path:join(directory,'book-native-area-retired.png')});
+ const restoredAreaAction=await moveObservedBall(viewPosition);
+ const restoredArea=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
+ assert.equal(restoredArea.residentCount,1);assert.ok((restoredArea.reasons as unknown as string[]).includes('observation'));
+ await writeFile(join(directory,'book-native-area-retirement.json'),JSON.stringify({boundary:'Original book move and fact forms against real Unity automatically retire an idle offscreen area and reacquire its object through the ordinary shared action. No larger-world physics or headset acceptance.',behindView,retiredArea,restoredAreaAction,restoredArea},null,2));
  const lampPosition={x:viewerPose.position.x+Math.cos(viewYaw)*6-Math.sin(viewYaw)*3,y:viewerPose.position.y,z:viewerPose.position.z-Math.sin(viewYaw)*6-Math.cos(viewYaw)*3};
  await moveObservedBall(lampPosition);
  await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);

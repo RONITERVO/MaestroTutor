@@ -18,6 +18,9 @@ not physical Quest acceptance.
 Saved actor water policies now share live liquid geometry across walking and
 recorded root movement; see [water traversal](#water-traversal-shares-actor-policy-and-live-liquid-geometry).
 Follow now finds bounded routes around finite water cavities; see [water-aware following](#water-aware-following--2026-10-09).
+The workspace now schedules retirement of idle, unobserved connected areas; see
+[the retirement contract](QUEST_WORLD_AUTHORING.md#retiring-unused-areas). Whole-world
+physics retention and current capacity remain unchanged; see the [verified desktop checkpoint](#automatic-retirement-of-unused-areas--2026-10-14).
 Shared Maestro attention now supports object and authored-point targets through the
 existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
@@ -9784,3 +9787,45 @@ passed. No APK/AAB was produced.
 
 Physical-headset gaze quality and acceptance remain unverified. V1 is incomplete;
 headset, paid-provider, signing, deployment and Meta holds remain in effect.
+
+
+### Automatic retirement of unused areas — 2026-10-14
+
+The active workspace schedules the existing atomic native retirement path after
+reliable viewer sampling and dependency/grace checks. It keeps one preparation
+owner until cancellation drains, reports phase/failure through
+`world.region.retention`, and reacquires content through the existing view/action
+path. It does not change authored definitions or Undo, restart stopped animation,
+enlarge world limits, enable per-area physics or remove whole-world collision
+retention.
+
+Focused checks corrected a one-frame status lag and preparation ownership across
+rapid disable/re-enable. Source review interrupted the first complete run after
+finding that failure text could exceed the shared program value limit; reports
+now normalize control characters and fit 128 characters. Native and web checks
+cover this boundary. The corrected full native suite passed **1,259 EditMode and
+1,564 PlayMode cases**, with three expected optional private-asset skips.
+
+The first Headless journey then exposed an obsolete resident-count assumption
+for an unobserved area. Both drivers now place their object visibly before
+checking residency, then explicitly verify retirement and action restoration.
+Only those drivers changed after the complete native suite. Corrected complete
+offline Headless `91463757aacd42b1a1e4681dece89001` and Original Book
+`6a0d14848aee43a9b8f2b7891cafd4c1` passed with clean client and Editor exits.
+The book's dormant fact report was visually inspected. All **2,958 web tests /
+313 files** passed with freshly captured native catalog and catch fixtures.
+
+A guarded continuation verified the unchanged native inputs, complete suites,
+successful journeys and web results before completing unsigned Android export
+and IL2CPP/Java compilation. Browser reports contain 128 passed/two skipped.
+All 22 selected ARM64 libraries passed ELF/16 KiB checks. All 152 staged web
+files, browser AAR and selected native hashes match. All 2,978 native inputs
+remained frozen; all 1,113 code/shader files, including 1,107 C# files, match the
+tested mirror. Four setup-generated project assets are recorded separately.
+Catalog provenance, scoped lint and integration-driver type checks passed.
+All 14 protected pre-existing files remain unchanged. No APK/AAB was produced.
+
+Evidence, interrupted logs, exact driver changes and continuation authority are
+retained in `.quest-evidence/area-retirement/`. Selective startup, per-area physics,
+larger worlds and physical loading/performance acceptance remain open. V1 is
+incomplete; headset, paid-provider, signing, deployment and Meta holds remain.

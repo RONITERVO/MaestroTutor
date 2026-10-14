@@ -5617,7 +5617,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Create or rename one of up to 32 authored areas. Empty id, revision 0 and empty members create. To rename, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Current runtime still uses the whole bounded world: these actions do not independently load/unload areas, change native resource residency, expand capacity or promise offscreen simulation. Physics, visibility and sound policies remain separate.",
+      "description": "Create or rename one of up to 32 authored areas. Empty id, revision 0 and empty members create. To rename, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.",
       "example": {
         "id": "",
         "revision": 0,
@@ -5686,7 +5686,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Current runtime still uses the whole bounded world: these actions do not independently load/unload areas, change native resource residency, expand capacity or promise offscreen simulation. Physics, visibility and sound policies remain separate.",
+      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.",
       "example": {
         "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "revision": 1
@@ -5797,7 +5797,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Current runtime still uses the whole bounded world: these actions do not independently load/unload areas, change native resource residency, expand capacity or promise offscreen simulation. Physics, visibility and sound policies remain separate.",
+      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -43921,11 +43921,13 @@
           "reasons": {
             "list": "text"
           },
-          "unloadingSupported": "boolean"
+          "unloadingSupported": "boolean",
+          "retirementState": "text",
+          "retirementIssue": "text"
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a transient diagnostic, not a saved revision or permission to unload: unloadingSupported is currently false, all accepted creations still use the bounded whole-world runtime, and additional indirect views, ground/water admission and regional scheduling must be implemented before automatic streaming. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics still retains the whole collision environment; starting physics prepares all participants. This does not expand the 64-object or spatial limits, promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -46216,7 +46218,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "2eda2bc7a5d3d5bd4ecf2a906347d715e290bacf61207366f724c69040a6853b"
+      "sha256": "c5ae591e65e28a9764ca75694cff702c8d704f36f2417544afc36453215da268"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -46651,6 +46653,10 @@
       "sha256": "e3827b7c79e6f653e70868f8329ab0008374a5a4ea7db907d17961ff3eb5dede"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAutomaticRetirement.cs",
+      "sha256": "e9b2121bdceaf793db3d201d1c13d3c99f1d8c93b17036c7e5efa00217461a5d"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
       "sha256": "c36b498ab920e02102e4e05f8cab82dd2c7e89a89ceea7fb3fec3d4eeda9684b"
     },
@@ -46872,11 +46878,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "8c549850271dcf17ff951d17fab5819015db55ef56601c2344bce1cd6895e9c0"
+      "sha256": "f4bd9166921e7e5a0722e3cf4e78a7174a9fe1d24e38f4402b0f4b2dc5a65d1f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
-      "sha256": "8c33f4ea4eb3b972be2618b58c451fa482ff92fcfe922df2d6057984d79a128e"
+      "sha256": "952a96bd236efb715d9386c374e5424ef10613eae92bb1cfd8d8485a5dcd0ae1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNavigationInputs.cs",
@@ -46956,7 +46962,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionRetention.cs",
-      "sha256": "2ca70e8dbf884fc49f79d27b471901129ea2bee45f3e8c8dca3e8fc15b0e58f1"
+      "sha256": "dc5a0cae1992feda2864b7633c6ce7b74a9e2d6e1f00262bc8404a6c24f71633"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -47036,7 +47042,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewerDemand.cs",
-      "sha256": "02ed265fcdce4e733ae624de8fbc1d16d9d6e5a42a650ac0ac53e4a6e3124ad0"
+      "sha256": "18ad9e679e1806309de566c7417e44f6829c9e6dc026be10f28b57228de26fe5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomViewpoint.cs",
@@ -47716,7 +47722,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
-      "sha256": "aa94495c19d0672e4e4811c127040b6ed587e148aa598eec369e49ffb95cfa5c"
+      "sha256": "81b7114639afe9c1871ecb52c96201074f1ff8c73c78d41be8c5e1984aab3cda"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceDefaults.cs",

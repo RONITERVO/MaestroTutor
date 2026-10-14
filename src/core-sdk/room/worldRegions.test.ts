@@ -25,12 +25,18 @@ it('programs declare creation ownership and use catalog actions without a separa
  expect(parseProgram(JSON.stringify(program)).error).toBeNull();program.resources=[];expect(parseProgram(JSON.stringify(program)).error).toContain('resource');
 });
 
-it('shares native dependency diagnostics without claiming independent regional unloading',()=>{
+it('shares actual native retirement support, phase and failure through the same fact schema',()=>{
  const id='world.region.retention';
  for(const value of ['',area])expect(validateFactArguments(id,1,{id:value})).toBeNull();
  expect(validateFactArguments(id,1,{id:'book'})).not.toBeNull();
- const value={id:area,memberCount:2,residentCount:2,retainedCount:2,missingDependencyCount:0,reasons:['audio','ownership'],unloadingSupported:false};
+ const value={id:area,memberCount:2,residentCount:2,retainedCount:2,missingDependencyCount:0,reasons:['audio','ownership'],unloadingSupported:false,retirementState:'disabled',retirementIssue:''};
  expect(validFactValue(id,value)).toBe(true);
+ for(const state of ['waiting','retained','ready','preparing','dormant','failed'])expect(validFactValue(id,{...value,unloadingSupported:true,retirementState:state,retirementIssue:state==='failed'?'Geometry preparation failed':''})).toBe(true);
+ expect(validFactValue(id,{...value,retirementState:42})).toBe(false);
+ expect(validFactValue(id,{...value,retirementIssue:42})).toBe(false);
+ expect(validFactValue(id,{...value,retirementState:'failed',retirementIssue:'"'.repeat(128)})).toBe(true);
+ expect(validFactValue(id,{...value,retirementIssue:'x'.repeat(129)})).toBe(false);
+ expect(validFactValue(id,{...value,retirementIssue:'Line\nbreak'})).toBe(false);
  expect(validFactValue(id,{...value,residentCount:"2"})).toBe(false);
  expect(validFactValue(id,{...value,reasons:[true]})).toBe(false);
  expect(behaviourFact(id)!.description).toContain('transient diagnostic');

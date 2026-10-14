@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation
         internal void ConfigureObservationTracking(System.Func<bool> tracked){viewerTracked=tracked;ResetViewerDemand();}
         internal bool ViewerTrackingReady=>!Ownership.Suspended&&(viewerTracked?.Invoke()??true);
         Camera ActiveViewerCamera(){var camera=Viewer?Viewer.GetComponent<Camera>():null;return camera&&camera.isActiveAndEnabled?camera:null;}
-        void LateUpdate()=>TickViewerDemand(Time.unscaledTimeAsDouble);
+        void LateUpdate(){TickViewerDemand(Time.unscaledTimeAsDouble);TickNativeRetirement(Time.unscaledTimeAsDouble);}
         internal void TickViewerDemand(double now)
         {
             var camera=ActiveViewerCamera();

@@ -13,9 +13,10 @@ namespace Maestro.Quest.Creation
     {
         // Prepare without retiring a single view. The existing synchronous
         // transaction adopts the complete closure only after every guard holds.
-        internal async Task<string> RetireNativeArea(string area, CancellationToken cancellation = default)
+        internal async Task<string> RetireNativeArea(string area, CancellationToken cancellation = default, Func<bool> admission = null)
         {
             if (!NativeTransitionAvailable(out var error)) return error;
+            if(admission?.Invoke()==false)return "Area retirement admission changed";
             var graph = ReadRetention(); var members = graph?.Members(area ?? "");
             if (members == null) return "The authored area is unavailable";
             var targets = graph.Closure(members);
@@ -34,7 +35,7 @@ namespace Maestro.Quest.Creation
             void Check()
             {
                 cancel.Token.ThrowIfCancellationRequested();
-                if (!currentInput() || !DisplayReady || !NativeTransitionAvailable(out _)
+                if (admission?.Invoke()==false || !currentInput() || !DisplayReady || !NativeTransitionAvailable(out _)
                     || !ReferenceEquals(owner, GetComponentInParent<RoomAcoustics>())) throw new OperationCanceledException();
                 foreach (var pair in live)
                     if (!pair.Value || NativeEntityDormant(pair.Key) || Find(pair.Key) != pair.Value

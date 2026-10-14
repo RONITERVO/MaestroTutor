@@ -216,6 +216,6 @@ namespace Maestro.Quest.Creation
             if(dormantNative.TryGetValue(data.id,out var entry)&&entry.ConnectionSource==JsonUtility.ToJson(data.connections.FirstOrDefault()))view.RestoreBrokenState(entry.ConnectionBroken);
         }
         void ReleaseNativeAcoustics(){StopAcousticPreparation();foreach(var entry in dormantNative.Values)ReleaseNativeAcoustic(entry);}
-        void CancelNativeActivation(){nativeGeneration++;foreach(var job in nativeAcquisitions.ToArray())job.Cancel();nativeActivation?.Cancel();}
+        void CancelNativeActivation(){StopNativeRetirement();nativeGeneration++;foreach(var job in nativeAcquisitions.ToArray())job.Cancel();nativeActivation?.Cancel();}
     }
 }

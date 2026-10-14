@@ -22,7 +22,7 @@ export async function probeObjectLights(execute:Execute,directory:string){
  const before=await list();assert.equal(before.lights.length,0);
  const settings={version:1,kind:'spot',part:'',position:{x:0,y:.2,z:0},rotation:{x:0,y:0,z:0,w:1},enabled:true,color:'#FFDDAA',intensity:1,range:8,angle:70,shadows:'hard'};
  await action('object.light.edit',{operation:'save',target,revision:before.revision,light:'Lamp',settings});const saved=await read();assert.equal(saved.active,true);assert.equal(saved.effective.overridden,false);
- const demanded=await retention();assert.ok(demanded.reasons.includes('lighting'),JSON.stringify(demanded));assert.equal(demanded.unloadingSupported,false);
+ const demanded=await retention();assert.ok(demanded.reasons.includes('lighting'),JSON.stringify(demanded));assert.equal(demanded.unloadingSupported,true);
  const controlled=await action('object.light.control',{operation:'set',target,light:'Lamp',stateId:saved.stateId,enabled:false,intensity:.25,color:'#3366FF'});const off=await read();assert.equal(off.active,false);assert.equal(off.effective.overridden,true);assert.equal(off.revision,saved.revision);assert.deepEqual(off.settings,saved.settings);
  const released=await retention();assert.ok(!released.reasons.includes('lighting'),JSON.stringify(released));
  const stateId=off.stateId;assert.equal((await read()).stateId,stateId,'Facts must be passive');

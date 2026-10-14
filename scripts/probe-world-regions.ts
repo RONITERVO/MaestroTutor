@@ -12,11 +12,21 @@ export async function probeWorldRegions(execute:Execute,directory:string){
   assert.equal(reply.available,true,JSON.stringify(reply));return reply.value as Record<string,unknown>;
  };
  const invoke=async(id:string,args:Record<string,unknown>)=>{
-  const state=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);
-  assert.equal(state.execution!.selected!.phase,'completed');return state.execution!.selected!;
+  let state=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);
+  const runId=state.execution!.selected!.id,deadline=Date.now()+15000;
+  while(['preparing','running'].includes(state.execution!.selected!.phase)&&Date.now()<deadline){
+   await new Promise(r=>setTimeout(r,100));state=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);
+  }
+  assert.equal(state.execution!.selected!.phase,'completed',JSON.stringify(state.execution!.selected));return state.execution!.selected!;
  };
- const state=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.regions',version:1,arguments:{offset:0}}}]);
+ let state=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.regions',version:1,arguments:{offset:0}}}]);
  const target=state.objects.find(o=>/^[a-fA-F0-9]{32}$/.test(o.id))!.id;
+ const originalPosition={...state.objects.find(o=>o.id===target)!.position};
+ const viewpoint=await fact('world.viewpoint');assert.equal(viewpoint.located,true);
+ const floor=viewpoint.position as {x:number;y:number;z:number},yaw=Number(viewpoint.yaw)*Math.PI/180;
+ const nearView={x:floor.x+Math.sin(yaw)*3,y:floor.y+.8,z:floor.z+Math.cos(yaw)*3};
+ await invoke('object.position.set',{target,...nearView});
+ state=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.presence',version:1,arguments:{target}}}]);
  const before=await fact('object.region',{target}),definition=await fact('object.definition',{target});
  const presence=await fact('object.presence',{target});assert.equal(presence.state,'active');assert.equal(presence.saved,true);assert.equal(presence.nativeInstance,true);assert.equal(presence.active,true);assert.equal(presence.revision,definition.revision);
  const spatial=await fact('object.spatialBounds',{target});assert.equal(spatial.source,'native');assert.equal(spatial.coordinates,'room');assert.equal(spatial.revision,definition.revision);
@@ -30,16 +40,13 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  const assigned=await invoke('object.region.assign',{target,revision:before.revision,regionId:id,regionRevision:saved.output!.revision});
  const bound=await fact('object.region',{target}),members=await fact('world.region.members',{id,offset:0});
  assert.equal(bound.regionId,id);assert.deepEqual(members.members,[target]);assert.equal(bound.homeRegionId,before.homeRegionId);
- const retention=await fact('world.region.retention',{id});assert.equal(retention.memberCount,1);assert.equal(retention.residentCount,1);assert.equal(retention.unloadingSupported,false);assert.ok(Array.isArray(retention.reasons));
+ const retention=await fact('world.region.retention',{id});assert.equal(retention.memberCount,1);assert.equal(retention.residentCount,1);assert.equal(retention.unloadingSupported,true);assert.ok(Array.isArray(retention.reasons));
  const sameDefinition=await fact('object.definition',{target});delete definition.revision;delete sameDefinition.revision;assert.deepEqual(sameDefinition,definition,'Region assignment moved or rebuilt authored content');
  const renamed=await invoke('world.region.save',{id,revision:members.revision,name:'Café garden',members:[target]});
  const named=await fact('world.region',{id});assert.equal(named.name,'Café garden');assert.equal(named.memberCount,1);
  await execute([{action:'undo'}]);assert.equal((await fact('world.region',{id})).name,'Learner garden');
  await execute([{action:'undo'}]);assert.equal((await fact('object.region',{target})).regionId,before.regionId);
  const empty=await fact('world.region',{id});const removed=await invoke('world.region.remove',{id,revision:empty.revision});
- const viewpoint=await fact('world.viewpoint');assert.equal(viewpoint.located,true);
- const floor=viewpoint.position as {x:number;y:number;z:number},yaw=Number(viewpoint.yaw)*Math.PI/180;
- const nearView={x:floor.x+Math.sin(yaw)*3,y:floor.y+.8,z:floor.z+Math.cos(yaw)*3};
  await invoke('object.position.set',{target,...nearView});
  const viewArea=await invoke('world.region.save',{id:'',revision:0,name:'Viewer demand check',members:[]});
  const viewBinding=await fact('object.region',{target});
@@ -47,7 +54,17 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  const viewerDemand=await fact('world.region.retention',{id:viewArea.output!.id});
  assert.ok((viewerDemand.reasons as string[]).includes('approachingView'),JSON.stringify(viewerDemand));
  assert.ok((viewerDemand.reasons as string[]).includes('recentObservation'),JSON.stringify(viewerDemand));
- await invoke('object.position.set',{target,...observed.position});
+ const behindView={x:floor.x-Math.sin(yaw)*6,y:floor.y+.8,z:floor.z-Math.cos(yaw)*6};
+ await invoke('object.position.set',{target,...behindView});
+ const dormantDefinition=await fact('object.definition',{target});
+ let dormant=await fact('world.region.retention',{id:viewArea.output!.id});const retirementDeadline=Date.now()+18000;
+ while(dormant.retirementState!=='dormant'&&Date.now()<retirementDeadline){await new Promise(r=>setTimeout(r,150));dormant=await fact('world.region.retention',{id:viewArea.output!.id});}
+ assert.equal(dormant.retirementState,'dormant',JSON.stringify(dormant));assert.equal(dormant.residentCount,0);
+ const dormantPresence=await fact('object.presence',{target});assert.equal(dormantPresence.saved,true);assert.equal(dormantPresence.nativeInstance,false);
+ assert.deepEqual(await fact('object.definition',{target}),dormantDefinition,'Automatic retirement changed authored content');
+ const restored=await invoke('object.position.set',{target,...nearView});const restoredPresence=await fact('object.presence',{target});assert.equal(restoredPresence.active,true);
+ await writeFile(join(directory,'automatic-area-retirement.json'),JSON.stringify({boundary:'Real Unity workspace automatically retires an idle out-of-view area; passive facts preserve exact saved content; the ordinary agent action acquires it and restores it to view. Physics remains paused. No increased capacity, physical headset, provider or per-area physics claim.',target,area:viewArea.output!.id,viewerDemand,behindView,dormantDefinition,dormant,dormantPresence,restored,restoredPresence},null,2));
+ await invoke('object.position.set',{target,...originalPosition});
  const restoredBinding=await fact('object.region',{target});
  await invoke('object.region.assign',{target,revision:restoredBinding.revision,regionId:'',regionRevision:0});
  const viewAreaCurrent=await fact('world.region',{id:viewArea.output!.id});await invoke('world.region.remove',{id:viewArea.output!.id,revision:viewAreaCurrent.revision});
