@@ -4,9 +4,9 @@
     "revision": 3,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -14,12 +14,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -39,7 +39,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -184,7 +184,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -235,22 +235,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -264,7 +264,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -293,7 +293,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -309,35 +338,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -1366,7 +1366,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -1376,9 +1376,9 @@
     "revision": 7,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1386,12 +1386,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -1411,7 +1411,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1426,10 +1426,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8b6bd8104068450d88e6d1c2113502b5",
-          "sequenceId": "73f252450fe348a2a825c914941011c9",
+          "id": "63389b6827054c78b1899ec64adf11f2",
+          "sequenceId": "a46c46e1dde34b9e83c03abde78af1cf",
           "phase": "cancelled",
-          "nodeId": "efbf5223c764489db22d6d065f88e3cd",
+          "nodeId": "56ce0e320a4f49cfa38ed810900985ac",
           "status": "Behaviour stopped"
         }
       ]
@@ -1564,7 +1564,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1615,22 +1615,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -1644,7 +1644,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -1673,7 +1673,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -1689,35 +1718,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -1773,7 +1773,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "3b7562a0804a4edfb5d548519473202d",
+          "target": "a09f908f520942ada84b7052c15ad980",
           "seconds": 100,
           "loop": false,
           "source": {
@@ -1792,7 +1792,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -1802,9 +1802,9 @@
     "revision": 6,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -1812,12 +1812,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -1837,7 +1837,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -1852,10 +1852,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8b6bd8104068450d88e6d1c2113502b5",
-          "sequenceId": "73f252450fe348a2a825c914941011c9",
+          "id": "63389b6827054c78b1899ec64adf11f2",
+          "sequenceId": "a46c46e1dde34b9e83c03abde78af1cf",
           "phase": "cancelled",
-          "nodeId": "efbf5223c764489db22d6d065f88e3cd",
+          "nodeId": "56ce0e320a4f49cfa38ed810900985ac",
           "status": "Behaviour stopped"
         }
       ]
@@ -1990,7 +1990,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2041,22 +2041,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -2070,7 +2070,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -2099,7 +2099,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -2115,35 +2144,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -2199,7 +2199,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "3b7562a0804a4edfb5d548519473202d",
+          "target": "a09f908f520942ada84b7052c15ad980",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -2212,7 +2212,7 @@
       "available": false,
       "occupied": false,
       "resources": [
-        "3b7562a0804a4edfb5d548519473202d"
+        "a09f908f520942ada84b7052c15ad980"
       ],
       "status": "A required saved object is missing"
     },
@@ -2220,7 +2220,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -2230,9 +2230,9 @@
     "revision": 5,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -2240,12 +2240,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -2265,7 +2265,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2280,14 +2280,14 @@
       "running": [
         {
           "parentRunId": "",
-          "id": "8b6bd8104068450d88e6d1c2113502b5",
-          "sequenceId": "73f252450fe348a2a825c914941011c9",
+          "id": "63389b6827054c78b1899ec64adf11f2",
+          "sequenceId": "a46c46e1dde34b9e83c03abde78af1cf",
           "preparing": false,
           "waiting": false,
           "waitEvent": "",
           "waitSeconds": 0.0,
           "state": [],
-          "nodeId": "efbf5223c764489db22d6d065f88e3cd",
+          "nodeId": "56ce0e320a4f49cfa38ed810900985ac",
           "functionName": "main",
           "status": "Running",
           "locals": []
@@ -2425,7 +2425,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2436,13 +2436,13 @@
       "error": "",
       "owners": [
         {
-          "id": "8b6bd8104068450d88e6d1c2113502b5",
+          "id": "63389b6827054c78b1899ec64adf11f2",
           "label": "Action 1",
           "role": "program",
           "allowsGrab": false,
           "claims": [
             {
-              "target": "84404bb39d144465aee8158adc7511ca",
+              "target": "f01c87f3ad3e44cf9b2533a3d9835c9f",
               "channel": "wholeTarget"
             }
           ]
@@ -2489,22 +2489,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -2518,7 +2518,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -2547,22 +2547,22 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
-        "name": "Block",
-        "kind": "Block",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 9,
+        "objectRevision": 8,
         "position": {
-          "x": 0.5233569145202637,
+          "x": 0.8600000143051147,
           "y": 1.4500000476837158,
           "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
           "a": 1.0
         },
         "animated": false,
@@ -2576,22 +2576,22 @@
         "movement": null
       },
       {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
+        "name": "Block",
+        "kind": "Block",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 4,
+        "objectRevision": 9,
         "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
+          "x": 0.5401517152786255,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
         },
         "scale": 1.0,
         "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
           "a": 1.0
         },
         "animated": false,
@@ -2647,7 +2647,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "84404bb39d144465aee8158adc7511ca",
+          "target": "f01c87f3ad3e44cf9b2533a3d9835c9f",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -2660,7 +2660,7 @@
       "available": false,
       "occupied": true,
       "resources": [
-        "84404bb39d144465aee8158adc7511ca"
+        "f01c87f3ad3e44cf9b2533a3d9835c9f"
       ],
       "status": "A running action owns a required animation channel or object"
     },
@@ -2668,7 +2668,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -2678,9 +2678,9 @@
     "revision": 4,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -2688,12 +2688,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -2713,7 +2713,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -2858,7 +2858,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2909,22 +2909,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -2938,7 +2938,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -2967,7 +2967,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -2983,35 +3012,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -3067,7 +3067,7 @@
         "id": "animation.play",
         "version": 1,
         "arguments": {
-          "target": "84404bb39d144465aee8158adc7511ca",
+          "target": "f01c87f3ad3e44cf9b2533a3d9835c9f",
           "seconds": 1,
           "loop": false,
           "source": {
@@ -3080,7 +3080,7 @@
       "available": true,
       "occupied": false,
       "resources": [
-        "84404bb39d144465aee8158adc7511ca"
+        "f01c87f3ad3e44cf9b2533a3d9835c9f"
       ],
       "status": "Ready now. This check does not reserve or start the action."
     },
@@ -3088,7 +3088,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -3098,9 +3098,9 @@
     "revision": 2,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3108,12 +3108,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -3133,7 +3133,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -3278,7 +3278,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3329,22 +3329,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -3358,7 +3358,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -3387,7 +3387,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -3403,35 +3432,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -3525,7 +3525,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -3535,9 +3535,9 @@
     "revision": 1,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3545,12 +3545,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -3570,7 +3570,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -3715,7 +3715,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3766,22 +3766,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -3795,7 +3795,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -3824,7 +3824,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -3840,35 +3869,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -3962,7 +3962,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }
@@ -3972,9 +3972,9 @@
     "revision": 8,
     "sceneRevision": 2,
     "ack": 0,
-    "session": "b0a04d357d23442899ff4b79faab3536",
+    "session": "b2e8797305984cc2ac5ccbfc9cd4a861",
     "status": "Room actions ready",
-    "selectedId": "84404bb39d144465aee8158adc7511ca",
+    "selectedId": "f01c87f3ad3e44cf9b2533a3d9835c9f",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3982,12 +3982,12 @@
     "visible": false,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "f7d66cda21f447b4b9b5f8248c368578",
+      "stateId": "ed20feea907140b7b734622e86f59b0d",
       "error": "",
       "visible": false,
       "holding": false
@@ -4007,7 +4007,7 @@
       "selectedError": "",
       "sequences": [
         {
-          "id": "73f252450fe348a2a825c914941011c9",
+          "id": "a46c46e1dde34b9e83c03abde78af1cf",
           "name": "Action 1",
           "error": "",
           "steps": 1,
@@ -4022,10 +4022,10 @@
       "running": [],
       "outcomes": [
         {
-          "id": "8b6bd8104068450d88e6d1c2113502b5",
-          "sequenceId": "73f252450fe348a2a825c914941011c9",
+          "id": "63389b6827054c78b1899ec64adf11f2",
+          "sequenceId": "a46c46e1dde34b9e83c03abde78af1cf",
           "phase": "cancelled",
-          "nodeId": "efbf5223c764489db22d6d065f88e3cd",
+          "nodeId": "56ce0e320a4f49cfa38ed810900985ac",
           "status": "Behaviour stopped"
         }
       ]
@@ -4160,7 +4160,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "065bcc48c1f74b83a09d24085482ce16",
+      "id": "cd2c4c700cb9421ba65084710aa0db73",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4211,22 +4211,22 @@
     },
     "objects": [
       {
-        "id": "113701bfa5c849e1b7cf1cf5d8d6e315",
-        "name": "Cylinder",
-        "kind": "Cylinder",
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
         "runtimeState": "active",
         "positionSource": "live",
-        "objectRevision": 8,
+        "objectRevision": 4,
         "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
         },
         "scale": 1.0,
         "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -4240,7 +4240,7 @@
         "movement": null
       },
       {
-        "id": "4a977befa36c4e48a1d8ea2523d7ce32",
+        "id": "c33c8484e6354175a951f58544f114ae",
         "name": "Ball",
         "kind": "Ball",
         "runtimeState": "active",
@@ -4269,7 +4269,36 @@
         "movement": null
       },
       {
-        "id": "84404bb39d144465aee8158adc7511ca",
+        "id": "cc458d9f2e7f479aafb90d782be9e57b",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 8,
+        "position": {
+          "x": 0.8600000143051147,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.5529412031173706,
+          "b": 0.5333333611488342,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "f01c87f3ad3e44cf9b2533a3d9835c9f",
         "name": "Block",
         "kind": "Block",
         "runtimeState": "active",
@@ -4285,35 +4314,6 @@
           "r": 0.45098039507865906,
           "g": 0.32549020648002625,
           "b": 0.30588236451148987,
-          "a": 1.0
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "runtimeState": "active",
-        "positionSource": "live",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.0,
-          "y": 0.0,
-          "z": 0.0
-        },
-        "scale": 1.0,
-        "color": {
-          "r": 1.0,
-          "g": 1.0,
-          "b": 1.0,
           "a": 1.0
         },
         "animated": false,
@@ -4374,7 +4374,7 @@
       "selected": null,
       "running": [],
       "outcomes": [],
-      "nextRunId": "d717eaefe3414c0b95a1625ea47e1644",
+      "nextRunId": "59407ffd59a341cea04c98cf9fcf4042",
       "storageError": null,
       "recovery": null
     }

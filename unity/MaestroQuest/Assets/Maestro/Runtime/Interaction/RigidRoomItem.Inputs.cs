@@ -53,7 +53,7 @@ namespace Maestro.Quest.Interaction {
             if(hasInputBinding&&ReferenceEquals(boundInputEditor,editor))return;
             grabInputs?.Suspend();InterruptPhysicsInputs();hasInputBinding=true;boundInputEditor=editor;
         }
-        bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&PhysicsEnabled;
+        bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&PhysicsPreparationEnabled;
         bool InputsCurrent=>InputEditor?InputEditor.PhysicsIslandReady(item,true,out _):CurrentInputs(out _);
         internal bool CurrentInputs(out string error)=>CurrentInputs(null,out error);
         internal bool CurrentInputs(PhysicsIslandQuery query,out string error){

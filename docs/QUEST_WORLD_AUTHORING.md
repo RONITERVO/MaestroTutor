@@ -690,7 +690,7 @@ readiness; see [retiring unused areas](#retiring-unused-areas).
 
 The shared `world.region.retention` fact accepts an authored area ID, or empty `id` for home creations. It reports saved members, active native objects, retained members, missing connection peers and aggregate retention reasons. A sound retains its emitter while preparing, playing or paused; manual/action channel ownership and enabled connections also carry retention across area boundaries. The report is ephemeral and does not edit the world.
 
-`unloadingSupported` reports whether automatic retirement is enabled in this workspace. It does not authorize releasing an area or promise that current dependencies allow it. Running physics still conservatively retains the complete collision environment. A missing runtime object is reported as unavailable while its saved entity remains intact.
+`unloadingSupported` reports whether automatic retirement is enabled in this workspace. It does not authorize releasing an area or promise that current dependencies allow it. Running physics retains each active dynamic actor and its swept collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. A missing runtime object is reported as unavailable while its saved entity remains intact.
 
 ### Saved content versus a loaded object
 
@@ -702,8 +702,9 @@ During internal area loading, unfinished objects stay invisible and unavailable
 for picking until the complete connected group is prepared. Cancelling or editing
 its saved input prevents the old group from appearing and permits a fresh retry.
 Loading restores saved/cached placement and stopped animation state; it does not
-start physics. Preparation now yields between batches across frames, but this
-does not enable automatic area streaming or increase the current world limits.
+start physics. Preparation now yields between batches across frames. Automatic retirement and
+view/action restoration use this same bounded path; startup and explicit physics
+Start still prepare the whole saved set, and current world limits remain.
 
 Procedural parts can prepare over multiple frames within a single object. Only
 its complete, validated source appears; a cancellation, invalid later part or
@@ -723,14 +724,14 @@ running for the others. Cancelling every requester discards unfinished work.
 Actions that need the same control channel still cannot compete. Editing a needed
 object, shared style or collision profile can require retrying its pending action;
 editing an unrelated object does not. Whole-room edits keep their existing action
-cancellation behavior. Automatic area streaming remains disabled.
+cancellation behavior. Retirement remains subject to the shared dependency and
+viewer-grace policy.
 
 The dependency report also shows `observation` for objects in the headset view or
 an app-owned camera capture. It considers the object's visible bounds, so a long
 object can still be needed when its centre is off-screen. Connected area members
-remain together. Finishing a snapshot releases that camera's dependency. This is
-a current-view diagnostic; it does not load dormant objects or turn on automatic
-world streaming.
+remain together. Finishing a snapshot releases that camera's dependency. Reading this diagnostic does not load content. The workspace's separate viewer
+scheduler can request dormant groups through the same bounded preparation path.
 
 
 The shared **Object spatial bounds** readout shows the space occupied by an
@@ -892,6 +893,19 @@ fixed anchor can remain independent. Reading this fact never starts physics or
 loads an object. `ready` describes available inputs, not a successful throw or a
 clear future path.
 
+In an already-running world, a free dynamic object can prepare its dormant local
+ground while staying stopped. An object whose policy excludes the real room
+cannot borrow the scanned floor: its current authored ground column, complete
+local input set and connected joints must be ready before gravity or impulses
+resume. Waiting or losing ground is not a landing or settlement event. A newly
+created object can carry its selected profile in the same atomic creation bundle.
+
+This preparation does not start a paused world or bypass the safety checks for
+changing an existing object's collision profile. Pause, grab, animation control,
+teleport, deletion or owner retirement cancels obsolete demand and discards old
+momentum. Returning control can prepare a fresh request in a running world;
+unavailable inputs still need repair and an explicit restart from rest.
+
 Ordinary `pending` preparation can retain motion in `momentumHeld`. An
 `interrupted` result is different: the solver reached a temporary guard for
 unavailable geometry, so the affected group stops and discards velocity while
@@ -918,9 +932,12 @@ for another action, does not retry recovery or replay old movement; explicitly
 restart from rest after fixing the input.
 
 This recovery uses the same fact and controls for programs, agents and book
-controls. It is a fallback prerequisite for future regional simulation. Current
-production physics still requires the complete authored collision environment;
-automatic regional unloading and larger-world limits are not enabled by it.
+controls. Automatic retirement can release unrelated static areas while physics
+retains its local dependencies. Explicit Start still prepares all saved
+participants; resident imported-geometry failures retain the global stop, and
+leaving the accepted simulation boundary retains its pause policy. Selective
+startup, local failure handling, larger worlds and hardware performance acceptance
+remain open.
 
 
 `object.collided` and `object.connection.broken` include the boolean event field

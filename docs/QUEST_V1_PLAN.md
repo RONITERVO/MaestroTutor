@@ -22,6 +22,8 @@ The workspace now schedules retirement of idle, unobserved connected areas; see
 [the retirement contract](QUEST_WORLD_AUTHORING.md#retiring-unused-areas). Running
 physics now retains each actor and its collision/support dependencies, allowing
 unused static areas to retire; see the [verified desktop checkpoint](#physics-dependency-retention-during-area-retirement--2026-10-14).
+Free objects in an already-running world now prepare dormant virtual ground before
+resuming motion; see [owned ground preparation](#owned-local-ground-preparation--2026-10-14).
 Current capacity, full-room startup and explicit Start remain unchanged.
 Shared Maestro attention now supports object and authored-point targets through the
 existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
@@ -9866,3 +9868,48 @@ skipped**. All 152 staged web files match, as do the tested native inputs.
 All 14 protected pre-existing files remain unchanged. No APK/AAB was produced.
 Evidence is in `.quest-evidence/regional-physics/`. V1 remains incomplete; no
 headset, paid-provider, signing, deployment or Meta work ran for this checkpoint.
+
+### Owned local ground preparation — 2026-10-14
+
+Verified on desktop. Native input ownership no longer depends on the ground
+already being resident. An active free body in a running world can acquire its
+dormant local ground while staying kinematic. Simulation still requires the
+actor's selected ground column, complete collision/water input set and ready
+physical joints. A virtual-only actor never borrows the scanned floor. Losing
+ground or waiting for it no longer emits a false settlement event.
+
+Pause, animation ownership, teleport, deletion and owner retirement cancel
+obsolete preparation and discard prior motion. Returning control can begin a
+fresh request; already-prepared geometry may publish immediately. Shared facts
+describe pending, ready and unavailable states through the same catalog used by
+programs and book controls. This does not start paused physics or bypass the
+guard for changing an existing object's environment profile.
+
+Nine new native regressions cover cold ground in mixed and virtual-only worlds,
+a real scanned collider above virtual terrain, an unrelated dormant area,
+passive inspection, shared Start, animation control, teleport, deletion, actual
+loss of support without settlement, independent motion and connected joints.
+Initial focused attempts exposed test setup/timing assumptions and an unsupported
+NUnit helper; these were corrected without relaxing the profile-change guard.
+The final focused run passed **17 EditMode / 78 PlayMode checks**. Complete suites
+passed **1,259 EditMode / 1,581 PlayMode**, with three expected optional
+private-asset skips.
+
+A later inspection of the book found stale whole-room-retention wording in one
+catalog description. Only that literal string changed after the complete native
+suites: 17 catalog EditMode and two catalog PlayMode tests, the complete Book
+journey, the web suite and unsigned Android compilation were then repeated.
+The Headless journey covered the same executable logic before this text correction.
+
+The full web suite passed **2,958 tests / 313 files**, including refreshed native
+catalog and catching fixtures. Offline Headless and Original Book journeys passed
+with zero client/editor exit codes and no provider calls. Unsigned Android
+IL2CPP/Java compilation passed; 22 ARM64 libraries passed ELF/16 KiB alignment
+checks, and browser Java reports contain 128 passed/two skipped. All 152
+staged web files and tested native sources match. All 14 protected pre-existing
+files remain unchanged. No APK/AAB was produced.
+
+Evidence is in `.quest-evidence/cold-ground/`. Selective startup, local handling
+of resident import failures and boundary exits, larger worlds and physical
+performance acceptance remain open. V1 is incomplete; headset, paid-provider,
+signing, deployment and Meta holds remain.

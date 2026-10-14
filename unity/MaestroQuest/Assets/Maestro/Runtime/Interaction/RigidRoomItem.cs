@@ -93,7 +93,9 @@ namespace Maestro.Quest.Interaction
             Refresh();
         }
         void PhysicsChanged(){if(!ContactTracking){grabInputs?.Suspend();InterruptPhysicsInputs();}MotionRevision++;Refresh();}
-        bool PhysicsEnabled => InputBindingAvailable && isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && world && world.CanSimulate(transform.position,item);
+        // Owning preparation does not admit motion: virtual ground may still be dormant.
+        bool PhysicsPreparationEnabled => InputBindingAvailable && isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && world && world.SimulationActive;
+        bool PhysicsEnabled => PhysicsPreparationEnabled && world.CanSimulate(transform.position,item);
         bool BaseAllowed=>PhysicsEnabled&&constraints.Count==0;
         // Held-body sweeps own contact inputs; XRI retains its body/throw setup.
         bool PhysicsInputsAdmitted => item&&item.Grab&&item.Grab.isSelected ? (!grabInputs||grabInputs.Ready)&&(!InputEditor||InputEditor.PhysicsIslandReady(item,true,out _)) : InputsCurrent;
@@ -210,7 +212,7 @@ namespace Maestro.Quest.Interaction
             // A newly accepted actor may become ready after collider synchronization,
             // even when another profile kept the global world ready throughout.
             if (Allowed == body.isKinematic) Refresh();
-            if(PhysicsEnabled&&!InputsCurrent){quietSince=Time.unscaledTime;return;} // Preparing is not settling.
+            if(PhysicsPreparationEnabled&&!InputsCurrent){quietSince=Time.unscaledTime;return;} // Missing ground or pending inputs are not settlement.
             bool moving = !body.isKinematic && !body.IsSleeping() && (body.linearVelocity.sqrMagnitude > .0025f || body.angularVelocity.sqrMagnitude > .01f);
             if (moving) { quietSince = Time.unscaledTime; wasMoving = true; }
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }
