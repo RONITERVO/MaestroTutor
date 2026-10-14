@@ -33548,7 +33548,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start prepares currently resident free dynamic actors and their connected, nearby collision, selected ground and water dependencies, then rechecks the selected environment. Unused dormant content stays unloaded; newly active actors prepare their own inputs before gravity. Fixed, held and animated objects do not initiate preparation, but may be dependencies of a free actor. During preparation it can be cancelled; manual Pause, another accepted start, scan/environment changes, focus loss, workspace changes or changes to captured saved inputs invalidate it. Unrelated saved edits do not cancel preparation. Native readiness changes alone do not create a new user intent. Failed/cancelled preparation never starts physics, even if its assets finish later. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room with provable imported-collision bounds and placement. Unavailable resident imports with previously accepted collision bounds use conservative native guards and stop dependent actors locally; unrelated actors can continue. Unknown bounds or placement still pause this bounded authored region. Explicit Start fails if a required selected dependency cannot prepare. Repair never silently resumes failed motion, including a movable imported object itself. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
+      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start prepares currently resident free dynamic actors and their connected, nearby collision, selected ground and water dependencies, then rechecks the selected environment. Unused dormant content stays unloaded; newly active actors prepare their own inputs before gravity. Fixed, held and animated objects do not initiate preparation, but may be dependencies of a free actor. In a cold virtual-only world, Start can also prepare local ground and collision inputs at the tracked user viewpoint. That request is cancelled if tracking is lost, the world is placed elsewhere or the user moves into different required inputs before completion; it never loads distant known areas merely because they exist. During preparation it can be cancelled; manual Pause, another accepted start, scan/environment changes, focus loss, workspace changes or changes to captured saved inputs invalidate it. Unrelated saved edits do not cancel preparation. Native readiness changes alone do not create a new user intent. Failed/cancelled preparation never starts physics, even if its assets finish later. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room with provable imported-collision bounds and placement. Unavailable resident imports with previously accepted collision bounds use conservative native guards and stop dependent actors locally; unrelated actors can continue. Unknown bounds or placement still pause this bounded authored region. Explicit Start fails if a required selected dependency cannot prepare. Repair never silently resumes failed motion, including a movable imported object itself. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
       "example": {
         "operation": "start",
         "stateId": "00000000000000000000000000000000"
@@ -35120,7 +35120,7 @@
         "physics.running",
         "navigation.floorReady"
       ],
-      "description": "Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking/following actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches fail at the last accepted place. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
+      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking/following actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches fail at the last accepted place. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
       "example": {
         "target": "maestro",
         "mode": "walk",
@@ -35273,7 +35273,7 @@
         "physics.running",
         "navigation.floorReady"
       ],
-      "description": "Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported characters currently move their root without an automatic gait, and a separate whole-target imported animation conflicts. Maestro uses its selected gait. This does not invent foot planting, swimming, crowd steering or head/limb posing. Four concurrent walking/following actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data.",
+      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported characters currently move their root without an automatic gait, and a separate whole-target imported animation conflicts. Maestro uses its selected gait. This does not invent foot planting, swimming, crowd steering or head/limb posing. Four concurrent walking/following actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data.",
       "example": {
         "target": "maestro",
         "leader": {
@@ -44309,7 +44309,7 @@
         }
       },
       "label": "Room physics state",
-      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes immediate selected-ground, room collision and lifecycle admission; an explicit Start must still prepare the required dependencies of resident free dynamic actors. It does not activate every saved object. It is not permission to act, alignment approval or complete resource admission. ready requires selected ground and no unresolved imported-collision bounds or placement in the current authored region. Known unavailable geometry stops dependent actors through local input checks, so room readiness does not guarantee every actor can move. Read object.physics.inputs for individual physics readiness and physics.environment for separate scan/virtual observations; neither room fact guarantees a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes immediate selected-ground, room collision and lifecycle admission; an explicit Start must still prepare the required dependencies of resident free dynamic actors, or local tracked-view ground in a cold virtual-only world. It does not activate every saved object. It is not permission to act, alignment approval or complete resource admission. ready requires selected ground and no unresolved imported-collision bounds or placement in the current authored region. Known unavailable geometry stops dependent actors through local input checks, so room readiness does not guarantee every actor can move. Read object.physics.inputs for individual physics readiness and physics.environment for separate scan/virtual observations; neither room fact guarantees a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
     },
     {
       "id": "object.physics.inputs",
@@ -45674,7 +45674,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "75d7f0f5fc48b000fbb5338d82c752eeb24b6e085f6163349d7def029b046259"
+      "sha256": "0643b8ef74fbd03f742f607b184d06cc7ae59813496c8cce6d449e586d1ef3f2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -46050,7 +46050,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
-      "sha256": "8832d9c589ce5b04a6c3115ac180a6bdd5f3cc46da47ff1c4c503e312b91abb6"
+      "sha256": "2ccf34c1f636b556dc0de458e74a3ce3f864026db673591be7b412a993e0f854"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
@@ -46142,7 +46142,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
-      "sha256": "766d8533c032dc184c29b7d1a5cbf9a2cb962fccd63df893578c9b524d10a6dd"
+      "sha256": "ec4f6016979c1f325e80f0ec90724e755a84c94d22256dc4695d16b3f8c7bd68"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
@@ -46178,11 +46178,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
-      "sha256": "ca2ff8489a187eb18ed34788f341d733f36c23bf5ac365bbf04c71842d4c8e47"
+      "sha256": "c83d5d458315c36d479dba6d4164e47674c8aa0c9a56ade3bcbe95c829fac72b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsStartOperation.cs",
-      "sha256": "f5243e6c733284a75e0d253df794f8c6728d4f1e2b9e89ffe5842e8288975704"
+      "sha256": "b5ccda5f65b62b0faec8218923c6e6e227d4362c3bb2fc9ce85e1641cedba259"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
@@ -46870,7 +46870,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeInput.cs",
-      "sha256": "b9c5869c416dde840b6c250041ad37db4a2fc27eecdc3562d0a4c5f1ce7d463a"
+      "sha256": "127854eb5343790a556af268a6b002851469c76013f73495695a4ae0f48748f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
@@ -46934,7 +46934,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPlacementDependencies.cs",
-      "sha256": "53bb7ecfa4dd6de94e7e808672968305c33521db943a6c6f4e1799a72a481926"
+      "sha256": "ae2de52693210369b1622ae8ee6be3cb1c077fae4d15eec20d3f69b9f80e62ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
@@ -47418,7 +47418,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
-      "sha256": "cad5ff30dbe216fae9a2432b73da196bd0ca20fc4beaadb5dbdb5fd620817acb"
+      "sha256": "5e634dc19be1484a0441aa4239e62d58f3fb18ed782bdad4848eb007f59e2c99"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
@@ -47542,7 +47542,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "ae19e750fb5101a32cf64f68a39d81e6cd6dd62887de3e99dd051197863ac2c4"
+      "sha256": "a8198ba3616f901b550b15a7565eb151c2b34596ae47a48db899d50b9eae7cfa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationBuild.cs",
@@ -47554,15 +47554,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationInputs.cs",
-      "sha256": "ee329c4661ca14406f6f98c47c040fca61c98d0f0a87067268e6f50d5cc8fb89"
+      "sha256": "35d3ca9f1654f5fcb67a8d54c323d3399690ac170adbca174e24baff0b658ba0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
-      "sha256": "142be19277fbf7bc090e96dc1df8a65849df971b1620aa3ac2c2b8dff9dc8e4b"
+      "sha256": "bfaa47d272be69a6561d69a6236542779723db08562e106c77e6e515e2a9480b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationSolidRoutes.cs",
       "sha256": "28822e01a6bacce0148e1a922eb3b32d0a9217539d68461813ab1c738cae0501"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationStartup.cs",
+      "sha256": "e1a2977bc0781fa21418030fea7d4695bcf41f00fba60b6090723ad0646b416a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
@@ -47682,7 +47686,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.Placement.cs",
-      "sha256": "3075bf5ae89abd2f0203ead7fd481f171d4c0bb07bbd1969410e4b36fec6a8f6"
+      "sha256": "a2a8306939ceacae2fd4d5f4d4f4bf1d724b3bd16e4f6e53253d10ec213193df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.cs",

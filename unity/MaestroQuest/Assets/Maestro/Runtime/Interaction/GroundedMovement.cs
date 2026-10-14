@@ -30,7 +30,7 @@ namespace Maestro.Quest.Interaction {
         internal static bool CanBegin(RoomEditor editor,RoomItem item,out string error){
             error="Grounded movement needs an active target and room";
             if(!editor||!item||!item.isActiveAndEnabled||!editor.isActiveAndEnabled||editor.RuntimeGate.Held)return false;
-            error="Start physics with accepted ground before walking";if(!editor.PhysicsWorld||!editor.PhysicsWorld.SimulationActive||!editor.PhysicsWorld.EnvironmentReady(item))return false;
+            error="Start physics with accepted ground before walking";if(!editor.PhysicsWorld||!editor.PhysicsWorld.SimulationActive||editor.PhysicsWorld.IncludesRealRoom(item)&&!editor.PhysicsWorld.EnvironmentReady(item))return false;
             error="Wait for another walking/following action to finish (four active actions maximum)";if(active.Count>=MaximumActive)return false;
             error="Walking needs a tracked viewer and an upright metre-scale world";
             var viewer=editor.Viewer;if(!viewer||!viewer.gameObject.activeInHierarchy||!editor.ViewerTrackingReady||!editor.Frame.Valid||Mathf.Abs(editor.Frame.MetresPerUnit-1)>.0001f||Vector3.Dot(editor.transform.up,Vector3.up)<.99999f)return false;
@@ -99,9 +99,14 @@ namespace Maestro.Quest.Interaction {
         }
         internal void Tick(){
             if(stopped||failure!=null||lastFrame==Time.frameCount)return;lastFrame=Time.frameCount;
-            if(!owned||!editor||!editor.isActiveAndEnabled||editor.TemporarySessionId!=session||editor.RuntimeGate.Held||!editor.ViewerTrackingReady||editor.Find(target)!=item||!item||!item.isActiveAndEnabled||item.Grab.isSelected||!navigation||!navigation.Ready||!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){Fail("The walking actor, tracking or physics became unavailable");return;}
+            if(!owned||!editor||!editor.isActiveAndEnabled||editor.TemporarySessionId!=session||editor.RuntimeGate.Held||!editor.ViewerTrackingReady||editor.Find(target)!=item||!item||!item.isActiveAndEnabled||item.Grab.isSelected||!navigation||!editor.Viewer||!editor.Viewer.gameObject.activeInHierarchy){Fail("The walking actor, tracking or physics became unavailable");return;}
             if(editor.ObjectRevision(target)!=revision||Vector3.Distance(item.transform.localPosition,acceptedPosition)>.001f||Quaternion.Angle(item.transform.localRotation,acceptedRotation)>.1f||Vector3.Distance(item.transform.localScale,acceptedScale)>.0001f||avatar&&avatar.ModelBusy){Fail("The walking actor changed; start a new journey from its current position");return;}
             if(Time.realtimeSinceStartup-started>300){Fail("Walking exceeded its five-minute lifetime");return;}
+            if(!navigation.PrepareStartingInputs(out var startingError)){
+                if(navigation.StartingInputsPending){Status="preparingGround";IdlePose();return;}
+                Fail(startingError);return;
+            }
+            if(!navigation.Ready){Fail("The selected ground or physics is unavailable");return;}
             if(gait!=null){var readiness=gait.State(out var gaitError);if(readiness==RuleActionState.Failed){Fail(gaitError);return;}if(readiness==RuleActionState.Preparing){Status="preparingAnimation";IdlePose();return;}}
             if(blocked!=null)return;
             var from=Foot;var goal=editor.Frame.PointToWorld(destination);

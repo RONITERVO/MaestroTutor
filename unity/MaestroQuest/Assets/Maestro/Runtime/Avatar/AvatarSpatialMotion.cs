@@ -66,7 +66,7 @@ namespace Maestro.Quest.Avatar
             {
                 float scale = transform.lossyScale.y;
                 if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error,item)) { Say(error ?? "Room navigation is unavailable"); return false; }
-                if (!navigation.Sample(transform.position,.25f,out _)) { error = "Place Maestro's feet near a supported walking surface, then try walking"; Say(error); return false; }
+                if (!navigation.Sample(transform.position,.25f,out _)&&!navigation.InitialInputsNeeded(out _)) { error = "Place Maestro's feet near a supported walking surface, then try walking"; Say(error); return false; }
             }
             var claims=value==AvatarSpatialMode.Look?new[]{new BehaviourCatalog.Claim("maestro","gaze")}:
                 new[]{new BehaviourCatalog.Claim("maestro","locomotion"),new BehaviourCatalog.Claim("maestro","gaze")};
@@ -99,7 +99,11 @@ namespace Maestro.Quest.Avatar
         }
         public void SetPreferences(float distance, float speed)
         {
-            Distance = Mathf.Clamp(distance,.8f,2.5f); Speed = Mathf.Clamp(speed,.2f,1.2f);
+            distance=Mathf.Clamp(distance,.8f,2.5f);speed=Mathf.Clamp(speed,.2f,1.2f);
+            // Loading another native surface also publishes Changed. Only an
+            // actual preference edit may cancel the movement's owned inputs.
+            if(Distance==distance&&Speed==speed)return;
+            Distance=distance;Speed=speed;
             nextPath = 0;corners=Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs(); Changed?.Invoke();
         }
         void ReadPreferences()
@@ -116,7 +120,17 @@ namespace Maestro.Quest.Avatar
             if (!Active) return;
             if (editor.RuntimeGate.Held||paused || !focused || !tracked() || !avatar || avatar.ModelBusy || item.Grab.isSelected) { Stop(); return; }
             if (mode == AvatarSpatialMode.Look) return;
-            if (!navigation || !navigation.Ready) { Stop(); Say("Walking stopped — check room alignment and Start physics again"); return; }
+            if(!navigation||!editor.PhysicsWorld||!editor.PhysicsWorld.SimulationActive){Stop();Say("Walking stopped — check room alignment and Start physics again");return;}
+            if(mode==AvatarSpatialMode.Manual){
+                if(Time.unscaledTime-manualAt>.15f){Stop();return;}
+                if(manualDirection.sqrMagnitude==0){avatar.SpatialWalk(0);return;}
+            }
+            if(!navigation.PrepareStartingInputs(out var startingError)){
+                avatar.SpatialWalk(0);
+                if(!navigation.StartingInputsPending)Stop();
+                Say(startingError);return;
+            }
+            if(!navigation.Ready){Stop();Say("Walking stopped — the selected ground is unavailable");return;}
             if(navigationRevision!=navigation.SurfaceRevision) { navigationRevision=navigation.SurfaceRevision;corners=Array.Empty<Vector3>();corner=0;nextPath=0; }
             float dt = Mathf.Min(Time.deltaTime,.05f);
             if (mode == AvatarSpatialMode.Manual) { ManualStep(dt); return; }

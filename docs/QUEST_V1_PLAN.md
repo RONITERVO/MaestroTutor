@@ -10119,3 +10119,46 @@ setup-generated project assets are recorded separately. Browser tests report
 was produced. Evidence: .quest-evidence/selective-startup/.
 
 Navigation-only cold-start demand, finer loading groups, unknown-geometry isolation, larger-world capacity and physical acceptance remain open. V1 is incomplete; existing headset/provider/signing/deployment/Meta holds remain.
+
+
+### Owned navigation startup — 2026-10-15
+
+Owned walking and following can now start beside dormant authored ground.
+Admission remains passive; the accepted movement owner prepares its local
+collision, ground and water inputs before displacement. Maestro's direct
+Follow/stick controls use this same preparation path. Virtual-only actors never
+borrow the scanned physical floor, including terrain below the room. Neutral
+manual input does not load or move anything; stale input, Stop, tracking loss,
+physics interruption and replacement end the owner without late movement.
+Loading unrelated native geometry no longer resets unchanged Maestro movement
+preferences or cancels that owner's pending inputs.
+
+An explicit Physics Start in a cold virtual-only world can prepare local ground
+at the tracked viewpoint even when all resident objects are fixed. It shares
+viewpoint/placement coordinates and collision dependency queries. Tracking loss,
+world placement, newly required local inputs or Pause invalidate that request;
+finishing an old load cannot start physics. Independent distant areas stay
+unloaded. Existing free-body preparation remains unchanged. Four catalog
+descriptions and thirteen native source hashes change; action IDs, versions,
+schemas and storage remain stable.
+
+Verified on desktop: **1,259 EditMode / 1,631 PlayMode** passed, with three
+expected optional private-asset skips. All **14 focused startup cases** passed:
+travel/follow/manual and shared action execution, cold fixed-only physics start,
+missing support, Stop, tracking loss, placement changes, newly required inputs
+and manual Pause. The input test feeds fresh samples before movement, matching
+the runtime update order rather than bypassing its stale-input guard.
+
+Offline Headless **255e5393f19a47de995c779f7317b9a5** and Original Book **4db14fd4c3b94dd0ad5e370e0d21d30f** passed with zero client/editor
+exit codes and no provider calls. **2,958 web tests / 313 files**,
+probe types, native fixture refresh and asset provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 ARM64 libraries pass
+ELF/16 KiB checks; 152 staged web files and the browser AAR match. The source
+audit covers 3,000 native inputs, including 1,118 C#
+and 1,124 code/shader files; four setup-derived project assets
+are recorded separately. Browser tests report 128 passed/two skipped. All 14
+protected files remain unchanged. No APK/AAB was produced.
+Evidence: .quest-evidence/navigation-startup/.
+
+Remaining: finer loading groups, unknown-geometry isolation, fixed-only per-entity virtual startup without a ready global environment, readable readiness summaries, larger-world capacity and physical acceptance. V1 is incomplete; headset/provider/signing/deployment/Meta holds remain.

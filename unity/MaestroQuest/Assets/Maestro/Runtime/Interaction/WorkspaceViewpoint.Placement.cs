@@ -37,6 +37,9 @@ namespace Maestro.Quest.Interaction
             if(target!=null&&(!target.Valid||!target.active)){error="Choose a finite world location within 25 metres and a heading from -180 to 180";return false;}
             error=null;return true;
         }
+        internal bool ReadTrackedViewpoint(out RoomViewpoint value){
+            value=null;return HeadReady&&!Pending&&view&&view.ReadViewpoint(out value);
+        }
         internal bool NeedsAuthoredGround=>view&&view.Active;
         internal bool PreparePlacement(RoomViewpoint target,out string error)=>view.PrepareViewpoint(target,out error);
         internal void ApplyPlacement()

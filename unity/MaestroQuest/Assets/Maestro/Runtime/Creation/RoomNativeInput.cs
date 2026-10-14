@@ -9,16 +9,30 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         // Start prepares the existing free actors and their local dependency
-        // closure. New/observed actors acquire their own inputs before gravity.
+        // closure, or tracked local ground in a cold virtual-only world.
+        // New/observed actors acquire their own inputs before gravity.
         // This query is passive and never wakes unrelated saved content.
-        internal string[] NativeSimulationTargets()
+        internal string[] NativeSimulationTargets()=>NativeSimulationTargets(out _);
+        internal string[] NativeSimulationTargets(out Func<bool> startCurrent)
         {
+            startCurrent=()=>true;
             var targets=new HashSet<string>(StringComparer.Ordinal);
             foreach(var item in objects.Values){
                 var rigid=item?item.GetComponent<RigidRoomItem>():null;
                 if(!item||!item.isActiveAndEnabled||!rigid||!rigid.isActiveAndEnabled||
                     !rigid.Dynamic||!item.Grab||item.Grab.isSelected||!PhysicsIslandOwned(item))continue;
                 var query=PhysicsInputs(item);targets.UnionWith(query.Members);targets.UnionWith(query.Targets);
+            }
+            // A cold virtual world may contain only fixed/animated objects. An
+            // explicit Start can prepare ground at the current tracked viewpoint;
+            // it must not make every saved object's existence a loading request.
+            var viewpoint=GetComponent<WorkspaceViewpoint>();
+            if(PhysicsWorld&&!PhysicsWorld.RealCollisions&&!PhysicsWorld.AnySimulationReady&&
+                viewpoint&&viewpoint.ReadTrackedViewpoint(out var point)){
+                var local=TrackedViewTargets(point,true);targets.UnionWith(local);
+                string state=viewpoint.PlacementState();var held=targets.ToHashSet(StringComparer.Ordinal);
+                startCurrent=()=>viewpoint&&viewpoint.PlacementState()==state&&viewpoint.ReadTrackedViewpoint(out var current)&&
+                    TrackedViewTargets(current,true).All(held.Contains);
             }
             return targets.OrderBy(id=>id,StringComparer.Ordinal).ToArray();
         }

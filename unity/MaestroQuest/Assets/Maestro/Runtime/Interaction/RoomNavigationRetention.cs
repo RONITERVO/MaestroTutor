@@ -26,7 +26,7 @@ namespace Maestro.Quest.Interaction
             // bake a map or replace native work. Pending mixed-world traversal uses
             // candidate ground after the previous map has already been retired.
             accepted.Retain(editor,graph);candidate.Retain(editor,graph);building.Retain(editor,graph);
-            if(InputEditor==editor){stepInputs?.Retain(graph);routeInputs?.Retain(graph);}
+            if(InputEditor==editor){startingInputs?.Retain(graph);stepInputs?.Retain(graph);routeInputs?.Retain(graph);}
             if(routeSearch?.Pending==true&&actor&&actor.GetComponentInParent<RoomEditor>()==editor)
                 foreach(var id in routeSearch.BlockerDependencies){
                     if(solidRouteBodies.TryGetValue(id,out var body)){if(body.Editor==editor&&body.Target!=null)graph.Retain(body.Target,RoomRetentionReason.Navigation);}

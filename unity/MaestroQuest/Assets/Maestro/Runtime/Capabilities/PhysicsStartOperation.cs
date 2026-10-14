@@ -14,10 +14,11 @@ namespace Maestro.Quest.Programs
         readonly CapabilityContext context;readonly RoomEditor editor;readonly RoomPhysicsWorld world;
         readonly CancellationTokenSource cancellation=new();readonly Func<bool> inputCurrent;
         readonly Task<string> pending;readonly int intent;readonly string[] targets;bool stopped,completed;JObject result;
-        internal PhysicsStartOperation(CapabilityContext context,string[] targets,int intent)
+        internal PhysicsStartOperation(CapabilityContext context,string[] targets,int intent,Func<bool> startCurrent=null)
         {
             this.context=context;this.targets=(string[])targets.Clone();editor=context.Editor;world=editor.PhysicsWorld;this.intent=intent;
-            inputCurrent=editor.CaptureNativeActionInput(targets);
+            var captured=editor.CaptureNativeActionInput(targets);
+            inputCurrent=()=>captured()&&(startCurrent?.Invoke()??true);
             pending=editor.AcquireNativeEntities(targets,Current,cancellation.Token);
         }
         bool Current()=>!stopped&&editor&&context.Editor==editor&&editor.PhysicsWorld==world&&world&&world.PreparedSimulationCurrent(intent)&&inputCurrent();

@@ -1041,7 +1041,7 @@ segments still test its wet triangles. General shoreline route planning remains
 open. Missing native bed geometry is unavailable, never silently treated as an
 ordinary rectangular pool; observation does not load it.
 
-The explicit physics Start still prepares the bounded world. Running actors
+The explicit physics Start prepares resident free actors and their required inputs, with tracked local-ground preparation for a cold virtual-only world. Running actors
 retain nearby collision, ground and water dependencies; unrelated idle areas may
 retire through the [shared policy](#retiring-unused-areas);
 the current 64-object, 25-metre and four-height-field limits are unchanged. Dense rain-driven level
@@ -1444,7 +1444,7 @@ This is an initial active retirement policy within the existing 64-object,
 25-metre world bounds. Physics Start prepares resident free dynamic actors and their connected,
 collision, selected-ground and water dependencies. Unused dormant content stays
 unloaded. Fixed, held and animated objects do not initiate free-body preparation;
-they can still be required by another actor. Later-active actors use the same
+they can still be required by another actor. If the global collision policy is virtual-only and no accepted ground is loaded, an explicit Start can prepare local ground at the current tracked viewpoint, even with only fixed objects. Tracking loss, world placement or movement into different required inputs invalidates that pending Start. Later-active actors use the same
 per-body input preparation before gravity. Cancelled preparations cannot start
 late, and unrelated saved edits do not invalidate the captured local inputs.
 Once running, each active dynamic body retains its rotating/swept collision
@@ -1485,7 +1485,8 @@ recipe autoplay even when approval precedes the object's first visible load;
 explicit playback remains a separate action. Source, identity, personal
 placement and Undo history do not change merely because a view loads.
 
-Navigation-only cold-start demand, unknown-geometry isolation, finer loading
-groups and larger world capacity remain required before claiming country-scale
+Owned navigation prepares dormant local ground before any displacement, including Maestro direct following and stick input. Neutral input does not request loading, and failed/cancelled preparation cannot produce late motion. Native loading does not reset unchanged movement preferences.
+
+Unknown-geometry isolation, finer loading groups, fixed-only per-entity virtual startup without a ready global environment and larger world capacity remain required before claiming country-scale
 worlds. Preparation is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.

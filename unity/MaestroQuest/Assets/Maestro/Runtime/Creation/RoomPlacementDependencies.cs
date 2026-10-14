@@ -9,14 +9,15 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        internal string[] WorldPlacementTargets(RoomViewpoint target)
+        internal string[] WorldPlacementTargets(RoomViewpoint target)=>TrackedViewTargets(target,GetComponent<WorkspaceViewpoint>()?.NeedsAuthoredGround==true);
+        internal string[] TrackedViewTargets(RoomViewpoint target,bool needsGround)
         {
             if(journal==null||target==null||!target.Valid)return Array.Empty<string>();
             // Covers the largest admitted tracked-body capsule, including its
             // skin. Loading must remain valid if the user stands up meanwhile.
             var body=new Bounds(target.position+Vector3.up*1.12f,new Vector3(.4f,2.16f,.4f));
             var support=RoomGroundQuery.SupportEnvelope(target.position,.2f,.025f,.025f);
-            return SpatialMovementTargets(body,GetComponent<WorkspaceViewpoint>()?.NeedsAuthoredGround==true?support:null);
+            return SpatialMovementTargets(body,needsGround?support:null);
         }
         internal string[] SpatialMovementTargets(Bounds body,Bounds? ground)
         {

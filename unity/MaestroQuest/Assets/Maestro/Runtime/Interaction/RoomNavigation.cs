@@ -50,7 +50,8 @@ namespace Maestro.Quest.Interaction
         public bool Ready => configured && RefreshGeometry(out _);
         // A bound actor that was destroyed is not an intentionally actorless query.
         bool ActorAvailable=>!actorBound||actor&&actor.isActiveAndEnabled&&world&&actor.transform.IsChildOf(world.transform);
-        bool ContextAvailable=>isActiveAndEnabled&&world&&world.SimulationActive&&ActorAvailable&&world.EnvironmentReady(actor);
+        bool ContextOwned=>isActiveAndEnabled&&world&&world.SimulationActive&&ActorAvailable;
+        bool ContextAvailable=>ContextOwned&&world.EnvironmentReady(actor);
         public void Initialize(RoomPhysicsWorld value)
         {
             if(world==value)return;
@@ -58,7 +59,7 @@ namespace Maestro.Quest.Interaction
             ResetBinding();world=value;
             if(world&&isActiveAndEnabled){world.Changed+=RoomChanged;world.RegisterNavigation(this);}
         }
-        void RoomChanged() { if (!ContextAvailable) Clear(); }
+        void RoomChanged() { if (!ContextOwned) Clear(); }
         public bool Prepare(float bodyRadius, float bodyHeight, out string error,RoomItem target=null)
         {
             error = null;
@@ -66,16 +67,18 @@ namespace Maestro.Quest.Interaction
             bool bound=!ReferenceEquals(target,null);
             if(!ReferenceEquals(actor,target)||actorBound!=bound){Clear();actor=target;actorBound=bound;}
             if(!ActorAvailable){Clear();error="The walking actor is unavailable in this world";return false;}
-            if(!ContextAvailable){Clear();error="Prepare the selected ground and Start physics before walking";return false;}
+            if(!ContextOwned||world.IncludesRealRoom(actor)&&!world.EnvironmentReady(actor)){Clear();error="Prepare the selected ground and Start physics before walking";return false;}
             if(!float.IsFinite(bodyRadius)||!float.IsFinite(bodyHeight)||bodyRadius<=0||bodyHeight<bodyRadius*2) { error="Choose a valid walking body";return false; }
             if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
             radius=bodyRadius;height=bodyHeight;configured=true;
-            return RefreshGeometry(out error);
+            if(RefreshGeometry(out error))return true;
+            return InitialInputsNeeded(out error);
         }
         bool RefreshGeometry(out string error)
         {
             error="Room navigation needs active physics and accepted surfaces";
-            if(!ContextAvailable){Clear();return false;}
+            if(!ContextOwned){Clear();return false;}
+            if(!world.EnvironmentReady(actor)){ReleaseMap();candidate.Clear();return false;}
             bool frameMoved=false;
             if(virtualFrame) {
                 var frame=world.transform.worldToLocalMatrix*virtualFrame.localToWorldMatrix;
@@ -85,6 +88,7 @@ namespace Maestro.Quest.Interaction
             }
             Physics.SyncTransforms();
             if(!candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
+            StartingGeometryAccepted();
             if(data&&installed.valid&&candidate.Same(accepted)){
                 Install(candidate.Position,candidate.Rotation);candidate.Clear();error=null;return installed.valid;
             }
@@ -192,7 +196,7 @@ namespace Maestro.Quest.Interaction
         }
         void Clear(){ReleaseMovementInputs();ReleaseMap();candidate.Clear();observedFrame=false;frameChangedOn=-1;}
         void ResetBinding(){Clear();configured=false;actor=null;actorBound=false;}
-        void LateUpdate(){if((data||PathsPending)&&!ContextAvailable)Clear();else if(PathsPending)RefreshGeometry(out _);}
+        void LateUpdate(){if((data||PathsPending)&&!ContextOwned)Clear();else if(PathsPending)RefreshGeometry(out _);}
         void OnEnable(){if(world){world.Changed+=RoomChanged;world.RegisterNavigation(this);}}
         void OnDisable(){if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}ResetBinding();}
         void OnDestroy(){if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}ResetBinding();world=null;virtualFrame=null;}
