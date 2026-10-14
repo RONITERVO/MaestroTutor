@@ -24,7 +24,8 @@ physics now retains each actor and its collision/support dependencies, allowing
 unused static areas to retire; see the [verified desktop checkpoint](#physics-dependency-retention-during-area-retirement--2026-10-14).
 Free objects in an already-running world now prepare dormant virtual ground before
 resuming motion; see [owned ground preparation](#owned-local-ground-preparation--2026-10-14).
-Current capacity, full-room startup and explicit Start remain unchanged.
+Explicit physics Start now prepares resident free actors and their local dependencies.
+Current capacity and initial full-room scene startup remain unchanged.
 Shared Maestro attention now supports object and authored-point targets through the
 existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
@@ -9943,3 +9944,45 @@ No APK/AAB was produced. Evidence: .quest-evidence/local-boundaries/.
 Selective startup, local resident-import failure handling, larger-world capacity,
 physical performance and the existing v1 release gates remain open. Headset,
 paid-provider, signing, deployment and Meta holds remain. V1 is incomplete.
+
+### Selective preparation for physics Start — 2026-10-14
+
+Verified on desktop. The shared Start action now acquires resident
+free dynamic actors and their existing connected/collision/ground/water inputs.
+Unused dormant content stays unloaded, including unused missing model files.
+Fixed, held and animated objects do not initiate free-body preparation, while
+remaining available as another actor's dependencies. Newly active actors retain
+the existing local preparation before gravity. No separate agent or tray path is
+introduced; both use the same catalog action and native receipt.
+
+Preparation captures relevant saved inputs rather than all saved object identities.
+Unrelated additions no longer cancel a pending Start. Captured edits, missing
+prepared instances, manual Pause, newer accepted intent, scan/lifecycle changes,
+timeouts and workspace holds still cancel without a late start. Selected-ground
+admission and the conservative global stop for resident imported-geometry failures
+remain. If no resident free actor requests unavailable selected ground, Start
+still refuses until viewing or another explicit action prepares that ground;
+generic cold-start demand for navigation-only actors remains open. Initial scene
+startup still admits the current bounded room; this does not increase capacities
+or establish country-scale or physical Quest performance.
+
+Verified on desktop: **1,259 EditMode / 1,593 PlayMode** passed, with
+three expected optional private-asset skips. Focused coverage passed
+**17 EditMode / 105 PlayMode**, including five new cases
+for cold virtual ground, unused missing imports, held/animated ownership and
+connected groups. Existing start cancellation and automatic-retirement tests
+now assert the selected dependency contract.
+
+Offline Headless **7085c0b8a614479b8987c1d4ea0e7343** and Original Book **84aed4b1f26941f89c271ef8df3996a2**
+journeys passed with zero client/editor exit codes and no provider calls.
+The web suite passed **2,958 tests / 313 files**; fresh native
+catalog/catching fixtures, probe types and asset provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 selected ARM64 libraries
+pass ELF/16 KiB checks; 152 staged web files and the browser AAR match.
+The source audit covers 2,988 native inputs, including
+1,118 code/shader files (1,112 C#); four setup-generated
+project assets are recorded separately. Browser tests report 128 passed/two
+skipped. All 14 protected files remain unchanged. No APK/AAB was produced.
+Evidence: .quest-evidence/selective-physics-start/.
+Headset, paid-provider, signing, deployment and Meta holds remain; v1 is incomplete.

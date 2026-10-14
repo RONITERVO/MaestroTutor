@@ -53,7 +53,7 @@ namespace Maestro.Quest.Tests {
             }
             yield return AutomaticAreaUntil(()=>!editor.Find(id),"Finished capture retained an unused area");
         }
-        [UnityTest]public IEnumerator AutomaticAreaOwnershipAndRunningBodyKeepCollisionContentThenStartReacquiresIt(){
+        [UnityTest]public IEnumerator AutomaticAreaOwnershipAndRunningBodyRetainContentButRestartLeavesUnusedAreaCold(){
             var(id,_,camera)=AutomaticAreaScene();camera.transform.rotation=Quaternion.Euler(0,180,0);
             Assert.That(editor.Ownership.TryAcquire("area-test","Pose",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(id,"wholeTarget")},null,out var lease,out var error),Is.True,error);
             using(lease){yield return new WaitForSecondsRealtime(2.7f);Assert.That(editor.Find(id),Is.SameAs(block));}
@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests {
             yield return new WaitForSecondsRealtime(1);Assert.That(editor.Find(id),Is.Not.Null);
             physics.PausePhysics();yield return AutomaticAreaUntil(()=>!editor.Find(id),"Idle area stayed resident after simulation paused");
             Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var run,out error),Is.True,error);yield return NativeActionDone(run);
-            Assert.That(physics.Running,Is.True);Assert.That(editor.Find(id),Is.Not.Null);yield return new WaitForSecondsRealtime(.8f);Assert.That(editor.Find(id),Is.Not.Null);
+            Assert.That(physics.Running,Is.True);Assert.That(editor.Find(id),Is.Null);yield return new WaitForSecondsRealtime(.8f);Assert.That(editor.Find(id),Is.Null);
         }
         [UnityTest]public IEnumerator AutomaticAreaKeepsOffscreenLightingAndCastersButRetiresUnrelatedArea(){
             var(lamp,caster,distant)=LightObservationScene();LightObservationCamera();editor.ConfigureNativeRetirement();

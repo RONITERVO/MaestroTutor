@@ -22,7 +22,6 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomJournal
     {
         internal string[] SavedObjectIds()=>items.Keys.OrderBy(id=>id,StringComparer.Ordinal).ToArray();
-        internal bool MatchesSavedObjects(ISet<string> expected)=>expected.SetEquals(items.Keys);
         internal bool ContainsObject(string target)=>target!=null&&items.ContainsKey(target);
     }
     public sealed partial class RoomEditor

@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests
         JObject NativePhysicsCall()=>new(){["id"]="physics.simulation.set",["version"]=1,["arguments"]=new JObject{["operation"]="start",["stateId"]=physics.ObserveSimulation()["stateId"]}};
         string RetirePhysicsBlock()
         {
-            physics.SetSurfaces(true,"Aligned fixture floor");string id=editor.Identity(block),area=NativeAreaFor(id);
+            physics.SetSurfaces(true,"Aligned fixture floor");PhysicsInputBall(block.transform.position+Vector3.up*.3f);string id=editor.Identity(block),area=NativeAreaFor(id);
             Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);return id;
         }
         IEnumerator DrainPhysicsPreparation()
@@ -29,15 +29,15 @@ namespace Maestro.Quest.Tests
             float until=Time.realtimeSinceStartup+12;while(editor.NativeActivationPending&&Time.realtimeSinceStartup<until)yield return null;
             Assert.That(editor.NativeActivationPending,Is.False);
         }
-        [UnityTest] public IEnumerator NativePhysicsStartAcquiresAllAreasWithoutSavedEditsAndReceiptCannotRestart()
+        [UnityTest] public IEnumerator NativePhysicsStartLeavesUnusedAreasColdWithoutSavedEditsAndReceiptCannotRestart()
         {
             physics.SetSurfaces(true,"Aligned floor");var ids=editor.Snapshot().objects.Where(o=>!o.IsBuiltIn).Select(o=>o.id).ToArray();
             foreach(var id in ids){string area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var issue),Is.True,issue);}
             int revision=editor.Revision;var executor=new RoomAgentExecutor(editor);var call=NativePhysicsCall();var request=new RoomAgentRequest{version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand{action="execution",execution=new JObject{["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call}}}};string run=(string)request.commands[0].execution["runId"];
             Assert.That(executor.Catalog.Execute(new JObject{["operation"]="check",["call"]=call},out var error),Is.True,error);
             Assert.That((bool)executor.Catalog.Observe()["available"],Is.True);Assert.That(editor.NativeActivationPending,Is.False,"Preflight is passive");
-            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(physics.Running,Is.False);Assert.That((string)runtime.Scheduler.Invocation(run)["phase"],Is.EqualTo("preparing"));
-            yield return NativeActionDone(run);Assert.That(physics.Running,Is.True);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(ids.All(id=>editor.Find(id)&&!editor.NativeEntityDormant(id)),Is.True);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.NativeActivationPending,Is.False);
+            yield return NativeActionDone(run);Assert.That(physics.Running,Is.True);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(ids.All(id=>!editor.Find(id)&&editor.NativeEntityDormant(id)),Is.True);
             Assert.That((bool)runtime.Scheduler.Invocation(run)["output"]["running"],Is.True);
             physics.PausePhysics();Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(physics.Running,Is.False);
         }
@@ -81,7 +81,7 @@ namespace Maestro.Quest.Tests
         {
             var asset=ModelLibrary.Inspect("physics.glb",ModelFixture.Create());var save=editor.Models.SaveAsync(asset);yield return new WaitUntil(()=>save.IsCompleted);Assert.That(save.Exception,Is.Null);
             var create=editor.CreateImportedModelAsync(asset.Hash,CancellationToken.None);yield return new WaitUntil(()=>create.IsCompleted);Assert.That(create.Exception,Is.Null);string id=create.Result;
-            physics.SetSurfaces(true,"Aligned floor");Assert.That(editor.RetireNativeArea(NativeAreaFor(id),out var error),Is.True,error);yield return null;
+            physics.SetSurfaces(true,"Aligned floor");PhysicsInputBall(editor.Find(id).transform.position+Vector3.up*.3f);Assert.That(editor.RetireNativeArea(NativeAreaFor(id),out var error),Is.True,error);yield return null;
             string path=Path.Combine(directory,"models",asset.Hash+".glb"),parked=path+".pending";File.Move(path,parked);
             try{Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var failed,out error),Is.True,error);yield return NativeActionDone(failed,"failed");yield return DrainPhysicsPreparation();Assert.That(physics.Running,Is.False);Assert.That(editor.Find(id),Is.Null);}finally{File.Move(parked,path);}
             Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var retry,out error),Is.True,error);yield return NativeActionDone(retry);Assert.That(physics.Running,Is.True);Assert.That(editor.Read(id).modelHash,Is.EqualTo(asset.Hash));
@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests
             string id=RetirePhysicsBlock();physics.SetSurfaces(false,"No scan");Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var run,out var error),Is.True,error);
             yield return NativeActionDone(run,"failed");Assert.That(editor.Find(id),Is.Not.Null);Assert.That(physics.Running,Is.False);physics.SetSurfaces(true,"Later alignment");yield return null;Assert.That(physics.Running,Is.False);
         }
-        [UnityTest] public IEnumerator NativePhysicsPostLoadAuthoredEditInvalidatesTheCapturedWorld()
+        [UnityTest] public IEnumerator NativePhysicsPostLoadAuthoredEditInvalidatesTheCapturedInputs()
         {
             string id=RetirePhysicsBlock();var scheduler=new RuleScheduler(new RoomRuleActions(editor,animations));
             try{
@@ -100,13 +100,13 @@ namespace Maestro.Quest.Tests
                 scheduler.Tick(Time.unscaledTime);Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("failed"));Assert.That(physics.Running,Is.False);
             }finally{scheduler.StopAll();}
         }
-        [UnityTest] public IEnumerator NativePhysicsNewSavedParticipantInvalidatesWholeWorldAdmission()
+        [UnityTest] public IEnumerator NativePhysicsUnrelatedNewSavedParticipantDoesNotInvalidatePreparedInputs()
         {
             string id=RetirePhysicsBlock();var scheduler=new RuleScheduler(new RoomRuleActions(editor,animations));
             try{
                 Assert.That(scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var run,out var error),Is.True,error);yield return NativeActionLoadedBeforeTick(id);
-                Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Later ball",new Vector3(1,1,1),1,Color.red,out _,out error),Is.True,error);
-                scheduler.Tick(Time.unscaledTime);Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("failed"));Assert.That(physics.Running,Is.False);
+                Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Later ball",new Vector3(-10,1,-10),1,Color.red,out _,out error),Is.True,error);
+                scheduler.Tick(Time.unscaledTime);Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("completed"));Assert.That(physics.Running,Is.True);
             }finally{scheduler.StopAll();}
         }
         [UnityTest] public IEnumerator NativePhysicsPhysicalToolUsesTheSamePreparingReceiptAndPausePriority()

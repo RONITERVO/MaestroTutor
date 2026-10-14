@@ -936,11 +936,11 @@ restart from rest after fixing the input.
 
 This recovery uses the same fact and controls for programs, agents and book
 controls. Automatic retirement can release unrelated static areas while physics
-retains its local dependencies. Explicit Start still prepares all saved
-participants; resident imported-geometry failures retain the global stop.
+retains its local dependencies. Explicit Start prepares resident free dynamic actors and their local dependencies;
+resident imported-geometry failures retain the global stop.
 A boundary interruption uses the same local group hold and restart controls.
-Selective
-startup, local failure handling, larger worlds and hardware performance acceptance
+Selective initial scene
+startup, local resident-import failure handling, larger worlds and hardware performance acceptance
 remain open.
 
 
@@ -1425,7 +1425,12 @@ not load it. Retirement is runtime resource management, not deletion, a saved
 edit or a new Undo entry.
 
 This is an initial active retirement policy within the existing 64-object,
-25-metre world bounds. Physics Start still prepares every saved participant.
+25-metre world bounds. Physics Start prepares resident free dynamic actors and their connected,
+collision, selected-ground and water dependencies. Unused dormant content stays
+unloaded. Fixed, held and animated objects do not initiate free-body preparation;
+they can still be required by another actor. Later-active actors use the same
+per-body input preparation before gravity. Cancelled preparations cannot start
+late, and unrelated saved edits do not invalidate the captured local inputs.
 Once running, each active dynamic body retains its rotating/swept collision
 envelope, ground, water and connected physical members. Sleeping and pending
 bodies keep their identities and required support; retirement rechecks these
@@ -1438,8 +1443,8 @@ prepares the required native inputs; a guard contact interrupts the affected
 dynamic group, prepares its dependencies and requires an explicit restart from
 rest. The engine never treats unknown collision as empty space. The existing
 global stop for unavailable resident imported geometry remains conservative.
-Startup and explicit Start still prepare the bounded room. Selective startup,
-fully local import failure/boundary handling and larger world capacity remain
+Initial scene startup still admits the bounded room. Selective scene startup,
+fully local resident-import failure handling and larger world capacity remain
 required before claiming country-scale worlds. Preparation
 is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.

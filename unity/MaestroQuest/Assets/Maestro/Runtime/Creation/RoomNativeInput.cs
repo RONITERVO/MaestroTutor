@@ -2,17 +2,25 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using Maestro.Quest.Interaction;
 namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        // Whole-world simulation currently depends on every saved participant.
-        // Admission is explicit; observations never acquire these instances.
-        internal string[] NativeSimulationTargets()=>journal?.SavedObjectIds()??Array.Empty<string>();
-        internal Func<bool> CaptureNativeWorldInput(string[] targets)
+        // Start prepares the existing free actors and their local dependency
+        // closure. New/observed actors acquire their own inputs before gravity.
+        // This query is passive and never wakes unrelated saved content.
+        internal string[] NativeSimulationTargets()
         {
-            var current=CaptureNativeActionInput(targets);var identities=targets.ToHashSet(StringComparer.Ordinal);
-            return ()=>current()&&journal.MatchesSavedObjects(identities);
+            var targets=new HashSet<string>(StringComparer.Ordinal);
+            foreach(var item in objects.Values){
+                var rigid=item?item.GetComponent<RigidRoomItem>():null;
+                if(!item||!item.isActiveAndEnabled||!rigid||!rigid.isActiveAndEnabled||
+                    !rigid.Dynamic||!item.Grab||item.Grab.isSelected||!PhysicsIslandOwned(item))continue;
+                var query=PhysicsInputs(item);targets.UnionWith(query.Members);targets.UnionWith(query.Targets);
+            }
+            return targets.OrderBy(id=>id,StringComparer.Ordinal).ToArray();
         }
         // A later edit to another object is not a reason to cancel this action.
         // Keep identities/revisions, never a second copy of recipes or saved state.

@@ -17,7 +17,7 @@ namespace Maestro.Quest.Programs
         internal PhysicsStartOperation(CapabilityContext context,string[] targets,int intent)
         {
             this.context=context;this.targets=(string[])targets.Clone();editor=context.Editor;world=editor.PhysicsWorld;this.intent=intent;
-            inputCurrent=editor.CaptureNativeWorldInput(targets);
+            inputCurrent=editor.CaptureNativeActionInput(targets);
             pending=editor.AcquireNativeEntities(targets,Current,cancellation.Token);
         }
         bool Current()=>!stopped&&editor&&context.Editor==editor&&editor.PhysicsWorld==world&&world&&world.PreparedSimulationCurrent(intent)&&inputCurrent();
