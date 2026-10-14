@@ -3615,6 +3615,47 @@
                       "audioClips.v1"
                     ],
                     "title": "Imported WAV clip"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^.{0,80}$",
+                        "maxLength": 80
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "stream"
+                        ]
+                      },
+                      "stream": {
+                        "type": "object",
+                        "properties": {
+                          "endpoint": {
+                            "type": "string",
+                            "pattern": "^https://[^\\s?#@]+$",
+                            "maxLength": 2048
+                          }
+                        },
+                        "required": [
+                          "endpoint"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind",
+                      "stream"
+                    ],
+                    "additionalProperties": false,
+                    "format": "worldAudioStream",
+                    "x-features": [
+                      "audioStreams.v1"
+                    ],
+                    "title": "Live HTTPS MP3"
                   }
                 ]
               }
@@ -3670,7 +3711,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Source kind tone is a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. Source kind clip references an exact privately imported WAV assetHash and inspected seconds from audio.import. Missing or changed bytes fail playback explicitly; no file is fetched by this action. Live stream connections remain pending adapters. To repeat a saved sound, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
+      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Source kind tone is a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. Source kind clip references an exact privately imported WAV assetHash and inspected seconds from audio.import. Missing or changed bytes fail playback explicitly; no file is fetched by this action. Source kind stream saves a direct public HTTPS MP3 endpoint without credentials, query strings or fragments. Read audio.source.stream for its details. It requires room format 40 and source version 2; saving does not connect. Only audio.start with loop=false opens its connection, without cookies, authorization or redirects. To repeat a saved sound, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
       "example": {
         "operation": "save",
         "id": "",
@@ -4030,7 +4071,7 @@
         "audio.output.ready",
         "audio.voice.available"
       ],
-      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones up to 30 seconds or imported PCM/float WAV clips up to 600 seconds. Clips over 30 seconds stream from their checked private copy through bounded shared buffers; they do not decode the entire recording into memory. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For background music, looping or independently controlled playback use audio.start; audio.play keeps its calling action waiting until the finite sound finishes. Live-source adapters, echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
+      "description": "Play one finite sound from a saved object emitter, waiting for consumed PCM and the device output tail before completion. Can be called by manual controls, agent programs or existing event subscriptions (buttons, contacts, timers or Maestro state). Plays retain the exact source revision at start. Moving, gripping or animating the object does not interrupt the sound; emitter edits, deletion, room switch, lost audio device, app suspension or stopping its owning program do. Claims are independent of the object's movement channels. Up to eight world voices, separate from Maestro speech; capacity failure never silently steals another voice. Sources are procedural tones up to 30 seconds or imported PCM/float WAV clips up to 600 seconds. Clips over 30 seconds stream from their checked private copy through bounded shared buffers; they do not decode the entire recording into memory. Imported clips are normalized to the same 24 kHz mono spatial transport; stereo is downmixed. For background music, looping or independently controlled playback use audio.start; audio.play keeps its calling action waiting until the finite sound finishes. Live sources require audio.start, never this finite waiting action. Echo cancellation and headset audible acceptance remain pending. Spatial emitters use the native HRTF/direct obstruction renderer; room reflections remain gated.",
       "example": {
         "target": "maestro",
         "emitter": "beep"
@@ -4118,7 +4159,7 @@
         "audio.output.ready",
         "audio.voice.available"
       ],
-      "description": "Start an independently controlled room sound. Explicit lifetime='room' transfers playback to the current room only when native PCM consumption is confirmed; the result returns the exact instance and current control revision. The program then continues without waiting for the sound to end. loop=true repeats the captured source, including its envelope, until explicitly stopped or its room/emitter becomes unavailable. loop=false ends after the finite source. Stopping the starting action before handoff cancels its preparation; stopping that task after a successful handoff does not retract the room-owned sound. Use audio.control with this exact instance to pause, resume, set gain or stop. Read audio.instance or await audio.instance.changed for later outcomes; a successful start does not mean completed playback. Never use repeated starts as a loop. One active instance per emitter, eight shared world voices across active and retiring workspaces, with no silent replacement. Emitter edits/deletion, room replacement, focus loss and audio-device reset cancel playback; restore does not restart it. Procedural tones and imported PCM/float WAV clips use the same bounded native transport. Live-source adapters remain pending. Decoding sources keep shared admission until cancelled work drains; runtime.audioBudget, runtime.audioReservation and runtime.audioOwner expose these resources without controlling playback.",
+      "description": "Start an independently controlled room sound. Explicit lifetime='room' transfers playback to the current room only when native PCM consumption is confirmed; the result returns the exact instance and current control revision. The program then continues without waiting for the sound to end. loop=true repeats the captured source, including its envelope, until explicitly stopped or its room/emitter becomes unavailable. loop=false ends after the finite source. Stopping the starting action before handoff cancels its preparation; stopping that task after a successful handoff does not retract the room-owned sound. Use audio.control with this exact instance to pause, resume, set gain or stop. Read audio.instance or await audio.instance.changed for later outcomes; a successful start does not mean completed playback. Never use repeated starts as a loop. One active instance per emitter, eight shared world voices across active and retiring workspaces, with no silent replacement. Emitter edits/deletion, room replacement, focus loss and audio-device reset cancel playback; restore does not restart it. Procedural tones and imported PCM/float WAV clips use the same bounded native transport. Live MP3 sources open a direct HTTPS connection only here, with loop=false. Up to two independent live connections share the eight-voice budget, including connection preparation and retiring work. Headers have a 10-second deadline, reads 15 seconds. There is no automatic reconnect, authentication, cookies or redirect. buffering reports stalled input; ended reports an EOF after queued PCM drains, not a finite-clip completion. Use audio.live for received/skipped/buffered time. This does not change conversation capture or guarantee audible Quest quality. Decoding sources keep shared admission until cancelled work drains; runtime.audioBudget, runtime.audioReservation and runtime.audioOwner expose these resources without controlling playback.",
       "example": {
         "target": "maestro",
         "emitter": "beep",
@@ -4180,8 +4221,10 @@
                 "enum": [
                   "preparing",
                   "playing",
+                  "buffering",
                   "paused",
                   "completed",
+                  "ended",
                   "stopped",
                   "cancelled",
                   "failed"
@@ -4475,7 +4518,7 @@
         "audio.instance.exists",
         "source.revision.current"
       ],
-      "description": "Pause, resume, stop or set the gain of the exact room-owned instance returned by audio.start. Read audio.instance immediately before editing and use its revision. A stale handle cannot stop a newer sound on the same emitter. Pause retains queued sound and its place; resume uses that same native source. Device/focus loss cancels rather than resuming. Gain is transient 0–1 and does not rewrite the saved emitter. Pause/resume of an already matching state and stop of a retained terminal instance are idempotent. Other edits to a terminal instance fail. Stop affects only this sound and never clears shared room reflections. audio.play belongs to its waiting action and is stopped through that action; use audio.start when independent controls are needed. Controls do not play a replacement, restart an ended sound or open any connection.",
+      "description": "Pause, resume, stop or set the gain of the exact room-owned instance returned by audio.start. Read audio.instance immediately before editing and use its revision. A stale handle cannot stop a newer sound on the same emitter. Pause retains a finite clip and its place. A live feed keeps receiving within its bounded source buffer; resume discards stale queued samples and synchronizes near the current feed using the same playback identity. audio.live reports skipped source time and discarded queued time. It does not seek or reconnect. Device/focus loss cancels rather than resuming. Gain is transient 0–1 and does not rewrite the saved emitter. Pause/resume of an already matching state and stop of a retained terminal instance are idempotent. Other edits to a terminal instance fail. Stop affects only this sound and never clears shared room reflections. audio.play belongs to its waiting action and is stopped through that action; use audio.start when independent controls are needed. Controls do not play a replacement, restart an ended sound or open any connection.",
       "example": {
         "operation": "pause",
         "target": "maestro",
@@ -4537,8 +4580,10 @@
                 "enum": [
                   "preparing",
                   "playing",
+                  "buffering",
                   "paused",
                   "completed",
+                  "ended",
                   "stopped",
                   "cancelled",
                   "failed"
@@ -20368,7 +20413,7 @@
                         "version": {
                           "type": "integer",
                           "minimum": 1.0,
-                          "maximum": 1.0
+                          "maximum": 2.0
                         },
                         "id": {
                           "type": "string",
@@ -20384,8 +20429,14 @@
                           "type": "string",
                           "enum": [
                             "tone",
-                            "clip"
+                            "clip",
+                            "stream"
                           ]
+                        },
+                        "endpoint": {
+                          "type": "string",
+                          "pattern": "^(|https://[^\\s?#@]+)$",
+                          "maxLength": 2048
                         },
                         "assetHash": {
                           "type": "string",
@@ -20413,7 +20464,7 @@
                         "seconds": {
                           "type": "number",
                           "minimum": 0.03,
-                          "maximum": 30.0
+                          "maximum": 600.0
                         },
                         "attack": {
                           "type": "number",
@@ -36066,8 +36117,10 @@
             "enum": [
               "preparing",
               "playing",
+              "buffering",
               "paused",
               "completed",
+              "ended",
               "stopped",
               "cancelled",
               "failed"
@@ -36652,6 +36705,97 @@
   ],
   "facts": [
     {
+      "id": "audio.source.stream",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "revision": "number",
+          "endpoint": "text",
+          "total": "number",
+          "next": "number"
+        }
+      },
+      "label": "Live sound endpoint",
+      "description": "Read at most 128 characters of a saved public HTTPS endpoint at offset. Start at zero; concatenate endpoint segments in order until next=-1. total is the full character count. Keep id/revision constant between pages or start reading again. Other source kinds are unavailable. This passive read never connects, authenticates or resumes playback. Save through audio.source.edit; only audio.start opens a connection. No credentials, query or fragment may be stored.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2048.0
+          }
+        },
+        "required": [
+          "id",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "id": "00000000000000000000000000000000",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "audioStreams.v1"
+      ]
+    },
+    {
+      "id": "audio.live",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "sourcePhase": "text",
+          "receivedSeconds": "number",
+          "skippedSeconds": "number",
+          "discardedQueuedSeconds": "number",
+          "bufferedSeconds": "number"
+        }
+      },
+      "label": "Live sound buffering",
+      "description": "Read the latest native observation for an exact live playback instance. sourcePhase distinguishes connecting, buffering, available, ended, failed or closed. Received time counts decoded source PCM; skipped time counts expired or deliberately skipped source PCM. Discarded queued time is output not yet confirmed consumed when resynchronizing; it is not proof of what a listener heard. Buffered time is the remaining bounded source PCM, excluding the native output queue. audio.instance retains the control revision, lifecycle and consumed cursor. Reads never advance, connect or restart the source. Ordinary clip instances are unavailable here.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "instance": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "instance"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "worldAudio.v1"
+        ]
+      },
+      "example": {
+        "target": "maestro",
+        "instance": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "audioStreams.v1"
+      ]
+    },
+    {
       "id": "audio.mix",
       "version": 1,
       "type": {
@@ -36750,7 +36894,7 @@
         }
       },
       "label": "Active room sounds",
-      "description": "List all current world-audio instances, up to eight, in stable ID order. Includes preparing, playing and paused sounds; excludes separate conversation speech and completed history. Use audio.instance for exact settings/control revision, then audio.control for room-owned sounds. An empty list does not prove silence from every application source. Reading does not start, stop or adopt playback.",
+      "description": "List all current world-audio instances, up to eight, in stable ID order. Includes preparing, playing, buffering and paused sounds; excludes separate conversation speech and completed history. Use audio.instance for exact settings/control revision, then audio.control for room-owned sounds. An empty list does not prove silence from every application source. Reading does not start, stop or adopt playback.",
       "features": [
         "worldAudio.v1"
       ]
@@ -37175,7 +37319,7 @@
         }
       },
       "label": "Sound definition",
-      "description": "Read the exact saved source and current edit revision. Active playback may retain an earlier revision. Missing IDs are unavailable, never silently substituted. kind selects tone or clip; the other block contains inactive defaults. Pass only the selected block when saving.",
+      "description": "Read the exact saved source and current edit revision. Active playback may retain an earlier revision. Missing IDs are unavailable, never silently substituted. kind selects tone, clip or stream. Tone/clip blocks are inactive defaults when not selected. For kind stream, read audio.source.stream for the endpoint. Pass only the selected kind block when saving.",
       "input": {
         "type": "object",
         "properties": {
@@ -45485,11 +45629,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "97776040e2d0b8c979bc2d7c5f5e4f62e49dc17f7d63b3167d4c7aac05791385"
+      "sha256": "469bbe2f369e3e2ab074efbc1805df6ac57bdddc185dc101f6f887aad3a4379a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
-      "sha256": "b8ba3eeabe02f71563d4c15bdf956e21539d524678556dbfdca3085ac063b684"
+      "sha256": "62fba142270f92fb34a41e577658ad34f54a2506ff519a37bd22f2ecf74530fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioImportCapability.cs",
@@ -45501,7 +45645,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioPlaybackCapabilities.cs",
-      "sha256": "6da71b58bc4b3fb4456447a534c94c02e2d02b3614972f96da6ec657ca708c48"
+      "sha256": "dc19d48d44917a733f63968cb530f95ac2096036e702222e71e1679d538ae668"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
@@ -45597,7 +45741,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
-      "sha256": "fb52fe66333f00cd32bb1788b742f494357351ff6348fd8646442acc5ff2a099"
+      "sha256": "a7224b855d2f8ff304627793caebee2ad97b36a53b2389692981095c41c3813b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
@@ -45682,6 +45826,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
       "sha256": "09976e9ab0b2528ab14d0c473033ff82a9c31c66ed4619e4cd960c18d53e18f5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LiveAudioFacts.cs",
+      "sha256": "ac0240747590466330b1339939a8a42724877253fac53a73e839b0e38044d831"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialPackToolCapability.cs",
@@ -45973,7 +46121,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
-      "sha256": "9ae2c9149519f342c726eb074ee7c5a39a686488be0b3b7410dc9c441b1bc968"
+      "sha256": "ed32375f00fc2c65c258b3b9e901c22c4216492e5655b4e8628057cb915b9c1c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioTone.cs",
@@ -46217,7 +46365,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
-      "sha256": "40e0e48e4ff4eb168873026ac3e51eb9b9d7b8806c279295dcd20f0f7a3187d6"
+      "sha256": "1f6e798517514b63adfb6bfce18f7621ead3e5c9e251c5414ffe62034c657089"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioEdits.cs",
@@ -46261,7 +46409,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "2cf450108fe2a955e624016de2efbdf070a8cbca03deb5f9a6aef10d5f8478dc"
+      "sha256": "e21802b7876b9b419494ef68448efc2a3e3a4e64b68d2ecad2f72675d098d546"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -46273,7 +46421,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "7688fdb794292de2693a41fed7ec0d9b67df3df164e97b5f43b602b2d704d02e"
+      "sha256": "21c7da21bf8397152967d23611cba16e0e70b5da0bd6c19a301a3b4f01cae5ff"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantCollision.cs",
@@ -46581,7 +46729,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "9fbbd020d8372d6271a0268ac3a0d9954b6160921baab0b11528daacde2d5f7d"
+      "sha256": "503b2b3c75f5c9aaab9468d39de4b20de38ce0851363ef221c13c5945d295e79"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -46729,11 +46877,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Control.cs",
-      "sha256": "783cde20d5e0cad291bb0c027ccc8316aff7adf04b940e24f6b8a0a96acd4f36"
+      "sha256": "39b94609c5ed787a841006649531e7e8abde3c467638b2ad3960a6530b07427a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Live.cs",
+      "sha256": "2bf827d4ecf727e97e974784af450c80674c40c7642782d08b56a7420b344192"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.cs",
-      "sha256": "0ff3a0af3807538809fa3643fd49bd56e0b12c5ddaa6c40123adf803b9084efb"
+      "sha256": "285223d72d524c659a66dc391c08c23358f0ad28d31f9e726f01c0cce5235e04"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Diagnostics/FrameIntervalWindow.cs",
@@ -46757,7 +46909,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioPcmAsset.cs",
-      "sha256": "5af7ea55db9c99d3b846d39fca8dc8edb5dd4b1a3e622cb0804d1c31c8cc548d"
+      "sha256": "334df23803e1e76d9cdf1c3e1ff46f1ea2b3489f5ecb5003ca98f395b714aa71"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioSampleReader.cs",
@@ -46856,8 +47008,12 @@
       "sha256": "82f7a7af4153679ac776242a50adac253ee1fd810a6857f64b7f718beb9d04ac"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LiveAudioHttp.cs",
+      "sha256": "c53e07a453c29948f035ae703d2c9c783da363f17f48ad0ef630b7f5310b8d44"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LiveMp3Source.cs",
-      "sha256": "3caac8a29565c8d51a3bead983bd2421d5f6db1827ca02ce5b703bbc6894b2cb"
+      "sha256": "85065c4caa4bd80b0dc969316f73d16e39254e0d95a187455646571cdca1482e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/LocalMotionBatchSource.cs",
@@ -47397,7 +47553,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "619720a17fa95c8f4adb503ee1eb4c1f9895d834cd0b2257c35d986afcf24ed3"
+      "sha256": "44a8ff44b980204354b767600e4afed54c27ab882991aa05f50899d012163386"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -47409,7 +47565,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "aef923949a2d885d52a9d01a7271cdb16dbd1a76a4ed6b9af97930fa232d616a"
+      "sha256": "d76e39ecdc6f53bb8e5d5c7fce0fc1098e0736b7451cb4d426093afff5c74b1d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",

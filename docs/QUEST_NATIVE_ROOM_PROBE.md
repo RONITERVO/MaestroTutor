@@ -1517,3 +1517,29 @@ and values, changes the same levels and resets them. Its `book-native-audio-mix.
 capture records the form; both receipts are included in the existing world-audio
 JSON evidence. These muted desktop journeys establish the shared native path,
 not headset audibility, real-provider interpretation or mixed-scene Live quality.
+
+### Live sound parity
+
+`-SyntheticLiveSound` is an explicit offline Headless or Book option; the complete
+verification pipeline enables it for both journeys. It refuses provider/prompt
+scenarios. An editor-only HTTP handler supplies paced, complete frames from the
+committed synthetic MP3 fixture. The production source admission, decoder,
+bounded buffers, native output and capability implementations are unchanged.
+It is never included in the Android player and performs no network request.
+
+Both journeys save and inspect a live endpoint without opening a source, attach
+it to the book, start independent playback and wait for native PCM consumption.
+They pause for 2.5 seconds, resume with the same instance, read explicit skipped
+source time and bounded buffering, then stop and verify resource release. The
+Book journey uses the actual generated forms and named resource picker. Evidence
+is `world-live-audio.json`, `book-native-live-sound.json` and
+`book-native-live-sound.png`. The endpoint fact is paged; callers begin with
+`offset: 0` and keep the same source revision between pages.
+
+These checks do not establish real network reliability or headset audibility.
+A separate Windows .NET smoke links the unmodified production transport/decoder
+and reads the public SoundHelix example MP3 over HTTPS with default certificate
+validation, then verifies bounded PCM and cancellation. Its private evidence is
+`.quest-evidence/live-audio-integration/network/`; it retains no audio and uses no
+provider credentials. Unity Android transport and simultaneous Live microphone
+capture still require their own acceptance.

@@ -65,6 +65,7 @@ namespace Maestro.Quest.Editor
                     var gaitPath=Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_GAIT");if(!string.IsNullOrEmpty(gaitPath))Publish("gait-fixture.json",QuestRoomProbeModel.Seed(root,gaitPath));
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_IMAGE")=="1")Publish("image-fixture.json",QuestRoomProbeImage.Seed(root));
                     if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_AUDIO")=="1")Publish("sound-fixture.json",QuestRoomProbeSound.Seed(root));
+                    if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LIVE_AUDIO")=="1")Publish("live-sound-fixture.json",QuestRoomProbeLiveSound.Seed());
                     Publish("ready.json",new JObject {["version"]=1,["id"]=id,["boundary"]="Real Unity app in Editor; no Android WebView, headset or real room scan",["syntheticPhysics"]=synthetic,["syntheticScan"]=syntheticScan});
                 }catch(Exception e){Fail(e);}
             }else if(state==PlayModeStateChange.EnteredEditMode){

@@ -560,6 +560,35 @@ try{
   importedSound={boundary:'Synthetic WAV, original book forms, native decoder and PCM consumption, read-only resource ownership, exact-instance stop and final release; muted renderer, no Android picker or physical audibility claim.',refreshed,library,clip,binding,played,started,budget,reservation,owner,mixBefore,mixSet,mixAfter,voiceAfterMix,mixReset,stopped,released};
   await writeFile(join(directory,'book-native-imported-sound.json'),JSON.stringify(importedSound,null,2));
  }
+ // An explicit offline transport fixture exercises live audio through the same user forms.
+ let liveSoundFixture:{endpoint:string}|null=null;
+ try{liveSoundFixture=JSON.parse(await readFile(join(directory,'live-sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+ if(liveSoundFixture){
+  await openNamedAction('Create or edit a reusable sound','audio.source.edit');await page.getByLabel('Action inputs definition variant',{exact:true}).selectOption('2');
+  await page.getByLabel('Action inputs definition name',{exact:true}).fill('Book radio');await page.getByLabel('Action inputs definition stream endpoint',{exact:true}).fill(liveSoundFixture.endpoint);
+  const saved=await runNamedAction('audio.source.edit');assert.equal((saved.call.arguments.definition as {kind:string}).kind,'stream');
+  const source=await readResourceFact('audio.source.stream','Live sound endpoint',{id:String(saved.output!.id),offset:'0'});assert.equal(source.endpoint,liveSoundFixture.endpoint);assert.equal(source.next,-1);
+  const silent=await readResourceFact('runtime.audioBudget','Shared room audio budget');assert.equal(silent.sources,0,'Saving/reading a source cannot connect');
+  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('radio');
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Load saved sound',exact:true}).click();await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([saved.output!.id,null]));
+  await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');await page.getByLabel('Action inputs definition gain',{exact:true}).fill('0');const binding=await runNamedAction('object.audioEmitter.edit');
+  await openNamedAction('Start independent room sound','audio.start');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('radio');await page.getByLabel('Action inputs loop',{exact:true}).selectOption('false');
+  const started=await runNamedAction('audio.start');const instance=String((started.output!.identity as {instance:string}).instance);assert.ok(Number((started.output!.playback as {seconds:number}).seconds)>0);
+  const control=async(operation:'pause'|'resume'|'stop',variant:string)=>{
+   await openNamedAction('Control a room sound','audio.control');await page!.getByLabel('Variant',{exact:true}).selectOption(variant);await page!.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page!.getByLabel('Action inputs instance',{exact:true}).fill(instance);
+   await page!.getByRole('button',{name:'Load current values',exact:true}).click();await page!.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+   const result=await runNamedAction('audio.control');assert.equal(result.call.arguments.operation,operation);return result;
+  };
+  const paused=await control('pause','0');assert.equal((paused.output!.playback as {phase:string}).phase,'paused');await page.waitForTimeout(2500);
+  const resumed=await control('resume','1');await page.waitForTimeout(300);
+  const live=await readResourceFact('audio.live','Live sound buffering',{target:'book',instance});assert.ok(Number(live.skippedSeconds)>1.5);assert.ok(Number(live.receivedSeconds)>Number(live.skippedSeconds));assert.ok(Number(live.bufferedSeconds)<=2);
+  await page.getByRole('heading',{name:'Live sound buffering',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-live-sound.png')});
+  const stopped=await control('stop','2');assert.equal((stopped.output!.playback as {phase:string}).phase,'stopped');
+  const terminal=await readResourceFact('audio.live','Live sound buffering',{target:'book',instance});assert.equal(terminal.sourcePhase,'closed');
+  const released=await readResourceFact('runtime.audioBudget','Shared room audio budget');assert.equal(released.sources,0);
+  await writeFile(join(directory,'book-native-live-sound.json'),JSON.stringify({boundary:'Real book forms and native live MP3 decoder/output with explicit offline HTTP fixture. No sockets, paid provider or headset quality proof.',saved,source,silent,binding,started,paused,resumed,live,stopped,terminal,released},null,2));
+ }
  // Optional explicit image fixture follows the original generated forms.
  let imageFixture:{hash:string;name:string;width:number;height:number}|null=null;
  try{imageFixture=JSON.parse(await readFile(join(directory,'image-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}

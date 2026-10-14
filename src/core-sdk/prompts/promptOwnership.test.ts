@@ -76,12 +76,12 @@ describe('prompt ownership', () => {
     const source = readFileSync(new URL('../../../shared/capabilities.ts', import.meta.url), 'utf8');
     const ast = ts.createSourceFile('capabilities.ts', source, ts.ScriptTarget.Latest, true);
     const imports = ast.statements.filter(ts.isImportDeclaration).map(node => (node.moduleSpecifier as ts.StringLiteral).text);
-    expect(imports).toEqual(['./surfaceGeometry','./roomConnection','./creationPrototype','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
+    expect(imports).toEqual(['./liveAudio','./surfaceGeometry','./roomConnection','./creationPrototype','./creationBatch','./programValues','./collisionRecipe','./programModuleIdentity','./roomRecipe','./behaviourCatalog']);
     const dependencies: Record<string, string[]> = {
       creationBatch: ['./roomConnection', './creationResources', './creationPrototype'],
       creationPrototype: ['./surfaceGeometry', './creationResources', './terrainReservoir', './roomConnection'],
-      terrainReservoir: [],
-      creationResources: ['./roomConnection'],
+      terrainReservoir: [], liveAudio: [],
+      creationResources: ['./liveAudio', './roomConnection'],
       programValues: ['./programLimits'], programLimits: ['./generated/behaviourCatalog.json'], roomConnection: [], surfaceGeometry: [],
     };
     for (const [name, expectedImports] of Object.entries(dependencies)) {

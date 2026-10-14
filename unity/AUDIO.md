@@ -8,7 +8,7 @@ providers, account access, generated media and Live conversation.
 
 The current implementation exposes reusable procedural and imported WAV/MP3/Vorbis sounds, object emitters,
 finite or looping native playback, independent controls, world master/role levels and playback events through
-the shared capability catalog. Clips up to ten minutes use bounded playback; additional codecs and live-stream adapters remain pending. Finished local chat audio attachments can be imported as reusable sources
+the shared capability catalog. Clips up to ten minutes use bounded playback. A first direct HTTPS MP3 live adapter now uses the same controls and emitters; other live protocols/codecs remain pending. Finished local chat audio attachments can be imported as reusable sources
 through the same checked native preview. Maestro speech still uses its existing
 native speech session; ordinary artifact playback remains in the web app until
 the user or agent explicitly imports, attaches and plays a world sound. Room reflection output and its background map scheduler are under
@@ -24,6 +24,9 @@ accepted on the headset.
   Kind `clip` references exact private WAV bytes by SHA-256 and their inspected duration;
   it never contains a path, URL, credential or PCM buffer. Source facts use version 2
   and a fixed record with both blocks; only the selected `kind` is executable.
+  Kind `stream` saves a public direct HTTPS MP3 endpoint. Its separate paged
+  `audio.source.stream` fact exposes that endpoint without changing the fixed
+  tone/clip record. Saving, copying, importing and reading never connect.
 - `audio.import` uses the shared native file-picker owner. `select` returns before
   the system chooser takes focus. `audio.import.selection` exposes a checked,
   unsaved preview. `accept` requires that request ID and exact asset hash, saves
@@ -44,12 +47,14 @@ accepted on the headset.
 - `audio.start` returns an exact playback instance after the renderer consumes
   its first samples. Its explicit `lifetime: "room"` hands that instance to the
   room, so the starting program can continue or finish while the sound plays.
-  `loop: true` repeats the captured source and envelope; `false` plays it once.
+  `loop: true` repeats a finite captured source and envelope; `false` plays it once.
+  A live source requires `loop: false` and runs until stopped, disconnected or EOF.
   Stopping preparation cancels it. Stopping the starting task after handoff does
   not retract room-owned playback.
 - `audio.control` pauses, resumes, stops or changes the gain of that exact
-  room-owned instance, using its current revision. Pause preserves queued PCM
-  and resampling phase. Gain is transient; it does not edit the saved emitter.
+  room-owned instance, using its current revision. For finite clips, pause preserves queued PCM
+  and resampling phase. Live pause continues bounded reception; resume resynchronizes
+  near the latest input and reports skipped samples through `audio.live`. Gain is transient; it does not edit the saved emitter.
   Stale controls cannot stop a replacement sound. A stopped or failed sound cannot
   be resumed, and focus/device loss never restarts one automatically.
 - `audio.mix` / `audio.mix.control` expose workspace-owned master, effects,
@@ -80,7 +85,8 @@ accepted on the headset.
   fail visibly, so a missed change cannot silently look like successful playback.
 
 Sources and emitters remain in the existing room journal, temporary-room fork,
-paired snapshots and portable archives; this adapter adds no saved format. Construction resource
+paired snapshots and portable archives. Live definitions require room format 40 and
+source component version 2; ordinary tone/clip definitions keep component version 1. Construction resource
 bundles preserve their source definitions and remap source IDs together with emitters.
 Asset hashes remain exact. Portable workspaces include the private audio library,
 check payload hashes and WAV metadata, and report missing sound references in export,
@@ -92,7 +98,7 @@ The first file adapter accepts ordinary RIFF/WAVE PCM 8/16/24/32-bit or IEEE flo
 mono/stereo, 8–96 kHz, .03–600 seconds and up to 32 MiB. Clips over 30 seconds
 use bounded asynchronous sample loading. MP3 and Ogg Vorbis now normalize into this
 canonical WAV adapter before preview (see below). Extensible/compressed WAV, other
-codecs and live streams need further adapters. The private library
+codecs and live protocols beyond direct HTTPS MP3 need further adapters. The private library
 holds at most 32 files/128 MiB. Original WAV bytes are preserved; playback deliberately
 downmixes stereo and resamples with an anti-aliasing filter to the existing 24 kHz
 mono transport. It is not a stereo music player. Two cancellable decoding workers
@@ -1296,12 +1302,9 @@ No decoder search through arbitrary bytes or growing seek index is allowed.
 Cancellation clears unread PCM, interrupts the owned input and awaits decoder
 and connection disposal. No automatic reconnect occurs.
 
-This is source-side preparation, **not an enabled live-radio capability**. The
-source is not connected to `WorldAudio`, the book or the catalog yet. Transport
-connection policy, read deadlines, live output resynchronization, shared runtime
-resource observations and user/agent start/stop controls remain implementation
-gates. Do not save credentials or expose this as a functioning radio before those
-paths and their native/headless acceptance exist. Continuous music with Live
+That earlier checkpoint was source-side preparation only. It did not connect the
+source to `WorldAudio`, the book or the catalog. The integration below supersedes
+those transport/control implementation gates. Continuous music with Live
 microphone input and headset acoustic acceptance remain separate open gates.
 
 Desktop verification for this source increment: **1,241 EditMode tests**, including
@@ -1319,3 +1322,94 @@ recorded separately. The first native long-clip run received an audio-device-cha
 cancellation; its unchanged test passed in both later runs. No test condition was
 relaxed. Evidence is in `.quest-evidence/live-audio-source/`. This increment has no
 new headset, provider, complete book journey or Android package acceptance.
+
+### Live world-source integration — 2026-10-14
+
+`audio.source.edit` accepts `{name, kind: "stream", stream: {endpoint}}`.
+This first adapter connects to a direct HTTPS MP3 response only when `audio.start`
+is explicitly executed. No credentials, user info, query, fragment, cookies,
+authentication, redirects, compressed HTTP bodies or interleaved ICY metadata are
+accepted. `icy-metaint: 0` is allowed. URL length is bounded to 2,048 characters.
+Default platform TLS certificate validation stays enabled. Saving a source does
+not establish that its remote endpoint exists, is playable or will remain online.
+
+The reusable definition and object/part/joint emitter use the existing journal,
+copy/capture/instantiate, temporary room and archive paths. `audio.source.stream`
+returns 128-character endpoint segments with `total` and `next`; begin with
+`offset: 0`, keep the same source revision, and concatenate until `next: -1`.
+This preserves the complete endpoint without widening program-value budgets.
+`audio.source.definition` keeps version 2 and its fixed tone/clip record, using
+inert blocks when kind is stream. Unsupported future source data remains read-only.
+
+Two live connections are admitted across workspaces, including header preparation
+and retiring work, within the existing eight world-voice/source budgets. Each
+instance owns its own connection and decoder, including when two emitters reference
+the same saved source. Header admission has a 10-second deadline; each network
+read has 15 seconds. A failed or stopped connection never reconnects automatically.
+The current adapter is MP3 Layer III, CBR/VBR, converted to mono 24 kHz; it is not
+HLS, WebRTC, stereo music playback or a provider/microphone adapter.
+
+The decoder retains at most two seconds of PCM; the output queue targets at most
+100 ms. Initial playback and resume synchronize to the latest 100 ms available.
+Pause retains the playback identity and keeps receiving into the bounded source
+buffer. Resume replaces only this instance's queued output, preserves the captured
+emitter/mix and accounts for both skipped source PCM and discarded queued output.
+Late frames do not revive a stopped instance. Source and emitter edits preserve
+the existing version/ownership rules. Room, focus and audio-device changes cancel
+rather than restore live playback.
+
+`audio.start` hands off only after native sample consumption. `audio.play` remains
+finite and rejects live sources. `audio.instance` / `audio.instance.changed`
+include `buffering` and `ended`: temporary starvation is not EOF, and clean EOF
+is reported only after queued output drains. `audio.live` exposes passive
+received, skipped, discarded-queue and buffered counters plus source phase. These
+counters are observations, not proof of what someone heard. Stop controls one
+exact instance; it does not clear other emitters or the separate speech renderer.
+
+Verification uses real MP3 fixtures through an explicitly injected editor-only
+HTTP response, the normal decoder, native output and shared capability paths.
+`Run-QuestRoomProbe.ps1 -SyntheticLiveSound` enables that offline fixture for Book
+or Headless journeys and refuses provider scenarios. The ordinary verification
+pipeline runs both. This fixture does not bypass production TLS or exist in the
+Android player. A separate unmodified-source Windows .NET smoke passed against a public HTTPS MP3
+file with default certificate validation and clean cancellation. Unity Android
+network transport, Quest audible quality and simultaneous
+background audio with Live microphone input remain separate acceptance gates.
+
+Verification for the integrated adapter: **1,259 EditMode and 1,547 PlayMode
+tests passed**, with only three expected optional private-asset skips. Complete
+offline Headless `415bb4a091f74f9bb3378a5fa1f4c852` and Original Book
+`19279a30a92642dd91cb93f8c2c5b69d` journeys passed with zero client/editor exits.
+Both saved a passive source, started through native consumption, paused/resumed
+the same instance with visible gaps, stopped it and observed zero source owners.
+The book buffering screenshot was visually inspected. Existing WAV/MP3/Vorbis
+chat import/playback and shared mix receipts also passed.
+
+**2,956 web tests / 313 files passed** against refreshed native catalog/catching
+fixtures. Catalog provenance, probe type checking and scoped lint passed. Web
+build, native-browser tasks and unsigned Unity Android IL2CPP/Java compilation
+passed. Browser test reports contain 128 passed / two skipped; unchanged Gradle
+test tasks were up-to-date. All 22 selected ARM64 libraries meet 16 KiB ELF LOAD
+alignment. All 152 staged web files, the browser AAR and selected native hashes
+match. No APK/AAB was produced. Five unselected ARMv7 dependencies remain in the
+intermediate; final-package filtering and ZIP alignment remain packaging checks.
+
+All 2,968 native inputs stayed frozen; all 1,108 code/shader files, including
+1,102 C# files, match the tested mirror. Four known setup-derived project assets
+were recorded separately. All 14 protected pre-existing files remain unchanged.
+The first complete native run had one long-recording test cancelled by an
+audio-device-change event; its unchanged assertion passed in the full rerun.
+Added Editor diagnostics record future configuration-change events without
+changing cancellation behavior. The first complete web run found a missing pure
+helper in the architecture dependency allowlist; that test now includes and
+checks `liveAudio` and its importers. This was the only test change after native
+verification; application code did not change. Both initial reports are retained.
+No test timeout or playback assertion was relaxed.
+
+Evidence: `.quest-evidence/live-audio-integration/`. The actual public-HTTPS smoke
+uses the unmodified production transport/decoder on Windows .NET 8; it consumes
+48,000 mono samples, keeps the two-second source bound and drains ownership on
+Close. It does not use a TLS override or retain media. It complements the offline
+paced-stream journeys; neither establishes Unity Android transport or headset
+acoustic/Live acceptance. Device, paid-provider, signing, deployment and Meta
+holds remain in place.

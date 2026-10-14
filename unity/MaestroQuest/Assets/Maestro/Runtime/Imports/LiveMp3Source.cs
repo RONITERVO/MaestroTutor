@@ -48,11 +48,11 @@ namespace Maestro.Quest.Imports {
             return new Snapshot(closed?"closed":failure!=null?"failed":buffered>0?"available":ended?"ended":"buffering",failure??"",produced,consumed,dropped+first-consumed,closed||failure!=null?0:buffered);
         }
         internal Snapshot Observe(){lock(gate)return ObserveLocked();}
-        internal ReadResult Read(short[] destination,int offset,int count){
-            if(destination==null||offset<0||count<1||offset>destination.Length-count)throw new ArgumentOutOfRangeException(nameof(count));
+        internal ReadResult Read(short[] destination,int offset,int count,int? latestFrames=null){
+            if(destination==null||offset<0||count<1||offset>destination.Length-count||latestFrames is <1 or >Capacity)throw new ArgumentOutOfRangeException(nameof(count));
             lock(gate){
                 if(closed||failure!=null)return new ReadResult(consumed,0,0,ObserveLocked());
-                long first=Math.Max(consumed,Math.Max(0,produced-Capacity)),lost=first-consumed;
+                long first=Math.Max(consumed,Math.Max(0,produced-(latestFrames??Capacity))),lost=first-consumed;
                 int take=(int)Math.Min(count,produced-first);
                 for(int i=0;i<take;i++)destination[offset+i]=ring[(first+i)%Capacity];
                 consumed=first+take;dropped+=lost;return new ReadResult(first,take,lost,ObserveLocked());

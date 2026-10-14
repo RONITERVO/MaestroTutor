@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {validLiveAudioEndpoint} from './liveAudio';
 import {validSurfaceGeometry,type SurfaceGeometry} from './surfaceGeometry';
 import {validConnectionDefinition,type ConnectionDefinition} from './roomConnection';
 import {validCreationPrototypeGeometry} from './creationPrototype';
@@ -22,7 +23,7 @@ export interface CapabilitySchema {
  oneOf?:CapabilitySchema[];'x-confirmation'?:string;'x-discriminators'?:string[];title?:string;description?:string;examples?:unknown[];'x-static'?:boolean;'x-channels'?:string[];'x-requirements'?:string[];'x-features'?:string[];
  items?:CapabilitySchema;minItems?:number;maxItems?:number;nullable?:boolean;
  properties?:Record<string,CapabilitySchema>;required?:string[];additionalProperties?:false;
- format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'extrusionPart'|'sweepPart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'drawingSurface'|'surfaceStrokeSelection'|'containerDefinition'|'containerTransfer'|'heightFieldTransfer'|'materialTransfer'|'materialStore'|'heightFieldDefinition'|'heightFieldSaved'|'heightFieldReset'|'sculptTip'|'worldAudioSource'|'worldAudioEmitter'|'appearanceStyle'|'appearanceBinding';'x-resource'?:'object';'x-requires'?:Record<string,string>;
+ format?:'unitQuaternion'|'boundedOffset'|'roomRecipe'|'lathePart'|'extrusionPart'|'sweepPart'|'collisionRecipe'|'programModule'|'programMemoryValue'|'objectLayout'|'creationBatch'|'creationPrototype'|'structureSource'|'connectionConfiguration'|'constructionSelection'|'groupTransform'|'snapPointDefinition'|'snapPlacement'|'drawingSurface'|'surfaceStrokeSelection'|'containerDefinition'|'containerTransfer'|'heightFieldTransfer'|'materialTransfer'|'materialStore'|'heightFieldDefinition'|'heightFieldSaved'|'heightFieldReset'|'sculptTip'|'worldAudioSource'|'worldAudioStream'|'worldAudioEmitter'|'appearanceStyle'|'appearanceBinding';'x-resource'?:'object';'x-requires'?:Record<string,string>;
  minimum?:number;maximum?:number;maxLength?:number;pattern?:string;enum?:string[];'x-enum-labels'?:Record<string,string>;'x-enum-images'?:Record<string,string>;
 }
 export interface CapabilityDefinition {
@@ -97,6 +98,7 @@ function validate(value:unknown,schema:CapabilitySchema,path:string):string|null
    if(schema.format==='appearanceBinding'){
     return (value.kind==='root'?value.partId===''&&value.modelHash===''&&value.materialIndex===-1:value.kind==='part'?value.partId!==''&&value.modelHash===''&&value.materialIndex===-1:value.partId===''&&value.modelHash!==''&&(value.materialIndex as number)>=0)?null:path+' needs an exact root, part or imported-material address';
    }
+   if(schema.format==='worldAudioStream')return validLiveAudioEndpoint((value.stream as {endpoint:string}).endpoint)?null:path+' needs a direct HTTPS MP3 URL without credentials, query or fragment';
    if(schema.format==='worldAudioSource'){const tone=value.tone as {attack:number;release:number;seconds:number};return tone.attack+tone.release<=tone.seconds+1e-7?null:path+' needs its attack and release to fit the sound duration';}
    if(schema.format==='worldAudioEmitter'){const p=value.position as {x:number;y:number;z:number},d=value.distance as {minimum:number;maximum:number};return !(value.part&&value.joint)&&p.x*p.x+p.y*p.y+p.z*p.z<=100&&d.minimum<=d.maximum?null:path+' needs one attachment, a bounded offset and ordered distances';}
    if(schema.format==='heightFieldReset')return (value.fillHeight as number)<=(value.definition as {maxHeight:number}).maxHeight?null:path+' needs fillHeight within maxHeight';

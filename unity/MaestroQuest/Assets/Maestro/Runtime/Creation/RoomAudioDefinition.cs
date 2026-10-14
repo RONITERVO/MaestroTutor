@@ -14,14 +14,20 @@ namespace Maestro.Quest.Creation
     {
         public const int MaximumSources=32;
         public int version=1;
-        public string id,name="",kind="tone",wave="sine",assetHash="";
+        public string id,name="",kind="tone",wave="sine",assetHash="",endpoint="";
         public float frequency=440,endFrequency=440,seconds=.25f,attack=.01f,release=.04f;
         public int seed=1;
         public RoomAudioDefinition Copy()=>(RoomAudioDefinition)MemberwiseClone();
         public bool Validate(out string error)
         {
-            error="An audio source needs version 1, a stable ID and a readable name";
-            if(version!=1||!Guid.TryParseExact(id,"N",out _)||name==null||name.Length>80||name.Any(char.IsControl))return false;
+            error="An audio source needs a supported version, a stable ID and a readable name";
+            if(version is not (1 or 2)||!Guid.TryParseExact(id,"N",out _)||name==null||name.Length>80||name.Any(char.IsControl))return false;
+            if(kind=="stream") {
+                error="A live sound needs version 2, a direct public HTTPS MP3 endpoint and canonical inactive clip/tone fields";
+                if(version!=2||!LiveAudioHttp.ValidEndpoint(endpoint)||assetHash!=""||seconds!=.25f||wave!="sine"||frequency!=440||endFrequency!=440||attack!=.01f||release!=.04f||seed!=1)return false;
+                error=null;return true;
+            }
+            if(version!=1||!string.IsNullOrEmpty(endpoint)){error="Only a live source can save a public stream endpoint";return false;}
             if(kind=="clip") {
                 error="An imported clip needs an exact asset hash, its inspected duration and canonical inactive tone fields";
                 if(!ModelLibrary.ValidHash(assetHash)||!Range(seconds,.03f,(float)WaveAudio.MaximumSeconds)||wave!="sine"||frequency!=440||endFrequency!=440||attack!=.01f||release!=.04f||seed!=1)return false;
@@ -38,13 +44,14 @@ namespace Maestro.Quest.Creation
             if(root["audioSources"]==null)return (int?)root["version"]<21;
             if(root["audioSources"] is not JArray sources)return false;
             var fields=new[]{"version","id","name","kind","wave","frequency","endFrequency","seconds","attack","release","seed"};
-            return sources.All(v=>v is JObject obj&&fields.All(obj.ContainsKey)&&obj.Properties().All(p=>fields.Contains(p.Name)||p.Name=="assetHash")&&
-                obj["version"]?.Type==JTokenType.Integer&&((string)obj["kind"]!="clip"||obj["assetHash"]?.Type==JTokenType.String));
+            return sources.All(v=>v is JObject obj&&fields.All(obj.ContainsKey)&&obj.Properties().All(p=>fields.Contains(p.Name)||p.Name=="assetHash"||p.Name=="endpoint")&&
+                obj["version"]?.Type==JTokenType.Integer&&(obj["endpoint"]==null||obj["endpoint"]?.Type==JTokenType.String)&&((string)obj["kind"]!="stream"||obj["endpoint"]?.Type==JTokenType.String)&&((string)obj["kind"]!="clip"||obj["assetHash"]?.Type==JTokenType.String));
         }
         internal static bool Range(float value,float min,float max)=>float.IsFinite(value)&&value>=min&&value<=max;
         internal static bool ValidateCollection(RoomAudioDefinition[] sources,RoomObjectData[] objects,int version,out string error)
         {
             error="Audio definitions require the current room format";
+            if(version<40&&sources?.Any(s=>s?.kind=="stream")==true)return false;
             if(version<32&&sources?.Any(s=>s?.kind=="clip")==true)return false;
             if(version<21&&((sources?.Length??0)>0||objects.Any(x=>(x.audioEmitters?.Length??0)>0)))return false;
             error="This room has invalid, duplicate or excessive audio sources";

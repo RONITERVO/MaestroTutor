@@ -66,6 +66,8 @@ namespace Maestro.Quest.Programs
                         if(!binding.Validate(new Maestro.Quest.Creation.RoomObjectData{kind=binding.kind=="part"?Maestro.Quest.Creation.RoomObjectKind.Assembly:Maestro.Quest.Creation.RoomObjectKind.ImportedModel})){error=path+" needs an exact root, part or imported-material address";return false;}
                     } else if((string)schema["format"]=="worldAudioSource") {
                         var tone=obj["tone"];if((double)tone["attack"]+(double)tone["release"]>(double)tone["seconds"]+1e-7){error=path+" needs its attack and release to fit the sound duration";return false;}
+                    } else if((string)schema["format"]=="worldAudioStream") {
+                        if(!Maestro.Quest.Imports.LiveAudioHttp.ValidEndpoint((string)obj["stream"]["endpoint"])){error=path+" needs a direct public HTTPS MP3 endpoint without credentials, query or fragment";return false;}
                     } else if((string)schema["format"]=="worldAudioEmitter") {
                         var p=obj["position"];var d=obj["distance"];
                         if(!string.IsNullOrEmpty((string)obj["part"])&&!string.IsNullOrEmpty((string)obj["joint"])||(double)p["x"]*(double)p["x"]+(double)p["y"]*(double)p["y"]+(double)p["z"]*(double)p["z"]>100||(double)d["minimum"]>(double)d["maximum"]){error=path+" needs one attachment, a bounded offset and ordered distances";return false;}

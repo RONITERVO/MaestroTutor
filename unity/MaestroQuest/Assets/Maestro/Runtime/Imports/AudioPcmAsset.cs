@@ -6,6 +6,7 @@ namespace Maestro.Quest.Imports {
     // Immutable source identity with independently addressed reads. A missing
     // block is preparation, never end-of-input or permission to advance a cursor.
     internal abstract class AudioPcmAsset {
+        internal virtual bool IsLive=>false;
         internal abstract int Frames {get;}
         internal abstract long BufferedBytes {get;}
         internal abstract long CapacityBytes {get;}

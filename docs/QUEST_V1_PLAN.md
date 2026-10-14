@@ -46,8 +46,9 @@ limits, using a shared PCM cache; see [long-recording playback](../unity/AUDIO.m
 MP3/Vorbis normalize into the existing private WAV library; see [compressed imports](../unity/AUDIO.md#mp3-and-vorbis-normalization--2026-10-14).
 A bounded internal live MP3 decoder now shares the file import converter; see
 [live-source preparation](../unity/AUDIO.md#bounded-live-mp3-source-preparation--2026-10-14).
-It is not yet connected to world playback or exposed to users/agents.
-Additional codecs, live-stream connection/output adapters and continuous-background-audio/Live
+The following integration now connects direct HTTPS MP3 sources to shared playback,
+book forms and agent actions; see [live world-source integration](../unity/AUDIO.md#live-world-source-integration--2026-10-14).
+Additional protocols/codecs, Unity Android network/headset acceptance and continuous-background-audio/Live
 coexistence remain implementation gates.
 The experimental reflection mixer and its map scheduler stay out of the production
 scene until the capture policy handles a mixed scene without indefinitely
@@ -9704,3 +9705,23 @@ files, browser AAR and native hashes match. No APK/AAB was produced. All 2,944
 native inputs / 1,090 C# files match the frozen source, and all 14 protected
 pre-existing files remain unchanged. Evidence: `.quest-evidence/audio-role-mix/`.
 V1 remains incomplete; device, provider, signing, deployment and Meta holds remain.
+
+### Shared live sound integration — 2026-10-14
+
+Direct HTTPS MP3 sources now use the saved source/emitter catalog, existing
+`audio.start` / `audio.control` and passive `audio.live` observations. Definitions
+stay passive; each started instance owns its connection, decoder and bounded
+buffers. Stop, source failure, focus/device changes and room boundaries preserve
+ownership rules. Resume explicitly catches up and exposes skipped audio. Room
+format 40 retains version-2 stream definitions; finite imports remain version 1.
+See [the contract and verification](../unity/AUDIO.md#live-world-source-integration--2026-10-14).
+
+The complete native suite passed (1,259 EditMode / 1,547 PlayMode, three expected
+private-asset skips), as did full offline Headless/Book journeys, 2,956 web tests
+in 313 files, and unsigned Android compilation with 22 checked ARM64 libraries.
+Real book forms and shared agent commands exercised native playback lifecycle.
+A separate Windows production-source HTTPS smoke passed. Initial native
+configuration-change and web dependency-allowlist failures are retained with the
+corrections and rerun evidence. No paid provider, headset, signing, deployment or
+Meta action was performed. Other stream adapters, Unity Android network and
+simultaneous background-audio/Live acoustic acceptance remain open.

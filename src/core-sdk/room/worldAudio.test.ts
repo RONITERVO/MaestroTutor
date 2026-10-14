@@ -45,7 +45,7 @@ it('rejects contradictory sound attachment distances and anchors before dispatch
  definition.position={x:9,y:9,z:0};expect(validateCapabilityArguments(id,1,args)).not.toBeNull();
 });
 
-it('does not represent unimplemented network sources or microphone privilege as supported audio',()=>{
+it('rejects undefined live source kinds and microphone privileges',()=>{
  const source=capabilityDefinition('audio.source.edit')!.example!;
  (source.definition as Record<string,unknown>).kind='live';expect(validateCapabilityArguments('audio.source.edit',1,source)).not.toBeNull();
  const emitter=capabilityDefinition('object.audioEmitter.edit')!.example!;
@@ -110,4 +110,17 @@ it('shares guarded world role levels without object claims or speech privileges'
   expect(validateCapabilityArguments(id,1,{...args,[role]:gain})).not.toBeNull();
  expect(validateCapabilityArguments(id,1,{...args,speech:0})).not.toBeNull();
  expect(validateCapabilityArguments(id,1,{...args,microphone:true})).not.toBeNull();
+});
+
+it('shares bounded public live sources and passive buffering facts',()=>{
+ const call={operation:'save',id:'',revision:0,definition:{name:'Radio',kind:'stream',stream:{endpoint:'https://radio.example/live.mp3'}}};
+ expect(validateCapabilityArguments('audio.source.edit',1,call)).toBeNull();
+ for(const endpoint of ['http://radio.example/live','https://u:p@radio.example/live','https://radio.example/live?key=x','https://radio.example/live#x','https:\\radio.example/live','https://radio.example/live\n']){
+  expect(validateCapabilityArguments('audio.source.edit',1,{...call,definition:{...call.definition,stream:{endpoint}}})).not.toBeNull();
+ }
+ expect(behaviourFact('audio.source.definition')?.version).toBe(2);
+ expect(behaviourFact('audio.source.stream')?.features).toContain('audioStreams.v1');
+ expect(validFactValue('audio.source.stream',{id:'a'.repeat(32),revision:1,endpoint:'x'.repeat(128),total:2048,next:128})).toBe(true);
+ expect(validFactValue('audio.source.stream',{id:'a'.repeat(32),revision:1,endpoint:'x'.repeat(129),total:2048,next:129})).toBe(false);
+ expect(validFactValue('audio.live',{revision:2,sourcePhase:'buffering',receivedSeconds:4,skippedSeconds:1,discardedQueuedSeconds:.05,bufferedSeconds:0})).toBe(true);
 });

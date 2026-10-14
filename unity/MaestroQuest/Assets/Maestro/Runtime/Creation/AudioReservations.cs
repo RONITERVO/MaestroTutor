@@ -32,7 +32,7 @@ namespace Maestro.Quest.Creation
                 World=owner.World;Region=owner.Region;Source=definition.id;Kind=definition.kind;AssetHash=definition.assetHash??"";DefinitionHash=hash;
                 // Imported duration is compared within 0.0001 s before decoding.
                 // Four extra samples cover that tolerance and float rounding.
-                ReservedBytes=definition.kind=="clip"&&definition.seconds>WaveAudio.ResidentSeconds?WavePcmAsset.MaximumPcmBytes:(checked((long)Math.Ceiling((double)definition.seconds*AudioTone.SampleRate))+4)*sizeof(short);
+                ReservedBytes=definition.kind=="stream"?(long)LiveMp3Source.Capacity*sizeof(short):definition.kind=="clip"&&definition.seconds>WaveAudio.ResidentSeconds?WavePcmAsset.MaximumPcmBytes:(checked((long)Math.Ceiling((double)definition.seconds*AudioTone.SampleRate))+4)*sizeof(short);
             }
         }
         internal sealed class Lease:IDisposable
@@ -64,6 +64,7 @@ namespace Maestro.Quest.Creation
             lock(gate){
                 if(entries.Sum(e=>e.Owners.Count)>=MaximumOwners)throw new InvalidOperationException("The shared room audio voice budget is full; stop or wait for another sound");
                 if(entries.Any(e=>e.Owners.Any(v=>v.Instance==instance)))throw new InvalidOperationException("This audio instance already owns a resource");
+                if(definition.kind=="stream"&&(cached!=null||entries.Count(e=>e.Kind=="stream")>=LiveMp3Source.MaximumSources))throw new InvalidOperationException("At most two live connections, including retiring sources, can be open; stop or wait for one");
                 var entry=cached;
                 if(entry!=null&&(entry.Retiring||!entries.Contains(entry)))throw new InvalidOperationException("The earlier sound preparation is stopping; wait for it to finish");
                 if(entry!=null&&(entry.World!=owner.World||entry.Region!=owner.Region||entry.DefinitionHash!=hash))throw new InvalidOperationException("A sound resource cannot be reassigned to another world or source");
@@ -72,17 +73,17 @@ namespace Maestro.Quest.Creation
                     if(entries.Count>=MaximumSources||entry.ReservedBytes>MaximumPcmBytes-entries.Sum(e=>e.ReservedBytes)){
                         entry.Cancel.Dispose();throw new InvalidOperationException("The shared sound decoder budget is full; wait for earlier preparations to finish");
                     }
-                    entries.Add(entry);entry.Pending=Prepare(loader,entry.Cancel.Token,entry.ReservedBytes);_ = Observe(entry.Pending);
+                    entries.Add(entry);entry.Pending=Prepare(loader,entry.Cancel.Token,entry.ReservedBytes,entry.Kind=="stream");_ = Observe(entry.Pending);
                 }
                 var lease=new Lease(entry,owner,instance,emitter,revision);entry.Owners.Add(lease);return lease;
             }
         }
-        static async Task<AudioPcmAsset> Prepare(Func<CancellationToken,Task<AudioPcmAsset>> loader,CancellationToken cancel,long reserved)
+        static async Task<AudioPcmAsset> Prepare(Func<CancellationToken,Task<AudioPcmAsset>> loader,CancellationToken cancel,long reserved,bool live)
         {
             var asset=await loader(cancel).ConfigureAwait(false);
             try{
                 cancel.ThrowIfCancellationRequested();
-                if(asset==null||asset.Frames<1||asset.CapacityBytes>reserved||asset.BufferedBytes>asset.CapacityBytes)throw new InvalidOperationException("Decoded sound exceeds its admitted PCM budget");
+                if(asset==null||asset.IsLive!=live||(!live&&asset.Frames<1)||asset.CapacityBytes>reserved||asset.BufferedBytes>asset.CapacityBytes)throw new InvalidOperationException("Decoded sound exceeds its admitted PCM budget");
                 return asset;
             }catch{if(asset!=null)await asset.Close().ConfigureAwait(false);throw;}
         }

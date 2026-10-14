@@ -42,7 +42,9 @@ namespace Maestro.Quest.Creation
             internal short[] Producer=new short[SpeechPcmStream.MaxChunk];
             internal bool Complete,Closed;
             internal double Cursor;
-            internal bool Loop,Paused,RoomOwned;
+            internal bool Loop,Paused,RoomOwned,IsLive,LiveSync;
+            internal long LivePlayedBase,LiveDiscardedFrames,LiveReceivedFrames,LiveSkippedFrames,LiveReadDropped;
+            internal int LiveBufferedFrames;internal string LivePhase="connecting";
             internal float Gain;
             internal int Revision;
             internal string Phase="preparing";
@@ -64,12 +66,14 @@ namespace Maestro.Quest.Creation
             error="The sound emitter or source is missing";
             if(!item||!item.isActiveAndEnabled||definition==null)return false;
             if(instances.Values.Any(v=>v.Target==target&&v.Emitter==emitter)){error="This sound emitter is already playing";return false;}
+            if(definition.kind=="stream"&&loop){error="A live stream cannot loop; use loop=false";return false;}
             if(!definition.Validate(out error)||!Anchor(item,config,out _,out _,out error))return false;
-            var v=new Instance {Id=Guid.NewGuid().ToString("N"),Target=target,Emitter=emitter,Source=definition.id,SourceRevision=editor.AudioRevision(definition.id),ObjectRevision=editor.ObjectRevision(target),ProgressAt=Time.realtimeSinceStartupAsDouble,Session=editor.TemporarySessionId,Item=item,Attachment=config.Copy(),Definition=JsonUtility.ToJson(config),CacheKey=JsonUtility.ToJson(definition),Loop=loop,Gain=config.gain};
+            var v=new Instance {Id=Guid.NewGuid().ToString("N"),Target=target,Emitter=emitter,Source=definition.id,SourceRevision=editor.AudioRevision(definition.id),ObjectRevision=editor.ObjectRevision(target),ProgressAt=Time.realtimeSinceStartupAsDouble,Session=editor.TemporarySessionId,Item=item,Attachment=config.Copy(),Definition=JsonUtility.ToJson(config),CacheKey=JsonUtility.ToJson(definition),Loop=loop,Gain=config.gain,IsLive=definition.kind=="stream",LiveSync=definition.kind=="stream"};
+            if(v.IsLive)v.CacheKey+=":"+v.Id;
             try {
                 decoded.TryGetValue(v.CacheKey,out var cached);var recipe=definition.Copy();
                 v.Resource=AudioReservations.AcquireSource(cached,recipe,new RoomResourceOwner(editor.WorldIdentity,target,"audio"),v.Id,emitter,v.SourceRevision,
-                    cancel=>recipe.kind=="clip"?editor.Sounds.PrepareAsync(recipe.assetHash,recipe.seconds,cancel):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return AudioPcmAsset.Resident(pcm);},cancel));
+                    cancel=>recipe.kind=="stream"?LiveAudioHttp.Open(recipe.endpoint,cancel):recipe.kind=="clip"?editor.Sounds.PrepareAsync(recipe.assetHash,recipe.seconds,cancel):Task.Run(()=>{var floats=AudioTone.Render(recipe,cancel);var pcm=new short[floats.Length];for(int i=0;i<pcm.Length;i++){if((i&1023)==0)cancel.ThrowIfCancellationRequested();pcm[i]=(short)Math.Round(floats[i]*short.MaxValue);}return AudioPcmAsset.Resident(pcm);},cancel));
                 decoded[v.CacheKey]=v.Resource.Resource;instances.Add(v.Id,v);Note(v);voice=v;error=null;return true;
             } catch(Exception e){Close(v,e.Message);error="Could not prepare room sound: "+e.Message;return false;}
         }
@@ -81,19 +85,23 @@ namespace Maestro.Quest.Creation
         {
             if(!decoded.TryGetValue(v.CacheKey,out var asset)){Close(v,"The decoded source is unavailable");return false;}
             if(!asset.Pending.IsCompleted)return false;
-            if(asset.Pending.IsCanceled||asset.Pending.IsFaulted){_=asset.Pending.Exception;Close(v,"The sound could not be decoded");return false;}
+            if(asset.Pending.IsCanceled||asset.Pending.IsFaulted){_=asset.Pending.Exception;Close(v,v.IsLive?"The live MP3 connection could not open; check its direct URL and network":"The sound could not be decoded");return false;}
             try {
-                v.Asset=asset.Pending.Result;var config=v.Attachment;
+                v.Asset=asset.Pending.Result;
                 v.ProgressAt=Time.realtimeSinceStartupAsDouble;
-                v.Renderer=PcmOutputLease.Open(transform,"World sound "+v.Emitter,
-                    new SpeechPcmStream(AudioSettings.dspTime+.1,PcmOutputLease.DeviceTail),
-                    config.spatial,EffectiveGain(v),96,config.minDistance,config.maxDistance);
+                OpenOutput(v);
                 Pump(v);if(v.Closed||!Follow(v))return false;v.Renderer.Start();return true;
             } catch(Exception e){Close(v,"Could not start room sound: "+e.Message);return false;}
         }
+        void OpenOutput(Instance v) {
+            var config=v.Attachment;
+            v.Renderer=PcmOutputLease.Open(transform,"World sound "+v.Emitter,
+                new SpeechPcmStream(AudioSettings.dspTime+.1,PcmOutputLease.DeviceTail),
+                config.spatial,EffectiveGain(v),96,config.minDistance,config.maxDistance);
+        }
         void Pump(Instance v)
         {
-            try{PumpAvailable(v);}catch(Exception){Close(v,"The sound source could not supply its next samples");}
+            try{if(v.IsLive)PumpLive(v);else PumpAvailable(v);}catch(Exception){Close(v,"The sound source could not supply its next samples");}
         }
         void PumpAvailable(Instance v)
         {
@@ -126,7 +134,8 @@ namespace Maestro.Quest.Creation
             if(v.Stream==null){OpenRenderer(v);return;}
             if(v.Renderer?.Available!=true){Close(v,"The audio renderer became unavailable");return;}
             if(!Follow(v))return;
-            if(v.Paused){var state=v.Stream.Read(AudioSettings.dspTime);if(state.Faulted||state.Closed){Close(v,"The paused audio renderer failed");return;}v.Cursor=state.Played/(double)AudioTone.SampleRate;return;}
+            if(v.IsLive&&!ObserveLive(v))return;
+            if(v.Paused){var state=v.Stream.Read(AudioSettings.dspTime);if(state.Faulted||state.Closed){Close(v,"The paused audio renderer failed");return;}v.Cursor=(v.LivePlayedBase+state.Played)/(double)AudioTone.SampleRate;return;}
             Pump(v);
         }
         bool Follow(Instance v)
@@ -162,11 +171,11 @@ namespace Maestro.Quest.Creation
         internal void Cancel(Instance v,string reason="Sound playback was cancelled")=>Close(v,reason,"cancelled");
         internal void Close(Instance v,string error="Sound playback was cancelled",string phase=null)
         {
-            if(v.Closed)return;if(v.Stream!=null)v.Cursor=v.Stream.Read(AudioSettings.dspTime).Played/(double)AudioTone.SampleRate;
-            v.Closed=true;v.Error=error;v.Phase=phase??(v.Complete?"completed":"failed");Note(v);v.Renderer?.Dispose();
+            if(v.Closed)return;if(v.Stream!=null)v.Cursor=(v.LivePlayedBase+v.Stream.Read(AudioSettings.dspTime).Played)/(double)AudioTone.SampleRate;
+            v.Closed=true;v.Error=error;v.Phase=phase??(v.Complete?"completed":"failed");if(v.IsLive)v.LivePhase=v.Phase=="ended"?"ended":v.Phase=="failed"?"failed":"closed";Note(v);v.Renderer?.Dispose();
             var resource=v.Resource?.Resource;v.Resource?.Dispose();v.Resource=null;
             if(resource!=null&&resource.Retiring&&decoded.TryGetValue(v.CacheKey,out var cached)&&ReferenceEquals(resource,cached))decoded.Remove(v.CacheKey);
-            v.Asset=null;v.Producer=null;v.Renderer=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
+            v.Asset=null;v.LiveBufferedFrames=0;v.Producer=null;v.Renderer=null;v.Item=null;v.Attachment=null;instances.Remove(v.Id);Remember(v);
         }
         void CloseAll(string reason){foreach(var voice in instances.Values.ToArray())Cancel(voice,reason);}
         void LateUpdate(){foreach(var voice in instances.Values.ToArray())Tick(voice);PruneDecoded();}

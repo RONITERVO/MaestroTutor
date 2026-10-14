@@ -35,3 +35,14 @@ it('lets the book switch to an imported clip without retaining the inactive tone
  expect(onChange).toHaveBeenCalledWith({...draft,clip:{assetHash:'b'.repeat(64),seconds:2}});
  const tone=changeCapabilityVariant(schema,0,draft,[]);expect(tone.kind).toBe('tone');expect(tone).not.toHaveProperty('clip');
 });
+
+it('uses the same book variant form for a live endpoint without keeping clip or tone fields',()=>{
+ const action=capabilityDefinition('audio.source.edit')!,call=action.example!;
+ const schema=resolveCapabilitySchema(action.input,call)!.properties!.definition;
+ const draft=changeCapabilityVariant(schema,2,call.definition,[]);draft.stream={endpoint:'https://radio.example/live.mp3'};
+ expect(draft.kind).toBe('stream');expect(draft).not.toHaveProperty('tone');expect(draft).not.toHaveProperty('clip');
+ expect(validateCapabilityArguments(action.id,action.version,{...call,definition:draft})).toBeNull();
+ const onChange=vi.fn(),screen=render(<CapabilityFields label="Sound" schema={schema} value={draft} objects={[]} onChange={onChange}/>);
+ fireEvent.change(screen.getByLabelText('Sound stream endpoint'),{target:{value:'https://other.example/live.mp3'}});
+ expect(onChange).toHaveBeenCalledWith({...draft,stream:{endpoint:'https://other.example/live.mp3'}});
+});

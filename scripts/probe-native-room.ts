@@ -1235,6 +1235,31 @@ try{
   const sourceRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.definition',version:2,arguments:{id:soundId}}}]);
   const cleaned=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]);
   await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,soundReservation,soundOwnership,releasedAudio,staleAudioOwner,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundMixBefore,soundMixed,soundMixAfter,pausedAfterMix,soundMixReset,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
+  let liveSoundFixture:{endpoint:string}|null=null;
+  try{liveSoundFixture=JSON.parse(await readFile(join(directory,'live-sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+  if(liveSoundFixture){
+   const callLive=async(id:string,args:Record<string,unknown>)=>{
+    let state=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);const runId=state.execution?.selected?.id;if(!runId)throw new Error('Live audio action missing identity');
+    const end=Date.now()+30000;while(!['completed','failed','cancelled'].includes(state.execution?.selected?.phase??'')&&Date.now()<end){await new Promise(r=>setTimeout(r,100));state=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);}
+    if(state.execution?.selected?.phase!=='completed')throw new Error('Live audio action failed: '+JSON.stringify(state.execution?.selected));return state;
+   };
+   const liveFact=async(id:string,args?:Record<string,unknown>)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:id,version:1,...(args?{arguments:args}:{})}}]);
+   const saved=await callLive('audio.source.edit',{operation:'save',id:'',revision:0,definition:{name:'Headless radio',kind:'stream',stream:{endpoint:liveSoundFixture.endpoint}}});
+   const sourceId=saved.execution!.selected!.output!.id as string;
+   const source=await liveFact('audio.source.stream',{id:sourceId,offset:0});if((factReply(source).value as {endpoint:string}).endpoint!==liveSoundFixture.endpoint)throw new Error('Saved live endpoint differs');
+   const silent=await liveFact('runtime.audioBudget');if((factReply(silent).value as {sources:number}).sources!==0)throw new Error('Saving a live source must remain passive');
+   const emitter=await liveFact('object.audioEmitter',{target:'book',emitter:'radio'});
+   const bound=await callLive('object.audioEmitter.edit',{operation:'configure',target:'book',revision:(factReply(emitter).value as {revision:number}).revision,emitter:'radio',definition:{source:sourceId,part:'',joint:'',position:{x:0,y:0,z:0},role:'media',spatial:true,gain:0,distance:{minimum:.2,maximum:10}}});
+   const started=await callLive('audio.start',{target:'book',emitter:'radio',loop:false,lifetime:'room'});const sample=started.execution!.selected!.output as SoundSample,instance=sample.identity.instance;
+   if(sample.playback.seconds<=0||sample.playback.lifetime!=='room')throw new Error('Live start was not confirmed by native PCM consumption');
+   const control=async(operation:string)=>{const observed=await liveFact('audio.instance',{target:'book',instance});return callLive('audio.control',{operation,target:'book',instance,revision:(factReply(observed).value as SoundSample).revision});};
+   const paused=await control('pause');await new Promise(r=>setTimeout(r,2500));const resumed=await control('resume');await new Promise(r=>setTimeout(r,300));
+   const live=await liveFact('audio.live',{target:'book',instance});const counters=factReply(live).value as {skippedSeconds:number;receivedSeconds:number;bufferedSeconds:number};
+   if(counters.skippedSeconds<1.5||counters.receivedSeconds<=counters.skippedSeconds||counters.bufferedSeconds>2)throw new Error('Live resume did not resynchronize with bounded, visible gaps');
+   const stopped=await control('stop');const terminal=await liveFact('audio.live',{target:'book',instance});if((factReply(terminal).value as {sourcePhase:string}).sourcePhase!=='closed')throw new Error('Stopped live source is not closed');
+   const released=await liveFact('runtime.audioBudget');if((factReply(released).value as {sources:number}).sources!==0)throw new Error('Stopped live source retained its connection');
+   await writeFile(join(directory,'world-live-audio.json'),JSON.stringify({boundary:'Shared headless agent action/fact path, real native MP3 decoder and consumption with explicit offline HTTP fixture. No sockets, provider or headset proof.',saved,source,silent,bound,started,paused,resumed,live,stopped,terminal,released},null,2));
+  }
  }
  const gripBefore=lease.state();
  const gripSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure construction grip snapping',offset:0}}]);

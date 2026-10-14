@@ -9,19 +9,24 @@ namespace Maestro.Quest.Editor
     [InitializeOnLoad] static class QuestTestProgress
     {
         static readonly TestRunnerApi api;
+        static string currentTest="between tests";
         static QuestTestProgress()
         {
             if(!Application.isBatchMode)return;
             api=ScriptableObject.CreateInstance<TestRunnerApi>();api.RegisterCallbacks(new Progress());
+            AudioSettings.OnAudioConfigurationChanged+=deviceChanged=>{
+                var config=AudioSettings.GetConfiguration();
+                Debug.Log($"MAESTRO_AUDIO_CONFIGURATION_CHANGED deviceChanged={deviceChanged} rate={config.sampleRate} buffer={config.dspBufferSize} speakers={config.speakerMode} dsp={AudioSettings.dspTime:F3} test={currentTest}");
+            };
         }
         sealed class Progress:ICallbacks
         {
             public void RunStarted(ITestAdaptor test) {}
             public void RunFinished(ITestResultAdaptor result) {}
-            public void TestStarted(ITestAdaptor test) {if(!test.IsSuite)Debug.Log("MAESTRO_TEST_STARTED "+test.FullName);}
+            public void TestStarted(ITestAdaptor test) {if(!test.IsSuite){currentTest=test.FullName;Debug.Log("MAESTRO_TEST_STARTED "+test.FullName);}}
             public void TestFinished(ITestResultAdaptor result) {
                 if(result.Test.IsSuite)return;
-                Debug.Log("MAESTRO_TEST_FINISHED "+result.Test.FullName+" "+result.TestStatus);
+                Debug.Log("MAESTRO_TEST_FINISHED "+result.Test.FullName+" "+result.TestStatus);currentTest="between tests";
                 if(result.TestStatus==TestStatus.Failed)Debug.Log("MAESTRO_TEST_FAILURE "+result.Test.FullName+"\n"+result.Message+"\n"+result.StackTrace);
             }
         }
