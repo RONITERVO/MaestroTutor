@@ -35737,7 +35737,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A native physical connection broke while room physics was running. Value/source is its owner object ID. connected is the exact other ID; kind is hinge, fixed or slider; forceLimit and torqueLimit are configured limits, not measured impact or proof of cause. interrupted means the moving contact/connection group reached temporary unavailable geometry in that solver step, not that the guard is proved to have caused this particular break. The observed break stays latched; inspect object.physics.inputs and the joint before recovery. Emitted once per admitted break; pause/Stop/retirement do not emit it and missed events are not replayed. Rearm or align explicitly to reconnect.",
+      "description": "A native physical connection broke while room physics was running. Value/source is its owner object ID. connected is the exact other ID; kind is hinge, fixed or slider; forceLimit and torqueLimit are configured limits, not measured impact or proof of cause. interrupted means the moving contact/connection group reached temporary unavailable geometry or left its selected ground boundary in that solver step, not proof that either caused this particular break. The observed break stays latched; inspect object.physics.inputs and the joint before recovery. Emitted once per admitted break; pause/Stop/retirement do not emit it and missed events are not replayed. Rearm or align explicitly to reconnect.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -36772,7 +36772,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point captured in authored room coordinates when the contact begins. A queued point stays in that room after virtual-world movement; it is not a persistent anchor to a real surface. interrupted means a moving contact/connection group touched temporary unavailable geometry during that solver step. The real contact is preserved, but do not count it as uninterrupted play or proof of cause; inspect object.physics.inputs and restart from rest. Receivers and the room-space point are captured at contact time; delivery waits until step classification. Shared fixed anchors do not merge independent moving children. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
+      "description": "A physics contact began while room physics was running. Value is the source object ID. otherId is a registered room object ID or empty; otherKind distinguishes object, scannedRoom, controller and environment. speed is relative speed in metres/second; x/y/z are one contact point captured in authored room coordinates when the contact begins. A queued point stays in that room after virtual-world movement; it is not a persistent anchor to a real surface. interrupted means a moving contact/connection group touched temporary unavailable geometry or left its selected ground boundary during that solver step. The real contact is preserved, but do not count it as uninterrupted play or proof of cause; inspect object.physics.inputs and restart from rest. Receivers and the room-space point are captured at contact time; delivery waits until step classification. Shared fixed anchors do not merge independent moving children. Compound colliders can produce separate contacts. This is not a continuous contact or precise impact-energy measurement. Fields do not authorize editing new objects.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1"
@@ -44328,7 +44328,7 @@
         }
       },
       "label": "Object physics inputs",
-      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for its ground, another member or a joint reports unavailable or pending. In an already running world, an owned free body may acquire dormant local ground while remaining stopped; it never borrows the scan when its policy requires virtual ground. Preparation does not admit gravity, impulses or settlement: current ground columns, complete local inputs and connected joints must all be ready. pending means bounded native preparation. After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry: its dynamic contact/constraint group is held while exact inputs prepare, with no old velocity replay. Grab, animation or teleport cancels the changed actor and its current physical connection group; merely touching another interrupted body does not grant control of it or resume it. Continuing native guard contacts are rechecked without requiring a fresh collision-enter callback. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. Retirement keeps each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unused unrelated areas may retire. Explicit Start still prepares all saved participants, and unavailable resident imports retain the conservative global stop.",
+      "description": "Read current native gravity/obstacle/water input ownership for a loaded solid/bouncy object and its connected physics group. Physical links share preparation and solver readiness; area membership alone does not create a physics group. Fixed, held, carried, paused and unavailable owners report inactive. A free member waiting for its ground, another member or a joint reports unavailable or pending. In an already running world, an owned free body may acquire dormant local ground while remaining stopped; it never borrows the scan when its policy requires virtual ground. Preparation does not admit gravity, impulses or settlement: current ground columns, complete local inputs and connected joints must all be ready. pending means bounded native preparation. After fixing unavailable inputs, pause and then start physics to retry. ready also rechecks current local geometry; it is not a clear path, completed throw or regional-streaming guarantee. dependencyCount counts the current required input identities; dependencies lists only the first four stable IDs. momentumHeld is transient velocity retained only during uninterrupted preparation: Pause, grab, animation, teleport, source edits and workspace retirement discard it. interrupted means a completed native step reached unavailable geometry or left its selected ground boundary. Unavailable geometry holds its free dynamic contact/constraint group while exact inputs prepare. A ground-boundary exit restores that group's last accepted poses and holds it; independent bodies keep running. Neither interruption replays old velocity. Grab, animation or teleport cancels the changed actor and its current physical connection group; merely touching another interrupted body does not grant control of it or resume it. Continuing native guard contacts are rechecked without requiring a fresh collision-enter callback. When preparation finishes, pause then start physics, or grab the object, to resume from rest. This is an explicit interruption, not a successful throw or authored contact. Reads never acquire native objects, start physics, save or change velocity. Retirement keeps each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unused unrelated areas may retire. Explicit Start still prepares all saved participants, and unavailable resident imports retain the conservative global stop.",
       "input": {
         "type": "object",
         "properties": {
@@ -45958,7 +45958,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConnectionCapability.cs",
-      "sha256": "a0c6467261393a1c39514f7a590b0bd0c4c2236f4d3aa030e0ba8be8adeb199c"
+      "sha256": "73e26371ac314d1b6e7aeddda02a05c3b86d8b37a4c03dd1e450b86d6c146679"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionManipulationCapability.cs",
@@ -46174,7 +46174,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
-      "sha256": "7b772253105aed33cc02aac9501bee204b315bd1d38ccc8f746766db4cce650d"
+      "sha256": "4351cd656edd1033c406fc49bf78876948aa419e5ae8d036aac1fa97f7c662fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -46706,7 +46706,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
-      "sha256": "48ce4f28b2f69fd902713bfdc0c54cdc71e3072826591dd2f93e4c99f6cb4776"
+      "sha256": "b78e114ce58c7b14f862cdd66efc384324e117272b9a10d9797e87485c272e94"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingEdits.cs",
@@ -46917,12 +46917,16 @@
       "sha256": "c85c88dd37b8291e5530349c6af4d144b43235df48c633749b759f4ae55c0f74"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsBoundaries.cs",
+      "sha256": "4eca81d2bd5c5b04f3af098e8aa11e10498ed1956d3774e36877713760c1c725"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
-      "sha256": "ed780f9d18b4141e0f809fbd7e5213f45b8191f216d089debe23923599e161cb"
+      "sha256": "10e4126fffae2c2137e04ede4557211c11b8f234acc314acb5aafa796df2e214"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
-      "sha256": "d80fc683c0c9fbbb975db6f1aae4404bd12e2adadc8627162a737d7dc46fbb10"
+      "sha256": "109089b53628e1b7720193daf7891fd01d7a814cb1f85af06b5f5f702aa7ebe1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStepRecorder.cs",
@@ -47470,7 +47474,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "16f1a183939004392cb0308626128df903be04601120cac49d630cb91be61aa2"
+      "sha256": "6add39baca8ba4202e081aee297251690cfea85f1b772ef369f21298e17237a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -47494,7 +47498,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
-      "sha256": "f9ecdb042cdc3e62f45191298e2cb7c74dcffce2a0041716fcd404c2283757de"
+      "sha256": "ddbbd698d107a0a86f6fdfba5188ca214bbee11f4d50983e7786fdfc19ac6bc7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomContactInputs.cs",
@@ -47830,7 +47834,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "5f4c785c1c8c29a95451cfa29a634025dafe02ffc71c835ad8951a92ae1a553c"
+      "sha256": "5c8cbbb458877e65d5e4796b02a00105b8790993e7f7810cb7f91c6acbc9cd46"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

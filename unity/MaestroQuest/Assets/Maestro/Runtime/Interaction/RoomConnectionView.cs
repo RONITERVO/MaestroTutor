@@ -19,7 +19,7 @@ namespace Maestro.Quest.Interaction
         public float Travel=>HasTravel?definition.Travel(transform,editor.Find(definition.connected).transform):0;
         internal void ResetBreak(){broken=false;Refresh();}
         internal void RestoreBrokenState(bool value){broken=value;Refresh();}
-        void OnJointBreak(float force){if(!admitted||definition==null)return;editor?.BeforePhysicsJointBreak(rigid);editor?.InterruptPhysicsIsland(item);admitted=false;joint=null;retiring=null;broken=true;rigid?.SetConstraintBlocked(this,false);Phase="broken";Error="Connection broke; align or rearm explicitly to reconnect";editor?.NotifyConnectionBroken(item,definition);}
+        void OnJointBreak(float force){if(!admitted||definition==null)return;editor?.BeforePhysicsJointBreak(rigid);editor?.InterruptPhysicsIsland(item,discardAcceptedPose:false);admitted=false;joint=null;retiring=null;broken=true;rigid?.SetConstraintBlocked(this,false);Phase="broken";Error="Connection broke; align or rearm explicitly to reconnect";editor?.NotifyConnectionBroken(item,definition);}
         public float Angle=>definition!=null&&linked?definition.Angle(transform,linked.transform):0;
         public void Apply(RoomEditor source,RoomConnection[] values)
         {

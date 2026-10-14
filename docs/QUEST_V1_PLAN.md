@@ -9913,3 +9913,33 @@ Evidence is in `.quest-evidence/cold-ground/`. Selective startup, local handling
 of resident import failures and boundary exits, larger worlds and physical
 performance acceptance remain open. V1 is incomplete; headset, paid-provider,
 signing, deployment and Meta holds remain.
+
+### Local interruption at selected ground boundaries — 2026-10-14
+
+Verified on desktop. An authored body leaving its
+selected ground boundary now restores its free dynamic contact/constraint group
+to the last accepted poses and holds that group. Independent bodies keep running.
+Old momentum is discarded. The existing shared input fact, visible reason and
+grab or pause/start recovery controls cover this interruption. Native contacts
+and joint breaks retain their observations with interrupted provenance; broken
+joints stay broken. Fixed anchors do not merge independent moving children.
+Held or animated objects remain with their current owners.
+
+The final focused run passes 17 catalog EditMode and 92 PlayMode checks, including
+seven new boundary regressions. One uses an actual native boundary crossing;
+another combines a real native joint break with a controlled boundary outcome
+to verify pre-break pose retention. Complete native suites passed **1,259 EditMode /
+1,588 PlayMode**, with three expected optional private-asset skips. Offline
+Headless and Original Book journeys passed with zero client/editor errors and
+no provider calls. The web suite passed **2,958 tests / 313 files**.
+
+Unsigned Android IL2CPP/Java compilation passed: 22 selected ARM64 libraries
+satisfy ELF/16 KiB checks; browser tests report 128 passed/two skipped. All 152
+staged web files and native code match the tested sources. The audit covers
+2,986 native inputs, including 1,117 code/shader files; four setup-generated
+project assets are recorded separately. All 14 protected files remain unchanged.
+No APK/AAB was produced. Evidence: .quest-evidence/local-boundaries/.
+
+Selective startup, local resident-import failure handling, larger-world capacity,
+physical performance and the existing v1 release gates remain open. Headset,
+paid-provider, signing, deployment and Meta holds remain. V1 is incomplete.

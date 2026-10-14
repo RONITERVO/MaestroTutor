@@ -12,15 +12,15 @@ namespace Maestro.Quest.Creation {
             internal DormantCollisionProxy Proxy;internal uint Generation;
             internal RoomJournal Journal;internal Matrix4x4 Frame;internal string[] Members;
         }
-        sealed class DormantRecovery:IDisposable {
+        sealed class PhysicsInterruption:IDisposable {
             internal RoomJournal Journal;internal Matrix4x4 Frame;internal string[] Members,Targets;
             internal readonly Dictionary<string,(RigidRoomItem body,uint placement)> Actors=new(StringComparer.Ordinal);
             internal RoomSpatialInputs Inputs;internal bool Pending=true,Disposed;internal string Reason;
             public void Dispose(){if(Disposed)return;Disposed=true;Inputs?.Dispose();Inputs=null;}
         }
         readonly List<DormantContact> dormantContacts=new();
-        readonly List<DormantRecovery> dormantRecoveries=new();
-        readonly Dictionary<string,DormantRecovery> recoveringBodies=new(StringComparer.Ordinal);
+        readonly List<PhysicsInterruption> dormantRecoveries=new();
+        readonly Dictionary<string,PhysicsInterruption> recoveringBodies=new(StringComparer.Ordinal);
         bool processingDormantContacts;
         // PhysX callbacks only copy a bounded contact identity. Publication,
         // loading and body changes happen after all callbacks from that step.
@@ -33,7 +33,7 @@ namespace Maestro.Quest.Creation {
                 Journal=journal,Frame=transform.localToWorldMatrix,Members=PhysicsStepMembers(body)});
         }
         bool RecoveryActor(RigidRoomItem body,RoomItem item,uint placement)=>body&&item&&body.PhysicsEditor==this&&Find(Identity(item))==item&&body.PlacementRevision==placement&&body.ContactTracking&&!item.Grab.isSelected;
-        bool RecoveryOwned(DormantRecovery value){
+        bool RecoveryOwned(PhysicsInterruption value){
             if(value.Disposed||!this||!isActiveAndEnabled||!ReferenceEquals(value.Journal,journal)||RuntimeGate.Held||WriteGate.Frozen)return false;
             foreach(var pair in value.Actors)if(!RecoveryActor(pair.Value.body,Find(pair.Key),pair.Value.placement))return false;
             return true;
@@ -43,7 +43,7 @@ namespace Maestro.Quest.Creation {
             pending=value.Pending;reason=value.Reason;return true;
         }
         internal string[] DormantRecoveryTargets(RoomItem item)=>Identity(item) is string id&&recoveringBodies.TryGetValue(id,out var value)?value.Targets:null;
-        void RemoveDormantRecovery(DormantRecovery value){
+        void RemoveDormantRecovery(PhysicsInterruption value){
             value.Dispose();dormantRecoveries.Remove(value);
             foreach(var pair in value.Actors){if(recoveringBodies.TryGetValue(pair.Key,out var found)&&ReferenceEquals(found,value))recoveringBodies.Remove(pair.Key);if(pair.Value.body)pair.Value.body.ClearCollisionInterruption();}
         }
@@ -63,7 +63,7 @@ namespace Maestro.Quest.Creation {
             }
         }
         void ReleaseDormantRecoveries(){CancelPhysicsStep();dormantContacts.Clear();foreach(var value in dormantRecoveries.ToArray())RemoveDormantRecovery(value);}
-        void RefuseRecovery(DormantRecovery value,string reason){
+        void RefuseRecovery(PhysicsInterruption value,string reason){
             value.Inputs?.Dispose();value.Inputs=null;value.Pending=false;
             // Keep the stopped state and recovery action within the shared short status.
             value.Reason="Movement stopped. Retry from rest: pause then start physics, or grab. "+reason;
@@ -72,6 +72,7 @@ namespace Maestro.Quest.Creation {
         internal void ProcessDormantContacts(){
             if(processingDormantContacts||applying)return;processingDormantContacts=true;
             try{
+                InterruptPhysicsBoundaries();
                 var queued=dormantContacts.ToArray();dormantContacts.Clear();
                 foreach(var contact in queued){
                     if(!ReferenceEquals(contact.Journal,journal)||!PhysicsWorld||!PhysicsWorld.Running||RuntimeGate.Held||Ownership.Suspended)continue;
@@ -83,7 +84,7 @@ namespace Maestro.Quest.Creation {
                     var previous=dormantRecoveries.Where(r=>r.Members.Intersect(members).Any(id=>recoveringBodies.ContainsKey(id))).ToArray();
                     if(previous.Length>0){members=members.Concat(previous.SelectMany(r=>r.Members)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();foreach(var old in previous){foreach(var pair in old.Actors)actors[pair.Key]=pair.Value;RemoveDormantRecovery(old);}}
                     var contacts=queued.Where(c=>members.Contains(c.Actor)).ToArray();
-                    var value=new DormantRecovery{Journal=journal,Frame=contact.Frame,Members=members,
+                    var value=new PhysicsInterruption{Journal=journal,Frame=contact.Frame,Members=members,
                         Targets=members.Concat(contacts.Select(c=>c.Target)).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray(),
                         Reason="Movement stopped at unavailable geometry; preparing nearby objects"};
                     foreach(var pair in actors)value.Actors[pair.Key]=pair.Value;

@@ -83,9 +83,11 @@ namespace Maestro.Quest.Tests
             Assert.That(body.isKinematic,Is.True);Assert.That(body.position.y,Is.EqualTo(2).Within(.001f));
             item.transform.position=new Vector3(0,1.5f,0);rigid.Teleported();Physics.SyncTransforms();yield return new WaitForSeconds(.15f);
             Assert.That(world.Running,Is.True);Assert.That(body.position.y,Is.LessThan(1.45f));
-            // Leaving admitted ground while actually simulating still recovers and pauses.
+            // Leaving admitted ground recovers this body without pausing the world.
             item.transform.position=new Vector3(8,body.position.y,0);Physics.SyncTransforms();rigid.SendMessage("LateUpdate");yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
-            Assert.That(world.Running,Is.False);Assert.That(body.position.x,Is.LessThan(2));
+            Assert.That(world.Running,Is.True);Assert.That(body.position.x,Is.LessThan(2));Assert.That(body.isKinematic,Is.True);
+            Assert.That(BehaviourCatalog.TryRead("object.physics.inputs",1,new JObject{["target"]=id},new BehaviourCatalog.FactContext(editor:editor),out var stopped),Is.True);
+            Assert.That((bool)JObject.FromObject(stopped.Value)["interrupted"],Is.True);
         }
         [UnityTest] public IEnumerator VirtualPhysicsGroundLossAndRestoreRequiresAFreshExplicitStart()
         {

@@ -41,8 +41,11 @@ namespace Maestro.Quest.Creation {
             }
             return found.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
         }
-        internal void InterruptPhysicsIsland(RoomItem item){
-            foreach(var id in PhysicsIslandMembers(item))Find(id)?.GetComponent<RigidRoomItem>()?.ReleasePhysicsInputs();
+        internal void InterruptPhysicsIsland(RoomItem item,bool discardAcceptedPose=true){
+            foreach(var id in PhysicsIslandMembers(item)){
+                var body=Find(id)?.GetComponent<RigidRoomItem>();if(!body)continue;
+                body.ReleasePhysicsInputs();if(discardAcceptedPose)body.ResetAcceptedPhysicsPose();
+            }
         }
         internal bool PhysicsIslandOwned(RoomItem item){
             foreach(var id in PhysicsIslandMembers(item)){

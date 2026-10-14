@@ -907,9 +907,12 @@ momentum. Returning control can prepare a fresh request in a running world;
 unavailable inputs still need repair and an explicit restart from rest.
 
 Ordinary `pending` preparation can retain motion in `momentumHeld`. An
-`interrupted` result is different: the solver reached a temporary guard for
-unavailable geometry, so the affected group stops and discards velocity while
-exact geometry prepares. Even when preparation finishes, movement remains stopped.
+`interrupted` result is different: the solver reached unavailable geometry or
+left its selected ground boundary. A temporary geometry guard stops the affected
+free dynamic contact/constraint group while exact geometry prepares. A boundary
+exit restores that group's last accepted poses and holds it. Independent bodies
+keep running. Both cases discard velocity; finishing preparation does not resume
+movement.
 Inspect the reason, then explicitly pause and start physics, or grab the object,
 to continue from rest. Do not retry an old throw automatically or describe this
 state as a completed catch. Pause, grab, animation control, teleport and ownership
@@ -934,16 +937,17 @@ restart from rest after fixing the input.
 This recovery uses the same fact and controls for programs, agents and book
 controls. Automatic retirement can release unrelated static areas while physics
 retains its local dependencies. Explicit Start still prepares all saved
-participants; resident imported-geometry failures retain the global stop, and
-leaving the accepted simulation boundary retains its pause policy. Selective
+participants; resident imported-geometry failures retain the global stop.
+A boundary interruption uses the same local group hold and restart controls.
+Selective
 startup, local failure handling, larger worlds and hardware performance acceptance
 remain open.
 
 
 `object.collided` and `object.connection.broken` include the boolean event field
 `interrupted`. It describes whether either participant belonged to a moving
-contact/constraint group that reached unavailable geometry during that native
-step. It is conservative step provenance, not proof that the guard caused this
+contact/constraint group that reached unavailable geometry or left its selected
+ground boundary during that native step. It is conservative step provenance, not proof that the guard caused this
 particular contact or break. A real broken connection remains broken and requires
 explicit rearming; the event is not erased or converted into a successful action.
 

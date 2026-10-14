@@ -121,7 +121,7 @@ namespace Maestro.Quest.Interaction
             body.excludeLayers=world&&!world.IncludesRealRoom(item)?body.excludeLayers.value|scanBit:body.excludeLayers.value&~scanBit;
             if(InputEditor)InputEditor.PreparePhysicsIsland(item);else PreparePhysicsInputs();
             bool allowed = Allowed;
-            if(!world||!world.Running||!Dynamic||!geometryReady||AnimationOwned||constraints.Count>0)boundaryActive=false;
+            if(!world||!world.Running||!Dynamic||!geometryReady||AnimationOwned)boundaryActive=false;
             item.Grab.throwOnDetach = allowed && !canceled && (!grabInputs||grabInputs.ThrowReady);
             item.Grab.throwVelocityScale = 1;
             item.Grab.throwAngularVelocityScale = 1;
@@ -192,6 +192,20 @@ namespace Maestro.Quest.Interaction
             if (!Allowed || item.Grab.isSelected || !float.IsFinite(velocity.sqrMagnitude) || !float.IsFinite(angularVelocity.sqrMagnitude)) return false;
             canceled = false; Refresh(); body.linearVelocity = Vector3.ClampMagnitude(velocity,15); body.angularVelocity = Vector3.ClampMagnitude(angularVelocity,30); body.WakeUp(); wasMoving = true; return true;
         }
+        internal bool PhysicsBoundaryExceeded=>boundaryActive&&InputBindingAvailable&&ContactTracking&&geometryReady&&item.Grab&&!item.Grab.isSelected&&world.SimulationActive&&world.EnvironmentReady(item)&&!world.CanSimulate(body.position,item);
+        internal void ResetAcceptedPhysicsPose()=>boundaryActive=false;
+        internal bool HasAcceptedPhysicsPose=>boundaryActive&&body&&float.IsFinite(lastGoodPosition.sqrMagnitude)&&float.IsFinite(Quaternion.Dot(lastGoodRotation,lastGoodRotation));
+        internal void RememberAcceptedPhysicsPose(){
+            if(!body||body.isKinematic||!Allowed||item.Grab.isSelected)return;
+            boundaryActive=true;lastGoodPosition=body.position;lastGoodRotation=body.rotation;
+        }
+        internal void RestoreAcceptedPhysicsPose(){
+            if(!HasAcceptedPhysicsPose)return;
+            // This is an interrupted native step, not a new user teleport. Keep
+            // its observations and hold until every affected actor is restored.
+            transform.SetPositionAndRotation(lastGoodPosition,lastGoodRotation);
+            body.position=lastGoodPosition;body.rotation=lastGoodRotation;PlacementRevision++;
+        }
         void FixedUpdate()
         {
             if (!body || !Dynamic) return;
@@ -199,12 +213,13 @@ namespace Maestro.Quest.Interaction
             if(Allowed==body.isKinematic)Refresh();
             // Unsupported dormant items do not stop an otherwise valid region. Only
             // a body that was actually simulating can cross its admitted boundary.
-            if (world && world.Running && (boundaryActive||!body.isKinematic) && world.EnvironmentReady(item) && !world.CanSimulate(transform.position,item) && !item.Grab.isSelected)
+            if (PhysicsBoundaryExceeded)
             {
-                transform.SetPositionAndRotation(lastGoodPosition,lastGoodRotation); Teleported();
-                world.PausePhysics(); return;
+                if(InputEditor)InputEditor.InterruptPhysicsBoundaries();
+                else { transform.SetPositionAndRotation(lastGoodPosition,lastGoodRotation);Teleported();world.PausePhysics(); }
+                return;
             }
-            if (Allowed && !item.Grab.isSelected) { boundaryActive=true;lastGoodPosition = transform.position; lastGoodRotation = transform.rotation; }
+            RememberAcceptedPhysicsPose();
         }
         void LateUpdate()
         {

@@ -34,6 +34,7 @@ namespace Maestro.Quest.Creation {
         internal void RememberPhysicsStepBody(RigidRoomItem body) {
             if(!body||body.PhysicsEditor!=this)return;
             string id=Identity(body.GetComponent<RoomItem>());if(id==null)return;
+            body.RememberAcceptedPhysicsPose();
             var members=body.CollisionInputMembers;
             physicsStepActors[id]=new(){Body=body,Placement=body.PlacementRevision,Members=members.Length>0?members:PhysicsIslandMembers(Find(id)),Dynamic=body.ContactTracking&&body.Simulating};
         }
