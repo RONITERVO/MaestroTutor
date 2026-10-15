@@ -144,6 +144,38 @@ namespace Maestro.Quest.Tests {
             Assert.That(motion.Active,Is.True,motion.Status);Assert.That(actor.transform.position.x,Is.GreaterThan(.2f));
             Assert.That(actor.transform.position.y,Is.LessThan(-1.8f));Assert.That(editor.Find(ground),Is.Not.Null);Assert.That(editor.Find(far),Is.Null);motion.Stop();
         }
+        IEnumerator IdleFollowReady(){
+            for(int i=0;i<240&&motion.Active&&!motion.Status.Contains("chosen distance");i++)yield return null;
+            Assert.That(motion.Active,Is.True,motion.Status);Assert.That(motion.Status,Does.Contain("chosen distance"));
+        }
+        [UnityTest]public IEnumerator NavigationStartupIdleFollowRetainsPreparedSupportThenWalksAndStops(){
+            var(actor,ground,far)=ColdWalkingScene(maestro:true,aligned:false);viewer.transform.position=new(0,1.6f,.8f);
+            Assert.That(motion.Begin("idle-follow",AvatarSpatialMode.Follow,out var error),Is.True,error);yield return IdleFollowReady();
+            var before=actor.transform.position;
+            for(int i=0;i<45;i++){
+                yield return null;Assert.That(motion.Active,Is.True,motion.Status);
+                Assert.That(NavigationField<bool>("startingPrepared"),Is.True,"Idle following retains accepted startup preparation instead of acquiring it every frame");
+                Assert.That(NavigationField<RoomSpatialInputs>("startingInputs"),Is.Null,"The accepted map owns support after preparation");
+                Assert.That(actor.transform.position,Is.EqualTo(before));
+            }
+            Assert.That(editor.Find(ground),Is.Not.Null);Assert.That(editor.Find(far),Is.Null);
+            viewer.transform.position=new(2,1.6f,.8f);for(int i=0;i<180;i++)yield return null;
+            Assert.That(motion.Active,Is.True,motion.Status);Assert.That(actor.transform.position.x,Is.GreaterThan(.2f));Assert.That(actor.transform.position.y,Is.LessThan(-1.8f));
+            world.PausePhysics();yield return null;Assert.That(motion.Active,Is.False);Assert.That(NavigationField<bool>("startingPrepared"),Is.False);
+            var stopped=actor.transform.position;world.StartPhysics();for(int i=0;i<20;i++)yield return null;
+            Assert.That(motion.Active,Is.False);Assert.That(actor.transform.position,Is.EqualTo(stopped));
+        }
+        [UnityTest]public IEnumerator NavigationStartupIdleFollowStopsOnGroundLossAndNeedsAFreshOwnerAfterRepair(){
+            var(actor,ground,_)=ColdWalkingScene(maestro:true,aligned:false);viewer.transform.position=new(0,1.6f,.8f);
+            Assert.That(motion.Begin("idle-ground",AvatarSpatialMode.Follow,out var error),Is.True,error);yield return IdleFollowReady();
+            var before=actor.transform.position;var surface=editor.Find(ground).GetComponentInChildren<RoomWalkableSurface>().Collision;
+            surface.enabled=false;Physics.SyncTransforms();for(int i=0;i<3;i++)yield return null;
+            Assert.That(world.Running,Is.True);Assert.That(motion.Active,Is.False);Assert.That(NavigationField<bool>("startingPrepared"),Is.False);
+            surface.enabled=true;Physics.SyncTransforms();for(int i=0;i<20;i++)yield return null;
+            Assert.That(motion.Active,Is.False);Assert.That(actor.transform.position,Is.EqualTo(before));
+            Assert.That(motion.Begin("fresh-idle",AvatarSpatialMode.Follow,out error),Is.True,error);yield return IdleFollowReady();
+            Assert.That(NavigationField<bool>("startingPrepared"),Is.True);motion.Stop();Assert.That(NavigationField<bool>("startingPrepared"),Is.False);
+        }
         [UnityTest]public IEnumerator NavigationStartupManualNeutralDoesNotLoadAndFreshInputCanPrepare(){
             var(actor,ground,far)=ColdWalkingScene(maestro:true);var before=actor.transform.position;
             Assert.That(motion.Begin("cold-stick",AvatarSpatialMode.Manual,out var error),Is.True,error);

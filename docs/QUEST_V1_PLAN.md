@@ -28,6 +28,8 @@ Explicit physics Start now prepares resident free actors and their local depende
 Enabled simulation can wait for ground; fixed actors own the ground preparation
 for their subsequent movement, including virtual actors without a physical scan.
 See [simulation intent and per-actor readiness](#simulation-intent-and-per-actor-readiness--2026-10-15).
+Stationary Maestro following now keeps accepted startup preparation while its
+owner remains active; see [the input lifetime](#stationary-follow-input-lifetime--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10220,5 +10222,46 @@ audit covers 3,000 native inputs, including 1,118 C# and
 recorded separately. Android browser unit tests report 128 passed/two skipped. All 14
 protected files remain unchanged. No APK/AAB was produced.
 Evidence: .quest-evidence/physics-intent/.
+
+Headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
+
+## Stationary follow input lifetime — 2026-10-15
+
+Direct Maestro following used to release its accepted startup preparation on
+every frame spent within the chosen distance. The next frame then created a
+new native-input demand even though the same owner and support were still active.
+This was reproduced by two failing lifecycle regressions before changing runtime
+code; no headset allocation or frame-time improvement is claimed.
+
+Stationary following now releases only transient step/route inputs. Accepted
+startup preparation remains valid for the active owner, while the navigation
+map still checks current navigation geometry every update. Moving away resumes normal owned
+route and step preparation. Stop, Pause, unavailable navigation, tracking/ownership changes
+and explicit preference changes retain their existing full cleanup. Repair or
+resuming physics never restarts an interrupted follow command.
+
+The full avatar/spatial group passed **225 checks**, including both regressions,
+actual movement after waiting, support loss and a fresh owner after repair.
+No capabilities, descriptions, schemas or saved data are added. The shared
+catalog refreshes only the two changed runtime source hashes.
+
+Verified on desktop: **1,259 EditMode / 1,638 PlayMode** passed, with three
+expected optional private-asset skips. Both new idle-follow regressions failed
+against the unchanged runtime before the fix; the full avatar/spatial group then
+passed **225 checks**. Coverage includes waiting without movement, later walking,
+ground loss, explicit Pause and fresh ownership after support repair. This is
+lifecycle evidence, not a measured headset frame-time improvement.
+
+Offline Headless **64ea5ba07e8d4de68a9c03eaa38665a0** and Original Book **f4d64853dc624804a2aa3e398bf6a9c6** passed with
+zero client/editor exits and no provider calls. **2,958 web tests / 313 files**,
+probe types, refreshed native fixtures and asset provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 ARM64 libraries pass
+ELF/16 KiB checks; 152 staged web files and the browser AAR match. The source
+audit covers 3,000 native inputs, including 1,118 C# and
+1,124 code/shader files; four setup-derived project assets are
+recorded separately. Android browser unit tests report 128 passed/two skipped.
+All 14 protected files remain unchanged. No APK/AAB was produced.
+Evidence: .quest-evidence/follow-idle/.
 
 Headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.

@@ -10,7 +10,10 @@ namespace Maestro.Quest.Interaction {
         internal bool MovementInputsPending=>stepInputs?.Pending==true;
         Vector3 inputsGoal;bool inputsGoalKnown;
         RoomEditor InputEditor=>actor?actor.GetComponentInParent<RoomEditor>():null;
-        internal void ReleaseMovementInputs(){ReleaseStartingInputs();stepInputs?.Dispose();stepInputs=null;CancelFollowRoute();}
+        internal void ReleaseMovementInputs(){ReleaseStartingInputs();ReleasePathInputs();}
+        // A stationary follow owner keeps its accepted startup preparation; only
+        // transient step/route demand ends until the target moves again.
+        internal void ReleasePathInputs(){stepInputs?.Dispose();stepInputs=null;CancelFollowRoute();}
         void ReleaseRouteInputs(){routeInputs?.Dispose();routeInputs=null;inputsGoalKnown=false;}
         // World-space query envelopes are projected by the shared world owner.
         // Direct steps include the motor's raised and per-substep support bands.

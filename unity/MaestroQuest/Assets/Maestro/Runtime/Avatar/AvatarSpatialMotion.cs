@@ -163,7 +163,7 @@ namespace Maestro.Quest.Avatar
             }
             else
             {
-                if(navigation)navigation.ReleaseMovementInputs();
+                if(navigation)navigation.ReleasePathInputs();
                 if (delta.sqrMagnitude > .01f) transform.rotation = Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(delta),90*dt);
                 Say("Maestro is keeping your chosen distance");
             }

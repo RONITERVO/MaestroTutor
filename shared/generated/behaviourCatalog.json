@@ -45674,7 +45674,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "0643b8ef74fbd03f742f607b184d06cc7ae59813496c8cce6d449e586d1ef3f2"
+      "sha256": "c4bde0cab0a492b5e8b2750c3ccf1bfa26864dc123488314c4866aadc75aa89e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -47554,7 +47554,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationInputs.cs",
-      "sha256": "35d3ca9f1654f5fcb67a8d54c323d3399690ac170adbca174e24baff0b658ba0"
+      "sha256": "e2064804409d2640cdb624c13fc3dbfd6c716bb4b51638fdce11e7e0d4800e4e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",

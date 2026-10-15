@@ -1507,6 +1507,14 @@ placement and Undo history do not change merely because a view loads.
 
 Owned navigation prepares dormant local ground before any displacement, including Maestro direct following and stick input. Neutral input does not request loading, and failed/cancelled preparation cannot produce late motion. Native loading does not reset unchanged movement preferences.
 
-Unknown-geometry isolation, finer loading groups, fixed-only per-entity virtual startup without a ready global environment and larger world capacity remain required before claiming country-scale
+When direct Maestro follow reaches its chosen distance, its active owner keeps
+accepted startup preparation and the navigation map continues checking current
+ground geometry. Temporary route and step inputs are released until the user moves again;
+standing still does not create a fresh startup demand each frame. Stopping or
+interrupting that owner releases the preparation too. Unavailable navigation stops follow,
+and repairing support or starting physics again does not silently resume it.
+A fresh follow command prepares against the current world.
+
+Unknown-geometry isolation, finer loading groups and larger world capacity remain required before claiming country-scale
 worlds. Preparation is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.
