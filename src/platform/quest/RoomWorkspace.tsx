@@ -1,3 +1,4 @@
+import {ObjectReferenceProvider} from './ObjectReferenceField';
 import {ObjectSearchList} from './ObjectSearchList';
 import {objectSearchFeature} from '../../../shared/objectSearch';
 import {SweepPathEditor} from './SweepPathEditor';
@@ -32,7 +33,7 @@ export function RoomWorkspace({client}:{client:RoomAgentClient}) {
  const [catalog,setCatalog]=useState<{insert?:CatalogInsert;initialCall?:CapabilityInvocation}|null>(null);
  useEffect(()=>{setCatalog(null);},[state?.session,state?.visible]);
  const openCatalog:OpenCatalog=(insert,initialCall)=>setCatalog({insert,initialCall});
- return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog} active={!catalog&&state?.workspaceView!=='rules'}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</>;
+ return <ObjectReferenceProvider client={client}><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog} active={!catalog&&state?.workspaceView!=='rules'}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</ObjectReferenceProvider>;
 }
 function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCatalog:OpenCatalog;active:boolean}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);

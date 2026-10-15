@@ -100,3 +100,7 @@
 .room-pattern-fields label {display:flex;flex-direction:column;gap:6px;min-width:0;font-size:14px;}
 .room-pattern-fields input,.room-pattern-fields select {box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:8px;border:1px solid #bdaf95;border-radius:6px;background:#fffaf0;color:inherit;font:inherit;}
 .room-pattern-fields input[type="color"] {padding:4px;}
+
+.object-reference-field{border:1px solid #535463;border-radius:.65rem;padding:.75rem;margin:.5rem 0;min-width:0}
+.object-reference-field code{overflow-wrap:anywhere}
+.object-reference-field .room-object-search{margin-top:.75rem}

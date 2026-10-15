@@ -25,6 +25,16 @@ namespace Maestro.Quest.Tests
             }while(cursor!="");
             Assert.That(ids,Does.Contain(dormant));Assert.That(ids.Count,Is.EqualTo(editor.Snapshot().objects.Length));Assert.That(editor.Find(dormant),Is.Null);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
             Assert.That(executor.Catalog.Execute(ObjectSearchRequest(query:dormant),out _),Is.True);var exact=executor.Catalog.Observe();Assert.That((int)exact["value"]["total"],Is.EqualTo(1));
+            var definitions=new JArray();
+            foreach(string id in ids){
+                var request=new JObject{["operation"]="inspect",["category"]="facts",["capability"]="object.definition",["version"]=1,["arguments"]=new JObject{["target"]=id}};
+                Assert.That(executor.Catalog.Execute(request,out var status),Is.True,status);var view=executor.Catalog.Observe();Assert.That((bool)view["available"],Is.True);
+                Assert.That((string)view["value"]["target"],Is.EqualTo(id));Assert.That((int)view["value"]["revision"],Is.EqualTo(editor.ObjectRevision(id)));
+                Assert.That(runtime.TryReadFact("object.definition",1,(JObject)request["arguments"],out var value),Is.True);Assert.That(JToken.DeepEquals(JToken.FromObject(value.Value),view["value"]),Is.True);
+                definitions.Add(new JObject{["request"]=request,["view"]=view});
+            }
+            Assert.That(editor.Find(dormant),Is.Null);Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+            string referencePath=Environment.GetEnvironmentVariable("MAESTRO_OBJECT_REFERENCE_EVIDENCE");if(!string.IsNullOrEmpty(referencePath)){Directory.CreateDirectory(referencePath);File.WriteAllText(Path.Combine(referencePath,"references.json"),new JObject{["pages"]=evidence.DeepClone(),["definitions"]=definitions,["dormantId"]=dormant}.ToString());}
             string path=Environment.GetEnvironmentVariable("MAESTRO_OBJECT_SEARCH_EVIDENCE");if(!string.IsNullOrEmpty(path)){Directory.CreateDirectory(path);File.WriteAllText(Path.Combine(path,"pages.json"),evidence.ToString());}
         }
         [UnityTest] public IEnumerator ObjectSearchCursorExpiresAcrossTemporaryBeginAndDiscard()

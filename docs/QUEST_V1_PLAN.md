@@ -37,7 +37,8 @@ Authored dependency topology is now reused across queries; see
 Allocation checks now validate their recorder and idle display no longer allocates;
 see [verified allocation measurement](#verified-allocation-measurement--2026-10-15).
 Users and agents now share bounded saved-object discovery; see
-[object search](#shared-saved-object-discovery--2026-10-15).
+[object search](#shared-saved-object-discovery--2026-10-15). Schema-generated action,
+fact and program fields now use the same directory; see [exact object choices](#shared-object-reference-fields--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10479,3 +10480,49 @@ state and other pickers still use the complete bounded object inventory; they ha
 not been silently truncated. Saved-object limits, whole-document persistence,
 live resource budgets and hardware acceptance remain further work. Existing
 headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
+
+## Shared object reference fields — 2026-10-15
+
+Schema-generated action, fact and nested program fields now discover objects
+through the same `world.objects` fact as the book hierarchy and agent. The shared
+native client is supplied by the workshop/catalog, not a second scene registry.
+Search opens only on request. Native pages preserve exact selection across
+paging; schema constraints disable incompatible choices, including built-in
+objects for creation-copy inputs. Merely opening or reading a field changes no
+draft, saved object, native view or program. Older clients without the discovery
+feature retain the complete-list control.
+
+A chosen ID remains visible outside the page or periodic object inventory.
+Explicit `object.definition` lookup supplies a display snapshot and read revision;
+blank native names retain their kind label. Unavailable reads retain the ID and
+explain the failure, without claiming the object was deleted. Changing the
+selection invalidates linked action inputs; the existing Load current values
+path must read their native revision before checking or executing. The field's
+name/revision preview is not an edit reservation. Session, temporary-room,
+draft-value and schema changes reject stale async replies. Catalog current-input
+reads now also guard temporary-room identity, not just transport session.
+
+Verification: **30 EditMode / 18 PlayMode** focused native checks passed with no
+failures/skips. The native fixture records search pages and exact definitions;
+program/native values match for every recorded object, including a dormant
+creation that remains unloaded. **2,976 web tests / 315 files**, application and
+probe TypeScript, and unchanged catalog-source checks passed. Eleven new cases
+cover off-inventory identities, native paging, schema exclusions, explicit reads,
+unavailable and late replies, temporary scopes, fallback controls, nested program
+fields and guarded action-current-input refresh.
+
+Actual desktop Chromium replayed the original book's copy-action form: find an
+object, read its name, load guarded current values and page without changing the
+chosen target. Disallowed choices remain disabled; narrow/wide screenshots were
+inspected without page errors or horizontal overflow. Browser receipts are
+simulated from native captures; no room edit or provider request was executed.
+All **3,014 frozen native inputs / 1,125 mirrored C# files** match. Fourteen
+pre-existing unrelated files remain unchanged. Evidence:
+`.quest-evidence/object-selectors/`.
+
+This does not page the periodic scene state, raise capacity or change native
+runtime/catalog contracts. Construction selections, legacy step/binding menus,
+reference summaries, inspector context and command preconditions still need
+exact-ID resolution before complete-state assumptions can be removed. Saved and
+live quotas remain separate forthcoming work. The broader native/Android/journey
+baseline remains **7fe48619**; headset, provider and release holds remain in place.

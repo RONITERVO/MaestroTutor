@@ -1,6 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {roomObjectLabel} from '../../../shared/roomSelection';
+import {ObjectReferenceField} from './ObjectReferenceField';
 import {useEffect,useRef,useState} from 'react';
 import {moduleHash} from '../../../shared/programModuleIdentity';
 import {checkedModuleFile} from '../../core-sdk/room/programModuleFile';
@@ -97,13 +97,13 @@ export function CapabilityFields({schema,value,onChange,label,objects,depth=0,lo
     </details>;
   }
   const stringValue=typeof value==='string'?value:'';
-  let options=schema.enum;
-  if(schema['x-resource']==='object') options=objects.filter(o=>(!schema.pattern||new RegExp(schema.pattern).test(o.id))&&(!schema.enum||schema.enum.includes(o.id))).map(o=>o.id);
+  const options=schema.enum;
+  if(schema['x-resource']==='object')return <><ObjectReferenceField {...{schema,value,onChange,label,objects}}/>{optionalNull}</>;
   const preview=schema['x-enum-images']?.[stringValue];
   const previewUrl=preview&&/^quest\/templates\/[a-f0-9]{64}\.png$/.test(preview)?import.meta.env.BASE_URL+preview:null;
   if(options) return <label>{label}<select aria-label={label} value={stringValue} onChange={e=>onChange(e.target.value)}>
     {!options.includes(stringValue)&&<option value={stringValue}>{stringValue||'Choose an object'}</option>}
-    {options.map(option=><option key={option} value={option}>{schema['x-resource']==='object'?roomObjectLabel(objects.find(o=>o.id===option)!,objects):schema['x-enum-labels']?.[option]??option}</option>)}
+    {options.map(option=><option key={option} value={option}>{schema['x-enum-labels']?.[option]??option}</option>)}
   </select>{previewUrl&&<img className="maestro-capability-choice-preview" src={previewUrl} alt={(schema['x-enum-labels']?.[stringValue]??'Selected option')+' preview'}/>} {optionalNull}</label>;
   if(schema.type==='boolean') return <label>{label}<select aria-label={label} value={String(value===true)} onChange={e=>onChange(e.target.value==='true')}><option value="false">No</option><option value="true">Yes</option></select>{optionalNull}</label>;
   return <label>{label}<input aria-label={label} type={schema.type==='string'?'text':'number'} value={typeof value==='number'?displayNumber(value):typeof value==='string'?value:''}

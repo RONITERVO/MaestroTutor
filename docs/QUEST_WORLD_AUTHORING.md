@@ -1608,3 +1608,24 @@ recipe parts remain inside their owning object.
 The current complete periodic scene inventory and existing object limits remain
 unchanged while other selectors and observation consumers are upgraded. This
 search does not establish larger-world or headset performance acceptance.
+
+## Choosing exact object references — 2026-10-15
+
+Object fields generated from the capability schema now use the shared saved-object
+search in the book's action catalog, facts and program editor. Find opens the
+same native directory used by the agent. Paging never replaces the selected ID;
+objects excluded by the field's schema are visible but cannot be chosen. An
+unloaded or off-page target stays selected. Reading the chosen object explicitly
+uses `object.definition`, without loading its view or changing the draft.
+
+The displayed read revision is a snapshot, not permission to edit. Changing a
+target clears the action's linked-input acceptance. Load current values obtains
+the required native revisions again; reusable program inputs keep their existing
+explicit Read blocks. Failed/unavailable reads preserve the exact target and do
+not silently substitute another. Session and temporary-room boundaries reject
+late replies from the previous scope.
+
+The periodic scene list remains complete at its current limit. Construction and
+legacy rule selectors, summaries and command guards still need migration before
+that list can be paged. This step introduces no additional saved schema, catalog
+operation, capacity increase or independent browser world.

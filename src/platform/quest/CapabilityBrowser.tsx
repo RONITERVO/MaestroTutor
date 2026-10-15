@@ -1,3 +1,4 @@
+import {ObjectReferenceProvider} from './ObjectReferenceField';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {ResourceChoiceFields} from './ResourceChoiceFields';
@@ -26,8 +27,9 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const busy=pending||loading;
  const [programInputs,setProgramInputs]=useState<'snapshot'|'current'>('current');
  const [currentChoices,setCurrentChoices]=useState<Record<string,boolean>>({}),[loadedInputs,setLoadedInputs]=useState<Record<string,unknown>|null>(null);
- const previousSession=useRef(state?.session);
- useEffect(()=>{if(previousSession.current!==state?.session){previousSession.current=state?.session;draftEpoch.current++;setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[state?.session]);
+ const roomScope=JSON.stringify([state?.session,state?.temporaryRoom?.id]);
+ const previousSession=useRef(roomScope);
+ useEffect(()=>{if(previousSession.current!==roomScope){previousSession.current=roomScope;draftEpoch.current++;setInspection(null);setLoaded('');setAcceptedSnapshot('');setChecked('');setConfirming('');}},[roomScope]);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;draftEpoch.current++;};},[]);
  const setArgs=(value:string)=>{draftEpoch.current++;writeArgs(value);setLoaded('');};
  const send=async(catalog:CatalogRequest)=>{
@@ -58,7 +60,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  let currentLocations:CurrentInputLocation[]=[],currentQueries:CatalogRequest[]=[],mappedFields:ReturnType<typeof currentInputFields>=[],currentError='',snapshotKey='';
  if(definition)try{
   currentLocations=currentInputLocations(definition.input,parsedArgs);mappedFields=currentInputFields(definition.input,parsedArgs);
-  currentQueries=currentLocations.map(l=>currentInputRequest(l.schema,l.value));snapshotKey=currentInputsIdentity(definition.input,parsedArgs,state?.session??'');
+  currentQueries=currentLocations.map(l=>currentInputRequest(l.schema,l.value));snapshotKey=currentInputsIdentity(definition.input,parsedArgs,roomScope);
  }catch(e){currentError=e instanceof Error?e.message:'Current values cannot be read.';}
  const hasCurrent=currentLocations.length>0;
  const snapshotReady=!hasCurrent||Boolean(snapshotKey&&snapshotKey===acceptedSnapshot);
@@ -67,7 +69,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const reusable=hasCurrent&&programInputs==='current'&&liveSupported;
  const currentFields=mappedFields.filter(f=>f.guard||(currentChoices[f.path]??(loadedInputs!==null&&JSON.stringify(argumentValue(loadedInputs,f.path))===JSON.stringify(argumentValue(parsedArgs,f.path))))).map(f=>f.path);
  const editActionInputs=(value:unknown,literalFields:string[]=[])=>{
-  let identityChanged=false;if(definition)try{identityChanged=currentInputsIdentity(definition.input,value,state?.session??'')!==snapshotKey;}catch{identityChanged=true;}
+  let identityChanged=false;if(definition)try{identityChanged=currentInputsIdentity(definition.input,value,roomScope)!==snapshotKey;}catch{identityChanged=true;}
   if(identityChanged){setAcceptedSnapshot('');setLoaded('');setLoadedInputs(null);}
   const choices={...currentChoices};
   for(const f of mappedFields)if(!f.guard&&(literalFields.includes(f.path)||JSON.stringify(argumentValue(parsedArgs,f.path))!==JSON.stringify(argumentValue(value,f.path))))choices[f.path]=false;
@@ -75,8 +77,8 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  };
  const loadCurrent=async()=>{
   if(!definition||!currentQueries.length||currentError)return;
-  const epoch=draftEpoch.current,session=state?.session;
-  const stillCurrent=()=>alive.current&&draftEpoch.current===epoch&&client.snapshot().session===session;
+  const epoch=draftEpoch.current,session=state?.session,temporary=state?.temporaryRoom?.id;
+  const stillCurrent=()=>alive.current&&draftEpoch.current===epoch&&client.snapshot().session===session&&client.getSnapshot().state?.temporaryRoom?.id===temporary;
   setError('');setLoaded('');setChecked('');setConfirming('');setLoading(true);
   try{
    const views:CatalogView[]=[];
@@ -89,7 +91,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
     views.push(result.catalog);
    }
    const next=applyCurrentInputSnapshots(definition.input,parsedArgs,views);
-   setArgs(JSON.stringify(next,null,2));setLoadedInputs(next);setCurrentChoices({});setAcceptedSnapshot(currentInputsIdentity(definition.input,next,session??''));setLoaded('Current values loaded. Review your changes before running.');
+   setArgs(JSON.stringify(next,null,2));setLoadedInputs(next);setCurrentChoices({});setAcceptedSnapshot(currentInputsIdentity(definition.input,next,roomScope));setLoaded('Current values loaded. Review your changes before running.');
   }catch(e){if(stillCurrent()){setLoaded('');setError(e instanceof Error?e.message:'Current values could not be read.');}}
   finally{if(alive.current)setLoading(false);}
  };
@@ -100,7 +102,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const supported=state?.capabilities?.includes('catalog.v1')===true;
  const viewImage=state?.capture?client.captureImage(state.capture.captureId):null;
  const execution=executionForCapability(definition?.id,state?.execution);
- return <div className="room-workspace capability-browser" aria-label="Action catalog">
+ return <ObjectReferenceProvider client={client}><div className="room-workspace capability-browser" aria-label="Action catalog">
   <section className="room-workspace-page room-hierarchy" aria-label="Find an action">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">ROOM VOCABULARY</span><h1>{category==='actions'?'Action catalog':category==='events'?'Events':category==='guides'?'Guides':'Room facts'}</h1></div><button disabled={busy} onClick={onClose}>Back to workshop</button></div>
    <p className="room-workspace-intro">Explore what Maestro can do, what programs can wait for and what they can observe. Search and inspect use the same native catalog as the agent.</p>
@@ -173,7 +175,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
     {state.execution.workspace&&<ExecutionHistory workspace view={state.execution.workspace} pending={busy} execute={execute} recoverable={state.capabilities?.includes('actionRecovery.v1')===true}/>}
    </>}
   </section>
- </div>;
+ </div></ObjectReferenceProvider>;
 }
 
 function ExecutionHistory({view,pending,execute,recoverable,workspace=false}:{view:ExecutionLane;pending:boolean;execute:(request:ExecutionRequest)=>Promise<void>;recoverable:boolean;workspace?:boolean}) {
