@@ -1684,8 +1684,37 @@ authorize a fresh action. Native receipt handling recognizes the completed actio
 before edit checks or rejects an unknown/mismatched identity. Undo cannot make an
 old receipt delete the restored object again.
 
-This is an inspection and guard foundation, not completion of periodic-state
-paging. Other multi-object consumers and selection validation still depend on the
-complete list and must gain explicit read sets before it is paged. World limits,
-resource admission and the independent real-room physics, visual and sound
-policies are unchanged.
+The shared read sets below now extend this to multi-object actions and native
+selection. Production periodic state remains complete; world limits, resource
+admission and the independent real-room physics, visual and sound policies are
+unchanged.
+
+
+## Shared object read sets — 2026-10-15
+
+An action may involve several saved objects outside the displayed inventory.
+Book and headless clients share explicit preparation for those targets: it reads
+only missing exact IDs through `object.definition`, keeps already reviewed
+revisions and sends the action only after every required read succeeds. Failed or
+mismatched reads send no partial edit. Native guards still reject changes made
+between those reads and execution. Preparation does not reserve the objects or
+silently refresh an existing guard.
+
+The action catalog retains the evidence from Load current values, including every
+nested construction member. Later display updates cannot replace those guards.
+Selection controls use the same preparation before selection/handle changes.
+Membership comes from the native selection state, not membership in a displayed
+page; exact IDs and order remain intact outside the list. A missing display label
+can show the ID without treating the object as deleted. Native existence,
+readiness, selection identity and action checks remain authoritative.
+
+Delegated tasks use the exact definition reads already returned in that task's
+receipts. They do not add hidden discovery calls at dispatch. Evidence cannot cross
+a session or temporary-room boundary; an unavailable subsequent definition removes
+its earlier fact evidence. Users and agents retain the same native validation and
+receipt semantics. An earlier execution's receipt can still be inspected after its
+target is gone, without granting a new action.
+
+The production periodic inventory remains complete pending a final consumer audit.
+This increment adds no saved capacity, new native capability or independent world
+store. Larger-world quotas and live resource admission remain separate work.

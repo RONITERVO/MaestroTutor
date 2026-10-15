@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {readObjectReference} from '../../../shared/objectReference';
 import {capabilityResources} from '../../../shared/capabilities';
 import {validObjectPhysics,validAvatarMovement} from '../../../shared/roomControls';
 import {validPigment} from './recipe';
@@ -19,14 +20,24 @@ export function inspectedRoomObject(state:RoomAgentState):RoomObjectObservation|
  return view.item??state.objects.find(o=>o.id===view.id);
 }
 /** Capture exact revision evidence from the state the author saw, never refresh at dispatch. */
-export function roomRevisionBasis(state:RoomAgentState):RoomObjectRevision[] {
- const result=state.objects.map(({id,objectRevision})=>({id,objectRevision})),view=state.inspection;
- if(view&&!result.some(o=>o.id===view.id))result.push({id:view.id,objectRevision:view.objectRevision});
- return result;
+export function roomRevisionBasis(state:RoomAgentState,earlier:readonly RoomAgentState[]=[]):RoomObjectRevision[] {
+ const result=new Map<string,RoomObjectRevision>();
+ for(const observed of [...earlier,state]){
+  if(observed.session!==state.session||observed.temporaryRoom?.id!==state.temporaryRoom?.id)throw new Error('Object reads belong to another room session.');
+  const fact=observed.catalog;
+  if(observed.ok&&fact?.operation==='inspect'&&fact.category==='facts'&&fact.capability==='object.definition'&&roomObjectId(fact.arguments?.target)){
+   const target=fact.arguments.target as string,read=readObjectReference(fact,target);
+   if(read)result.set(target,{id:target,objectRevision:read.revision});
+   else result.delete(target);
+  }
+  for(const {id,objectRevision} of observed.objects)result.set(id,{id,objectRevision});
+  const view=observed.inspection;if(view)result.set(view.id,{id:view.id,objectRevision:view.objectRevision});
+ }
+ return [...result.values()];
 }
-/** Missing evidence is not permission to omit a native target precondition. */
-export function roomCommandConditions(commands:readonly RoomCommand[],basis:readonly RoomObjectRevision[],reconcile=false):{version:1|2;conditions:{id:string;revision:number}[]} {
- const modern=basis.every(o=>revision(o.objectRevision)),targets=new Set<string>(),required=new Set<string>(),aliases=new Set<string>();
+/** Only external exact objects need evidence; earlier creation aliases belong to this batch. */
+export function roomCommandTargets(commands:readonly RoomCommand[]):{targets:Set<string>;required:Set<string>} {
+ const targets=new Set<string>(),required=new Set<string>(),aliases=new Set<string>();
  for(const command of commands){
   if(command.action==='create'){if(command.reference)aliases.add(command.reference);continue;}
   const references=command.action==='execution'&&command.execution?.operation==='start'?capabilityResources(command.execution.call.id,command.execution.call.arguments):command.target?[command.target]:[];
@@ -34,6 +45,11 @@ export function roomCommandConditions(commands:readonly RoomCommand[],basis:read
    targets.add(target);if(!['inspect','motions'].includes(command.action))required.add(target);
   }
  }
+ return {targets,required};
+}
+/** Missing evidence is not permission to omit a native target precondition. */
+export function roomCommandConditions(commands:readonly RoomCommand[],basis:readonly RoomObjectRevision[],reconcile=false):{version:1|2;conditions:{id:string;revision:number}[]} {
+ const modern=basis.every(o=>revision(o.objectRevision)),{targets,required}=roomCommandTargets(commands);
  // Zero cannot authorize a new edit. It permits the native receipt lane to
  // reconcile an old ID before checking targets that may no longer exist.
  if(reconcile)return {version:2,conditions:[...targets].map(id=>({id,revision:0}))};

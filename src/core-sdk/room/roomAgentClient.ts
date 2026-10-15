@@ -8,7 +8,7 @@ import {validRoomCaptureMetadata,validRoomCaptureImage,sameRoomCapture,type Room
 import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
 import {validRoomOwnership} from '../../../shared/roomOwnership';
 import {validTemporaryRoom} from '../../../shared/roomSession';
-import {roomCommandConditions,roomRevisionBasis,roomObjectId,validRoomObjectObservation} from './roomObjectContext';
+import {roomCommandConditions,roomCommandTargets,roomRevisionBasis,roomObjectId,validRoomObjectObservation} from './roomObjectContext';
 import {validExecutionView,identifyExecution,executionForCapability} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
 import { MAX_ROOM_CAPABILITIES, requireRoomCapabilities, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
@@ -16,7 +16,9 @@ import {validActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionSearchView} from '../../../shared/roomMotions';
 import {validRuleView} from './rules';
 import {parseRecipe} from './recipe';
-import { parseRoomCommands, type RoomAgentLease, type RoomAgentState, type RoomCommand } from './roomAgent';
+import { parseRoomCommands, type RoomAgentLease, type RoomAgentState, type RoomCommand, type RoomObjectRevision } from './roomAgent';
+import {objectReferenceRequest,readObjectReference} from '../../../shared/objectReference';
+export interface RoomCommandContext {state:RoomAgentState;objects:RoomObjectRevision[]}
 const record=(v:unknown):v is Record<string,unknown> => v!==null && typeof v==='object' && !Array.isArray(v);
 const integer=(v:unknown,min=0) => typeof v==='number' && Number.isInteger(v) && v>=min && v<=2147483647;
 const id=(v:unknown) => typeof v==='string' && /^[a-f0-9]{32}$/.test(v);
@@ -49,8 +51,8 @@ export class RoomAgentClient {
       !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>327680) return false;
     if(!input.objects.every(validRoomObjectObservation)||new Set(input.objects.map(o=>o.id)).size!==input.objects.length)return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>MAX_ROOM_CAPABILITIES||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
-    if(input.constructionSelection!==undefined&&input.constructionSelection!==null&&!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionSelection.v1')&&!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects']))return false;
-    if(input.constructionManipulation!==undefined&&input.constructionManipulation!==null&&!validConstructionManipulation(input.constructionManipulation,input.constructionSelection as RoomAgentState['constructionSelection'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionManipulation.v1')&&(!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects'])||!validConstructionManipulation(input.constructionManipulation,input.constructionSelection)))return false;
+    if(input.constructionSelection!==undefined&&input.constructionSelection!==null&&!validConstructionSelection(input.constructionSelection)||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionSelection.v1')&&!validConstructionSelection(input.constructionSelection))return false;
+    if(input.constructionManipulation!==undefined&&input.constructionManipulation!==null&&!validConstructionManipulation(input.constructionManipulation,input.constructionSelection as RoomAgentState['constructionSelection'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionManipulation.v1')&&(!validConstructionSelection(input.constructionSelection)||!validConstructionManipulation(input.constructionManipulation,input.constructionSelection)))return false;
     if(input.temporaryRoom!==undefined&&!validTemporaryRoom(input.temporaryRoom)||Array.isArray(input.capabilities)&&input.capabilities.includes('temporaryRoom.v1')&&!validTemporaryRoom(input.temporaryRoom))return false;
     if(input.ownership!==undefined&&input.ownership!==null&&!validRoomOwnership(input.ownership)||Array.isArray(input.capabilities)&&input.capabilities.includes('roomOwnership.v1')&&!validRoomOwnership(input.ownership))return false;
     if(input.physics!==undefined&&input.physics!==null&&(!validPhysicsObservation(input.physics)||input.physics.running!==input.physicsRunning))return false;
@@ -92,9 +94,42 @@ export class RoomAgentClient {
     if(this.pending) {clearTimeout(this.pending.timer);this.pending.detachAbort();this.pending.reject(new DOMException('Room request interrupted; inspect the room before retrying.','AbortError'));this.pending=undefined;}
     this.value=null;this.publish();
   }
-  request(commands:RoomCommand[],expected?:RoomAgentState) {
+  request(commands:RoomCommand[],expected?:RoomAgentState,expectedObjects?:readonly RoomObjectRevision[]) {
     const lease=this.lease();if(!lease)return Promise.reject(new Error('The room is disconnected or another action is pending.'));
-    const scene=expected??lease.state();if(scene.session!==lease.state().session||scene.temporaryRoom?.id!==lease.state().temporaryRoom?.id)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,roomRevisionBasis(scene));
+    const scene=expected??lease.state();if(scene.session!==lease.state().session||scene.temporaryRoom?.id!==lease.state().temporaryRoom?.id)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,expectedObjects??roomRevisionBasis(scene));
+  }
+  /** Read only missing exact targets. Never refresh evidence the author already reviewed. */
+  prepare(commands:RoomCommand[],expected?:RoomAgentState,expectedObjects?:readonly RoomObjectRevision[]):RoomCommandContext|Promise<RoomCommandContext> {
+    const lease=this.lease();if(!lease)throw new Error('The room is disconnected or another action is pending.');
+    const state=expected??lease.state(),live=lease.state();
+    if(state.session!==live.session||state.temporaryRoom?.id!==live.temporaryRoom?.id)throw new Error('The room session changed. Reload the latest object before editing.');
+    parseRoomCommands({commands});requireRoomCapabilities(commands,live);
+    const objects=(expectedObjects??roomRevisionBasis(state)).map(o=>({...o}));
+    if(this.reconciling(commands)||objects.some(o=>o.objectRevision===undefined))return {state,objects};
+    const missing=[...roomCommandTargets(commands).required].filter(id=>!objects.some(o=>o.id===id));
+    if(!missing.length){roomCommandConditions(commands,objects);return {state,objects};}
+    return (async()=>{
+    for(const target of missing){
+      if(!roomObjectId(target))throw new Error('Choose an exact saved object before editing: '+target);
+      const receipt=await lease.execute([{action:'catalog',catalog:objectReferenceRequest(target)}],state.sceneRevision,[]);
+      if(!lease.valid())throw new Error('The room session changed while reading action objects.');
+      const read=receipt.ok?readObjectReference(receipt.catalog,target):null;
+      if(!read)throw new Error(receipt.ok?'The saved object cannot be read now: '+target:receipt.status);
+      objects.push({id:target,objectRevision:read.revision});
+    }
+    roomCommandConditions(commands,objects);
+    return {state,objects};
+    })();
+  }
+  /** Explicit user-action preparation, shared with headless clients. */
+  requestPrepared(commands:RoomCommand[],expected?:RoomAgentState,expectedObjects?:readonly RoomObjectRevision[]):Promise<RoomAgentState> {
+    const prepared=this.prepare(commands,expected,expectedObjects);
+    const dispatch=(context:RoomCommandContext)=>this.request(commands,context.state,context.objects);
+    return prepared instanceof Promise?prepared.then(dispatch):dispatch(prepared);
+  }
+  private reconciling(commands:readonly RoomCommand[]):boolean {
+    const start=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'?commands[0].execution:null;
+    return Boolean(start?.runId&&this.value?.capabilities?.includes('executionReceipts.v1')&&start.runId!==executionForCapability(start.call.id,this.value.execution)?.nextRunId);
   }
   snapshot=() => {
     const snapshot = {clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null};
@@ -124,9 +159,7 @@ export class RoomAgentClient {
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
       parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);
       if(this.value!.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,this.value!.execution)}:c);
-      const start=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'?commands[0].execution:null;
-      const reconcile=Boolean(start?.runId&&this.value!.capabilities?.includes('executionReceipts.v1')&&start.runId!==executionForCapability(start.call.id,this.value!.execution)?.nextRunId);
-      const context=roomCommandConditions(commands,expectedObjects??roomRevisionBasis(this.value!),reconcile);
+      const context=roomCommandConditions(commands,expectedObjects??roomRevisionBasis(this.value!),this.reconciling(commands));
       const request={...context,session,sequence:++this.sequence,sceneRevision:expectedRevision,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
       return new Promise<RoomAgentState>((resolve,reject)=>{
         const abort=()=>{if(this.pending?.request===request)this.cancel();};

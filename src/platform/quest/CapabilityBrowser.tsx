@@ -1,3 +1,6 @@
+import {roomRevisionBasis} from '../../core-sdk/room/roomObjectContext';
+import type {RoomCommandContext} from '../../core-sdk/room/roomAgentClient';
+import type {RoomAgentState} from '../../core-sdk/room/roomAgent';
 import {ObjectReferenceProvider} from './ObjectReferenceField';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -23,6 +26,7 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
  const [inspection,setInspection]=useState<Extract<CatalogView,{operation:'inspect'}>|null>(null),[args,writeArgs]=useState('{}'),[error,setError]=useState('');
  const [checked,setChecked]=useState(''),[recoveryNotice,setRecoveryNotice]=useState(''),[confirming,setConfirming]=useState('');
  const draftEpoch=useRef(0),alive=useRef(true),seeded=useRef(false);
+ const [readContext,setReadContext]=useState<RoomCommandContext|null>(null);
  const [loaded,setLoaded]=useState(''),[acceptedSnapshot,setAcceptedSnapshot]=useState(''),[loading,setLoading]=useState(false);
  const busy=pending||loading;
  const [programInputs,setProgramInputs]=useState<'snapshot'|'current'>('current');
@@ -37,8 +41,9 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   catch(e){setError(e instanceof Error?e.message:'The room is unavailable.');return null;}
  };
  const execute=async(execution:ExecutionRequest)=>{
-  setError('');setRecoveryNotice('');try {const result=await client.request([{action:'execution',execution}],state??undefined);if(!result.ok)setError(result.status);else if(execution.operation==='recover')setRecoveryNotice(result.status);}
+  setError('');setRecoveryNotice('');setLoading(true);try {const reviewed=execution.operation==='start'&&hasCurrent&&snapshotReady?readContext:null;const result=await client.requestPrepared([{action:'execution',execution}],reviewed?.state??state??undefined,reviewed?.objects);if(!result.ok)setError(result.status);else if(execution.operation==='recover')setRecoveryNotice(result.status);}
   catch(e){setError(e instanceof Error?e.message:'The action could not be confirmed. Inspect the room before retrying.');}
+  finally{if(alive.current)setLoading(false);}
  };
  const scope=category==='actions'?{}:{category};
  const search=async(offset=0)=>{setInspection(null);const result=await send({operation:'search',...scope,query:offset?page?.query??query:query,offset});if(result?.operation==='search'&&(result.category??'actions')===category)setPage(result);};
@@ -81,16 +86,17 @@ export function CapabilityBrowser({client,onClose,onInsert,initialCall}:{client:
   const stillCurrent=()=>alive.current&&draftEpoch.current===epoch&&client.snapshot().session===session&&client.getSnapshot().state?.temporaryRoom?.id===temporary;
   setError('');setLoaded('');setChecked('');setConfirming('');setLoading(true);
   try{
-   const views:CatalogView[]=[];
+   const views:CatalogView[]=[],observations:RoomAgentState[]=[];
    for(let i=0;i<currentQueries.length;i++){
     if(!stillCurrent())return;
     setLoaded(`Reading current values ${i+1} of ${currentQueries.length}…`);
     const result=await client.request([{action:'catalog',catalog:currentQueries[i]}]);
     if(!stillCurrent())return;
     if(!result.ok||!result.catalog)throw new Error(result.status||'Current values are unavailable.');
-    views.push(result.catalog);
+    views.push(result.catalog);observations.push(result);
    }
    const next=applyCurrentInputSnapshots(definition.input,parsedArgs,views);
+   const last=observations[observations.length-1];setReadContext({state:last,objects:roomRevisionBasis(last,observations.slice(0,-1))});
    setArgs(JSON.stringify(next,null,2));setLoadedInputs(next);setCurrentChoices({});setAcceptedSnapshot(currentInputsIdentity(definition.input,next,roomScope));setLoaded('Current values loaded. Review your changes before running.');
   }catch(e){if(stillCurrent()){setLoaded('');setError(e instanceof Error?e.message:'Current values could not be read.');}}
   finally{if(alive.current)setLoading(false);}

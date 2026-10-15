@@ -55,6 +55,24 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.SetConstructionSelection(editor.ObserveConstructionSelection().stateId,new[]{id},true,out error),Is.True,error);Assert.That(editor.ConfigureDrawing("space",Color.blue,.003f,out error),Is.True,error);Assert.That(editor.ObserveConstructionSelection().collecting,Is.False);
             Assert.That(editor.SetConstructionSelection(editor.ObserveConstructionSelection().stateId,new[]{id},true,out error),Is.False);Assert.That(error,Does.Contain("pencil"));yield return null;
         }
+        [UnityTest] public IEnumerator ExplicitObjectReadSetGuardsAllSelectionMembers()
+        {
+            var ids=editor.Snapshot().objects.Where(x=>!x.IsBuiltIn).Take(2).Select(x=>x.id).ToArray();Assert.That(ids.Length,Is.EqualTo(2));
+            var executor=new RoomAgentExecutor(editor);var guards=new RoomObjectCondition[ids.Length];
+            for(int i=0;i<ids.Length;i++){
+                var query=new JObject{["operation"]="inspect",["category"]="facts",["capability"]="object.definition",["version"]=1,["arguments"]=new JObject{["target"]=ids[i]}};
+                Assert.That(executor.Catalog.Execute(query,out var status),Is.True,status);var read=executor.Catalog.Observe();Assert.That((bool)read["available"],Is.True);
+                guards[i]=new RoomObjectCondition{id=(string)read["value"]["target"],revision=(int)read["value"]["revision"]};
+            }
+            var before=editor.ObserveConstructionSelection();var call=new JObject{["id"]="room.selection.set",["version"]=1,["arguments"]=new JObject{["stateId"]=before.stateId,["members"]=new JArray(ids),["collecting"]=false}};
+            var request=new RoomAgentRequest{version=2,conditions=guards,commands=new[]{new RoomAgentCommand{action="execution",execution=new JObject{["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call}}}};
+            Assert.That(editor.PaintObject(ids[0],Color.magenta,out var error),Is.True,error);
+            Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(editor.ObserveConstructionSelection().members,Is.Empty);
+            guards[0].revision=editor.ObjectRevision(ids[0]);request.conditions=guards.Take(1).ToArray();Assert.That(executor.Execute(request,out error,out _),Is.False,"A missing member guard cannot authorize the selection");
+            Assert.That(editor.ObserveConstructionSelection().stateId,Is.EqualTo(before.stateId));
+            request.conditions=guards;request.commands[0].execution["runId"]=runtime.Scheduler.Receipts.NextId;Assert.That(executor.Execute(request,out error,out _),Is.True,error);
+            Assert.That(editor.ObserveConstructionSelection().members,Is.EqualTo(ids));Assert.That(executor.Executions.Observe()["selected"]["phase"].Value<string>(),Is.EqualTo("completed"));yield return null;
+        }
         [UnityTest] public IEnumerator SharedSelectionCapabilityRequiresExactObjectConditionsAndReturnsNoCreatedAuthority() {
             var definition=ConstructionSelectionCapability.Fact();Assert.That(definition.TryRead(new BehaviourCatalog.FactContext(editor:editor),out var empty),Is.True);Assert.That(JObject.FromObject(empty.Value)["members"],Is.Empty);
             string id=editor.Identity(block);var before=editor.ObserveConstructionSelection();var call=new JObject {["id"]="room.selection.set",["version"]=1,["arguments"]=new JObject {["stateId"]=before.stateId,["members"]=new JArray(id),["collecting"]=false}};

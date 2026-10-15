@@ -4,9 +4,10 @@ import type {CapabilityInvocation} from './capabilities';
 export interface ConstructionSelection {stateId:string;collecting:boolean;members:string[]}
 type SceneObject={id:string;name?:string;objectRevision?:number};
 const id=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9]{32}$/.test(value);
-export function validConstructionSelection(value:unknown,objects?:readonly SceneObject[]):value is ConstructionSelection {
+/** Native selection owns membership; absence from a displayed page is not deletion. */
+export function validConstructionSelection(value:unknown):value is ConstructionSelection {
  if(!value||typeof value!=='object'||Array.isArray(value))return false;const s=value as Record<string,unknown>;
- return Object.keys(s).sort().join(',')==='collecting,members,stateId'&&id(s.stateId)&&typeof s.collecting==='boolean'&&Array.isArray(s.members)&&s.members.length<=16&&s.members.every(id)&&new Set(s.members).size===s.members.length&&(!objects||s.members.every(member=>objects.some(o=>o.id===member)));
+ return Object.keys(s).sort().join(',')==='collecting,members,stateId'&&id(s.stateId)&&typeof s.collecting==='boolean'&&Array.isArray(s.members)&&s.members.length<=16&&s.members.every(id)&&new Set(s.members).size===s.members.length;
 }
 /** Labels distinguish duplicates; identity always remains the exact object ID. */
 export function roomObjectLabel(object:SceneObject,objects:readonly SceneObject[]):string {

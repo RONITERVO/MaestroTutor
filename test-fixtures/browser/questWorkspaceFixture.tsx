@@ -284,7 +284,8 @@ if(new URLSearchParams(location.search).has('moduleLibrary'))Object.assign(windo
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
 const behaviourChoicesMode=new URLSearchParams(location.search).has('behaviourObjectChoices');
-const constructionSearchMode=new URLSearchParams(location.search).has('constructionSearch');
+const objectReadSetsMode=new URLSearchParams(location.search).has('objectReadSets');
+const constructionSearchMode=objectReadSetsMode||new URLSearchParams(location.search).has('constructionSearch');
 const objectSelectorsMode=behaviourChoicesMode||constructionSearchMode||new URLSearchParams(location.search).has('objectSelectors');
 const objectSearchMode=objectSelectorsMode||new URLSearchParams(location.search).has('objectSearch');
 const objectSearchPages=(objectSelectorsMode?nativeObjectReferences.pages:nativeObjectSearch) as unknown as {request:CatalogRequest;view:CatalogView}[];
@@ -300,6 +301,7 @@ if(behaviourChoicesMode){
  state.rules.sequences=[{id:selected.id,name:selected.name,steps:1,repeat:false}];state.rules.running=[];state.rules.bindings=[];state.rules.bindingCount=0;state.rules.buttons=[];state.rules.outcomes=[];
  state.workspaceView='rules';state.selectedId=target;state.capabilities=[...new Set([...state.capabilities!,...nativeProgram.capabilities])];
 }
+if(objectReadSetsMode)state.objects=[];
 const objectInspectionMode=new URLSearchParams(location.search).has('objectInspection');
 if(objectInspectionMode)state={...structuredClone(nativeObjectInspection) as unknown as RoomAgentState,objects:[]};
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
@@ -324,7 +326,8 @@ setInterval(()=>{
     const object=state.objects.find(value=>value.id===command.target);if(object){state.selectedId=object.id;state.inspection={id:object.id,objectRevision:object.objectRevision!,recipe:null};}else{state.ok=false;state.status='Object is not in the native search recording.';}
    }else if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(constructionSearchMode&&input.operation==='start'&&input.call.id==='room.selection.set'){
+    if(objectReadSetsMode&&input.operation==='start'&&input.call.id==='program.module.captureConstruction'){state.ok=false;state.status='Captured guarded request; this fixture does not save constructions.';}
+    else if(constructionSearchMode&&input.operation==='start'&&input.call.id==='room.selection.set'){
       const args=input.call.arguments,problem=validateCapabilityArguments(input.call.id,input.call.version,args);
       if(problem||args.stateId!==state.constructionSelection?.stateId){state.ok=false;state.status=problem??'Selection changed';}
       else{const output={stateId:uuid(),members:args.members as string[],collecting:args.collecting as boolean},summary={id:input.runId!,capability:input.call.id,version:1,phase:'completed' as const,status:'Simulated native selection acknowledgement',resources:capabilityResources(input.call.id,args),output};state.constructionSelection=output;state.execution={nextRunId:uuid(),running:[],outcomes:[summary],selected:{...summary,call:input.call},storageError:null};}

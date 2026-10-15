@@ -213,8 +213,8 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       // A post-action scene alone cannot tell the next planner what was removed.
       const dispatched=copy(batch);
       const receipt=await (control.signal
-        ? lease.execute(batch,current.sceneRevision,roomRevisionBasis(current),control.signal)
-        : lease.execute(batch,current.sceneRevision,roomRevisionBasis(current)));
+        ? lease.execute(batch,current.sceneRevision,roomRevisionBasis(current,receipts),control.signal)
+        : lease.execute(batch,current.sceneRevision,roomRevisionBasis(current,receipts)));
       operations.push({commands:dispatched,receiptIndex:receipts.length});
       receipts.push(copy(receipt));
       const moduleQuery=batch.length===1&&batch[0].action==='catalog'&&batch[0].catalog?.operation==='inspect'&&batch[0].catalog.category==='modules'?batch[0].catalog:null;

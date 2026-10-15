@@ -10,8 +10,8 @@ import native from '../../../test-fixtures/browser/programBookState.json';
 const objects=[{id:'a'.repeat(32),name:'Brick',objectRevision:101},{id:'b'.repeat(32),name:'Brick',objectRevision:202}];
 const selection={stateId:'c'.repeat(32),collecting:false,members:objects.map(o=>o.id)};
 it('shares bounded ordered selection identities without exposing created-resource authority',()=>{
- expect(validConstructionSelection(selection,objects)).toBe(true);expect(validConstructionSelection({...selection,members:[]},objects)).toBe(true);
- for(const bad of [{...selection,extra:1},{...selection,stateId:'old'},{...selection,collecting:'yes'},{...selection,members:['book']},{...selection,members:[objects[0].id,objects[0].id]},{...selection,members:['f'.repeat(32)]},{...selection,members:Array.from({length:17},(_,i)=>(i+1).toString(16).padStart(32,'0'))}])expect(validConstructionSelection(bad,objects)).toBe(false);
+ expect(validConstructionSelection(selection)).toBe(true);expect(validConstructionSelection({...selection,members:[]})).toBe(true);
+ for(const bad of [{...selection,extra:1},{...selection,stateId:'old'},{...selection,collecting:'yes'},{...selection,members:['book']},{...selection,members:[objects[0].id,objects[0].id]},{...selection,members:Array.from({length:17},(_,i)=>(i+1).toString(16).padStart(32,'0'))}])expect(validConstructionSelection(bad)).toBe(false);
  const call=constructionSelectionCall(selection,[...selection.members].reverse(),true);expect(validateCapabilityArguments(call.id,call.version,call.arguments)).toBeNull();expect(capabilityResources(call.id,call.arguments)).toEqual([...selection.members].reverse());
  expect(validateCapabilityArguments(call.id,1,{...call.arguments,members:[objects[0].id,objects[0].id]})).toContain("distinct");
  expect(validateCapabilityOutput(call.id,1,selection)).toBeNull();expect(capabilityDefinition(call.id)!.output!.properties!.members.items!['x-resource']).toBeUndefined();
@@ -27,7 +27,8 @@ it('prepares exact editable capture members in selected order and distinguishes 
 it('requires native selection evidence when advertised and shares it with the delegated agent',()=>{
  const base={...structuredClone(native),capabilities:[...native.capabilities,'constructionSelection.v1'],constructionSelection:selection,objects:objects.map(o=>({...native.objects[0],...o}))};
  const client=new RoomAgentClient();expect(client.receive(base)).toBe(true);expect(JSON.parse(buildRoomAgentPrompt('Save these pieces',base,[])).scene.constructionSelection).toEqual(selection);
- for(const bad of [undefined,null,{...selection,members:['f'.repeat(32)]},{...selection,stateId:'bad'}])expect(new RoomAgentClient().receive({...base,constructionSelection:bad})).toBe(false);
+ for(const bad of [undefined,null,{...selection,stateId:'bad'}])expect(new RoomAgentClient().receive({...base,constructionSelection:bad})).toBe(false);
+ expect(new RoomAgentClient().receive({...base,objects:[]})).toBe(true);expect(validConstructionSelection({...selection,members:['f'.repeat(32)]})).toBe(true);
  expect(new RoomAgentClient().receive({...base,capabilities:native.capabilities,constructionSelection:undefined})).toBe(true);client.cancel();
 });
 

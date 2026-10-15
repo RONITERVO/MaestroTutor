@@ -45,6 +45,8 @@ Behaviour fields, trigger sources and reference summaries now share those saved
 identities; see [behaviour references](#shared-behaviour-object-choices--2026-10-15).
 The object inspector now carries its own native metadata and reviewed edit revisions;
 see [inspection context](#self-contained-object-inspection--2026-10-15).
+Multi-object actions now retain explicit native reads without a complete inventory;
+see [shared object read sets](#shared-object-read-sets--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10671,3 +10673,60 @@ guard. Saved quotas and native resource admission remain separate forthcoming wo
 Per-entity scanned-room physics/navigation choices remain independent of visibility
 and sound. V1 remains incomplete. No headset, paid provider, signing, deployment or
 Meta work was performed; existing holds remain in place.
+
+
+## Shared object read sets — 2026-10-15
+
+The shared client can now prepare missing exact-object revisions through the
+existing native `object.definition` fact. Preparation retains revisions already
+reviewed, reads only missing required targets and dispatches no edit unless all
+those reads succeed. It does not silently retry stale writes. Session or temporary
+room changes stop the preparation; creation aliases and old execution receipts
+retain their existing special handling. The same API is available to book and
+headless clients, without another object lookup protocol or capability family.
+
+The action catalog retains the revision context of its explicit current-input
+reads, including nested construction members. A later periodic observation cannot
+replace those reviewed guards. Selection changes and move-handle requests use the
+shared preparation path. Construction selection validation now trusts native
+membership independently of the displayed inventory; malformed, duplicate,
+oversized and inconsistent handle observations still fail validation. Native
+selection continues to enforce saved existence, readiness and its own state ID.
+
+Delegated tasks retain successful exact definition reads from their own earlier
+receipts, within the same room scope. These are the same receipts supplied to the
+planner. Their compact revision evidence can guard a later multi-object command
+even with an empty periodic inventory. A newly unavailable definition removes that
+prior fact evidence; current explicit observations remain authoritative. The task
+does not silently invent an extra read or refresh a guard when it dispatches.
+
+Verification passed **33 EditMode / 16 PlayMode** focused native cases without
+failures/skips. The added native case checks stale and incomplete two-object read
+sets before accepting the exact ordered selection. **3,011 web tests / 319 files**,
+application/probe TypeScript and unchanged catalog-source checks passed. Eight new
+web cases cover scoped facts, only-missing preparation, failed/mismatched reads,
+room changes, creation aliases, old receipts, nested capture and selection guards,
+and the delegated task's two-read handoff.
+
+Desktop Chromium exercised the original book with native-recorded directory and
+definition data plus an empty simulated inventory. Cross-page selection, reordering
+and capture requests carried exact native revisions; a simulated capture refusal
+remained visible. Wide/narrow screenshots were inspected without horizontal
+overflow or page errors. Selection acknowledgements are simulated and no native
+browser mutation or provider call occurred. Native selection and rejection behavior
+were verified separately in Unity.
+
+All **3,014 native inputs / 1,125 mirrored C# files** match the tested source;
+14 unrelated pre-existing files remain byte-for-byte unchanged. Evidence:
+`.quest-evidence/object-read-sets/`. The preceding inspection checkpoint is
+**38df71ea**; the broader native/Android/offline journey baseline remains
+**7fe48619** and was not rerun. Native runtime, catalog definitions and saved schema
+are unchanged by this increment.
+
+The production periodic inventory is still complete and world limits are unchanged.
+Remaining observation consumers need a final audit before publishing a bounded
+inventory contract; saved capacity and native resource admission remain separate
+work. Optional labels can still use inventory metadata, falling back to exact IDs
+when it is absent. This fallback does not infer deletion or authorize an edit.
+V1 is incomplete. No headset, paid provider, signing, deployment or Meta work ran;
+existing holds remain in place.

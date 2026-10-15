@@ -1,3 +1,6 @@
+import referenceFixtures from '../../../test-fixtures/browser/objectReferences.json';
+import {readObjectReference} from '../../../shared/objectReference';
+import type {CatalogView} from '../../../shared/roomCatalog';
 import nativeInspection from '../../../test-fixtures/browser/objectInspection.json';
 import nativeEditProgram from '../../../test-fixtures/browser/objectEditProgram.json';
 import {sequenceProgram} from './programs';
@@ -612,4 +615,13 @@ it('passes inspected off-inventory revision evidence from the planner snapshot t
  const ai=client([JSON.stringify({commands:[{action:'resize',target,scale:1.5}]}),'{"commands":[]}']);const execute=vi.fn(async()=>({...observed,ack:observed.ack+1}));
  await runRoomActionTask({...input,prompt:'Make this robot larger.'},{aiClient:ai},{state:()=>observed,valid:()=>true,execute},()=>{});
  expect(execute).toHaveBeenCalledOnce();expect(execute.mock.calls[0]).toEqual([[{action:'resize',target,scale:1.5}],observed.sceneRevision,[{id:target,objectRevision:observed.inspection!.objectRevision}]]);
+});
+
+it('retains two explicit object reads for a later planner action when neither object is in periodic state',async()=>{
+ const defs=referenceFixtures.definitions.filter(d=>!['book','maestro'].includes(d.request.arguments.target)).slice(0,2),ids=defs.map(d=>d.request.arguments.target);
+ let observed:RoomAgentState={...scene,capabilities:['catalog.v1','catalogVocabulary.v1','factQueries.v1'],catalog:null};
+ const commands:RoomCommand[]=ids.map(target=>({action:'delete',target}));const ai=client([JSON.stringify({commands:defs.map(d=>({action:'catalog',catalog:d.request}))}),JSON.stringify({commands}),'{"commands":[]}']);
+ const execute=vi.fn(async(batch:RoomCommand[],_revision:number,_basis?:unknown)=>{const query=batch[0].catalog;observed={...observed,revision:observed.revision+1,ack:observed.ack+1,catalog:query?.operation==='inspect'?defs.find(d=>d.request.arguments.target===query.arguments?.target)!.view as unknown as CatalogView:null};return observed;});
+ await runRoomActionTask(input,{aiClient:ai},{state:()=>observed,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledTimes(3);expect(execute.mock.calls[2][0]).toEqual(commands);expect(execute.mock.calls[2][2]).toEqual(defs.map((d,i)=>({id:ids[i],objectRevision:readObjectReference(d.view as unknown as CatalogView,ids[i])!.revision})));expect(observed.objects).toEqual([]);
 });
