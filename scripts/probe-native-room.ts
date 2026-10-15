@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {probeNativeMotion} from './probe-native-motion';
+import {readNativeObjects} from './native-probe-read-set';
 import {probeAvatarAttention} from './probe-avatar-attention';
 import {probeGroundedTravel,probeGroundedFollowing} from './probe-grounded-travel';
 import {prepareObjectWalk,probeObjectWalk} from './probe-object-walk';
@@ -94,7 +96,10 @@ try{
  const initialSavedCount=await nativeObjects.count();
  const readPlacement=(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target}}}]);
  let outcome:unknown;
- if(prompt){
+ if(probeOwner.motionOnly){
+  if(prompt||providerScenario)throw new Error('The motion fixture cannot call a provider');
+  await probeNativeMotion(execute,()=>lease.state(),directory);outcome={motionOnly:true};
+ }else if(prompt){
   const client=await createHeadlessClient(); // isolated evidence, never an existing user's profile
   // Observe responses from the real provider for this isolated synthetic test.
   // The original stream and request are passed through unchanged.
@@ -169,6 +174,7 @@ try{
    const audioSetup=providerScenario==='ImportedAudio'?await prepareAgentImportedAudio(execute,directory):null;
    const contactSetup=providerScenario==='LiquidContacts'?await prepareAgentLiquidContacts(execute):null;
    const waterSetup=providerScenario==='WaterTraversal'?await prepareAgentWaterTraversal(execute):null;
+   const physicsObjectsBefore=providerScenario==='PhysicsLaunch'?await readNativeObjects(execute):null;
    let createdJourney;
    if(spoken){
     const fixture=JSON.parse(await readFile(process.env.MAESTRO_ROOM_PROBE_SPEECH!,'utf8'));
@@ -219,7 +225,10 @@ try{
     outcome={scenario:providerScenario,createdJourney,composite:await runAgentCompositeProof({client,before,execute,directory})};
    }
    if(providerScenario==='PhysicsLaunch'){
-    const before=structuredClone(lease.state()),ball=assertCreatedParityBall(initial,before,'blue',0.5);
+    const createdObjects=await readNativeObjects(execute),before=structuredClone(lease.state());
+    if(!physicsObjectsBefore)throw new Error('Missing explicit physics baseline');
+    const ball=assertCreatedParityBall(physicsObjectsBefore,createdObjects,'blue',0.5);
+    await writeFile(join(directory,'provider-physics-create-objects.json'),JSON.stringify({before:physicsObjectsBefore,after:createdObjects},null,2));
     outcome={scenario:providerScenario,createdJourney,physics:await runAgentPhysicsProof({client,before,target:ball.id,execute,directory,read:()=>lease.state()})};
    }
    if(providerScenario==='TaskSteering'){
@@ -261,6 +270,7 @@ try{
   }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
 
  }else{
+  await probeNativeMotion(execute,()=>lease.state(),directory);
   await probeModelAssetBounds(execute,directory);
   const gait=await prepareObjectWalk(execute,directory);
   const catalog=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.create',version:1}}]);
@@ -1320,7 +1330,7 @@ try{
  const gripReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.snapSettings',version:1,arguments:{...gripAfter.execution.selected.output,mode:'off'}}}}]);
  if(gripReset.execution?.selected?.phase!=='completed')throw new Error('Could not return grip snapping to off');
  await writeFile(join(directory,'grip-snapping.json'),JSON.stringify({boundary:'Real Unity shared configuration and preview facts. Actual grip matching, save, cancellation and Undo are tested separately in PlayMode; no headset proof.',before:gripBefore,search:gripSearch,definition:gripDefinition,read:gripRead,arguments:gripArguments,after:gripAfter,preview:gripPreview,reset:gripReset},null,2));
- await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,initial,observations,readSets,outcome},null,2));
+ await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,motionOnly:!!probeOwner.motionOnly,initial,observations,readSets,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
 }catch(error){
  await writeFile(join(directory,'journey-failure.json'),JSON.stringify({error:error instanceof Error?error.stack:String(error),observations,readSets},null,2));

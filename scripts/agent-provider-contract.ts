@@ -3,17 +3,20 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { RoomAgentState } from '../src/core-sdk/room/roomAgent';
 
+// Structural input permits incremental migration to explicit NativeObjectReadSet.
+// Never fabricate a RoomAgentState to represent those separate reads.
+type RoomObjects = Pick<RoomAgentState, 'objects'>;
 const saved = (object: RoomAgentState['objects'][number]) => ({
   id: object.id, name: object.name, kind: object.kind, position: object.position,
   scale: object.scale, color: object.color, physics: object.physics,
 });
-function unchangedOthers(before: RoomAgentState, after: RoomAgentState, target?: string) {
+function unchangedOthers(before: RoomObjects, after: RoomObjects, target?: string) {
   for (const object of before.objects.filter(object => object.id !== target)) {
     const current = after.objects.find(candidate => candidate.id === object.id);
     if (!current || !isDeepStrictEqual(saved(current), saved(object))) throw new Error('Provider scenario changed an unrelated object: ' + object.name);
   }
 }
-export function assertCreatedParityBall(before: RoomAgentState, after: RoomAgentState, colour: 'blue' | 'red' = 'blue', expectedScale?: number) {
+export function assertCreatedParityBall(before: RoomObjects, after: RoomObjects, colour: 'blue' | 'red' = 'blue', expectedScale?: number) {
   const added = after.objects.filter(object => !before.objects.some(previous => previous.id === object.id));
   const ball = added[0];
   if (after.objects.length !== before.objects.length + 1 || added.length !== 1 || !ball
@@ -26,7 +29,7 @@ export function assertCreatedParityBall(before: RoomAgentState, after: RoomAgent
   unchangedOthers(before, after);
   return structuredClone(ball);
 }
-export function assertPaintedParityBall(before: RoomAgentState, after: RoomAgentState, target: string) {
+export function assertPaintedParityBall(before: RoomObjects, after: RoomObjects, target: string) {
   const old = before.objects.find(object => object.id === target);
   const ball = after.objects.find(object => object.id === target);
   if (!old || !ball || after.objects.length !== before.objects.length
@@ -37,7 +40,7 @@ export function assertPaintedParityBall(before: RoomAgentState, after: RoomAgent
   unchangedOthers(before, after, target);
   return structuredClone(ball);
 }
-export function assertSameRoomObjects(expected: RoomAgentState, actual: RoomAgentState) {
+export function assertSameRoomObjects(expected: RoomObjects, actual: RoomObjects) {
   if (expected.objects.length !== actual.objects.length) throw new Error('Room object count differs from the expected state.');
   unchangedOthers(expected, actual);
 }

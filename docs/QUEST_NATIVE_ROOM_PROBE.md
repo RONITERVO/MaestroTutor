@@ -1596,3 +1596,35 @@ prepared read sets. All periodic object lists were empty. This exposed and fixed
 clip discovery for unloaded characters: facts now use validated immutable asset
 metadata; guarded selection still prepares and validates the native model.
 The accompanying audit is `.quest-evidence/sparse-book-world/verified.json`.
+
+### Physics evidence without a complete periodic inventory
+
+The provider `PhysicsLaunch` verification now reads object membership and poses
+explicitly. `readNativeObjects` produces a separate `NativeObjectReadSet`; it never
+fills `RoomAgentState.objects`. It checks the room/session, saved scene revision,
+directory membership and per-object revision across the read window. Physics
+mode, shape and mass come from `object.physics.settings`. Built-ins deliberately
+have no editable-physics fact, so their actual native inspection supplies those
+values. Missing settings fail the check rather than disappearing from comparisons.
+Live poses are sequential readings; room-parity assertions run after settling.
+
+Continuous motion uses an ordinary, visible, editable v3 program reading
+`object.observation` and `physics.running`. It publishes one record with a native
+serial every 0.1 seconds and stops after 12,000 samples. This fixture source is
+recorded in `native-motion-observer.json`/`provider-physics.json`; it is not attributed
+to the provider. It acquires no action channels or native residency. The fixture
+waits for normal viewer demand before starting; passive inspection must not load
+an off-screen actor. Exact run/target/session checks reject lost, stale, replaced,
+reordered or non-live evidence. No catalog polling is injected during a provider
+turn. Flight checks consume every recorded flight sample, including any unexpected
+pause. Fixture cleanup stops/deletes only its unchanged program and checks that
+other saved rules remain intact; setup refuses running or bound user programs.
+
+The complete offline Headless journey includes a real PhysX drop, aimed throw,
+wall/floor collision, settling, duplicate-receipt and pause check using this
+observer. For a focused rerun, use `Run-QuestRoomProbe.ps1 -Journey Headless
+-MotionOnly -SparseObjectView` with the usual Editor and BuildMirror parameters.
+`MotionOnly` refuses provider, Book and resume modes and records its scope in the
+owner, journey and verification files. The remaining provider helpers still need
+their own inventory assumptions migrated. Sparse provider execution remains
+unsupported; no real-provider acceptance is claimed by these offline checks.

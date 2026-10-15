@@ -10876,3 +10876,46 @@ lightweight object-observation fact. Broad native/Android evidence remains tied
 to **7fe48619**, not this checkpoint. Larger saved capacity and resource admission
 remain separate work. V1 is incomplete; no headset, paid provider, signing,
 deployment or Meta work ran.
+
+
+### 2026-10-15 — Explicit physics proof and passive program observations
+
+The per-entity environment policy remains the shared path for keeping virtual
+characters on terrain below a scanned floor while other objects obey the real
+room. Rendering/occlusion, sound and collision remain separate. This checkpoint
+continues the verification needed before larger worlds can use bounded periodic
+observations; it does not increase the saved capacity or change those policies.
+
+`PhysicsLaunch` now verifies creation and unrelated saved objects with a separate
+explicit read set, retaining physics mode, shape and mass, including actual native
+built-in settings. The continuous physics observer is an ordinary editable v3
+program using shared read-only facts. It has no action ownership and issues no
+concurrent fact requests into a provider's command channel. Exact native run,
+target, serial, scope and live-transform checks fail on stale/missing evidence.
+Flight validation does not filter away unexpected paused samples. Test fixture
+source and actions remain clearly distinguished from provider-authored actions.
+
+The complete offline sparse Headless run
+`570ab2d5c39c4bdaaa359306fbbb8349` passed **1,477 raw observations / 1,470 prepared
+read sets**, followed by final stricter focused motion run
+`5e12d15554dd47b796e91e1b602bb072`: **238 raw observations / 238 prepared read sets**,
+**174 live samples**, including **25 unfiltered flight samples**. Both exited
+normally with empty periodic object arrays. Native evidence confirms actual
+falling, ballistic travel, requested-point approach, wall/floor collision,
+settling, unchanged physics/other objects, idempotent launch receipt and no motion
+after pause. The observer and fixture objects were removed through shared handlers.
+`-MotionOnly` provides an offline-only focused rerun of the same proof.
+
+**3,036 web tests / 322 files**, application/probe TypeScript, catalog source check,
+and runner syntax/offline guards passed. Native product source was unchanged:
+all **3,014 prior native inputs** still match the mirror. The 41 EditMode / 14
+PlayMode and Original Book evidence remain from **a20d9797**; broad native/Android
+evidence remains **7fe48619**. No native unit suite or Android build was rerun.
+All 14 unrelated files are unchanged. Earlier attempts retain fixture timer,
+placement/state-delivery and off-view-residency failures; they are not accepted
+proof. Evidence: `.quest-evidence/sparse-physics-observer/`.
+
+Other provider helpers still depend on complete inventory and must be migrated
+before changing production observations. Larger saved capacity and native resource
+admission remain separate work. V1 is incomplete; headset, paid-provider,
+signing, deployment and Meta holds remain in place.
