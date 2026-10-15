@@ -13,6 +13,19 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class RoomRulesTests
     {
+        [UnityTest] public IEnumerator ObjectObservationSharesLiveAndDormantProjectionWithoutLoadingOrSelecting()
+        {
+            string target=editor.Identity(block),selected=editor.SelectedId,before=JsonUtility.ToJson(editor.Snapshot());int revision=editor.ObjectRevision(target);
+            block.transform.localPosition+=Vector3.up;
+            var live=SavedFact("object.observation",new JObject{["target"]=target});var listed=editor.ObserveObject(target);
+            Assert.That((string)live["id"],Is.EqualTo(target));Assert.That((int)live["objectRevision"],Is.EqualTo(revision));Assert.That((string)live["runtimeState"],Is.EqualTo("active"));Assert.That((string)live["positionSource"],Is.EqualTo("live"));Assert.That((float)live["position"]["y"],Is.EqualTo(listed.position.y));Assert.That((float)live["color"]["r"],Is.EqualTo(listed.color.r));
+            block.gameObject.SetActive(false);var inactive=SavedFact("object.observation",new JObject{["target"]=target});
+            Assert.That((string)inactive["runtimeState"],Is.EqualTo("inactive"));Assert.That((string)inactive["positionSource"],Is.EqualTo("saved"));Assert.That((float)inactive["position"]["y"],Is.EqualTo(editor.Read(target).position.y));
+            UnityEngine.Object.Destroy(block.gameObject);yield return null;
+            var dormant=SavedFact("object.observation",new JObject{["target"]=target});Assert.That((string)dormant["runtimeState"],Is.EqualTo("unavailable"));Assert.That((bool)dormant["held"],Is.False);Assert.That((bool)dormant["simulating"],Is.False);Assert.That((bool)dormant["animated"],Is.False);
+            Assert.That(!editor.Find(target),Is.True);Assert.That(editor.SelectedId,Is.EqualTo(selected));Assert.That(editor.ObjectRevision(target),Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+            Assert.That(BehaviourCatalog.TryRead("object.observation",1,new JObject{["target"]=new string('f',32)},new BehaviourCatalog.FactContext(editor:editor),out _),Is.False);
+        }
         JObject PresenceFact(string target)=>SavedFact("object.presence",new JObject{["target"]=target});
         JObject SavedFact(string id,JObject args){Assert.That(BehaviourCatalog.TryRead(id,1,args,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True,id);return (JObject)value.Value;}
         [UnityTest] public IEnumerator ObjectPresenceSeparatesDisabledInstanceFromSavedContentAndRejectsLiveActions()

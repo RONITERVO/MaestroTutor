@@ -1,12 +1,14 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict';
+import {nativeProbeObjects} from './native-probe-objects';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeWorldRegions(execute:Execute,directory:string){
+ const objects=nativeProbeObjects(execute);
  const fact=async(capability:string,args?:Record<string,unknown>)=>{
   const reply=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}]));
   assert.equal(reply.available,true,JSON.stringify(reply));return reply.value as Record<string,unknown>;
@@ -19,19 +21,19 @@ export async function probeWorldRegions(execute:Execute,directory:string){
   }
   assert.equal(state.execution!.selected!.phase,'completed',JSON.stringify(state.execution!.selected));return state.execution!.selected!;
  };
- let state=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.regions',version:1,arguments:{offset:0}}}]);
- const target=state.objects.find(o=>/^[a-fA-F0-9]{32}$/.test(o.id))!.id;
- const originalPosition={...state.objects.find(o=>o.id===target)!.position};
+ await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.regions',version:1,arguments:{offset:0}}}]);
+ const target=(await objects.ids()).find(id=>/^[a-f0-9]{32}$/.test(id));assert.ok(target,'Expected a saved creation');
+ const originalPosition={...(await objects.observation(target)).position};
  const viewpoint=await fact('world.viewpoint');assert.equal(viewpoint.located,true);
  const floor=viewpoint.position as {x:number;y:number;z:number},yaw=Number(viewpoint.yaw)*Math.PI/180;
  const nearView={x:floor.x+Math.sin(yaw)*3,y:floor.y+.8,z:floor.z+Math.cos(yaw)*3};
  await invoke('object.position.set',{target,...nearView});
- state=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.presence',version:1,arguments:{target}}}]);
+ await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.presence',version:1,arguments:{target}}}]);
  const before=await fact('object.region',{target}),definition=await fact('object.definition',{target});
  const presence=await fact('object.presence',{target});assert.equal(presence.state,'active');assert.equal(presence.saved,true);assert.equal(presence.nativeInstance,true);assert.equal(presence.active,true);assert.equal(presence.revision,definition.revision);
  const spatial=await fact('object.spatialBounds',{target});assert.equal(spatial.source,'native');assert.equal(spatial.coordinates,'room');assert.equal(spatial.revision,definition.revision);
  const visual=spatial.visual as {known:boolean;hasBounds:boolean;min:{x:number;y:number;z:number};max:{x:number;y:number;z:number}};assert.equal(visual.known,true);assert.equal(visual.hasBounds,true);for(const axis of ['x','y','z'] as const){assert.ok(Number.isFinite(visual.min[axis]));assert.ok(visual.min[axis]<=visual.max[axis]);}
- const observed=state.objects.find(o=>o.id===target)!;assert.equal(observed.runtimeState,'active');assert.equal(observed.positionSource,'live');
+ const observed=await objects.observation(target);assert.equal(observed.runtimeState,'active');assert.equal(observed.positionSource,'live');
  const missing=await fact('object.presence',{target:'0'.repeat(32)});assert.equal(missing.state,'missing');assert.equal(missing.saved,false);assert.equal(missing.revision,0);
 
  const absentSpatial=await fact('object.spatialBounds',{target:'0'.repeat(32)});assert.equal(absentSpatial.source,'missing');assert.equal((absentSpatial.visual as {known:boolean}).known,false);

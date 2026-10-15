@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict';
+import {nativeProbeObjects} from './native-probe-objects';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {RoomCommand,RoomAgentState} from '../src/core-sdk/room/roomAgent';
@@ -24,17 +25,18 @@ export async function prepareObjectWalk(execute:Execute,directory:string){
  await writeFile(join(directory,'native-object-walk-selection.json'),JSON.stringify({boundary:'Explicit synthetic skinned character, real shared settings/clip-list/action/save path; selection alone does not move or play.',fixture,before,clips,receipt:saved.execution?.selected,after},null,2));return fixture;
 }
 export async function probeObjectWalk(execute:Execute,directory:string,fixture:GaitFixture|null){
+ const objects=nativeProbeObjects(execute);
  if(!fixture)return;const target=fixture.target;
  const call={id:'object.navigate',version:1,arguments:{target,mode:'walk',destination:{x:-1,y:0,z:-4},speed:.5}};
  const start=await execute([{action:'execution',execution:{operation:'start',call}}]);const runId=start.execution?.selected?.id;assert.ok(runId);
  let state=start;const samples:Array<{position:unknown;selection:unknown}>=[],deadline=Date.now()+30000;
  while(Date.now()<deadline){
   const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.walk.settings',version:1,arguments:{target}}}]);
-  assert.ok(fact.catalog?.operation==='inspect'&&fact.catalog.category==='facts');assert.equal(fact.catalog.available,true);samples.push({position:fact.objects.find(o=>o.id===target)!.position,selection:(fact.catalog!.value as {selection:unknown}).selection});
+  assert.ok(fact.catalog?.operation==='inspect'&&fact.catalog.category==='facts');assert.equal(fact.catalog.available,true);samples.push({position:(await objects.observation(target)).position,selection:(fact.catalog!.value as {selection:unknown}).selection});
   state=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);if(state.execution?.selected?.phase==='completed')break;
   assert.ok(!['failed','cancelled'].includes(state.execution?.selected?.phase??''),JSON.stringify(state.execution?.selected));await new Promise(r=>setTimeout(r,60));
  }
  assert.equal(state.execution?.selected?.phase,'completed',JSON.stringify(state.execution?.selected));assert.ok(samples.some(s=>(s.selection as {playbackStatus:string}).playbackStatus==='walking'),'No native gait playback observed');
- const position=state.objects.find(o=>o.id===target)!.position;assert.ok(Math.abs(position.x+1)<.02&&Math.abs(position.z+4)<.02);
+ const position=(await objects.observation(target)).position;assert.ok(Math.abs(position.x+1)<.02&&Math.abs(position.z+4)<.02);
  await writeFile(join(directory,'native-object-walk.json'),JSON.stringify({boundary:'Actual native movement and assigned-pose ownership observed through headless facts/receipts. Full joint/root-neutralization proof is in PlayMode tests. No provider/headset or foot-planting claim.',fixture,samples,receipt:state.execution?.selected,position},null,2));
 }

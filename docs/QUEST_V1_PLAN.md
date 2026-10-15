@@ -47,6 +47,8 @@ The object inspector now carries its own native metadata and reviewed edit revis
 see [inspection context](#self-contained-object-inspection--2026-10-15).
 Multi-object actions now retain explicit native reads without a complete inventory;
 see [shared object read sets](#shared-object-read-sets--2026-10-15).
+The offline headless journey now passes with an empty periodic object list; see
+[explicit object reads](#headless-journey-with-an-empty-object-view--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10782,3 +10784,43 @@ and newly-created-member differences. Those consumers need exact saved-directory
 and object reads before bounded production observations. Saved capacity and live
 resource admission remain separate work. V1 is incomplete; headset, paid provider,
 signing, deployment and Meta holds remain in place.
+
+
+## Headless journey with an empty object view — 2026-10-15
+
+The native headless journey and its offline movement, attention, construction and
+area helpers now discover saved IDs through `world.objects`, check explicit
+existence with `object.presence`, read revisions from `object.definition`, and use
+the new shared `object.observation` fact for live/saved display metadata. That fact
+uses the normal native projection without selecting, loading or editing an object.
+Its saved revision can supply subsequent guarded edit evidence; live motion does
+not advance that revision. Missing and dormant content remain distinct.
+
+Actions use the production client's exact-target preparation. The recorded scene
+states are left unchanged, with separate compact read sets. The explicit offline
+`-SparseObjectView` fixture empties only the periodic inventory and refuses provider
+or Book scenarios. Changed directory continuations fail rather than implying that
+objects disappeared. Saved limits and the production inventory remain unchanged.
+
+The complete offline Unity Headless journey passed **1,312 native observations**,
+all with an empty object list, and **1,304 prepared read sets**. It retained
+creation/paint/Undo, geometry/materials, construction, program-created members,
+area retirement, movement, physical catch/drop, synthetic imported model/gait and
+muted audio coverage. Native and client processes exited successfully. Evidence:
+`.quest-evidence/native-room/f795425906be44e9b14ab5fdf77ee00e/`.
+
+Focused native checks passed **33 EditMode / 18 PlayMode** cases. The first export
+attempt timed out waiting for Unity background operations; an unchanged retry
+exited normally. The new destroyed-object assertion initially used ordinary null
+comparison; it was corrected to Unity object semantics and passed a targeted rerun.
+No production fix was needed for that assertion. **3,027 web tests / 320 files**,
+application/probe types and catalog-source checks passed. All **3,014 native inputs**
+match the mirror, and 14 unrelated files remain unchanged. Verification records and
+failed attempts are in `.quest-evidence/sparse-headless-world/`.
+
+Provider-specific helpers and the Original Book journey still need their remaining
+complete-inventory assumptions removed before bounded production observations.
+No UI was changed; prior book evidence remains tied to **262ea329**. Broad native
+suites and Android compilation remain at **7fe48619** and were not rerun. Larger
+saved capacity and native admission remain separate work. V1 is incomplete; no
+headset, paid provider, signing, deployment or Meta work ran.

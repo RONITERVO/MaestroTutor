@@ -14,10 +14,12 @@ param(
  [switch]$SyntheticImage,
  [switch]$SyntheticModel,
  [switch]$SyntheticGait,
+ [switch]$SparseObjectView,
  [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($SparseObjectView -and ($Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SparseObjectView is an explicit offline Headless observation fixture only.'}
 if(($SyntheticModel -or $SyntheticGait) -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SyntheticModel is an explicit offline Headless or Book fixture only.'}
 if($SyntheticImage -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticImage is an explicit offline Book fixture only.'}
 if($SyntheticLiveSound -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SyntheticLiveSound is an explicit offline Book or Headless fixture only.'}
@@ -69,7 +71,7 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 }
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+@{version=1;id=$id;sparseObjectView=[bool]$SparseObjectView} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 if($ResumeLearnerRun){
  $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeLearnerRun"
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
@@ -89,7 +91,7 @@ if($ResumeLearnerRun){
 }
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
-$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_GAIT=$(if($SyntheticGait){Join-Path $repoRoot 'test-fixtures/models/walking-character.glb'}else{''});MAESTRO_ROOM_PROBE_MODEL=$(if($ProviderScenario -eq 'ModelGeometry' -or $SyntheticModel){Join-Path $repoRoot 'test-fixtures/models/room-building.glb'}else{''});MAESTRO_ROOM_PROBE_IMAGE=$(if($ProviderScenario -eq 'ImportedImage' -or $SyntheticImage){'1'}else{''});MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_LIVE_AUDIO=$(if($SyntheticLiveSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
+$process=Start-Process -FilePath $editorPath -WindowStyle Hidden -PassThru -ArgumentList @('-batchmode','-force-d3d11','-buildTarget','Win64','-projectPath',('"'+$mirror+'"'),'-executeMethod','Maestro.Quest.Editor.QuestRoomProbe.Start','-logFile',('"'+$log+'"')) -Environment @{ADB_SERVER_SOCKET='tcp:localhost:5041';MAESTRO_ROOM_PROBE_DIRECTORY=$directory;MAESTRO_ROOM_PROBE_SPARSE_OBJECTS=$(if($SparseObjectView){'1'}else{''});MAESTRO_ROOM_PROBE_GAIT=$(if($SyntheticGait){Join-Path $repoRoot 'test-fixtures/models/walking-character.glb'}else{''});MAESTRO_ROOM_PROBE_MODEL=$(if($ProviderScenario -eq 'ModelGeometry' -or $SyntheticModel){Join-Path $repoRoot 'test-fixtures/models/room-building.glb'}else{''});MAESTRO_ROOM_PROBE_IMAGE=$(if($ProviderScenario -eq 'ImportedImage' -or $SyntheticImage){'1'}else{''});MAESTRO_ROOM_PROBE_AUDIO=$(if($ProviderScenario -eq 'ImportedAudio' -or $SyntheticSound){'1'}else{''});MAESTRO_ROOM_PROBE_LIVE_AUDIO=$(if($SyntheticLiveSound){'1'}else{''});MAESTRO_ROOM_PROBE_SCAN=$(if($SyntheticRoomScan){'1'}else{''});MAESTRO_ROOM_PROBE_LEARNER=$(if($ProviderScenario -eq 'LearnerConversation'){'1'}else{''});MAESTRO_ROOM_PROBE_AVATAR=$(if($ProviderScenario -in @('AvatarAnimation','LearnerConversation')){'1'}else{''});MAESTRO_ROOM_PROBE_PHYSICS=$(if([string]::IsNullOrWhiteSpace($Prompt) -or $ProviderScenario -in @('PhysicsLaunch','LearnerConversation')){'1'}else{''});MAESTRO_QUEST_RELEASE_PROFILE='';MAESTRO_QUEST_KEYSTORE='';MAESTRO_QUEST_KEY_ALIAS='';MAESTRO_QUEST_STORE_PASSWORD='';MAESTRO_QUEST_KEY_PASSWORD=''}
 $previousPrompt=$env:MAESTRO_ROOM_PROBE_PROMPT;$previousProfile=$env:MAESTRO_ROOM_PROBE_PROFILE;$previousScenario=$env:MAESTRO_ROOM_PROBE_SCENARIO;$previousSpeech=$env:MAESTRO_ROOM_PROBE_SPEECH
 try{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$Prompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$Profile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$ProviderScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$SpeechFixture
@@ -112,7 +114,7 @@ try{
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$ResumeLearnerRun} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;sparseObjectView=[bool]$SparseObjectView;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$ResumeLearnerRun} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech

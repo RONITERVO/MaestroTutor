@@ -1609,6 +1609,24 @@ The current complete periodic scene inventory and existing object limits remain
 unchanged while other selectors and observation consumers are upgraded. This
 search does not establish larger-world or headset performance acceptance.
 
+### Reading one object's observed state
+
+`object.observation` version 1 accepts an exact `target`. It returns the same
+lightweight metadata as the room view, even when the object is outside that view:
+identity, saved revision, name/kind, position, scale, effective root tint and
+runtime flags. `runtimeState` distinguishes active, inactive and unavailable
+native instances; `positionSource` says whether the origin is live or saved.
+Reading never selects, loads, moves or edits the object. An unknown saved ID is
+unavailable; use `object.presence` for explicit saved-existence checks.
+
+The revision guards saved edits, not animation or physics frames. A dormant
+object's false playback flag does not say its saved recipe was stopped. Tint is
+not sampled pixels or every material. Use component facts for full appearance,
+physics, geometry and animation settings. Successful exact observations can
+supply reviewed revision evidence to a subsequent shared-client edit; unavailable
+reads invalidate that fact evidence. Neither a missing list entry nor an
+unavailable read authorizes deletion or recreating an existing object.
+
 ## Choosing exact object references — 2026-10-15
 
 Object fields generated from the capability schema now use the shared saved-object

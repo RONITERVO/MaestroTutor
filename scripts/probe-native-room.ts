@@ -42,6 +42,8 @@ import {decodePcm16LeBase64} from '../src/core-sdk/media/pcmInput';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {isDeepStrictEqual} from 'node:util';
+import {nativeProbeObjects} from './native-probe-objects';
+import {roomRevisionBasis} from '../src/core-sdk/room/roomObjectContext';
 import {HeadlessRoomTransport} from '../src/headless/roomTransport';
 import {type RoomCommand,type RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {createHeadlessClient} from '../src/headless/client';
@@ -59,11 +61,16 @@ const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
 if(providerScenario && (!['ContextCreateEdit','LiveVisual','ObserverVisual','EventProgram','AvatarAnimation','CompositeModule','PhysicsLaunch','TaskSteering','WorldPresentation','WorldLighting','WorldTime','WorldWeather','LiquidMedium','WaterTraversal','LiquidContacts','ImportedAudio','ImportedImage','GeneratedImage','ModelGeometry','PassthroughWindow'].includes(providerScenario)||!prompt))throw new Error('Unknown or unconfigured provider scenario.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
-const observations:unknown[]=[];
+const observations:unknown[]=[];const readSets:unknown[]=[];
+const probeOwner=JSON.parse(await readFile(join(directory,'owner.json'),'utf8'));
+const checkSparse=(state:RoomAgentState)=>{if(probeOwner.sparseObjectView&&state.objects.length)throw new Error('The sparse-view fixture leaked a complete object list');};
 try{
- const lease=transport.lease();let initial=structuredClone(lease.state());
+ const lease=transport.lease();let initial=structuredClone(lease.state());checkSparse(initial);
  const execute=async<const C extends RoomCommand[]>(commands:C):Promise<NativeProbeState<C>>=>{
-  const state=lease.state();let result=await lease.execute(commands,state.sceneRevision,state.objects);observations.push(structuredClone(result));
+  const state=lease.state(),prepared=await transport.client.prepare(commands,state);
+  if(!lease.valid())throw new Error('Native probe room changed while preparing an action');
+  readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
+  let result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));
   const command=commands.length===1?commands[0]:undefined;
   const execution=command?.action==='execution'?command.execution:undefined;
   // Instant actions can still prepare dormant native inputs asynchronously.
@@ -73,16 +80,18 @@ try{
    const deadline=Date.now()+15000;
    while(['preparing','running'].includes(result.execution!.selected!.phase)&&Date.now()<deadline){
     await new Promise(r=>setTimeout(r,100));const current=lease.state();
-    result=await lease.execute([{action:'execution',execution:{operation:'inspect',runId}}],current.sceneRevision,current.objects);observations.push(structuredClone(result));
+    result=await lease.execute([{action:'execution',execution:{operation:'inspect',runId}}],current.sceneRevision,roomRevisionBasis(current));checkSparse(result);observations.push(structuredClone(result));
     if(!result.ok||result.execution?.selected?.id!==runId)throw new Error('Instant-action receipt changed while waiting: '+result.status);
    }
    if(result.execution?.selected?.phase!=='completed')throw new Error('Instant native action did not complete: '+JSON.stringify(result.execution?.selected));
   }
   if(!result.ok){
-   await writeFile(join(directory,'refused-command.json'),JSON.stringify({commands,expectedSceneRevision:state.sceneRevision,expectedObjects:state.objects,result},null,2));
+   await writeFile(join(directory,'refused-command.json'),JSON.stringify({commands,expectedSceneRevision:state.sceneRevision,expectedObjects:prepared.objects,result},null,2));
    throw new Error('Native action refused: '+result.status);
   }return checkedProbeReply(commands,result);
  };
+ const nativeObjects=nativeProbeObjects(execute);
+ const initialSavedCount=await nativeObjects.count();
  const readPlacement=(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target}}}]);
  let outcome:unknown;
  if(prompt){
@@ -260,10 +269,10 @@ try{
   const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Native probe ball'}}}}]);
   const selected=created.execution?.selected;
   if(selected?.phase!=='completed'||typeof selected.output?.objectId!=='string')throw new Error('Creation did not produce a completed native receipt.');
-  const target=selected.output.objectId;const original=created.objects.find(object=>object.id===target);
-  if(!original||created.objects.length!==initial.objects.length+1)throw new Error('The object was not created in the real room.');
-  const painted=await execute([{action:'paint',target,color:{r:1,g:0,b:0,a:1}}]);
-  if(painted.objects.find(object=>object.id===target)?.color.r!==1)throw new Error('Native paint did not apply.');
+  const target=selected.output.objectId;const original=await nativeObjects.observation(target);
+  if(!original||await nativeObjects.count()!==initialSavedCount+1)throw new Error('The object was not created in the real room.');
+  await execute([{action:'paint',target,color:{r:1,g:0,b:0,a:1}}]);
+  if((await nativeObjects.observation(target)).color.r!==1)throw new Error('Native paint did not apply.');
   const viewSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Capture virtual room',offset:0}}]);
   const viewDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'room.view.capture',version:1}}]);
   const viewBefore=structuredClone(lease.state());
@@ -274,10 +283,10 @@ try{
   if(viewImage.capture.sha256!==viewAfter.execution.selected.output?.sha256||viewAfter.sceneRevision!==viewBefore.sceneRevision)throw new Error('Virtual view image differs from its receipt or mutated the room');
   await writeFile(join(directory,'virtual-room.jpg'),Buffer.from(viewImage.data,'base64'));
   await writeFile(join(directory,'view-capture.json'),JSON.stringify({boundary:'Real full-app Unity camera, shared action/receipt and separate image transport. No live provider or Quest frame-time proof.',before:viewBefore,search:viewSearch,definition:viewDefinition,after:viewAfter,payload:{version:1,revision:1,session:viewAfter.session,...viewImage},ack:transport.client.snapshot().captureAck},null,2));
-  const undoPaint=await execute([{action:'undo'}]);
-  if(JSON.stringify(undoPaint.objects.find(object=>object.id===target)?.color)!==JSON.stringify(original.color))throw new Error('Native Undo did not restore the previous paint.');
-  const undoCreate=await execute([{action:'undo'}]);
-  if(undoCreate.objects.some(object=>object.id===target)||undoCreate.objects.length!==initial.objects.length)throw new Error('Native Undo did not remove the created object.');
+  await execute([{action:'undo'}]);
+  if(JSON.stringify((await nativeObjects.observation(target)).color)!==JSON.stringify(original.color))throw new Error('Native Undo did not restore the previous paint.');
+  await execute([{action:'undo'}]);
+  if(await nativeObjects.exists(target)||await nativeObjects.count()!==initialSavedCount)throw new Error('Native Undo did not remove the created object.');
   const diagnostic=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelBudget',version:1}}]);
   if(!diagnostic.catalog?.available)throw new Error('Native resource diagnostics are unavailable.');
   const modelUsage=factReply(diagnostic).value as {reserved:{models:number}};
@@ -313,9 +322,9 @@ try{
   if(!scanDefinition.catalog?.definition)throw new Error('Shared scanned surface schema is unavailable.');
   const scanInkDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'drawing.layer.edit',version:1}}]);
   if(!scanInkDefinition.catalog?.definition||!lease.state().capabilities?.includes('scanDrawingLayers.v1'))throw new Error('Shared scanned ink capability is unavailable.');
-  const inkState=lease.state();const deniedInk=await lease.execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.layer.edit',version:1,arguments:capabilityDefinition('drawing.layer.edit')!.example!}}}],inkState.sceneRevision,inkState.objects);
+  const inkCount=await nativeObjects.count(),inkState=lease.state();const deniedInk=await lease.execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.layer.edit',version:1,arguments:capabilityDefinition('drawing.layer.edit')!.example!}}}],inkState.sceneRevision,roomRevisionBasis(inkState));
   observations.push(structuredClone(deniedInk));
-  if(deniedInk.ok||lease.state().objects.length!==inkState.objects.length)throw new Error('Desktop ink placement must refuse an unavailable scan without creating a layer.');
+  if(deniedInk.ok||await nativeObjects.count()!==inkCount)throw new Error('Desktop ink placement must refuse an unavailable scan without creating a layer.');
   const repeat=Number(process.env.MAESTRO_ROOM_PROBE_REPEATS??1);if(!Number.isInteger(repeat)||repeat<1||repeat>32)throw new Error('Probe repeats must be 1–32.');
   for(let cycle=0;cycle<repeat;cycle++){
   const cases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/lathe-contract.json','utf8'));
@@ -326,8 +335,8 @@ try{
   const inspected=await execute([{action:'inspect',target:cupId}]);
   if(inspected.inspection?.recipe?.parts[0].shape!=='lathe')throw new Error('The shared client cannot inspect the native lathe.');
   const changed=structuredClone(inspected.inspection.recipe.parts[0]);if(!changed.profile||changed.profile.length<2)throw new Error('Native lathe profile is missing');changed.profile[1].x=.48;changed.segments=32;
-  const edited=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:cupId,revision:inspected.inspection.objectRevision,parts:[changed],removeParts:[],tracks:[],removeTracks:[],duration:cup.duration,loop:false}}}}]);
-  const revision=edited.objects.find(object=>object.id===cupId)?.objectRevision;
+  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:cupId,revision:inspected.inspection.objectRevision,parts:[changed],removeParts:[],tracks:[],removeTracks:[],duration:cup.duration,loop:false}}}}]);
+  const revision=await nativeObjects.revision(cupId);
   const profile=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:cupId,revision,part:'Body',offset:0}}}]);
   const value=profile.catalog?.value as {segments?:number;points?:{x:number;y:number}[]}|undefined;
   if(!profile.catalog?.available||value?.segments!==32||Math.abs((value.points?.[1].x??0)-.48)>.00001)throw new Error('Native lathe readback differs from the edit.');
@@ -338,7 +347,7 @@ try{
   const collisionDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.collision.edit',version:1}}]);
   const collisionCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
   const collided=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.collision.edit',version:1,arguments:{target:cupId,revision:restored.inspection!.objectRevision,collision:collisionCases[0].collision}}}}]);
-  const collisionRevision=collided.objects.find(object=>object.id===cupId)?.objectRevision;
+  const collisionRevision=await nativeObjects.revision(cupId);
   const readCollisionOwnership=async()=>{
    const budgetReply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.collisionResources',version:1}}]);
    const budget=factReply(budgetReply).value as {entries:number;colliders:number;meshColliders:number;sourceTriangles:number;activeColliders:number};
@@ -367,7 +376,7 @@ try{
   if(collisionReleased.owners.some(owner=>owner.target===cupId))throw new Error('Collision Undo left the retired cup geometry retained after native destruction.');
   await writeFile(join(directory,'collision-resources.json'),JSON.stringify({boundary:'Shared catalog reads of actual native compound collision ownership and Undo cleanup. Source geometry counts, not measured memory, enforced admission or headset evidence.',owned:collisionOwned,released:collisionReleased},null,2));
   await writeFile(join(directory,'collision-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:restored,search:collisionCatalog,definition:collisionDefinition,current:collisionCurrent,after:collided,summary,wall},null,2));
-  const removed=await execute([{action:'undo'}]);if(removed.objects.some(object=>object.id===cupId))throw new Error('Lathe Undo did not remove the created geometry.');
+  await execute([{action:'undo'}]);if(await nativeObjects.exists(cupId))throw new Error('Lathe Undo did not remove the created geometry.');
   const extrusionCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/extrusion-contract.json','utf8'));
   const extrusionRecipe=extrusionCases[0].recipe;
   const extrusionCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable bracket',x:.2,y:1,z:.5,scale:1,recipe:extrusionRecipe}}}}]);
@@ -375,7 +384,7 @@ try{
   const extrusionBefore=await execute([{action:'inspect',target:extrusionId}]);if(extrusionBefore.inspection?.recipe?.parts[0].shape!=='extrude')throw new Error('Native extrusion source is not inspectable');
   const extrusionPart=structuredClone(extrusionBefore.inspection.recipe.parts[0]);extrusionPart.profile![3].x=0;
   const extrusionAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:extrusionId,revision:extrusionBefore.inspection.objectRevision,parts:[extrusionPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]);
-  const extrusionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:extrusionId,revision:extrusionAfter.objects.find(o=>o.id===extrusionId)!.objectRevision,part:'Outline',offset:0}}}]);
+  const extrusionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:extrusionId,revision:await nativeObjects.revision(extrusionId),part:'Outline',offset:0}}}]);
   const extrusionValue=extrusionRead.catalog?.value as {segments:number;points:{x:number;y:number}[]};if(extrusionValue?.segments!==0||extrusionValue.points[3].x!==0)throw new Error('Extrusion profile readback differs from edit');
   const extrusionUndo=await execute([{action:'undo'}]);const extrusionRestored=await execute([{action:'inspect',target:extrusionId}]);if(Math.abs((extrusionRestored.inspection?.recipe?.parts[0].profile?.[3].x??0)+.1)>.00001)throw new Error('Extrusion Undo did not restore source');
   await writeFile(join(directory,'extrusion-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, profile readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:extrusionBefore,after:extrusionAfter,read:extrusionRead,undo:extrusionUndo,restored:extrusionRestored},null,2));
@@ -386,7 +395,7 @@ try{
   const sweepBefore=await execute([{action:'inspect',target:sweepId}]);if(sweepBefore.inspection?.recipe?.parts[0].shape!=='sweep')throw new Error('Native sweep source is not inspectable');
   const sweepPart=structuredClone(sweepBefore.inspection.recipe.parts[0]);sweepPart.path![2].z=.05;
   const sweepAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:sweepId,revision:sweepBefore.inspection.objectRevision,parts:[sweepPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]);
-  const sweepRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.path',version:1,arguments:{target:sweepId,revision:sweepAfter.objects.find(o=>o.id===sweepId)!.objectRevision,part:'Handle',offset:0}}}]);
+  const sweepRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.path',version:1,arguments:{target:sweepId,revision:await nativeObjects.revision(sweepId),part:'Handle',offset:0}}}]);
   const sweepValue=sweepRead.catalog?.value as {count:number;points:{x:number;y:number;z:number}[]};if(sweepValue?.count!==6||Math.abs(sweepValue.points[2].z-.05)>.00001)throw new Error('Sweep path readback differs from edit');
   const sweepUndo=await execute([{action:'undo'}]);const sweepRestored=await execute([{action:'inspect',target:sweepId}]);if(sweepRestored.inspection?.recipe?.parts[0].path?.[2].z!==0)throw new Error('Sweep Undo did not restore source');
   await writeFile(join(directory,'sweep-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, path readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:sweepBefore,after:sweepAfter,read:sweepRead,undo:sweepUndo,restored:sweepRestored},null,2));
@@ -397,7 +406,7 @@ try{
   const patternBefore=await execute([{action:'inspect',target:patternId}]);if(!patternBefore.inspection?.recipe)throw new Error('Pattern source missing');
   const patternPart=structuredClone(patternBefore.inspection.recipe.parts[0]);patternPart.pattern={kind:'stripes',plane:'xz',columns:4,rows:8,secondary:'#eeddcc'};
   const patternAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:patternId,revision:patternBefore.inspection.objectRevision,parts:[patternPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:patternBefore.inspection.recipe.loop}}}}]);
-  const patternRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.part',version:1,arguments:{target:patternId,revision:patternAfter.objects.find(o=>o.id===patternId)!.objectRevision,index:0}}}]);
+  const patternRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.part',version:1,arguments:{target:patternId,revision:await nativeObjects.revision(patternId),index:0}}}]);
   if(!isDeepStrictEqual((patternRead.catalog?.value as {part:{pattern:unknown}}).part.pattern,patternPart.pattern))throw new Error('Pattern readback differs from accepted edit');
   const patternUndo=await execute([{action:'undo'}]);const patternRestored=await execute([{action:'inspect',target:patternId}]);if(patternRestored.inspection?.recipe?.parts[0].pattern?.kind!=='checker')throw new Error('Pattern Undo failed');
   await writeFile(join(directory,'pattern-authoring.json'),JSON.stringify({boundary:'Real full-app native pattern creation, edit, fact readback and Undo; browser replays native acknowledgements. No headset/provider proof.',before:patternBefore,after:patternAfter,read:patternRead,undo:patternUndo,restored:patternRestored},null,2));
@@ -410,19 +419,19 @@ try{
   const templateAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:templateArgs}}}]);
   const templateId=templateAfter.execution?.selected?.output?.objectId;if(typeof templateId!=='string')throw new Error('Template creation returned no object');
   const templateRead=await execute([{action:'inspect',target:templateId}]);
-  if(templateRead.objects.find(object=>object.id===templateId)?.name!=='Cup'||templateRead.inspection?.recipe?.parts.length!==2)throw new Error('Template geometry did not expand');
+  if((await nativeObjects.observation(templateId)).name!=='Cup'||templateRead.inspection?.recipe?.parts.length!==2)throw new Error('Template geometry did not expand');
   const templateCollision=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:templateId}}}]);
   if((templateCollision.catalog?.value as {pieces?:number})?.pieces!==21)throw new Error('Template collision did not expand');
   const templatePhysics=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.physics.settings',version:1,arguments:{target:templateId}}}]);
   if((templatePhysics.catalog?.value as {mode?:string})?.mode!=='solid')throw new Error('Template physics did not expand');
-  const templateUndo=await execute([{action:'undo'}]);if(templateUndo.objects.some(object=>object.id===templateId))throw new Error('Single Undo did not remove the whole template');
+  const templateUndo=await execute([{action:'undo'}]);if(await nativeObjects.exists(templateId))throw new Error('Single Undo did not remove the whole template');
   await writeFile(join(directory,'template-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:templateBefore,search:templateSearch,definition:templateDefinition,after:templateAfter,read:templateRead,collision:templateCollision,physics:templatePhysics,undo:templateUndo},null,2));
   const brickSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json','utf8'));
   const {createHash}=await import('node:crypto');const brickHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json')).digest('hex');
   const snowHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json')).digest('hex');
   const fieldCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Editable snow'}}}}]);
   const fieldId=fieldCreated.execution?.selected?.output?.objectId;if(typeof fieldId!=='string')throw new Error('Height surface creation failed');
-  const groundPosition=fieldCreated.objects.find(object=>object.id===fieldId)!.position;
+  const groundPosition=(await nativeObjects.observation(fieldId)).position;
   const groundRead=(position:{x:number;y:number;z:number})=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.ground',version:1,arguments:{position,radius:.05}}}]);
   const groundSupported=await groundRead(groundPosition),groundMissing=await groundRead({x:0,y:24,z:0});
   type GroundAvailability={found:boolean;availability:string;dependencyCount:number;dependencies:unknown[]};
@@ -484,11 +493,11 @@ try{
   const appearanceRead=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'appearance.definition',version:2,arguments:{id:appearanceId}}}]);
   const appearanceBindings=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.appearances',version:1,arguments:{target:fieldId,offset:0}}}]);
   const appearanceInitial=await appearanceRead();
-  const appearanceBound=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.appearance.bind',version:1,arguments:{operation:'assign',target:fieldId,revision:lease.state().objects.find(o=>o.id===fieldId)!.objectRevision,appearanceRevision:(appearanceInitial.catalog!.value as {revision:number}).revision,binding:{version:1,appearanceId,kind:'root',partId:'',modelHash:'',materialIndex:-1,tint:''}}}}}]);
+  const appearanceBound=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.appearance.bind',version:1,arguments:{operation:'assign',target:fieldId,revision:await nativeObjects.revision(fieldId),appearanceRevision:(appearanceInitial.catalog!.value as {revision:number}).revision,binding:{version:1,appearanceId,kind:'root',partId:'',modelHash:'',materialIndex:-1,tint:''}}}}}]);
   const appearanceBeforePaint=await appearanceBindings();
   const appearancePainted=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.color.set',version:1,arguments:{target:fieldId,red:0,green:0,blue:1}}}}]);
   const appearanceAfterPaint=await appearanceBindings(),appearanceUnchanged=await appearanceRead();
-  if((appearanceAfterPaint.catalog!.value as {bindings:{tint:string}[]}).bindings[0].tint!=='#0000FF'||appearancePainted.objects.find(o=>o.id===fieldId)!.color.b!==1)throw new Error('Object paint did not update the canonical local appearance');
+  if((appearanceAfterPaint.catalog!.value as {bindings:{tint:string}[]}).bindings[0].tint!=='#0000FF'||(await nativeObjects.observation(fieldId)).color.b!==1)throw new Error('Object paint did not update the canonical local appearance');
   if(JSON.stringify(appearanceInitial.catalog!.value)!==JSON.stringify(appearanceUnchanged.catalog!.value))throw new Error('Object painting changed a shared appearance');
   const appearanceEdited=await execute([{action:'execution',execution:{operation:'start',call:{id:'appearance.save',version:1,arguments:{id:appearanceId,revision:(appearanceUnchanged.catalog!.value as {revision:number}).revision,name:'Shared warm glass',style:{...appearanceStyle,opacity:.7},members:[fieldId]}}}}]);
   const appearanceChanged=await appearanceRead();if(Math.abs((appearanceChanged.catalog!.value as {surface:{opacity:number}}).surface.opacity-.7)>.00001)throw new Error('Shared appearance edit was not saved');
@@ -506,10 +515,10 @@ try{
   const fieldRevision=(fieldBefore.catalog?.value as {revision:number}).revision;
   const fieldCall={id:'object.field.sculpt',version:1,arguments:{target:fieldId,revision:fieldRevision,mode:'lower',radius:.14,height:.04,path:[{x:-.3,z:0},{x:.3,z:0}]}};
   const fieldAfter=await execute([{action:'execution',execution:{operation:'start',call:fieldCall}}]);
-  const fieldRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field.samples',version:1,arguments:{target:fieldId,revision:fieldAfter.objects.find(o=>o.id===fieldId)!.objectRevision,offset:144}}}]);
+  const fieldRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field.samples',version:1,arguments:{target:fieldId,revision:await nativeObjects.revision(fieldId),offset:144}}}]);
   if(Math.abs((fieldRead.catalog?.value as {heights:number[]}).heights[0]-.04)>.000001)throw new Error('Accepted height differs from sculpted source');
   const fieldUndo=await execute([{action:'undo'}]);
-  const fieldRestored=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field.samples',version:1,arguments:{target:fieldId,revision:fieldUndo.objects.find(o=>o.id===fieldId)!.objectRevision,offset:144}}}]);
+  const fieldRestored=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field.samples',version:1,arguments:{target:fieldId,revision:await nativeObjects.revision(fieldId),offset:144}}}]);
   if(Math.abs((fieldRestored.catalog?.value as {heights:number[]}).heights[0]-.08)>.000001)throw new Error('Surface Undo did not restore heights');
   await writeFile(join(directory,'height-field-authoring.json'),JSON.stringify({boundary:'Real shared-client/native surface creation, sculpt, readback and Undo. Physical collision is tested separately; no headset/provider proof.',created:fieldCreated,search:fieldSearch,definition:fieldDefinition,before:fieldBefore,call:fieldCall,after:fieldAfter,read:fieldRead,undo:fieldUndo,restored:fieldRestored},null,2));
   const receivingField=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Receiving snow',x:1.5}}}}]);
@@ -542,7 +551,7 @@ try{
   const packingRead=await execute([{action:'inspect',target:packingOutput.objectId}]);
   if(packingRead.inspection?.recipe?.parts[0].shape!=='sphere')throw new Error('Packed ball is not an editable ordinary recipe');
   const packingUndo=await execute([{action:'undo'}]);const packingRestored=await transferFieldRead(fieldId);
-  if(packingUndo.objects.some(o=>o.id===packingOutput.objectId)||localVolume(packingRestored)!==localVolume(packingBefore))throw new Error('Packing Undo did not restore both sides');
+  if(await nativeObjects.exists(packingOutput.objectId)||localVolume(packingRestored)!==localVolume(packingBefore))throw new Error('Packing Undo did not restore both sides');
   await writeFile(join(directory,'material-packing-authoring.json'),JSON.stringify({boundary:'Real full-app native shared-client packing, material fact, ordinary geometry, measured source loss and atomic Undo. Browser separately replays these observations; no headset/provider proof.',created:packingCreated,before:packingBefore,search:packingSearch,definition:packingDefinition,call:packingCall,after:packingAfter,source:packingSource,material:packingMaterial,read:packingRead,undo:packingUndo,restored:packingRestored},null,2));
   // A carried store has one authoritative balance; surface/store transfers share the native kernel.
   const materialValue=(state:RoomAgentState)=>{if(state.catalog?.operation!=='inspect'||!('value' in state.catalog))throw new Error('Expected a native material fact');return state.catalog.value as {revision:number;configured?:boolean;definition:{amountLitres:number;capacityLitres:number;material:string;color:{r:number;g:number;b:number;a:number}}};};
@@ -550,7 +559,7 @@ try{
   const transferCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,shape:'block',name:'Carried material store',x:1,y:1,z:.7}}}}]);
   const storeId=transferCreated.execution?.selected?.output?.objectId;if(typeof storeId!=='string')throw new Error('Material carrier was not created');
   const materialSourceBefore=await transferFieldRead(fieldId);const sourceMaterial=materialValue(materialSourceBefore).definition;
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.material.edit',version:1,arguments:{operation:'configure',target:storeId,revision:lease.state().objects.find(o=>o.id===storeId)!.objectRevision,definition:{capacityLitres:1,amountLitres:0,material:sourceMaterial.material,color:sourceMaterial.color}}}}}]);
+  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.material.edit',version:1,arguments:{operation:'configure',target:storeId,revision:await nativeObjects.revision(storeId),definition:{capacityLitres:1,amountLitres:0,material:sourceMaterial.material,color:sourceMaterial.color}}}}}]);
   const materialStoreBefore=await materialRead(storeId);
   const materialSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Transfer carried or surface material',offset:0}}]);
   const materialDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.material.transfer',version:1}}]);
@@ -665,12 +674,12 @@ try{
   const scoopTemplates=[];
   for(const [template,amount,capacity] of [['bucket',0,2000],['basin',32000,40000]] as const){
     const hash=createHash('sha256').update(await readFile(`unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/${template}.json`)).digest('hex');
-    const before=structuredClone(lease.state());
+    const before=structuredClone(lease.state()),beforeCount=await nativeObjects.count();
     const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
     const id=created.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Missing scoop-template object identity');
     const contents=await liquidRead(id),definition=(contents.catalog?.value as {definition:{amountMl:number;capacityMl:number}}).definition;
     if(definition.amountMl!==amount||definition.capacityMl!==capacity)throw new Error('Scoop-template quantities differ from the source');
-    const undone=await execute([{action:'undo'}]);if(undone.objects.some(object=>object.id===id)||undone.objects.length!==before.objects.length)throw new Error('Scoop-template Undo did not remove one complete object');
+    const undone=await execute([{action:'undo'}]);if(await nativeObjects.exists(id)||await nativeObjects.count()!==beforeCount)throw new Error('Scoop-template Undo did not remove one complete object');
     scoopTemplates.push({template,hash,before,created,contents,undone});
   }
   await writeFile(join(directory,'scooping-templates.json'),JSON.stringify({boundary:'Ordinary shared creation, accepted quantities and one Undo; physical scooping is tested separately.',templates:scoopTemplates},null,2));
@@ -848,7 +857,7 @@ try{
   if(typeof sliderRead.catalog?.value!=='number'||Math.abs(sliderRead.catalog.value-.025)>.0001)throw new Error('Slider distance readback differs');
   await execute([{action:'undo'}]);const sliderUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.travel',version:1,arguments:{target:sliderTarget}}}]);
   if(typeof sliderUndo.catalog?.value!=='number'||Math.abs(sliderUndo.catalog.value)>.0001)throw new Error('Slider Undo did not restore its live travel');
-  await execute([{action:'undo'}]);const buttonRemoved=await execute([{action:'undo'}]);if(buttonIds.some(id=>buttonRemoved.objects.some(o=>o.id===id)))throw new Error('Button construction was not one Undo');
+  await execute([{action:'undo'}]);const buttonRemoved=await execute([{action:'undo'}]);if(await nativeObjects.any(buttonIds))throw new Error('Button construction was not one Undo');
   await writeFile(join(directory,'slider-authoring.json'),JSON.stringify({boundary:'Real Unity native slider configure/linear alignment/readback/Undo. Physical pressing and program response tested in PlayMode; no headset or provider proof.',before:sliderBefore,search:sliderSearch,definition:sliderDefinition,current:sliderCurrent,after:sliderAfter,tuning:sliderTuning,aligned:sliderAligned,read:sliderRead,undo:sliderUndo,removed:buttonRemoved},null,2));
   const snapFrames={position:{x:0,y:.05,z:0},rotation:{x:0,y:0,z:0,w:1}};
   const snapEdited=[];
@@ -871,7 +880,7 @@ try{
   const snapRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   const snapConnection=snapRead.catalog?.value as {configured:boolean;connected:string;definition:{kind:string;breakForce:number}};
   if(!snapConnection.configured||snapConnection.connected!==layoutIds[1]||snapConnection.definition.kind!=='fixed'||snapConnection.definition.breakForce!==45)throw new Error('Snap join differs from its accepted definition');
-  const snapMoved=snapAfter.objects.find(o=>o.id===layoutIds[0])!,snapTarget=snapAfter.objects.find(o=>o.id===layoutIds[1])!;
+  const snapMoved=await nativeObjects.observation(layoutIds[0]),snapTarget=await nativeObjects.observation(layoutIds[1]);
   if(Math.abs(snapMoved.position.x-snapTarget.position.x)>.0001||Math.abs(snapMoved.position.z-snapTarget.position.z)>.0001||Math.abs(snapMoved.position.y-snapTarget.position.y-.05*(snapMoved.scale+snapTarget.scale))>.0001)throw new Error('Snapped frames do not coincide');
   const snapUndo=await execute([{action:'undo'}]);
   const snapRestoredPlacements=[];for(const target of layoutIds)snapRestoredPlacements.push(await readPlacement(target));
@@ -890,17 +899,17 @@ try{
    const value=fact.catalog?.value as {position?:{x:number;y:number;z:number};scale?:number};
    if(!value?.position||Math.abs(value.position.x-p.position.x)>.00001||Math.abs(value.position.y-p.position.y)>.00001||Math.abs(value.position.z-p.position.z)>.00001||value.scale!==1)throw new Error('Layout live readback differs');layoutFacts.push(fact);
   }
-  const layoutUndo=await execute([{action:'undo'}]);for(let i=0;i<2;i++)if(Math.abs((layoutUndo.objects.find(o=>o.id===layoutIds[i])?.position.x??0)-(.4+i*.25))>.00001)throw new Error('Single Undo did not restore both layout members');
+  const layoutUndo=await execute([{action:'undo'}]);for(let i=0;i<2;i++)if(Math.abs((await nativeObjects.observation(layoutIds[i])).position.x-(.4+i*.25))>.00001)throw new Error('Single Undo did not restore both layout members');
   await writeFile(join(directory,'layout-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:layoutBefore,search:layoutSearch,definition:layoutDefinition,after:layoutAfter,facts:layoutFacts,undo:layoutUndo},null,2));
   const batchProgram=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-batch-create.json','utf8'));
-  const batchArgs=batchProgram.functions[0].body[0].arguments,batchBefore=structuredClone(lease.state());
+  const batchArgs=batchProgram.functions[0].body[0].arguments,batchBefore=structuredClone(lease.state()),batchBeforeCount=await nativeObjects.count();
   const batchSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Create a structure',offset:0}}]);
   const batchDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.batch.create',version:1}}]);
   const batchAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:batchArgs}}}]);
   const batchIds=batchAfter.execution?.selected?.output?.objectIds,batchSlots=batchAfter.execution?.selected?.output?.slots;
   if(!Array.isArray(batchIds)||batchIds.length!==6||!batchIds.every(id=>typeof id==='string')||new Set(batchIds).size!==6||JSON.stringify(batchSlots)!==JSON.stringify(batchArgs.blueprint.pieces.map((p:{slot:string})=>p.slot)))throw new Error('Batch result lost piece identity/order');
-  if(batchAfter.objects.length!==batchBefore.objects.length+6||batchIds.some(id=>!batchAfter.objects.some(o=>o.id===id)))throw new Error('Native structure pieces were not all created');
-  const batchUndo=await execute([{action:'undo'}]);if(batchIds.some(id=>batchUndo.objects.some(o=>o.id===id))||batchUndo.objects.length!==batchBefore.objects.length)throw new Error('One Undo did not remove the whole batch');
+  if(await nativeObjects.count()!==batchBeforeCount+6||!await nativeObjects.all(batchIds as string[]))throw new Error('Native structure pieces were not all created');
+  const batchUndo=await execute([{action:'undo'}]);if(await nativeObjects.any(batchIds as string[])||await nativeObjects.count()!==batchBeforeCount)throw new Error('One Undo did not remove the whole batch');
   await writeFile(join(directory,'batch-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:batchBefore,search:batchSearch,definition:batchDefinition,after:batchAfter,undo:batchUndo},null,2));
   const structureBefore=structuredClone(lease.state()),structureMembers=[...layoutIds];
   if(structureMembers.length!==2)throw new Error('Two observed pieces are needed for the structure acceptance');
@@ -916,12 +925,12 @@ try{
    return observed;
   };
   const structureInitial=await readStructure();if((structureInitial.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Captured structure should match its live pieces');
-  const member=structureBefore.objects.find(o=>o.id===structureMembers[0])!;
+  const member=await nativeObjects.observation(structureMembers[0]);
   await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:member.id,x:member.position.x+.4,y:member.position.y,z:member.position.z}}}}]);
   const structureDisplaced=await readStructure();if((structureDisplaced.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Live member movement was not observed');
   const structureReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:structureId,revision:structureRevision,members:structureMembers}}}}]);
   const structureRestored=await readStructure();if((structureRestored.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Structure reset did not restore its captured baseline');
-  const structureUndo=await execute([{action:'undo'}]);if(Math.abs((structureUndo.objects.find(o=>o.id===member.id)?.position.x??0)-member.position.x-.4)>.00001)throw new Error('Structure Undo lost the displaced pose');
+  const structureUndo=await execute([{action:'undo'}]);if(Math.abs((await nativeObjects.observation(member.id)).position.x-member.position.x-.4)>.00001)throw new Error('Structure Undo lost the displaced pose');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await writeFile(join(directory,'structure-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:structureBefore,search:structureSearch,definition:structureDefinition,after:structureAfter,initial:structureInitial,displaced:structureDisplaced,reset:structureReset,restored:structureRestored,undo:structureUndo},null,2));
   await execute([{action:'undo'}]);await execute([{action:'undo'}]); // Remove the two observed structure fixtures.
@@ -931,14 +940,14 @@ try{
   compositionBody.find((step:{id:string})=>step.id==='create').arguments.position={x:.3,y:1.4,z:2};
   Object.assign(compositionBody.find((step:{id:string})=>step.id==='displace').arguments,{y:1.4,z:2});
   const compositionSource=JSON.stringify(compositionProgram);
-  const compositionBefore=await execute([{action:'rules',rule:{action:'inspect'}}]);
+  const compositionBefore=await execute([{action:'rules',rule:{action:'inspect'}}]),compositionBeforeIds=await nativeObjects.ids();
   const compositionSaved=await execute([{action:'rules',rule:{action:'edit',revision:compositionBefore.rules!.revision,edits:[{kind:'save',reference:'composition',sequence:{id:'',name:'Native build/reset probe',interruption:0,repeat:false,program:compositionSource}}]}}]);
   const compositionId=compositionSaved.rules?.sequences.find(s=>s.name==='Native build/reset probe')?.id;if(!compositionId)throw new Error('Composed program was not saved');
   let compositionAfter=await execute([{action:'rules',rule:{action:'play',revision:compositionSaved.rules!.revision,target:compositionId}}]);
   const compositionDeadline=Date.now()+15000;
   while(!compositionAfter.rules?.outcomes?.some(o=>o.sequenceId===compositionId)&&Date.now()<compositionDeadline){await new Promise(r=>setTimeout(r,100));compositionAfter=await execute([{action:'rules',rule:{action:'inspect',target:compositionId}}]);}
   const compositionOutcome=compositionAfter.rules?.outcomes?.find(o=>o.sequenceId===compositionId);
-  if(compositionOutcome?.phase!=='completed'||compositionAfter.objects.length!==compositionBefore.objects.length+6)throw new Error('Composed build/reset failed: '+JSON.stringify(compositionOutcome));
+  if(compositionOutcome?.phase!=='completed'||await nativeObjects.count()!==compositionBeforeIds.length+6)throw new Error('Composed build/reset failed: '+JSON.stringify(compositionOutcome));
   const compositionList=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.list',version:1,arguments:{offset:0}}}]);
   const compositionGroup=(compositionList.catalog?.value as {entries?:{id:string;name:string;count:number}[]})?.entries?.find(e=>e.name==='Castle'&&e.count===6);
   if(!compositionGroup)throw new Error('Composed structure was not saved');
@@ -970,7 +979,7 @@ try{
   const watcherArmed=await waitForWatch('waitingForDisturbance',0);
   const slot=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.slot',version:1,arguments:{id:compositionGroup.id,index:0}}}]);
   const slotValue=slot.catalog?.value as {target:string;position:{x:number;y:number;z:number}};
-  const watcherMembers=compositionAfter.objects.filter(o=>!compositionBefore.objects.some(before=>before.id===o.id)).map(o=>o.id);
+  const watcherMembers=(await nativeObjects.ids()).filter(id=>!compositionBeforeIds.includes(id));
   if(!slotValue?.target||watcherMembers.length!==6||!watcherMembers.includes(slotValue.target))throw new Error('Watcher member identities unavailable');
   await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:slotValue.target,x:slotValue.position.x+.3,y:slotValue.position.y,z:slotValue.position.z}}}}]);
   const watcherDisturbed=await waitForWatch('waitingForRebuild',1);
@@ -989,16 +998,16 @@ try{
   await writeFile(join(directory,'program-composition.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport; no headset or provider proof.',source:JSON.parse(compositionSource),saved:compositionSaved,after:compositionAfter,group:compositionGroup,state:compositionState,undo:compositionUndo,outcome:compositionOutcome},null,2));
   const leverSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-spring-lever.json','utf8'));
   const connectedArgs=leverSource.imports[0].module.program.functions.find((f:{name:string})=>f.name==='create').body[0].arguments;
-  const connectedBefore=structuredClone(lease.state());
+  const connectedBefore=structuredClone(lease.state()),connectedBeforeCount=await nativeObjects.count();
   const connectedSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Create a structure',offset:0}}]);
   const connectedDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.batch.create',version:1}}]);
   const connectedAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:connectedArgs}}}]);
   const connectedIds=connectedAfter.execution?.selected?.output?.objectIds;
-  if(!Array.isArray(connectedIds)||connectedIds.length!==2||!connectedIds.every(id=>typeof id==='string')||new Set(connectedIds).size!==2||connectedAfter.objects.length!==connectedBefore.objects.length+2)throw new Error('Connected blueprint did not create exactly two distinct pieces');
+  if(!Array.isArray(connectedIds)||connectedIds.length!==2||!connectedIds.every(id=>typeof id==='string')||new Set(connectedIds).size!==2||await nativeObjects.count()!==connectedBeforeCount+2)throw new Error('Connected blueprint did not create exactly two distinct pieces');
   const connectedRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:connectedIds[1]}}}]);
   const connectedValue=connectedRead.catalog?.value as {configured:boolean;connected:string};
   if(!connectedValue.configured||connectedValue.connected!==connectedIds[0])throw new Error('Blueprint did not bind its hinge to its own mount');
-  const connectedUndo=await execute([{action:'undo'}]);if(connectedIds.some(id=>connectedUndo.objects.some(o=>o.id===id))||connectedUndo.objects.length!==connectedBefore.objects.length)throw new Error('Connected blueprint was not one Undo');
+  const connectedUndo=await execute([{action:'undo'}]);if(await nativeObjects.any(connectedIds as string[])||await nativeObjects.count()!==connectedBeforeCount)throw new Error('Connected blueprint was not one Undo');
   await writeFile(join(directory,'connected-blueprint-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Physics tested in PlayMode; no headset or provider proof.',arguments:connectedArgs,before:connectedBefore,search:connectedSearch,definition:connectedDefinition,after:connectedAfter,read:connectedRead,undo:connectedUndo},null,2));
   // Included play-kit constructors use the same module lookup, program save/run,
   // native receipt and Undo path as a user's or the agent's own construction.
@@ -1007,17 +1016,17 @@ try{
    const source=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-'+fixture+'.json','utf8'));
    const inspected=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:source.imports[0].hash,version:1}}]);
    if(!inspected.catalog?.included||!isDeepStrictEqual(inspected.catalog.definition,source.imports[0].module))throw new Error(label+' is not the exact included module');
-   const before=await execute([{action:'rules',rule:{action:'inspect'}}]);
+   const before=await execute([{action:'rules',rule:{action:'inspect'}}]),beforeIds=await nativeObjects.ids();
    const saved=await execute([{action:'rules',rule:{action:'edit',revision:before.rules!.revision,edits:[{kind:'save',reference:'kit',sequence:{id:'',name:'Native '+label+' probe',interruption:0,repeat:false,program:JSON.stringify(source)}}]}}]);
    const sequenceId=saved.rules?.sequences.find(s=>s.name==='Native '+label+' probe')?.id;
-   if(!sequenceId||saved.objects.length!==before.objects.length)throw new Error(label+' save unexpectedly built objects');
+   if(!sequenceId||await nativeObjects.count()!==beforeIds.length)throw new Error(label+' save unexpectedly built objects');
    let after=await execute([{action:'rules',rule:{action:'play',revision:saved.rules!.revision,target:sequenceId}}]);
    const deadline=Date.now()+15000;
    while(!after.rules?.outcomes?.some(o=>o.sequenceId===sequenceId)&&Date.now()<deadline){await new Promise(r=>setTimeout(r,100));after=await execute([{action:'rules',rule:{action:'inspect',target:sequenceId}}]);}
-   const outcome=after.rules?.outcomes?.find(o=>o.sequenceId===sequenceId),members=after.objects.filter(o=>!before.objects.some(b=>b.id===o.id)).map(o=>o.id);
+   const outcome=after.rules?.outcomes?.find(o=>o.sequenceId===sequenceId),members=(await nativeObjects.ids()).filter(id=>!beforeIds.includes(id));
    if(outcome?.phase!=='completed'||members.length!==count||after.physicsRunning!==before.physicsRunning)throw new Error(label+' did not complete with exactly its members: '+JSON.stringify(outcome));
    const undone=await execute([{action:'undo'}]);
-   if(members.some(id=>undone.objects.some(o=>o.id===id))||undone.objects.length!==before.objects.length)throw new Error(label+' did not undo atomically');
+   if(await nativeObjects.any(members)||await nativeObjects.count()!==beforeIds.length)throw new Error(label+' did not undo atomically');
    await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:sequenceId}]}}]);
    playKitEvidence.push({label,hash:source.imports[0].hash,inspected,before,saved,after,undone,members});
   }
@@ -1025,13 +1034,13 @@ try{
   const leverHash=leverSource.imports[0].hash;
   const leverModule=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:leverHash,version:1}}]);
   if(!leverModule.catalog?.included||JSON.stringify(leverModule.catalog.definition)!==JSON.stringify(leverSource.imports[0].module))throw new Error('Included spring lever source differs from its pinned fixture');
-  const leverBefore=await execute([{action:'rules',rule:{action:'inspect'}}]);
+  const leverBefore=await execute([{action:'rules',rule:{action:'inspect'}}]),leverBeforeIds=await nativeObjects.ids();
   const leverSaved=await execute([{action:'rules',rule:{action:'edit',revision:leverBefore.rules!.revision,edits:[{kind:'save',reference:'lever',sequence:{id:'',name:'Native spring lever probe',interruption:0,repeat:false,program:JSON.stringify(leverSource)}}]}}]);
   const leverId=leverSaved.rules?.sequences.find(s=>s.name==='Native spring lever probe')?.id;if(!leverId)throw new Error('Spring lever caller was not saved');
   let leverAfter=await execute([{action:'rules',rule:{action:'play',revision:leverSaved.rules!.revision,target:leverId}}]);
   const leverDeadline=Date.now()+15000;
   while(!leverAfter.rules?.outcomes?.some(o=>o.sequenceId===leverId)&&Date.now()<leverDeadline){await new Promise(r=>setTimeout(r,100));leverAfter=await execute([{action:'rules',rule:{action:'inspect',target:leverId}}]);}
-  const leverOutcome=leverAfter.rules?.outcomes?.find(o=>o.sequenceId===leverId),leverMembers=leverAfter.objects.filter(o=>!leverBefore.objects.some(before=>before.id===o.id)).map(o=>o.id);
+  const leverOutcome=leverAfter.rules?.outcomes?.find(o=>o.sequenceId===leverId),leverMembers=(await nativeObjects.ids()).filter(id=>!leverBeforeIds.includes(id));
   if(leverOutcome?.phase!=='completed'||leverMembers.length!==2||leverMembers.some(id=>connectedIds.includes(id)))throw new Error('Spring lever module did not complete with fresh members: '+JSON.stringify(leverOutcome));
   const leverFacts=[];for(const id of leverMembers){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:id}}}]);leverFacts.push(read);}
   const leverOwners=leverFacts.filter(f=>(f.catalog?.value as {configured:boolean}).configured);
@@ -1077,7 +1086,7 @@ try{
   for(let i=0;i<2;i++){const before=movementFacts[i].catalog?.value as typeof movementOrigin,after=movementAfterFacts[i].catalog?.value as typeof movementOrigin;if(Math.abs(after.scale-before.scale*1.2)>.0001)throw new Error('Group transform lost a member scale');}
   const movedOrigin=(movementAfterFacts[0].catalog?.value as typeof movementOrigin).position;if(Math.hypot(movedOrigin.x-movementArguments.position.x,movedOrigin.y-movementArguments.position.y,movedOrigin.z-movementArguments.position.z)>.0001)throw new Error('Group transform pivot was not placed');
   const movementUndo=await execute([{action:'undo'}]);
-  for(let i=0;i<2;i++){const actual=movementUndo.objects.find(o=>o.id===leverMembers[i])!,expected=movementFacts[i].catalog?.value as typeof movementOrigin;if(Math.hypot(actual.position.x-expected.position.x,actual.position.y-expected.position.y,actual.position.z-expected.position.z)>.0001||Math.abs(actual.scale-expected.scale)>.0001)throw new Error('One group Undo did not restore both members');}
+  for(let i=0;i<2;i++){const actual=await nativeObjects.observation(leverMembers[i]),expected=movementFacts[i].catalog?.value as typeof movementOrigin;if(Math.hypot(actual.position.x-expected.position.x,actual.position.y-expected.position.y,actual.position.z-expected.position.z)>.0001||Math.abs(actual.scale-expected.scale)>.0001)throw new Error('One group Undo did not restore both members');}
   const movementHidden=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.manipulate',version:1,arguments:{stateId:movementUndo.constructionSelection!.stateId,members:leverMembers,visible:false}}}}]);if(movementHidden.constructionManipulation?.visible)throw new Error('Move handle did not close');
   const currentCaptureSource=insertProgramCapability(JSON.stringify({version:2,entry:'main',resources:[],functions:[{name:'main',returns:'void',parameters:[],locals:[],body:[]}]}),{id:'program.module.captureConstruction',version:1,arguments:{...captureArguments,members:captureMembers.map(m=>({...m,revision:1}))}},{kind:'current',fields:captureMembers.map((_,i)=>`members.${i}.revision`)});
   const currentCaptureSaved=await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'save',reference:'capture_current',sequence:{id:'',name:'Native current capture probe',interruption:0,repeat:false,program:JSON.stringify(currentCaptureSource)}}]}}]);
@@ -1088,7 +1097,7 @@ try{
   const currentCaptureOutcome=currentCaptureAfter.rules?.outcomes?.find(o=>o.sequenceId===currentCaptureId);
   if(currentCaptureOutcome?.phase!=='completed')throw new Error('Visible current-member reads did not complete native capture: '+JSON.stringify(currentCaptureOutcome));
   await writeFile(join(directory,'current-members-program.json'),JSON.stringify({source:currentCaptureSource,saved:currentCaptureSaved,after:currentCaptureAfter,outcome:currentCaptureOutcome,hash:capturedHash,placeholderRevisions:captureMembers.map(()=>1),actualRevisions:captureMembers.map(m=>m.revision)},null,2));
-  const leverUndo=await execute([{action:'undo'}]);if(leverUndo.constructionSelection?.members.length||leverUndo.constructionSelection?.stateId===selectionBoth.constructionSelection!.stateId)throw new Error('Deleting original members retained a stale selection');if(leverMembers.some(id=>leverUndo.objects.some(o=>o.id===id)))throw new Error('Program-created lever was not one Undo');
+  const leverUndo=await execute([{action:'undo'}]);if(leverUndo.constructionSelection?.members.length||leverUndo.constructionSelection?.stateId===selectionBoth.constructionSelection!.stateId)throw new Error('Deleting original members retained a stale selection');if(await nativeObjects.any(leverMembers))throw new Error('Program-created lever was not one Undo');
   const parsedCapture=parseProgram(JSON.stringify(capturedModule.program));
   const createNode=parsedCapture.program?.functions.find(f=>f.name==='create')?.body[0];
   if(createNode?.op!=='invoke'||createNode.capability!=='object.batch.create')throw new Error('Captured module does not contain its editable construction: '+parsedCapture.error);
@@ -1099,7 +1108,7 @@ try{
   const rebuiltHinges=[];for(const id of rebuiltIds){const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:id as string}}}]);rebuiltHinges.push(read);}
   const rebuiltOwner=rebuiltHinges.find(r=>(r.catalog?.value as {configured:boolean}).configured);
   if(!rebuiltOwner||!rebuiltIds.includes((rebuiltOwner.catalog?.value as {connected:string}).connected))throw new Error('Rebuilt hinge did not bind its fresh members');
-  const rebuiltUndo=await execute([{action:'undo'}]);if(rebuiltIds.some(id=>rebuiltUndo.objects.some(o=>o.id===id)))throw new Error('Captured construction did not keep one Undo');
+  const rebuiltUndo=await execute([{action:'undo'}]);if(await nativeObjects.any(rebuiltIds))throw new Error('Captured construction did not keep one Undo');
   await writeFile(join(directory,'construction-capture.json'),JSON.stringify({boundary:'Real Unity shared transport and module library; no headset or provider proof.',arguments:captureArguments,facts:captureFacts,before:selectionLocated,search:captureSearch,definition:captureDefinition,captured:captureAfter,module:capturedRead,originalsRemoved:leverUndo,rebuilt,connections:rebuiltHinges,undo:rebuiltUndo},null,2));
   await writeFile(join(directory,'construction-movement.json'),JSON.stringify({boundary:'Real Unity native handle visibility/facts, group transform and one Undo. Physical grip is verified separately in PlayMode; no headset/provider proof.',before:movementBefore,shown:movementShown,read:movementRead,facts:movementFacts,search:movementSearch,definition:movementDefinition,arguments:movementArguments,transformed:movementTransformed,afterFacts:movementAfterFacts,undo:movementUndo,hidden:movementHidden},null,2));
   await writeFile(join(directory,'construction-selection.json'),JSON.stringify({boundary:'Real Unity room selection, fact, locate and capture states; browser replay is separate, no physical headset proof.',before:selectionBefore,first:selectionFirst,both:selectionBoth,read:selectionRead,located:selectionLocated,definition:captureDefinition,facts:captureFacts,captured:captureAfter,removed:leverUndo},null,2));
@@ -1121,7 +1130,7 @@ try{
   const catchTarget=catchCreated.execution?.selected?.output?.objectId;if(typeof catchTarget!=='string')throw new Error('Catch ball creation failed');
   const catchSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Catch a physical object',offset:0}}]);
   const catchDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.physics.catch',version:1}}]);
-  const catchCall={id:'object.physics.catch',version:1,arguments:{target:catchTarget,holder:{kind:'recipePart',objectId:catchHolder,part:'Socket',revision:catchCreated.objects.find(o=>o.id===catchHolder)!.objectRevision},offset:{x:0,y:0,z:.3},timeout:5,holdSeconds:1,gripRadius:.05,maxSpeed:5}};
+  const catchCall={id:'object.physics.catch',version:1,arguments:{target:catchTarget,holder:{kind:'recipePart',objectId:catchHolder,part:'Socket',revision:await nativeObjects.revision(catchHolder)},offset:{x:0,y:0,z:.3},timeout:5,holdSeconds:1,gripRadius:.05,maxSpeed:5}};
   const catchBlocked=await execute([{action:'catalog',catalog:{operation:'check',call:catchCall}}]);
   if(catchBlocked.catalog?.available!==false)throw new Error('Catching should require explicit running physics');
   const physicsBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'physics.simulation',version:1}}]);
@@ -1135,15 +1144,17 @@ try{
   // advances object revisions too; a still-falling ball is not a stable fixture.
   // Observe over a full placement-capture interval; never retry a refused launch.
   const waitForCatchPlacement=async(simulating:boolean,wholeRoom=false)=>{
-   const samples:RoomAgentState[]=[];const deadline=Date.now()+15000;let quietSince=Date.now();
-   const signature=(state:RoomAgentState)=>JSON.stringify(state.objects.filter(o=>wholeRoom||o.id===catchTarget).map(o=>[o.id,o.objectRevision,o.position]));
-   let previous=signature(lease.state());
+   const samples:unknown[]=[];const deadline=Date.now()+15000;let quietSince=Date.now();
+   const sample=async()=>{
+    const ids=wholeRoom?await nativeObjects.ids():[catchTarget],objects=[];
+    for(const target of ids)objects.push(await nativeObjects.observation(target));
+    const ball=objects.find(o=>o.id===catchTarget);if(!ball||ball.simulating!==simulating)throw new Error('The catch fixture has the wrong physics state');
+    samples.push({ids,objects});return JSON.stringify(objects.map(o=>[o.id,o.objectRevision,o.position]));
+   };
+   let previous=await sample();
    while(Date.now()<deadline){
-    await new Promise(r=>setTimeout(r,150));
-    const sample=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.position',version:2,arguments:{target:catchTarget}}}]);
-    samples.push(sample);const ball=sample.objects.find(o=>o.id===catchTarget);
-    if(!ball||ball.simulating!==simulating)throw new Error('The catch fixture has the wrong physics state');
-    const current=signature(sample);if(current!==previous)quietSince=Date.now();previous=current;
+    await new Promise(r=>setTimeout(r,150));const current=await sample();
+    if(current!==previous)quietSince=Date.now();previous=current;
     if(Date.now()-quietSince>=1250)return samples;
    }
    throw new Error('The catch fixture placement did not stabilize within the bounded observation window');
@@ -1166,7 +1177,7 @@ try{
   const connectedDeadline=Date.now()+10000;
   while(!(connectedInputs.catalog?.value as {ready:boolean})?.ready&&Date.now()<connectedDeadline){await new Promise(r=>setTimeout(r,100));connectedInputs=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.physics.inputs',version:1,arguments:{target:connectedTarget}}}]);}
   const connectedInputState=connectedInputs.catalog?.value as {state:string;ready:boolean;dependencyCount:number};
-  if(connectedInputState?.state!=='ready'||!connectedInputState.ready||connectedInputState.dependencyCount<2||!connectedInputs.objects.find(o=>o.id===connectedTarget)?.simulating||connectedInputs.objects.find(o=>o.id===activeButtonIds[0])?.simulating)throw new Error('Connected button physics input ownership does not match its dynamic cap and fixed mount');
+  if(connectedInputState?.state!=='ready'||!connectedInputState.ready||connectedInputState.dependencyCount<2||!(await nativeObjects.observation(connectedTarget)).simulating||(await nativeObjects.observation(activeButtonIds[0])).simulating)throw new Error('Connected button physics input ownership does not match its dynamic cap and fixed mount');
   const activeConnection=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.state',version:1,arguments:{target:connectedTarget}}}]);
   if(!(activeConnection.catalog?.value as {active:boolean})?.active)throw new Error('The connected input fact admitted a cap without its active joint');
   await writeFile(join(directory,'connected-physics-inputs.json'),JSON.stringify({boundary:'Real Unity shared-client input and connection facts for a running slider on a fixed mount. Synthetic floor; pending-load and interruption coverage is in PlayMode, not this journey. No headset or provider proof.',created:activeButtonCreated,inputs:connectedInputs,connection:activeConnection},null,2));
@@ -1186,18 +1197,18 @@ try{
   // Pausing freezes bodies; the periodic placement capture can still publish their last pose.
   // Observe the whole room for one capture interval before one-shot global Undo.
   const catchPausedSettling=await waitForCatchPlacement(false,true);
-  const walkingObstacleRemoved=await execute([{action:'undo'}]);if(walkingObstacleRemoved.objects.some(o=>o.id===walkingTargets.obstacle))throw new Error('One Undo did not remove the walking obstacle');
-  const walkingRemoved=await execute([{action:'undo'}]);if(walkingRemoved.objects.some(o=>o.id===walkingTargets.target))throw new Error('One Undo did not remove the walking fixture');
+  await execute([{action:'undo'}]);if(await nativeObjects.exists(walkingTargets.obstacle))throw new Error('One Undo did not remove the walking obstacle');
+  await execute([{action:'undo'}]);if(await nativeObjects.exists(walkingTargets.target))throw new Error('One Undo did not remove the walking fixture');
   await writeFile(join(directory,'physical-catching.json'),JSON.stringify({boundary:'Real full-app shared-client capture and drop with ordinary PhysX against a synthetic probe floor. Includes the real command result and duplicate receipt; no headset, scan, browser physics or provider proof.',search:catchSearch,definition:catchDefinition,readyDefinition:catchReadyDefinition,readyCheck:catchReadyCheck,call:catchCall,blocked:catchBlocked,settling:catchSettling,waiting:catchWaiting,fact:catchFact,launch:catchLaunch,after:catchAfter,replay:catchReplay,paused:catchPaused,pausedSettling:catchPausedSettling},null,2));
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
-  const activeButtonRemoved=await execute([{action:'undo'}]);if(activeButtonIds.some(id=>activeButtonRemoved.objects.some(o=>o.id===id)))throw new Error('Active button did not retain single-Undo construction');
+  await execute([{action:'undo'}]);if(await nativeObjects.any(activeButtonIds))throw new Error('Active button did not retain single-Undo construction');
   outcome={groundedFollowing:{movingLeaderStatusDistanceAndReplayVerified:true},groundedTravel:{gradualMotionArrivalAndReplayVerified:true,solidObstacleDetourObserved:true},connectedPhysicsInputs:{runningSliderAndFixedMountVerified:true},portableResources,physicalCatching:{syntheticFloor:true,sharedLaunchCatchDropAndReplayVerified:true},constructionMovement:{sharedHandleTransformAndOneUndoVerified:true},constructionSelection:{sharedStateFactLocateCaptureAndPruneVerified:true},currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
  if(!prompt){
   const sound=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'save',id:'',revision:0,definition:{name:'Robot greeting',kind:'tone',tone:{wave:'sine',frequency:440,endFrequency:660,seconds:.3,attack:.01,release:.04,seed:1}}}}}}]);
   const soundId=sound.execution?.selected?.output?.id;if(typeof soundId!=='string')throw new Error('Sound creation did not return its stable identity');
-  const emitter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'configure',target:'book',revision:lease.state().objects.find(o=>o.id==='book')!.objectRevision,emitter:'probeSound',definition:{source:soundId,part:'',joint:'',position:{x:0,y:0,z:0},role:'effects',spatial:false,gain:0,distance:{minimum:.5,maximum:15}}}}}}]);
+  const emitter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'configure',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound',definition:{source:soundId,part:'',joint:'',position:{x:0,y:0,z:0},role:'effects',spatial:false,gain:0,distance:{minimum:.5,maximum:15}}}}}}]);
   const configured=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.audioEmitter',version:1,arguments:{target:'book',emitter:'probeSound'}}}]);
   if((configured.catalog?.value as {definition:{source:string}}).definition.source!==soundId)throw new Error('Sound attachment did not preserve its source identity');
   let played=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.play',version:1,arguments:{target:'book',emitter:'probeSound'}}}}]);
@@ -1265,7 +1276,7 @@ try{
   if(staleAudioOwner.catalog?.available!==false)throw new Error('Released sound ownership remained available');
   await execute([{action:'rules',rule:{action:'stop',target:soundWatchId}}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:soundWatchId}]}}]);
-  const removed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:lease.state().objects.find(o=>o.id==='book')!.objectRevision,emitter:'probeSound'}}}}]);
+  const removed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound'}}}}]);
   const sourceRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.definition',version:2,arguments:{id:soundId}}}]);
   const cleaned=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]);
   await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,soundReservation,soundOwnership,releasedAudio,staleAudioOwner,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundMixBefore,soundMixed,soundMixAfter,pausedAfterMix,soundMixReset,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
@@ -1309,9 +1320,9 @@ try{
  const gripReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.snapSettings',version:1,arguments:{...gripAfter.execution.selected.output,mode:'off'}}}}]);
  if(gripReset.execution?.selected?.phase!=='completed')throw new Error('Could not return grip snapping to off');
  await writeFile(join(directory,'grip-snapping.json'),JSON.stringify({boundary:'Real Unity shared configuration and preview facts. Actual grip matching, save, cancellation and Undo are tested separately in PlayMode; no headset proof.',before:gripBefore,search:gripSearch,definition:gripDefinition,read:gripRead,arguments:gripArguments,after:gripAfter,preview:gripPreview,reset:gripReset},null,2));
- await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,initial,observations,outcome},null,2));
+ await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,initial,observations,readSets,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
 }catch(error){
- await writeFile(join(directory,'journey-failure.json'),JSON.stringify({error:error instanceof Error?error.stack:String(error),observations},null,2));
+ await writeFile(join(directory,'journey-failure.json'),JSON.stringify({error:error instanceof Error?error.stack:String(error),observations,readSets},null,2));
  transport.checkHealth();throw error;
 }finally{await transport.close();}

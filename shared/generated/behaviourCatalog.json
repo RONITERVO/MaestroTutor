@@ -37874,6 +37874,62 @@
       ]
     },
     {
+      "id": "object.observation",
+      "version": 1,
+      "type": {
+        "record": {
+          "id": "text",
+          "objectRevision": "number",
+          "name": "text",
+          "kind": "text",
+          "position": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "scale": "number",
+          "color": {
+            "record": {
+              "r": "number",
+              "g": "number",
+              "b": "number",
+              "a": "number"
+            }
+          },
+          "animated": "boolean",
+          "held": "boolean",
+          "simulating": "boolean",
+          "runtimeState": "text",
+          "positionSource": "text"
+        }
+      },
+      "label": "Observe one saved object",
+      "description": "Read one exact saved object's display metadata without selecting, loading, moving or editing it. Uses the same projection as the room view, independently of which objects that view lists. objectRevision guards saved edits, not live frame changes. position is the current authored-frame origin when positionSource=live; otherwise it is the saved origin. runtimeState distinguishes active, inactive and unavailable native instances. held, simulating and animated describe an active grab, rigid simulation and recipe playback; false on a dormant object does not mean its saved recipe is stopped. color is the effective root tint, not sampled pixels or every part/material. Use component facts for full physics, placement, animation and appearance settings. Missing saved IDs return unavailable; use object.presence to explicitly distinguish missing from dormant. Reads do not acquire native resources or grant editing authority.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-f0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "book"
+      },
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "object.spatialBounds",
       "version": 1,
       "type": {
@@ -47919,7 +47975,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "d13b0efd94660b70a8796b86585f41377a5b1fe7bf8b2a6830969a6ba145a6ae"
+      "sha256": "774f9856a386c30dc54a3a008ce09deb7eabccd72604025b655660ed8060eaa8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -47947,7 +48003,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/NativeObjectFacts.cs",
-      "sha256": "d7f3a8c54f324ddf7b1029de26f998b870397eed7cfdaf1b05b4e259b1f87014"
+      "sha256": "3dc6bd3d6198f58222d6eafefa5cc9ae2afca69c8b456d435dbcadf32fe95d18"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/PhysicsMotionSubscription.cs",

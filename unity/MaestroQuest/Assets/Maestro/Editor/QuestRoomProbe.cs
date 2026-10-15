@@ -99,6 +99,9 @@ namespace Maestro.Quest.Editor
                 if(agent?.CapturePayload is JObject capture)Publish("capture.json",capture);
                 if(agent){
                     var observed=agent.Observe();
+                    // Explicit offline stress fixture only: retain native receipts/inspection
+                    // and force consumers to discover saved objects through ordinary facts.
+                    if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_SPARSE_OBJECTS")=="1")observed.objects=Array.Empty<RoomAgentObject>();
                     Publish("state.json",new JObject {["version"]=1,["id"]=id,["clientId"]=clientId,["state"]=JObject.Parse(RoomAgentWire.Serialize(observed))});
                     var animation=avatarProbe?.Observe(root,id,observed);if(animation!=null)Publish("avatar-playback.json",animation);
                     if(scanProbe!=null)Publish("synthetic-scan.json",new JObject{["loads"]=scanProbe.Loads,["scans"]=scanProbe.Scans,["boundary"]="Explicit synthetic platform and floor; native setup/placement and real provider"});

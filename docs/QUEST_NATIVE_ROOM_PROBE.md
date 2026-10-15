@@ -1543,3 +1543,26 @@ validation, then verifies bounded PCM and cancellation. Its private evidence is
 `.quest-evidence/live-audio-integration/network/`; it retains no audio and uses no
 provider credentials. Unity Android transport and simultaneous Live microphone
 capture still require their own acceptance.
+
+
+### Offline empty-inventory journey
+
+`-SparseObjectView` is an explicit offline Headless option. The editor fixture
+empties only the periodic `objects` list; native actions, receipts, catalog facts
+and self-contained inspection remain unchanged. It refuses provider prompts and
+Book journeys. Production observations and world limits are unchanged.
+
+The driver uses shared `world.objects` paging for saved totals and member
+differences, `object.presence` for existence, `object.definition` for revisions,
+and `object.observation` for live/saved metadata. A changed or unavailable page
+fails the directory read instead of implying deletion. Action preparation uses
+the production client's compact exact-target revision reads. Pose checks remain
+native reads; no inventory is synthesized into the recorded state.
+
+`journey.json` records the fixture flag, raw observations and the separate
+prepared read sets. The owner and terminal verification receipts also identify
+the mode. Missing read evidence, a leaked nonempty list, malformed responses or
+failed native effects fail the journey. This verifies offline client/native
+coverage, not provider interpretation, original-book UI or headset acceptance.
+Provider-specific journey helpers still require their own migration and checks
+before production observations can become bounded.
