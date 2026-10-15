@@ -34,6 +34,16 @@ namespace Maestro.Quest.Tests
             editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,avatar,directory,physics);
             yield return null;
         }
+        [UnityTest] public IEnumerator WorkspaceReadinessTracksContentBindingAndNotVisibility()
+        {
+            var agent=root.AddComponent<RoomAgent>();agent.Initialize(null,null);
+            var opening=agent.Observe();Assert.That(opening.workspaceReady,Is.False);Assert.That(opening.objects,Is.Empty);
+            Assert.That((bool)Newtonsoft.Json.Linq.JObject.Parse(RoomAgentWire.Serialize(opening))["workspaceReady"],Is.False);
+            agent.Bind(editor,"Ready");var ready=agent.Observe();Assert.That(ready.workspaceReady,Is.True);Assert.That(ready.visible,Is.False);
+            Assert.That((bool)Newtonsoft.Json.Linq.JObject.Parse(RoomAgentWire.Serialize(ready))["workspaceReady"],Is.True);
+            Assert.That(ready.session,Is.Not.EqualTo(opening.session));agent.Bind(null,"Unavailable");
+            var unavailable=agent.Observe();Assert.That(unavailable.workspaceReady,Is.False);Assert.That(unavailable.session,Is.Not.EqualTo(ready.session));yield return null;
+        }
         RoomItem Included(string name)
         {
             var item = GameObject.CreatePrimitive(PrimitiveType.Cube); item.name = name; item.transform.SetParent(root.transform,false);

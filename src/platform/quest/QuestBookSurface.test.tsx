@@ -67,7 +67,7 @@ describe('full-page book layouts', () => {
 
 const nativeRoom = (session = 'a'.repeat(32), ready = true): RoomAgentState => ({
   version: 1, session, revision: 1, sceneRevision: 1, ack: 0, ok: true,
-  status: ready ? 'Workspace ready' : 'Opening workspace', visible: false,
+  status: ready ? 'Workspace ready' : 'Opening workspace', visible: false, workspaceReady:ready,
   canUndo: false, canRedo: false, physicsRunning: false, created: [], capabilities: ['catalog.v1'],
   objects: ready ? [{ id: 'book', name: 'Book', kind: 'Book', position: { x: 0, y: 1, z: 1 }, scale: 1,
     color: { r: 1, g: 1, b: 1, a: 1 }, animated: false, objectRevision: 1 }] : [],
@@ -175,4 +175,23 @@ describe('workshop navigation while the native workspace opens', () => {
     expect(roomCommand()).toBeNull(); expect(ui.getByRole('button', { name: 'Back to chat' })).toBeTruthy();
   });
 
+});
+
+it('settles an acknowledged open using native readiness even with an empty view',async()=>{
+ render(<QuestBookSurface><ChatProbe /></QuestBookSurface>);
+ const ready={...nativeRoom(),objects:[]};await nativeState(ready);openWorkshop();await acknowledge(ready,true);
+ await nativeState({...nativeRoom('b'.repeat(32)),objects:[]});
+ expect(roomCommand()).toBeNull();
+});
+it('keeps an opening intent through a not-ready bind even if book metadata is present',async()=>{
+ render(<QuestBookSurface><ChatProbe /></QuestBookSurface>);
+ const opening={...nativeRoom(),workspaceReady:false};await nativeState(opening);openWorkshop();await acknowledge(opening,true);
+ const ready={...nativeRoom('b'.repeat(32)),objects:[]};await nativeState(ready);
+ expect(roomCommand()?.commands).toEqual([{action:'workspace',visible:true}]);await acknowledge(ready,true);
+ await nativeState(nativeRoom('c'.repeat(32)));expect(roomCommand()).toBeNull();
+});
+it('keeps the complete-list readiness fallback for an older native host',async()=>{
+ render(<QuestBookSurface><ChatProbe /></QuestBookSurface>);
+ const old={...nativeRoom(),workspaceReady:undefined};await nativeState(old);openWorkshop();await acknowledge(old,true);
+ await nativeState({...nativeRoom('b'.repeat(32)),workspaceReady:undefined});expect(roomCommand()).toBeNull();
 });

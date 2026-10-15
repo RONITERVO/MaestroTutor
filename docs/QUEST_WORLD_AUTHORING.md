@@ -1718,3 +1718,29 @@ target is gone, without granting a new action.
 The production periodic inventory remains complete pending a final consumer audit.
 This increment adds no saved capacity, new native capability or independent world
 store. Larger-world quotas and live resource admission remain separate work.
+
+
+## Observation-independent controls — 2026-10-15
+
+Opening the workshop uses the native `workspaceReady` signal, which means a content
+editor is bound. It does not promise that every object is loaded, that physics is
+ready, or that a requested action is allowed. An empty displayed object list does
+not mean startup is unfinished. Older hosts retain their complete-list fallback.
+
+Schema-created object fields start unselected unless the schema fixes one exact
+identity. Display order, search order and example IDs never select a target for the
+author. An explicit compatible target survives a variant change, including when
+it is outside the current view.
+
+Selected construction pieces can use the shared Read control to fetch their saved
+name by exact ID. This is an optional display read; it does not change membership,
+load the object, reserve a revision or replace the action's own reviewed inputs.
+The first piece still defines the origin and unavailable reads keep the saved ID.
+Standalone inspection and motion searches carry no write guards, so conflicting
+old edit evidence cannot prevent a refresh. Fresh edits still require their exact
+reviewed object revisions.
+
+Periodic inventory is still complete. The native headless journey also uses that
+list for object counts, pose checks and deletion assertions; those checks must
+move to explicit saved-directory and target reads before the production view can
+be bounded. Saved-world quotas and live-resource admission are separate changes.

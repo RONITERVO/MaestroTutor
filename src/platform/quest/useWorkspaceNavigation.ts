@@ -22,8 +22,9 @@ export function useWorkspaceNavigation(room:RoomAgentClient,view:ReturnType<Room
     const state=view.state;if(!state||view.pending)return;
     if(Boolean(state.visible)===intent.visible){
       // Before content exists, a visible maintenance view may still be replaced
-      // by the initial bind. Settle an open only when the book itself is present.
-      if(!intent.visible||state.objects.some(object=>object.id==='book'))setIntent(null);
+      // by the initial bind. Native readiness is independent of object paging.
+      // Older hosts used the included book as their complete-list readiness signal.
+      if(!intent.visible||(state.workspaceReady??state.objects.some(object=>object.id==='book')))setIntent(null);
       return;
     }
     if(intent.attemptedSession===state.session)return;

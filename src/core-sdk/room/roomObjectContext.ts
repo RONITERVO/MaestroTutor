@@ -39,10 +39,12 @@ export function roomRevisionBasis(state:RoomAgentState,earlier:readonly RoomAgen
 export function roomCommandTargets(commands:readonly RoomCommand[]):{targets:Set<string>;required:Set<string>} {
  const targets=new Set<string>(),required=new Set<string>(),aliases=new Set<string>();
  for(const command of commands){
+  // Standalone native reads refresh evidence; stale edit guards must not stop them.
+  if(['inspect','motions'].includes(command.action))continue;
   if(command.action==='create'){if(command.reference)aliases.add(command.reference);continue;}
   const references=command.action==='execution'&&command.execution?.operation==='start'?capabilityResources(command.execution.call.id,command.execution.call.arguments):command.target?[command.target]:[];
   for(const target of references)if(!aliases.has(target)){
-   targets.add(target);if(!['inspect','motions'].includes(command.action))required.add(target);
+   targets.add(target);required.add(target);
   }
  }
  return {targets,required};

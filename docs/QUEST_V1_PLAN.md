@@ -10730,3 +10730,55 @@ work. Optional labels can still use inventory metadata, falling back to exact ID
 when it is absent. This fallback does not infer deletion or authorize an edit.
 V1 is incomplete. No headset, paid provider, signing, deployment or Meta work ran;
 existing holds remain in place.
+
+
+## Observation-independent controls — 2026-10-15
+
+Native observations now report `workspaceReady` from the content binding. The book
+settles startup navigation using that signal instead of requiring a book entry in
+the displayed object list. False means content is not bound; true does not bypass
+runtime gates or promise readiness of every object. Older hosts retain the prior
+complete-list fallback. Client validation rejects malformed readiness values.
+
+Schema-generated object fields no longer select the first displayed object or an
+example identity. Only a schema restricting the field to one exact ID may supply
+that identity automatically. Explicit compatible choices survive variant changes.
+Selected construction pieces now reuse the shared exact-ID reference summary and
+optional Read control. Names can be read outside the current view without changing
+membership, loading objects or reserving an edit revision. Native selection order
+and the first-piece origin remain authoritative.
+
+Standalone inspect and motion queries do not carry edit guards. Conflicting old
+revision evidence therefore cannot stop a refresh. New writes still require the
+exact reviewed targets, and stale/missing guards retain their existing failures.
+
+Verification passed **33 EditMode / 17 PlayMode** focused native cases with no
+failures or skips, including actual binding/unbinding readiness and serialization.
+**3,019 web tests / 319 files**, application/probe types and catalog-source checks
+passed. Eight new web cases cover explicit choices, compatible targets, readiness
+handoffs/legacy hosts, malformed input, fresh reads and off-view selection labels.
+Two earlier selection tests were updated for the reference-summary layout.
+
+Desktop Chromium exercised the original book with native-recorded directory and
+object-definition evidence and an empty simulated inventory. It read off-view
+piece names, reordered across pages, retained exact revisions and displayed a
+simulated capture refusal. Wide/narrow screenshots were inspected. Browser
+acknowledgements were simulated; actual native selection guards ran separately.
+No browser mutation reached Unity and no provider was called. The first local Vite
+launch stalled while watching the large workspace; the existing restricted fixture
+server resolved it. The reorder probe now waits for the acknowledged first ID
+before reading it. Failed harness attempts remain in the evidence folder.
+
+All **3,014 native inputs** match the verification mirror; 14 unrelated files
+remain byte-for-byte unchanged. Catalog definitions are unchanged and the one
+runtime source hash was refreshed through Unity's official export. Evidence:
+`.quest-evidence/object-observation-consumers/`. The preceding read-set checkpoint
+is **5961bcac**; broader native/Android/offline evidence remains **7fe48619** and
+was not rerun.
+
+Production inventory and world limits are still unchanged. The native headless
+journey also assumes a complete list for totals, existence, pose/colour assertions
+and newly-created-member differences. Those consumers need exact saved-directory
+and object reads before bounded production observations. Saved capacity and live
+resource admission remain separate work. V1 is incomplete; headset, paid provider,
+signing, deployment and Meta holds remain in place.

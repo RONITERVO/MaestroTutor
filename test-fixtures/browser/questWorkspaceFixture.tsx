@@ -301,7 +301,7 @@ if(behaviourChoicesMode){
  state.rules.sequences=[{id:selected.id,name:selected.name,steps:1,repeat:false}];state.rules.running=[];state.rules.bindings=[];state.rules.bindingCount=0;state.rules.buttons=[];state.rules.outcomes=[];
  state.workspaceView='rules';state.selectedId=target;state.capabilities=[...new Set([...state.capabilities!,...nativeProgram.capabilities])];
 }
-if(objectReadSetsMode)state.objects=[];
+if(objectReadSetsMode){state.objects=[];state.workspaceReady=true;}
 const objectInspectionMode=new URLSearchParams(location.search).has('objectInspection');
 if(objectInspectionMode)state={...structuredClone(nativeObjectInspection) as unknown as RoomAgentState,objects:[]};
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];

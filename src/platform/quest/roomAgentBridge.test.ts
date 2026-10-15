@@ -105,7 +105,7 @@ it('accepts the actual Unity motion page and keeps search receipts tied to nativ
  const client=new RoomAgentClient();expect(client.receive(native)).toBe(true);
  const command={action:'motions' as const,target:'maestro',motionQuery:native.motions.query};
  const pending=client.request([command]);expect(client.snapshot().request?.commands).toEqual([command]);
- expect(client.snapshot().request?.conditions).toEqual([{id:'maestro',revision:native.objects.find((o:any)=>o.id==='maestro').objectRevision}]);
+ expect(client.snapshot().request?.conditions).toEqual([]); // A search refreshes evidence; it does not edit the avatar.
  expect(client.receive({...native,revision:2,ack:1})).toBe(true);expect((await pending).motions?.entries[0].id).toBe(native.motions.entries[0].id);
  expect(client.receive({...native,revision:3,ack:1,motions:{...native.motions,total:999}})).toBe(false);
  expect(client.receive({...native,revision:3,ack:1,motions:{...native.motions,ready:false}})).toBe(false);
@@ -132,4 +132,11 @@ it('accepts Unity activity observations and carries their independent revision w
  expect(client.receive({...native,revision:native.revision+1,ack:1,ok:false,status:'Tutor-state assignments changed',activityProfile:{...native.activityProfile,revision:3}})).toBe(true);
  expect((await pending).ok).toBe(false);expect(client.snapshot().request).toBeNull();
  for(const change of [{revision:undefined},{revision:0},{roles:[]},{roles:native.activityProfile.roles.map((r:any)=>({...r,choices:r.choices.map((c:any)=>({...c,weight:1.5}))}))}])expect(client.receive({...native,revision:native.revision+2,activityProfile:{...native.activityProfile,...change}})).toBe(false);
+});
+
+it('validates explicit native readiness without deriving it from visible object metadata',()=>{
+ for(const workspaceReady of [true,false,undefined]){
+  const client=new RoomAgentClient();expect(client.receive(state({workspaceReady}))).toBe(true);expect(client.getSnapshot().state?.workspaceReady).toBe(workspaceReady);client.cancel();
+ }
+ for(const workspaceReady of [null,'true',1,{}])expect(new RoomAgentClient().receive(state({workspaceReady}))).toBe(false);
 });

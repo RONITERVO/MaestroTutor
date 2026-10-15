@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {cleanup,fireEvent,render} from '@testing-library/react';
 import {afterEach,expect,it,vi} from 'vitest';
-import {CapabilityFields,changeCapabilityVariant} from './CapabilityFields';
+import {CapabilityFields,changeCapabilityVariant,initialCapabilityValue} from './CapabilityFields';
 import {capabilityDefinition,resolveCapabilitySchema,validateCapabilityArguments} from '../../../shared/capabilities';
 afterEach(cleanup);
 it('shows native float values readably without changing an untouched draft',()=>{
@@ -59,4 +59,18 @@ it('lets attention switch between object, place and user without hidden stale ta
  expect(person).toEqual({kind:'user'});expect(validateCapabilityArguments(action.id,action.version,{...call,focus:person})).toBeNull();
  const object=changeCapabilityVariant(schema,1,person,[]);object.objectId='book';
  expect(object).toEqual({kind:'object',objectId:'book'});expect(validateCapabilityArguments(action.id,action.version,{...call,focus:object})).toBeNull();
+});
+
+it('requires an explicit object choice regardless of observed order or an example identity',()=>{
+ const target=capabilityDefinition('object.delete')!.input.properties!.target;
+ const objects=[{id:'a'.repeat(32),name:'Apple'},{id:'b'.repeat(32),name:'Tree'}];
+ for(const observed of [objects,[...objects].reverse(),[]])expect(initialCapabilityValue({...target,examples:[objects[0].id]},observed)).toBe('');
+ expect(initialCapabilityValue({...target,enum:objects.map(o=>o.id)},objects)).toBe('');
+ expect(initialCapabilityValue({...target,enum:[objects[1].id]},[])).toBe(objects[1].id);
+});
+it('preserves an explicitly chosen off-view target when changing compatible action variants',()=>{
+ const schema=capabilityDefinition('avatar.look')!.input.properties!.focus;
+ const objectId='a'.repeat(32);
+ expect(changeCapabilityVariant(schema,1,{kind:'object',objectId},[])).toEqual({kind:'object',objectId});
+ expect(changeCapabilityVariant(schema,1,{kind:'user'},[{id:'book'}])).toEqual({kind:'object',objectId:''});
 });

@@ -59,6 +59,7 @@ export class RoomAgentClient {
     if(input.activityProfile!==undefined&&input.activityProfile!==null&&!validActivityProfile(input.activityProfile,true))return false;
     if(input.walk!==undefined&&input.walk!==null&&!validAvatarWalkObservation(input.walk))return false;
     if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
+    if(input.workspaceReady!==undefined&&typeof input.workspaceReady!=='boolean')return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
     if(input.execution!==undefined&&input.execution!==null&&!validExecutionView(input.execution))return false;
     if(Array.isArray(input.capabilities)&&input.capabilities.includes('workspaceMaintenance.v1')&&(!record(input.execution)||!record(input.execution.workspace)))return false;

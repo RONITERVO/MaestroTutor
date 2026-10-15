@@ -23,6 +23,9 @@ function displayNumber(value:number):number {
 
 /** A draft value only. The shared validator and native handler decide validity. */
 export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly EditorObject[]):unknown {
+  // A partial observation is not a default target. Only a schema fixing one
+  // exact identity may choose an object without an explicit author selection.
+  if(schema['x-resource']==='object') return schema.enum?.length===1?schema.enum[0]:'';
   if (schema.examples?.length) return JSON.parse(JSON.stringify(schema.examples[0]));
   if (schema.oneOf) return initialCapabilityValue(schema.oneOf[0],objects);
   if (schema.enum) return schema.enum[0];
@@ -34,7 +37,6 @@ export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly
   if(schema.type==='array') return Array.from({length:schema.minItems??0},()=>initialCapabilityValue(schema.items!,objects));
   if(schema.type==='boolean') return false;
   if(schema.type==='number'||schema.type==='integer') return Math.max(schema.minimum??0,Math.min(0,schema.maximum??0));
-  if(schema['x-resource']==='object') return objects.find(x=>!schema.pattern||new RegExp(schema.pattern).test(x.id))?.id??'';
   return '';
 }
 

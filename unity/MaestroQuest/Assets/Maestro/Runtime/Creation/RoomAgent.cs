@@ -51,7 +51,7 @@ namespace Maestro.Quest.Creation
     {
         public int version=1,revision,sceneRevision,ack;
         public string session,status,selectedId;
-        public bool ok,canUndo,canRedo,physicsRunning,visible;
+        public bool ok,canUndo,canRedo,physicsRunning,visible,workspaceReady;
         public RoomInspection inspection;
         public ConstructionSelectionView constructionSelection;
         public ConstructionManipulationView constructionManipulation;
@@ -318,7 +318,7 @@ namespace Maestro.Quest.Creation
             var inspected=editor.Read(lastInspected);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
                 chatImage=editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.Chat.Request(),chatAudio=editor.GetComponent<Maestro.Quest.Imports.AudioImportWorkshop>()?.Chat.Request(),capture=editor.ViewCaptureMetadata,ownership=editor.Ownership.Observe(),temporaryRoom=editor.ObserveTemporaryRoom(),motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),execution=executor.Executions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
-                visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=editor.RecipeForEditing(inspected),item=editor.ObserveObject(inspected.id)},
+                workspaceReady=true,visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=editor.RecipeForEditing(inspected),item=editor.ObserveObject(inspected.id)},
                 constructionSelection=editor.ObserveConstructionSelection(),constructionManipulation=editor.ObserveConstructionManipulation(),selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
                 objects=editor.ObserveObjects() };
         }

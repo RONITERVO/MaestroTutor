@@ -39,18 +39,18 @@ function setup(members:string[]=[],extra:Partial<RoomAgentState>={}) {
 it('searches only when requested and keeps native order/origin across pages, removal and failed selection',async()=>{
  const {client,screen,reply,receive,acknowledge,expand,search,order}=setup();expect(client.snapshot().request).toBeNull();expand();expect(client.snapshot().request).toBeNull();
  fireEvent.click(screen.getByRole('button',{name:'Find construction pieces'}));expect(client.snapshot().request!.commands[0].catalog).toEqual(pages[0].request);await reply(pages[0].view);
- fireEvent.click(search().getByRole('button',{name:new RegExp(first.name)}));expect(screen.queryByRole('list')).toBeNull();await acknowledge();expect(order().getAllByRole('listitem')[0].textContent).toContain(first.name+' · origin');
+ fireEvent.click(search().getByRole('button',{name:new RegExp(first.name)}));expect(screen.queryByRole('list')).toBeNull();await acknowledge();expect(within(order().getAllByRole('listitem')[0]).getByRole('region',{name:'Piece 1 · origin object reference'}).textContent).toContain(first.name);
  fireEvent.click(search().getByRole('button',{name:'Next objects'}));await reply(pages[1].view);expect(order().getAllByRole('listitem')).toHaveLength(1);
  fireEvent.click(search().getByRole('button',{name:new RegExp(later.name)}));expect(client.snapshot().request!.commands[0].execution).toMatchObject({call:{arguments:{members:[first.id,later.id]}}});await receive({ok:false,status:'Selection changed; retry'});expect(order().getAllByRole('listitem')).toHaveLength(1);expect(search().getByRole('button',{name:new RegExp(later.name)}).getAttribute('aria-pressed')).toBe('false');
  fireEvent.click(search().getByRole('button',{name:new RegExp(later.name)}));await acknowledge();
- fireEvent.click(order().getByRole('button',{name:'Move '+later.name+' earlier'}));await acknowledge();expect(order().getAllByRole('listitem')[0].textContent).toContain(later.name+' · origin');
+ fireEvent.click(order().getByRole('button',{name:'Move '+later.name+' earlier'}));await acknowledge();expect(within(order().getAllByRole('listitem')[0]).getByRole('region',{name:'Piece 1 · origin object reference'}).textContent).toContain(later.name);
  fireEvent.click(order().getByRole('button',{name:'Remove '+first.name+' from construction'}));await acknowledge();expect(order().getAllByRole('listitem')).toHaveLength(1);
  fireEvent.click(order().getByRole('button',{name:'Locate '+later.name}));expect(client.snapshot().request!.commands).toEqual([{action:'inspect',target:later.id}]);await receive();
 });
 it('retains chosen pieces when a continuation expires and can refresh without changing selection',async()=>{
  const {client,screen,reply,expand,search,order}=setup([first.id]);expand();fireEvent.click(screen.getByRole('button',{name:'Find construction pieces'}));await reply(pages[0].view);
  fireEvent.click(search().getByRole('button',{name:'Next objects'}));await reply({...pages[1].view,available:false,value:null} as CatalogView);
- expect(search().getByRole('status').textContent).toContain('Search again');expect(order().getAllByRole('listitem')[0].textContent).toContain(first.name+' · origin');
+ expect(search().getByRole('status').textContent).toContain('Search again');expect(within(order().getAllByRole('listitem')[0]).getByRole('region',{name:'Piece 1 · origin object reference'}).textContent).toContain(first.name);
  fireEvent.click(search().getByRole('button',{name:'Search objects'}));expect(client.snapshot().request!.commands[0].catalog).toEqual(pages[0].request);await reply(pages[0].view);expect(search().getByRole('button',{name:new RegExp(first.name)}).getAttribute('aria-pressed')).toBe('true');
 });
 it('allows removal at the 16-piece limit but excludes new pieces and built-ins',async()=>{

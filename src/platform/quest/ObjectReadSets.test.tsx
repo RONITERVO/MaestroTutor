@@ -6,7 +6,7 @@ import {afterEach,expect,it,vi} from 'vitest';
 import {RoomAgentClient} from './roomAgentBridge';
 import {CapabilityBrowser} from './CapabilityBrowser';
 import {ConstructionSelectionControls} from './ConstructionSelectionControls';
-import {roomRevisionBasis} from '../../core-sdk/room/roomObjectContext';
+import {roomRevisionBasis,roomCommandConditions} from '../../core-sdk/room/roomObjectContext';
 import type {RoomAgentState,RoomCommand} from '../../core-sdk/room/roomAgent';
 import {capabilityDefinition} from '../../../shared/capabilities';
 import {objectReferenceRequest,readObjectReference} from '../../../shared/objectReference';
@@ -49,4 +49,23 @@ it('uses reviewed nested capture reads after the periodic inventory changes, wit
 it('keeps authoritative ordered selection off inventory and prepares every member before requesting a reorder',async()=>{
  const selection={stateId:'b'.repeat(32),collecting:false,members:ids},c=make({constructionSelection:selection}),onCapture=vi.fn();const screen=render(<ConstructionSelectionControls client={c} disabled={false} onCapture={onCapture}/>);fireEvent.click(screen.getByRole('button',{name:'Move '+ids[1]+' earlier'}));expect(c.snapshot().request!.commands[0].catalog).toEqual(objectReferenceRequest(ids[1]));expect((screen.getByRole('button',{name:'Clear pieces'}) as HTMLButtonElement).disabled).toBe(true);
  await reply(c,{catalog:views[1]});await reply(c,{catalog:views[0]});expect(c.snapshot().request!.commands[0].execution).toMatchObject({call:{id:'room.selection.set',arguments:{stateId:selection.stateId,members:[ids[1],ids[0]],collecting:false}}});expect(c.snapshot().request!.conditions).toEqual([...basis].reverse().map(({id,objectRevision})=>({id,revision:objectRevision})));await reply(c,{ok:false,status:'Selection changed elsewhere'});expect(c.getSnapshot().state!.constructionSelection!.members).toEqual(ids);expect(screen.getByRole('alert').textContent).toContain('changed elsewhere');expect(onCapture).not.toHaveBeenCalled();
+});
+
+it('allows exact refresh queries without reusing conflicting edit evidence',()=>{
+ const stale=[basis[0],{...basis[0],objectRevision:basis[0].objectRevision+1}];
+ for(const action of ['inspect','motions'] as const)expect(roomCommandConditions([{action,target:ids[0]}],stale)).toEqual({version:2,conditions:[]});
+ expect(()=>roomCommandConditions([{action:'delete',target:ids[0]}],stale)).toThrow('Conflicting');
+ expect(()=>roomCommandConditions([{action:'delete',target:ids[0]}],[])).toThrow('Read the current saved object');
+});
+it('reads selected piece names on demand without changing membership or reserving a write revision',async()=>{
+ const selection={stateId:'b'.repeat(32),collecting:true,members:ids},c=make({constructionSelection:selection,capabilities:[...state().capabilities!,'objectSearch.v1']}),onCapture=vi.fn();
+ const screen=render(<ConstructionSelectionControls client={c} disabled={false} onCapture={onCapture}/>);
+ fireEvent(screen.getByText('Construction pieces · 2 selected').closest('details')!,new Event('toggle'));
+ expect(c.snapshot().request).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Read Piece 1 · origin'}));expect(c.snapshot().request!.commands).toEqual([{action:'catalog',catalog:objectReferenceRequest(ids[0])}]);
+ await reply(c,{catalog:views[0]});expect(screen.getByRole('region',{name:'Piece 1 · origin object reference'}).textContent).toContain((reads[0].name||reads[0].kind)+' · read at revision '+reads[0].revision);expect(c.getSnapshot().state!.objects).toEqual([]);expect(c.getSnapshot().state!.constructionSelection).toEqual(selection);
+ fireEvent.click(screen.getByRole('button',{name:'Remove '+ids[0]+' from construction'}));
+ expect(c.snapshot().request!.commands).toEqual([{action:'catalog',catalog:objectReferenceRequest(ids[1])}]);
+ await reply(c,{catalog:views[1]});expect(c.snapshot().request!.commands[0].execution).toMatchObject({call:{arguments:{members:[ids[1]]}}});await reply(c,{ok:false,status:'Selection changed'});
+ expect(c.getSnapshot().state!.constructionSelection).toEqual(selection);expect(onCapture).not.toHaveBeenCalled();
 });
