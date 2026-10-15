@@ -47,10 +47,15 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator ObjectWalkSavedChoiceSurvivesNativeLossAndPreparation(){
             yield return WalkingCharacter();Assert.That(SelectGait("embedded",null,out var error),Is.True,error);world.PausePhysics();
             string id=editor.Identity(gaitItem),hash=gaitModel.AssetHash,before=JsonUtility.ToJson(editor.Snapshot());int revision=editor.ObjectRevision(id);
+            var clips=editor.ObserveWalkClips(hash,0,id);Assert.That((double)clips["entries"][0]["duration"],Is.EqualTo(gaitModel.ClipDuration(0)).Within(.000001));
             var retirement=editor.RetireNativeArea("");
             for(int i=0;i<600&&!retirement.IsCompleted;i++)yield return null;
             Assert.That(retirement.IsCompleted,Is.True);Assert.That(retirement.Exception,Is.Null);Assert.That(retirement.Result,Is.Null);yield return null;
             Assert.That(editor.NativeEntityDormant(id),Is.True);
+            var budget=ImportedModel.LiveBudget;
+            Assert.That(JToken.DeepEquals(editor.ObserveWalkClips(hash,0,id),clips),Is.True,"Exact clip discovery survives native retirement");
+            Assert.That(ImportedModel.LiveBudget,Is.EqualTo(budget));
+            Assert.That(editor.ObserveWalkClips(new string('0',64),0,id),Is.Null,"Never substitute a different model hash");
             var lost=SettingsFact("object.walk.settings",id);var selection=(JObject)lost["selection"];
             Assert.That((string)selection["source"],Is.EqualTo("embedded"));Assert.That((string)selection["modelHash"],Is.EqualTo(hash));Assert.That((int)selection["clipIndex"],Is.Zero);
             Assert.That((bool)selection["available"],Is.False);Assert.That((string)selection["playbackStatus"],Is.EqualTo("inactive"));

@@ -1,3 +1,5 @@
+import {nativeBookObjects} from './native-book-objects';
+import {readObjectReference} from '../shared/objectReference';
 import {chatSoundFixture} from './probe-chat-audio';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
@@ -12,12 +14,14 @@ import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {roomGuide} from '../shared/prompts/roomguides';
 import {ROOM_TASK_LIMITS} from '../shared/roomTaskBudget';
 const directory=process.argv[2];if(!directory)throw new Error('Supply the fresh, explicitly started native probe directory.');
+const owner=JSON.parse(await readFile(join(directory,'owner.json'),'utf8'));
+const checkSparse=(state:RoomAgentState)=>{if(owner.sparseObjectView&&state.objects.length)throw new Error('Sparse book fixture leaked a complete object inventory');};
 const channel=await RoomProbeChannel.connect(directory,120000);
 let browser:Browser|undefined,server:ViteDevServer|undefined;
 const requests=new Map<string,unknown>(),observations:RoomAgentState[]=[],providerRequests:unknown[]=[],errors:string[]=[];
 let page:Awaited<ReturnType<Browser['newPage']>>|undefined;
 let releasePlan:()=>void=()=>{};const blockedPlan=new Promise<void>(resolve=>{releasePlan=resolve;});
-let plannerCalls=0,normalReplies=0,verificationCalls=0,planWaiting=false;
+let plannerCalls=0,normalReplies=0,verificationCalls=0,planWaiting=false,plannedBallId='';
 const discoveryReads=ROOM_TASK_LIMITS.queryBatches,expectedPlans=discoveryReads+3;
 try{
  // This immutable verification page needs no watcher or shared optimizer cache.
@@ -37,7 +41,7 @@ try{
   if(source.frame!==page!.mainFrame()||source.frame.url()!==base+'/test-fixtures/browser/quest-native-book.html')throw new Error('Only the owned top-level book can use this native channel.');
   if(snapshot.request)requests.set(snapshot.clientId+':'+snapshot.request.sequence,structuredClone(snapshot.request));
   const result=await channel.exchange(snapshot);
-  if(result.state){const state=result.state as RoomAgentState,previous=observations.at(-1);if(previous?.session!==state.session||previous.revision!==state.revision)observations.push(structuredClone(state));}
+  if(result.state){const state=result.state as RoomAgentState,previous=observations.at(-1);checkSparse(state);if(previous?.session!==state.session||previous.revision!==state.revision)observations.push(structuredClone(state));}
   return result;
  });
  await context.route('**/*',async route=>{
@@ -54,19 +58,22 @@ try{
    const state=input.scene as RoomAgentState;assert.ok(state.session&&state.sceneRevision);
    assert.equal(input.receipts.length,plannerCalls-1);
    // Exercise the exhausted-discovery boundary with actual native reads.
-   assert.deepEqual(input.budget,{planningCalls:ROOM_TASK_LIMITS.planningCalls+1-plannerCalls,queryBatches:Math.max(0,discoveryReads+1-plannerCalls),actionBatches:ROOM_TASK_LIMITS.actionBatches-Math.max(0,plannerCalls-discoveryReads-1)});
+   assert.deepEqual(input.budget,{planningCalls:ROOM_TASK_LIMITS.planningCalls+1-plannerCalls,queryBatches:discoveryReads-(plannerCalls<=discoveryReads?plannerCalls-1:plannerCalls===discoveryReads+1?discoveryReads-1:discoveryReads),actionBatches:ROOM_TASK_LIMITS.actionBatches-(plannerCalls<=discoveryReads?0:plannerCalls<=discoveryReads+2?1:2)});
    if(plannerCalls===1||plannerCalls===4)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'search',query:plannerCalls===1?'object.create':'object.color',offset:0}}]});
    else if(plannerCalls===5)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',capability:'object.color.set',version:1}}]});
    else if(plannerCalls===3){
     const definition=state.catalog?.operation==='inspect'?state.catalog.definition:null;assert.ok(definition&&'example' in definition&&definition.example);
     text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'check',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Cooperative ball',x:.5,y:1,z:.8}}}}]});
-   }else if(plannerCalls<=discoveryReads)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]});
-   else if(plannerCalls===discoveryReads+1){
+   }else if(plannerCalls<discoveryReads)text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]});
+   else if(plannerCalls===discoveryReads){
     const definition=state.catalog?.operation==='inspect'?state.catalog.definition:null;
     assert.ok(definition&&'example' in definition&&definition.example);
     text=JSON.stringify({commands:[{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Cooperative ball',x:.5,y:1,z:.8}}}}]});
+   }else if(plannerCalls===discoveryReads+1){
+    const created=state.execution?.selected;assert.equal(created?.capability,'object.create');assert.equal(created?.phase,'completed');assert.equal(created?.call.arguments.name,'Cooperative ball');assert.equal(typeof created?.output?.objectId,'string');plannedBallId=created!.output!.objectId as string;
+    text=JSON.stringify({commands:[{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:plannedBallId}}}]});
    }else if(plannerCalls===discoveryReads+2){
-    const ball=state.objects.find(o=>o.name==='Cooperative ball');assert.ok(ball);planWaiting=true;await blockedPlan;
+    const ball=readObjectReference(state.catalog,plannedBallId);assert.ok(ball);assert.equal(ball.name,'Cooperative ball');planWaiting=true;await blockedPlan;
     text=JSON.stringify({commands:[{action:'paint',target:ball.id,color:{r:0,g:1,b:0,a:1}}]});
    }else if(plannerCalls===expectedPlans){assert.equal(input.receipts.at(-1).ok,false);assert.match(input.receipts.at(-1).status,/target changed/);text=JSON.stringify({commands:[]});}
    else throw new Error('Unexpected additional planner request');
@@ -81,7 +88,16 @@ try{
  await page.goto(base+'/test-fixtures/browser/quest-native-book.html',{waitUntil:'domcontentloaded',timeout:60000});
  await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state,{},{timeout:30000});
  console.log('Actual native book handshake received.');
- const initial=await page.evaluate(()=>window.nativeBookEvidence!().state!);
+ const initial=await page.evaluate(()=>window.nativeBookEvidence!().state!);checkSparse(initial);
+ const book=nativeBookObjects(page),chooseObject=book.choose;
+ const readResourceFact=async(id:string,label:string,args:Record<string,string>={})=>(await book.fact(id,label,args)).value as Record<string,string|number>;
+ const undoRemoved=async(target:string)=>{
+  const revision=await page!.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+  await page!.getByRole('button',{name:'Undo',exact:true}).filter({visible:true}).first().click();
+  await page!.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,revision);
+  assert.equal(await book.exists(target),false);await book.workshop();
+ };
+ const initialSavedCount=await book.count();await book.workshop();
  await page.evaluate(()=>window.maestroBook!.command({version:1,type:'workspace.open'}));
  // Optional physical tools use the actual generated form and native receipt path.
  await page.getByRole('button',{name:'Physical tools',exact:true}).click();
@@ -141,8 +157,7 @@ try{
  await page.getByRole('button',{name:'Undo',exact:true}).first().click();
  await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,edited.sceneRevision);
  const restored=await page.evaluate(()=>window.nativeBookEvidence!().state!);assert.deepEqual(restored.inspection!.recipe,robot.recipe);
- await page.getByRole('button',{name:'Undo',exact:true}).first().click();
- await page.waitForFunction(id=>!window.nativeBookEvidence!().state!.objects.some(o=>o.id===id),robot.id);
+ await undoRemoved(robot.id);
  await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  console.log('Actual book create/edit/Undo passed.');
  await writeFile(join(directory,'manual-book.json'),JSON.stringify({boundary:'Real book UI and Unity room; no native replay, headset or live provider.',initial,robot,edited,restored},null,2));
@@ -152,11 +167,11 @@ try{
  await page.waitForFunction(()=>window.nativeBookEvidence!().agentWorking,{},{timeout:30000});
  const waitingDeadline=Date.now()+30000;while(!planWaiting&&Date.now()<waitingDeadline)await new Promise(resolve=>setTimeout(resolve,100));assert.ok(planWaiting,'Planner did not reach the live edit boundary');
  const working=await page.evaluate(()=>window.nativeBookEvidence!());assert.equal(working.inputBlocked,false);
- const ball=working.state!.objects.find(o=>o.name==='Cooperative ball');assert.ok(ball);
+ const ball={id:plannedBallId};assert.ok(ball.id);assert.equal(readObjectReference(working.state!.catalog,ball.id)?.name,'Cooperative ball');
  await page.evaluate(()=>window.maestroBook!.command({version:1,type:'workspace.open'}));
- await page.getByRole('button',{name:/Cooperative ball/}).click();
+ await book.inspect(ball.id);
  await page.getByRole('button',{name:'Purple',exact:true}).click();
- await page.waitForFunction(id=>{const ball=window.nativeBookEvidence!().state!.objects.find(o=>o.id===id);return !!ball&&Math.abs(ball.color.r-.47)<.0001;},ball.id);
+ await page.waitForFunction(id=>{const item=window.nativeBookEvidence!().state!.inspection?.item;return item?.id===id&&Math.abs(item.color.r-.47)<.0001;},ball.id);
  const human=await page.evaluate(()=>window.nativeBookEvidence!().state!);
  await page.screenshot({path:join(directory,'book-human-takeover.png')});
  releasePlan();
@@ -166,8 +181,8 @@ try{
  const task=await page.evaluate(id=>window.nativeBookTask!(id),taskMessage.agentTask!.id);assert.ok(task);
  assert.equal(task.handoff.input.prompt,'Create a ball, then make it green.');assert.equal(task.phase,'completed');
  const failedPaint=task.operations.find(o=>o.commands[0].action==='paint');assert.ok(failedPaint?.receipt&&!failedPaint.receipt.ok,'Stale planned paint must be refused after the human edit');
- assert.deepEqual(completed.state!.objects.find(o=>o.id===ball.id)!.color,human.objects.find(o=>o.id===ball.id)!.color);
- assert.equal(completed.state!.objects.length,initial.objects.length+1);assert.equal(plannerCalls,expectedPlans);assert.equal(verificationCalls,1);assert.equal(normalReplies,2);
+ const keptBall=await book.inspect(ball.id);assert.deepEqual(keptBall.item!.color,human.inspection!.item!.color);
+ assert.equal(await book.count(),initialSavedCount+1);await book.workshop();assert.equal(plannerCalls,expectedPlans);assert.equal(verificationCalls,1);assert.equal(normalReplies,2);
  await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();
  assert.equal(task.operations.length,discoveryReads+2);
  await page.getByText('Task details',{exact:true}).click();await page.getByText(`Recorded action batches: ${discoveryReads+2}.`,{exact:true}).waitFor();
@@ -206,7 +221,7 @@ try{
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  await page.getByLabel('Search actions',{exact:true}).fill('Choose object visual layer');await page.getByRole('button',{name:'Search',exact:true}).click();
  await page.getByRole('button',{name:/Choose object visual layer.*object.visibility.assign/}).click();
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
  await page.getByLabel('Choose visual layer',{exact:true}).selectOption(JSON.stringify([visualLayer.output!.id,visualLayer.output!.revision]));
@@ -220,7 +235,7 @@ try{
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  await page.getByLabel('Search actions',{exact:true}).fill('Choose object appearance');await page.getByRole('button',{name:'Search',exact:true}).click();
  await page.getByRole('button',{name:/Choose object appearance.*object.appearance.bind/}).click();
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();
  await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([appearance.output!.id,appearance.output!.revision]));
@@ -234,7 +249,7 @@ try{
  await memberFields.waitFor({state:'visible'}); // Inspection is asynchronous; the keyed form opens after its native reply.
  if(!await memberTarget.isVisible())await memberFields.click();
  await page.getByLabel('Action inputs name',{exact:true}).fill('My styled ball');
- await page.getByLabel('Action inputs members 1 target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs members 1 target',ball.id);
  await page.getByLabel('Action inputs members 1 slot',{exact:true}).fill('ball');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();
  await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
@@ -266,20 +281,20 @@ try{
  await writeFile(join(directory,'book-native-lighting.json'),JSON.stringify({boundary:'Real generated book form, current-value guard and native saved lighting receipt; no headset/provider proof.',lighting},null,2));
  await page.screenshot({path:join(directory,'book-native-lighting.png')});
  await openNamedAction('Edit an object lamp','object.light.edit');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByLabel('Action inputs settings kind',{exact:true}).selectOption('spot');
  await page.getByLabel('Action inputs settings shadows',{exact:true}).selectOption('hard');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const lampSaved=await runNamedAction('object.light.edit');assert.equal(lampSaved.output!.light,'Lamp');
- await openNamedAction('Control a lamp','object.light.control');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await openNamedAction('Control a lamp','object.light.control');await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByLabel('Action inputs enabled',{exact:true}).selectOption('false');
  const lampOff=await runNamedAction('object.light.control');assert.equal(lampOff.output!.active,false);assert.equal(lampOff.output!.revision,lampSaved.output!.revision);
  await page.getByRole('heading',{name:'Control a lamp',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-lamp.png')});
- await page.getByLabel('Variant',{exact:true}).selectOption('1');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
+ await page.getByLabel('Variant',{exact:true}).selectOption('1');await chooseObject('Action inputs target',ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const lampReset=await runNamedAction('object.light.control');assert.equal(lampReset.output!.active,true);
- await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Variant',{exact:true}).selectOption('1');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
+ await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Variant',{exact:true}).selectOption('1');await chooseObject('Action inputs target',ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const lampRemoved=await runNamedAction('object.light.edit');
  await writeFile(join(directory,'book-native-lamp.json'),JSON.stringify({boundary:'Original generated book forms, native lamp editing, live control/reset and removal. No provider/headset or visual illumination claim.',lampSaved,lampOff,lampReset,lampRemoved},null,2));
@@ -320,7 +335,7 @@ try{
  await writeFile(join(directory,'book-native-weather.json'),JSON.stringify({boundary:'Actual generated original-book controls and native weather receipt; no headset appearance or real-provider proof.',weather},null,2));
  await page.getByRole('heading',{name:'Set world weather',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-weather.png')});
  await openNamedAction('Configure or fill a liquid container','object.container.edit');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByLabel('Action inputs definition amountMl',{exact:true}).fill('100');
  await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).fill('850');
@@ -347,7 +362,7 @@ try{
  for(const [key,value] of Object.entries({x:4,y:2,z:4,scale:1}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
  const terrainCreated=await runNamedAction('object.create'),terrainTarget=terrainCreated.output!.objectId as string;
  await openNamedAction('Configure or fill a liquid container','object.container.edit');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(terrainTarget);
+ await chooseObject('Action inputs target',terrainTarget);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByLabel('Include Action inputs definition terrainFloor',{exact:true}).check();
  await page.getByLabel('Action inputs definition terrainFloor',{exact:true}).selectOption('true');
@@ -364,8 +379,7 @@ try{
  const terrainRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
  await page.getByRole('button',{name:'Undo',exact:true}).first().click();
  await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,terrainRevision);
- await page.getByRole('button',{name:'Undo',exact:true}).first().click();
- await page.waitForFunction(id=>!window.nativeBookEvidence!().state!.objects.some(o=>o.id===id),terrainTarget);
+ await undoRemoved(terrainTarget);
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  await openNamedAction('Blend a visual layer','visibility.layer.present');
  await page.getByRole('button',{name:'Load saved visual layer',exact:true}).click();
@@ -378,7 +392,7 @@ try{
  await writeFile(join(directory,'book-native-layer-presentation.json'),JSON.stringify({boundary:'Named layer lookup, current guard read and transient view request through the original book and native Unity. No headset or real-provider proof.',layerPresentation},null,2));
  await page.getByRole('region',{name:'Visual layer choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-layer-presentation.png')});
  await openNamedAction('Configure water traversal','object.water.traversal.configure');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const retainedDepth=await page.getByLabel('Action inputs maxDepthMetres',{exact:true}).inputValue();
  await page.getByLabel('Action inputs mode',{exact:true}).selectOption('avoid');
@@ -402,7 +416,7 @@ try{
  await page.getByLabel('Action inputs name',{exact:true}).fill('Café garden');
  const region=await runNamedAction('world.region.save');
  await openNamedAction('Choose creation area','object.region.assign');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved area',exact:true}).click();
  await page.getByLabel('Choose area',{exact:true}).selectOption(JSON.stringify([region.output!.id,region.output!.revision]));
@@ -416,7 +430,7 @@ try{
  await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');
  const collisionProfile=await runNamedAction('environment.profile.save');
  await openNamedAction('Choose object environment','object.environment.assign');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved collision profile',exact:true}).click();
  await page.getByLabel('Choose collision profile',{exact:true}).selectOption(JSON.stringify([collisionProfile.output!.id,collisionProfile.output!.revision]));
@@ -428,7 +442,7 @@ try{
  await page.getByLabel('Action inputs definition name',{exact:true}).fill('Friendly ball beep');
  const sound=await runNamedAction('audio.source.edit');
  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved sound',exact:true}).click();
@@ -439,23 +453,12 @@ try{
  await page.screenshot({path:join(directory,'book-native-resource-choices.png')});
  // Optional explicit synthetic WAV: ordinary book forms discover, bind and play
  // exact saved bytes. This does not impersonate the Android file chooser.
- const readResourceFact=async(id:string,label:string,args:Record<string,string>={})=>{
-  await page!.getByRole('button',{name:'Back to workshop',exact:true}).click();await page!.getByRole('button',{name:'Action catalog',exact:true}).click();
-  await page!.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page!.getByLabel('Search facts',{exact:true}).fill(id);await page!.getByRole('button',{name:'Search',exact:true}).click();
-  await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
-  for(const [name,value] of Object.entries(args)){const field=page!.getByLabel('Fact inputs '+name,{exact:true});if(await field.evaluate(element=>element.tagName==='SELECT'))await field.selectOption(value);else await field.fill(value);}
-  await page!.getByLabel('Current fact value',{exact:true}).waitFor();
-  // An explicit input schema still requires submission when it has no fields.
-  const readFact=page!.getByRole('button',{name:'Read fact',exact:true});
-  if(await readFact.count())await readFact.click();
-  await page!.waitForFunction(id=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true;},id);
-  return page!.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Resource fact missing');return c.value as Record<string,string|number>;});
- };
+
  const viewerPose=await readResourceFact('world.viewpoint','Your world location') as unknown as {located:boolean;position:{x:number;y:number;z:number};yaw:number};
  assert.equal(viewerPose.located,true);const viewYaw=viewerPose.yaw*Math.PI/180;
  const viewPosition={x:viewerPose.position.x+Math.sin(viewYaw)*3,y:viewerPose.position.y+.8,z:viewerPose.position.z+Math.cos(viewYaw)*3};
  const moveObservedBall=async(position:Record<string,string|number>)=>{
-  await openNamedAction('Move object','object.position.set');await page!.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+  await openNamedAction('Move object','object.position.set');await chooseObject('Action inputs target',ball.id);
   for(const axis of ['x','y','z'])await page!.getByLabel('Action inputs '+axis,{exact:true}).fill(String(position[axis]));
   return runNamedAction('object.position.set');
  };
@@ -483,19 +486,19 @@ try{
  await writeFile(join(directory,'book-native-area-retirement.json'),JSON.stringify({boundary:'Original book move and fact forms against real Unity automatically retire an idle offscreen area and reacquire its object through the ordinary shared action. No larger-world physics or headset acceptance.',behindView,retiredArea,restoredAreaAction,restoredArea},null,2));
  const lampPosition={x:viewerPose.position.x+Math.cos(viewYaw)*6-Math.sin(viewYaw)*3,y:viewerPose.position.y,z:viewerPose.position.z-Math.sin(viewYaw)*6-Math.cos(viewYaw)*3};
  await moveObservedBall(lampPosition);
- await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await openNamedAction('Edit an object lamp','object.light.edit');await chooseObject('Action inputs target',ball.id);
  await page.getByLabel('Action inputs settings range',{exact:true}).fill('8');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();await runNamedAction('object.light.edit');
  const lampDemand=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
  assert.ok((lampDemand.reasons as unknown as string[]).includes('lighting'),JSON.stringify(lampDemand));
  assert.ok(!(lampDemand.reasons as unknown as string[]).includes('observation'),'Lamp object is behind the actual native camera');
  await page.screenshot({path:join(directory,'book-native-light-demand.png')});
- await openNamedAction('Control a lamp','object.light.control');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await openNamedAction('Control a lamp','object.light.control');await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByLabel('Action inputs enabled',{exact:true}).selectOption('false');await runNamedAction('object.light.control');
  const lampReleased=await readResourceFact('world.region.retention','Area runtime dependencies',{id:String(region.output!.id)});
  assert.ok(!(lampReleased.reasons as unknown as string[]).includes('lighting'),JSON.stringify(lampReleased));
- await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Variant',{exact:true}).selectOption('1');await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
+ await openNamedAction('Edit an object lamp','object.light.edit');await page.getByLabel('Variant',{exact:true}).selectOption('1');await chooseObject('Action inputs target',ball.id);await page.getByLabel('Action inputs light',{exact:true}).fill('Lamp');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();await runNamedAction('object.light.edit');
  await writeFile(join(directory,'book-native-light-demand.json'),JSON.stringify({boundary:'Original book forms and native off-camera illumination dependency; turning a lamp off releases its lighting reason. Conservative demand, no provider/headset or rendered-quality claim.',lampPosition,lampDemand,lampReleased},null,2));
  await moveObservedBall(originalPosition);
@@ -525,15 +528,15 @@ try{
   await page.getByLabel('Action inputs definition name',{exact:true}).fill('Imported book bell');await page.getByLabel('Action inputs definition clip assetHash',{exact:true}).fill(file.id);await page.getByLabel('Action inputs definition clip seconds',{exact:true}).fill(String(file.seconds));
   assert.equal(await page.getByLabel('Action inputs definition tone wave',{exact:true}).count(),0);
   const clip=await runNamedAction('audio.source.edit');assert.equal((clip.call.arguments.definition as {kind:string}).kind,'clip');
-  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
+  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Load saved sound',exact:true}).click();await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([clip.output!.id,null]));
   await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');await page.getByLabel('Action inputs definition gain',{exact:true}).fill('0');
   const binding=await runNamedAction('object.audioEmitter.edit');
   await page.getByRole('region',{name:'Sound choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-imported-sound.png')});
-  await openNamedAction("Play an object's sound",'audio.play');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
+  await openNamedAction("Play an object's sound",'audio.play');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
   const played=await runNamedAction('audio.play');assert.equal(played.output?.source,clip.output!.id);assert.ok(Number(played.output?.seconds)>=file.seconds-.0001);
-  await openNamedAction('Start independent room sound','audio.start');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
+  await openNamedAction('Start independent room sound','audio.start');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');
   await page.getByLabel('Action inputs loop',{exact:true}).selectOption('true');const started=await runNamedAction('audio.start');
   const instance=(started.output!.identity as {instance:string}).instance;assert.match(instance,/^[a-f0-9]{32}$/);
   const observationRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
@@ -563,7 +566,7 @@ try{
   const mixReset=await runNamedAction('audio.mix.control');
   for(const role of ['master','effects','media','ambience'])assert.equal(mixReset.output![role],1);
   await openNamedAction('Control a room sound','audio.control');await page.getByLabel('Variant',{exact:true}).selectOption('2');
-  await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs instance',{exact:true}).fill(instance);
+  await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs instance',{exact:true}).fill(instance);
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   const stopped=await runNamedAction('audio.control');assert.equal((stopped.output!.playback as {phase:string}).phase,'stopped');
   const released=await readResourceFact('runtime.audioBudget','Shared room audio budget');assert.equal(released.sources,0);assert.equal(released.owners,0);assert.equal(released.readyPcmBytes,0);assert.equal(released.reservedPcmBytes,0);
@@ -579,14 +582,14 @@ try{
   const saved=await runNamedAction('audio.source.edit');assert.equal((saved.call.arguments.definition as {kind:string}).kind,'stream');
   const source=await readResourceFact('audio.source.stream','Live sound endpoint',{id:String(saved.output!.id),offset:'0'});assert.equal(source.endpoint,liveSoundFixture.endpoint);assert.equal(source.next,-1);
   const silent=await readResourceFact('runtime.audioBudget','Shared room audio budget');assert.equal(silent.sources,0,'Saving/reading a source cannot connect');
-  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('radio');
+  await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('radio');
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Load saved sound',exact:true}).click();await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([saved.output!.id,null]));
   await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');await page.getByLabel('Action inputs definition gain',{exact:true}).fill('0');const binding=await runNamedAction('object.audioEmitter.edit');
-  await openNamedAction('Start independent room sound','audio.start');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('radio');await page.getByLabel('Action inputs loop',{exact:true}).selectOption('false');
+  await openNamedAction('Start independent room sound','audio.start');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('radio');await page.getByLabel('Action inputs loop',{exact:true}).selectOption('false');
   const started=await runNamedAction('audio.start');const instance=String((started.output!.identity as {instance:string}).instance);assert.ok(Number((started.output!.playback as {seconds:number}).seconds)>0);
   const control=async(operation:'pause'|'resume'|'stop',variant:string)=>{
-   await openNamedAction('Control a room sound','audio.control');await page!.getByLabel('Variant',{exact:true}).selectOption(variant);await page!.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page!.getByLabel('Action inputs instance',{exact:true}).fill(instance);
+   await openNamedAction('Control a room sound','audio.control');await page!.getByLabel('Variant',{exact:true}).selectOption(variant);await chooseObject('Action inputs target','book');await page!.getByLabel('Action inputs instance',{exact:true}).fill(instance);
    await page!.getByRole('button',{name:'Load current values',exact:true}).click();await page!.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
    const result=await runNamedAction('audio.control');assert.equal(result.call.arguments.operation,operation);return result;
   };
@@ -608,7 +611,7 @@ try{
   await openNamedAction('Save shared appearance','appearance.save');await page.getByLabel('Action inputs name',{exact:true}).fill('Imported blue tiles');await page.getByLabel('Action inputs style patternMode',{exact:true}).selectOption('image');await page.getByLabel('Action inputs style imageHash',{exact:true}).fill(imageFixture.hash);
   await page.getByLabel('Action inputs style tint',{exact:true}).fill('#FFFFFF');await page.getByLabel('Action inputs style renderMode',{exact:true}).selectOption('blend');await page.getByLabel('Action inputs style opacity',{exact:true}).fill('0.5');
   const appearance=await runNamedAction('appearance.save');
-  await openNamedAction('Choose object appearance','object.appearance.bind');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await openNamedAction('Choose object appearance','object.appearance.bind');await chooseObject('Action inputs target','book');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([appearance.output!.id,appearance.output!.revision]));
   const bound=await runNamedAction('object.appearance.bind');assert.equal(bound.call.arguments.binding && (bound.call.arguments.binding as {appearanceId:string}).appearanceId,appearance.output!.id);
   await page.getByRole('region',{name:'Appearance choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-imported-image.png')});
@@ -659,17 +662,17 @@ try{
  assert.ok(soundPreview,'Native chat sound preview must finish before acceptance');assert.match(soundPreview.assetHash,/^[a-f0-9]{64}$/);if(soundFormat==='wav')assert.equal(soundPreview.assetHash,chatSound.hash);else assert.notEqual(soundPreview.assetHash,chatSound.hash);
  await openNamedAction('Import a sound together','audio.import');await page.getByLabel('Variant',{exact:true}).selectOption('1');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const acceptedSound=await runNamedAction('audio.import');assert.equal(acceptedSound.output!.assetHash,soundPreview.assetHash);
- await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await openNamedAction('Attach a sound to an object','object.audioEmitter.edit');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved sound',exact:true}).click();await page.getByLabel('Choose sound',{exact:true}).selectOption(JSON.stringify([acceptedSound.output!.sourceId,null]));await page.getByLabel('Action inputs definition joint',{exact:true}).selectOption('');await page.getByLabel('Action inputs definition gain',{exact:true}).fill('0');
  const soundAttached=await runNamedAction('object.audioEmitter.edit');
- await openNamedAction("Play an object's sound",'audio.play');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');const soundPlayed=await runNamedAction('audio.play',chatSound.seconds*1000+15000);assert.equal(soundPlayed.output!.source,acceptedSound.output!.sourceId);assert.ok(Math.abs(Number(soundPlayed.output!.seconds)-soundPreview.seconds)<.001);
+ await openNamedAction("Play an object's sound",'audio.play');await chooseObject('Action inputs target','book');await page.getByLabel('Action inputs emitter',{exact:true}).fill('bell');const soundPlayed=await runNamedAction('audio.play',chatSound.seconds*1000+15000);assert.equal(soundPlayed.output!.source,acceptedSound.output!.sourceId);assert.ok(Math.abs(Number(soundPlayed.output!.seconds)-soundPreview.seconds)<.001);
  await page.screenshot({path:join(directory,`book-chat-audio-${soundFormat}.png`)});await writeFile(join(directory,soundFormat==='wav'?'book-chat-audio.json':`book-chat-audio-${soundFormat}.json`),JSON.stringify({boundary:'Synthetic finished sound in original chat, real book selection/preview/acceptance, emitter attachment and native PCM consumption at gain zero. No provider or audible/headset acceptance.',soundFormat,inputHash:chatSound.hash,preview:soundPreview,seconds:chatSound.seconds,selectedSound,acceptedSound,soundAttached,soundPlayed},null,2));
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  for(let i=0;i<2;i++){const before=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);await page.getByRole('button',{name:'Undo',exact:true}).click();await page.waitForFunction(rev=>window.nativeBookEvidence!().state!.sceneRevision>rev,before);}
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  }
  // Bind the accepted chat image, then inspect actual retention through generated fact forms.
- await openNamedAction('Choose object appearance','object.appearance.bind');await page.getByLabel('Action inputs target',{exact:true}).selectOption('book');
+ await openNamedAction('Choose object appearance','object.appearance.bind');await chooseObject('Action inputs target','book');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Load saved appearance',exact:true}).click();await page.getByLabel('Choose appearance',{exact:true}).selectOption(JSON.stringify([acceptedChat.output!.appearanceId,acceptedChat.output!.revision]));
  const chatBinding=await runNamedAction('object.appearance.bind');
@@ -720,12 +723,12 @@ try{
 
  // Passthrough masks are ordinary shared surface components in generated book forms.
  await openNamedAction('Edit a drawing surface','object.surface.edit');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByLabel('Action inputs surface',{exact:true}).fill('WindowPlane');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const windowPlane=await runNamedAction('object.surface.edit');
  await openNamedAction('Edit a passthrough opening','object.window.edit');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByLabel('Action inputs surface',{exact:true}).fill('WindowPlane');
  await page.getByLabel('Action inputs reveal',{exact:true}).fill('0.5');
  await page.getByLabel('Action inputs shape',{exact:true}).selectOption('ellipse');
@@ -733,7 +736,7 @@ try{
  const windowSaved=await runNamedAction('object.window.edit');assert.equal(windowSaved.call.arguments.reveal,.5);assert.equal(windowSaved.call.arguments.shape,'ellipse');
  await page.screenshot({path:join(directory,'book-native-window.png')});
  await page.getByLabel('Variant',{exact:true}).selectOption('1');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(ball.id);
+ await chooseObject('Action inputs target',ball.id);
  await page.getByLabel('Action inputs window',{exact:true}).fill('Window');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const windowRemoved=await runNamedAction('object.window.edit');assert.equal(windowRemoved.call.arguments.operation,'remove');
@@ -743,7 +746,7 @@ try{
  const modelFixture=await readFile(join(directory,'model-fixture.json'),'utf8').then(text=>JSON.parse(text) as {target:string;hash:string}).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
  if(modelFixture){
   await openNamedAction('Set imported model geometry','object.model.geometry.set');
-  await page.getByLabel('Action inputs target',{exact:true}).selectOption(modelFixture.target);
+  await chooseObject('Action inputs target',modelFixture.target);
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   assert.equal(await page.getByLabel('Action inputs settings scaleMode',{exact:true}).inputValue(),'fitted');
   await page.getByLabel('Action inputs settings scaleMode',{exact:true}).selectOption('source');
@@ -824,19 +827,19 @@ try{
  };
  const gait=await gaitFixture(directory);
  if(gait){
-  await openNamedAction('Set imported model geometry','object.model.geometry.set');await page.getByLabel('Action inputs target',{exact:true}).selectOption(gait.target);
+  await openNamedAction('Set imported model geometry','object.model.geometry.set');await chooseObject('Action inputs target',gait.target);
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   await page.getByLabel('Action inputs settings pivot',{exact:true}).selectOption('base');await runNamedAction('object.model.geometry.set');
   await openNamedAction('Arrange or reset objects','object.layout.apply');
   await page.getByText('Action inputs placements · 1 entries',{exact:true}).click();
-  await page.getByLabel('Action inputs placements 1 target',{exact:true}).selectOption(gait.target);
+  await chooseObject('Action inputs placements 1 target',gait.target);
   for(const [key,value] of Object.entries({x:-3,y:0,z:-4}))await page.getByLabel('Action inputs placements 1 position '+key,{exact:true}).fill(String(value));
   for(const [key,value] of Object.entries({x:0,y:0,z:0,w:1}))await page.getByLabel('Action inputs placements 1 rotation '+key,{exact:true}).fill(String(value));
   await page.getByLabel('Action inputs placements 1 scale',{exact:true}).fill('1');await runNamedAction('object.layout.apply');
   const before=await readResourceFact('object.walk.settings','Character walking animation',{target:gait.target});
   const clips=await readResourceFact('object.walk.clips','Character embedded clip choices',{target:gait.target,modelHash:gait.hash,offset:'0'});assert.equal(clips.total,1);
   await openNamedAction('Choose character walking animation','object.walk.select');await page.getByLabel('Character walking animation',{exact:true}).selectOption('1');
-  await page.getByLabel('Action inputs target',{exact:true}).selectOption(gait.target);await page.getByLabel('Action inputs modelHash',{exact:true}).fill(gait.hash);await page.getByLabel('Action inputs clipIndex',{exact:true}).fill('0');
+  await chooseObject('Action inputs target',gait.target);await page.getByLabel('Action inputs modelHash',{exact:true}).fill(gait.hash);await page.getByLabel('Action inputs clipIndex',{exact:true}).fill('0');
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   const selected=await runNamedAction('object.walk.select');
   await page.getByRole('heading',{name:'Choose character walking animation',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-object-walk.png')});
@@ -846,32 +849,34 @@ try{
  const walkingObstacle=await createWalkingRobot('Book walking obstacle',-2),walkingObstacleId=walkingObstacle.output!.objectId as string;
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
  await openNamedAction('Walk to a place','object.navigate');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(walkingTarget);
+ await chooseObject('Action inputs target',walkingTarget);
  for(const [axis,value] of Object.entries({x:-1,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
  await page.getByLabel('Action inputs speed',{exact:true}).fill('0.65');
  const walkingReceipt=await runNamedAction('object.navigate');
- const walkingPosition=await page.evaluate(id=>window.nativeBookEvidence!().state!.objects.find(o=>o.id===id)!.position,walkingTarget);
- assert.ok(Math.abs(walkingPosition.x+1)<.02&&Math.abs(walkingPosition.y)<.02&&Math.abs(walkingPosition.z+3)<.02);assert.ok(Number(walkingReceipt.output!.distance)>2);
  await page.getByRole('heading',{name:'Walk to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-travel.png')});
+ const walkingPosition=(await book.observation(walkingTarget)).position;
+ assert.ok(Math.abs(walkingPosition.x+1)<.02&&Math.abs(walkingPosition.y)<.02&&Math.abs(walkingPosition.z+3)<.02);assert.ok(Number(walkingReceipt.output!.distance)>2);
+
  await writeFile(join(directory,'book-native-grounded-travel.json'),JSON.stringify({boundary:'Original book generated create and walk forms around a solid robot obstacle, with real native arrival, travelled distance and position. Explicit synthetic floor; no provider or headset acceptance.',created:walkingCreated,obstacle:walkingObstacle,receipt:walkingReceipt,position:walkingPosition},null,2));
  // Put the independent leader farther away with the existing walking form.
  await openNamedAction('Walk to a place','object.navigate');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(walkingTarget);
+ await chooseObject('Action inputs target',walkingTarget);
  for(const [axis,value] of Object.entries({x:1,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
  await page.getByLabel('Action inputs speed',{exact:true}).fill('1.2');await runNamedAction('object.navigate');
  await openNamedAction('Follow someone','object.follow');
  await page.getByLabel('Leader',{exact:true}).selectOption('1');
- await page.getByLabel('Action inputs target',{exact:true}).selectOption(walkingObstacleId);
- await page.getByLabel('Action inputs leader objectId',{exact:true}).selectOption(walkingTarget);
+ await chooseObject('Action inputs target',walkingObstacleId);
+ await chooseObject('Action inputs leader objectId',walkingTarget);
  for(const [key,value] of Object.entries({distance:1,speed:1.2,seconds:5}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
  const followingReceipt=await runNamedAction('object.follow');assert.equal(followingReceipt.output!.state,'keepingDistance');assert.ok(Number(followingReceipt.output!.distance)>1.9);
- const followingPositions=await page.evaluate(({target,leader})=>{const objects=window.nativeBookEvidence!().state!.objects;return {actor:objects.find(o=>o.id===target)!.position,leader:objects.find(o=>o.id===leader)!.position};},{target:walkingObstacleId,leader:walkingTarget});
- const followingGap=Math.hypot(followingPositions.actor.x-followingPositions.leader.x,followingPositions.actor.z-followingPositions.leader.z);assert.ok(followingGap>=.95&&followingGap<=1.12);
  await page.getByRole('heading',{name:'Follow someone',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-following.png')});
+ const followingPositions={actor:(await book.observation(walkingObstacleId)).position,leader:(await book.observation(walkingTarget)).position};
+ const followingGap=Math.hypot(followingPositions.actor.x-followingPositions.leader.x,followingPositions.actor.z-followingPositions.leader.z);assert.ok(followingGap>=.95&&followingGap<=1.12);
+
  const followingStatus=await readResourceFact('object.navigation','Walking action status',{target:walkingObstacleId});assert.equal(followingStatus.active,false);
  await writeFile(join(directory,'book-native-grounded-following.json'),JSON.stringify({boundary:'Original book generated follow form, live native following, accepted distance and passive status. Explicit synthetic ground, no provider or headset acceptance.',receipt:followingReceipt,positions:followingPositions,gap:followingGap,status:followingStatus},null,2));
  if(gait){
-  await openNamedAction('Walk to a place','object.navigate');await page.getByLabel('Action inputs target',{exact:true}).selectOption(gait.target);
+  await openNamedAction('Walk to a place','object.navigate');await chooseObject('Action inputs target',gait.target);
   for(const [axis,value] of Object.entries({x:-1,y:0,z:-4}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));await page.getByLabel('Action inputs speed',{exact:true}).fill('0.5');
   const receipt=await runNamedAction('object.navigate');assert.ok(Number(receipt.output!.distance)>1.9);
   const after=await readResourceFact('object.walk.settings','Character walking animation',{target:gait.target});
@@ -884,21 +889,21 @@ try{
  await page.getByLabel('Action inputs seconds',{exact:true}).fill('0.8');
  const attentionPoint=await runNamedAction('avatar.look');assert.equal(attentionPoint.output!.focus,'point');assert.equal(attentionPoint.output!.applied,true);
  await page.getByLabel('Attention',{exact:true}).selectOption('1');
- await page.getByLabel('Action inputs focus objectId',{exact:true}).selectOption('book');
+ await chooseObject('Action inputs focus objectId','book');
  const attentionObject=await runNamedAction('avatar.look');assert.equal(attentionObject.output!.objectId,'book');assert.equal(attentionObject.output!.applied,true);
  await page.getByRole('heading',{name:'Look toward something',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-avatar-attention.png')});
  const attentionStopped=await readResourceFact('avatar.attention','Maestro attention',{target:'maestro'});assert.equal(attentionStopped.active,false);
  await writeFile(join(directory,'book-native-avatar-attention.json'),JSON.stringify({boundary:'Original book schema-generated place/object focus controls, actual Unity gaze receipts and passive stopped fact. No provider or headset claim.',point:attentionPoint,object:attentionObject,stopped:attentionStopped},null,2));
  const physicsPaused=await changePhysics('pause');assert.equal(physicsPaused.output!.running,false);
  // Observe one quiet placement-capture interval before the one-shot Undo.
- const placementSignature=()=>page!.evaluate(()=>JSON.stringify(window.nativeBookEvidence!().state!.objects.map(o=>[o.id,o.objectRevision,o.position])));
- let placementBefore=await placementSignature(),quietAt=Date.now();const placementDeadline=Date.now()+15000;
+ const placementSignature=async()=>{const samples=[];for(const id of await book.ids()){const o=await book.observation(id);samples.push([id,o.objectRevision,o.position]);}return JSON.stringify(samples);};
+ let placementBefore=await placementSignature(),quietAt=Date.now();const placementDeadline=Date.now()+60000;
  while(Date.now()-quietAt<1250){
   assert.ok(Date.now()<placementDeadline,'Paused native placement did not settle');await new Promise(resolve=>setTimeout(resolve,150));
   const current=await placementSignature();if(current!==placementBefore)quietAt=Date.now();placementBefore=current;
  }
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
- for(const target of [walkingObstacleId,walkingTarget]){await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(id=>!window.nativeBookEvidence!().state!.objects.some(o=>o.id===id),target);}
+ for(const target of [walkingObstacleId,walkingTarget])await undoRemoved(target);
  await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  const physicsInputs=await readResourceFact('object.physics.inputs','Object physics inputs',{target:ball.id});assert.equal(physicsInputs.state,'inactive');
  const heldContact=await readResourceFact('object.contact.inputs','Held object contact inputs',{target:ball.id});assert.equal(heldContact.state,'inactive');
@@ -918,7 +923,7 @@ try{
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  await page.getByText('The ball keeps your colour.',{exact:true}).waitFor();
  assert.equal(requests.size,commandCount,'Reload replayed a room command');assert.equal(plannerCalls,expectedPlans);assert.deepEqual(errors,[]);assert.deepEqual((await page.evaluate(()=>window.nativeBookEvidence!())).errors,[]);
- const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,providerRequests,manual:true,importedSound,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,mixedMovement,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
+ const evidence={boundary:'Real QuestBookSurface, ChatInterface/useTutorConversation, verifier, task service/IndexedDB and Unity app; provider SSE responses are explicitly scripted offline, no real provider, Android texture, headset or scan acceptance.',providerUsed:false,sparseObjectView:!!owner.sparseObjectView,providerRequests,manual:true,importedSound,physicalTools:{shownAndHiddenViaSharedForm:true,savedSceneUnchanged:true},manualForm,portableCapture,presentation,mixedMovement,capture,capturePixelsVerified:true,humanEditPreserved:true,staleAgentPaintRefused:true,discoveryBudgetPreservedActions:true,planningCalls:plannerCalls,reloadWithoutReplay:true,initial,working,human,completed,task,requests:[...requests.values()],observations,errors};
  await writeFile(join(directory,'book-journey.json'),JSON.stringify(evidence,null,2));
  console.log('Real native book and original-chat handoff journey passed.');
 }catch(error){

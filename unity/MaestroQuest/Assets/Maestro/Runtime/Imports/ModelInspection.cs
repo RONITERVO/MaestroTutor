@@ -14,9 +14,17 @@ namespace Maestro.Quest.Imports
         public ModelImportException(string message) : base(message) { }
     }
 
+    internal readonly struct ModelClipMetadata
+    {
+        internal readonly string Name;
+        internal readonly float Duration;
+        internal ModelClipMetadata(string name,float duration){Name=name;Duration=duration;}
+    }
+
     public sealed partial class ModelInspection
     {
         public const int MaximumBytes = 64 * 1024 * 1024;
+        internal System.Collections.Generic.IReadOnlyList<ModelClipMetadata> AnimationClips {get;private set;}=System.Array.Empty<ModelClipMetadata>();
         public int Vertices, Triangles, TexturePixels, Clips, MorphVertices;
         public bool IsAvatar;
         public string Attribution;
@@ -231,10 +239,13 @@ namespace Maestro.Quest.Imports
             {
                 var animations = Array(root, "animations", 32); info.Clips = animations.Count; long keys = 0, curveValues = 0;
                 var timelines=new System.Collections.Generic.List<ImportedMotionTimeline>();
+                var clips=new System.Collections.Generic.List<ModelClipMetadata>();
+                var names=new System.Collections.Generic.HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var animation in animations)
                 {
                     var samplers = Array(animation, "samplers", 512); var channels = Array(animation, "channels", 512);
                     var keyTimes=new System.Collections.Generic.HashSet<float>();
+                    var ends=new System.Collections.Generic.List<float>();
                     foreach (var sampler in samplers)
                     {
                         int input = Index(sampler["input"], accessors.Count), output = Index(sampler["output"], accessors.Count);
@@ -242,6 +253,7 @@ namespace Maestro.Quest.Imports
                         string interpolation = (string)sampler["interpolation"] ?? "LINEAR";
                         Require(new[] { "LINEAR", "STEP", "CUBICSPLINE" }.Contains(interpolation));
                         double previous = -1;var samplerTimes=new System.Collections.Generic.List<float>(); ForValues(accessors[input], value => { Require(value >= 0 && value > previous && value <= 3600, "Animation key times must increase and fit within one hour."); previous = value; keyTimes.Add((float)value);samplerTimes.Add((float)value); });
+                        ends.Add((float)previous);
                         Require(Count(output) % (Count(input) * (interpolation == "CUBICSPLINE" ? 3 : 1)) == 0);
                         keys += Count(output);Require(keys <= 200000, "Reduce the number of animation keys to 200,000 or fewer.");
                         if(interpolation=="CUBICSPLINE"){
@@ -250,17 +262,25 @@ namespace Maestro.Quest.Imports
                             ImportedMotionTimeline.IncludeCubicExtrema(keyTimes,samplerTimes.ToArray(),values);
                         }
                     }
+                    float duration=0;
                     foreach (var channel in channels)
                     {
-                        var sampler = samplers[Index(channel["sampler"], samplers.Count)]; Index(channel["target"]?["node"], nodes.Count);
+                        int samplerIndex=Index(channel["sampler"], samplers.Count);
+                        var sampler = samplers[samplerIndex]; Index(channel["target"]?["node"], nodes.Count);
+                        duration=Math.Max(duration,ends[samplerIndex]);
                         Require(new[] { "translation", "rotation", "scale", "weights" }.Contains((string)channel["target"]?["path"]));
                         var output = accessors[Index(sampler["output"], accessors.Count)];
                         curveValues += (long)(int)output["count"] * Components((string)output["type"]);
                         Require(curveValues <= 800000, "Reduce the number of animated channels or keyframes before importing.");
                     }
                     timelines.Add(new ImportedMotionTimeline(keyTimes));
+                    // Match the importer's name normalization without allocating a native clip.
+                    string name=(string)animation["name"];if(string.IsNullOrEmpty(name))name="animation_"+clips.Count;
+                    name=UniGLTF.GlbLowLevelParser.FixNameUnique(names,name);
+                    clips.Add(new ModelClipMetadata(ModelLibrary.SafeName(name),duration));
                 }
                 info.AnimationTimelines=timelines.ToArray();
+                info.AnimationClips=System.Array.AsReadOnly(clips.ToArray());
                 Require(keys <= 200000, "Reduce the number of animation keys to 200,000 or fewer.");
             }
             int Big16(int at) => bytes[at] * 256 + bytes[at+1];

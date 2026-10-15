@@ -54,13 +54,15 @@ namespace Maestro.Quest.Creation
         }
         internal JObject ObserveWalkClips(string hash,int offset,string target="maestro")
         {
-            var data=Read(target);var model=AvatarWalkSelection.Model(this,data);
-            if(!ModelLibrary.ValidHash(hash)||offset<0||offset>32||data?.modelHash!=hash||!model||!model.Ready||model.AssetHash!=hash)return null;
-            var entries=new JArray();for(int index=offset;index<System.Math.Min(model.ClipCount,offset+3);index++){
-                double duration=System.Math.Round(model.ClipDuration(index),6);if(!double.IsFinite(duration)||duration<0||duration>1000000)return null;
-                entries.Add(new JObject {["index"]=index,["name"]=ImportObservation.Text(model.ClipName(index)),["duration"]=duration,["selectable"]=duration>=.1});
+            var data=Read(target);
+            if(!ModelLibrary.ValidHash(hash)||offset<0||offset>32||data?.modelHash!=hash||!Models.TryReadClips(hash,out var clips))return null;
+            // Metadata preparation is owned by import/spatial preparation. This
+            // passive read cannot load a native model or reserve a motion channel.
+            var entries=new JArray();for(int index=offset;index<System.Math.Min(clips.Count,offset+3);index++){
+                double duration=System.Math.Round(clips[index].Duration,6);
+                entries.Add(new JObject {["index"]=index,["name"]=ImportObservation.Text(clips[index].Name),["duration"]=duration,["selectable"]=clips[index].Duration>=.1f});
             }
-            return new JObject {["modelHash"]=hash,["offset"]=offset,["total"]=model.ClipCount,["pageSize"]=3,["entries"]=entries};
+            return new JObject {["modelHash"]=hash,["offset"]=offset,["total"]=clips.Count,["pageSize"]=3,["entries"]=entries};
         }
         internal JObject ObserveWalkSettings()
         {

@@ -17,6 +17,21 @@ namespace Maestro.Quest.Tests
             Assert.That(result.Vertices, Is.EqualTo(3)); Assert.That(result.Triangles, Is.EqualTo(1)); Assert.That(result.Clips, Is.EqualTo(1)); Assert.That(result.IsAvatar, Is.False);
             var avatar = ModelInspection.Inspect(ModelFixture.Create(avatar: true)); Assert.That(avatar.IsAvatar, Is.True); Assert.That(avatar.Attribution, Does.Contain("Maestro tests"));
         }
+        [Test] public void ClipMetadataPreservesExactOrderNamesAndOnlyUsedSamplerTimes()
+        {
+            var result=ModelInspection.Inspect(ModelFixture.Create(root=>{
+                var original=root["animations"][0].DeepClone();var clips=new JArray();
+                foreach(var name in new[]{"Wave","wave","", "No channels"}){var clip=original.DeepClone();clip["name"]=name;clips.Add(clip);}
+                // The last clip has an unused one-second sampler, but no animation curves.
+                clips[3]["channels"]=new JArray();root["animations"]=clips;
+            }));
+            Assert.That(result.AnimationClips.Count,Is.EqualTo(4));
+            Assert.That(result.AnimationClips[0].Name,Is.EqualTo("Wave"));
+            Assert.That(result.AnimationClips[1].Name,Is.Not.EqualTo("wave"));
+            Assert.That(result.AnimationClips[2].Name,Is.EqualTo("animation_2"));
+            Assert.That(result.AnimationClips[0].Duration,Is.EqualTo(1));
+            Assert.That(result.AnimationClips[3].Duration,Is.Zero);
+        }
         [Test] public void RejectsExternalResourcesBrokenAccessorsAndRecursiveNodesBeforeLoading()
         {
             Assert.Throws<ModelImportException>(() => ModelInspection.Inspect(ModelFixture.Create(root => root["buffers"][0]["uri"] = "https://example.com/data")));

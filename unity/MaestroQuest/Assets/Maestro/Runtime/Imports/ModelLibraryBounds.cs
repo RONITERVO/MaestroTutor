@@ -12,7 +12,7 @@ namespace Maestro.Quest.Imports
         const int MaximumBoundsEntries=32;
         readonly object boundsGate=new();
         readonly SemaphoreSlim boundsPreparation=new(1,1);
-        readonly Dictionary<string,(ModelAssetBounds Static,ModelAssetBounds Resting)> assetBounds=new(StringComparer.Ordinal);
+        readonly Dictionary<string,(ModelAssetBounds Static,ModelAssetBounds Resting,IReadOnlyList<ModelClipMetadata> Clips)> assetBounds=new(StringComparer.Ordinal);
         readonly List<string> boundsOrder=new();
         // Pure read: a cache miss never opens a file, materializes the included
         // avatar, reserves native capacity or queues asynchronous work.
@@ -20,6 +20,11 @@ namespace Maestro.Quest.Imports
         {
             result=default;if(!ValidHash(hash))return false;
             lock(boundsGate){if(!assetBounds.TryGetValue(hash,out var value))return false;result=rest?value.Resting:value.Static;return true;}
+        }
+        internal bool TryReadClips(string hash,out IReadOnlyList<ModelClipMetadata> clips)
+        {
+            clips=null;if(!ValidHash(hash))return false;
+            lock(boundsGate){if(!assetBounds.TryGetValue(hash,out var value))return false;clips=value.Clips;return true;}
         }
         // Explicit owned preparation, not a fact read. Included content is read
         // in place; unlike native first-use import this never writes a local copy.
@@ -47,7 +52,7 @@ namespace Maestro.Quest.Imports
         {
             lock(boundsGate){
                 boundsOrder.Remove(verified.Hash);boundsOrder.Add(verified.Hash);
-                assetBounds[verified.Hash]=(verified.Inspection.AssetBounds,verified.Inspection.RestBounds);
+                assetBounds[verified.Hash]=(verified.Inspection.AssetBounds,verified.Inspection.RestBounds,verified.Inspection.AnimationClips);
                 if(boundsOrder.Count>MaximumBoundsEntries){assetBounds.Remove(boundsOrder[0]);boundsOrder.RemoveAt(0);}
             }
         }

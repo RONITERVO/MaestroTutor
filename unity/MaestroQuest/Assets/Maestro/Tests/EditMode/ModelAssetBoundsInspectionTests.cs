@@ -85,6 +85,21 @@ namespace Maestro.Quest.Tests
                 Assert.Throws<ModelImportException>(()=>cold.ReadAsync(asset.Hash).GetAwaiter().GetResult());Assert.That(cold.TryReadBounds(asset.Hash,out _),Is.False);
             } finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
+        [Test] public void ColdClipMetadataPreparationIsBoundedAndDoesNotLoadNativeModels()
+        {
+            string directory=Path.Combine(Path.GetTempPath(),"MaestroClips-"+Guid.NewGuid().ToString("N"));
+            try {
+                var source=new ModelLibrary(directory);var asset=ModelLibrary.Inspect("Character.glb",ModelFixture.Create());
+                source.SaveAsync(asset).GetAwaiter().GetResult();var cold=new ModelLibrary(directory);var budget=ImportedModel.LiveBudget;
+                Assert.That(cold.TryReadClips(asset.Hash,out _),Is.False);
+                cold.PrepareRestBoundsAsync(asset.Hash,default).GetAwaiter().GetResult();
+                Assert.That(cold.TryReadClips(asset.Hash,out var clips),Is.True);Assert.That(clips.Count,Is.EqualTo(1));
+                Assert.That(clips[0].Duration,Is.EqualTo(1));Assert.That(clips[0].Name,Is.EqualTo("Wave triangle"));
+                Assert.That(ImportedModel.LiveBudget,Is.EqualTo(budget));
+                File.WriteAllBytes(Path.Combine(directory,asset.Hash+".glb"),new byte[30]);
+                Assert.Throws<ModelImportException>(()=>cold.ReadAsync(asset.Hash).GetAwaiter().GetResult());Assert.That(cold.TryReadClips(asset.Hash,out _),Is.False);
+            } finally {if(Directory.Exists(directory))Directory.Delete(directory,true);}
+        }
         [Test] public void MetadataCacheIsBoundedAndNeverRehydratesEvictedEntriesDuringRead()
         {
             string directory=Path.Combine(Path.GetTempPath(),"MaestroBounds-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(directory);
@@ -94,7 +109,8 @@ namespace Maestro.Quest.Tests
                     var asset=ModelLibrary.Inspect("Static.glb",StaticModelFixture.Create(root=>root["asset"]["copyright"]="Fixture "+i));
                     first??=asset.Hash;last=asset.Hash;File.WriteAllBytes(Path.Combine(directory,asset.Hash+".glb"),asset.Bytes);library.ReadAsync(asset.Hash).GetAwaiter().GetResult();
                 }
-                Assert.That(library.TryReadBounds(first,out _),Is.False);Assert.That(library.TryReadBounds(last,out _),Is.True);Assert.That(library.TryReadBounds("../file",out _),Is.False);
+                Assert.That(library.TryReadBounds(first,out _),Is.False);Assert.That(library.TryReadBounds(last,out _),Is.True);
+                Assert.That(library.TryReadClips(first,out _),Is.False);Assert.That(library.TryReadClips(last,out _),Is.True);Assert.That(library.TryReadBounds("../file",out _),Is.False);
                 Assert.That(File.Exists(Path.Combine(directory,first+".glb")),Is.True);Assert.That(library.TryReadBounds(first,out _),Is.False);
             } finally {Directory.Delete(directory,true);}
         }

@@ -19,7 +19,7 @@ param(
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
-if($SparseObjectView -and ($Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SparseObjectView is an explicit offline Headless observation fixture only.'}
+if($SparseObjectView -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SparseObjectView is an explicit offline Headless or Book observation fixture only.'}
 if(($SyntheticModel -or $SyntheticGait) -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SyntheticModel is an explicit offline Headless or Book fixture only.'}
 if($SyntheticImage -and ($Journey -ne 'Book' -or $ProviderScenario)){throw 'SyntheticImage is an explicit offline Book fixture only.'}
 if($SyntheticLiveSound -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SyntheticLiveSound is an explicit offline Book or Headless fixture only.'}

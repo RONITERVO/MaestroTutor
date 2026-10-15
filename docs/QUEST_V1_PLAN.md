@@ -10824,3 +10824,55 @@ No UI was changed; prior book evidence remains tied to **262ea329**. Broad nativ
 suites and Android compilation remain at **7fe48619** and were not rerun. Larger
 saved capacity and native admission remain separate work. V1 is incomplete; no
 headset, paid provider, signing, deployment or Meta work ran.
+
+
+## Original Book journey with an empty object view — 2026-10-15
+
+The complete Original Book journey now obtains object targets, saved counts,
+existence, revisions and poses through visible native search/fact forms and
+creation receipts. Schema-generated fields use their normal Find controls;
+continuation pages preserve exact identity even when an ID search also matches
+other objects' names. No complete inventory is synthesized for the browser.
+`Verify-Quest.ps1` now runs both offline Headless and Book journeys with
+`-SparseObjectView`. Production observations and saved quotas remain unchanged.
+
+The offline planner spends its final discovery batch on the newly created ball's
+exact definition. A human edit made while its next plan waits must survive the
+resulting stale paint refusal. The query/action budgets, original chat hook,
+verifier, task persistence and reload-without-replay checks remain exercised.
+Those provider responses are explicitly scripted; no paid provider ran.
+
+This journey exposed a native defect: embedded walking-clip discovery depended
+on a live model and failed after off-view retirement. Import and background
+spatial preparation now retain immutable, bounded clip metadata alongside
+validated model bounds. Both object and Maestro clip facts read exact hashes and
+source-order indexes without file I/O, native loading, playback or save changes.
+Names use the importer's normalization. Source timeline duration excludes unused
+samplers; selection still validates the actual loaded humanoid and clip. Cold or
+invalidated metadata is unavailable rather than an empty list. Saved walking
+choices remain separate from runtime availability. No saved schema changed.
+
+The complete Book run passed **923 native requests / 3,019 raw observations**,
+all with an empty object list, including original-chat handoff, human-edit
+preservation, generated editing forms, media, construction, retirement, imported
+gait, movement, gaze, physics, Undo and reload. The matching Headless run passed
+**1,307 raw observations / 1,300 separate prepared read sets** against the same
+native inputs. Both native and client processes exited successfully. Runs:
+`.quest-evidence/native-room/1107adc4364d47ae945b30dd5e9bc4b9/` (Book) and
+`.quest-evidence/native-room/c54d04fbb3a44860bb99ea216f1d5541/` (Headless).
+
+Focused checks passed **41 EditMode / 14 PlayMode** cases, **3,027 web tests / 320
+files**, application/probe TypeScript and the officially exported catalog check.
+Desktop screenshots were inspected. All **3,014 native inputs** match the mirror;
+14 unrelated files remain unchanged. Earlier failed Book attempts retain the
+form-render timing issue, native clip dependency and ambiguous search assumption;
+the final complete run verifies their fixes. Evidence and audit records:
+`.quest-evidence/sparse-book-world/`. The preceding checkpoint is **69cba57d**.
+
+Provider-specific verification helpers still need explicit saved-directory,
+object and component reads before production observations become bounded. In
+particular, their physics comparisons must not lose coverage when using the
+lightweight object-observation fact. Broad native/Android evidence remains tied
+to **7fe48619**, not this checkpoint. Larger saved capacity and resource admission
+remain separate work. V1 is incomplete; no headset, paid provider, signing,
+deployment or Meta work ran.

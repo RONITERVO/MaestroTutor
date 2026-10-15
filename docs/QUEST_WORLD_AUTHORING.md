@@ -1184,8 +1184,8 @@ following and shared admission. Delivery results are recorded in the v1 plan.
 
 Created imported humanoids can now use an explicitly assigned gait with both
 `object.navigate` and `object.follow`. `object.walk.settings` reports the exact
-selection and revision; `object.walk.clips` lists the loaded model's embedded
-clips. The shared `object.walk.select` action chooses an embedded clip, an exact
+selection and revision; `object.walk.clips` lists the saved model's embedded
+clips from validated asset metadata, even after its native instance unloads. The shared `object.walk.select` action chooses an embedded clip, an exact
 compatible downloaded library motion, or no walking animation. The generated
 book form and agent/program calls use the same guarded save path.
 
@@ -1762,3 +1762,16 @@ Periodic inventory is still complete. The native headless journey also uses that
 list for object counts, pose checks and deletion assertions; those checks must
 move to explicit saved-directory and target reads before the production view can
 be bounded. Saved-world quotas and live-resource admission are separate changes.
+
+
+### Embedded clip discovery without a loaded character
+
+`object.walk.clips` and `avatar.walk.clips` use exact model hashes and source-order
+indexes. Import and background spatial preparation retain a bounded, immutable
+metadata cache; reading a page never opens a file, loads geometry, reserves a
+motion channel or starts playback. A cold/unprepared or invalidated entry is
+unavailable, not an empty animation list. Names follow the importer normalization
+and remain display data. Duration describes the source timeline; `selectable`
+checks its minimum duration only. The guarded selection action separately loads
+and validates the actual humanoid model and clip before accepting a choice.
+Saved choices and runtime playback availability remain separate facts.

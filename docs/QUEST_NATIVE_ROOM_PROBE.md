@@ -1547,10 +1547,10 @@ capture still require their own acceptance.
 
 ### Offline empty-inventory journey
 
-`-SparseObjectView` is an explicit offline Headless option. The editor fixture
+`-SparseObjectView` is an explicit offline Headless or Book option. The editor fixture
 empties only the periodic `objects` list; native actions, receipts, catalog facts
 and self-contained inspection remain unchanged. It refuses provider prompts and
-Book journeys. Production observations and world limits are unchanged.
+provider scenarios. Production observations and world limits are unchanged.
 
 The driver uses shared `world.objects` paging for saved totals and member
 differences, `object.presence` for existence, `object.definition` for revisions,
@@ -1559,10 +1559,40 @@ fails the directory read instead of implying deletion. Action preparation uses
 the production client's compact exact-target revision reads. Pose checks remain
 native reads; no inventory is synthesized into the recorded state.
 
-`journey.json` records the fixture flag, raw observations and the separate
+For Headless, `journey.json` records the fixture flag, raw observations and the separate
 prepared read sets. The owner and terminal verification receipts also identify
 the mode. Missing read evidence, a leaked nonempty list, malformed responses or
-failed native effects fail the journey. This verifies offline client/native
+failed native effects fail the journey. This headless mode verifies offline client/native
 coverage, not provider interpretation, original-book UI or headset acceptance.
 Provider-specific journey helpers still require their own migration and checks
 before production observations can become bounded.
+
+
+The Original Book variant uses visible Workshop search and schema-generated fact
+forms to obtain the same evidence. Object fields use their Find controls; no
+hidden transport command or synthetic inventory supplies a selection. Saved
+counts, exact-ID deletion checks and quiet placement samples come from native
+queries made through those forms. Unknown IDs are checked by complete filtered
+search results, including continuation pages, rather than selecting a deleted
+object in a picker. Pose sampling has a 60-second deadline to allow visible form
+navigation; the existing 1.25-second quiet criterion remains unchanged.
+
+Its scripted offline planner identifies the created ball from the native creation
+receipt, then spends its final query batch on the ball's exact saved definition.
+The person changes the colour while the next plan waits. That pending paint must
+retain the earlier revision, be refused as stale, and preserve the person's colour.
+The same query/action budgets, original chat hook, verifier and task coordinator
+are exercised; these scripted SSE replies are not real-provider acceptance.
+The evidence is `book-journey.json`, including the raw observations, actual native
+requests, fixture flag and completed task record. Screenshots show the actual book
+UI connected to Unity. Provider-specific runners remain a separate migration.
+
+
+The standard `Verify-Quest.ps1` offline Headless and Book invocations both enable
+this mode. The 2026-10-15 Book run `1107adc4364d47ae945b30dd5e9bc4b9` passed
+923 native requests and 3,019 raw observations; the same-source Headless run
+`c54d04fbb3a44860bb99ea216f1d5541` passed 1,307 raw observations and 1,300 explicit
+prepared read sets. All periodic object lists were empty. This exposed and fixed
+clip discovery for unloaded characters: facts now use validated immutable asset
+metadata; guarded selection still prepares and validates the native model.
+The accompanying audit is `.quest-evidence/sparse-book-world/verified.json`.
