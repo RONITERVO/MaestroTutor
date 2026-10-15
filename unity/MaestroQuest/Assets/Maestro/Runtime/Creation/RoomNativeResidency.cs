@@ -67,15 +67,25 @@ namespace Maestro.Quest.Creation
         // Owned direct and predicted viewer demand are part of retention. Indirect
         // demand still needs an automatic loading policy. Existing native ownership, audio,
         // animation, physical links and collision admission cannot be bypassed.
-        // Every connected area is retired together; a peer never loses its joint.
-        internal bool RetireNativeArea(string area,out string error) => RetirePreparedNativeArea(area,null,out error);
-        bool RetirePreparedNativeArea(string area,Dictionary<string,Book.RoomAcoustics.AcousticResidency> prepared,out string error)
+        // Explicit area operations still include all members. Automatic retirement
+        // uses exact dependency groups through this same adoption transaction.
+        internal bool RetireNativeArea(string area,out string error)
         {
             if(!NativeTransitionAvailable(out error))return false;
             var graph=ReadRetention();var members=graph?.Members(area??"");error="The authored area is unavailable";
-            if(members==null)return false;var targets=graph.Closure(members);
-            error="The area or a connected area is still required by the running room";
+            return members!=null&&RetirePreparedNativeTargets(graph.Closure(members),null,out error);
+        }
+        bool CanRetireNativeTargets(string[] targets,out string error)
+        {
+            var graph=ReadRetention();error="The objects or their dependencies changed";
+            if(graph==null||targets==null||!graph.Closure(targets).SequenceEqual(targets))return false;
+            error="The objects or their connections are still required by the running room";
             if(targets.Any(id=>graph.Reasons(id)!=RoomRetentionReason.None))return false;
+            error=null;return true;
+        }
+        bool RetirePreparedNativeTargets(string[] targets,Dictionary<string,Book.RoomAcoustics.AcousticResidency> prepared,out string error)
+        {
+            if(!NativeTransitionAvailable(out error)||!CanRetireNativeTargets(targets,out error))return false;
             var snapshots=new Dictionary<string,DormantEntity>(StringComparer.Ordinal);
             foreach(var id in targets){
                 if(NativeEntityDormant(id))continue;

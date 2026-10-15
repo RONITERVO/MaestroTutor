@@ -53,7 +53,7 @@ namespace Maestro.Quest.Creation
             }
             return new JObject { ["id"]=area,["memberCount"]=members.Length,["residentCount"]=resident,
                 ["retainedCount"]=required,["missingDependencyCount"]=missing,["reasons"]=new JArray(RoomRetentionGraph.Names(reasons)),
-                ["unloadingSupported"]=automaticRetirement,["retirementState"]=NativeRetirementState(area,members,reasons),["retirementIssue"]=NativeRetirementIssue(area) };
+                ["unloadingSupported"]=automaticRetirement,["retirementState"]=NativeRetirementState(members,reasons),["retirementIssue"]=NativeRetirementIssue(members) };
         }
     }
 }

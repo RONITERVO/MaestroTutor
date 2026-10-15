@@ -36,6 +36,15 @@ namespace Maestro.Quest.Tests
             var saved=editor.Snapshot();var template=saved.objects.First(x=>!x.IsBuiltIn);
             saved.objects=saved.objects.Concat(Enumerable.Range(0,10).Select(i=>{var value=template.Copy();value.id=Guid.NewGuid().ToString("N");value.position=new Vector3(i*.2f,1,2);return value;})).OrderBy(x=>x.id,StringComparer.Ordinal).ToArray();return saved;
         }
+        // Shared-preparation checks need an explicit atomic area. Independent
+        // home jobs may finish before a later coroutine can observe pending work.
+        RoomDocument StartupManyInOneArea()
+        {
+            var saved=StartupMany();saved.regions=new[]{new RoomRegion{
+                id=Guid.NewGuid().ToString("N"),name="Shared startup preparation",
+                members=saved.objects.Where(x=>!x.IsBuiltIn).Select(x=>x.id).ToArray()}};
+            return saved;
+        }
         [UnityTest] public IEnumerator NativeStartupPublishesSavedIdentitiesCooperativelyWithoutEditsOrGravity()
         {
             var saved=StartupMany();string json=JsonUtility.ToJson(saved);yield return ReloadForStartup(saved);
@@ -76,8 +85,9 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeStartupPreviewCannotKeepAnOrdinaryActionAliveAcrossReview()
         {
-            var saved=StartupMany();yield return ReloadForStartup(saved);editor.TickNativeDisplay();string id=saved.objects.First(x=>!x.IsBuiltIn).id;
+            var saved=StartupManyInOneArea();yield return ReloadForStartup(saved);editor.TickNativeDisplay();string id=saved.objects.First(x=>!x.IsBuiltIn).id;
             var action=editor.AcquireNativeEntities(new[]{id},()=>true,CancellationToken.None);
+            Assert.That(action.IsCompleted,Is.False,"Exercise a pending shared action before review begins");
             using(editor.RuntimeGate.Hold("Review shared load")){
                 yield return StartupFinished();Assert.That(action.IsCompleted,Is.True);Assert.That(action.Result,Is.Not.Null,"Only the display owner can survive review");
                 Assert.That(editor.Find(id),Is.Not.Null);Assert.That(physics.Running,Is.False);
@@ -91,7 +101,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeDisplayTimeoutDrainsAndNeedsExplicitRetry()
         {
-            var saved=StartupMany();yield return ReloadForStartup(saved);yield return StartupAdmissionStarted();
+            var saved=StartupManyInOneArea();yield return ReloadForStartup(saved);yield return StartupAdmissionStarted();
             editor.TickNativeDisplay(Time.unscaledTimeAsDouble+RoomEditor.NativeDisplayTimeout+1);
             yield return StartupFinished();Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(0));
             Assert.That(editor.Status,Does.Contain("timed out"));for(int i=0;i<3;i++)yield return null;

@@ -26,7 +26,7 @@ namespace Maestro.Quest.Tests
             graph.Retain("book",RoomRetentionReason.WorldOwned);graph.Retain(Id('1'),RoomRetentionReason.Held);
             Assert.That(graph.Members(""),Is.EqualTo(new[]{Id('2'),Id('3')}));
             Assert.That(graph.Reasons(Id('2')),Is.EqualTo(RoomRetentionReason.None));Assert.That(graph.Reasons("maestro"),Is.EqualTo(RoomRetentionReason.None));
-            graph.Retain(Id('2'),RoomRetentionReason.Physics);Assert.That(graph.Reasons(Id('3')),Is.EqualTo(RoomRetentionReason.Physics));
+            graph.Retain(Id('2'),RoomRetentionReason.Physics);Assert.That(graph.Reasons(Id('3')),Is.EqualTo(RoomRetentionReason.None));
         }
         [Test] public void DependencySnapshotDoesNotBorrowMutableJournalArraysOrRetainPriorDemands()
         {
@@ -50,6 +50,14 @@ namespace Maestro.Quest.Tests
             Assert.That(graph.Members(Id('a')),Is.Empty);
             Assert.That(RoomRetentionGraph.Names(graph.Reasons(Id('1'))),Is.EqualTo(new[]{"collisionEnvironment","workspaceBusy"}));
             Assert.That(graph.Reasons(Id('2')),Is.EqualTo(graph.Reasons(Id('1'))));
+        }
+        [Test] public void NativeGroupsKeepNamedAreasAndConnectionsAtomicButSeparateUnassignedCreations(){
+            var graph=new RoomRetentionGraph(new[]{Item('1'),Item('2'),Item('3',Id('4')),Item('4'),Item('5'),new RoomObjectData{id="book",kind=RoomObjectKind.Book}},new[]{Area('a','1','2')});
+            var groups=graph.Groups().ToArray();Assert.That(groups.Length,Is.EqualTo(4));
+            Assert.That(groups[0],Is.EqualTo(new[]{Id('1'),Id('2')}));Assert.That(groups[1],Is.EqualTo(new[]{Id('3'),Id('4')}));
+            Assert.That(groups[2],Is.EqualTo(new[]{Id('5')}));Assert.That(groups[3],Is.EqualTo(new[]{"book"}));
+            Assert.That(graph.Members(""),Is.EqualTo(new[]{Id('3'),Id('4'),Id('5')}));
+            graph.Retain(Id('3'),RoomRetentionReason.Ownership);Assert.That(graph.Reasons(Id('4')),Is.EqualTo(RoomRetentionReason.Ownership));Assert.That(graph.Reasons(Id('5')),Is.EqualTo(RoomRetentionReason.None));
         }
     }
 }

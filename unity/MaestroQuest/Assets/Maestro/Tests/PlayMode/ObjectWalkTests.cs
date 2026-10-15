@@ -19,6 +19,8 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.Find("maestro").GetComponent<Maestro.Quest.Avatar.MaestroAvatar>(),Is.Null);
             var view=AvatarWalkSelection.Observe(editor);Assert.That(view.source,Is.EqualTo("included"));Assert.That(view.available,Is.False);Assert.That(view.playbackStatus,Is.Empty);
             Assert.That(view.status,Does.Contain("loading"));yield return null;
+            UnityEngine.Object.Destroy(editor.Find("maestro").gameObject);yield return null;
+            view=AvatarWalkSelection.Observe(editor);Assert.That(view,Is.Not.Null);Assert.That(view.source,Is.EqualTo("included"));Assert.That(view.available,Is.False);Assert.That(view.playbackStatus,Is.Empty);
         }
         [UnityTest]public IEnumerator ObjectWalkAdvertisesItsSharedFeature(){Assert.That(RoomControls.Capabilities(editor),Does.Contain(ObjectWalkSettingsCapability.Feature));yield return null;}
     }
@@ -41,6 +43,25 @@ namespace Maestro.Quest.Tests {
             var saved=new RoomStorage(directory).Load(out error);Assert.That(error,Is.Null);Assert.That(saved.objects.Single(o=>o.id==id).walkClip,Is.EqualTo(1));
             Assert.That((string)SettingsFact("object.walk.settings",id)["selection"]["source"],Is.EqualTo("embedded"));Assert.That(editor.ConfigureObjectWalk(id,(int)args["revision"],"none",gaitModel.AssetHash,null,-1,out error),Is.False,"Stale revisions cannot replace a selection");
             Assert.That(SelectGait("embedded",null,out error),Is.True,error);editor.Undo();Assert.That(editor.Read(id).walkClip,Is.Zero,"Identical save does not add Undo");editor.Redo();Assert.That(editor.Read(id).walkClip,Is.EqualTo(1));
+        }
+        [UnityTest]public IEnumerator ObjectWalkSavedChoiceSurvivesNativeLossAndPreparation(){
+            yield return WalkingCharacter();Assert.That(SelectGait("embedded",null,out var error),Is.True,error);world.PausePhysics();
+            string id=editor.Identity(gaitItem),hash=gaitModel.AssetHash,before=JsonUtility.ToJson(editor.Snapshot());int revision=editor.ObjectRevision(id);
+            var retirement=editor.RetireNativeArea("");
+            for(int i=0;i<600&&!retirement.IsCompleted;i++)yield return null;
+            Assert.That(retirement.IsCompleted,Is.True);Assert.That(retirement.Exception,Is.Null);Assert.That(retirement.Result,Is.Null);yield return null;
+            Assert.That(editor.NativeEntityDormant(id),Is.True);
+            var lost=SettingsFact("object.walk.settings",id);var selection=(JObject)lost["selection"];
+            Assert.That((string)selection["source"],Is.EqualTo("embedded"));Assert.That((string)selection["modelHash"],Is.EqualTo(hash));Assert.That((int)selection["clipIndex"],Is.Zero);
+            Assert.That((bool)selection["available"],Is.False);Assert.That((string)selection["playbackStatus"],Is.EqualTo("inactive"));
+            Assert.That((bool)editor.Find(id),Is.False,"Reading a saved gait must not instantiate it");Assert.That(editor.ObjectRevision(id),Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+            var loading=editor.AcquireNativeEntities(new[]{id},()=>true,default);
+            for(int i=0;i<600&&!loading.IsCompleted;i++){
+                var pending=SettingsFact("object.walk.settings",id);Assert.That((string)pending["selection"]["source"],Is.EqualTo("embedded"));Assert.That((int)pending["selection"]["clipIndex"],Is.Zero);yield return null;
+            }
+            Assert.That(loading.IsCompleted,Is.True);Assert.That(loading.Exception,Is.Null);Assert.That(loading.Result,Is.Null);
+            var loaded=SettingsFact("object.walk.settings",id);Assert.That((bool)loaded["selection"]["available"],Is.True);Assert.That((string)loaded["selection"]["playbackStatus"],Is.EqualTo("inactive"));
+            Assert.That(editor.Find(id).GetComponent<CreatedRoomObject>().Model.IsPlaying,Is.False);Assert.That(editor.ObjectRevision(id),Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
         }
         [UnityTest]public IEnumerator ObjectWalkEmbeddedMovesBonesAndSkinWithoutEscapingItsNavigationBody(){
             yield return WalkingCharacter();Assert.That(SelectGait("embedded",null,out var error),Is.True,error);

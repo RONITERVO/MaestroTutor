@@ -30,6 +30,8 @@ for their subsequent movement, including virtual actors without a physical scan.
 See [simulation intent and per-actor readiness](#simulation-intent-and-per-actor-readiness--2026-10-15).
 Stationary Maestro following now keeps accepted startup preparation while its
 owner remains active; see [the input lifetime](#stationary-follow-input-lifetime--2026-10-15).
+Unassigned home objects now load and retire by dependency group; see
+[independent home loading](#independent-home-loading--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10263,5 +10265,68 @@ audit covers 3,000 native inputs, including 1,118 C# and
 recorded separately. Android browser unit tests report 128 passed/two skipped.
 All 14 protected files remain unchanged. No APK/AAB was produced.
 Evidence: .quest-evidence/follow-idle/.
+
+Headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
+
+
+## Independent home loading — 2026-10-15
+
+Unassigned home creations previously had implicit edges to every other home
+creation. Viewing one therefore kept unrelated distant objects resident. A new
+native regression reproduced this before runtime changes. Named authored regions
+and enabled physical connections remain atomic; the implicit home edges are gone.
+
+Automatic retirement now chooses a deterministic dependency group. Explicit
+whole-region and automatic target operations share one prepared native adoption
+path, which checks the exact closure, poses, live ownership, tracking admission,
+source revisions and acoustic reservations before detaching any view. Whole-home
+operations additionally guard their member list across asynchronous preparation.
+Failure state belongs to the failed group and is aggregated into the existing
+shared region report, so failure does not prevent unrelated home retirement.
+
+Inspection and selection also use saved identity. The offline Headless journey
+exposed a refusal after a newly created cup retired; inspection had incorrectly
+required a live view. Saved recipes now remain inspectable without loading them.
+The saved physics-settings fact also no longer depends on a native instance.
+Saved imported-character gait choices remain readable while their native model
+is unloaded or preparing; availability and owned playback stay separate.
+Missing parts and deleted objects still fail, and live actions retain their
+existing native-presence requirements.
+
+The change preserves saved state, IDs, versions, schemas and current budgets.
+Partial residency is reported by existing resident/retained counts, not a second
+user or agent scene. Named-area granularity, unknown-geometry isolation and
+larger capacity remain separate work. No headset performance claim is made.
+
+Verified on desktop: **1,260 EditMode / 1,648 PlayMode** passed, with three
+expected optional private-asset skips. Regression coverage includes independent
+home viewing/reload, physical connections, active ownership, isolated retirement
+failures, changed area membership and changed dependency groups. Saved inspection,
+physics preferences and gait choices remain readable through retirement and model
+preparation, without changing saved content or automatically starting playback.
+The independent-home and saved-gait regressions failed before their fixes.
+Focused checks also passed: 6 EditMode / 37 PlayMode for retention,
+14 startup checks, 11 inspection/presence checks and
+22 gait/presence checks.
+
+Offline Headless **e8bc1daede2e4062b281380c298f618f** and Original Book **11e1e571ef39454ab724fcf8222d2ad8** passed; their clients and
+editors exited successfully, with no provider calls. Live fixture checks place
+collision, water, joint, structure and catch inputs in the stationary camera's
+view while retaining normal retirement. Structure assertions require complete
+live readback. The driver follows the same receipt through asynchronous preparation
+of catalog instant actions, without replaying effects; timed-action states remain
+observable. Model reservation diagnostics record sequential reads rather than
+claiming an atomic inventory.
+
+**2,958 web tests / 313 files**, probe types, refreshed native fixtures and asset
+provenance passed. Unsigned Android IL2CPP/Java compilation passed. All 22 ARM64
+libraries pass ELF/16 KiB checks; 152 staged web files and the browser AAR match.
+The source audit covers 3,000 native inputs, including
+1,118 C# and 1,124 code/shader files;
+four setup-derived project assets are recorded separately. Android browser unit
+tests report 128 passed/two skipped. All 14 protected files remain unchanged.
+No APK/AAB was produced. These checks do not establish headset performance.
+Evidence: .quest-evidence/home-loading/.
+
 
 Headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.

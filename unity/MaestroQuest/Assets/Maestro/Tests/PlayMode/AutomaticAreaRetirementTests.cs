@@ -124,5 +124,83 @@ namespace Maestro.Quest.Tests {
                 Assert.That(editor.Read(id).name,Is.EqualTo(changed.name));
             }finally{editor.ConfigureNativeRetirement(false);if(surface)surface.Bind(valid);UnityEngine.Object.Destroy(invalid);UnityEngine.Object.Destroy(holder);}
         }
+        (string near,string far,Camera camera) AutomaticHomeScene(){
+            string near=editor.Identity(block);
+            foreach(var value in editor.Snapshot().objects.Where(x=>!x.IsBuiltIn&&x.id!=near))NativeAreaFor(value.id);
+            block.transform.position=new Vector3(0,0,3);
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Distant home object",new Vector3(0,0,-4),1,Color.blue,out var far,out var error),Is.True,error);
+            var camera=NativeObservationCamera();return(near,far,camera);
+        }
+        [UnityTest]public IEnumerator AutomaticHomeIndependentViewsRetireAndRestoreOnlyObservedObjects(){
+            var(near,far,camera)=AutomaticHomeScene();string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;
+            editor.ConfigureNativeRetirement();
+            yield return AutomaticAreaUntil(()=>!editor.Find(far),"Unrelated home object remained loaded beside a visible object");
+            Assert.That(editor.Find(near),Is.SameAs(block));Assert.That(editor.RegionFor(near),Is.Empty);Assert.That(editor.RegionFor(far),Is.Empty);
+            var state=editor.ObserveRegionRetention("");Assert.That((int)state["memberCount"],Is.EqualTo(2));Assert.That((int)state["residentCount"],Is.EqualTo(1));Assert.That((int)state["retainedCount"],Is.EqualTo(1));
+            camera.transform.rotation=Quaternion.Euler(0,180,0);
+            yield return AutomaticAreaUntil(()=>editor.Find(far)&&!editor.Find(near),"Turning toward a dormant home object did not load it independently");
+            Assert.That(editor.Find(far).transform.position,Is.EqualTo(new Vector3(0,0,-4)));
+            Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
+        }
+        [UnityTest]public IEnumerator AutomaticHomePhysicalConnectionKeepsBothEndsButNotUnrelatedContent(){
+            var(near,far,camera)=AutomaticHomeScene();
+            Assert.That(editor.SetItemPhysics(near,new(){mode="fixed",shape="box",mass=1}),Is.True);
+            Assert.That(editor.SetItemPhysics(far,new(){mode="solid",shape="box",mass=1}),Is.True);
+            Assert.That(Connect(AttachCall(far,near),out var error),Is.True,error);
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Independent piece",new Vector3(4,0,-4),1,Color.red,out var loose,out error),Is.True,error);
+            string saved=JsonUtility.ToJson(editor.Snapshot());editor.ConfigureNativeRetirement();
+            yield return AutomaticAreaUntil(()=>!editor.Find(loose),"An unrelated home piece was pinned by a connection");
+            Assert.That(editor.Find(near),Is.Not.Null);Assert.That(editor.Find(far),Is.Not.Null);
+            camera.transform.rotation=Quaternion.Euler(0,90,0);
+            double until=Time.realtimeSinceStartupAsDouble+10;while((editor.Find(near)||editor.Find(far))&&Time.realtimeSinceStartupAsDouble<until)yield return null;
+            Assert.That(!editor.Find(near)&&!editor.Find(far),Is.True,"Connected home demand: "+editor.ObserveRegionRetention("")+"; near="+editor.ReadRetention().Reasons(near)+"; far="+editor.ReadRetention().Reasons(far));
+            camera.transform.rotation=Quaternion.identity;
+            yield return AutomaticAreaUntil(()=>editor.Find(near)&&editor.Find(far),"Observing one endpoint did not restore both ends");
+            Assert.That(editor.Find(far).GetComponent<RoomConnectionView>(),Is.Not.Null);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
+        }
+        [UnityTest]public IEnumerator AutomaticHomeActiveOwnerRetainsOnlyItsGroupUntilReleased(){
+            var(near,far,_)=AutomaticHomeScene();
+            Assert.That(editor.Ownership.TryAcquire("home-pin","Keep distant piece",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(far,"wholeTarget")},null,out var lease,out var error),Is.True,error);
+            editor.ConfigureNativeRetirement();
+            using(lease){yield return new WaitForSecondsRealtime(2.7f);Assert.That(editor.Find(far),Is.Not.Null);}
+            yield return AutomaticAreaUntil(()=>!editor.Find(far),"Released home ownership kept unrelated content loaded");
+            Assert.That(editor.Find(near),Is.Not.Null);
+        }
+        [UnityTest]public IEnumerator AutomaticHomeFailureDoesNotPreventAnotherGroupFromRetiring(){
+            var(near,far,_)=AutomaticHomeScene();var(id,_,audio)=CpuRetirementArea();Assert.That(AssignRegion(id,"",out var error),Is.True,error);
+            editor.Find(id).transform.position=new Vector3(0,0,-3);var holder=HoldAcousticContext(audio);var original=editor.Find(id);
+            var surface=original.GetComponentsInChildren<AcousticSurface>().Last();var valid=surface.Mesh;var invalid=new Mesh();
+            try{
+                surface.Bind(invalid);editor.ConfigureNativeRetirement();
+                yield return AutomaticAreaUntil(()=>!editor.Find(far)&&(string)editor.ObserveRegionRetention("")["retirementState"]=="failed","One failed home group blocked another group or hid its failure");
+                Assert.That(editor.Find(near),Is.Not.Null);Assert.That(editor.Find(id),Is.SameAs(original));
+                Assert.That((string)editor.ObserveRegionRetention("")["retirementIssue"],Is.Not.Empty);
+                surface.Bind(valid);yield return new WaitForSecondsRealtime(1.2f);Assert.That(editor.Find(id),Is.SameAs(original));
+                var changed=editor.Read(id);changed.name="Repaired home geometry";changed.position=new Vector3(0,0,-3);
+                Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out error),Is.True,error);
+                yield return AutomaticAreaUntil(()=>!editor.Find(id),"Repaired home group did not retry after its input changed");
+                Assert.That((string)editor.ObserveRegionRetention("")["retirementIssue"],Is.Empty);Assert.That(editor.Find(near),Is.Not.Null);
+            }finally{editor.ConfigureNativeRetirement(false);if(surface)surface.Bind(valid);UnityEngine.Object.Destroy(invalid);UnityEngine.Object.Destroy(holder);}
+        }
+        [UnityTest]public IEnumerator AutomaticHomeExplicitAreaPreparationRejectsNewMembers(){
+            var(id,_,audio)=CpuRetirementArea();foreach(var value in editor.Snapshot().objects.Where(x=>!x.IsBuiltIn&&x.id!=id))NativeAreaFor(value.id);
+            Assert.That(AssignRegion(id,"",out var error),Is.True,error);var original=editor.Find(id);var holder=HoldAcousticContext(audio);string peer=editor.Identity(block);
+            try{
+                var task=editor.RetireNativeArea("");yield return CpuReservationStarted(task,audio);
+                Assert.That(AssignRegion(peer,"",out error),Is.True,error);
+                yield return NativeAreaCompletion(task,false);Assert.That(editor.Find(id),Is.SameAs(original));Assert.That(editor.Find(peer),Is.SameAs(block));Assert.That(audio.RetainedGeometryCount,Is.Zero);
+                yield return NativeAreaCompletion(editor.RetireNativeArea(""));Assert.That(editor.Find(id),Is.Null);Assert.That(editor.Find(peer),Is.Null);
+            }finally{UnityEngine.Object.Destroy(holder);}
+        }
+        [UnityTest]public IEnumerator AutomaticHomeTargetPreparationRejectsChangedDependencyGroup(){
+            var(id,_,audio)=CpuRetirementArea();Assert.That(AssignRegion(id,"",out var error),Is.True,error);string peer=editor.Identity(block),other=NativeAreaFor(peer);var original=editor.Find(id);var holder=HoldAcousticContext(audio);
+            try{
+                var task=editor.RetireNativeTargets(new[]{id});yield return CpuReservationStarted(task,audio);
+                Assert.That(AssignRegion(id,other,out error),Is.True,error);
+                yield return NativeAreaCompletion(task,false);Assert.That(editor.Find(id),Is.SameAs(original));Assert.That(block.isActiveAndEnabled,Is.True);Assert.That(audio.RetainedGeometryCount,Is.Zero);
+                yield return NativeAreaCompletion(editor.RetireNativeTargets(new[]{id}),false);
+                yield return NativeAreaCompletion(editor.RetireNativeArea(other));Assert.That(editor.Find(id),Is.Null);Assert.That(editor.Find(peer),Is.Null);
+            }finally{UnityEngine.Object.Destroy(holder);}
+        }
     }
 }

@@ -13,14 +13,19 @@ namespace Maestro.Quest.Creation
     {
         // Prepare without retiring a single view. The existing synchronous
         // transaction adopts the complete closure only after every guard holds.
-        internal async Task<string> RetireNativeArea(string area, CancellationToken cancellation = default, Func<bool> admission = null)
+        internal Task<string> RetireNativeArea(string area, CancellationToken cancellation = default, Func<bool> admission = null)
         {
-            if (!NativeTransitionAvailable(out var error)) return error;
-            if(admission?.Invoke()==false)return "Area retirement admission changed";
-            var graph = ReadRetention(); var members = graph?.Members(area ?? "");
-            if (members == null) return "The authored area is unavailable";
-            var targets = graph.Closure(members);
-            if (targets.Any(id => graph.Reasons(id) != RoomRetentionReason.None)) return "The area or a connected area is still required by the running room";
+            if(!NativeTransitionAvailable(out var error))return Task.FromResult(error);
+            area??="";var graph=ReadRetention();var members=graph?.Members(area);
+            if(members==null)return Task.FromResult("The authored area is unavailable");
+            var currentArea=CaptureNativeAreaInput(area,members);
+            return RetireNativeTargets(graph.Closure(members),cancellation,()=>currentArea()&&admission?.Invoke()!=false);
+        }
+        internal async Task<string> RetireNativeTargets(string[] targets, CancellationToken cancellation = default, Func<bool> admission = null)
+        {
+            if(!NativeTransitionAvailable(out var error)||!CanRetireNativeTargets(targets,out error))return error;
+            if(admission?.Invoke()==false)return "Object retirement admission changed";
+            targets=(string[])targets.Clone();
             var currentInput = CaptureNativeClosureInput(targets);
             var live = targets.Where(id => !NativeEntityDormant(id)).ToDictionary(id => id, Find, StringComparer.Ordinal);
             if (live.Values.Any(item => !item || !item.isActiveAndEnabled)) return "The area's native placement is unavailable";
@@ -40,8 +45,7 @@ namespace Maestro.Quest.Creation
                 foreach (var pair in live)
                     if (!pair.Value || NativeEntityDormant(pair.Key) || Find(pair.Key) != pair.Value
                         || !pair.Value.isActiveAndEnabled || !poses[pair.Key].Equals(pair.Value.transform.localToWorldMatrix)) throw new OperationCanceledException();
-                var current = ReadRetention();
-                if (current == null || targets.Any(id => current.Reasons(id) != RoomRetentionReason.None)) throw new OperationCanceledException();
+                if(!CanRetireNativeTargets(targets,out _))throw new OperationCanceledException();
             }
             try
             {
@@ -52,7 +56,7 @@ namespace Maestro.Quest.Creation
                     prepared.Add(pair.Key, owner ? await owner.PrepareResidencyAsync(pair.Value.gameObject, transform, budget, cancel.Token) : null);
                 }
                 Check();
-                adopted = RetirePreparedNativeArea(area, prepared, out error); return adopted ? null : error;
+                adopted = RetirePreparedNativeTargets(targets, prepared, out error); return adopted ? null : error;
             }
             catch (OperationCanceledException) { return "Area retirement was cancelled or its input changed"; }
             catch (InvalidOperationException failure) { return failure.Message; }

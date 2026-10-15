@@ -153,10 +153,16 @@ namespace Maestro.Quest.Creation
 
         public void Select(RoomItem item)
         {
-            if (!identities.TryGetValue(item,out selected)) return;
-            UpdateSelection();
-            var data = journal.Read(selected);
+            if (item && identities.TryGetValue(item,out var id)) SelectSavedObject(id);
+        }
+        // Selection and inspection refer to saved identity. A dormant view is not
+        // missing authored content, and selecting it must not start native work.
+        internal bool SelectSavedObject(string id)
+        {
+            var data=Read(id);if(data==null)return false;
+            selected=id;UpdateSelection();
             SetStatus(data.IsBuiltIn ? data.kind + " — move or resize" : data.kind + " — paint, duplicate or erase");
+            return true;
         }
 
         public void Create(RoomObjectKind kind)

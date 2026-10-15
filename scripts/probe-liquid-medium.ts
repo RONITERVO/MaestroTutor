@@ -10,14 +10,15 @@ type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeSta
 export async function probeLiquidMedium(execute:Execute,directory:string){
  const fact=async(capability:string,args:Record<string,unknown>)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}])).value;
  const invoke=async(id:string,args:Record<string,unknown>)=>{const s=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s.execution!.selected!;};
- const create=async(name:string,x:number)=>(await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name,x,y:1,z:0})).output!.objectId as string;
- const pool=await create('Medium probe pool',3),cup=await create('Medium probe receiver',4);
+ const create=async(name:string,x:number)=>(await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name,x,y:1,z:2})).output!.objectId as string;
+ // Live medium queries need visible native cavities, not an implicit all-home loading group.
+ const pool=await create('Medium probe pool',-.5),cup=await create('Medium probe receiver',.5);
  type Container={revision:number;definition:Record<string,unknown>&{amountMl:number;fluid:{densityKgM3:number;linearDrag:number}}};
  const read=async(target:string)=>await fact('object.container',{target}) as Container;
  const configure=async(target:string,extra:Record<string,unknown>)=>{const c=await read(target);return invoke('object.container.edit',{operation:'configure',target,revision:c.revision,definition:{...c.definition,...extra}});};
  await configure(pool,{frame:{position:{x:0,y:.2,z:0},rotation:{x:0,y:0,z:0,w:1}},rectangle:{width:1,depth:1},height:.6,capacityMl:600000,amountMl:400000,fluid:{version:1,densityKgM3:900,linearDrag:4,angularDrag:2}});
  await configure(cup,{capacityMl:200000,amountMl:0});
- const query=async()=>await fact('world.medium',{position:{x:3,y:1.4,z:0},target:''}) as {found:boolean;active:boolean;depthMetres:number;densityKgM3:number};
+ const query=async()=>await fact('world.medium',{position:{x:-.5,y:1.4,z:2},target:''}) as {found:boolean;active:boolean;depthMetres:number;densityKgM3:number};
  const before=await query();assert.equal(before.found,true);assert.equal(before.active,false);assert.ok(Math.abs(before.depthMetres-.2)<1e-5);assert.equal(before.densityKgM3,900);
  const a=await read(pool),b=await read(cup);await invoke('object.container.transfer',{source:{target:pool,revision:a.revision},destination:{target:cup,revision:b.revision},amountMl:100000});
  const after=await query(),destination=await read(cup);assert.ok(Math.abs(after.depthMetres-.1)<1e-5);assert.equal(destination.definition.amountMl,100000);assert.equal(destination.definition.fluid.densityKgM3,900);assert.equal(destination.definition.fluid.linearDrag,4);assert.equal((await read(pool)).definition.amountMl+destination.definition.amountMl,400000);

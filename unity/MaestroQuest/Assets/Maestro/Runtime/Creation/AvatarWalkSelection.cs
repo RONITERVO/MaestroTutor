@@ -57,7 +57,8 @@ namespace Maestro.Quest.Creation
         public static AvatarWalkObservation Observe(RoomEditor editor,string target="maestro")
         {
             var data=editor.Read(target);var item=editor.Find(target);var avatar=item?item.GetComponent<MaestroAvatar>():null;
-            if(data==null||!item||data.kind is not (RoomObjectKind.Maestro or RoomObjectKind.ImportedModel))return null;
+            // Saved choices remain inspectable while native views retire or prepare.
+            if(data==null||data.kind is not (RoomObjectKind.Maestro or RoomObjectKind.ImportedModel))return null;
             bool isMaestro=data.kind==RoomObjectKind.Maestro,busy=isMaestro&&(!avatar||avatar.ModelBusy);
             var view=new AvatarWalkObservation {source=isMaestro?"included":"none",motionId="",modelHash=data.modelHash ?? "",name=isMaestro?"Included walk":"No walking animation",available=!busy,
                 status=busy ? "Wait for Maestro's model to finish loading" : "Included walking animation selected",playbackStatus=isMaestro ? (avatar?avatar.WalkMotionStatus??"":"") : ImportedObjectWalk.StatusFor(item)};

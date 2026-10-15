@@ -794,8 +794,8 @@ This does not enable automatic area streaming or expand current world limits.
 
 Opening a saved room prepares demanded areas in stages while the book remains
 available. Observation, capture or an explicit action supplies demand; independent
-unseen areas remain dormant. Saved areas and enabled physical connections load
-together, including the shared unassigned home area. A broken import in one area
+unseen areas remain dormant. Named areas and enabled physical connections load
+together. Unassigned home creations load independently unless connected. A broken import in one area
 does not prevent independent areas from opening. Loading preserves saved positions and
 animation settings and does not switch gravity on. Failed objects stay in the
 saved room so they can be inspected and retried after their asset is repaired.
@@ -811,7 +811,7 @@ prioritizes areas during startup. Losing tracking or leaving a view does not
 start physics, and a timed-out or broken import waits for an explicit retry.
 The same display-demand path applies at startup and after retirement. Unknown
 bounds remain conservative; observation does not approve physics or prove a safe
-path. Finer automatic loading groups, larger-world capacity and fully local
+path. Finer grouping within named areas, larger-world capacity and fully local
 physics failure handling remain unfinished.
 
 
@@ -1423,7 +1423,8 @@ pending startup is never treated as evidence that an area is unused.
 Viewing, capture readback, effective lamps and their shadow casters, held items,
 owned actions, paused/playing sound, animation, navigation, connections and
 collision dependencies retain their existing native resources. All members of
-an area and connected areas stay together. The book and Maestro remain
+a named area and enabled connection endpoints stay together. Unassigned home
+creations form independent groups when no connection joins them. The book and Maestro remain
 world-owned. These checks repeat during preparation; returning to view, an edit,
 a changed pose or tracking/focus loss cancels the unfinished transaction. Native
 objects remain intact until the whole transaction can commit.
@@ -1491,8 +1492,9 @@ returning dormant content. A bounded spatial index prepares canonical bounds
 without creating native views. A tracked viewer, its predicted/recent view or an
 owned capture can request an area; an explicit capability can acquire its own
 required inputs without a visible camera. Independent offscreen areas remain
-dormant. Saved area membership and enabled physical connections still define
-atomic loading groups, including the shared unassigned home area. Unknown model
+dormant. Named area membership and enabled physical connections still define
+atomic loading groups. Unassigned home objects no longer form one implicit
+group. Unknown model
 bounds remain conservative; they are never evidence of empty space. Ink whose
 exact scan plane is unavailable cannot trigger a useless hidden display load.
 
@@ -1515,6 +1517,41 @@ interrupting that owner releases the preparation too. Unavailable navigation sto
 and repairing support or starting physics again does not silently resume it.
 A fresh follow command prepares against the current world.
 
-Unknown-geometry isolation, finer loading groups and larger world capacity remain required before claiming country-scale
+Unknown-geometry isolation, finer grouping within named areas and larger world capacity remain required before claiming country-scale
 worlds. Preparation is cooperative across frames; this is not a measured Quest frame-time or
 headset quality guarantee.
+
+
+## Independent home loading — 2026-10-15
+
+Unassigned objects share the logical home region, but no longer require every
+other home object to be loaded. Observing or acting on one object acquires its
+actual dependency group. Automatic retirement releases only an unused group;
+explicit whole-region operations still include every member and its connections.
+Named authored regions retain their existing atomic grouping.
+
+Loading and retirement use the same dependency closure and the existing staged
+transaction. Preparation cannot silently expand its targets: changed group
+membership, ownership, placement, tracking or relevant input cancels it before
+native objects are removed. Explicit whole-home preparation also cancels if its
+member list changes, even when the old objects' individual groups are unchanged.
+
+The shared `world.region.retention` report keeps logical membership and reports
+actual resident/retained counts. A home region may therefore be partially loaded.
+A current failure remains visible in `retirementState`/`retirementIssue`, while
+other independent home groups can finish. Failed groups wait for changed input
+or renewed demand before retrying. No saved IDs, region definitions, program
+schemas, limits or Undo history are changed by this runtime policy.
+
+Book and agent inspection read the same saved identity, including dormant or
+currently unavailable native objects. Selecting a saved object exposes its recipe
+and properties without loading it or changing Undo history. Saved physics
+preferences likewise remain readable; they do not imply a running body. Saved
+walking-animation choices also remain readable during native model loading; an
+unavailable clip is not replaced or started by observation. An active recipe can
+still highlight its selected part. Missing parts and deleted objects are rejected;
+inspection does not claim that physical actions can run without a live object.
+
+This is a loading-granularity improvement, not evidence of larger-world capacity
+or a measured headset performance gain. The existing unknown-geometry gate,
+active simulation dependencies and current world budgets remain in force.

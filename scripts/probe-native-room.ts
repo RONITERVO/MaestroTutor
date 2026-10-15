@@ -62,7 +62,21 @@ const observations:unknown[]=[];
 try{
  const lease=transport.lease();let initial=structuredClone(lease.state());
  const execute=async<const C extends RoomCommand[]>(commands:C):Promise<NativeProbeState<C>>=>{
-  const state=lease.state();const result=await lease.execute(commands,state.sceneRevision,state.objects);observations.push(structuredClone(result));
+  const state=lease.state();let result=await lease.execute(commands,state.sceneRevision,state.objects);observations.push(structuredClone(result));
+  const command=commands.length===1?commands[0]:undefined;
+  const execution=command?.action==='execution'?command.execution:undefined;
+  // Instant actions can still prepare dormant native inputs asynchronously.
+  // Follow the accepted receipt; never replay the effect or wait away a timed action.
+  if(result.ok&&execution?.operation==='start'&&capabilityDefinition(execution.call.id)?.duration==='instant'){
+   const runId=result.execution?.selected?.id;if(!runId)throw new Error('Instant action has no native receipt');
+   const deadline=Date.now()+15000;
+   while(['preparing','running'].includes(result.execution!.selected!.phase)&&Date.now()<deadline){
+    await new Promise(r=>setTimeout(r,100));const current=lease.state();
+    result=await lease.execute([{action:'execution',execution:{operation:'inspect',runId}}],current.sceneRevision,current.objects);observations.push(structuredClone(result));
+    if(!result.ok||result.execution?.selected?.id!==runId)throw new Error('Instant-action receipt changed while waiting: '+result.status);
+   }
+   if(result.execution?.selected?.phase!=='completed')throw new Error('Instant native action did not complete: '+JSON.stringify(result.execution?.selected));
+  }
   if(!result.ok){
    await writeFile(join(directory,'refused-command.json'),JSON.stringify({commands,expectedSceneRevision:state.sceneRevision,expectedObjects:state.objects,result},null,2));
    throw new Error('Native action refused: '+result.status);
@@ -266,15 +280,18 @@ try{
   const diagnostic=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelBudget',version:1}}]);
   if(!diagnostic.catalog?.available)throw new Error('Native resource diagnostics are unavailable.');
   const modelUsage=factReply(diagnostic).value as {reserved:{models:number}};
-  const modelReservations:unknown[]=[];
+  const modelReservations:unknown[]=[],modelReservationReads:unknown[]=[];
   for(let index=0;index<modelUsage.reserved.models;index++){
    const reply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.modelReservation',version:1,arguments:{index}}}]);
-   const value=factReply(reply).value as {reservationId:string;worldId:string;regionId:string;target:string;role:string;modelHash:string;state:string};
-   if(!value||value.reservationId.length!==32||value.modelHash.length!==64||!['loading','ready','retiring'].includes(value.state))throw new Error('Native model lease observation is missing or malformed.');
+   const reading=factReply(reply);modelReservationReads.push({index,...reading});
+   // Indexed diagnostics are sequential observations; retirement can remove or shift a slot.
+   if(!reading.available)continue;
+   const value=reading.value as {reservationId:string;worldId:string;regionId:string;target:string;role:string;modelHash:string;state:string};
+   if(!value||value.reservationId.length!==32||value.modelHash.length!==64||!['queued','loading','ready','retiring'].includes(value.state))throw new Error('Native model lease observation is missing or malformed.');
    if(value.role==='avatar'&&(value.target!=='maestro'||value.worldId.length!==32||value.regionId.length!==32))throw new Error('Native avatar model reservation lost its durable world/entity owner.');
    modelReservations.push(value);
   }
-  await writeFile(join(directory,'model-reservations.json'),JSON.stringify({boundary:'Actual native model reservations, not measured memory or regional streaming.',budget:factReply(diagnostic).value,leases:modelReservations},null,2));
+  await writeFile(join(directory,'model-reservations.json'),JSON.stringify({boundary:'Sequential native model reservation reads; slots may shift or disappear after the budget read. Not an atomic inventory, measured memory or headset performance.',budget:factReply(diagnostic).value,reads:modelReservationReads,leases:modelReservations},null,2));
   const imagesBefore=lease.state().sceneRevision;
   const imageBudget=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.imageBudget',version:1}}]);
   const imageUsage=factReply(imageBudget).value as {entries:number;owners:number;textureBytes:number};
@@ -302,7 +319,8 @@ try{
   for(let cycle=0;cycle<repeat;cycle++){
   const cases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/lathe-contract.json','utf8'));
   const cup=cases[0].recipe;
-  const lathe=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Native profile cup',x:.2,y:1,z:.5,scale:1,recipe:cup}}}}]);
+  // This checks live collision ownership; keep the cup inside the stationary viewer's frustum.
+  const lathe=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Native profile cup',x:.2,y:1.4,z:1.5,scale:1,recipe:cup}}}}]);
   const cupId=lathe.execution?.selected?.output?.objectId;if(typeof cupId!=='string')throw new Error('Lathe creation did not return an object.');
   const inspected=await execute([{action:'inspect',target:cupId}]);
   if(inspected.inspection?.recipe?.parts[0].shape!=='lathe')throw new Error('The shared client cannot inspect the native lathe.');
@@ -763,9 +781,10 @@ try{
    await execute([{action:'undo'}]);drawingKit.push({name,hash,before:created,current,search,definition,after:edited,read,undone});
   }
   await writeFile(join(directory,'drawing-kit.json'),JSON.stringify({boundary:'Actual native template creation, shared mode configuration/readback and Undo. Held contact and failed saves have separate native interaction tests.',examples:drawingKit},null,2));
+  // Live joint readback needs observed native pieces; saved authoring also works offscreen.
   const layoutIds:string[]=[];let layoutBefore=templateUndo;
   for(let i=0;i<2;i++){
-   layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.2,z:.7,scale:1}}}}]);
+   layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.4,z:2,scale:1}}}}]);
    const id=layoutBefore.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Layout member missing');layoutIds.push(id);
   }
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
@@ -810,6 +829,7 @@ try{
   await writeFile(join(directory,'connection-authoring.json'),JSON.stringify({boundary:'Real Unity native attach/readback/Undo. PhysX break and typed event tested separately; no headset or provider proof.',before:connectionBefore,search:connectionSearch,definition:connectionDefinition,current:connectionCurrent,arguments:connectionArgs,after:connectionAfter,placementsBefore:connectionPlacementsBefore,placementsAfter:connectionPlacementsAfter,read:connectionRead,state:connectionState,undo:connectionUndo,undone:connectionUndone},null,2));
   const buttonModule=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/SpringButton.json','utf8'));
   const buttonArgs=buttonModule.program.functions.find((f:{name:string})=>f.name==='create').body[0].arguments;
+  buttonArgs.position={x:.4,y:1.4,z:2}; // Observe the live slider without pinning unrelated creations.
   const buttonCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:buttonArgs}}}]);
   const buttonIds=buttonCreated.execution?.selected?.output?.objectIds;if(!Array.isArray(buttonIds)||buttonIds.length!==2||!buttonIds.every(id=>typeof id==='string'))throw new Error('Spring button did not create two members');
   const sliderTarget=buttonIds[1] as string,sliderMount=buttonIds[0] as string;
@@ -871,7 +891,6 @@ try{
   }
   const layoutUndo=await execute([{action:'undo'}]);for(let i=0;i<2;i++)if(Math.abs((layoutUndo.objects.find(o=>o.id===layoutIds[i])?.position.x??0)-(.4+i*.25))>.00001)throw new Error('Single Undo did not restore both layout members');
   await writeFile(join(directory,'layout-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:layoutBefore,search:layoutSearch,definition:layoutDefinition,after:layoutAfter,facts:layoutFacts,undo:layoutUndo},null,2));
-  await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   const batchProgram=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-batch-create.json','utf8'));
   const batchArgs=batchProgram.functions[0].body[0].arguments,batchBefore=structuredClone(lease.state());
   const batchSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Create a structure',offset:0}}]);
@@ -882,15 +901,19 @@ try{
   if(batchAfter.objects.length!==batchBefore.objects.length+6||batchIds.some(id=>!batchAfter.objects.some(o=>o.id===id)))throw new Error('Native structure pieces were not all created');
   const batchUndo=await execute([{action:'undo'}]);if(batchIds.some(id=>batchUndo.objects.some(o=>o.id===id))||batchUndo.objects.length!==batchBefore.objects.length)throw new Error('One Undo did not remove the whole batch');
   await writeFile(join(directory,'batch-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:batchBefore,search:batchSearch,definition:batchDefinition,after:batchAfter,undo:batchUndo},null,2));
-  const structureBefore=structuredClone(lease.state()),structureMembers=structureBefore.objects.filter(o=>!['Book','Maestro'].includes(o.kind)).slice(0,2).map(o=>o.id);
-  if(structureMembers.length!==2)throw new Error('Two starter pieces are needed for the structure acceptance');
+  const structureBefore=structuredClone(lease.state()),structureMembers=[...layoutIds];
+  if(structureMembers.length!==2)throw new Error('Two observed pieces are needed for the structure acceptance');
   const structureArgs={id:'',revision:0,source:{kind:'capture',name:'Native probe castle',positionTolerance:.05,rotationTolerance:15,scaleTolerance:.05,members:structureMembers.map((target,i)=>({slot:'piece_'+i,target}))}};
   const structureSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'structure.save',offset:0}}]);
   const structureDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'structure.save',version:1}}]);
   const structureAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.save',version:1,arguments:structureArgs}}}]);
   const structureId=structureAfter.execution?.selected?.output?.structureId,structureRevision=structureAfter.execution?.selected?.output?.revision;
   if(typeof structureId!=='string'||typeof structureRevision!=='number')throw new Error('Native structure identity was not returned');
-  const readStructure=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:structureId}}}]);
+  const readStructure=async()=>{
+   const observed=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:structureId}}}]);
+   if((observed.catalog?.value as {available?:boolean})?.available!==true)throw new Error('Structure live observation is incomplete');
+   return observed;
+  };
   const structureInitial=await readStructure();if((structureInitial.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Captured structure should match its live pieces');
   const member=structureBefore.objects.find(o=>o.id===structureMembers[0])!;
   await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:member.id,x:member.position.x+.4,y:member.position.y,z:member.position.z}}}}]);
@@ -900,7 +923,13 @@ try{
   const structureUndo=await execute([{action:'undo'}]);if(Math.abs((structureUndo.objects.find(o=>o.id===member.id)?.position.x??0)-member.position.x-.4)>.00001)throw new Error('Structure Undo lost the displaced pose');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await writeFile(join(directory,'structure-authoring.json'),JSON.stringify({boundary:'Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.',before:structureBefore,search:structureSearch,definition:structureDefinition,after:structureAfter,initial:structureInitial,displaced:structureDisplaced,reset:structureReset,restored:structureRestored,undo:structureUndo},null,2));
-  const compositionSource=await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json','utf8');
+  await execute([{action:'undo'}]);await execute([{action:'undo'}]); // Remove the two observed structure fixtures.
+  const compositionProgram=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-build-structure.json','utf8'));
+  // The watcher observes live disturbance, so every piece and its displaced pose stay in view.
+  const compositionBody=compositionProgram.functions[0].body;
+  compositionBody.find((step:{id:string})=>step.id==='create').arguments.position={x:.3,y:1.4,z:2};
+  Object.assign(compositionBody.find((step:{id:string})=>step.id==='displace').arguments,{y:1.4,z:2});
+  const compositionSource=JSON.stringify(compositionProgram);
   const compositionBefore=await execute([{action:'rules',rule:{action:'inspect'}}]);
   const compositionSaved=await execute([{action:'rules',rule:{action:'edit',revision:compositionBefore.rules!.revision,edits:[{kind:'save',reference:'composition',sequence:{id:'',name:'Native build/reset probe',interruption:0,repeat:false,program:compositionSource}}]}}]);
   const compositionId=compositionSaved.rules?.sequences.find(s=>s.name==='Native build/reset probe')?.id;if(!compositionId)throw new Error('Composed program was not saved');
@@ -913,7 +942,7 @@ try{
   const compositionGroup=(compositionList.catalog?.value as {entries?:{id:string;name:string;count:number}[]})?.entries?.find(e=>e.name==='Castle'&&e.count===6);
   if(!compositionGroup)throw new Error('Composed structure was not saved');
   const compositionState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:compositionGroup.id}}}]);
-  if((compositionState.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Composed reset did not recover its baseline');
+  if((compositionState.catalog?.value as {available?:boolean})?.available!==true||(compositionState.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Composed reset did not recover its baseline');
   const watcher=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-structure-watch.json','utf8'));
   const moduleHash=watcher.imports[0].hash;
   const includedModule=await execute([{action:'catalog',catalog:{operation:'inspect',category:'modules',capability:moduleHash,version:1}}]);
@@ -953,7 +982,7 @@ try{
   await writeFile(join(directory,'program-structure-watch.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport. Movement is an explicit edit here; ball physics is covered separately in PlayMode. No headset or provider proof.',source:watcher,module:includedModule,saved:watcherSaved,armed:watcherArmed,disturbed:watcherDisturbed,rebuilt:watcherRebuilt,stopped:watcherStopped},null,2));
   await execute([{action:'undo'}]);
   const compositionUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'structure.state',version:1,arguments:{id:compositionGroup.id}}}]);
-  if((compositionUndo.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Composed reset Undo did not restore the displaced piece');
+  if((compositionUndo.catalog?.value as {available?:boolean})?.available!==true||(compositionUndo.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Composed reset Undo did not restore the displaced piece');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:compositionId}]}}]);
   await writeFile(join(directory,'program-composition.json'),JSON.stringify({boundary:'Real Unity runtime and shared transport; no headset or provider proof.',source:JSON.parse(compositionSource),saved:compositionSaved,after:compositionAfter,group:compositionGroup,state:compositionState,undo:compositionUndo,outcome:compositionOutcome},null,2));
@@ -1082,10 +1111,11 @@ try{
   const activeButtonCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.batch.create',version:1,arguments:buttonArgs}}}]);
   const activeButtonIds=activeButtonCreated.execution?.selected?.output?.objectIds;
   if(!Array.isArray(activeButtonIds)||activeButtonIds.length!==2||!activeButtonIds.every(id=>typeof id==='string'))throw new Error('Active spring button did not create two members');
-  // Real full-app contact capture, on the probe's explicitly labelled synthetic floor.
-  const catchHolderCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Catch socket',x:3,y:1,z:.3,scale:1,recipe:{version:1,parts:[{id:'Socket',parent:null,shape:'box',position:{x:0,y:0,z:0},size:{x:.08,y:.08,z:.08},rotation:{x:0,y:0,z:0,w:1},color:{r:.2,g:.6,b:.6,a:1}}],tracks:[],duration:1,playing:false,loop:false}}}}}]);
+  // Real full-app contact capture on the synthetic floor, with both inputs in view.
+  // Keep their relative throw geometry and clearance from the walking fixtures.
+  const catchHolderCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Catch socket',x:1.5,y:1,z:4,scale:1,recipe:{version:1,parts:[{id:'Socket',parent:null,shape:'box',position:{x:0,y:0,z:0},size:{x:.08,y:.08,z:.08},rotation:{x:0,y:0,z:0,w:1},color:{r:.2,g:.6,b:.6,a:1}}],tracks:[],duration:1,playing:false,loop:false}}}}}]);
   const catchHolder=catchHolderCreated.execution?.selected?.output?.objectId;if(typeof catchHolder!=='string')throw new Error('Catch holder creation failed');
-  const catchCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Catch ball',x:2.3,y:1,z:.6}}}}]);
+  const catchCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Catch ball',x:.8,y:1,z:4.3}}}}]);
   const catchTarget=catchCreated.execution?.selected?.output?.objectId;if(typeof catchTarget!=='string')throw new Error('Catch ball creation failed');
   const catchSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Catch a physical object',offset:0}}]);
   const catchDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.physics.catch',version:1}}]);

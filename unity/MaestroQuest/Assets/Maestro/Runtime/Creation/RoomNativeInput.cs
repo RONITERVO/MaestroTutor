@@ -42,6 +42,18 @@ namespace Maestro.Quest.Creation
                 environments.All(v=>EnvironmentRevision(v.id)==v.revision)&&
                 visibility.All(v=>VisibilityRevision(v.id)==v.revision);
         }
+        Func<bool> CaptureNativeAreaInput(string area,string[] members)
+        {
+            var source=journal;int checkedRevision=Revision;bool sameMembers=true;
+            return ()=>{
+                if(source==null||!ReferenceEquals(journal,source))return false;
+                if(checkedRevision!=Revision){
+                    checkedRevision=Revision;
+                    sameMembers=journal.RetentionGraph().Members(area)?.SequenceEqual(members)==true;
+                }
+                return sameMembers;
+            };
+        }
         Func<bool> CaptureNativeClosureInput(string[] closure)
         {
             var current=CaptureNativeActionInput(closure);

@@ -150,11 +150,15 @@ namespace Maestro.Quest.Creation
             if(commands.Length==1 && commands[0]?.action=="inspect")
             {
                 RulesFocused=false;
-                if(!editor.TryGetLiveObject(commands[0].target,out var target,out status))return false;
-                string partId=commands[0].partId;var geometry=target.GetComponent<RecipeObject>();
-                if(!string.IsNullOrEmpty(partId) && (!geometry || !geometry.Part(partId))) {status="That recipe part no longer exists";return false;}
+                var data=editor.Read(commands[0].target);
+                if(data==null){status="This object is not in the saved room; inspect the room first";return false;}
+                string partId=commands[0].partId;
+                if(!string.IsNullOrEmpty(partId) && data.recipe?.parts.Any(part=>part.id==partId)!=true) {status="That recipe part no longer exists";return false;}
                 foreach(var recipeObject in editor.GetComponentsInChildren<RecipeObject>())recipeObject.Highlight(null);
-                InspectionId=commands[0].target;InspectedPart=partId;editor.Select(target);geometry?.Highlight(partId);status="Object inspected";return true;
+                InspectionId=data.id;InspectedPart=partId;editor.SelectSavedObject(data.id);
+                var target=editor.Find(data.id);
+                if(target&&target.isActiveAndEnabled)target.GetComponent<RecipeObject>()?.Highlight(partId);
+                status="Object inspected";return true;
             }
             if(!Preconditions(request,out status)) return false;
             if(editor.AnyHeld) {status="Release the held object before editing."; return false;}

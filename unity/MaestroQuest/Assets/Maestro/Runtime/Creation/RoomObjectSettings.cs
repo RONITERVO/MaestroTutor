@@ -43,7 +43,7 @@ namespace Maestro.Quest.Creation
         }
         internal JObject ObservePhysicsSettings(string id)
         {
-            var data=Read(id);if(data==null||data.IsBuiltIn||!Find(id))return null;var value=RoomControls.Physics(data);
+            var data=Read(id);if(data==null||data.IsBuiltIn)return null;var value=RoomControls.Physics(data);
             return new JObject {["target"]=id,["revision"]=ObjectRevision(id),["mode"]=value.mode,["shape"]=value.shape,["mass"]=System.Math.Round(value.mass,6),["temporary"]=TemporaryRoom};
         }
         internal JObject ObserveMovementSettings()

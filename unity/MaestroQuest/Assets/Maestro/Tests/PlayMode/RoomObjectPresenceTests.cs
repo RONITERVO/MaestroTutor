@@ -78,5 +78,52 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out var error),Is.True,error);
             foreach(var target in new[]{"book","maestro"}){Assert.That(editor.HasSavedObject(target),Is.True);Assert.That((string)PresenceFact(target)["state"],Is.EqualTo("unavailable"));Assert.That((bool)editor.Find(target),Is.False);Assert.That(SavedFact("object.definition",new JObject{["target"]=target}),Is.Not.Null);}
         }
+        Func<JObject,RoomAgentState> SavedInspectionClient()
+        {
+            var agent=root.AddComponent<RoomAgent>();agent.Initialize(editor,null);string client=Guid.NewGuid().ToString("N");int sequence=0;
+            agent.Receive(new JObject{["clientId"]=client}.ToString());string session=agent.Observe().session;
+            return command=>{
+                agent.Receive(new JObject{["clientId"]=client,["session"]=session,["request"]=new JObject{
+                    ["version"]=2,["session"]=session,["sequence"]=++sequence,["sceneRevision"]=editor.Revision,
+                    ["conditions"]=new JArray(),["commands"]=new JArray(command)}}.ToString());
+                var state=agent.Observe();Assert.That(state.ack,Is.EqualTo(sequence));return state;
+            };
+        }
+        [UnityTest] public IEnumerator SavedInspectionOfDormantRecipeKeepsBookReadbackWithoutLoadingOrEditing()
+        {
+            string target=RecipeTarget(false),area=NativeAreaFor(target),part=editor.Read(target).recipe.parts[0].id;
+            yield return NativeAreaCompletion(editor.RetireNativeArea(area));
+            string before=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;bool undo=editor.CanUndo;
+            var send=SavedInspectionClient();Assert.That(send(new JObject{["action"]="workspace",["visible"]=true}).ok,Is.True);
+            var state=send(new JObject{["action"]="inspect",["target"]=target,["partId"]=part});
+            Assert.That(state.ok,Is.True,state.status);Assert.That(state.visible,Is.True);Assert.That(state.selectedId,Is.EqualTo(target));
+            Assert.That(state.inspection.id,Is.EqualTo(target));Assert.That(state.inspection.partId,Is.EqualTo(part));
+            Assert.That(JsonUtility.ToJson(state.inspection.recipe),Is.EqualTo(JsonUtility.ToJson(editor.RecipeForEditing(editor.Read(target)))));
+            Assert.That(editor.Find(target),Is.Null);Assert.That(editor.NativeEntityDormant(target),Is.True);
+            Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.CanUndo,Is.EqualTo(undo));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+        }
+        [UnityTest] public IEnumerator SavedInspectionReadsInactiveAndLostRecipeWithoutClaimingLivePresence()
+        {
+            string target=RecipeTarget(false);var item=editor.Find(target);string before=JsonUtility.ToJson(editor.Snapshot());
+            var settings=SavedFact("object.physics.settings",new JObject{["target"]=target});
+            var send=SavedInspectionClient();item.gameObject.SetActive(false);
+            var state=send(new JObject{["action"]="inspect",["target"]=target});Assert.That(state.ok,Is.True,state.status);
+            Assert.That(state.inspection.id,Is.EqualTo(target));Assert.That(state.objects.Single(x=>x.id==target).runtimeState,Is.EqualTo("inactive"));
+            UnityEngine.Object.Destroy(item.gameObject);yield return null;
+            state=send(new JObject{["action"]="inspect",["target"]=target});Assert.That(state.ok,Is.True,state.status);
+            Assert.That(state.inspection.recipe,Is.Not.Null);Assert.That(state.objects.Single(x=>x.id==target).runtimeState,Is.EqualTo("unavailable"));
+            Assert.That(JToken.DeepEquals(settings,SavedFact("object.physics.settings",new JObject{["target"]=target})),Is.True);
+            Assert.That((bool)editor.Find(target),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+        }
+        [UnityTest] public IEnumerator SavedInspectionRejectsMissingPartsAndDeletedObjectsWithoutResurrection()
+        {
+            string target=RecipeTarget(false),part=editor.Read(target).recipe.parts[0].id;var send=SavedInspectionClient();
+            Assert.That(send(new JObject{["action"]="inspect",["target"]=target,["partId"]=part}).ok,Is.True);
+            string before=JsonUtility.ToJson(editor.Snapshot());
+            var rejected=send(new JObject{["action"]="inspect",["target"]=target,["partId"]="MissingPart"});
+            Assert.That(rejected.ok,Is.False);Assert.That(rejected.inspection.partId,Is.EqualTo(part));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+            Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{target},out var error),Is.True,error);yield return null;
+            rejected=send(new JObject{["action"]="inspect",["target"]=target});Assert.That(rejected.ok,Is.False);Assert.That(editor.Read(target),Is.Null);Assert.That(editor.Find(target),Is.Null);
+        }
     }
 }

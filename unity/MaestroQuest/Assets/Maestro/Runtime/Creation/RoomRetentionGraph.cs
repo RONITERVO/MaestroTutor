@@ -12,7 +12,8 @@ namespace Maestro.Quest.Creation
         Navigation=512, WaterRoute=1024, Observation=2048, ApproachingView=4096, RecentObservation=8192, Lighting=16384
     }
     /// <summary>Ephemeral dependency closure, never authored state or permission to unload.
-    /// Area members activate together; enabled native connections retain both ends.
+    /// Named area members activate together; unassigned creations remain independent.
+    /// Enabled native connections retain both ends.
     /// A structure's remembered arrangement is not a physical connection.</summary>
     internal sealed class RoomRetentionGraph
     {
@@ -34,7 +35,7 @@ namespace Maestro.Quest.Creation
                 areas.Add(region.id,members);foreach(var id in members)assigned.Add(id);ConnectArea(members);
             }
             var home=values.Where(x=>!x.IsBuiltIn&&!assigned.Contains(x.id)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
-            areas.Add("",home);ConnectArea(home);
+            areas.Add("",home);
             foreach(var value in values)foreach(var link in value.connections??Array.Empty<RoomConnection>())if(link.enabled){
                 // Deleted connection peers remain meaningful saved references. They are
                 // unavailable dependencies, never silently recreated runtime objects.
@@ -59,6 +60,16 @@ namespace Maestro.Quest.Creation
             var found=new HashSet<string>(StringComparer.Ordinal);var pending=new Queue<string>(targets);
             while(pending.Count>0){string id=pending.Dequeue();if(!Contains(id)||!found.Add(id))continue;foreach(var next in edges[id])pending.Enqueue(next);}
             return found.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        }
+        // Deterministic native loading units are derived from dependencies, not
+        // saved region membership lists. Each connected unit is yielded once.
+        internal IEnumerable<string[]> Groups()
+        {
+            var visited=new HashSet<string>(StringComparer.Ordinal);
+            foreach(var id in edges.Keys.OrderBy(x=>x,StringComparer.Ordinal)){
+                if(visited.Contains(id))continue;
+                var group=Closure(new[]{id});visited.UnionWith(group);yield return group;
+            }
         }
         internal void RetainAll(RoomRetentionReason reason){foreach(var id in edges.Keys)Retain(id,reason);}
         internal RoomRetentionReason Reasons(string target)=>reasons.TryGetValue(target,out var value)?value:RoomRetentionReason.None;
