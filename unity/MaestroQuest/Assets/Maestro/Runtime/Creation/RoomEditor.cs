@@ -102,7 +102,10 @@ namespace Maestro.Quest.Creation
             maestro.GetComponent<MaestroAvatar>()?.ConfigureOwnership(Ownership,"maestro",WorldIdentity);
             Liquids=gameObject.AddComponent<LiquidPouring>();Liquids.Initialize(this);Sculpting.Editor=this;
             if(loaded!=null&&!storage.ReadOnly)InitializeNativeStartup(loaded);
-            Reconcile();
+            using(var initial=RoomEditPreparation.TryCreateInitial(this,journal.Snapshot(),out var geometryError)){
+                if(initial==null){InitializeNativeStartup(journal.Snapshot());message??=geometryError;}
+                Reconcile(preparation:initial);
+            }
             PhysicsWorld?.ConfigureCollisionAdmission(this,RegionCollisionIssue);
             gameObject.AddComponent<Art.WorldLightingView>().Initialize(this);
             gameObject.AddComponent<Art.WorldRainView>().Initialize(this);
@@ -497,9 +500,9 @@ namespace Maestro.Quest.Creation
                     // an accepted edit. World-owned book/avatar instances belong to
                     // their host and must never become ordinary creation prefabs.
                     if(data.IsBuiltIn)continue;
-                    var root = new GameObject(data.kind.ToString()); root.transform.SetParent(transform,false);
-                    // Canonical scale is linked to XRI before restoring saved pose/scale.
-                    item = root.AddComponent<CreatedRoomObject>().BuildPrepared(data, Models,RuntimeGate,WorldIdentity,preparation);
+                    // Reserve before root allocation; preparation transfers its exact
+                    // target lease only after the save transaction has accepted it.
+                    item=CreatedRoomObject.CreatePrepared(data,transform,Models,RuntimeGate,WorldIdentity,preparation);
                     AddIdentity(data.id,item); room.Register(item);
                     created = true;
                 }

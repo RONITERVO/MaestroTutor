@@ -104,10 +104,22 @@ namespace Maestro.Quest.Creation
             foreach(var target in LightViewDependencies(views))graph.Retain(target,RoomRetentionReason.Lighting);
             RetainViewerDemand(graph);
         }
-        void VisitObservedNative(IReadOnlyList<RoomObservationView> views,Action<string> retain)
+        void VisitObservedNative(IReadOnlyList<RoomObservationView> views,Action<string> retain,bool includePreparedEnvelope=false)
         {
             foreach(var pair in objects){
                 var item=pair.Value;if(!item||!item.isActiveAndEnabled)continue;
+                if(includePreparedEnvelope){
+                    // Predictive retention uses the envelope that would be used
+                    // to reload this root, including disabled/rest geometry.
+                    // Exact rendered observation below keeps its existing meaning.
+                    var spatial=RoomSpatialBounds.Unknown;
+                    if(Frame.Read(item.transform,out var position,out var rotation,out var scale)){
+                        spatial=RoomSpatialBounds.CaptureVisual(item,journal.ImportedEntity(pair.Key),observationRenderers)
+                            .Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale)).Transform(transform.localToWorldMatrix);
+                    }
+                    foreach(var view in views)if(view.Includes(spatial)){retain(pair.Key);break;}
+                    continue;
+                }
                 item.GetComponentsInChildren(false,observationRenderers);
                 foreach(var renderer in observationRenderers){
                     if(!renderer||!renderer.enabled||renderer.forceRenderingOff)continue;

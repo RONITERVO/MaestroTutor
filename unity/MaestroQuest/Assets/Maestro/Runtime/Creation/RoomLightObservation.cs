@@ -100,7 +100,7 @@ namespace Maestro.Quest.Creation
         }
         void VisitViewDependencies(IReadOnlyList<RoomObservationView> views,Action<string> retain)
         {
-            VisitObservedNative(views,retain);foreach(var target in LightViewDependencies(views))retain(target);
+            VisitObservedNative(views,retain,includePreparedEnvelope:true);foreach(var target in LightViewDependencies(views))retain(target);
         }
         bool LightingViewLoading(Camera camera)
         {

@@ -58,6 +58,22 @@ namespace Maestro.Quest.Tests
             camera.enabled=false;Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.False);camera.enabled=true;
             renderer.gameObject.SetActive(false);Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.False);yield return null;
         }
+        [UnityTest] public IEnumerator NativeObservationRetainsReloadEnvelopeWithoutStarvingUnrelatedRetirement()
+        {
+            string id=editor.Identity(block);NativeAreaFor(id);block.transform.position=new Vector3(0,0,-3);
+            var hidden=GameObject.CreatePrimitive(PrimitiveType.Cube);hidden.transform.SetParent(block.transform,false);hidden.transform.localPosition=new Vector3(0,0,6);hidden.SetActive(false);
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Unrelated offscreen piece",new Vector3(0,0,-5),1,Color.white,out var other,out var error),Is.True,error);NativeAreaFor(other);
+            var camera=NativeObservationCamera();for(int i=0;i<3;i++)yield return null;
+            Assert.That(RetainedFor(id,RoomRetentionReason.Observation),Is.False,"Disabled geometry is not an actual rendered observation");
+            Assert.That(RetainedFor(id,RoomRetentionReason.ApproachingView),Is.True,"Retirement would publish this same conservative reload envelope");
+            Assert.That(RetainedFor(other,RoomRetentionReason.ApproachingView),Is.False);
+            string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;editor.ConfigureNativeRetirement();
+            yield return AutomaticAreaUntil(()=>!editor.Find(other),"A predicted envelope must not repeatedly reload and starve unrelated retirement");
+            Assert.That(editor.Find(id),Is.SameAs(block),"The retained root must not cycle through destruction and recreation");
+            camera.transform.localPosition=new Vector3(15,0,0);
+            yield return AutomaticAreaUntil(()=>!editor.Find(id),"Moving away must release the conservative envelope too");
+            Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
+        }
         [UnityTest] public IEnumerator NativeObservationSupportsOrthographicProjectionAndClipPlanes()
         {
             string id=editor.Identity(block);NativeAreaFor(id);var camera=NativeObservationCamera();camera.orthographic=true;camera.orthographicSize=1;

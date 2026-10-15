@@ -1,0 +1,49 @@
+{
+  "budget": {
+    "instances": 128,
+    "preparing": 124,
+    "ready": 4,
+    "retiring": 0,
+    "instanceLimit": 128
+  },
+  "preparing": {
+    "reservationId": "815f6900e3e646f3b6261638169ac9ea",
+    "worldId": "efed502becd746dc8338b6672c1cedf1",
+    "regionId": "b230731d667f4d67aba71c7448accc69",
+    "target": "897dc5f5f64a4be19e3f48864af66a39",
+    "role": "object",
+    "kind": "Block",
+    "phase": "preparing",
+    "active": false
+  },
+  "ready": {
+    "reservationId": "815f6900e3e646f3b6261638169ac9ea",
+    "worldId": "efed502becd746dc8338b6672c1cedf1",
+    "regionId": "b230731d667f4d67aba71c7448accc69",
+    "target": "897dc5f5f64a4be19e3f48864af66a39",
+    "role": "object",
+    "kind": "Block",
+    "phase": "ready",
+    "active": true
+  },
+  "disabled": {
+    "reservationId": "815f6900e3e646f3b6261638169ac9ea",
+    "worldId": "efed502becd746dc8338b6672c1cedf1",
+    "regionId": "b230731d667f4d67aba71c7448accc69",
+    "target": "897dc5f5f64a4be19e3f48864af66a39",
+    "role": "object",
+    "kind": "Block",
+    "phase": "ready",
+    "active": false
+  },
+  "retiring": {
+    "reservationId": "815f6900e3e646f3b6261638169ac9ea",
+    "worldId": "efed502becd746dc8338b6672c1cedf1",
+    "regionId": "b230731d667f4d67aba71c7448accc69",
+    "target": "897dc5f5f64a4be19e3f48864af66a39",
+    "role": "object",
+    "kind": "Block",
+    "phase": "retiring",
+    "active": false
+  }
+}

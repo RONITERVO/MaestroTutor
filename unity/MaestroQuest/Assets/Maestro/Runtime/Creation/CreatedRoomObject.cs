@@ -13,6 +13,8 @@ namespace Maestro.Quest.Creation
     public sealed partial class CreatedRoomObject : MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         Material pigment;
+        NativeObjectResources.Lease objectInstance;
+        bool buildStarted;
         RecipeObject recipe;
         PencilMarks drawing;
         GameObject selection;
@@ -38,11 +40,23 @@ namespace Maestro.Quest.Creation
         internal bool AcousticBoundary => acousticBody && !acousticBody.Dynamic
             && acousticItem && acousticItem.Grab && !acousticItem.Grab.isSelected
             && !acousticBody.AnimationOwned && !(recipe && recipe.IsPlaying) && !(Model && Model.IsPlaying);
+        internal static RoomItem CreatePrepared(RoomObjectData data,Transform parent,ModelLibrary library,RoomRuntimeGate gate,RoomWorldIdentity world,RoomEditPreparation preparation)
+        {
+            var lease=preparation?.TakeObject(data)??NativeObjectResources.Begin(data,new RoomResourceOwner(world,data.id,"object"));GameObject root=null;
+            try{
+                root=new GameObject(data.kind.ToString());root.transform.SetParent(parent,false);
+                var view=root.AddComponent<CreatedRoomObject>();view.objectInstance=lease;lease.Bind(root);
+                return view.BuildPrepared(data,library,gate,world,preparation);
+            }catch{lease.Dispose();if(root){root.SetActive(false);NativeResourceLifetime.Release(root);ArtResources.Release(root);}throw;}
+        }
         public RoomItem Build(RoomObjectData data, ModelLibrary library = null, RoomRuntimeGate runtimeGate = null, RoomWorldIdentity world = null)
             =>BuildCore(data,library,runtimeGate,world,null);
         internal RoomItem BuildPrepared(RoomObjectData data,ModelLibrary library,RoomRuntimeGate runtimeGate,RoomWorldIdentity world,RoomEditPreparation preparation)=>BuildCore(data,library,runtimeGate,world,preparation);
         RoomItem BuildCore(RoomObjectData data,ModelLibrary library,RoomRuntimeGate runtimeGate,RoomWorldIdentity world,RoomEditPreparation preparation)
         {
+            if(buildStarted)throw new System.InvalidOperationException("The native object was already built");buildStarted=true;
+            if(objectInstance==null){objectInstance=preparation?.TakeObject(data)??NativeObjectResources.Begin(data,new RoomResourceOwner(world,data.id,"object"));objectInstance.Bind(gameObject);}
+            objectInstance.Validate(data);
             collisionOwner=new RoomResourceOwner(world,data.id,"collision");
             if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new RoomResourceOwner(world,data.id,"object");
             importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
@@ -91,7 +105,7 @@ namespace Maestro.Quest.Creation
                 } else if(library!=null) LoadModel(data.modelHash,library,collider);
             }
             ApplyCollision(data.collision,preparation);SetCollisionShape(data.collisionShape);
-            return item;
+            objectInstance.Ready();return item;
         }
         internal void ApplyScanLayer(RoomObjectData data) {
             if(!ScanDrawingAnchor.Has(data))return;var size=new Vector3(data.surfaces[0].width,data.surfaces[0].height,.002f);if(geometryBounds.size==size)return;
@@ -179,7 +193,7 @@ namespace Maestro.Quest.Creation
         bool nativeResourcesReleased;
         void OnDestroy()=>ReleaseNativeResources();
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
-        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;objectInstance?.Dispose();preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
         void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

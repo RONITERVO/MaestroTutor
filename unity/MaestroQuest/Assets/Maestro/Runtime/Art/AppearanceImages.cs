@@ -17,7 +17,7 @@ namespace Maestro.Quest.Art {
         internal const long MaximumResidentBytes=64L*1024*1024;
         // A refresh briefly holds old and replacement bindings together. These
         // limits bound observations without confusing owners with texture copies.
-        internal const int MaximumEntries=RoomAppearance.MaximumDefinitions*2,MaximumOwnersPerImage=(RoomDocument.MaximumObjects+2)*2;
+        internal const int MaximumEntries=128,MaximumOwnersPerImage=132;
         internal sealed class Entry {internal readonly string Id=Guid.NewGuid().ToString("N");internal string Hash,State="loading",Error="";internal readonly List<Lease> Owners=new();internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task<ImageAsset> Read;}
         internal sealed class Lease:IDisposable {
             AppearanceImages owner;Entry entry;

@@ -12,10 +12,11 @@ namespace Maestro.Quest.Creation
     // or storage releases all candidates and preserves the active scene.
     // Compound and terrain candidates do not need a published entity component.
     // Transfer them by stable target identity; cancellation destroys every untaken
-    // candidate. Regional activation and global cost limits remain separate work.
+    // candidate. Native activation and edits share the same admission ownership.
     internal sealed class RoomEditPreparation:IDisposable
     {
         readonly List<IDisposable> resources=new();
+        readonly Dictionary<string,NativeObjectResources.Lease> objects=new();
         readonly Dictionary<string,CollisionGeometry> collisions=new();
         readonly Dictionary<string,HeightFieldGeometry> fields=new();
         readonly Dictionary<string,RecipeVisual> recipes=new();
@@ -36,6 +37,18 @@ namespace Maestro.Quest.Creation
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
             if(!models.TryGetValue(data.id,out var model))return null;model.Validate(data);
             models.Remove(data.id);resources.Remove(model);return model;
+        }
+        internal NativeObjectResources.Lease TakeObject(RoomObjectData data)
+        {
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");
+            if(!objects.TryGetValue(data.id,out var lease))return null;lease.Validate(data);
+            objects.Remove(data.id);resources.Remove(lease);return lease;
+        }
+        internal static RoomEditPreparation TryCreateInitial(RoomEditor editor,RoomDocument document,out string error)
+        {
+            var prepared=new RoomEditPreparation();error=null;
+            try{foreach(var data in document.objects)if(!data.IsBuiltIn&&!editor.NativeEntityDormant(data.id)&&!editor.Find(data.id))foreach(var step in prepared.PrepareGeometry(editor,data,null)){}return prepared;}
+            catch(Exception failure){prepared.Dispose();error=failure is ModelImportException or RoomResourceLimitException?failure.Message:"The initial room geometry could not be prepared; saved objects remain available";return null;}
         }
         bool ended;
         internal CollisionGeometry TakeCollision(string target,CollisionRecipe source)
@@ -83,6 +96,9 @@ namespace Maestro.Quest.Creation
         }
         IEnumerable<object> PrepareGeometry(RoomEditor editor,RoomObjectData data,RoomObjectData before)
         {
+            if(!data.IsBuiltIn&&before==null){
+                var lease=NativeObjectResources.Begin(data,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));resources.Add(lease);objects.Add(data.id,lease);yield return null;
+            }
             var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
             if(data.kind==RoomObjectKind.Assembly&&(before==null?data.recipe!=null:JsonUtility.ToJson(before.recipe)!=JsonUtility.ToJson(data.recipe))){
                 var candidate=RecipeVisual.BeginPreparation(data.recipe,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));resources.Add(candidate);recipes.Add(data.id,candidate);
@@ -106,6 +122,6 @@ namespace Maestro.Quest.Creation
             if(!view.CanConfigureModelGeometry(data.modelGeometry,out var issue))throw new ModelImportException(issue);
             resources.Add(view.PrepareModelGeometry(data.modelGeometry));yield return null;
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();}
     }
 }

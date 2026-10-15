@@ -11202,3 +11202,62 @@ Object-instance, ink, light/window and simulation admission plus transaction/
 storage costs still need work before saved capacity expands. Full broad Unity
 suites, Android compilation, paid providers, headset performance and Store
 acceptance were not rerun. V1 remains incomplete.
+
+
+## Native object admission (2026-10-16)
+
+User-created native roots now reserve process-wide capacity before production
+allocation: 128 primitives, drawings, assemblies and imported-model hosts across
+workspaces. Private candidates, disabled objects and roots waiting for Unity
+destruction retain their reservation. Saved capacity remains 64 creations plus
+book/Maestro. Built-in book/Maestro and tool roots are excluded; meshes, images,
+ink, lamps, windows, collision and simulation have separate costs. This logical
+bound does not establish Quest memory or frame-time capacity.
+
+Preparation transfers the exact target and kind to its constructed root. Failed
+batches and storage writes release unused candidates, while capacity refusal
+preserves saved bytes, revisions and Undo/Redo. Dormant activation retains its
+saved identity and can retry. A fresh workspace at capacity retains its starter
+content as dormant instead of leaving a partially created scene. Never-active
+and unpublished roots release their slot after actual destruction even when
+Unity does not invoke component OnDestroy.
+
+Predictive retention now uses the same conservative visual envelope as dormant
+display admission, including disabled/rest geometry. Exact rendered observation
+still honors active renderer state and camera layers. This prevents an object
+from repeatedly unloading and immediately reloading ahead of unrelated groups.
+A deterministic regression verifies the shared envelope, stable root identity,
+unrelated retirement and release after the viewer moves away. The original
+failure and diagnostic traces are preserved with this checkpoint.
+
+Human and agent programs share passive `runtime.objectBudget` and
+`runtime.objectReservation` facts. Ready means the host was constructed, not
+published identity, visible geometry, model readiness or running physics. The
+web validates native-captured phase and owner output in
+`test-fixtures/browser/nativeObjectReservations.json`.
+
+Appearance image entry/owner limits now remain fixed at 128 / 132 instead of
+scaling with saved definition/object quotas. The current per-workspace 64 MiB
+image limit is unchanged. Image decoding, preview temporaries and deferred
+texture destruction still require shared lifetime accounting before expansion;
+this change does not claim a global texture budget.
+
+Accepted desktop evidence: **1,302 EditMode / 1,674
+PlayMode** tests passed (3 optional private-asset skips),
+**3,080 web tests / 328 files**, application/probe
+TypeScript and catalog provenance passed. Full offline Headless
+`1cf5f89aecb3481fa4042ab71aa337af` passed 2,187 observations /
+2,180 explicit read sets, 175 motion samples and
+15 scripted responses with zero provider-network attempts.
+Original Book `d4b095defa4842b3b98841dceabd9933` passed 991
+requests / 3,171 observations / 27 scripted
+planning calls, preserving human edits, refusing stale writes and reloading
+without replay. Both journeys used the bounded production context rather than
+SparseObjectView. All 4,278 frozen source/fixture/config inputs,
+3,038 native source/mirror inputs and 14 unrelated files were
+verified. Evidence: `.quest-evidence/native-object-admission/`.
+
+Saved limits and world extent remain unchanged. Shared texture lifetime,
+transactional ink/light/window admission, simulation and transaction/storage
+costs remain work before capacity expands. Android compilation, paid providers,
+headset performance and Store acceptance were not rerun. V1 remains incomplete.

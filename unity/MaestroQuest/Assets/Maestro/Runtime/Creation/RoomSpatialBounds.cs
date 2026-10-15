@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Collections.Generic;
 using Maestro.Quest.Interaction;
 using UnityEngine;
 namespace Maestro.Quest.Creation
@@ -50,14 +51,23 @@ namespace Maestro.Quest.Creation
         internal static RoomSpatialBounds Capture(RoomItem item,RoomObjectData data)
         {
             if(!item||data==null)return Unknown;
-            var created=item.GetComponent<CreatedRoomObject>();
-            if(data.kind==RoomObjectKind.ImportedModel&&(!created||!created.ModelGeometryReady))return Unknown;
+            var result=CaptureVisual(item,data.kind==RoomObjectKind.ImportedModel,new List<Renderer>());
+            result.Collision=CaptureCollision(item,data.kind);return result;
+        }
+        // Display admission and retention must use the same conservative envelope.
+        // Otherwise hidden/rest geometry can repeatedly reload a root that the
+        // active-renderer view just retired, starving other dependency groups.
+        internal static RoomSpatialBounds CaptureVisual(RoomItem item,bool imported,List<Renderer> renderers)
+        {
+            if(!item)return Unknown;var created=item.GetComponent<CreatedRoomObject>();
+            if(imported&&(!created||!created.ModelGeometryReady))return Unknown;
             var result=new RoomSpatialBounds{Visual=RoomSpatialExtent.Empty,Collision=RoomSpatialExtent.Empty};
             var inverse=item.transform.worldToLocalMatrix;
             // Include disabled children too: visibility and selection can change
             // independently of geometry. Do not read collider.bounds (empty when
             // disabled), invoke Physics.SyncTransforms, or bake meshes on a read.
-            foreach(var renderer in item.GetComponentsInChildren<Renderer>(true)){
+            item.GetComponentsInChildren(true,renderers);
+            foreach(var renderer in renderers){
                 result.VisualLayers|=1<<renderer.gameObject.layer;
                 if(renderer is MeshRenderer){
                     // TextMesh also uses MeshRenderer, without a MeshFilter.
@@ -73,8 +83,7 @@ namespace Maestro.Quest.Creation
             // reloaded. Cover that rest shape as well as the captured idle pose.
             if(created&&created.Model&&created.ModelGeometryReady)
                 result.Visual.Include(created.Model.LocalBounds,Matrix4x4.identity);
-            result.Collision=CaptureCollision(item,data.kind);
-            return result;
+            renderers.Clear();return result;
         }
         // Continuous movement needs current colliders, not renderers, skin
         // bounds or a detached copy of every recipe and animation payload.

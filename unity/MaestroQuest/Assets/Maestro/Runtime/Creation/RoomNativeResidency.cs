@@ -168,8 +168,7 @@ namespace Maestro.Quest.Creation
                 var slots=document.objects.Where(data=>!data.IsBuiltIn).Select((data,index)=>(data.id,index)).ToDictionary(value=>value.id,value=>value.index,StringComparer.Ordinal);
                 foreach(var data in values){
                     await budget.Step();
-                    var root=new GameObject(data.kind.ToString());root.transform.SetParent(staging.transform,false);roots.Add(root);
-                    var item=root.AddComponent<CreatedRoomObject>().BuildPrepared(data,Models,RuntimeGate,WorldIdentity,prepared);
+                    var item=CreatedRoomObject.CreatePrepared(data,staging.transform,Models,RuntimeGate,WorldIdentity,prepared);roots.Add(item.gameObject);
                     ApplyPose(item,NativeActivationPose(data));ConfigureNativeObject(data,item,document,prepared,true,slots[data.id]);RestoreNativeRecipe(data,item);
                     candidates.Add(data.id,item);
                 }
