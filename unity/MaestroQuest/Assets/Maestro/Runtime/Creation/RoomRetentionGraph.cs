@@ -11,75 +11,105 @@ namespace Maestro.Quest.Creation
         Physics=32, CollisionEnvironment=64, Unavailable=128, WorkspaceBusy=256,
         Navigation=512, WaterRoute=1024, Observation=2048, ApproachingView=4096, RecentObservation=8192, Lighting=16384
     }
-    /// <summary>Ephemeral dependency closure, never authored state or permission to unload.
-    /// Named area members activate together; unassigned creations remain independent.
-    /// Enabled native connections retain both ends.
-    /// A structure's remembered arrangement is not a physical connection.</summary>
-    internal sealed class RoomRetentionGraph
+    /// <summary>Immutable authored dependencies, with no live demand or native references.
+    /// Named regions and enabled connections form groups; unassigned objects are independent.
+    /// Remembered structures are not physical connections.</summary>
+    internal sealed class RoomRetentionTopology
     {
-        readonly Dictionary<string,HashSet<string>> edges=new(StringComparer.Ordinal);
-        readonly Dictionary<string,RoomRetentionReason> reasons=new(StringComparer.Ordinal);
+        readonly Dictionary<string,int> groupByTarget=new(StringComparer.Ordinal);
         readonly Dictionary<string,string[]> areas=new(StringComparer.Ordinal);
         readonly HashSet<string> missingDependencies=new(StringComparer.Ordinal);
-        internal IEnumerable<string> Targets=>edges.Keys;
-        internal bool Contains(string target)=>target!=null&&edges.ContainsKey(target);
-        internal RoomRetentionGraph(IEnumerable<RoomObjectData> objects,IEnumerable<RoomRegion> regions)
+        readonly string[][] groups;
+        readonly IReadOnlyList<string> targets;
+        internal IEnumerable<string> Targets=>targets;
+        internal int GroupCount=>groups.Length;
+        internal int GroupIndex(string target)=>target!=null&&groupByTarget.TryGetValue(target,out var index)?index:-1;
+        internal bool Contains(string target)=>GroupIndex(target)>=0;
+        internal RoomRetentionTopology(IEnumerable<RoomObjectData> objects,IEnumerable<RoomRegion> regions)
         {
-            // Copy only dependency identities. Recipes, images, strokes and motion samples
-            // stay in the canonical journal; reporting demand must not duplicate them.
+            // Copy only identities. No recipes, motion samples or mutable journal arrays
+            // are retained. Temporary build edges disappear after components are formed.
             var values=objects.ToArray();
-            foreach(var value in values){edges.Add(value.id,new(StringComparer.Ordinal));reasons.Add(value.id,RoomRetentionReason.None);}
+            targets=Array.AsReadOnly(values.Select(value=>value.id).ToArray());
+            var edges=values.ToDictionary(value=>value.id,_=>new HashSet<string>(StringComparer.Ordinal),StringComparer.Ordinal);
+            void Connect(string first,string second){edges[first].Add(second);edges[second].Add(first);}
             var assigned=new HashSet<string>(StringComparer.Ordinal);
             foreach(var region in regions){
                 var members=region.members.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
-                areas.Add(region.id,members);foreach(var id in members)assigned.Add(id);ConnectArea(members);
+                areas.Add(region.id,members);assigned.UnionWith(members);
+                for(int i=1;i<members.Length;i++)Connect(members[0],members[i]);
             }
-            var home=values.Where(x=>!x.IsBuiltIn&&!assigned.Contains(x.id)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
-            areas.Add("",home);
+            areas.Add("",values.Where(x=>!x.IsBuiltIn&&!assigned.Contains(x.id)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray());
             foreach(var value in values)foreach(var link in value.connections??Array.Empty<RoomConnection>())if(link.enabled){
-                // Deleted connection peers remain meaningful saved references. They are
-                // unavailable dependencies, never silently recreated runtime objects.
-                if(Contains(link.connected))Connect(value.id,link.connected);else missingDependencies.Add(value.id);
+                // A deleted peer is unavailable, never an invented entity.
+                if(edges.ContainsKey(link.connected))Connect(value.id,link.connected);else missingDependencies.Add(value.id);
             }
-        }
-        void ConnectArea(string[] members){for(int i=1;i<members.Length;i++)Connect(members[0],members[i]);}
-        void Connect(string first,string second){edges[first].Add(second);edges[second].Add(first);}
-        internal bool Retain(string target,RoomRetentionReason reason)
-        {
-            if(!Contains(target))return false;
-            var pending=new Queue<string>();pending.Enqueue(target);
-            while(pending.Count>0){
-                string id=pending.Dequeue();var combined=reasons[id]|reason;
-                if(combined==reasons[id])continue;
-                reasons[id]=combined;foreach(var next in edges[id])pending.Enqueue(next);
-            }
-            return true;
-        }
-        internal string[] Closure(IEnumerable<string> targets)
-        {
-            var found=new HashSet<string>(StringComparer.Ordinal);var pending=new Queue<string>(targets);
-            while(pending.Count>0){string id=pending.Dequeue();if(!Contains(id)||!found.Add(id))continue;foreach(var next in edges[id])pending.Enqueue(next);}
-            return found.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
-        }
-        // Deterministic native loading units are derived from dependencies, not
-        // saved region membership lists. Each connected unit is yielded once.
-        internal IEnumerable<string[]> Groups()
-        {
-            var visited=new HashSet<string>(StringComparer.Ordinal);
+            var components=new List<string[]>();var visited=new HashSet<string>(StringComparer.Ordinal);
             foreach(var id in edges.Keys.OrderBy(x=>x,StringComparer.Ordinal)){
                 if(visited.Contains(id))continue;
-                var group=Closure(new[]{id});visited.UnionWith(group);yield return group;
+                var members=new List<string>();var pending=new Queue<string>();pending.Enqueue(id);
+                while(pending.Count>0){
+                    var next=pending.Dequeue();if(!visited.Add(next))continue;
+                    members.Add(next);foreach(var peer in edges[next])pending.Enqueue(peer);
+                }
+                var group=members.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+                foreach(var member in group)groupByTarget.Add(member,components.Count);
+                components.Add(group);
             }
+            groups=components.ToArray();
         }
-        internal void RetainAll(RoomRetentionReason reason){foreach(var id in edges.Keys)Retain(id,reason);}
-        internal RoomRetentionReason Reasons(string target)=>reasons.TryGetValue(target,out var value)?value:RoomRetentionReason.None;
+        internal string[] Closure(IEnumerable<string> seeds)
+        {
+            var included=new HashSet<int>();foreach(var target in seeds){int group=GroupIndex(target);if(group>=0)included.Add(group);}
+            if(included.Count==0)return Array.Empty<string>();
+            if(included.Count==1)return (string[])groups[included.First()].Clone();
+            return included.SelectMany(index=>groups[index]).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        }
+        internal IEnumerable<string[]> Groups(){foreach(var group in groups)yield return (string[])group.Clone();}
         internal string[] Members(string area)=>areas.TryGetValue(area,out var members)?(string[])members.Clone():null;
         internal bool MissingDependency(string target)=>missingDependencies.Contains(target);
+    }
+    /// <summary>A fresh live retention observation over immutable authored topology.
+    /// Queries never share mutable demand flags or permission to unload.</summary>
+    internal sealed class RoomRetentionGraph
+    {
+        readonly RoomRetentionTopology topology;
+        readonly RoomRetentionReason[] reasons;
+        internal RoomRetentionGraph(IEnumerable<RoomObjectData> objects,IEnumerable<RoomRegion> regions):this(new RoomRetentionTopology(objects,regions)){}
+        internal RoomRetentionGraph(RoomRetentionTopology topology){this.topology=topology;reasons=new RoomRetentionReason[topology.GroupCount];}
+        internal IEnumerable<string> Targets=>topology.Targets;
+        internal bool Contains(string target)=>topology.Contains(target);
+        internal bool Retain(string target,RoomRetentionReason reason){int group=topology.GroupIndex(target);if(group<0)return false;reasons[group]|=reason;return true;}
+        internal void RetainAll(RoomRetentionReason reason){for(int i=0;i<reasons.Length;i++)reasons[i]|=reason;}
+        internal RoomRetentionReason Reasons(string target){int group=topology.GroupIndex(target);return group>=0?reasons[group]:RoomRetentionReason.None;}
+        internal string[] Closure(IEnumerable<string> targets)=>topology.Closure(targets);
+        internal IEnumerable<string[]> Groups()=>topology.Groups();
+        internal string[] Members(string area)=>topology.Members(area);
+        internal bool MissingDependency(string target)=>topology.MissingDependency(target);
         internal static string[] Names(RoomRetentionReason flags)=>Enum.GetValues(typeof(RoomRetentionReason)).Cast<RoomRetentionReason>()
             .Where(value=>value!=RoomRetentionReason.None&&(flags&value)!=0).Select(value=>char.ToLowerInvariant(value.ToString()[0])+value.ToString().Substring(1)).ToArray();
     }
     public sealed partial class RoomJournal
     {
-        internal RoomRetentionGraph RetentionGraph()=>new(items.Values,regions.Values);
+        // Forks may share this immutable value. Only accepted dependency edits replace
+        // it; retained observations keep their old snapshot and their own live flags.
+        RoomRetentionTopology retentionTopology;
+        internal RoomRetentionTopology RetentionTopology=>retentionTopology??=new(items.Values,regions.Values);
+        internal RoomRetentionGraph RetentionGraph()=>new(RetentionTopology);
+        static bool SameRetentionEntries<T>(T[] before,T[] after,Func<T,string> identity,Func<T,T,bool> same)
+        {
+            if(before.Length!=after.Length)return false;if(before.Length==0)return true;
+            var next=after.ToDictionary(identity,StringComparer.Ordinal);
+            return before.All(value=>next.TryGetValue(identity(value),out var changed)&&same(value,changed));
+        }
+        static IEnumerable<string> EnabledPeers(RoomObjectData value)=>(value.connections??Array.Empty<RoomConnection>()).Where(x=>x.enabled).Select(x=>x.connected);
+        void InvalidateRetentionObjects(RoomObjectData[] before,RoomObjectData[] after)
+        {
+            if(retentionTopology!=null&&!SameRetentionEntries(before,after,x=>x.id,(a,b)=>a.IsBuiltIn==b.IsBuiltIn&&new HashSet<string>(EnabledPeers(a),StringComparer.Ordinal).SetEquals(EnabledPeers(b))))retentionTopology=null;
+        }
+        void InvalidateRetentionRegions(RoomRegion[] before,RoomRegion[] after)
+        {
+            if(retentionTopology!=null&&!SameRetentionEntries(before,after,x=>x.id,(a,b)=>new HashSet<string>(a.members,StringComparer.Ordinal).SetEquals(b.members)))retentionTopology=null;
+        }
     }
 }

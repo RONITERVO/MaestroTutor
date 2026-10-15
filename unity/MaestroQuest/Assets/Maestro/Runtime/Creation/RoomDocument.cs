@@ -250,6 +250,7 @@ namespace Maestro.Quest.Creation
             foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
             foreach(var pair in source.regions)regions.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.regionRevisions)regionRevisions.Add(pair.Key,pair.Value);
+            retentionTopology=source.retentionTopology;
             foreach(var pair in source.structures)structures.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.structureRevisions)structureRevisions.Add(pair.Key,pair.Value);
             foreach(var pair in source.audioSources)audioSources.Add(pair.Key,pair.Value.Copy());
@@ -406,6 +407,7 @@ namespace Maestro.Quest.Creation
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {
+            InvalidateRetentionObjects(before,after);
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
             foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=clock.Next++; }
         }

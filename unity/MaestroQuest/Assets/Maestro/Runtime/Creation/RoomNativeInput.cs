@@ -49,7 +49,7 @@ namespace Maestro.Quest.Creation
                 if(source==null||!ReferenceEquals(journal,source))return false;
                 if(checkedRevision!=Revision){
                     checkedRevision=Revision;
-                    sameMembers=journal.RetentionGraph().Members(area)?.SequenceEqual(members)==true;
+                    sameMembers=journal.RetentionTopology.Members(area)?.SequenceEqual(members)==true;
                 }
                 return sameMembers;
             };
@@ -63,7 +63,7 @@ namespace Maestro.Quest.Creation
                 if(!current())return false;
                 if(checkedRevision!=Revision){
                     checkedRevision=Revision;
-                    sameTopology=areas.All(v=>RegionFor(v.id)==v.area)&&journal.RetentionGraph().Closure(closure).SequenceEqual(closure);
+                    sameTopology=areas.All(v=>RegionFor(v.id)==v.area)&&journal.RetentionTopology.Closure(closure).SequenceEqual(closure);
                 }
                 return sameTopology;
             };

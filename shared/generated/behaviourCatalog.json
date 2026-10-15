@@ -46694,7 +46694,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
-      "sha256": "8c936ca484beedd054f07085a0bfd27f3f64711065920688c820ac77f44b54c7"
+      "sha256": "ba4f30b7354cc79474a7be29a626b440a0b9716d4f45855027e35eb8bf3bf48b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayDemand.cs",
@@ -46702,7 +46702,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "21c7da21bf8397152967d23611cba16e0e70b5da0bd6c19a301a3b4f01cae5ff"
+      "sha256": "ef5506d85162c4e004cbb460eec700c2f0bf22e5f5a031546b3a780563476a5d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -46862,7 +46862,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeAcquisition.cs",
-      "sha256": "739741e33aa72784a8c3a8f9831c47a0e2d95275d59aa13d553a5b2a36d6f755"
+      "sha256": "65ab4f4dc4a7293343546ef63c803f163a41b519238cf467b9549d1c87ac01e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeDemand.cs",
@@ -46870,7 +46870,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeInput.cs",
-      "sha256": "9d127879df978b7379d0b05b5742fd03d14cb5ef94bc736e0edd7de6869b57e7"
+      "sha256": "aa96a43f1d478da2d222ef57609948809aea131bb45d964907737f5b67f74d42"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
@@ -46954,7 +46954,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegion.cs",
-      "sha256": "a019256141437dcb460b69197f71700a656bb67e73cf939bce07610789cb261a"
+      "sha256": "417dc2f152ad56bbf19be2be403df3f0313543412f0e0bf72ee8d42477e4a9a8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
@@ -46978,7 +46978,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
-      "sha256": "5abf11c2f537f9e88a8b54d6e6b1f4b8a55e6452a675a238b6662e89c5bbe425"
+      "sha256": "73280a83999e74509676c562ed225a783a723c1260539bd6a09157ab2941db0e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",

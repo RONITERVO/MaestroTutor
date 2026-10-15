@@ -47,7 +47,7 @@ namespace Maestro.Quest.Creation
         }
         internal async Task<string> AcquireNativeEntities(string[] targets,Func<bool> actionAdmission,CancellationToken cancellation,bool displayDuringHold=false)
         {
-            var graph=journal?.RetentionGraph();
+            var graph=journal?.RetentionTopology;
             if(graph==null||targets.Any(id=>!graph.Contains(id)))return "A required saved object is missing";
             var closure=graph.Closure(targets);
             if(!closure.Any(NativeEntityDormant))return null;

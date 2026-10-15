@@ -32,6 +32,8 @@ Stationary Maestro following now keeps accepted startup preparation while its
 owner remains active; see [the input lifetime](#stationary-follow-input-lifetime--2026-10-15).
 Unassigned home objects now load and retire by dependency group; see
 [independent home loading](#independent-home-loading--2026-10-15).
+Authored dependency topology is now reused across queries; see
+[immutable retention topology](#immutable-retention-topology--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10330,3 +10332,58 @@ Evidence: .quest-evidence/home-loading/.
 
 
 Headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
+
+
+## Immutable retention topology — 2026-10-15
+
+Routine journal queries previously rebuilt dependency edges and region lists even
+when saved connections were unchanged. The journal now lazily builds immutable
+connected groups. Loading and input guards query that topology directly; live
+retention reports allocate fresh demand flags for those groups. No live native
+object, ownership decision, recipe or mutable saved array is cached in topology.
+
+Only accepted identity/dependency edits invalidate the cache. History and snapshot
+publication share that invalidation. Pose, paint, joint settings and region names
+can preserve it. Forks share immutable data while preserving independent saved
+state and live demand; retained observations keep their original dependency view.
+
+The initial .NET allocation-counter attempt returned zero on this runtime and was
+rejected as unsupported evidence. Unity's GC.Alloc recorder reproduced 13,100
+allocation events for 100 warm journal queries at 64 creations before the change.
+This is an allocation-event count, not byte usage or a headset frame-time result. The regression also requires a working recorder.
+The measurement uses Unity's documented current-thread recording mode:
+[ProfilerRecorder options](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Unity.Profiling.ProfilerRecorderOptions.CollectOnlyOnCurrentThread.html).
+
+Verified on desktop: **1,270 EditMode / 1,648 PlayMode** passed, with three
+expected optional private-asset skips. **41 focused EditMode / 51 PlayMode** checks
+cover immutable readback, fresh reasons, connection edits, deletion/recreation,
+regions, no-op edits, prepared acceptance/cancellation, forks, snapshots and history,
+alongside existing native acquisition, startup and retirement cases.
+
+Unity's current-thread GC.Alloc recorder measured **13,100 → 900
+allocation events** for 100 warm journal read/retain/closure queries at 64 creations.
+Reconstruction with the new topology measured 93,900 events. Cold builds
+allocate more because connected groups are precomputed; the benefit applies to
+reused queries, not every edit. The pre-change regression failed; the post-change bound requires at least fourfold fewer events.
+These are managed allocation-event counts, not memory bytes or headset frame time.
+The earlier .NET counter returned zero and was rejected as unsupported evidence.
+Four older echo, speech, world-time and weather tests still use that counter;
+their allocation assertions are not accepted as allocation proof pending repair.
+Their functional checks remain part of the suite.
+
+Offline Headless **c6caea81d3b943ad9e494aea65a546db** and Original Book **662fa8d8543341f3b0066798d1a6904f** passed with successful
+client/editor exits and no provider calls. **2,958 web tests / 313 files**, probe
+types, refreshed native fixtures and asset provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 ARM64 libraries pass
+ELF/16 KiB checks; 152 staged web files and the browser AAR match. The source
+audit covers 3,000 native inputs, including 1,118
+C# and 1,124 code/shader files; four setup-derived project
+assets are recorded separately. Android browser tests report 128 passed/two
+skipped. All 14 protected files remain unchanged. No APK/AAB was produced.
+Evidence: .quest-evidence/retention-topology/.
+
+
+Saved/resident/physics/behaviour budgets, larger capacity, unknown geometry and
+headset performance remain separate work. Headset/provider/signing/deployment/
+Meta holds remain. V1 is incomplete.

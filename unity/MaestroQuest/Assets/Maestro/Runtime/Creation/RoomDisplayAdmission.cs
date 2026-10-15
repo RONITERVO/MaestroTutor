@@ -69,7 +69,7 @@ namespace Maestro.Quest.Creation
                 .OrderBy(id=>NativeDisplayPriority(id,now)).ThenBy(id=>id,StringComparer.Ordinal).FirstOrDefault();
             if(target==null)return;
             int version=displayVersion;var source=journal;double deadline=now+NativeDisplayTimeout;displayDeadline=deadline;
-            var attempt=journal.RetentionGraph().Closure(new[]{target});displayAttempt=attempt;
+            var attempt=journal.RetentionTopology.Closure(new[]{target});displayAttempt=attempt;
             bool Current()=>DisplayReady&&Time.unscaledTimeAsDouble<deadline&&displayVersion==version&&ReferenceEquals(journal,source)&&ReferenceEquals(displayJournal,source)
                 &&attempt.Any(id=>NativeDisplayPriority(id,Time.unscaledTimeAsDouble)<4);
             displayAdmission=AcquireNativeEntities(new[]{target},Current,CancellationToken.None,displayDuringHold:true);

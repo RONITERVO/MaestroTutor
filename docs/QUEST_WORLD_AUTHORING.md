@@ -1555,3 +1555,24 @@ inspection does not claim that physical actions can run without a live object.
 This is a loading-granularity improvement, not evidence of larger-world capacity
 or a measured headset performance gain. The existing unknown-geometry gate,
 active simulation dependencies and current world budgets remain in force.
+
+
+## Reusing authored dependency topology — 2026-10-15
+
+The journal keeps one immutable description of object identities, named-area
+membership, enabled connections and missing peers. Repeated loading queries use
+that description without rebuilding edges. Live retention reasons still belong
+to each query: holding, observing or playing one object cannot leak a hold into a
+later query or another temporary room.
+
+Accepted additions, removals, connection changes and region membership changes
+invalidate the cached description. Undo, Redo and accepted snapshots use the same
+publication path. Prepared, rejected and abandoned edits do not publish it.
+Runtime placement, appearance, joint parameters, region names and other changes
+that leave dependencies unchanged can reuse it. Forks share only immutable data
+and diverge when either room accepts a dependency edit. Returned membership and
+closure arrays are detached copies, so callers cannot alter the shared cache.
+
+This reduces repeated dependency work. It does not change loading policy, physical
+simulation ownership, saved capacity or the existing limits on the world. Live
+conditions are still reevaluated before loading or retiring native objects.
