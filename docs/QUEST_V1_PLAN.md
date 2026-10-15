@@ -39,6 +39,8 @@ see [verified allocation measurement](#verified-allocation-measurement--2026-10-
 Users and agents now share bounded saved-object discovery; see
 [object search](#shared-saved-object-discovery--2026-10-15). Schema-generated action,
 fact and program fields now use the same directory; see [exact object choices](#shared-object-reference-fields--2026-10-15).
+Construction selection now keeps explicit member order across search pages; see
+[paged construction choices](#shared-construction-discovery--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10526,3 +10528,47 @@ reference summaries, inspector context and command preconditions still need
 exact-ID resolution before complete-state assumptions can be removed. Saved and
 live quotas remain separate forthcoming work. The broader native/Android/journey
 baseline remains **7fe48619**; headset, provider and release holds remain in place.
+
+## Shared construction discovery — 2026-10-15
+
+Construction selection now uses the same `world.objects` directory as the
+hierarchy, schema fields, agents and programs. Its multi-select projection opens
+only on request while the workshop and selection panel are visible. The separate
+ordered member list retains the origin, Locate, Earlier and Remove controls
+across pages and expired cursors. Rejected changes keep the native selection;
+there is no optimistic second selection store. Built-ins cannot be included,
+and removal remains available at the 16-piece limit. Older clients retain their
+complete-list chooser. Temporary-room changes reset the local search view.
+
+Review opens an unready capture draft containing the exact ordered IDs and slot
+names. It does not read edit revisions from the periodic inventory or search
+metadata. The existing generated action `x-current` path reads every member's
+`object.definition` and applies all revisions atomically; an unavailable member
+leaves the draft unchanged. Existing action guards still reject changes between
+read and execution. The offline native probe now uses this same draft and mapping
+path instead of reconstructing revisions from the complete observation. No native
+runtime, catalog or saved schema changed.
+
+Verification passed **30 EditMode / 18 PlayMode** focused native cases with no
+failures/skips, including ordered selection, stale/invalid membership, lifecycle
+boundaries, capture guards/independent constructors and saved-object discovery.
+**2,982 web tests / 316 files**, application/probe TypeScript and catalog checks
+passed. Six added cases cover native-authoritative paging/order/removal, expired
+searches, the selection limit, hidden views, and all-or-nothing capture reads.
+Desktop Chromium exercised selection across actual native-recorded pages in the
+original book, reordering the origin and loading exact native member revisions.
+Wide/narrow screenshots were inspected without horizontal overflow or page errors.
+Selection acknowledgements are simulated; capture was not executed in the browser.
+
+All **3,014 native inputs / 1,125 mirrored C# files** match the tested source;
+14 unrelated files remain byte-for-byte unchanged. Evidence:
+`.quest-evidence/construction-discovery/`. The broader native/Android/offline
+journey baseline remains **7fe48619**; the updated full probe was type-checked,
+not rerun. No provider, headset, signing, deployment or Meta work was performed.
+
+Periodic scene state remains complete and capacity unchanged. Legacy step/binding
+menus, reference summaries, inspector context and command preconditions remain
+before that state can be paged. Saved and live quotas still need separate admission
+work. Per-entity scanned-room physics/navigation choices remain independent of
+visibility and sound. V1 remains incomplete, with existing device/provider/release
+holds in place.

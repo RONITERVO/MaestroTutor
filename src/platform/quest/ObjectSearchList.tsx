@@ -6,7 +6,7 @@ import {roomObjectLabel} from '../../../shared/roomSelection';
 import type {RoomAgentClient} from './roomAgentBridge';
 type Page={value:ObjectSearchPage;query:string;kind:string;cursor:string;previous:string[]};
 /** A bounded projection of the same native discovery fact available to programs and agents. */
-export function ObjectSearchList({client,active,disabled,selectedId,onSelect,accepts,title='Find saved objects'}:{client:RoomAgentClient;active:boolean;disabled:boolean;selectedId?:string;onSelect:(id:string,entry:ObjectSearchEntry)=>void;accepts?:(entry:ObjectSearchEntry)=>boolean;title?:string}) {
+export function ObjectSearchList({client,active,disabled,selectedId,selectedIds,onSelect,accepts,exclusionLabel='Not allowed for this field',title='Find saved objects'}:{client:RoomAgentClient;active:boolean;disabled:boolean;selectedId?:string;selectedIds?:readonly string[];onSelect:(id:string,entry:ObjectSearchEntry)=>void;accepts?:(entry:ObjectSearchEntry)=>boolean;exclusionLabel?:string;title?:string}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [query,setQuery]=useState(''),[kind,setKind]=useState('all'),[page,setPage]=useState<Page|null>(null);
  const [loading,setLoading]=useState(false),[attempted,setAttempted]=useState(false),[error,setError]=useState('');
@@ -37,7 +37,7 @@ export function ObjectSearchList({client,active,disabled,selectedId,onSelect,acc
    <button type="submit">Search objects</button>
   </fieldset></form>
   <p role="status">{status}</p>
-  <div className="room-object-list" aria-label="Objects">{page?.value.entries.map(object=><button key={object.id} disabled={busy||accepts?.(object)===false} aria-pressed={selectedId===object.id} onClick={()=>{if(accepts?.(object)!==false)onSelect(object.id,object);}}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {roomObjectLabel(object,state?.objects??page.value.entries)}</span><small>{object.kind}{accepts?.(object)===false?' · Not allowed for this field':''}{state?.objects.find(o=>o.id===object.id)?.animated?' · Playing':''}</small></button>)}</div>
+  <div className="room-object-list" aria-label="Objects">{page?.value.entries.map(object=><button key={object.id} disabled={busy||accepts?.(object)===false} aria-pressed={selectedIds?selectedIds.includes(object.id):selectedId===object.id} onClick={()=>{if(accepts?.(object)!==false)onSelect(object.id,object);}}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {roomObjectLabel(object,state?.objects??page.value.entries)}</span><small>{object.kind}{selectedIds?.includes(object.id)?' · Included':''}{accepts?.(object)===false?' · '+exclusionLabel:''}{state?.objects.find(o=>o.id===object.id)?.animated?' · Playing':''}</small></button>)}</div>
   {page&&<div className="room-workspace-actions"><button disabled={busy||Boolean(changed)||!page.previous.length} onClick={()=>void search(page.previous[page.previous.length-1],page.previous.slice(0,-1),page.query,page.kind)}>Previous objects</button><button disabled={busy||Boolean(changed)||!page.value.next} onClick={()=>void search(page.value.next,[...page.previous,page.cursor],page.query,page.kind)}>Next objects</button></div>}
  </div>;
 }

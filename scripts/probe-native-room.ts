@@ -46,7 +46,8 @@ import {HeadlessRoomTransport} from '../src/headless/roomTransport';
 import {type RoomCommand,type RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import {createHeadlessClient} from '../src/headless/client';
 import {capabilityDefinition} from '../shared/capabilities';
-import {constructionCaptureCall} from '../shared/roomSelection';
+import {constructionCaptureDraft} from '../shared/roomSelection';
+import {applyCurrentInputSnapshots} from '../shared/currentCapabilityInputs';
 import {insertProgramCapability} from '../src/core-sdk/room/programCapabilityEditing';
 import {HeadlessRoomAgent,runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {selectHeadlessLanguage,runHeadlessChatTurn} from '../src/headless/chatJourney';
@@ -1047,7 +1048,8 @@ try{
    const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target:leverMembers[i]}}}]);
    captureFacts.push(fact);captureMembers.push({target:leverMembers[i],slot:'piece_'+(i+1),revision:(fact.catalog?.value as {revision:number}).revision});
   }
-  const captureArguments=constructionCaptureCall(selectionLocated.constructionSelection!,selectionLocated.objects).arguments;
+  const captureDraft=constructionCaptureDraft(selectionLocated.constructionSelection!);
+  const captureArguments=applyCurrentInputSnapshots(capabilityDefinition(captureDraft.id)!.input,captureDraft.arguments,captureFacts.map(fact=>{if(!fact.catalog)throw new Error('Missing native member definition');return fact.catalog;}));
   if(!isDeepStrictEqual(captureArguments.members,captureMembers))throw new Error('Book selection draft differs from current native member facts');
   const captureSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Save construction',offset:0}}]);
   const captureDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'program.module.captureConstruction',version:1}}]);

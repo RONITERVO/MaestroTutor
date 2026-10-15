@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
-import {constructionCaptureCall,constructionSelectionCall,constructionManipulationCall,validConstructionManipulation,roomObjectLabel,validConstructionSelection} from '../../../shared/roomSelection';
+import {constructionCaptureDraft,constructionSelectionCall,constructionManipulationCall,validConstructionManipulation,roomObjectLabel,validConstructionSelection} from '../../../shared/roomSelection';
 import {capabilityDefinition,capabilityResources,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
 import {currentInputRequest} from '../../../shared/currentCapabilityInputs';
 import {RoomAgentClient} from './roomAgentClient';
@@ -19,9 +19,9 @@ it('shares bounded ordered selection identities without exposing created-resourc
  expect(currentInputRequest(capabilityDefinition(call.id)!.input,call.arguments)).toEqual({operation:'inspect',category:'facts',capability:'room.selection',version:1});
 });
 it('prepares exact editable capture members in selected order and distinguishes duplicate labels',()=>{
- const call=constructionCaptureCall(selection,objects);expect(call.arguments).toEqual({name:'My construction',members:[{target:objects[0].id,revision:101,slot:'piece_1'},{target:objects[1].id,revision:202,slot:'piece_2'}]});expect(validateCapabilityArguments(call.id,1,call.arguments)).toBeNull();
+ const call=constructionCaptureDraft(selection);expect(call.arguments).toEqual({name:'My construction',members:[{target:objects[0].id,revision:0,slot:'piece_1'},{target:objects[1].id,revision:0,slot:'piece_2'}]});expect(validateCapabilityArguments(call.id,1,call.arguments)).not.toBeNull();
  expect(roomObjectLabel(objects[0],objects)).toBe('Brick · aaaaaaaa');expect(roomObjectLabel(objects[1],objects)).toBe('Brick · bbbbbbbb');expect(roomObjectLabel(objects[0],[objects[0]])).toBe('Brick');const duplicates=[objects[0],{...objects[0],id:'a'.repeat(31)+'b'}];expect(roomObjectLabel(duplicates[0],duplicates)).not.toBe(roomObjectLabel(duplicates[1],duplicates));
- expect(()=>constructionCaptureCall({...selection,members:[]},objects)).toThrow();expect(()=>constructionCaptureCall(selection,[objects[0]])).toThrow();expect(()=>constructionCaptureCall(selection,objects.map(o=>({...o,objectRevision:0})))).toThrow();
+ expect(()=>constructionCaptureDraft({...selection,members:[]})).toThrow();expect(()=>constructionCaptureDraft({...selection,members:['book']})).toThrow();expect(()=>constructionCaptureDraft({...selection,members:[objects[0].id,objects[0].id]})).toThrow();
  (call.arguments.members as {revision:number}[])[0].revision=5;expect(objects[0].objectRevision).toBe(101);expect(selection.members).toEqual(objects.map(o=>o.id));
 });
 it('requires native selection evidence when advertised and shares it with the delegated agent',()=>{

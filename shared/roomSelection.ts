@@ -17,10 +17,11 @@ export function constructionSelectionCall(selection:ConstructionSelection,member
  const next={...selection,members,collecting};if(!validConstructionSelection(next))throw new Error('Choose at most 16 distinct creations.');
  return {id:'room.selection.set',version:1,arguments:{stateId:selection.stateId,members:[...members],collecting}};
 }
-/** Prepare an ordinary editable capture draft; selection never authorizes execution. */
-export function constructionCaptureCall(selection:ConstructionSelection,objects:readonly SceneObject[]):CapabilityInvocation {
- if(!validConstructionSelection(selection,objects)||!selection.members.length)throw new Error('Choose existing construction pieces first.');
- const members=selection.members.map((target,i)=>{const revision=objects.find(o=>o.id===target)?.objectRevision;if(!Number.isInteger(revision)||revision!<1||revision!>2147483647)throw new Error('Read the current object revisions before capturing.');return {target,revision,slot:'piece_'+(i+1)};});
+/** Prepare an unready draft. The catalog's x-current mappings read every member's
+ * native revision atomically before check/run/insert; directory pages are not guards. */
+export function constructionCaptureDraft(selection:ConstructionSelection):CapabilityInvocation {
+ if(!validConstructionSelection(selection)||!selection.members.length)throw new Error('Choose construction pieces first.');
+ const members=selection.members.map((target,i)=>({target,revision:0,slot:'piece_'+(i+1)}));
  return {id:'program.module.captureConstruction',version:1,arguments:{name:'My construction',members}};
 }
 

@@ -281,13 +281,15 @@ if(new URLSearchParams(location.search).has('moduleLibrary'))Object.assign(windo
 
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
-const objectSelectorsMode=new URLSearchParams(location.search).has('objectSelectors');
+const constructionSearchMode=new URLSearchParams(location.search).has('constructionSearch');
+const objectSelectorsMode=constructionSearchMode||new URLSearchParams(location.search).has('objectSelectors');
 const objectSearchMode=objectSelectorsMode||new URLSearchParams(location.search).has('objectSearch');
 const objectSearchPages=(objectSelectorsMode?nativeObjectReferences.pages:nativeObjectSearch) as unknown as {request:CatalogRequest;view:CatalogView}[];
 if(objectSearchMode){
  const entries=objectSearchPages.flatMap(page=>{const value=readObjectSearchPage(page.view,page.request);if(!value)throw new Error('Invalid native object discovery fixture');return value.entries;});
  state={...state,inspection:null,rules:undefined,selectedId:null,capabilities:['objectSearch.v1','catalog.v1','catalogVocabulary.v1','factQueries.v1','structuredValues.v1','inspect.v1','workspace.v1'],objects:entries.map((entry,i)=>({...entry,objectRevision:1,position:{x:i/10,y:1,z:1},scale:1,color:white,animated:false})),status:'Recorded native search pages; browser acknowledgements are simulated.'};
 }
+if(constructionSearchMode){state.capabilities!.push('constructionSelection.v1','constructionCapture.v1','moduleLibrary.v1','creationPrototypes.v1','execution.v1','executionReceipts.v1','actionResults.v1');state.constructionSelection={stateId:'c'.repeat(32),members:[],collecting:false};state.execution={nextRunId:'e'.repeat(32),running:[],outcomes:[],selected:null,storageError:null};}
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
 const ruleUndo:RuleView[]=[],ruleRedo:RuleView[]=[];
 const copy=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));
@@ -310,7 +312,12 @@ setInterval(()=>{
     const object=state.objects.find(value=>value.id===command.target);if(object){state.selectedId=object.id;state.inspection={id:object.id,objectRevision:object.objectRevision!,recipe:null};}else{state.ok=false;state.status='Object is not in the native search recording.';}
    }else if(command.action==='execution'&&command.execution){
     const input=command.execution;
-    if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
+    if(constructionSearchMode&&input.operation==='start'&&input.call.id==='room.selection.set'){
+      const args=input.call.arguments,problem=validateCapabilityArguments(input.call.id,input.call.version,args);
+      if(problem||args.stateId!==state.constructionSelection?.stateId){state.ok=false;state.status=problem??'Selection changed';}
+      else{const output={stateId:uuid(),members:args.members as string[],collecting:args.collecting as boolean},summary={id:input.runId!,capability:input.call.id,version:1,phase:'completed' as const,status:'Simulated native selection acknowledgement',resources:capabilityResources(input.call.id,args),output};state.constructionSelection=output;state.execution={nextRunId:uuid(),running:[],outcomes:[summary],selected:{...summary,call:input.call},storageError:null};}
+     }
+     else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
     else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.selection.selected.call)){state.execution=copy(nativeAvatar.selection) as RoomAgentState['execution'];avatarObservation=nativeAvatar.after;state.status='Recorded native model selection; browser acknowledgement is simulated';}
     else if(spatialSettings&&input.operation==='start'){
      const index=spatialViews.findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));

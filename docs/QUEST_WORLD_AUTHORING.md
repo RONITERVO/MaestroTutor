@@ -1625,7 +1625,10 @@ explicit Read blocks. Failed/unavailable reads preserve the exact target and do
 not silently substitute another. Session and temporary-room boundaries reject
 late replies from the previous scope.
 
-The periodic scene list remains complete at its current limit. Construction and
-legacy rule selectors, summaries and command guards still need migration before
+Construction selection now uses the same paged directory while keeping an explicit
+ordered list and origin; see [construction selection](QUEST_CONSTRUCTION_SELECTION.md).
+Capture reads every member revision through the same generated action inputs.
+The periodic scene list remains complete at its current limit. Legacy rule
+selectors, summaries and command guards still need migration before
 that list can be paged. This step introduces no additional saved schema, catalog
 operation, capacity increase or independent browser world.
