@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {probeNativeSparsePrograms} from './probe-native-sparse-programs';
 import {probeNativeMotion} from './probe-native-motion';
 import {readNativeObjects} from './native-probe-read-set';
 import {probeAvatarAttention} from './probe-avatar-attention';
@@ -166,7 +167,6 @@ try{
    if(providerScenario==='WorldLighting')await writeFile(join(directory,'lighting-baseline.json'),JSON.stringify({startup:initial,beforeRequest:lightingBaseline},null,2));
    const worldTimeBaseline=providerScenario==='WorldTime'?await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.time',version:1}}]):initial;
    if(providerScenario==='WorldTime')await writeFile(join(directory,'world-time-baseline.json'),JSON.stringify({startup:initial,beforeRequest:worldTimeBaseline},null,2));
-   const weatherBaseline=providerScenario==='WorldWeather'?await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.weather',version:1}}]):initial;
    const mediumSetup=providerScenario==='LiquidMedium'?await prepareAgentLiquidMedium(execute):null;
    const geometrySetup=providerScenario==='ModelGeometry'?await prepareAgentModelGeometry(execute,directory):null;
    const imageSetup=providerScenario==='ImportedImage'?await prepareAgentImportedImage(execute,directory):null;
@@ -174,7 +174,8 @@ try{
    const audioSetup=providerScenario==='ImportedAudio'?await prepareAgentImportedAudio(execute,directory):null;
    const contactSetup=providerScenario==='LiquidContacts'?await prepareAgentLiquidContacts(execute):null;
    const waterSetup=providerScenario==='WaterTraversal'?await prepareAgentWaterTraversal(execute):null;
-   const physicsObjectsBefore=providerScenario==='PhysicsLaunch'?await readNativeObjects(execute):null;
+   const objectsBeforeRequest=await readNativeObjects(execute);
+   await writeFile(join(directory,'provider-baseline-objects.json'),JSON.stringify(objectsBeforeRequest,null,2));
    let createdJourney;
    if(spoken){
     const fixture=JSON.parse(await readFile(process.env.MAESTRO_ROOM_PROBE_SPEECH!,'utf8'));
@@ -190,13 +191,13 @@ try{
     const planner=providerInputs.filter(value=>value.stage==='planning').flatMap(value=>value.media);
     if(!planner.some(value=>value.mimeType==='audio/wav'&&value.sha256===input.audio)
       ||input.frames.some(frame=>!planner.some(value=>value.mimeType==='image/jpeg'&&value.sha256===frame.sha256)))throw new Error('Original Live audio/frames did not reach the real planner request.');
-    assertCreatedParityBall(initial,finalState,'red',0.5);
+    assertCreatedParityBall(objectsBeforeRequest,await readNativeObjects(execute),'red',0.5);
     const scenarioEvidence={scenario:providerScenario,phase:'passed',semantics:{originalSentMedia:true,originalMediaInPlanner:true,contextNameAndSize:true,visualColour:true},
      createdJourney,finalState,liveInput:{pcm:input.pcm,audioBytes:sent.audioBytes,frames:sent.frames}};
     await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(scenarioEvidence,null,2));outcome=scenarioEvidence;
    }else {createdJourney=await runHeadlessRoomTurn(client,{text:prompt});outcome=createdJourney;}
    if(providerScenario==='ModelGeometry'&&geometrySetup){outcome={scenario:providerScenario,createdJourney,geometry:await runAgentModelGeometryProof({client,execute,directory,...geometrySetup})};}
-   if(providerScenario==='PassthroughWindow'){outcome={scenario:providerScenario,createdJourney,window:await runAgentWindowProof({client,initial,execute,directory,read:()=>lease.state()})};}
+   if(providerScenario==='PassthroughWindow'){outcome={scenario:providerScenario,createdJourney,window:await runAgentWindowProof({client,initialObjects:objectsBeforeRequest,execute,directory})};}
    if(providerScenario==='ImportedImage'||providerScenario==='GeneratedImage')await writeFile(join(directory,'provider-initial-turn.json'),JSON.stringify({scenario:providerScenario,createdJourney},null,2));
    if(providerScenario==='ImportedImage'&&imageSetup){outcome={scenario:providerScenario,createdJourney,image:await runAgentImportedImageProof({client,execute,directory,...imageSetup})};}
    if(providerScenario==='GeneratedImage'&&generatedSetup){outcome={scenario:providerScenario,createdJourney,image:await runAgentGeneratedImageProof({client,execute,directory,...generatedSetup})};}
@@ -204,51 +205,50 @@ try{
    if(providerScenario==='LiquidContacts'&&contactSetup){outcome={scenario:providerScenario,createdJourney,contacts:await runAgentLiquidContactsProof({client,execute,directory,...contactSetup})};}
    if(providerScenario==='WaterTraversal'&&waterSetup){outcome={scenario:providerScenario,createdJourney,water:await runAgentWaterTraversalProof({client,execute,directory,...waterSetup})};}
    if(providerScenario==='LiquidMedium'&&mediumSetup){outcome={scenario:providerScenario,createdJourney,medium:await runAgentLiquidMediumProof({client,execute,directory,...mediumSetup})};}
-   if(providerScenario==='WorldWeather'){outcome={scenario:providerScenario,createdJourney,weather:await runAgentWorldWeatherProof({client,initial:weatherBaseline,execute,directory,read:()=>lease.state()})};}
-   if(providerScenario==='WorldTime'){outcome={scenario:providerScenario,createdJourney,time:await runAgentWorldTimeProof({client,initial:worldTimeBaseline,execute,directory,read:()=>lease.state()})};}
+   if(providerScenario==='WorldWeather'){outcome={scenario:providerScenario,createdJourney,weather:await runAgentWorldWeatherProof({client,initialObjects:objectsBeforeRequest,execute,directory})};}
+   if(providerScenario==='WorldTime'){outcome={scenario:providerScenario,createdJourney,time:await runAgentWorldTimeProof({client,initialObjects:objectsBeforeRequest,execute,directory})};}
    if(providerScenario==='WorldLighting'){
-    outcome={scenario:providerScenario,createdJourney,lighting:await runAgentLightingProof({client,initial:lightingBaseline,execute,directory,read:()=>lease.state()})};
+    outcome={scenario:providerScenario,createdJourney,lighting:await runAgentLightingProof({client,initialObjects:objectsBeforeRequest,execute,directory})};
    }
    if(providerScenario==='WorldPresentation'){
-    outcome={scenario:providerScenario,createdJourney,presentation:await runAgentPresentationProof({client,initial:presentationBaseline,execute,directory,read:()=>lease.state()})};
+    outcome={scenario:providerScenario,createdJourney,presentation:await runAgentPresentationProof({client,initial:presentationBaseline,initialObjects:objectsBeforeRequest,execute,directory,read:()=>lease.state()})};
    }
    if(providerScenario==='EventProgram'){
-    const before=structuredClone(lease.state()),ball=assertCreatedParityBall(initial,before,'blue',0.5);
+    const createdObjects=await readNativeObjects(execute),before=structuredClone(lease.state()),ball=assertCreatedParityBall(objectsBeforeRequest,createdObjects,'blue',0.5);
     outcome={scenario:providerScenario,createdJourney,program:await runAgentProgramProof({client,before,target:ball.id,execute,directory})};
    }
    if(providerScenario==='AvatarAnimation'){
-    const before=structuredClone(lease.state());assertCreatedParityBall(initial,before,'blue',0.5);
+    const createdObjects=await readNativeObjects(execute),before=structuredClone(lease.state());assertCreatedParityBall(objectsBeforeRequest,createdObjects,'blue',0.5);
     outcome={scenario:providerScenario,createdJourney,animation:await runAgentAnimationProof({client,before,execute,directory,probeId:transport.id})};
    }
    if(providerScenario==='CompositeModule'){
-    const before=structuredClone(lease.state());assertCreatedParityBall(initial,before,'blue',0.5);
+    const createdObjects=await readNativeObjects(execute),before=structuredClone(lease.state());assertCreatedParityBall(objectsBeforeRequest,createdObjects,'blue',0.5);
     outcome={scenario:providerScenario,createdJourney,composite:await runAgentCompositeProof({client,before,execute,directory})};
    }
    if(providerScenario==='PhysicsLaunch'){
     const createdObjects=await readNativeObjects(execute),before=structuredClone(lease.state());
-    if(!physicsObjectsBefore)throw new Error('Missing explicit physics baseline');
-    const ball=assertCreatedParityBall(physicsObjectsBefore,createdObjects,'blue',0.5);
-    await writeFile(join(directory,'provider-physics-create-objects.json'),JSON.stringify({before:physicsObjectsBefore,after:createdObjects},null,2));
+    const ball=assertCreatedParityBall(objectsBeforeRequest,createdObjects,'blue',0.5);
+    await writeFile(join(directory,'provider-physics-create-objects.json'),JSON.stringify({before:objectsBeforeRequest,after:createdObjects},null,2));
     outcome={scenario:providerScenario,createdJourney,physics:await runAgentPhysicsProof({client,before,target:ball.id,execute,directory,read:()=>lease.state()})};
    }
    if(providerScenario==='TaskSteering'){
-    const before=structuredClone(lease.state()),ball=assertCreatedParityBall(initial,before,'blue',0.5);
+    const createdObjects=await readNativeObjects(execute),before=structuredClone(lease.state()),ball=assertCreatedParityBall(objectsBeforeRequest,createdObjects,'blue',0.5);
     outcome={scenario:providerScenario,createdJourney,steering:await runAgentSteeringProof({client,before,target:ball.id,directory,execute,
      lease:()=>transport.lease(),observe:observer=>{receiptObserver=observer;}})};
    }
    if(providerScenario==='ContextCreateEdit'){
     const createdState=structuredClone(lease.state());
-    const ball=assertCreatedParityBall(initial,createdState);
+    const createdObjects=await readNativeObjects(execute),ball=assertCreatedParityBall(objectsBeforeRequest,createdObjects);
     await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify({scenario:providerScenario,phase:'created',createdJourney,createdState},null,2));
     const editJourney=await runHeadlessRoomTurn(client,{text:'Ask the room agent to change only the existing ParityBall to red. Keep its name, size and position; do not create another object.'});
     const editedState=structuredClone(lease.state());
-    assertPaintedParityBall(createdState,editedState,ball.id);
+    const editedObjects=await readNativeObjects(execute);assertPaintedParityBall(createdObjects,editedObjects,ball.id);
     // These are the same native Undo/Redo handlers used by physical controls;
     // this is handler parity, not a claim that a controller button was pressed.
-    const undone=await execute([{action:'undo'}]);assertSameRoomObjects(createdState,undone);
-    const redone=await execute([{action:'redo'}]);assertSameRoomObjects(editedState,redone);
+    const undone=await execute([{action:'undo'}]),undoneObjects=await readNativeObjects(execute);assertSameRoomObjects(createdObjects,undoneObjects);
+    const redone=await execute([{action:'redo'}]),redoneObjects=await readNativeObjects(execute);assertSameRoomObjects(editedObjects,redoneObjects);
     const readbackJourney=await runHeadlessRoomTurn(client,{text:'Ask the room agent to inspect the current ParityBall in the live room and tell me its name, shape, colour and size. Read only; do not change anything.',requireActions:false});
-    const readbackState=structuredClone(lease.state());assertSameRoomObjects(redone,readbackState);
+    const readbackState=structuredClone(lease.state()),readbackObjects=await readNativeObjects(execute);assertSameRoomObjects(redoneObjects,readbackObjects);
     const visibleReply=readbackJourney.task?.message.translations?.map(value=>value.native).join(' ')||'';
     if(!visibleReply.includes('ParityBall')||!(/\bred\b/i.test(visibleReply)))throw new Error('Agent readback did not describe the current red ParityBall.');
     const scenarioEvidence={scenario:providerScenario,phase:'passed',semantics:{contextOnly:true,exactCreation:true,sameObjectEdit:true,unrelatedObjectsPreserved:true,undo:true,redo:true,agentReadback:true},
@@ -270,6 +270,7 @@ try{
   }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
 
  }else{
+   await probeNativeSparsePrograms(execute,directory);
   await probeNativeMotion(execute,()=>lease.state(),directory);
   await probeModelAssetBounds(execute,directory);
   const gait=await prepareObjectWalk(execute,directory);

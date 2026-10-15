@@ -15,6 +15,8 @@ import { parseRecipe } from '../src/core-sdk/room/recipe';
 import { factReply, placementReply } from './native-probe-contract';
 import { assertSameRoomObjects } from './agent-provider-contract';
 import { assertAvatarPreferences } from './probe-agent-animation';
+import {readNativeObjects,type NativeObjectReadSet} from './native-probe-read-set';
+import {readAvatarMovementSettings} from './native-probe-avatar-preferences';
 
 export const PARITY_COMPOSITE_REQUEST = `Ask the room agent to save an editable program named ParitySpinners, using the included reusable module named Passive spinner. Discover and pin its exact library definition; do not rewrite its internals. Save only now. When I start it later, run two branches in parallel: one waits indefinitely for the text event user.spawnLeft, then calls the module's create export once at room position x=2, y=1, z=0.3; the other independently waits indefinitely for user.spawnRight, then creates one copy at x=3, y=1, z=0.3. Use identity rotation and scale 1 for both. Each branch finishes after its own construction, and the parent finishes only when both are done. Do not emit these events yourself. Create nothing yet, add no buttons or automatic bindings, and leave existing objects, avatar preferences and physics mode alone.`;
 const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -72,18 +74,19 @@ export async function runAgentCompositeProof(input: { client: HeadlessClient; be
   execute: (commands: RoomCommand[]) => Promise<RoomAgentState>; directory: string }) {
   const { client, before, execute, directory } = input;
   const module = JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/Spinner.json', 'utf8')) as ProgramModule;
-  const hash = moduleHash(module), evidence: Record<string, unknown> = { phase: 'saving', before, hash, samples: [] };
+  const beforeObjects=await readNativeObjects(execute),beforeMovement=await readAvatarMovementSettings(execute);
+  const hash = moduleHash(module), evidence: Record<string, unknown> = { phase: 'saving', before, beforeObjects, beforeMovement, hash, samples: [] };
   const samples = evidence.samples as { label: string; state: RoomAgentState }[];
   const save = () => writeFile(join(directory, 'provider-composite.json'), JSON.stringify(evidence, null, 2));
   const capture = async (label: string, state: RoomAgentState) => { samples.push({ label, state: structuredClone(state) }); await save(); return state; };
-  const unchanged = (state: RoomAgentState) => {
-    assertSameRoomObjects(before, { ...state, objects: state.objects.filter(object => before.objects.some(old => old.id === object.id)) });
-    assertAvatarPreferences(before, state);
+  const unchanged = async (state: RoomAgentState, objects:NativeObjectReadSet) => {
+    assertSameRoomObjects(beforeObjects, {objects:objects.objects.filter(object => beforeObjects.objects.some(old => old.id === object.id))});
+    assertAvatarPreferences(before,state,beforeMovement,await readAvatarMovementSettings(execute));
     if (state.physicsRunning !== before.physicsRunning) throw new Error('Composite task changed physics mode.');
   };
   const saveJourney = await runHeadlessRoomTurn(client, { text: PARITY_COMPOSITE_REQUEST }); evidence.saveJourney = saveJourney; await save();
   const saved = await capture('saved', await execute([{ action: 'rules', rule: { action: 'inspect' } }]));
-  assertSameRoomObjects(before, saved); unchanged(saved);
+  const savedObjects=await readNativeObjects(execute);assertSameRoomObjects(beforeObjects,savedObjects);await unchanged(saved,savedObjects);
   const added = saved.rules!.sequences.filter(sequence => !before.rules!.sequences.some(old => old.id === sequence.id));
   if (added.length !== 1 || saved.rules!.running.length || saved.rules!.buttons.length !== before.rules!.buttons.length
     || saved.rules!.bindingCount !== before.rules!.bindingCount || (saved.rules!.outcomes?.length || 0) !== (before.rules!.outcomes?.length || 0)) throw new Error('Save-only composite request started effects or changed unrelated authoring.');
@@ -118,16 +121,18 @@ export async function runAgentCompositeProof(input: { client: HeadlessClient; be
   evidence.startJourney = await runHeadlessRoomTurn(client, { text: 'Ask the room agent to start saved ParitySpinners now exactly as saved. Do not emit either event, edit the source or start anything else.' }); await save();
   const armed = await wait('both-branches-waiting', state => state.rules?.running.filter(run => run.sequenceId === sequenceId && run.parentRunId && ['user.spawnLeft', 'user.spawnRight'].includes(run.waitEvent || '')).length === 2);
   const runId = assertParallelWaiting(armed, sequenceId, ['user.spawnLeft', 'user.spawnRight']);
-  assertSameRoomObjects(before, armed); unchanged(armed);
+  const armedObjects=await readNativeObjects(execute);assertSameRoomObjects(beforeObjects,armedObjects);await unchanged(armed,armedObjects);
   const signal = async (eventName: string) => { const current = await inspect(); return execute([{ action: 'rules', rule: { action: 'signal', revision: current.rules!.revision, eventName, value: 'go' } }]); };
   await capture('left-signal', await signal('user.spawnLeft'));
-  const left = await wait('left-built-right-waiting', state => state.objects.length === before.objects.length + 2 && state.rules?.running.some(run => run.parentRunId === runId && run.waitEvent === 'user.spawnRight') === true);
-  assertParallelWaiting(left, sequenceId, ['user.spawnRight']); unchanged(left);
+  const left = await wait('left-built-right-waiting', state => state.rules?.running.filter(run => run.parentRunId === runId).length === 1 && state.rules.running.some(run => run.parentRunId === runId && run.waitEvent === 'user.spawnRight'));
+  assertParallelWaiting(left, sequenceId, ['user.spawnRight']);
+  const leftObjects=await readNativeObjects(execute);if(leftObjects.objects.length!==beforeObjects.objects.length+2)throw new Error('Left construction count differs.');await unchanged(left,leftObjects);
   await capture('right-signal', await signal('user.spawnRight'));
   const completed = await wait('completed', state => !state.rules?.running.some(run => run.sequenceId === sequenceId)
     && state.rules?.outcomes?.some(outcome => outcome.id === runId && outcome.phase === 'completed') === true);
-  if (completed.objects.length !== before.objects.length + 4 || completed.rules!.selected?.program !== source.program) throw new Error('Composite count or saved source changed.');
-  unchanged(completed);
+  const completedObjects=await readNativeObjects(execute);
+  if (completedObjects.objects.length !== beforeObjects.objects.length + 4 || completed.rules!.selected?.program !== source.program) throw new Error('Composite count or saved source changed.');
+  await unchanged(completed,completedObjects);
   // Native persisted definitions, editable geometry, physics and internal connections.
   const create = module.program.functions.find(fn => fn.name === 'create')!.body.find(node => node.op === 'invoke')!;
   if (create.op !== 'invoke') throw new Error('Included constructor missing.');
@@ -139,8 +144,8 @@ export async function runAgentCompositeProof(input: { client: HeadlessClient; be
     if (!reply.available || reply.capability !== capability || !isDeepStrictEqual(reply.arguments, arguments_) || !record(reply.value)) throw new Error('Missing matching native construction fact.');
     return { state, value: reply.value };
   };
-  const additions = completed.objects.filter(object => !before.objects.some(old => old.id === object.id));
-  const verifyConstruction = async (state: RoomAgentState, x: number) => {
+  const additions = completedObjects.objects.filter(object => !beforeObjects.objects.some(old => old.id === object.id));
+  const verifyConstruction = async (state: NativeObjectReadSet, x: number) => {
     const members = additions.filter(object => Math.abs(object.position.x - x) < .00001);
     if (members.length !== 2) throw new Error('Wrong independent construction placement.');
     for (const piece of blueprint.pieces) {
@@ -168,17 +173,17 @@ export async function runAgentCompositeProof(input: { client: HeadlessClient; be
     }
     return members.map(member => member.id);
   };
-  const leftIds = await verifyConstruction(completed, 2), rightIds = await verifyConstruction(completed, 3);
-  const undoRight = await capture('undo-right-construction', await execute([{ action: 'undo' }]));
-  assertSameRoomObjects(left, undoRight);
-  const undoLeft = await capture('undo-left-construction', await execute([{ action: 'undo' }]));
-  assertSameRoomObjects(before, undoLeft);
-  const redoLeft = await capture('redo-left-construction', await execute([{ action: 'redo' }])); assertSameRoomObjects(left, redoLeft);
-  const redoRight = await capture('redo-right-construction', await execute([{ action: 'redo' }])); assertSameRoomObjects(completed, redoRight);
-  if (!isDeepStrictEqual(leftIds, await verifyConstruction(redoRight, 2)) || !isDeepStrictEqual(rightIds, await verifyConstruction(redoRight, 3))) throw new Error('Redo lost construction member identities.');
+  const leftIds = await verifyConstruction(completedObjects, 2), rightIds = await verifyConstruction(completedObjects, 3);
+  await capture('undo-right-construction', await execute([{ action: 'undo' }]));
+  const undoRightObjects=await readNativeObjects(execute);assertSameRoomObjects(leftObjects,undoRightObjects);
+  await capture('undo-left-construction', await execute([{ action: 'undo' }]));
+  const undoLeftObjects=await readNativeObjects(execute);assertSameRoomObjects(beforeObjects,undoLeftObjects);
+  await capture('redo-left-construction', await execute([{ action: 'redo' }])); const redoLeftObjects=await readNativeObjects(execute);assertSameRoomObjects(leftObjects,redoLeftObjects);
+  await capture('redo-right-construction', await execute([{ action: 'redo' }])); const redoRightObjects=await readNativeObjects(execute);assertSameRoomObjects(completedObjects,redoRightObjects);
+  if (!isDeepStrictEqual(leftIds, await verifyConstruction(redoRightObjects, 2)) || !isDeepStrictEqual(rightIds, await verifyConstruction(redoRightObjects, 3))) throw new Error('Redo lost construction member identities.');
   await signal('user.spawnLeft'); await signal('user.spawnRight');
   await new Promise(resolve => setTimeout(resolve, 300)); const final = await capture('signals-after-completion', await inspect());
-  assertSameRoomObjects(completed, final); unchanged(final);
+  const finalObjects=await readNativeObjects(execute);assertSameRoomObjects(completedObjects,finalObjects);await unchanged(final,finalObjects);
   if (final.rules?.running.length || final.rules?.selected?.program !== source.program || final.rules?.outcomes?.filter(outcome => outcome.sequenceId === sequenceId).length !== 1) throw new Error('Finished composite program replayed or changed its source.');
   evidence.phase = 'passed'; evidence.semantics = { exactIncludedPin: true, discoveredBeforeSave: true, saveOnly: true, editableSource: true,
     parallelNativeBranches: true, independentEvents: true, completeParent: true, editableGeometry: true, exactPlacement: true,

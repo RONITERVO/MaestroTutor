@@ -1628,3 +1628,26 @@ observer. For a focused rerun, use `Run-QuestRoomProbe.ps1 -Journey Headless
 owner, journey and verification files. The remaining provider helpers still need
 their own inventory assumptions migrated. Sparse provider execution remains
 unsupported; no real-provider acceptance is claimed by these offline checks.
+
+
+### Provider assertions and offline program acceptance
+
+The environment, media, geometry, contacts, window, event, animation, construction
+and simple creation/paint proofs use `NativeObjectReadSet` for object parity.
+This is separate explicit evidence, including physics settings; periodic native
+observations remain untouched. Avatar distance/speed use the shared movement fact.
+Activity preservation compares saved IDs and playback settings, while resolved
+names/availability and actual playback readiness have separate checks.
+
+`probeNativeSparsePrograms` runs in the offline Headless journey. It authors known
+fixtures through ordinary native rule handlers and records
+`native-sparse-programs.json`. It observes scheduler timing before slower reads,
+then checks event branches, state, fresh runs, Stop, independent parallel module
+construction, and exact object/physics identity through Undo and Redo. It waits
+for avatar-profile hydration and removes its unchanged programs and objects.
+Its actions are fixture-authored: this proves native execution/assertion behavior,
+not chat, verifier, provider authorship, controllers or headset acceptance.
+
+Task-steering receipt observation and the real-provider Book journey still depend
+on periodic inventory. Do not enable sparse paid-provider runs or bound production
+inventory until those consumers and their receipt/context handling are migrated.

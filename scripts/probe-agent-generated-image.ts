@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {readNativeObjects} from './native-probe-read-set';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {writeFile} from 'node:fs/promises';
@@ -28,6 +29,6 @@ export async function prepareAgentGeneratedImage(client:HeadlessClient,transport
  await transport.client.chatImages.update(scope,chatImageSources(messages));
  const baseline=await execute([{action:'rules',rule:{action:'inspect'}}]);
  await writeFile(join(directory,'generated-image.json'),JSON.stringify({boundary:'Real original-app image generation, fresh synthetic learning context. Original bytes offered from chat, not seeded into native storage.',generated,billing,hash,bytes:bytes.length},null,2));
- return {baseline,fixture:{hash,name:'assistant-generated.jpg',width:0,height:0,source:'generated-chat' as const}};
+ return {baseline,baselineObjects:await readNativeObjects(execute),fixture:{hash,name:'assistant-generated.jpg',width:0,height:0,source:'generated-chat' as const}};
 }
 export const runAgentGeneratedImageProof=runAgentImportedImageProof;

@@ -11,6 +11,9 @@ import type { RoomAgentState, RoomCommand } from '../src/core-sdk/room/roomAgent
 import { parseProgram, type ProgramNode } from '../src/core-sdk/room/programs';
 import type { RuleSequence } from '../src/core-sdk/room/rules';
 import { assertSameRoomObjects } from './agent-provider-contract';
+import {readNativeObjects} from './native-probe-read-set';
+import {readAvatarMovementSettings} from './native-probe-avatar-preferences';
+import type {AvatarMovementSettings} from '../shared/roomControls';
 
 export const PARITY_MOTION_REQUEST = `Ask the room agent to save an editable program named ParityMotion for Maestro. Find the compatible downloaded library animation named Agree_Gesture and use that exact saved motion ID. The program must play that full clip once, in place, with no loop, then finish. Do not play it yet. Do not move or change objects, change the avatar, create buttons, set automatic bindings or change tutor activity or walking preferences. Save only; I will ask to start it later.`;
 function nodes(body: ProgramNode[]): ProgramNode[] {
@@ -95,19 +98,21 @@ export function assertAvatarPlacement(before: RoomAgentState, after: RoomAgentSt
   if (!isDeepStrictEqual(read(before), read(after))) throw new Error('In-place animation changed Maestro placement.');
 }
 
-export function assertAvatarPreferences(before: RoomAgentState, after: RoomAgentState) {
-  const preferences = (state: RoomAgentState) => ({
+export function assertAvatarPreferences(before: RoomAgentState, after: RoomAgentState, beforeMovement:AvatarMovementSettings, afterMovement:AvatarMovementSettings) {
+  const preferences = (state: RoomAgentState, movement:AvatarMovementSettings) => ({
     model: state.activityProfile?.modelHash,
-    roles: state.activityProfile?.roles,
+    // Names/availability describe loaded assets, not saved user choices.
+    roles: state.activityProfile?.roles.map(role=>({role:role.role,choices:role.choices.map(choice=>({motionId:choice.motionId,weight:choice.weight,speed:choice.speed,cooldown:choice.cooldown,loop:choice.loop}))})),
     walk: state.walk && { source: state.walk.source, motionId: state.walk.motionId, modelHash: state.walk.modelHash, clipIndex: state.walk.clipIndex },
-    movement: state.objects.find(object => object.id === 'maestro')?.movement,
+    movement,
   });
-  if (!before.walk || !before.activityProfile || !isDeepStrictEqual(preferences(before), preferences(after))) throw new Error('Animation request changed avatar, walking or tutor-activity preferences.');
+  if (!before.walk || !before.activityProfile || !isDeepStrictEqual(preferences(before,beforeMovement), preferences(after,afterMovement))) throw new Error('Animation request changed avatar, walking or tutor-activity preferences.');
 }
 
 export async function runAgentAnimationProof(input: { client: HeadlessClient; before: RoomAgentState; execute: (commands: RoomCommand[]) => Promise<RoomAgentState>; directory: string; probeId: string }) {
   const { client, before, execute, directory, probeId } = input;
-  const evidence: Record<string, unknown> = { phase: 'saving', before };
+  const beforeObjects=await readNativeObjects(execute),beforeMovement=await readAvatarMovementSettings(execute);
+  const evidence: Record<string, unknown> = { phase: 'saving', before, beforeObjects, beforeMovement };
   const save = () => writeFile(join(directory, 'provider-animation.json'), JSON.stringify(evidence, null, 2));
   const placement = () => execute([{ action: 'catalog', catalog: { operation: 'inspect', category: 'facts', capability: 'object.definition', version: 1, arguments: { target: 'maestro' } } }]);
   const position = () => execute([{ action: 'catalog', catalog: { operation: 'inspect', category: 'facts', capability: 'object.position', version: 2, arguments: { target: 'maestro' } } }]);
@@ -115,7 +120,7 @@ export async function runAgentAnimationProof(input: { client: HeadlessClient; be
   assertAvatarPlacement(beforePlacement, beforePlacement, 'object.definition'); assertAvatarPlacement(beforePosition, beforePosition, 'object.position');
   const saveJourney = await runHeadlessRoomTurn(client, { text: PARITY_MOTION_REQUEST }); evidence.saveJourney = saveJourney; await save();
   const saved = await execute([{ action: 'rules', rule: { action: 'inspect' } }]); evidence.saved = saved; await save();
-  assertSameRoomObjects(before, saved); assertAvatarPreferences(before, saved);
+  assertSameRoomObjects(beforeObjects,await readNativeObjects(execute)); assertAvatarPreferences(before,saved,beforeMovement,await readAvatarMovementSettings(execute));
   const added = saved.rules!.sequences.filter(sequence => !before.rules!.sequences.some(old => old.id === sequence.id));
   if (added.length !== 1 || saved.rules!.running.length || saved.rules!.buttons.length !== before.rules!.buttons.length
     || saved.rules!.bindingCount !== before.rules!.bindingCount || (saved.rules!.outcomes?.length || 0) !== (before.rules!.outcomes?.length || 0)) throw new Error('Animation save-only request executed work or changed authoring.');
@@ -151,7 +156,7 @@ export async function runAgentAnimationProof(input: { client: HeadlessClient; be
   const outcomes = finalState!.rules?.outcomes?.filter(outcome => outcome.sequenceId === source.id);
   if (outcomes?.length !== 1 || outcomes[0].phase !== 'completed' || finalState!.rules!.running.length
     || finalState!.rules!.selected?.program !== source.program) throw new Error('Exact animation program did not complete once with its source intact.');
-  assertSameRoomObjects(before, finalState!); assertAvatarPreferences(before, finalState!);
+  assertSameRoomObjects(beforeObjects,await readNativeObjects(execute)); assertAvatarPreferences(before,finalState!,beforeMovement,await readAvatarMovementSettings(execute));
   const finalPlacement = await placement(); evidence.finalPlacement = finalPlacement;
   const finalPosition = await position(); evidence.finalPosition = finalPosition;
   assertAvatarPlacement(beforePlacement, finalPlacement, 'object.definition'); assertAvatarPlacement(beforePosition, finalPosition, 'object.position');

@@ -33,7 +33,8 @@
     "scripts/probe-quest-camera-provider.ts",
     "test-fixtures/browser/quest-camera.tsx",
     "scripts/native-probe-motion.test.ts",
-    "scripts/native-probe-read-set.test.ts"
+    "scripts/native-probe-read-set.test.ts",
+    "scripts/native-probe-avatar-preferences.test.ts"
   ],
   "references": []
 }

@@ -8,15 +8,16 @@ import {isRoomQuery,type RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {factReply,type NativeProbeState} from './native-probe-contract';
 import {assertSameRoomObjects} from './agent-provider-contract';
+import {readNativeObjects,type NativeObjectReadSet} from './native-probe-read-set';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function prepareAgentImportedAudio(execute:Execute,directory:string){
  const fixture=JSON.parse(await readFile(join(directory,'sound-fixture.json'),'utf8')) as {hash:string;seconds:number;name:string};
  assert.match(fixture.hash,/^[a-f0-9]{64}$/);assert.equal(fixture.name,'Little bell.wav');assert.equal(fixture.seconds,1);
  const baseline=await execute([{action:'rules',rule:{action:'inspect'}}]);
  const sounds=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.list',version:1,arguments:{offset:0}}}])).value as {total:number};assert.equal(sounds.total,0);
- return {baseline,fixture};
+ return {baseline,baselineObjects:await readNativeObjects(execute),fixture};
 }
-export async function runAgentImportedAudioProof({client,execute,directory,baseline,fixture}:{client:HeadlessClient;execute:Execute;directory:string;baseline:NativeProbeState<RoomCommand[]>;fixture:{hash:string;seconds:number;name:string}}){
+export async function runAgentImportedAudioProof({client,execute,directory,baseline,baselineObjects,fixture}:{client:HeadlessClient;execute:Execute;directory:string;baseline:NativeProbeState<RoomCommand[]>;baselineObjects:NativeObjectReadSet;fixture:{hash:string;seconds:number;name:string}}){
  const read=async(capability:string,args?:Record<string,unknown>,version=1)=>{
   const fact=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version,...(args===undefined?{}:{arguments:args})}}]));
   assert.equal(fact.available,true,`Expected available native fact ${capability}`);assert.notEqual(fact.value,null,`Missing native value for ${capability}`);return fact.value;
@@ -26,7 +27,7 @@ export async function runAgentImportedAudioProof({client,execute,directory,basel
  const attached=await read('object.audioEmitters',{target:'book'}) as {entries:{emitter:string;source:string}[]};assert.equal(attached.entries.length,1);assert.equal(attached.entries[0].source,source);const emitter=attached.entries[0].emitter;
  const configured=await read('object.audioEmitter',{target:'book',emitter}) as {definition:{spatial:boolean;gain:number}};assert.equal(configured.definition.spatial,true);assert.ok(configured.definition.gain>0&&configured.definition.gain<=1);
  const active=await read('audio.instances') as {entries:unknown[]};assert.equal(active.entries.length,0,'Attaching a clip must not start it');
- const beforePlay=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baseline,beforePlay);assert.deepEqual(beforePlay.rules?.sequences,baseline.rules?.sequences);
+ const beforePlay=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baselineObjects,await readNativeObjects(execute));assert.deepEqual(beforePlay.rules?.sequences,baseline.rules?.sequences);
  const played=await runHeadlessRoomTurn(client,{text:"Please play the book's little chime once now, then leave it quiet."});
  const task=await client.roomAgent!.store.get(played.task!.id);assert.ok(task);
  const playback=task.operations.map(o=>o.receipt?.execution?.selected).find(v=>v?.capability==='audio.play'&&v.phase==='completed'&&v.output?.source===source);
@@ -70,7 +71,7 @@ export async function runAgentImportedAudioProof({client,execute,directory,basel
 
  const remaining=await read('object.audioEmitters',{target:'book'}) as {entries:unknown[]};assert.equal(remaining.entries.length,0);
  const kept=await read('audio.source.definition',{id:source},2);assert.deepEqual(kept,exact);
- const after=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baseline,after);assert.deepEqual(after.rules?.sequences,baseline.rules?.sequences);
+ const after=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baselineObjects,await readNativeObjects(execute));assert.deepEqual(after.rules?.sequences,baseline.rules?.sequences);
  const result={scenario:'ImportedAudio',phase:'passed',boundary:'Fresh real-provider chat uses one synthetic one-second WAV seeded through the private AudioLibrary. Native decoder/emitter/PCM completion, independent loop, read-only ownership/cost inspection, final buffer release and exact-source retention are real; file-picker interaction and human audibility are separate checks.',fixture,source,emitter,exact,configured,played,consumed,looping,inspection,reservations,owners,usageBefore,usageAfter,removed,kept,after};
  await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(result,null,2));return result;
 }

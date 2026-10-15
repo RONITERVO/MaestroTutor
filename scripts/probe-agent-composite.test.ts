@@ -2,24 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, it, expect } from 'vitest';
 import spinner from '../unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/Spinner.json';
+import {parityCompositeFixture} from './native-probe-program-fixtures';
 import { moduleHash } from '../shared/programModuleIdentity';
-import type { BehaviourProgram, ProgramModule, ProgramNode } from '../shared/programSyntax';
+import type { BehaviourProgram, ProgramModule } from '../shared/programSyntax';
 import type { RoomAgentState } from '../src/core-sdk/room/roomAgent';
 import { assertCompositeSource, assertNativeValues, assertNativeRecipe, assertParallelWaiting } from './probe-agent-composite';
 const module = spinner as unknown as ProgramModule;
-function source(): BehaviourProgram {
-  return { version: 3, moduleVersion: 1, dataVersion: 1, parallelVersion: 1, entry: 'main', resources: [], state: [],
-    events: [{ name: 'user.spawnLeft', type: 'text' }, { name: 'user.spawnRight', type: 'text' }],
-    imports: [{ alias: 'kit', hash: moduleHash(module), module, signals: {} }],
-    functions: [{ name: 'main', returns: 'void', parameters: [], locals: [], body: [{ id: 'fork', op: 'parallel', branches: [{ function: 'left', args: [] }, { function: 'right', args: [] }] }] },
-      ...(['left', 'right'] as const).map((side, index) => ({ name: side, returns: 'void' as const, parameters: [],
-        locals: [{ name: 'received', initial: false }, { name: 'payload', initial: '' }], body: [
-          { id: side + 'Wait', op: 'awaitEvent', event: index ? 'user.spawnRight' : 'user.spawnLeft', source: '', timeout: { value: 0 }, received: 'received', value: 'payload' },
-          { id: side + 'Create', op: 'call', module: 'kit', function: 'create', args: [
-            { value: { x: 2 + index, y: 1, z: .3 }, type: { record: { x: 'number', y: 'number', z: 'number' } } },
-            { value: { x: 0, y: 0, z: 0, w: 1 }, type: { record: { x: 'number', y: 'number', z: 'number', w: 'number' } } }, { value: 1 }] },
-        ] as ProgramNode[] }))] };
-}
+const source=()=>parityCompositeFixture(module);
 const sequence = (program: BehaviourProgram) => ({ id: 'a'.repeat(32), name: 'ParitySpinners', repeat: false, interruption: 0, program: JSON.stringify(program) });
 describe('composite provider evidence gates', () => {
   it('requires an exact immutable native pin and rejects a substituted or altered module', () => {

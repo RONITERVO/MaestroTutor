@@ -8,6 +8,7 @@ import {isRoomQuery,type RoomCommand,type RoomAgentState} from '../src/core-sdk/
 import {runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {factReply,assertSamePlacement,type NativeProbeState} from './native-probe-contract';
 import {assertSameRoomObjects} from './agent-provider-contract';
+import {readNativeObjects,type NativeObjectReadSet} from './native-probe-read-set';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 const readFact=async(execute:Execute,capability:string)=>{
  const reply=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1}}]));assert.equal(reply.available,true);assert.notEqual(reply.value,null);return reply.value as Record<string,unknown>;
@@ -26,9 +27,9 @@ export async function prepareAgentModelGeometry(execute:Execute,directory:string
  const baseline=await execute([{action:'rules',rule:{action:'inspect'}}]);
  const placement=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target:fixture.target}}}]);
  const policies={view:await readFact(execute,'world.presentation'),environment:await readFact(execute,'physics.environment'),simulation:await readFact(execute,'physics.simulation')};
- return {fixture,before,baseline,placement,policies};
+ return {fixture,before,baseline,baselineObjects:await readNativeObjects(execute),placement,policies};
 }
-export async function runAgentModelGeometryProof({client,execute,directory,fixture,before,baseline,placement,policies}:{client:HeadlessClient;execute:Execute;directory:string;fixture:{target:string;hash:string};before:Geometry;baseline:RoomAgentState;placement:RoomAgentState;policies:{view:Record<string,unknown>;environment:Record<string,unknown>;simulation:Record<string,unknown>}}){
+export async function runAgentModelGeometryProof({client,execute,directory,fixture,before,baseline,baselineObjects,placement,policies}:{client:HeadlessClient;execute:Execute;directory:string;fixture:{target:string;hash:string};before:Geometry;baseline:RoomAgentState;baselineObjects:NativeObjectReadSet;placement:RoomAgentState;policies:{view:Record<string,unknown>;environment:Record<string,unknown>;simulation:Record<string,unknown>}}){
  const checkPlacement=async()=>{
   assertSamePlacement(placement,await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target:fixture.target}}}]),'Model geometry edit');
   assert.deepEqual(await readFact(execute,'world.presentation'),policies.view);
@@ -60,7 +61,7 @@ export async function runAgentModelGeometryProof({client,execute,directory,fixtu
  assert.equal(new Set(reservations.map(value=>value.reservationId)).size,(usageBefore.reserved as {models:number}).models,'Agent did not inspect every occupied model lease');
  assert.ok(reservations.some(value=>value.target===fixture.target&&value.modelHash===fixture.hash&&value.role==='object'&&value.state==='ready'),'Agent did not observe the exact loaded building owner');
  assert.deepEqual(await readFact(execute,'runtime.modelBudget'),usageBefore);assert.deepEqual(await readGeometry(execute,fixture.target),restored);await checkPlacement();
- const after=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baseline,after);assert.deepEqual(after.rules?.sequences,baseline.rules?.sequences);
+ const after=await execute([{action:'rules',rule:{action:'inspect'}}]);assertSameRoomObjects(baselineObjects,await readNativeObjects(execute));assert.deepEqual(after.rules?.sequences,baseline.rules?.sequences);
  const result={scenario:'ModelGeometry',phase:'passed',boundary:'Real original-app chat and delegated provider against native GLB import, saved settings, readiness, restoration and read-only agent inspection of actual scoped model leases. Original synthetic model; no real headset, file picker, live collision or navigation performance claim.',fixture,policies,before,source,followup,solid,restore,restored,inspection,reservations,after};
  await writeFile(join(directory,'provider-scenarios.json'),JSON.stringify(result,null,2));return result;
 }

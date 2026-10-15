@@ -10919,3 +10919,45 @@ Other provider helpers still depend on complete inventory and must be migrated
 before changing production observations. Larger saved capacity and native resource
 admission remain separate work. V1 is incomplete; headset, paid-provider,
 signing, deployment and Meta holds remain in place.
+
+
+### 2026-10-15 — Provider checks use explicit native reads
+
+Environmental presentation, lighting, time/weather, media/image, model-geometry,
+water-contact, window, creation/paint, event-program, avatar-animation and composite
+provider assertions now read separate native object sets. Physics mode, shape and
+mass remain part of preservation checks. Global rule/source/run observations stay
+native; no helper fabricates a complete `RoomAgentState.objects`. Provider task
+steering and the real-provider Book helper still need migration before production
+periodic inventory can become bounded. Saved capacity is unchanged.
+
+Avatar movement preferences come from `avatar.movement.settings`, with matching
+request, availability, range and temporary-room checks. Activity comparisons retain
+exact saved motion IDs, weights, speeds, cooldowns and looping. Derived names and
+availability may resolve during loading; actual animation completion still has its
+separate exact-motion/rig and displayed-joint evidence. The new offline fixture
+waits for the selected avatar profile before capturing its baseline.
+
+Event proof captures the one-second scheduler wait before slower object reads.
+Composite proof observes one unfinished branch after the other finishes, then reads
+its actual construction; it no longer polls periodic object counts. Exact source,
+object/physics preservation, Undo/Redo identity and post-completion checks remain.
+The fixture program sources are shared with contract tests and are explicitly
+fixture-authored, never attributed to the provider.
+
+Offline full sparse Headless run `67967fc63e56428b920ae68e62e65b2d` passed with
+**1,983 raw observations / 1,976 prepared read sets**, all
+raw object arrays empty. Its added program fixture verified save-only behavior,
+branching/counters, timed waits, restart/Stop, independent construction events and
+Undo/Redo. The normal motion and remaining Headless journey also passed.
+**3,039 web tests / 323 files**, probe/application TypeScript
+and catalog checks passed. **3,014 native inputs** remain
+unchanged and match the mirror. Prior native unit/Book and broad Android evidence
+remain at a20d9797 and 7fe48619 respectively; they were not rerun here.
+
+Two unsuccessful fixture attempts are retained: an avatar profile baseline taken
+before hydration, then an old preference comparison treating derived availability
+as authored state. The corrected run is the accepted proof. All 14 unrelated
+files are unchanged. Evidence: `.quest-evidence/sparse-provider-reads/`. Migrated
+provider wrappers were not rerun against a paid provider. V1 remains incomplete;
+headset, provider, signing, deployment and Meta holds remain in place.

@@ -45,10 +45,23 @@ describe('native avatar playback proof', () => {
     expect(() => assertAvatarPlacement(saved, fact('object.definition', { ...value, rotation: { x: 0, y: 1, z: 0, w: 0 } }), 'object.definition')).toThrow(/changed/);
     expect(() => assertAvatarPlacement(fact('object.placement', null, false), saved, 'object.definition')).toThrow(/available/);
   });
-  it('rejects collateral activity or walk changes', () => {
+  it('rejects collateral activity, walk or movement changes with an empty periodic object view', () => {
+    const movement={distance:1.5,speed:1};
     const state = { objects: [], walk: { source: 'library', motionId: expected.motionId, modelHash: expected.modelHash, clipIndex: -1 }, activityProfile: { modelHash: expected.modelHash, roles: [] } } as unknown as RoomAgentState;
-    expect(() => assertAvatarPreferences(state, structuredClone(state))).not.toThrow();
-    expect(() => assertAvatarPreferences(state, { ...state, walk: { ...state.walk!, motionId: 'other' } })).toThrow(/preferences/);
-    expect(() => assertAvatarPreferences(state, { ...state, activityProfile: { ...state.activityProfile!, modelHash: 'other' } })).toThrow(/preferences/);
+    expect(() => assertAvatarPreferences(state, structuredClone(state),movement,movement)).not.toThrow();
+    for(const changed of [{distance:2,speed:1},{distance:1.5,speed:2}]) expect(()=>assertAvatarPreferences(state,state,movement,changed)).toThrow(/preferences/);
+    expect(() => assertAvatarPreferences(state, { ...state, walk: { ...state.walk!, motionId: 'other' } },movement,movement)).toThrow(/preferences/);
+    expect(() => assertAvatarPreferences(state, { ...state, activityProfile: { ...state.activityProfile!, modelHash: 'other' } },movement,movement)).toThrow(/preferences/);
   });
+  it('preserves exact saved activity choices while readiness and display names resolve',()=>{
+    const movement={distance:1.5,speed:1};
+    const state={objects:[],walk:{source:'library',motionId:expected.motionId,modelHash:expected.modelHash,clipIndex:-1},activityProfile:{modelHash:expected.modelHash,roles:[{role:0,choices:[{motionId:expected.motionId,name:'Missing saved motion',available:false,weight:1,speed:1,cooldown:2,loop:false}]}]}} as unknown as RoomAgentState;
+    const ready=structuredClone(state),choice=ready.activityProfile!.roles[0].choices[0];choice.name='Agree_Gesture';choice.available=true;
+    expect(()=>assertAvatarPreferences(state,ready,movement,movement)).not.toThrow();
+    for(const patch of [{motionId:'different'},{weight:2},{speed:.5},{cooldown:3},{loop:true}]){
+      const changed=structuredClone(ready);Object.assign(changed.activityProfile!.roles[0].choices[0],patch);
+      expect(()=>assertAvatarPreferences(state,changed,movement,movement)).toThrow(/preferences/);
+    }
+  });
+
 });
