@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction {
     public sealed partial class RoomNavigation {
         RoomSpatialInputs startingInputs;
-        bool startingPrepared;
+        bool startingPrepared;Matrix4x4 startingFrame;string startingFailure;
         internal bool StartingInputsPending=>startingInputs?.Pending==true;
         bool StartingEnvelope(out Bounds body,out Bounds ground,out string error){
             body=ground=default;error="The walking actor or physics is unavailable";
@@ -22,12 +22,18 @@ namespace Maestro.Quest.Interaction {
             return loading;
         }
         internal bool PrepareStartingInputs(out string error){
-            error=null;if(startingPrepared)return true;
+            error=startingFailure;if(error!=null)return false;if(startingPrepared)return true;
             // Standalone geometry queries have no authored native owner to load.
             if(!InputEditor)return !actorBound||actor;
             if(!StartingEnvelope(out var body,out var ground,out error))return false;
             var editor=InputEditor;
-            startingInputs??=new RoomSpatialInputs(editor,editor.Identity(actor),()=>ContextOwned&&editor.ViewerTrackingReady,false);
+            if(startingInputs==null){
+                startingFrame=editor.transform.localToWorldMatrix;
+                startingInputs=new RoomSpatialInputs(editor,editor.Identity(actor),()=>ContextOwned&&editor.ViewerTrackingReady&&editor.transform.localToWorldMatrix.Equals(startingFrame),false);
+            }
+            if(!editor.transform.localToWorldMatrix.Equals(startingFrame)){
+                startingInputs.Dispose();error=startingFailure="The world moved while preparing ground; request movement again";return false;
+            }
             if(!startingInputs.Require(body,ground,actor.WaterTraversal.mode!="ignore",out error))return false;
             startingPrepared=true;return true;
         }
@@ -36,6 +42,6 @@ namespace Maestro.Quest.Interaction {
             // Accepted/candidate map snapshots now retain the prepared geometry.
             startingInputs?.Dispose();startingInputs=null;
         }
-        void ReleaseStartingInputs(){startingInputs?.Dispose();startingInputs=null;startingPrepared=false;}
+        void ReleaseStartingInputs(){startingInputs?.Dispose();startingInputs=null;startingPrepared=false;startingFailure=null;}
     }
 }

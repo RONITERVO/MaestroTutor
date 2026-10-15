@@ -56,13 +56,15 @@ namespace Maestro.Quest.Tests
             Assert.That(Run(new RoomAgentCommand {action="physicsSettings",target="maestro",physics=new ObjectPhysicsSettings {mode="solid",shape="box",mass=1}}),Is.False);
             editor.Undo();Assert.That(editor.Find(id),Is.Null,"One undo removes the create/settings transaction");
             editor.Redo();Assert.That(editor.Read(id).mass,Is.EqualTo(2));
-            Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.False);Assert.That(physics.Running,Is.False);
+            Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.True);Assert.That(physics.Running,Is.True);Assert.That(physics.AnySimulationReady,Is.False);
+            var waitingBody=editor.Find(id).GetComponent<Rigidbody>();var waitingPosition=waitingBody.position;yield return new WaitForFixedUpdate();yield return new WaitForFixedUpdate();
+            Assert.That(waitingBody.isKinematic,Is.True);Assert.That(waitingBody.position,Is.EqualTo(waitingPosition));
             physics.SetSurfaces(true,"Synthetic aligned scan");
             Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.True);Assert.That(physics.Running,Is.True);
             Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="pause"}),Is.True);Assert.That(physics.Running,Is.False);
             physics.SendMessage("OnApplicationFocus",false);Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.False);
             physics.SendMessage("OnApplicationFocus",true);Assert.That(physics.Running,Is.False,"Focus recovery never restarts gravity");
-            physics.SetSurfaces(false,"Lost alignment");Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.False);
+            physics.SetSurfaces(false,"Lost alignment");Assert.That(Run(new RoomAgentCommand {action="physicsRun",operation="start"}),Is.True);Assert.That(waitingBody.isKinematic,Is.True);Assert.That(physics.AnySimulationReady,Is.False);
             var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);
             var state=observer.Observe();Assert.That(state.capabilities,Does.Contain("physicsSettings.v1"));Assert.That(state.capabilities,Does.Not.Contain("avatarMotion.v1"));
             Assert.That(state.physics.status,Is.EqualTo(physics.Status));

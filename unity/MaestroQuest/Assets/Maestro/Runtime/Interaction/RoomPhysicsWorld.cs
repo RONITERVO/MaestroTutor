@@ -11,6 +11,7 @@ namespace Maestro.Quest.Interaction
     public sealed partial class RoomPhysicsWorld : MonoBehaviour
     {
         public bool SurfacesReady { get; private set; }
+        // Explicit world intent, independent of whether any actor currently has accepted ground.
         public bool Running { get; private set; }
         public string Status { get; private set; } = "Load or scan your room to use gravity";
         public event Action Changed;
@@ -22,7 +23,8 @@ namespace Maestro.Quest.Interaction
         bool Active=>!paused&&focused&&isActiveAndEnabled;
         internal int SimulationIntent=>startIntentVersion;
         void Notify(bool setupChanged=true,bool readinessOnly=false){if(!readinessOnly){startIntentVersion++;preparingStart=false;}else if(preparingStart)Status="Preparing objects for physics";observedReady=AnySimulationReady;stateId=Guid.NewGuid().ToString("N");Changed?.Invoke();if(setupChanged)SetupChanged?.Invoke();}
-        string IdleStatus=>CollisionAdmissionIssue??(AnySimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Add accepted virtual ground before starting physics");
+        string IdleStatus=>CollisionAdmissionIssue??(AnySimulationReady?"Physics paused — Start resumes without old throw speeds":RealCollisions?"Load or scan your room to use gravity":"Physics paused — actors need accepted virtual ground to move");
+        string RunningStatus=>AnySimulationReady?"Physics enabled — each actor needs its own ground and inputs":"Physics enabled — waiting for accepted ground";
         RoomRuntimeGate runtimeGate;
         internal bool RuntimeHeld=>runtimeGate?.Held==true;
         internal string RuntimeHoldReason=>runtimeGate?.Reason;
@@ -32,7 +34,7 @@ namespace Maestro.Quest.Interaction
         {
             SurfacesReady = ready;
             if (!AnySimulationReady) Running = false;
-            Status=Running?"Physics on — some objects may be waiting for their ground":SimulationReady?message:IdleStatus; Notify();
+            Status=Running?RunningStatus:SimulationReady?message:IdleStatus; Notify();
         }
         public void StartPhysics() => SetRunning(true,out _);
         public void PausePhysics() => SetRunning(false,out _);
@@ -42,14 +44,13 @@ namespace Maestro.Quest.Interaction
             if(running&&runtimeGate?.Held==true)error=runtimeGate.Reason;
             else if(running&&!Active)error="Return to the active room before starting physics";
             else if(running&&!CollisionReady)error=CollisionAdmissionIssue;
-            else if(running&&!AnySimulationReady)error=RealCollisions?"Load the room scan and check its alignment first":"Add accepted virtual ground before starting physics";
             return error==null;
         }
         public bool SetRunning(bool running,out string status)
         {
             RefreshCollisionAdmission();
             if(!CanRun(running,out status)){Status=status;Notify();return false;}
-            Running=running;Status=running?"Physics on — grip to pick up, release to throw":IdleStatus;
+            Running=running;Status=running?RunningStatus:IdleStatus;
             status=Status;Notify();return true;
         }
         internal JObject ObserveSimulation()

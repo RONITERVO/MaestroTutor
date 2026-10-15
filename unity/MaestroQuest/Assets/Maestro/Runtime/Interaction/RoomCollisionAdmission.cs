@@ -26,7 +26,7 @@ namespace Maestro.Quest.Interaction
             if(issue==observedCollisionIssue)return;
             observedCollisionIssue=issue;
             bool wasRunning=Running;if(issue!=null)Running=false;
-            Status=Running?"Physics on — grip to pick up, release to throw":IdleStatus;
+            Status=Running?RunningStatus:IdleStatus;
             Notify(setupChanged:wasRunning!=Running,readinessOnly:!wasRunning);
         }
     }

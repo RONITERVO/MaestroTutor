@@ -9,9 +9,9 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        internal string[] WorldPlacementTargets(RoomViewpoint target)=>TrackedViewTargets(target,GetComponent<WorkspaceViewpoint>()?.NeedsAuthoredGround==true);
-        internal string[] TrackedViewTargets(RoomViewpoint target,bool needsGround)
+        internal string[] WorldPlacementTargets(RoomViewpoint target)
         {
+            bool needsGround=GetComponent<WorkspaceViewpoint>()?.NeedsAuthoredGround==true;
             if(journal==null||target==null||!target.Valid)return Array.Empty<string>();
             // Covers the largest admitted tracked-body capsule, including its
             // skin. Loading must remain valid if the user stands up meanwhile.

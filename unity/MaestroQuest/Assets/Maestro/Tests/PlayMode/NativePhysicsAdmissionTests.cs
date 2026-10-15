@@ -86,10 +86,12 @@ namespace Maestro.Quest.Tests
             try{Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var failed,out error),Is.True,error);yield return NativeActionDone(failed,"failed");yield return DrainPhysicsPreparation();Assert.That(physics.Running,Is.False);Assert.That(editor.Find(id),Is.Null);}finally{File.Move(parked,path);}
             Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var retry,out error),Is.True,error);yield return NativeActionDone(retry);Assert.That(physics.Running,Is.True);Assert.That(editor.Read(id).modelHash,Is.EqualTo(asset.Hash));
         }
-        [UnityTest] public IEnumerator NativePhysicsMissingGroundFailsAfterPreparationAndLaterReadinessDoesNotResume()
+        [UnityTest] public IEnumerator NativePhysicsMissingGroundWaitsAfterPreparationAndPausePreventsLateResume()
         {
             string id=RetirePhysicsBlock();physics.SetSurfaces(false,"No scan");Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var run,out var error),Is.True,error);
-            yield return NativeActionDone(run,"failed");Assert.That(editor.Find(id),Is.Not.Null);Assert.That(physics.Running,Is.False);physics.SetSurfaces(true,"Later alignment");yield return null;Assert.That(physics.Running,Is.False);
+            yield return NativeActionDone(run);Assert.That(editor.Find(id),Is.Not.Null);Assert.That(physics.Running,Is.True);Assert.That(physics.AnySimulationReady,Is.False);
+            Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);physics.PausePhysics();
+            physics.SetSurfaces(true,"Later alignment");yield return null;Assert.That(physics.Running,Is.False);Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);
         }
         [UnityTest] public IEnumerator NativePhysicsPostLoadAuthoredEditInvalidatesTheCapturedInputs()
         {

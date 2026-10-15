@@ -60,9 +60,11 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest]public IEnumerator BoundaryRecoveryUsesTheMovedAcceptedPose() {
             yield return new WaitForFixedUpdate();rigid.SendMessage("FixedUpdate");var accepted=new RoomFrame(content.transform).PointToRoom(ball.transform.position);
-            Shift(new Vector3(15,0,4),45);var expected=content.transform.TransformPoint(accepted);
+            Shift(new Vector3(15,0,4),45);var expected=content.transform.TransformPoint(accepted);int intent=world.SimulationIntent;
             ball.position=content.transform.TransformPoint(new Vector3(30,2,0));ball.transform.position=ball.position;Physics.SyncTransforms();rigid.SendMessage("FixedUpdate");
-            Assert.That(world.Running,Is.False);Assert.That(Vector3.Distance(ball.position,expected),Is.LessThan(.001f),"Recovery must not jump back to the old physical coordinates");
+            Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));Assert.That(ball.isKinematic,Is.True);
+            Assert.That((bool)rigid.ObservePhysicsInputs()["interrupted"],Is.True);Assert.That(Vector3.Distance(ball.position,expected),Is.LessThan(.001f),"Recovery must not jump back to the old physical coordinates");
+            yield return new WaitForFixedUpdate();Assert.That(ball.isKinematic,Is.True);Assert.That(Vector3.Distance(ball.position,expected),Is.LessThan(.001f));
         }
         [UnityTest]public IEnumerator RefusalLeavesAllBodiesAndTheFrameUnchanged() {
             var at=content.transform.position;var p=ball.position;var velocity=ball.linearVelocity;

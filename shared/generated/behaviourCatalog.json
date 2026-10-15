@@ -33548,7 +33548,7 @@
         "room.active",
         "workspace.available"
       ],
-      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start prepares currently resident free dynamic actors and their connected, nearby collision, selected ground and water dependencies, then rechecks the selected environment. Unused dormant content stays unloaded; newly active actors prepare their own inputs before gravity. Fixed, held and animated objects do not initiate preparation, but may be dependencies of a free actor. In a cold virtual-only world, Start can also prepare local ground and collision inputs at the tracked user viewpoint. That request is cancelled if tracking is lost, the world is placed elsewhere or the user moves into different required inputs before completion; it never loads distant known areas merely because they exist. During preparation it can be cancelled; manual Pause, another accepted start, scan/environment changes, focus loss, workspace changes or changes to captured saved inputs invalidate it. Unrelated saved edits do not cancel preparation. Native readiness changes alone do not create a new user intent. Failed/cancelled preparation never starts physics, even if its assets finish later. Start needs the selected environment ready (aligned scan when real collisions are on, accepted virtual ground when off) and an active room with provable imported-collision bounds and placement. Unavailable resident imports with previously accepted collision bounds use conservative native guards and stop dependent actors locally; unrelated actors can continue. Unknown bounds or placement still pause this bounded authored region. Explicit Start fails if a required selected dependency cannot prepare. Repair never silently resumes failed motion, including a movable imported object itself. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
+      "description": "Explicitly start or pause gravity and object physics through the physical Start physics/Pause controls. Read physics.simulation and pass its exact stateId. Manual Start/Pause, scan changes, focus/lifecycle transitions and workspace holds invalidate older intents, even after returning to the same mode. Start prepares currently resident free dynamic actors and their connected, nearby collision, selected ground and water dependencies, then rechecks admission. An accepted Start enables simulation even when no selected ground is resident yet; running=true and ready=false means waiting, not moving. Each actor still needs its own selected ground and owned native inputs before walking or gravity. Unused dormant content stays unloaded; newly active actors prepare their own inputs before gravity. Fixed, held and animated objects do not initiate preparation, but may be dependencies of a free actor. An empty or fixed-only world does not require a tracked viewpoint to enable physics, and Start does not load its ground; a subsequent movement owner prepares its own nearby ground. During preparation it can be cancelled; manual Pause, another accepted start, scan/environment changes, focus loss, workspace changes or changes to captured saved inputs invalidate it. Unrelated saved edits do not cancel preparation. Native readiness changes alone do not create a new user intent. Failed/cancelled preparation never starts physics, even if its assets finish later. Start needs an active room with provable imported-collision bounds and placement. Actual motion needs the selected environment ready for that actor (aligned scan for real-room collisions, accepted virtual ground otherwise). Native ground loading or retirement alone never changes enabled intent or creates a new Start. Unavailable resident imports with previously accepted collision bounds use conservative native guards and stop dependent actors locally; unrelated actors can continue. Unknown bounds or placement still pause this bounded authored region. Explicit Start fails if a required selected dependency cannot prepare. Repair never silently resumes failed motion, including a movable imported object itself. This action cannot scan, grant room permission or verify alignment. Pause freezes dynamic bodies and clears throw velocities; it can stop physics-dependent walking or actions, but does not stop unrelated gestures, programs or authoring. Held/carried/animated objects keep their own existing owners when physics starts. These world transitions may run alongside other actions; they do not acquire those actors or clear the scheduler. Returning focus/alignment never automatically restarts physics or cancelled movement. No save or Undo; pausing cannot reverse a throw. A completed result describes that moment only; read the fact for current state. Duplicate receipts never restart physics. Stop on a completed receipt does not pause simulation: issue explicit pause with a fresh stateId.",
       "example": {
         "operation": "start",
         "stateId": "00000000000000000000000000000000"
@@ -44309,7 +44309,7 @@
         }
       },
       "label": "Room physics state",
-      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes immediate selected-ground, room collision and lifecycle admission; an explicit Start must still prepare the required dependencies of resident free dynamic actors, or local tracked-view ground in a cold virtual-only world. It does not activate every saved object. It is not permission to act, alignment approval or complete resource admission. ready requires selected ground and no unresolved imported-collision bounds or placement in the current authored region. Known unavailable geometry stops dependent actors through local input checks, so room readiness does not guarantee every actor can move. Read object.physics.inputs for individual physics readiness and physics.environment for separate scan/virtual observations; neither room fact guarantees a clear navigation path. Running does not mean held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
+      "description": "Current native simulation state and exact stateId for physics.simulation.set. canStart describes room collision and lifecycle admission to enable simulation; it does not require ground to be loaded. An explicit Start must still prepare the required dependencies of resident free dynamic actors. It does not activate every saved object. It is not permission to act, alignment approval or complete resource admission. running is explicit world enablement; running=true with ready=false means waiting for accepted ground. ready reports whether any currently selected environment has accepted ground and the authored region has no unresolved imported-collision bounds or placement. Native readiness changes alone do not change enabled intent. Known unavailable geometry stops dependent actors through local input checks, so room readiness does not guarantee every actor can move. Read object.physics.inputs for individual physics readiness and physics.environment for separate scan/virtual observations; neither room fact guarantees a clear navigation path. Running does not mean every actor has ground or that held/animated/fixed objects simulate. This read never starts, pauses or saves anything."
     },
     {
       "id": "object.physics.inputs",
@@ -46178,11 +46178,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
-      "sha256": "c83d5d458315c36d479dba6d4164e47674c8aa0c9a56ade3bcbe95c829fac72b"
+      "sha256": "3ddd6c3edb311bd57cf4e33a6efb18fa519145b02c117c65da07c8951aa3da35"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsStartOperation.cs",
-      "sha256": "b5ccda5f65b62b0faec8218923c6e6e227d4362c3bb2fc9ce85e1641cedba259"
+      "sha256": "f5243e6c733284a75e0d253df794f8c6728d4f1e2b9e89ffe5842e8288975704"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
@@ -46870,7 +46870,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeInput.cs",
-      "sha256": "127854eb5343790a556af268a6b002851469c76013f73495695a4ae0f48748f0"
+      "sha256": "514065f8ffab960030a20bd634ca5cabfaad42b1f0ceaeffd5d40da1ce0c9301"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
@@ -46934,7 +46934,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPlacementDependencies.cs",
-      "sha256": "ae2de52693210369b1622ae8ee6be3cb1c077fae4d15eec20d3f69b9f80e62ed"
+      "sha256": "962b52ebe4fbe3093c48ecfade1477e6d60bbf8c1eec3d41f7299cebe80a80b3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
@@ -47474,11 +47474,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "3ade56c1c17cfd2eec478564f1748f92c16639a856120ef18c746e95dc9c1446"
+      "sha256": "c55d38bd3036eac355f477466232121c638e8300a6a9d4787218391e6a030ed4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "cebdad6e8e7f2c167938ed92a1c32e67564507a8a5f6fb597d34d09666f2f6e3"
+      "sha256": "d18652263ebf24a0504f2949e7cbfad6cea1ff96d8864748f24e3cb68646b0cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -47494,7 +47494,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionAdmission.cs",
-      "sha256": "5c0c1ea45a89df20ab6c777936a67a2918ce16e14503fa2eff2105e05d47752a"
+      "sha256": "7f1d83d349d77f21690e05053595c766c2bc515ad3a53016a9e2388992d715e2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCollisionVolume.cs",
@@ -47542,7 +47542,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "a8198ba3616f901b550b15a7565eb151c2b34596ae47a48db899d50b9eae7cfa"
+      "sha256": "bb222e3a065f72ebde731dd9fe5e1c2135c1a17ffd319351d5369f6dde013899"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationBuild.cs",
@@ -47566,7 +47566,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationStartup.cs",
-      "sha256": "e1a2977bc0781fa21418030fea7d4695bcf41f00fba60b6090723ad0646b416a"
+      "sha256": "36d98d5a16af6947f85f40173cc2296f804acfdb6b414b86c2f55c01bb2ed396"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationWaterRoutes.cs",
@@ -47582,7 +47582,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "321aabf9d51293294408b1df18117f44aa865be8c293c48d0e2d1fcdd51a6c23"
+      "sha256": "e5d501b961ecb67bb9534369cc831be7d83da24c20223fe404251d44db9f5ff9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPlaybackClock.cs",
@@ -47610,7 +47610,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "78a15527fa4c5c44f5bc9f1ad705783a2b7da30bceca7227595dbd04d1478981"
+      "sha256": "8456169554e7754917e93cd09c1af5785bcb056f8df70a40d8d278d784d3bfd7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSpatialInputs.cs",
@@ -47686,7 +47686,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.Placement.cs",
-      "sha256": "a2a8306939ceacae2fd4d5f4d4f4bf1d724b3bd16e4f6e53253d10ec213193df"
+      "sha256": "3075bf5ae89abd2f0203ead7fd481f171d4c0bb07bbd1969410e4b36fec6a8f6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.cs",

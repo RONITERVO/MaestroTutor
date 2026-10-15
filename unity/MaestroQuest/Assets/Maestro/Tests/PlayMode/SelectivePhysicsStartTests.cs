@@ -13,6 +13,32 @@ using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
+        [UnityTest]public IEnumerator NativePhysicsLastGroundLossDoesNotResumeAcceptedMotionOnRepair(){
+            string ground=AvailabilityTerrain(),ball=ColdPhysicsBall(NewEnvironment());
+            physics.StartPhysics();yield return IslandActive(new[]{ball});yield return new WaitForFixedUpdate();
+            var rigid=editor.Find(ball).GetComponent<RigidRoomItem>();var body=editor.Find(ball).GetComponent<Rigidbody>();
+            Assert.That(rigid.Launch(Vector3.right,Vector3.zero),Is.True);yield return new WaitForFixedUpdate();
+            int intent=physics.SimulationIntent;var surface=editor.Find(ground).GetComponentInChildren<RoomWalkableSurface>().Collision;
+            surface.enabled=false;Physics.SyncTransforms();for(int i=0;i<4;i++)yield return new WaitForFixedUpdate();
+            Assert.That(physics.Running,Is.True);Assert.That(physics.AnySimulationReady,Is.False);Assert.That(body.isKinematic,Is.True);
+            var stopped=body.position;surface.enabled=true;Physics.SyncTransforms();for(int i=0;i<8;i++)yield return new WaitForFixedUpdate();
+            Assert.That(physics.SimulationIntent,Is.EqualTo(intent));Assert.That(body.isKinematic,Is.True);Assert.That(body.position,Is.EqualTo(stopped));
+            Assert.That((bool)PhysicsInputFact(ball)["interrupted"],Is.True);Assert.That((bool)PhysicsInputFact(ball)["ready"],Is.False);
+            physics.PausePhysics();physics.StartPhysics();yield return IslandActive(new[]{ball});
+            Assert.That(Mathf.Abs(body.linearVelocity.x),Is.LessThan(.001f));
+        }
+        [UnityTest]public IEnumerator NativePhysicsSelectiveStartCanWaitWithoutScanAndNeverInventsAFloor(){
+            string ball=PhysicsInputBall(new(4,2,4));var body=editor.Find(ball).GetComponent<Rigidbody>();var before=body.position;
+            Assert.That(physics.SurfacesReady,Is.False);Assert.That(physics.AnySimulationReady,Is.False);
+            Assert.That(runtime.Scheduler.Invoke(NativePhysicsCall(),Time.unscaledTime,out var run,out var error),Is.True,error);
+            yield return NativeActionDone(run);for(int i=0;i<15;i++)yield return new WaitForFixedUpdate();
+            Assert.That(physics.Running,Is.True);Assert.That((bool)physics.ObserveSimulation()["ready"],Is.False);
+            Assert.That(body.isKinematic,Is.True);Assert.That(body.position,Is.EqualTo(before));
+            Assert.That((bool)PhysicsInputFact(ball)["ready"],Is.False);Assert.That((string)PhysicsInputFact(ball)["reason"],Does.Contain("ground"));
+            Assert.That(physics.CanSimulate(body.position,editor.Find(ball)),Is.False);
+            physics.PausePhysics();physics.SetSurfaces(true,"Accepted aligned scan");yield return null;
+            Assert.That(physics.Running,Is.False,"Accepting ground after Pause is not a new Start");Assert.That(body.isKinematic,Is.True);
+        }
         [UnityTest]public IEnumerator NativePhysicsSelectiveStartPreparesColdVirtualGroundBeforeActualGravity(){
             string ground=AvailabilityTerrain(),profile=NewEnvironment(),ball=ColdPhysicsBall(profile);
             Assert.That(physics.SetEnvironment((string)physics.ObserveEnvironment()["stateId"],false,out _,out var error),Is.True,error);

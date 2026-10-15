@@ -762,7 +762,7 @@ start file access, native loading, provider calls or automatic regional streamin
 
 The shared “Authored object bounds” fact shows the prepared extent of an object, including ink, terrain, fill, carried material and selection outlines. It uses the accepted world data and verified model metadata, independently of whether a native object exists. Preparation is bounded and belongs to the current room; closing or replacing the room cancels it. Reading the fact is passive.
 
-Pending or unsupported geometry is reported as unknown, never as empty space. Animated recipe parts use a conservative swept envelope; animated imported models and scan anchors remain unknown. These bounds help observation and future loading decisions. They do not prove that physics, walking or asset loading is ready. Startup still loads the bounded room; automatic regional streaming is unfinished.
+Pending or unsupported geometry is reported as unknown, never as empty space. Animated recipe parts use a conservative swept envelope; animated imported models and scan anchors remain unknown. These bounds help observation and future loading decisions. They do not prove that physics, walking or asset loading is ready. Startup loads demanded connected areas; finer automatic regional streaming and larger-world capacity are unfinished.
 
 
 Area dependency inspection distinguishes objects currently in view from those
@@ -771,20 +771,32 @@ near the expected view (`approachingView`) and recently viewed
 releasing an area's native contents. These reasons propagate through the same
 area and physical-connection graph as other dependencies. Inspection itself
 does not refresh the timer or load anything. Automatic regional loading remains
-unfinished; current world-size limits and the explicit whole-room Start remain.
+unfinished; current world-size limits remain, and simulation still needs an explicit Start.
 
 
 Starting physics can prepare objects whose saved content is not currently loaded.
 The same Start action serves the book, agent, programs and physical tool. You can
 cancel preparation or press Pause; finishing a load later will not restart it.
-Changing the room setup or saved content also requires a fresh Start request.
-If preparation fails, the action reports the failure and keeps physics paused.
+Changing the room setup or captured required content invalidates pending Start;
+unrelated saved edits do not.
+If required preparation fails, the action reports the failure and keeps physics paused.
+An accepted Start enables the world even when selected ground has not loaded yet:
+`physics.simulation.running=true` with `ready=false` means enabled and waiting.
+No actor moves until its own ground and collision/water inputs are accepted.
+Enabling an empty or fixed-only world does not load ground at the viewer or need
+a camera; an accepted walking action prepares its own local inputs. That includes
+a virtual-only character while the global real-room policy is on and no scan is
+available. Ground loading or retirement alone never issues a new Start/Pause.
+`canStart` reports current world admission, not permission, alignment approval or
+proof that an actor can move. Read the actor's inputs for that distinction.
 This does not enable automatic area streaming or expand current world limits.
 
 
-Opening a saved room prepares its objects in stages while the book remains
-available. Connected objects appear together; a broken import in one area does
-not prevent other areas from opening. Loading preserves saved positions and
+Opening a saved room prepares demanded areas in stages while the book remains
+available. Observation, capture or an explicit action supplies demand; independent
+unseen areas remain dormant. Saved areas and enabled physical connections load
+together, including the shared unassigned home area. A broken import in one area
+does not prevent independent areas from opening. Loading preserves saved positions and
 animation settings and does not switch gravity on. Failed objects stay in the
 saved room so they can be inspected and retried after their asset is repaired.
 
@@ -797,9 +809,10 @@ When an area is already dormant, looking toward it can bring its connected
 objects back through the same loading system. Available view information also
 prioritizes areas during startup. Losing tracking or leaving a view does not
 start physics, and a timed-out or broken import waits for an explicit retry.
-Startup still opens the complete bounded saved room. Unused areas can retire
-later under the policy below; startup selection, larger-world streaming and
-fully local physics failure handling remain unfinished.
+The same display-demand path applies at startup and after retirement. Unknown
+bounds remain conservative; observation does not approve physics or prove a safe
+path. Finer automatic loading groups, larger-world capacity and fully local
+physics failure handling remain unfinished.
 
 
 Loaded supported avatars and skinned models expose spatial bounds for their
@@ -890,8 +903,8 @@ Read `object.physics.inputs` to inspect a solid or bouncy object's required
 geometry. Physically connected moving objects prepare and wait together; merely
 belonging to the same area does not join them. Separate objects attached to a
 fixed anchor can remain independent. Reading this fact never starts physics or
-loads an object. `ready` describes available inputs, not a successful throw or a
-clear future path.
+loads an object. `ready` requires current actor admission, selected ground,
+local inputs and connected joints; it is not a successful throw or a clear future path.
 
 In an already-running world, a free dynamic object can prepare its dormant local
 ground while staying stopped. An object whose policy excludes the real room
@@ -908,7 +921,10 @@ unavailable inputs still need repair and an explicit restart from rest.
 
 Ordinary `pending` preparation can retain motion in `momentumHeld`. An
 `interrupted` result is different: the solver reached unavailable geometry or
-left its selected ground boundary. A temporary geometry guard stops the affected
+left its selected ground boundary, or previously accepted ground disappeared.
+An enabled but never-supported body simply waits; losing support after actual
+simulation holds prior motion until a fresh owner resumes it from rest.
+A temporary geometry guard stops the affected
 free dynamic contact/constraint group while exact geometry prepares. A boundary
 exit restores that group's last accepted poses and holds it. Independent bodies
 keep running. Both cases discard velocity; finishing preparation does not resume
@@ -1041,7 +1057,8 @@ segments still test its wet triangles. General shoreline route planning remains
 open. Missing native bed geometry is unavailable, never silently treated as an
 ordinary rectangular pool; observation does not load it.
 
-The explicit physics Start prepares resident free actors and their required inputs, with tracked local-ground preparation for a cold virtual-only world. Running actors
+The explicit physics Start prepares resident free actors and their required inputs.
+An enabled world can wait for ground; walking actors prepare their own ground. Running actors
 retain nearby collision, ground and water dependencies; unrelated idle areas may
 retire through the [shared policy](#retiring-unused-areas);
 the current 64-object, 25-metre and four-height-field limits are unchanged. Dense rain-driven level
@@ -1444,7 +1461,10 @@ This is an initial active retirement policy within the existing 64-object,
 25-metre world bounds. Physics Start prepares resident free dynamic actors and their connected,
 collision, selected-ground and water dependencies. Unused dormant content stays
 unloaded. Fixed, held and animated objects do not initiate free-body preparation;
-they can still be required by another actor. If the global collision policy is virtual-only and no accepted ground is loaded, an explicit Start can prepare local ground at the current tracked viewpoint, even with only fixed objects. Tracking loss, world placement or movement into different required inputs invalidates that pending Start. Later-active actors use the same
+they can still be required by another actor. A fixed-only world may be enabled
+without loading ground or observing an area. The subsequent walking owner
+prepares its own ground before displacement; tracking loss or world placement
+during preparation ends that movement request. Later-active actors use the same
 per-body input preparation before gravity. Cancelled preparations cannot start
 late, and unrelated saved edits do not invalidate the captured local inputs.
 Once running, each active dynamic body retains its rotating/swept collision

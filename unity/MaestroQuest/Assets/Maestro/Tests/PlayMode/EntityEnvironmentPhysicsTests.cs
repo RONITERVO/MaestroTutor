@@ -67,6 +67,30 @@ namespace Maestro.Quest.Tests
             Assert.That(world.IncludesRealRoom(realBall),Is.False);Assert.That(realBall.GetComponent<Rigidbody>().excludeLayers.value&(1<<RoomPhysicsLayers.Scanned),Is.Not.Zero);
             Assert.That(world.Running,Is.False);yield return null;
         }
+        [UnityTest]public IEnumerator LosingSelectedGroundHoldsOnlyItsActorAndRepairDoesNotResumeTheThrow(){
+            for(int i=0;i<5;i++)yield return new WaitForFixedUpdate();
+            var rigid=virtualBall.GetComponent<RigidRoomItem>();var body=virtualBall.GetComponent<Rigidbody>();
+            Assert.That(rigid.Launch(Vector3.right,Vector3.zero),Is.True);yield return new WaitForFixedUpdate();
+            int intent=world.SimulationIntent;var ground=root.GetComponentInChildren<RoomWalkableSurface>().Collision;
+            ground.enabled=false;Physics.SyncTransforms();for(int i=0;i<3;i++)yield return new WaitForFixedUpdate();
+            Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+            Assert.That(realBall.GetComponent<Rigidbody>().isKinematic,Is.False);Assert.That(body.isKinematic,Is.True);
+            var stopped=body.position;ground.enabled=true;Physics.SyncTransforms();for(int i=0;i<8;i++)yield return new WaitForFixedUpdate();
+            Assert.That(body.isKinematic,Is.True);Assert.That(body.position,Is.EqualTo(stopped));
+            Assert.That((bool)rigid.ObservePhysicsInputs()["interrupted"],Is.True);
+            world.PausePhysics();world.StartPhysics();yield return new WaitForFixedUpdate();
+            Assert.That(body.isKinematic,Is.False);Assert.That(Mathf.Abs(body.linearVelocity.x),Is.LessThan(.001f));
+        }
+        [UnityTest]public IEnumerator LosingLastVirtualGroundKeepsEnabledIntentAndRequiresFreshOwnerForPriorMotion(){
+            Assert.That(world.SetEnvironment((string)world.ObserveEnvironment()["stateId"],false,out _,out var error),Is.True,error);world.StartPhysics();
+            for(int i=0;i<5;i++)yield return new WaitForFixedUpdate();int intent=world.SimulationIntent;
+            var ground=root.GetComponentInChildren<RoomWalkableSurface>().Collision;ground.enabled=false;Physics.SyncTransforms();
+            for(int i=0;i<4;i++)yield return new WaitForFixedUpdate();
+            Assert.That(world.Running,Is.True);Assert.That(world.AnySimulationReady,Is.False);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+            ground.enabled=true;Physics.SyncTransforms();for(int i=0;i<4;i++)yield return new WaitForFixedUpdate();
+            Assert.That(world.AnySimulationReady,Is.True);Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+            Assert.That(virtualBall.GetComponent<Rigidbody>().isKinematic,Is.True);Assert.That(realBall.GetComponent<Rigidbody>().isKinematic,Is.True);
+        }
         [UnityTearDown]public IEnumerator Cleanup(){Object.Destroy(root);Time.captureDeltaTime=priorDelta;yield return null;yield return null;}
     }
 }

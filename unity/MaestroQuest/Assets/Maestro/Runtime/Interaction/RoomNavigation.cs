@@ -196,7 +196,12 @@ namespace Maestro.Quest.Interaction
         }
         void Clear(){ReleaseMovementInputs();ReleaseMap();candidate.Clear();observedFrame=false;frameChangedOn=-1;}
         void ResetBinding(){Clear();configured=false;actor=null;actorBound=false;}
-        void LateUpdate(){if((data||PathsPending)&&!ContextOwned)Clear();else if(PathsPending)RefreshGeometry(out _);}
+        void LateUpdate(){
+            if(!(data||PathsPending))return;
+            if(!ContextOwned)Clear();
+            else if(!world.EnvironmentReady(actor)){ReleaseMap();candidate.Clear();}
+            else if(PathsPending)RefreshGeometry(out _);
+        }
         void OnEnable(){if(world){world.Changed+=RoomChanged;world.RegisterNavigation(this);}}
         void OnDisable(){if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}ResetBinding();}
         void OnDestroy(){if(world){world.Changed-=RoomChanged;world.UnregisterNavigation(this);}ResetBinding();world=null;virtualFrame=null;}

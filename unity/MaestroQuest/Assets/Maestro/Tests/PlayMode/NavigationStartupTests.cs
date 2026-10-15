@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests {
         void Update()=>Sample?.Invoke();
     }
     public sealed partial class AvatarSpatialTests {
-        (RoomItem actor,string ground,string far) ColdWalkingScene(bool maestro=false){
+        (RoomItem actor,string ground,string far) ColdWalkingScene(bool maestro=false,bool aligned=true){
             Surface(new(0,-.1f,0),new(12,.2f,12));Tutor();
             editor.ConfigureObservationTracking(()=>tracked);
             var(ground,area)=NavigationGround(new(0,-2.2f,0));
@@ -32,61 +32,78 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.BindEnvironment(id,editor.ObjectRevision(id),profile.id,editor.EnvironmentRevision(profile.id),out error),Is.True,error);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
             Assert.That(editor.RetireNativeArea(farArea,out error),Is.True,error);
-            Physics.SyncTransforms();world.SetSurfaces(true,"Synthetic aligned physical floor");world.StartPhysics();
+            Physics.SyncTransforms();world.SetSurfaces(aligned,"Synthetic physical scan state");world.StartPhysics();
             Assert.That(world.Running,Is.True);Assert.That(world.EnvironmentReady(actor),Is.False);
             Assert.That(editor.Find(ground),Is.Null);Assert.That(editor.Find(far),Is.Null);
             viewer.transform.position=new(2,1.6f,0);
             return(actor,ground,far);
         }
-        (string ground,string far,VirtualRoomView view) ColdFixedPhysicsScene(){
-            var(_,ground,far)=ColdWalkingScene();
-            world.PausePhysics();
-            Assert.That(world.SetEnvironment((string)world.ObserveEnvironment()["stateId"],false,out _,out var error),Is.True,error);
-            root.transform.position=Vector3.up*2;viewer.transform.position=new(0,1.6f,0);
-            var camera=viewer.AddComponent<Camera>();camera.enabled=false;
-            var view=physicalRoot.AddComponent<VirtualRoomView>();view.Initialize(root.transform,physicalRoot.transform,camera,null,world);
-            root.AddComponent<WorkspaceViewpoint>().Initialize(editor,view,()=>tracked);
-            Assert.That(world.AnySimulationReady,Is.False);Assert.That(editor.NativeSimulationTargets(),Does.Contain(ground));
-            return(ground,far,view);
-        }
-        CapabilityOperation ColdPhysicsStart(){
-            var capability=new PhysicsSimulationCapability();
+        CapabilityOperation EnableWaitingPhysics(){
+            world.PausePhysics();var capability=new PhysicsSimulationCapability();
             var args=new JObject{["operation"]="start",["stateId"]=world.ObserveSimulation()["stateId"]};
+            Assert.That((bool)world.ObserveSimulation()["canStart"],Is.True);
             Assert.That(capability.Start(new CapabilityContext(editor,authoring),"cold-start",args,out var operation,out var error),Is.True,error);
-            Assert.That(world.Running,Is.False);return operation;
+            Assert.That(operation.Complete(out error),Is.True,error);
+            Assert.That(world.Running,Is.True);Assert.That(world.AnySimulationReady,Is.False);
+            Assert.That((bool)operation.Result["running"],Is.True);Assert.That((bool)operation.Result["ready"],Is.False);
+            Assert.That((string)operation.Result["status"],Does.Contain("waiting"));return operation;
         }
-        [UnityTest]public IEnumerator NavigationStartupPhysicsCanPrepareFixedOnlyVirtualWorldAtTrackedView(){
-            var(ground,far,_)=ColdFixedPhysicsScene();int revision=editor.Revision;
-            var operation=ColdPhysicsStart();
+        [UnityTest]public IEnumerator NavigationStartupEnabledFixedActorWalksWithoutScanOrObservedGround(){
+            var(actor,ground,far)=ColdWalkingScene(aligned:false);int revision=editor.Revision;
+            var start=EnableWaitingPhysics();start.Stop(false);int intent=world.SimulationIntent;
+            Assert.That(world.RealCollisions,Is.True);Assert.That(world.SurfacesReady,Is.False);
+            Assert.That(editor.NativeSimulationTargets(),Is.Empty);Assert.That(editor.Find(ground),Is.Null);Assert.That(editor.Revision,Is.EqualTo(revision),"Enabling physics does not save the world");
+            var travel=new GroundedTravel(editor,actor,new(.6f,-2,0),1.2f);
             try{
-                for(int i=0;i<100&&operation.State(out _)==RuleActionState.Preparing;i++)yield return null;
-                Assert.That(operation.Complete(out var error),Is.True,error);
-                Assert.That(world.Running,Is.True);Assert.That(editor.Find(ground),Is.Not.Null);Assert.That(editor.Find(far),Is.Null);
-                Assert.That(editor.Revision,Is.EqualTo(revision));
-            }finally{operation.Stop(false);}
+                Assert.That(travel.Begin(out var error),Is.True,error);yield return FinishWalking(travel);
+                Assert.That(actor.transform.position.x,Is.EqualTo(.6f).Within(.015f));Assert.That(actor.transform.position.y,Is.LessThan(-1.8f));
+                Assert.That(editor.Find(ground),Is.Not.Null);Assert.That(editor.Find(far),Is.Null);
+                Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+            }finally{travel.Stop(false);}
         }
-        [UnityTest]public IEnumerator NavigationStartupPhysicsViewPreparationCannotOutliveTracking()=>ColdPhysicsCancelled("tracking");
-        [UnityTest]public IEnumerator NavigationStartupPhysicsViewPreparationCannotOutlivePlacement()=>ColdPhysicsCancelled("placement");
-        [UnityTest]public IEnumerator NavigationStartupPhysicsViewPreparationCannotOutliveNewLocalInputs()=>ColdPhysicsCancelled("inputs");
-        [UnityTest]public IEnumerator NavigationStartupPhysicsViewPreparationCannotOutlivePause()=>ColdPhysicsCancelled("pause");
-        IEnumerator ColdPhysicsCancelled(string change){
-            var(ground,far,_)=ColdFixedPhysicsScene();var operation=ColdPhysicsStart();
+        [UnityTest]public IEnumerator NavigationStartupEnabledWithoutTrackingDoesNotInventOrLoadGround(){
+            var(actor,ground,far)=ColdWalkingScene(aligned:false);tracked=false;
+            Assert.That(world.SetEnvironment((string)world.ObserveEnvironment()["stateId"],false,out _,out var error),Is.True,error);
+            var before=actor.transform.position;var operation=EnableWaitingPhysics();operation.Stop(false);
+            for(int i=0;i<20;i++)yield return null;
+            Assert.That(world.Running,Is.True);Assert.That(world.CanSimulate(actor.transform.position,actor),Is.False);
+            Assert.That(actor.transform.position,Is.EqualTo(before));Assert.That(editor.Find(ground),Is.Null);Assert.That(editor.Find(far),Is.Null);
+        }
+        [UnityTest]public IEnumerator NavigationStartupReadinessLoadingAndRetirementDoNotCreateSimulationIntent(){
+            var(_,ground,far)=ColdWalkingScene(aligned:false);EnableWaitingPhysics().Stop(false);
+            int intent=world.SimulationIntent,setup=0;string before=(string)world.ObserveSimulation()["stateId"];
+            Action changed=()=>setup++;world.SetupChanged+=changed;
             try{
-                if(change=="tracking")tracked=false;
-                else if(change=="placement")root.transform.position+=Vector3.right;
-                else if(change=="inputs")viewer.transform.position+=Vector3.right*12;
-                else world.PausePhysics();
-                Assert.That(operation.State(out _),Is.EqualTo(RuleActionState.Failed));operation.Stop(false);
-                tracked=true;for(int i=0;i<40;i++)yield return null;
-                Assert.That(world.Running,Is.False);Assert.That(operation.Complete(out _),Is.False);
-                Assert.That(editor.Find(ground),Is.Null);Assert.That(editor.Find(far),Is.Null);
-            }finally{operation.Stop(false);}
+                var load=editor.AcquireNativeEntities(new[]{ground},()=>true,System.Threading.CancellationToken.None);
+                yield return new WaitUntil(()=>load.IsCompleted);Assert.That(load.Exception,Is.Null);Assert.That(load.Result,Is.Null);yield return null;
+                Assert.That(world.AnySimulationReady,Is.True);Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+                Assert.That((string)world.ObserveSimulation()["stateId"],Is.Not.EqualTo(before));
+                Assert.That(editor.RetireNativeArea(editor.RegionFor(ground),out var error),Is.True,error);yield return null;
+                Assert.That(world.AnySimulationReady,Is.False);Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+                Assert.That(setup,Is.Zero,"Native ground availability must not impersonate a scan or simulation command");Assert.That(editor.Find(far),Is.Null);
+            }finally{world.SetupChanged-=changed;}
         }
-        [UnityTest]public IEnumerator NavigationStartupPhysicsWithoutTrackingCannotInventGround(){
-            var(ground,far,_)=ColdFixedPhysicsScene();tracked=false;
-            var args=new JObject{["operation"]="start",["stateId"]=world.ObserveSimulation()["stateId"]};
-            Assert.That(new PhysicsSimulationCapability().CanRun(new CapabilityContext(editor,authoring),args,out _),Is.False);
-            yield return null;Assert.That(world.Running,Is.False);Assert.That(editor.Find(ground),Is.Null);Assert.That(editor.Find(far),Is.Null);
+        [UnityTest]public IEnumerator NavigationStartupWaitingFactsAndViewChangesDoNotLoadSavedAreas(){
+            var(actor,ground,far)=ColdWalkingScene(aligned:false);EnableWaitingPhysics().Stop(false);var before=actor.transform.position;
+            for(int i=0;i<20;i++){
+                Assert.That((bool)world.ObserveSimulation()["ready"],Is.False);world.ObserveEnvironment();
+                viewer.transform.position+=Vector3.right*.2f;yield return null;
+            }
+            Assert.That(actor.transform.position,Is.EqualTo(before));Assert.That(editor.Find(ground),Is.Null);Assert.That(editor.Find(far),Is.Null);
+        }
+        [UnityTest]public IEnumerator NavigationStartupWaitingMovementCannotOutlivePause()=>WaitingMovementCancelled(false);
+        [UnityTest]public IEnumerator NavigationStartupWaitingMovementCannotOutliveWorldPlacement()=>WaitingMovementCancelled(true);
+        IEnumerator WaitingMovementCancelled(bool place){
+            var(actor,_,far)=ColdWalkingScene(aligned:false);EnableWaitingPhysics().Stop(false);
+            var before=actor.transform.localPosition;var travel=new GroundedTravel(editor,actor,new(.6f,-2,0),1.2f);
+            try{
+                Assert.That(travel.Begin(out var error),Is.True,error);Assert.That(travel.State(out error),Is.EqualTo(RuleActionState.Preparing),error);
+                if(place)root.transform.position+=Vector3.right;else world.PausePhysics();
+                yield return null;Assert.That(travel.State(out _),Is.EqualTo(RuleActionState.Failed));travel.Stop(false);
+                for(int i=0;i<25;i++){travel.Tick();yield return null;}
+                Assert.That(actor.transform.localPosition,Is.EqualTo(before));Assert.That(editor.Find(far),Is.Null);
+                if(!place)Assert.That(world.Running,Is.False);
+            }finally{travel.Stop(false);}
         }
         [UnityTest]public IEnumerator NavigationStartupTravelPreparesColdGroundBelowTheScanWithoutLoadingDistantAreas(){
             var(actor,ground,far)=ColdWalkingScene();var before=actor.transform.position;

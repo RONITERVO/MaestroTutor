@@ -68,8 +68,9 @@ namespace Maestro.Quest.Interaction
             RefreshCollisionAdmission();
             bool ready=AnySimulationReady;
             if(ready==observedReady)return;
-            bool wasRunning=Running;if(!ready)Running=false;
-            Status=Running?"Physics on — grip to pick up, release to throw":IdleStatus;Notify(setupChanged:wasRunning!=Running,readinessOnly:!wasRunning);
+            // Native availability is not a Start/Pause request. Actors still need
+            // their selected ground and owned inputs before any physical step.
+            Status=Running?RunningStatus:IdleStatus;Notify(setupChanged:false,readinessOnly:true);
         }
     }
 }

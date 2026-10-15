@@ -51,6 +51,16 @@ namespace Maestro.Quest.Tests
             var field=Terrain(Vector3.zero,.2f,out _);Ready();yield return NavigationBuilt();var collision=field.Collision;field.Apply(null);Assert.IsFalse(navigation.Ready);
             EmptyNavigationCapture();Assert.IsFalse(NavigationField<RoomNavigationGeometry>("accepted").Ground.Contains(collision));yield return null;
         }
+        [UnityTest] public IEnumerator NavigationLifetimeLastGroundLossRetiresMapWithoutQueryWhilePhysicsStaysEnabled()
+        {
+            var field=Terrain(Vector3.zero,.2f,out _);
+            Assert.That(world.SetEnvironment((string)world.ObserveEnvironment()["stateId"],false,out _,out var error),Is.True,error);world.StartPhysics();
+            Assert.That(navigation.Prepare(.25f,1.7f,out error),Is.True,error);yield return NavigationBuilt();
+            var filter=NavigationFilter();Assert.That(NavMesh.SamplePosition(Vector3.up*.2f,out _,.2f,filter),Is.True);int intent=world.SimulationIntent;
+            field.Apply(null);yield return null;yield return null;
+            Assert.That(world.Running,Is.True);Assert.That(world.SimulationIntent,Is.EqualTo(intent));
+            Assert.That(NavMesh.SamplePosition(Vector3.up*.2f,out _,.2f,filter),Is.False);EmptyNavigationCapture();
+        }
         [UnityTest] public IEnumerator NavigationLifetimeDisabledActorCannotFallBackToUnownedRouting()
         {
             Terrain(Vector3.zero,.2f,out _);Tutor();Ready();yield return NavigationBuilt();var item=avatar.GetComponent<RoomItem>();Assert.IsTrue(navigation.Prepare(.25f,1.7f,out var error,item),error);

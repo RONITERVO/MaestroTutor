@@ -54,8 +54,9 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SharedSimulationReadsReadinessWithoutMutatingAndRespectsWorkspaceAndRuntimeHolds()
         {
-            SharedModes(out _,out _);world.SetSurfaces(false,new string('x',1024)+"🧪");var unavailable=SimulationFact();Assert.That((bool)unavailable["canStart"],Is.False);Assert.That((string)unavailable["status"],Has.Length.LessThanOrEqualTo(128));
-            Assert.That(modeActions.Execute(SimulationRequest("start"),out _),Is.False);Assert.That(JToken.DeepEquals(unavailable,SimulationFact()),Is.True);
+            SharedModes(out _,out _);world.SetSurfaces(false,new string('x',1024)+"🧪");var unavailable=SimulationFact();Assert.That((bool)unavailable["canStart"],Is.True);Assert.That((bool)unavailable["ready"],Is.False);Assert.That((string)unavailable["status"],Has.Length.LessThanOrEqualTo(128));
+            Assert.That(JToken.DeepEquals(unavailable,SimulationFact()),Is.True,"Reading readiness does not enable or mutate physics");
+            yield return ChangeSimulation("start");Assert.That(world.Running,Is.True);Assert.That((bool)SimulationFact()["ready"],Is.False);world.PausePhysics();
             world.SetSurfaces(true,"Aligned");var before=SimulationFact();using(editor.WriteGate.TryFreeze(out var error)){Assert.That(error,Is.Null);Assert.That(modeActions.Execute(SimulationRequest("start"),out _),Is.False);Assert.That(JToken.DeepEquals(before,SimulationFact()),Is.True);world.PausePhysics();}
             var stale=SimulationRequest("start");using(editor.RuntimeGate.Hold("Review room content first")){Assert.That((bool)SimulationFact()["held"],Is.True);Assert.That((bool)SimulationFact()["canStart"],Is.False);Assert.That(modeActions.Execute(SimulationRequest("start"),out _),Is.False);}
             Assert.That(world.Running,Is.False);Assert.That((bool)SimulationFact()["held"],Is.False);Assert.That(modeActions.Execute(stale,out _),Is.False);

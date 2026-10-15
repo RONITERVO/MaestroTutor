@@ -101,11 +101,16 @@ namespace Maestro.Quest.Interaction {
         void InterruptPhysicsInputs(){InputEditor?.CancelDormantRecovery(item);InputEditor?.InterruptPhysicsIsland(item);ReleasePhysicsInputs();collisionInterrupted=false;}
         internal void ReleasePhysicsInputs(){physicsInputs?.Dispose();physicsInputs=null;inputMembers=Array.Empty<string>();shapeFailed=false;DiscardPreparedMotion();inputStatus=null;SetInputsReady(false);}
         internal JObject ObservePhysicsInputs(){
-            bool active=InputOwner,ready=active&&InputsCurrent;
-            bool recoveryPending=false,recovering=InputEditor&&InputEditor.DormantRecoveryBlocked(item,out recoveryPending,out _);
+            bool active=InputOwner,ready=active&&BaseAllowed&&InputsCurrent;
+            bool recoveryPending=false,recovering=false;string recoveryReason=null;
+            if(InputEditor)recovering=InputEditor.DormantRecoveryBlocked(item,out recoveryPending,out recoveryReason);
             string state=!active?"inactive":ready?"ready":physicsInputs?.Pending==true||recovering&&recoveryPending?"pending":"unavailable";
             var targets=InputEditor?.DormantRecoveryTargets(item)??physicsInputs?.Targets??Array.Empty<string>();
-            return new JObject{["state"]=state,["ready"]=ready,["reason"]=ImportObservation.Text(ready?null:active?PhysicsInputStatus:"Physics, geometry or object ownership is unavailable"),
+            string reason=ready?null:!active?"Physics, geometry or object ownership is unavailable":
+                recovering?recoveryReason:!world.EnvironmentReady(item)?"Waiting for accepted ground for this object":
+                !world.CanSimulate(body.position,item)?"Object is outside its accepted ground columns":
+                collisionInterrupted?"Movement was interrupted; grab the object or pause and start physics to resume from rest":PhysicsInputStatus;
+            return new JObject{["state"]=state,["ready"]=ready,["reason"]=ImportObservation.Text(reason),
                 ["dependencyCount"]=targets.Length,["dependencies"]=new JArray(targets.Take(4)),["momentumHeld"]=active&&preparedMomentum,["interrupted"]=collisionInterrupted};
         }
     }

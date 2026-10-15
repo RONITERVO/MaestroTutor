@@ -25,7 +25,11 @@ unused static areas to retire; see the [verified desktop checkpoint](#physics-de
 Free objects in an already-running world now prepare dormant virtual ground before
 resuming motion; see [owned ground preparation](#owned-local-ground-preparation--2026-10-14).
 Explicit physics Start now prepares resident free actors and their local dependencies.
-Current capacity and initial full-room scene startup remain unchanged.
+Enabled simulation can wait for ground; fixed actors own the ground preparation
+for their subsequent movement, including virtual actors without a physical scan.
+See [simulation intent and per-actor readiness](#simulation-intent-and-per-actor-readiness--2026-10-15).
+Current capacity remains bounded. Saved-room display uses observed-area demand;
+independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
 existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#directing-maestros-attention).
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
@@ -10027,7 +10031,7 @@ pass ELF/16 KiB checks; 152 staged web files and the browser AAR match.
 The source audit covers 2,992 native inputs, including
 1,120 code/shader files (1,114 C#);
 four setup-generated project assets are recorded separately.
-Browser tests report 128 passed/two skipped. All 14 protected files remain unchanged.
+Android browser unit tests report 128 passed/two skipped. All 14 protected files remain unchanged.
 No APK/AAB was produced. Evidence: .quest-evidence/local-resident-geometry/.
 
 Selective scene startup, navigation-only cold-start admission, unknown-geometry
@@ -10157,8 +10161,64 @@ Unsigned Android IL2CPP/Java compilation passed. All 22 ARM64 libraries pass
 ELF/16 KiB checks; 152 staged web files and the browser AAR match. The source
 audit covers 3,000 native inputs, including 1,118 C#
 and 1,124 code/shader files; four setup-derived project assets
-are recorded separately. Browser tests report 128 passed/two skipped. All 14
+are recorded separately. Android browser unit tests report 128 passed/two skipped. All 14
 protected files remain unchanged. No APK/AAB was produced.
 Evidence: .quest-evidence/navigation-startup/.
 
 Remaining: finer loading groups, unknown-geometry isolation, fixed-only per-entity virtual startup without a ready global environment, readable readiness summaries, larger-world capacity and physical acceptance. V1 is incomplete; headset/provider/signing/deployment/Meta holds remain.
+
+
+## Simulation intent and per-actor readiness — 2026-10-15
+
+The world now distinguishes explicit enablement from available ground. Start can
+complete with `running=true, ready=false`: enabled, waiting for accepted ground.
+`canStart` reports world collision/lifecycle admission, not actual movement
+readiness. Every body still needs its selected ground column and owned native
+inputs before gravity, impulses or walking. The shared action, facts and tool
+controls use this same runtime; no new storage, capability ID or schema is added.
+
+This supersedes the tracked-view Start fallback from the preceding checkpoint.
+An empty or fixed-only world does not load ground at the viewer just to enable
+physics. A virtual character can prepare its own local ground for an accepted
+walk even with global real-room collisions enabled and no aligned scan. Loading
+or retiring native ground changes readiness, not the user's simulation intent.
+Explicit Pause, focus/lifecycle holds, scan changes and collision-policy changes
+retain their existing invalidation rules. Required free-body preparation can
+still fail; enabled does not promise a clear path or available assets.
+
+A previously simulating actor whose selected ground disappears is held with its
+affected physical group; independent bodies continue. Repair does not replay its
+old throw or silently resume it. Grab or Pause/Start creates a fresh owner from
+rest. An actor that has never had ground simply waits. Object input observations
+now require its ground admission as well as prepared geometry, so they cannot
+report ready while the body is waiting outside accepted ground. Specific recovery
+errors (changed inputs, missing/damaged imports and world movement) remain visible
+ahead of generic waiting/interruption guidance. Missing support and interruption
+are not settlement events.
+
+Moving the world during initial walking preparation cancels that request and its
+pending inputs. Idle navigation maps also release invalid ground without waiting
+for another route query. Larger loading groups, conservative unknown-geometry
+isolation, readable readiness summaries, continuous-follow idle demand and
+country-scale capacity still need work. Hardware acceptance remains outstanding.
+
+Verified on desktop: **1,259 EditMode / 1,636 PlayMode** passed, with three
+expected optional private-asset skips. The focused runs passed **51 physics,
+startup and ownership checks**, then **12 virtual-policy/navigation-lifetime
+checks**, **32 room-editor/legacy-agent checks**, and **38 recovery/boundary/world-motion checks**. These include actual gravity, per-actor ground loss, restored support,
+empty-world waiting, scan-free virtual walking, stale requests, Pause and
+world-frame cancellation.
+
+Offline Headless **ac597e7a490a48acae925a398a2d8c29** and Original Book **181ab007ba074678a5f789e06b911764** passed with
+zero client/editor exits and no provider calls. **2,958 web tests / 313 files**,
+probe types, refreshed native fixtures and asset provenance passed.
+
+Unsigned Android IL2CPP/Java compilation passed. All 22 ARM64 libraries pass
+ELF/16 KiB checks; 152 staged web files and the browser AAR match. The source
+audit covers 3,000 native inputs, including 1,118 C# and
+1,124 code/shader files; four setup-derived project assets are
+recorded separately. Android browser unit tests report 128 passed/two skipped. All 14
+protected files remain unchanged. No APK/AAB was produced.
+Evidence: .quest-evidence/physics-intent/.
+
+Headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
