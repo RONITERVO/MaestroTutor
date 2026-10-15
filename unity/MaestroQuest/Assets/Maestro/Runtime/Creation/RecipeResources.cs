@@ -7,10 +7,6 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation
 {
-    internal sealed class RoomResourceLimitException:InvalidOperationException
-    {
-        internal RoomResourceLimitException(string message):base(message){}
-    }
     // Process-wide native ownership, independent of saved document quotas. These
     // source counts are admission bounds, not measured memory or frame time.
     internal static class RecipeResources

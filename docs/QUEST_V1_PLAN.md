@@ -11154,3 +11154,51 @@ object instances, ink, light/window and simulation costs. Existing collision
 resource diagnostics report ownership and source costs; they do not themselves
 enforce a process-wide collision budget. No larger-world, paid-provider, headset,
 packaging or Store acceptance is claimed. V1 remains incomplete.
+
+
+## Authored collision resource admission (2026-10-15)
+
+Compound, terrain and rigid imported collision now reserve independent native
+capacity before allocation: 256 retained entries, 2,048 colliders and 1,048,576
+source triangles. Costs follow preparation, accepted/disabled geometry,
+replacement overlap and deferred destruction across workspaces. Compound and
+terrain leases retain separately owned meshes until those meshes are destroyed;
+shared imported meshes retain their separate model ownership. Rigid imported
+collision remains limited to 32 meshes / 50,000 triangles per object. These
+bounds provide logical replacement headroom, not measured Quest RAM, PhysX
+cooked size or frame-time guarantees.
+
+Admission failure preserves accepted geometry, saved bytes, revisions and
+Undo/Redo. Dormant activation keeps its saved target and can retry after capacity
+is released. Unexpected actual geometry exceeding its reservation rejects
+preparation and remains charged through rollback. There is no automatic eviction
+or saved-data deletion. User and agent inspection share the passive
+`runtime.collisionBudget` fact; existing owner/totals fact schemas are unchanged.
+Their descriptions now explain enforcement and owned-mesh retirement.
+
+Accepted desktop evidence: **30 EditMode / 50 PlayMode** checks, **3,074 web tests
+/ 327 files**, application/probe TypeScript and catalog provenance passed.
+Native tests cover each independent limit, wide arithmetic, save/Undo stability,
+compound/terrain/imported replacement, deferred destruction, actual-cost
+mismatch and dormant activation retry. Actual native budget/owner output in
+`test-fixtures/browser/collisionAdmission.json` is validated on the web side.
+
+Full offline Headless `2f3e594a67a4421fbb28274466087bcc` passed 2,179
+observations / 2,174 explicit read sets with 15 scripted provider
+responses and zero provider-network attempts; steering, native programs,
+physics and 177 motion samples passed. Original Book
+`d88916a7ea974b56af16d40d4ee5e314` passed 988 requests /
+3,213 observations / 27 scripted planning calls, with no browser
+errors, preserved human edits, stale-write refusal and reload without replay.
+Both used the bounded production object context, not SparseObjectView.
+All 4,268 frozen source/fixture/config inputs, 3,030 native source/mirror
+inputs and 14 unrelated files were verified. Evidence is under
+`.quest-evidence/collision-admission/`. Existing review comments were reread;
+there were no new or changed findings and no comments were posted.
+
+Saved limits and world extent remain unchanged. Default item/book/avatar proxies,
+room scans, navigation and other system colliders are outside this ledger.
+Object-instance, ink, light/window and simulation admission plus transaction/
+storage costs still need work before saved capacity expands. Full broad Unity
+suites, Android compilation, paid providers, headset performance and Store
+acceptance were not rerun. V1 remains incomplete.

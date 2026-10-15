@@ -23,11 +23,20 @@ A 0.0000001-metre calculation tolerance keeps the minimum consistent across
 web doubles and Unity floats. Positions stay within 2 metres; dimensions are 0.005–2 metres; combined extent
 stays within 3 metres. Whole-object scaling applies to these dimensions.
 
-Each ring sector becomes one convex prism; other shapes cost one piece. Admission
-reserves at most 64 pieces per object and 512 across the room, including custom
+Each ring sector becomes one convex prism; other shapes cost one piece. Saved-room
+admission reserves at most 64 pieces per object and 512 across the room, including custom
 recipes currently bypassed by a box/sphere override. An ordinary created object
 reserves one piece. The built-ins are outside this custom-geometry budget.
 These limits bound growth; they are not a Quest frame-time guarantee.
+
+Native geometry additionally shares the independent process-wide collision
+budget with terrain and rigid imported models: 256 entries, 2,048 colliders and
+1,048,576 source triangles. Preparation and retiring replacements retain costs
+until their owned components and meshes are destroyed. An admission refusal
+preserves the accepted geometry, persistence and Undo/Redo history; retry is
+possible once capacity is released. See [resource admission](QUEST_WORLD_AUTHORING.md#authored-collision-resource-admission)
+and shared catalog fact `runtime.collisionBudget`. This does not increase the
+saved-room limits above.
 
 ## Physical and save behaviour
 

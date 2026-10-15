@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation
                 if(!CommitPersisted(new[]{data},Array.Empty<string>(),"Imported geometry saved",false,out error,ComponentBefore(new[]{data})))return false;
                 if(view.ModelGeometryReady)return true;error="Geometry settings were saved but preparation is unavailable: "+view.ModelGeometryIssue;return false;
             }
-            catch(System.Exception e){error=e is Imports.ModelImportException?e.Message:"Imported geometry could not be prepared; inspect the object before retrying";return false;}
+            catch(System.Exception e){error=e is Imports.ModelImportException or RoomResourceLimitException?e.Message:"Imported geometry could not be prepared; inspect the object before retrying";return false;}
         }
         internal JObject ObserveModelGeometry(string target)
         {

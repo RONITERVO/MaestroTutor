@@ -55,10 +55,10 @@ namespace Maestro.Quest.Tests
             root.AddComponent<RuntimeDiagnostics>();var parent=new GameObject("Owned collision parent");parent.transform.SetParent(root.transform,false);
             using var geometry=new CollisionGeometry(ResourceRecipe(),parent.transform,new RoomResourceOwner(editor.WorldIdentity,"external","collision"));geometry.SetActive(true);
             parent.SetActive(false);var inactive=CollisionOwners("external").Single();Assert.AreEqual(11,(int)inactive["colliders"]);Assert.AreEqual(0,(int)inactive["activeColliders"]);
-            UnityEngine.Object.Destroy(parent);Assert.AreEqual(1,CollisionOwners("external").Length);yield return null;Assert.IsEmpty(CollisionOwners("external"));
+            UnityEngine.Object.Destroy(parent);Assert.AreEqual(1,CollisionOwners("external").Length);yield return null;Assert.AreEqual(1,CollisionOwners("external").Length,"Owned compound meshes still exist after external hierarchy destruction");
             // A wrapper can outlive externally destroyed hierarchy components. Its
             // later Dispose must still release mesh assets without resurrecting a lease.
-            geometry.Dispose();Assert.IsEmpty(CollisionOwners("external"));
+            geometry.Dispose();Assert.AreEqual(1,CollisionOwners("external").Length);yield return null;Assert.IsEmpty(CollisionOwners("external"));
         }
         [UnityTest] public IEnumerator CollisionResourcesTerrainEditsTrackAcceptedMeshAndExcludeVisualSculptPreview()
         {

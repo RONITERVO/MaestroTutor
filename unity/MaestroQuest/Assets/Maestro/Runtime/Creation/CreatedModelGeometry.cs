@@ -71,7 +71,7 @@ namespace Maestro.Quest.Creation
             }
             catch(System.Exception error)
             {
-                candidate?.Dispose();modelGeometryReady=false;ModelGeometryIssue=error is ModelImportException?error.Message:"Imported collision geometry could not be prepared";
+                candidate?.Dispose();modelGeometryReady=false;ModelGeometryIssue=error is ModelImportException or RoomResourceLimitException?error.Message:"Imported collision geometry could not be prepared";
                 ModelStatus=ModelGeometryIssue;SetCollisionShape(collisionShape,true);GetComponent<RigidRoomItem>().SetGeometryReady(false);
                 GetComponentInParent<RoomEditor>()?.RefreshRegionCollision();
             }

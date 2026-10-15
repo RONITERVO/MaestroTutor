@@ -37,7 +37,7 @@ namespace Maestro.Quest.Creation
             }resource.Ready(colliders);}catch{Dispose();throw;}
         }
         void AddMesh(GameObject node,Mesh mesh) {
-            meshes.Add(mesh);var collider=node.AddComponent<MeshCollider>();collider.convex=true;collider.sharedMesh=mesh;colliders.Add(collider);
+            meshes.Add(mesh);resource.Own(mesh);var collider=node.AddComponent<MeshCollider>();collider.convex=true;collider.sharedMesh=mesh;colliders.Add(collider);
         }
         static Vector2[] Circle(int count){var p=new Vector2[count];for(int i=0;i<count;i++){float a=2*Mathf.PI*i/count;p[i]=new Vector2(.5f*Mathf.Cos(a),.5f*Mathf.Sin(a));}return p;}
         // Counter-clockwise X/Z footprint. Each ring sector is convex and leaves the centre empty.

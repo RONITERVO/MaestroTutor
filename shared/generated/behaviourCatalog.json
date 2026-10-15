@@ -43470,7 +43470,7 @@
         }
       },
       "label": "Authored collision resources",
-      "description": "Process-wide retained collision geometry from authored compound shapes, accepted height fields and rigid imported-model collision. Includes disabled and prepared replacements. Source collider/triangle counts are not measured RAM, PhysX cooked size, unique mesh assets or enforced admission limits. Repeated mesh instances count separately. Default bounds, book/avatar proxies, scanned room geometry and navigation maps are excluded. Preparing costs are declared; ready costs come from actual accepted colliders; retiring costs remain until all owned collider components are destroyed. activeColliders counts enabled components in active hierarchies, not proof of simulation or contact. Reads may forget completed destruction metadata but never destroy geometry, evict, load or modify saved world data. Regional admission/streaming remains separate.",
+      "description": "Process-wide retained collision geometry from authored compound shapes, accepted height fields and rigid imported-model collision. Includes disabled and prepared replacements. Source collider/triangle counts are not measured RAM, PhysX cooked size, unique mesh assets. Admission limits are reported by runtime.collisionBudget. Repeated mesh instances count separately. Default bounds, book/avatar proxies, scanned room geometry and navigation maps are excluded. Preparing costs are declared; ready costs come from actual accepted colliders; retiring costs remain until owned collider components and separately owned compound/terrain meshes are destroyed. Shared imported asset meshes have their separate model ownership. activeColliders counts enabled components in active hierarchies, not proof of simulation or contact. Reads may forget completed destruction metadata but never destroy geometry, evict, load or modify saved world data. Regional admission/streaming remains separate.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -43494,7 +43494,7 @@
         }
       },
       "label": "Authored collision owner",
-      "description": "Read one retained authored collision lease by index (zero to runtime.collisionResources.entries minus one). Indices may shift; leaseId is an ephemeral runtime identity, never a saved object reference. World/region/target copy the owning authored entity; unscoped desktop geometry has empty identifiers. role is collision or unscoped; kind is compound, terrain or imported; phase is preparing, ready or retiring. A replacement can retain two leases for one target. Disabled geometry retains its source costs. Retiring source costs remain until all owned collider components are gone; activeColliders reflects actual enabled components in active hierarchies. Same accounting scope and exclusions as runtime.collisionResources; not measured RAM or admission limits. Reads return detached metadata and never delete assets, saved objects or geometry.",
+      "description": "Read one retained authored collision lease by index (zero to runtime.collisionResources.entries minus one). Indices may shift; leaseId is an ephemeral runtime identity, never a saved object reference. World/region/target copy the owning authored entity; unscoped desktop geometry has empty identifiers. role is collision or unscoped; kind is compound, terrain or imported; phase is preparing, ready or retiring. A replacement can retain two leases for one target. Disabled geometry retains its source costs. Retiring source costs remain until owned collider components and separately owned compound/terrain meshes are gone; activeColliders reflects actual enabled components in active hierarchies. Same accounting scope and exclusions as runtime.collisionResources; not measured RAM. Use runtime.collisionBudget for enforced limits. Reads return detached metadata and never delete assets, saved objects or geometry.",
       "input": {
         "type": "object",
         "properties": {
@@ -43514,6 +43514,26 @@
       },
       "features": [
         "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.collisionBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "entries": "number",
+          "colliders": "number",
+          "meshColliders": "number",
+          "sourceTriangles": "number",
+          "entryLimit": "number",
+          "colliderLimit": "number",
+          "triangleLimit": "number"
+        }
+      },
+      "label": "Live authored collision budget",
+      "description": "Process-wide enforced reservations for authored compound shapes, height fields and rigid imported collision, including private preparation, disabled geometry, replacement overlap and deferred destruction across workspaces. These logical source costs are not measured PhysX memory or frame time. Begin reserves before native collider allocation; unexpected accepted geometry exceeding that reservation rejects preparation and remains charged until rollback destroys it. Default item/book/avatar proxies, scans, navigation and other system colliders are outside this ledger. Saved quotas are independent. No read starts physics, loads or evicts objects, or alters saved data.",
+      "features": [
         "runtimeDiagnostics.v1"
       ]
     },
@@ -46445,7 +46465,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
-      "sha256": "4510df3dd0b8abbd8f5bd7ffad15ab24481f7ed6b63920ed6325e6bfefa4fa1d"
+      "sha256": "7449442a58da52c08f8a33e9e4bb5b5a0ed4d32454b2c90eb7d92c69e089c732"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanDrawingCapability.cs",
@@ -46605,7 +46625,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionGeometry.cs",
-      "sha256": "f997ecb3ed8b6f940428cfa33cf458dc540218eae8ca1b8838ef6adc0063358e"
+      "sha256": "74d45ab2ec0a9ea6f121f28e6fe39b53fb5370c368ec05156bdcfa1d10f2d0ce"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionRecipe.cs",
@@ -46613,7 +46633,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CollisionResources.cs",
-      "sha256": "a3ed4233613ec1c76bc251a0dd2220ae91bad963cdaee94a6dc71a9683fc2a1a"
+      "sha256": "5a99bd62735213128b92a79f07561231d6eb99f831c55636236d83aeee46fd50"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionCapture.cs",
@@ -46653,11 +46673,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
-      "sha256": "4c63ee412de6895d4b673e5edfdcbbf6829efaefac03f2b6ec24b2dbaaa15a66"
+      "sha256": "1a5636fecd99eadedc47d481221bd43ec77c9453fb6f913ba9c3557b0080170f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "6ff6cb0a33099f58c368d5f34808a900402648d4cdd5d3089864a0fdb2f4a953"
+      "sha256": "0b25f74bbc9c55d437d3b32f6f46efa5f2310a0812d1d386a250f33b0cfa42fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -46701,7 +46721,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
-      "sha256": "ca936eeaa245c1b8cbb6a7c3e22d311a011d14a0a0330d71fdf370df9a586f09"
+      "sha256": "da4cf0bf86c5fda4ccc3eb943f83e5e12553d7926dce260e1d0e9e1ccd3eebaa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldTransfer.cs",
@@ -46793,7 +46813,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeResources.cs",
-      "sha256": "15a4c4bc45acaa1149dec78d10a6fb4ce357cd4ca319b1e986e435daef0437c6"
+      "sha256": "3cf41e622d87cf857bb8f5d56370a28c7b4a7f947fd8daa79c878be208425cc5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeSweep.cs",
@@ -47041,7 +47061,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelGeometryEdits.cs",
-      "sha256": "60dabb4f0d473c149833e580a3815ab597f32da97ac5cdb6777ab586937f0bef"
+      "sha256": "d4b0e0359bd09f3a00d142bf47be8b71b91b364ea90e030197d7050021446002"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotion.cs",
@@ -47174,6 +47194,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResidentCollision.cs",
       "sha256": "22ab62e84ef55dcb5b9b495ee24f6351f8e13e0ba2fcd0f569fead59891146f7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceLimitException.cs",
+      "sha256": "cae80895e73270040746da6a40b8593e492a6818729826471036719cc67668f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -48045,7 +48069,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "937836b53c053f0179d6e52dcf7eb43344c6c9b785e52ab1ddb087442e4c356c"
+      "sha256": "6bbebb0dcd73bd7aae1fc1bdd5071ddc497d761186aa67e65c80e23ac9a8eef2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

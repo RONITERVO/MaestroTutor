@@ -1828,8 +1828,8 @@ bounded replacement headroom relative to the current saved-world limits; they
 are not measured headset memory or performance guarantees. Shared primitive
 meshes are represented by their part count, not by custom vertices. Imported
 models, collision, terrain, ink, lights, materials and textures have separate
-costs. In particular, the existing collision resource ledger reports retained
-costs but does not yet enforce a process-wide limit.
+costs. Authored collision geometry has its own process-wide admission limits,
+described below.
 
 If admission is full, an edit fails before persistence and keeps the accepted
 geometry, playback and Undo history. Dormant activation also preserves the saved
@@ -1842,3 +1842,34 @@ is passive; `ready` does not prove visibility or running animation.
 This guard does not increase saved capacity or the supported world extent.
 Remaining saved/runtime limits and persistence costs must be separated before
 those can grow.
+
+
+## Authored collision resource admission
+
+Authored compound shapes, accepted height fields and rigid imported-model
+colliders share a process-wide reservation before native geometry is allocated.
+It holds through preparation, adoption, disabled geometry, replacement overlap
+and deferred destruction. Separately owned compound and terrain meshes must
+also finish destruction before their reservation is released. Imported meshes
+retain their separate model ownership; their collision components are charged
+here without taking ownership of those shared mesh assets.
+
+The independent limits are 256 retained entries, 2,048 collider components and
+1,048,576 source triangles. These bound temporary overlap as well as accepted
+geometry; they are not measurements of cooked PhysX memory, frame time or Quest
+capacity. Saved-room collision/terrain quotas are unchanged. Default object,
+book and avatar proxies, room scans, navigation and other system colliders are
+outside this ledger and need their own budgets.
+
+Failure leaves the accepted geometry, saved state and Undo/Redo history intact.
+A failed dormant activation keeps the saved object available for a later retry.
+Nothing is automatically evicted or deleted to make space. If actual prepared
+colliders exceed the evaluator's reservation, preparation is refused and the
+larger cost remains charged until rollback finishes destroying that geometry.
+
+User and agent inspection share `runtime.collisionBudget` for limits and usage,
+`runtime.collisionResources` for phase totals and `runtime.collisionResource`
+for individual owners. Reads are passive and return detached metadata. A ready
+lease records accepted ownership; enabled/active collider counts do not prove
+simulation, contact or visible geometry. These resource limits do not change
+which real-room surfaces an entity collides with or its virtual-world terrain.

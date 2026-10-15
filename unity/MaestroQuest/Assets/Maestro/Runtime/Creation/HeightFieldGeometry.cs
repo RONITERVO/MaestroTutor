@@ -26,7 +26,7 @@ namespace Maestro.Quest.Creation
             try {
                 Surface=new GameObject("Editable height surface");Surface.SetActive(false);Surface.layer=RoomPhysicsLayers.Item;
                 Surface.transform.SetLocalPositionAndRotation(data.frame.position,data.frame.rotation);
-                Mesh=new Mesh{name="Bounded height surface"};Fill(Mesh,data);Surface.AddComponent<MeshFilter>().sharedMesh=Mesh;
+                Mesh=new Mesh{name="Bounded height surface"};resource.Own(Mesh);Fill(Mesh,data);Surface.AddComponent<MeshFilter>().sharedMesh=Mesh;
                 pigment=IllustratedMaterials.Create(color,.035f);pigment.SetFloat("_Shading",.28f);Surface.AddComponent<MeshRenderer>().sharedMaterial=pigment;
                 Collision=Surface.AddComponent<MeshCollider>();Collision.convex=false;Collision.sharedMesh=Mesh;
                 Book.AcousticSurface.Attach(Surface,Mesh);Surface.AddComponent<RoomWalkableSurface>().Publish(Collision);
