@@ -51,6 +51,8 @@ The offline headless journey now passes with an empty periodic object list; see
 [explicit object reads](#headless-journey-with-an-empty-object-view--2026-10-15).
 Task steering and visible Book parity now also use explicit reads; see
 [shared steering evidence](#2026-10-15--task-steering-and-visible-book-reads-without-full-inventory).
+Learner restore identity now uses the saved directory across native restarts; see
+[restart evidence](#2026-10-15--explicit-saved-identity-across-native-restart).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -11003,3 +11005,40 @@ periodic inventory and saved limits remain unchanged. The resumed novice-lesson
 identity check still reads the initial full inventory; it and remaining live/context
 consumers must be verified before production snapshots become bounded. Broad
 native suites and Android compilation remain at their recorded earlier checkpoints.
+
+
+### 2026-10-15 — Explicit saved identity across native restart
+
+The learner collector and restore handoff no longer use a periodic object array
+as proof of saved membership. Startup and clean-finish directory reads preserve
+world/session identity and exact sorted IDs; two complete passes detect membership
+changes. Temporary, pending and unavailable state is refused. Pose revisions may
+advance independently. Resume requires a new native session and the same saved
+world/IDs, verifies the profile digest before loading it, and preserves access mode.
+Setup failures now close the native transport. Older diagnostic receipts lacking
+explicit final identity are refused without modifying their saved files.
+
+A dedicated offline identity mode reopens a copied, closed workspace through the
+actual Unity process and shared facts. A command-level guard admits only saved
+object-directory reads; it prevents unrelated shared fixtures from changing the
+copy. The sole native-source change is this Editor-only restore gate. Production
+native behavior, periodic inventory and saved limits are unchanged.
+
+Accepted fresh run `c5498066f96f43e7839679adf0ca1138` and resumed run
+`7ffec49e44c249309e76449e35097c9b` each passed 9 explicit directory requests with empty
+periodic object arrays. All 5 object IDs and the durable world ID survived;
+the native session changed. Web tests passed **3,051 / 324 files**, application/probe
+TypeScript and all eight invalid-mode guards passed. All 3,014 native inputs
+match the mirror and all 14 unrelated files remain byte-identical. Evidence:
+`.quest-evidence/sparse-learner-resume/`. An initial stale-mirror preflight and two
+initial runs that still executed shared audio checks remain recorded but are not
+accepted as read-only restart evidence; the command guard and corrected runs
+supersede them.
+
+This is native saved-identity acceptance, not paid-lesson or learner-profile replay,
+headset, complete-property restoration or Store acceptance. Earlier full Headless
+and Original Book evidence remains at `618099bf`; broad native suites and Android
+compilation remain at their documented checkpoints. Next: make production object
+projection explicitly bounded and non-exhaustive, with matching protocol/context
+semantics. Preserve the authoritative paged directory and exact target reads.
+Do not raise saved capacity or claim new provider/device acceptance from these runs.

@@ -12,29 +12,35 @@ import {runHeadlessSuggestionAftersteps} from '../src/headless/suggestionJourney
 import {runHeadlessLiveTurn} from '../src/headless/liveJourney';
 import {decodePcm16LeBase64} from '../src/core-sdk/media/pcmInput';
 import {captureManagedJourneyBilling,evaluateManagedJourneyBilling,waitForManagedJourneyBillingSettlement} from '../src/headless/managedJourneyBilling';
+import {createHash} from 'node:crypto';
+import {readNativeObjectIdentity,assertResumedNativeIdentity,readLearnerResumeReceipt,type NativeObjectIdentity,type LearnerResumeReceipt} from './native-probe-identity';
 import type {ChatMessage} from '../src/core/types';
 import {debugLogService,type LogEntry} from '../src/core-sdk/diagnostics';
 
 const directory=process.argv[2];
 if(!directory||process.env.MAESTRO_ROOM_PROBE_SCENARIO!=='LearnerConversation')throw new Error('Explicit fresh learner probe required.');
 const transport=await HeadlessRoomTransport.connect(directory,120000);
+let stopProviderLogs=()=>{};
+try{
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const records:Record<string,unknown>[]=[];
 let providerLogs:LogEntry[]=[];
-const stopProviderLogs=debugLogService.subscribe(logs=>{providerLogs=logs;});
+stopProviderLogs=debugLogService.subscribe(logs=>{providerLogs=logs;});
 let sequence=0,finished=false,active=false;
-let resumedFrom:string|undefined,resumeObjectIds:string[]|undefined;
-try{const resume=JSON.parse(await readFile(join(directory,'learner-resume.json'),'utf8'));assert.equal(resume.version,1);assert.match(resume.sourceRun,/^[a-f0-9]{32}$/);resumedFrom=resume.sourceRun;assert.ok(Array.isArray(resume.nativeObjectIds));resumeObjectIds=resume.nativeObjectIds;}
+let resumedFrom:string|undefined,resume:LearnerResumeReceipt|undefined,finalIdentity:NativeObjectIdentity|undefined;
+try{resume=readLearnerResumeReceipt(JSON.parse(await readFile(join(directory,'learner-resume.json'),'utf8')));resumedFrom=resume.sourceRun;}
 catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+if(resume){const bytes=await readFile(join(directory,'profiles/learner/profile.json'));assert.equal(createHash('sha256').update(bytes).digest('hex'),resume.profileSha256.toLowerCase(),'Copied learner profile does not match its closed-run receipt');}
 const client=await createHeadlessClient({profileName:'learner',dataRoot:join(directory,'profiles')});
 if(!resumedFrom){assert.equal(Object.keys(client.state.chats).length,0,'Learner history must start empty.');assert.equal(client.state.globalProfile,'');}
-else{assert.equal(client.state.settings.selectedLanguagePairId,'es-ES-en-US');assert.ok(client.state.chats['es-ES-en-US']?.length,'Resumed learner history is missing.');}
+else{assert.equal(client.accessMode,resume!.accessMode);assert.equal(client.state.settings.selectedLanguagePairId,'es-ES-en-US');assert.ok(client.state.chats['es-ES-en-US']?.length,'Resumed learner history is missing.');}
 const pair=await selectHeadlessLanguage(client,{targetLanguageCode:'es-ES',nativeLanguageCode:'en-US'});
 const initialNative=structuredClone(transport.client.getSnapshot().state);
-if(resumeObjectIds)assert.deepEqual(initialNative!.objects.map(object=>object.id).sort(),resumeObjectIds.slice().sort(),'Restored room must preserve the exact original object identities.');
+const initialIdentity=await readNativeObjectIdentity(commands=>transport.client.requestPrepared(commands));
+if(resume)assertResumedNativeIdentity(resume.nativeIdentity,initialIdentity);
 const agent=new HeadlessRoomAgent(client,()=>transport.lease());client.roomAgent=agent;
 const boundary='Adaptive novice dialogue chosen by the developer, without catalog coaching. Original chat/verifier/tools/provider and actual Unity. Fresh local learning history unless resumedFrom identifies an explicitly restored closed test run; existing test payer. Synthetic Editor floor; no real scan, onboarding UI, physical input or headset proof. Outcomes require review.';
-const save=()=>writeFile(join(directory,'learner-session.json'),JSON.stringify({boundary,accessMode:client.accessMode,profile:client.profile.directory,sequence,finished,resumedFrom,initialNative,records},null,2));
+const save=()=>writeFile(join(directory,'learner-session.json'),JSON.stringify({boundary,accessMode:client.accessMode,profile:client.profile.directory,sequence,finished,resumedFrom,initialNative,initialIdentity,finalIdentity,records},null,2));
 const file=async(name:string,max:number)=>{
  const path=join(directory,name);if((await stat(path)).size>max)throw new Error('Oversized learner input');
  return JSON.parse(await readFile(path,'utf8'));
@@ -113,6 +119,10 @@ try{
  }
  if(!finished)throw new Error('Learner session exceeded its bounded duration.');
 }finally{
- clearInterval(control);stopProviderLogs();agent.tasks.stopAll();await agent.disconnect();await save();await transport.close();
+ clearInterval(control);agent.tasks.stopAll();
+  try{await agent.disconnect();if(finished)finalIdentity=await readNativeObjectIdentity(commands=>transport.client.requestPrepared(commands));}
+  finally{await save();}
 }
 console.log('Learner session collected; semantic and UI outcomes require review.');
+
+}finally{stopProviderLogs();await transport.close();}

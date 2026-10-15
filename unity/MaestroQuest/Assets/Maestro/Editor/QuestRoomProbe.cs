@@ -30,7 +30,7 @@ namespace Maestro.Quest.Editor
             if(File.Exists(Path.Combine(directory,"workspace")))throw new InvalidOperationException("The probe workspace must be a directory.");
             if(Directory.Exists(Path.Combine(directory,"workspace"))){
                 var resumePath=Path.Combine(directory,"learner-resume.json");
-                if(Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")!="1"||!File.Exists(resumePath))throw new InvalidOperationException("An existing workspace requires an explicit closed learner-session copy.");
+                if((Environment.GetEnvironmentVariable("MAESTRO_ROOM_PROBE_LEARNER")!="1"&&(bool?)owner["identityOnly"]!=true)||!File.Exists(resumePath))throw new InvalidOperationException("An existing workspace requires an explicit closed learner or identity-probe copy.");
                 var resume=JObject.Parse(File.ReadAllText(resumePath));
                 if((int?)resume["version"]!=1||!Guid.TryParseExact((string)resume["sourceRun"],"N",out _)||(string)resume["sourceRun"]==(string)owner["id"])throw new InvalidOperationException("Invalid learner restore receipt.");
             }

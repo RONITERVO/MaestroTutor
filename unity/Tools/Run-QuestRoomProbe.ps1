@@ -17,10 +17,14 @@ param(
  [switch]$SparseObjectView,
  [switch]$MotionOnly,
  [switch]$SteeringOnly,
+ [switch]$IdentityOnly,
+ [string]$ResumeIdentityRun,
  [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($IdentityOnly -and ($MotionOnly -or $SteeringOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'IdentityOnly is an offline Headless fixture; other focused, provider, Book and learner resume modes are excluded.'}
+if($ResumeIdentityRun -and (!$IdentityOnly -or $ResumeIdentityRun -notmatch '^[a-f0-9]{32}$')){throw 'ResumeIdentityRun requires IdentityOnly and a completed native probe run ID.'}
 if($SteeringOnly -and ($MotionOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'SteeringOnly is an offline Headless fixture; MotionOnly, provider, Book and resume modes are excluded.'}
 if($MotionOnly -and ($Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'MotionOnly is an offline Headless fixture; provider, Book and resume modes are excluded.'}
 if($SparseObjectView -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SparseObjectView is an explicit offline Headless or Book observation fixture only.'}
@@ -75,13 +79,24 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 }
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+@{version=1;id=$id;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+if($ResumeIdentityRun){
+ $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeIdentityRun"
+ $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
+ $previousVerified=Get-Content -LiteralPath (Join-Path $previousRun 'verified.json') -Raw | ConvertFrom-Json
+ $identity=Get-Content -LiteralPath (Join-Path $previousRun 'native-object-identity.json') -Raw | ConvertFrom-Json
+ if($previousOwner.id -ne $ResumeIdentityRun -or $previousVerified.id -ne $ResumeIdentityRun -or $previousVerified.clientExit -ne 0 -or $previousVerified.editorExit -ne 0 -or $previousVerified.outcome -ne 'passed' -or $previousVerified.providerUsed){throw 'Identity resume requires a cleanly closed, owned offline native run.'}
+ if($identity.source -ne 'explicit-native-object-directory' -or $identity.version -ne 1 -or !$identity.ids){throw 'Identity resume requires explicit final saved-object evidence.'}
+ Copy-Item -LiteralPath (Join-Path $previousRun 'workspace') -Destination (Join-Path $directory 'workspace') -Recurse
+ @{version=1;sourceRun=$ResumeIdentityRun;nativeIdentity=$identity;boundary='Copied closed offline workspace for an identity-only native restart. No provider or old operation is replayed.'} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'learner-resume.json') -Encoding utf8
+}
 if($ResumeLearnerRun){
  $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeLearnerRun"
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
  $previousVerified=Get-Content -LiteralPath (Join-Path $previousRun 'verified.json') -Raw | ConvertFrom-Json
  $previousSession=Get-Content -LiteralPath (Join-Path $previousRun 'learner-session.json') -Raw | ConvertFrom-Json
  if($previousOwner.id -ne $ResumeLearnerRun -or $previousVerified.id -ne $ResumeLearnerRun -or $previousVerified.clientExit -ne 0 -or $previousVerified.editorExit -ne 0 -or !$previousSession.finished){throw 'Resume requires a cleanly closed, owned learner run.'}
+ if($previousSession.finalIdentity.source -ne 'explicit-native-object-directory' -or $previousSession.finalIdentity.version -ne 1 -or !$previousSession.finalIdentity.ids){throw 'Resume requires explicit final saved-object identity evidence; an old periodic object list is insufficient.'}
  if($previousSession.accessMode -ne $env:MAESTRO_HEADLESS_ACCESS_MODE){throw 'Resume must keep the original access mode.'}
  $previousProfile=[IO.Path]::GetFullPath($previousSession.profile)
  $tempPrefix=Join-Path ([IO.Path]::GetTempPath()) 'maestro-headless-'
@@ -91,7 +106,7 @@ if($ResumeLearnerRun){
  New-Item -ItemType Directory -Path (Split-Path -Parent $profileCopy) | Out-Null
  Copy-Item -LiteralPath $previousProfile -Destination $profileCopy -Recurse
  Copy-Item -LiteralPath (Join-Path $previousRun 'workspace') -Destination (Join-Path $directory 'workspace') -Recurse
- @{version=1;sourceRun=$ResumeLearnerRun;accessMode=$previousSession.accessMode;nativeObjectIds=@($previousSession.records[-1].native.objects.id);profileSha256=(Get-FileHash -LiteralPath (Join-Path $previousProfile 'profile.json')).Hash;boundary='Copied closed diagnostic profile and saved room; new native session. No old operations are replayed.'} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'learner-resume.json') -Encoding utf8
+ @{version=1;sourceRun=$ResumeLearnerRun;accessMode=$previousSession.accessMode;nativeIdentity=$previousSession.finalIdentity;profileSha256=(Get-FileHash -LiteralPath (Join-Path $previousProfile 'profile.json')).Hash;boundary='Copied closed diagnostic profile and saved room; new native session. No old operations are replayed.'} | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $directory 'learner-resume.json') -Encoding utf8
 }
 $log=Join-Path $directory 'unity.log'
 Stop-QuestBuildHelper
@@ -118,7 +133,7 @@ try{
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$ResumeLearnerRun} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;identityOnly=[bool]$IdentityOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$(if($ResumeIdentityRun){$ResumeIdentityRun}else{$ResumeLearnerRun})} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech

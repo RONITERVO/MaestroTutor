@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {readNativeObjectIdentity,assertResumedNativeIdentity,readNativeResumeReceipt,isNativeIdentityRead} from './native-probe-identity';
 import {probeNativeSteering} from './probe-native-steering';
 import {probeNativeSparsePrograms} from './probe-native-sparse-programs';
 import {probeNativeMotion} from './probe-native-motion';
@@ -71,6 +72,7 @@ const checkSparse=(state:RoomAgentState)=>{if(probeOwner.sparseObjectView&&state
 try{
  const lease=transport.lease();let initial=structuredClone(lease.state());checkSparse(initial);
  const execute=async<const C extends RoomCommand[]>(commands:C):Promise<NativeProbeState<C>>=>{
+  if(probeOwner.identityOnly&&!commands.every(isNativeIdentityRead))throw new Error('IdentityOnly permits only explicit saved-object directory reads');
   const state=lease.state(),prepared=await transport.client.prepare(commands,state);
   if(!lease.valid())throw new Error('Native probe room changed while preparing an action');
   readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
@@ -98,7 +100,14 @@ try{
  const initialSavedCount=await nativeObjects.count();
  const readPlacement=(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target}}}]);
  let outcome:unknown;
- if(probeOwner.steeringOnly){
+ if(probeOwner.identityOnly){
+  if(prompt||providerScenario||probeOwner.motionOnly||probeOwner.steeringOnly)throw new Error('The identity fixture cannot call a provider or another focused fixture');
+  const nativeIdentity=await readNativeObjectIdentity(execute);let resume:ReturnType<typeof readNativeResumeReceipt>|undefined;
+  try{resume=readNativeResumeReceipt(JSON.parse(await readFile(join(directory,'learner-resume.json'),'utf8')));}
+  catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
+  if(resume)assertResumedNativeIdentity(resume.nativeIdentity,nativeIdentity);
+  outcome={identityOnly:true,resumedFrom:resume?.sourceRun,nativeIdentity,boundary:'Explicit saved-object identity across actual native startup. No provider, task replay, profile restoration or headset proof.'};
+ }else if(probeOwner.steeringOnly){
   if(prompt||providerScenario||probeOwner.motionOnly)throw new Error('The steering fixture cannot call a paid provider or another focused fixture');
   await probeNativeSteering(execute,()=>transport.lease(),directory,!!probeOwner.sparseObjectView);outcome={steeringOnly:true};
  }else if(probeOwner.motionOnly){
@@ -1221,7 +1230,7 @@ try{
   outcome={groundedFollowing:{movingLeaderStatusDistanceAndReplayVerified:true},groundedTravel:{gradualMotionArrivalAndReplayVerified:true,solidObstacleDetourObserved:true},connectedPhysicsInputs:{runningSliderAndFixedMountVerified:true},portableResources,physicalCatching:{syntheticFloor:true,sharedLaunchCatchDropAndReplayVerified:true},constructionMovement:{sharedHandleTransformAndOneUndoVerified:true},constructionSelection:{sharedStateFactLocateCaptureAndPruneVerified:true},currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }
- if(!prompt){
+ if(!prompt&&!probeOwner.identityOnly){
   const sound=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'save',id:'',revision:0,definition:{name:'Robot greeting',kind:'tone',tone:{wave:'sine',frequency:440,endFrequency:660,seconds:.3,attack:.01,release:.04,seed:1}}}}}}]);
   const soundId=sound.execution?.selected?.output?.id;if(typeof soundId!=='string')throw new Error('Sound creation did not return its stable identity');
   const emitter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'configure',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound',definition:{source:soundId,part:'',joint:'',position:{x:0,y:0,z:0},role:'effects',spatial:false,gain:0,distance:{minimum:.5,maximum:15}}}}}}]);
@@ -1322,6 +1331,7 @@ try{
    await writeFile(join(directory,'world-live-audio.json'),JSON.stringify({boundary:'Shared headless agent action/fact path, real native MP3 decoder and consumption with explicit offline HTTP fixture. No sockets, provider or headset proof.',saved,source,silent,bound,started,paused,resumed,live,stopped,terminal,released},null,2));
   }
  }
+ if(!probeOwner.identityOnly){
  const gripBefore=lease.state();
  const gripSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure construction grip snapping',offset:0}}]);
  const gripDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'room.selection.snapSettings',version:1}}]);
@@ -1336,7 +1346,9 @@ try{
  const gripReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'room.selection.snapSettings',version:1,arguments:{...gripAfter.execution.selected.output,mode:'off'}}}}]);
  if(gripReset.execution?.selected?.phase!=='completed')throw new Error('Could not return grip snapping to off');
  await writeFile(join(directory,'grip-snapping.json'),JSON.stringify({boundary:'Real Unity shared configuration and preview facts. Actual grip matching, save, cancellation and Undo are tested separately in PlayMode; no headset proof.',before:gripBefore,search:gripSearch,definition:gripDefinition,read:gripRead,arguments:gripArguments,after:gripAfter,preview:gripPreview,reset:gripReset},null,2));
- await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,motionOnly:!!probeOwner.motionOnly,steeringOnly:!!probeOwner.steeringOnly,initial,observations,readSets,outcome},null,2));
+ }
+ const finalIdentity=await readNativeObjectIdentity(execute);await writeFile(join(directory,'native-object-identity.json'),JSON.stringify(finalIdentity,null,2));
+ await writeFile(join(directory,'journey.json'),JSON.stringify({version:1,boundary:'Real Unity Editor app and shared room protocol; no Quest input, WebView, scan or Store proof',providerUsed:!!prompt,sparseObjectView:!!probeOwner.sparseObjectView,motionOnly:!!probeOwner.motionOnly,steeringOnly:!!probeOwner.steeringOnly,identityOnly:!!probeOwner.identityOnly,initial,observations,readSets,outcome},null,2));
  console.log(JSON.stringify({providerUsed:!!prompt,observations:observations.length,output:join(directory,'journey.json')}));
 }catch(error){
  await writeFile(join(directory,'journey-failure.json'),JSON.stringify({error:error instanceof Error?error.stack:String(error),observations,readSets},null,2));

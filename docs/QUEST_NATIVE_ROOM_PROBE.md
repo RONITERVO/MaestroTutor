@@ -1650,9 +1650,10 @@ not chat, verifier, provider authorship, controllers or headset acceptance.
 
 Task-steering receipt observation and the real-provider Book parity checks now use
 explicit reads, as described below. Sparse paid-provider execution remains refused.
-The resumed novice-lesson probe still enumerates its initial periodic object list;
-that path and remaining live/context consumers need verification before production
-inventory becomes bounded. Saved capacity is unchanged.
+The learner collector now verifies resumed identity through the explicit saved
+directory as described below. Production projection still needs a bounded-view
+contract and provider/context acceptance before its complete periodic inventory
+can be retired. Saved capacity is unchanged.
 
 
 ### Task steering and visible Book read sets
@@ -1687,3 +1688,34 @@ paint, Undo, Redo and reload parity. Reload replay checks run before intentional
 inspection. The offline Original Book journey exercises this adapter against
 built-ins and editable objects. This does not certify paid-provider behavior,
 Android WebView rendering, headset input or physical room alignment.
+
+
+### Closed learner identity and offline native restart
+
+The learner collector reads saved membership explicitly at startup and again after
+its agent has disconnected on a clean finish. Each read enumerates the native
+`world.objects` directory twice and checks session/world scope and membership.
+Temporary, pending or unavailable worlds cannot become durable resume evidence.
+Ordinary pose revisions may advance: this evidence covers identity, not a frozen
+copy of every property. Native directory generations still guard each page.
+
+`finalIdentity` in `learner-session.json` is the restore source; the last turn's
+periodic `objects` array is never used. `learner-resume.json` retains that explicit
+identity and the copied profile digest. The collector checks the digest before
+loading the profile and checks access mode, a new native session, the same saved
+world and exact object IDs before accepting another learner request. Setup failures
+also close the transport. Older diagnostic captures without explicit final evidence
+are refused; their saved files are untouched. A changing directory can refuse this
+probe evidence without changing or stopping the world's authored programs.
+
+The offline `-IdentityOnly -SparseObjectView` Headless mode reads a fresh world.
+Add `-ResumeIdentityRun <closed-run-id>` to copy its owned, successfully closed
+offline workspace and reopen it in another Unity process. The Editor-only restore
+gate accepts that explicit copy. Every dispatched command in this mode must be a
+`world.objects` fact read; other focused modes, provider, Book and learner-resume
+combinations are refused. Shared audio/configuration checks do not run in this mode.
+The final `native-object-identity.json` and `journey.json` retain the raw evidence.
+
+This verifies native saved identity across a real process restart. It does not
+replay a paid lesson, restore a learner profile end to end, or establish headset,
+Store, complete-property or autonomous-program restoration acceptance.
