@@ -60,17 +60,17 @@ namespace Maestro.Quest.Creation
                 state.Synchronize(VisibilityRevision(definition.id),definition.opacity,definition.realDepth);
             }
         }
-        void ApplyVisibility(RoomObjectData data,RoomItem item,RoomDocument document) {
-            ApplyLights(data,item);
+        void ApplyVisibility(RoomObjectData data,RoomItem item,RoomDocument document,RoomEditPreparation preparation) {
+            ApplyLights(data,item,preparation);
             var windows=item.GetComponent<RoomWindowView>();if(!windows&&data.windows.Length>0)windows=item.gameObject.AddComponent<RoomWindowView>();if(windows)windows.Apply(data,GetComponentInParent<VirtualRoomView>());
             windows?.ConfigureVisibility(data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);
             var view=item.GetComponent<RoomAppearanceView>();
             if(!view&&(data.appearanceBindings.Length>0||data.visibilityLayer!=""))view=item.gameObject.AddComponent<RoomAppearanceView>();
             if(view){view.ConfigureImages(ImageTextures,new RoomResourceOwner(WorldIdentity,data.id,"appearance"));view.ConfigureLayer(data,document.appearances,data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);}
         }
-        void ReconcileVisibility() {
+        void ReconcileVisibility(RoomEditPreparation preparation) {
             var document=journal.Snapshot();SynchronizeVisibility(document);
-            foreach(var data in document.objects){var item=Find(data.id);if(item)ApplyVisibility(data,item,document);}
+            foreach(var data in document.objects){var item=Find(data.id);if(item)ApplyVisibility(data,item,document,preparation);}
         }
         internal JObject ObserveVisibility(string id) {
             var p=ReadVisibility(id);return p==null?null:new JObject{["id"]=id,["revision"]=VisibilityRevision(id),["name"]=p.name,["opacity"]=p.opacity,["realDepth"]=p.realDepth,["memberCount"]=VisibilityMembers(id).Length,["temporary"]=TemporaryRoom};

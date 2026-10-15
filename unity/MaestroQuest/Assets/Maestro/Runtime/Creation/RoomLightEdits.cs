@@ -25,8 +25,10 @@ namespace Maestro.Quest.Creation
             var data=Read(target);if(data==null)return null;var item=Find(target);var view=item?item.GetComponent<RoomLightView>():null;
             return new JObject{["target"]=target,["revision"]=ObjectRevision(target),["lights"]=new JArray(data.lights.Select(l=>new JObject{["id"]=l.id,["overridden"]=LightState(target,l.id)?.Overridden??false,["active"]=view&&view.Active(l.id),["reason"]=view?view.Reason(l.id):"The object's native light view is unavailable"}))};
         }
-        void ApplyLights(RoomObjectData data,Maestro.Quest.Interaction.RoomItem item){
-            var view=item.GetComponent<RoomLightView>();if(!view&&data.lights.Length>0)view=item.gameObject.AddComponent<RoomLightView>();if(view)view.Apply(this,data.id,data.lights);
+        void ApplyLights(RoomObjectData data,Maestro.Quest.Interaction.RoomItem item,RoomEditPreparation preparation){
+            using var candidate=preparation?.TakeLights(data);var view=item.GetComponent<RoomLightView>();
+            if(candidate!=null){if(!view)view=item.gameObject.AddComponent<RoomLightView>();view.Apply(this,data.id,data.lights,candidate);}
+            else if(view)view.Refresh(); // Unrelated reconciliation cannot allocate after acceptance.
         }
     }
 }

@@ -286,7 +286,7 @@ namespace Maestro.Quest.Creation
                     if(!storage.Save(edit.Snapshot(),out error))return false;
                 }
                 if(!edit.Accept(journal,out error))return false;
-                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose,preparation:native);
+                if(visualOnly)ReconcileVisibility(native);else Reconcile(edit.ChangedObjects,applyPose,preparation:native);
                 MarkDirty();SetStatus(message);if(!TemporaryRoom){dirty=false;lastSaveError=null;}return true;
             }
         }
@@ -402,7 +402,7 @@ namespace Maestro.Quest.Creation
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return false;}
                 if(!edit.Accept(journal,out error)){SetStatus(error);return false;}
-                if(visualOnly)ReconcileVisibility();else Reconcile(edit.ChangedObjects,applyPose??!placement,preparation:native);MarkDirty();SetStatus(success);return true;
+                if(visualOnly)ReconcileVisibility(native);else Reconcile(edit.ChangedObjects,applyPose??!placement,preparation:native);MarkDirty();SetStatus(success);return true;
             }
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)

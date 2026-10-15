@@ -21,6 +21,7 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,HeightFieldGeometry> fields=new();
         readonly Dictionary<string,RecipeVisual> recipes=new();
         readonly Dictionary<string,PreparedImportedModel> models=new();
+        readonly Dictionary<string,PreparedRoomLights> lights=new();
         internal void EnlistModel(PreparedImportedModel model,RoomJournal.PreparedEdit edit)
         {
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
@@ -49,6 +50,20 @@ namespace Maestro.Quest.Creation
             var prepared=new RoomEditPreparation();error=null;
             try{foreach(var data in document.objects)if(!data.IsBuiltIn&&!editor.NativeEntityDormant(data.id)&&!editor.Find(data.id))foreach(var step in prepared.PrepareGeometry(editor,data,null)){}return prepared;}
             catch(Exception failure){prepared.Dispose();error=failure is ModelImportException or RoomResourceLimitException?failure.Message:"The initial room geometry could not be prepared; saved objects remain available";return null;}
+        }
+        // Discard changes journals and resets dormant membership. Prepare the
+        // saved destination, including missing roots, before ending temporary memory.
+        internal static RoomEditPreparation TryCreateRestoration(RoomEditor editor,RoomDocument document,out string error)
+        {
+            var prepared=new RoomEditPreparation();error=null;
+            try{foreach(var data in document.objects)foreach(var step in prepared.PrepareGeometry(editor,data,editor.Find(data.id)?editor.Read(data.id):null)){}return prepared;}
+            catch(Exception failure){prepared.Dispose();error=failure is ModelImportException or RoomResourceLimitException?failure.Message:"The saved room could not be prepared; temporary changes remain available";return null;}
+        }
+        internal PreparedRoomLights TakeLights(RoomObjectData data)
+        {
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");
+            if(!lights.TryGetValue(data.id,out var candidate))return null;candidate.Validate(data.id,data.lights);
+            lights.Remove(data.id);resources.Remove(candidate);return candidate;
         }
         bool ended;
         internal CollisionGeometry TakeCollision(string target,CollisionRecipe source)
@@ -111,6 +126,10 @@ namespace Maestro.Quest.Creation
             if(field!=null&&(previous==null||JsonUtility.ToJson(field)!=JsonUtility.ToJson(previous))){
                 var candidate=new HeightFieldGeometry(field,owner);resources.Add(candidate);fields.Add(data.id,candidate);yield return null;
             }
+            var current=before!=null?editor.Find(data.id):null;var lightView=current?current.GetComponent<RoomLightView>():null;
+            if(data.lights.Length>0||lightView){
+                var candidate=new PreparedRoomLights(editor.WorldIdentity,data.id,data.lights,lightView);resources.Add(candidate);lights.Add(data.id,candidate);yield return null;
+            }
             if(data.kind!=RoomObjectKind.ImportedModel)yield break;
             // New/unloaded model instances keep the established asynchronous
             // import/readiness path. An edit of existing geometry must be
@@ -122,6 +141,6 @@ namespace Maestro.Quest.Creation
             if(!view.CanConfigureModelGeometry(data.modelGeometry,out var issue))throw new ModelImportException(issue);
             resources.Add(view.PrepareModelGeometry(data.modelGeometry));yield return null;
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();}
     }
 }

@@ -1271,6 +1271,27 @@ shadows, physical alignment or hardware performance. Current evidence and remain
 acceptance are recorded in the v1 delivery plan.
 
 
+Native lamp lifetime has a separate process-wide admission limit of eight Light
+components and twelve shadow faces. Private replacements, disabled lamps and
+retiring components count alongside current lamps across workspaces. Switching a
+lamp off does not immediately free its allocation; destruction must finish.
+These logical reservations do not measure Unity's cached shadow render targets.
+
+Light creation and replacement prepare before saving or accepting Undo/Redo.
+Unchanged lamps reuse their native instance, including across recipe attachment
+replacement. Removing a lamp needs no replacement slot. Failed admission or
+saving leaves the accepted lamps, saved definitions and history available for
+retry. Discarding a temporary room also prepares the saved destination before
+ending the temporary room and memory session; a refusal keeps both sessions.
+
+User and agent programs can inspect the same passive `runtime.lightBudget` and
+indexed `runtime.lightReservation` facts when `runtimeDiagnostics.v1` is
+available. Reservation identity is temporary; saved target/light identity stays
+separate. `preparing`, `ready` and `retiring` describe native ownership, and
+`active` only reports whether the Light component is enabled in an active
+hierarchy. Reading these facts does not load, illuminate or delete anything.
+
+
 ## Lighting dependencies during native loading — 2026-10-14
 
 `world.region.retention` now includes `lighting`. An effective local lamp can

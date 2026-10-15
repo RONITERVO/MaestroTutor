@@ -11325,3 +11325,54 @@ Android compilation, paid providers, headset performance and Store acceptance
 were not rerun. Transactional ink/light/window preparation, simulation admission
 and transaction/storage/extent work remain before increasing saved capacity.
 V1 remains incomplete.
+
+
+## Transactional native lamps (2026-10-16)
+
+Authored local lamps now prepare detached, disabled native candidates before a
+save or journal/history acceptance. Unchanged definitions reuse their native
+Light, including when a recipe replaces an attachment. Removal does not reserve
+a replacement. Ordinary edits, visual-only edits, Undo/Redo, initial creation
+and dormant activation transfer the same exact-target/source preparation.
+Unrelated reconciliation cannot allocate a missing peer's lamps after acceptance.
+
+Temporary-room discard now prepares the saved destination before ending its
+paired temporary memory session or swapping journals. This also admits restored
+native roots, recipes, compound/terrain geometry and changed imported collision
+through their existing preparation paths. Admission/readiness refusal leaves the
+temporary source and memory available for retry; it does not promise that every
+restore can proceed immediately while other resources or actions are active.
+
+A separate process-wide ledger reserves at most eight native lamps and twelve
+shadow faces across preparation, ready views, disabled roots and deferred
+retirement. Point shadows reserve six faces; spot shadows reserve one. Cancelled
+private candidates and replaced lamps remain charged until Unity destroys their
+roots, including never-active roots. These constants are independent of the
+unchanged saved quotas (two lamps/object, four/room, six shadow faces).
+`runtime.lightBudget` and `runtime.lightReservation` provide the same passive,
+typed diagnostics to user and agent programs. Existing facts/actions/events and
+adapters are unchanged. The browser fixture is captured native lifecycle output.
+
+Verification: **1,311 EditMode / 1,690 PlayMode** passed, with
+**3 optional private-asset skips** in the full native run. The focused
+lighting/temporary-room PlayMode run passed **110** tests. New regressions cover
+separate lamp/shadow saturation, wrong actual shadow cost, cross-workspace
+reservations, exact-source transfer, disabled/deferred lifetime, failed batches
+and saves, history and temporary-discard refusal/retry, recipe reattachment,
+missing peer views and dormant activation. **3,091 web tests / 330 files**, both
+TypeScript checks and catalog provenance passed. All **4,300 frozen inputs**,
+**3,056 native source/mirror files** and **14 unrelated files** were verified.
+The initial pre-export catalog check correctly rejected the stale committed
+manifest; the regenerated artifact passed the full suite. Evidence:
+`.quest-evidence/authored-visual-admission/`.
+
+This is logical allocation admission, not measured GPU memory, shadow rendering
+quality or Quest frame time. Unity can retain internal shadow render targets
+beyond component destruction. Sun and other system lights are excluded.
+No Android build, paid-provider request, headset check, signing, deployment or
+Meta action ran. Full offline Headless/Book journeys were not rerun for this
+lamp checkpoint; their most recent evidence remains pinned to `9f38abca` above.
+Transactional spatial/surface ink and passthrough windows remain next, followed
+by simulation admission and transaction/storage/spatial-extent work before saved
+capacity expansion. Per-entity real-room collisions remain independent of virtual
+terrain and presentation. V1 is incomplete.

@@ -168,6 +168,7 @@ namespace Maestro.Quest.Creation
             if(!CanChangeTemporaryBoundary(out error,changingMemory:true))return false;
             if(stopAuthoring)Editing?.Invoke();
             if(!CanChangeTemporaryBoundary(out error,changingMemory:true))return false;
+            using var native=RoomEditPreparation.TryCreateRestoration(this,savedJournal.Snapshot(),out error);if(native==null)return false;
             // Discard restores document state, never historical velocity or a
             // running action. Leave physics paused after replacing colliders.
             try{TemporaryMemory?.EndTemporary();}catch(Exception e){error=e.Message;return false;}
@@ -176,7 +177,7 @@ namespace Maestro.Quest.Creation
             bool viewpointChanged=savedJournal.UpdateViewpoint(journal.Viewpoint);
             journal=savedJournal;savedJournal=null;TemporarySessionId=Guid.NewGuid().ToString("N");TemporarySaveId="";TemporarySaveRevision=0;dirty=!savedBaseDurable||viewpointChanged;saveAt=UnityEngine.Time.unscaledTime+.5f;Revision++;ClearConstructionSelection();
             if(journal.Read(selected)==null)selected=null;
-            ResetLightControls();ResetAudioMix();ResetLayerPresentation(true);Reconcile();TemporarySaveError=null;
+            ResetLightControls();ResetAudioMix();ResetLayerPresentation(true);Reconcile(preparation:native);TemporarySaveError=null;
             SetStatus(savedBaseDurable?"Temporary changes discarded: returned to the last saved room":"Temporary changes discarded: returned to the starting room; saving its pending edits");return true;
         }
     }

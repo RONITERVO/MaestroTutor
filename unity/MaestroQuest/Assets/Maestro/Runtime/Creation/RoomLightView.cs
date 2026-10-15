@@ -10,21 +10,20 @@ namespace Maestro.Quest.Creation
     /// <summary>Native ownership of bounded Unity point/spot lights. Reads never create or advance them.</summary>
     public sealed class RoomLightView:MonoBehaviour,INativeResourceOwner
     {
-        sealed class Entry {internal RoomLight Data;internal Light Light;internal string Reason="Waiting for the world frame";}
-        readonly List<Entry> entries=new();static readonly HashSet<RoomLightView> activeViews=new();
-        RoomEditor editor;string target,encoded;bool released;
+        List<PreparedRoomLights.Entry> entries=new();static readonly HashSet<RoomLightView> activeViews=new();
+        RoomEditor editor;string target;bool released;
         internal bool Active(string id)=>entries.Any(e=>e.Data.id==id&&e.Light&&e.Light.isActiveAndEnabled);
         internal string Reason(string id)=>entries.FirstOrDefault(e=>e.Data.id==id)?.Reason??"The native lamp is unavailable";
+        internal PreparedRoomLights.Entry Reusable(RoomLight definition)=>entries.FirstOrDefault(e=>e.Light&&e.Encoded==JsonUtility.ToJson(definition));
         internal void Apply(RoomEditor owner,string identity,RoomLight[] definitions){
-            editor=owner;target=identity;string next=string.Join("|",definitions.Select(l=>JsonUtility.ToJson(l)));
-            if(encoded!=next||entries.Any(e=>!e.Light)){
-                Clear();encoded=next;released=false;
-                foreach(var definition in definitions){var go=new GameObject("Lamp "+definition.id);go.transform.SetParent(transform,false);var light=go.AddComponent<Light>();light.enabled=false;
-                    light.type=definition.kind=="point"?LightType.Point:LightType.Spot;ColorUtility.TryParseHtmlString(definition.color,out var color);light.color=color;light.intensity=definition.intensity;
-                    light.spotAngle=definition.angle;light.innerSpotAngle=definition.angle*.75f;light.renderMode=LightRenderMode.ForcePixel;light.shadows=definition.shadows=="hard"?LightShadows.Hard:LightShadows.None;
-                    light.shadowCustomResolution=512;light.shadowBias=.01f;light.shadowNormalBias=.03f;light.bounceIntensity=0;light.cullingMask=~(1<<Maestro.Quest.Interaction.RoomPhysicsLayers.Scanned);
-                    entries.Add(new Entry{Data=definition.Copy(),Light=light});}
-            }
+            using var candidate=new PreparedRoomLights(owner?owner.WorldIdentity:null,identity,definitions,this);
+            Apply(owner,identity,definitions,candidate);
+        }
+        internal void Apply(RoomEditor owner,string identity,RoomLight[] definitions,PreparedRoomLights candidate){
+            var next=candidate.Take(this,identity,definitions);
+            foreach(var entry in entries)if(!next.Contains(entry))entry.Dispose();
+            entries=next;editor=owner;target=identity;released=false;
+            foreach(var entry in entries){entry.Light.transform.SetParent(transform,false);entry.Light.gameObject.SetActive(true);}
             Refresh();
         }
         internal void Refresh(){
@@ -47,7 +46,7 @@ namespace Maestro.Quest.Creation
         void LateUpdate()=>Refresh();
         void OnEnable(){if(editor)Refresh();}
         void OnDisable(){foreach(var e in entries)if(e.Light)e.Light.enabled=false;activeViews.Remove(this);Publish();}
-        void Clear(){foreach(var e in entries)if(e.Light){e.Light.enabled=false;ArtResources.Release(e.Light.gameObject);}entries.Clear();activeViews.Remove(this);Publish();}
+        void Clear(){foreach(var e in entries)e.Dispose();entries.Clear();activeViews.Remove(this);Publish();}
         void OnDestroy()=>ReleaseNativeResources();
         void INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
         void ReleaseNativeResources(){if(released)return;released=true;Clear();}

@@ -39,7 +39,7 @@ namespace Maestro.Quest.Creation
                 item.SetHome(new Vector3(-.63f + (slot % 8) * .18f,.7f + ((slot / 8) % 4) * .18f,1.15f + (slot / 32) * .25f),Quaternion.identity,Vector3.one);
                 item.GetComponent<CreatedRoomObject>().ApplyColor(data.appearanceBindings.Any(b=>b.kind=="root")?Color.white:data.color);
             }
-            ApplyVisibility(data,item,document);
+            ApplyVisibility(data,item,document,preparation);
         }
     }
 }
