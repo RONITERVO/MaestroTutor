@@ -7,6 +7,14 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
+    [Serializable] public sealed class RoomObjectOverview
+    {
+        internal const string Feature="objectOverview.v1";
+        internal const int Limit=4;
+        public int version=1,limit=Limit;
+        public string scope="context";
+        public bool exhaustive=false;
+    }
     public sealed partial class RoomJournal
     {
         // Project only the object-list fields. Copying recipes, strokes and animation
@@ -20,6 +28,10 @@ namespace Maestro.Quest.Creation
         internal RoomAgentObject[] ObserveObjects() => items.Values
             .OrderBy(item=>item.id,StringComparer.Ordinal)
             .Select(ObserveObject).ToArray();
+        // Choose IDs before projection, without walking the saved directory or
+        // copying recipe geometry. Dormant items remain saved context, never loaded.
+        internal RoomAgentObject[] ObserveObjectContext(string selected,string inspected) => new[]{"book","maestro",selected,inspected}
+            .Where(id=>id!=null).Distinct(StringComparer.Ordinal).Select(ObserveObject).Where(item=>item!=null).ToArray();
         internal RoomAgentObject ObserveObject(string id) => id!=null&&items.TryGetValue(id,out var item)?ObserveObject(item):null;
         RoomAgentObject ObserveObject(RoomObjectData item) => new RoomAgentObject {
                 id=item.id,objectRevision=ObjectRevision(item.id),name=item.name??item.kind.ToString(),kind=item.kind.ToString(),
@@ -34,6 +46,12 @@ namespace Maestro.Quest.Creation
         internal RoomAgentObject[] ObserveObjects()
         {
             var result=journal.ObserveObjects();
+            foreach(var value in result) ObserveRuntime(value);
+            return result;
+        }
+        internal RoomAgentObject[] ObserveObjectContext(string selected,string inspected)
+        {
+            var result=journal.ObserveObjectContext(selected,inspected);
             foreach(var value in result) ObserveRuntime(value);
             return result;
         }

@@ -66,6 +66,7 @@ namespace Maestro.Quest.Creation
         public AvatarMovementObservation avatar;
         public AvatarWalkObservation walk;
         public ActivityProfileView activityProfile;
+        public RoomObjectOverview objectOverview;
         public RoomAgentObject[] objects;
         public string[] created=Array.Empty<string>();
     }
@@ -316,11 +317,14 @@ namespace Maestro.Quest.Creation
             if(executor.WorkspaceVisible && editor.SelectedId!=null) lastInspected=editor.SelectedId;
             else if(executor.InspectionId!=null) lastInspected=executor.InspectionId;
             var inspected=editor.Read(lastInspected);
+            var capabilities=RoomControls.Capabilities(editor);
+            bool overview=capabilities.Contains(RoomObjectOverview.Feature);
             return new RoomAgentState { session=inbox.Session,revision=++revision,sceneRevision=editor.Revision,ack=inbox.Ack,ok=ok,status=status,created=created,
-                chatImage=editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.Chat.Request(),chatAudio=editor.GetComponent<Maestro.Quest.Imports.AudioImportWorkshop>()?.Chat.Request(),capture=editor.ViewCaptureMetadata,ownership=editor.Ownership.Observe(),temporaryRoom=editor.ObserveTemporaryRoom(),motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),execution=executor.Executions.Observe(),capabilities=RoomControls.Capabilities(editor),physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
+                chatImage=editor.GetComponent<Maestro.Quest.Imports.ImageImportWorkshop>()?.Chat.Request(),chatAudio=editor.GetComponent<Maestro.Quest.Imports.AudioImportWorkshop>()?.Chat.Request(),capture=editor.ViewCaptureMetadata,ownership=editor.Ownership.Observe(),temporaryRoom=editor.ObserveTemporaryRoom(),motions=executor.Motions.Observe(),catalog=executor.Catalog.Observe(),execution=executor.Executions.Observe(),capabilities=capabilities,physics=RoomControls.ObservePhysics(editor),avatar=RoomControls.ObserveAvatar(editor),walk=AvatarWalkSelection.Observe(editor),activityProfile=AvatarActivityActions.Observe(editor),
                 workspaceReady=true,visible=executor.WorkspaceVisible,workspaceView=executor.RulesFocused ? "rules" : "objects",rules=editor.GetComponent<RuleWorkshop>()?.Observe(executor.RulesFocused),inspection=inspected==null || executor.RulesFocused ? null : new RoomInspection {id=inspected.id,partId=executor.InspectionId==inspected.id ? executor.InspectedPart : null,objectRevision=editor.ObjectRevision(inspected.id),recipe=editor.RecipeForEditing(inspected),item=editor.ObserveObject(inspected.id)},
                 constructionSelection=editor.ObserveConstructionSelection(),constructionManipulation=editor.ObserveConstructionManipulation(),selectedId=editor.SelectedId,canUndo=editor.CanUndo,canRedo=editor.CanRedo,physicsRunning=editor.PhysicsWorld && editor.PhysicsWorld.Running,
-                objects=editor.ObserveObjects() };
+                objectOverview=overview?new RoomObjectOverview():null,
+                objects=overview?editor.ObserveObjectContext(editor.SelectedId,inspected?.id):editor.ObserveObjects() };
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Maestro.Quest.Creation
         public static string Serialize(RoomAgentState state)
         {
             var json=JObject.Parse(JsonUtility.ToJson(state));
+            if(state.objectOverview==null)json.Remove("objectOverview");
             if(state.inspection==null)json["inspection"]=JValue.CreateNull();
             else {
                 if(state.inspection.recipe==null)json["inspection"]["recipe"]=JValue.CreateNull();

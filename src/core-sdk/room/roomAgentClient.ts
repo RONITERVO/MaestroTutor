@@ -9,6 +9,7 @@ import {validConstructionSelection,validConstructionManipulation} from '../../..
 import {validRoomOwnership} from '../../../shared/roomOwnership';
 import {validTemporaryRoom} from '../../../shared/roomSession';
 import {roomCommandConditions,roomCommandTargets,roomRevisionBasis,roomObjectId,validRoomObjectObservation} from './roomObjectContext';
+import {ROOM_OBJECT_OVERVIEW_FEATURE,ROOM_OBJECT_OVERVIEW_LIMIT,validRoomObjectOverview} from '../../../shared/roomObjectOverview';
 import {validExecutionView,identifyExecution,executionForCapability} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
 import { MAX_ROOM_CAPABILITIES, requireRoomCapabilities, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
@@ -51,6 +52,9 @@ export class RoomAgentClient {
       !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>327680) return false;
     if(!input.objects.every(validRoomObjectObservation)||new Set(input.objects.map(o=>o.id)).size!==input.objects.length)return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>MAX_ROOM_CAPABILITIES||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
+    if(Array.isArray(input.capabilities)&&input.capabilities.includes(ROOM_OBJECT_OVERVIEW_FEATURE)){
+      if(!validRoomObjectOverview(input.objectOverview)||input.workspaceReady!==true||!input.capabilities.includes('objectSearch.v1')||input.objects.length>ROOM_OBJECT_OVERVIEW_LIMIT)return false;
+    }else if(input.objectOverview!==undefined)return false;
     if(input.constructionSelection!==undefined&&input.constructionSelection!==null&&!validConstructionSelection(input.constructionSelection)||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionSelection.v1')&&!validConstructionSelection(input.constructionSelection))return false;
     if(input.constructionManipulation!==undefined&&input.constructionManipulation!==null&&!validConstructionManipulation(input.constructionManipulation,input.constructionSelection as RoomAgentState['constructionSelection'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionManipulation.v1')&&(!validConstructionSelection(input.constructionSelection)||!validConstructionManipulation(input.constructionManipulation,input.constructionSelection)))return false;
     if(input.temporaryRoom!==undefined&&!validTemporaryRoom(input.temporaryRoom)||Array.isArray(input.capabilities)&&input.capabilities.includes('temporaryRoom.v1')&&!validTemporaryRoom(input.temporaryRoom))return false;

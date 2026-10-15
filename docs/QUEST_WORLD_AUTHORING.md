@@ -1605,9 +1605,10 @@ metadata/revisions and `object.presence` to distinguish saved existence from nat
 readiness. A target not listed on one page must not be treated as deleted. Internal
 recipe parts remain inside their owning object.
 
-The current complete periodic scene inventory and existing object limits remain
-unchanged while other selectors and observation consumers are upgraded. This
-search does not establish larger-world or headset performance acceptance.
+Saved-object limits remain unchanged. Modern hosts use the bounded context
+[described below](#bounded-native-object-context--2026-10-15), while this directory
+remains authoritative for discovery. Search does not establish larger-world or
+headset performance acceptance.
 
 ### Reading one object's observed state
 
@@ -1646,11 +1647,11 @@ late replies from the previous scope.
 Construction selection now uses the same paged directory while keeping an explicit
 ordered list and origin; see [construction selection](QUEST_CONSTRUCTION_SELECTION.md).
 Capture reads every member revision through the same generated action inputs.
-The periodic scene list remains complete at its current limit. Behaviour target
-fields, trigger sources and reference summaries now use this same directory.
+The periodic scene context is not the complete directory. Behaviour target
+fields, trigger sources and reference summaries use this same directory.
 Inspector context now carries its own native metadata and reviewed revisions; see
-[inspection and edit context](#inspection-and-edit-context--2026-10-15). Other
-complete-list consumers still need explicit read sets before paging. These changes
+[inspection and edit context](#inspection-and-edit-context--2026-10-15). Native
+journeys and learner restore now use explicit directory/target reads. These changes
 introduce no additional saved schema, catalog operation, capacity increase or
 independent browser world.
 
@@ -1703,7 +1704,7 @@ before edit checks or rejects an unknown/mismatched identity. Undo cannot make a
 old receipt delete the restored object again.
 
 The shared read sets below now extend this to multi-object actions and native
-selection. Production periodic state remains complete; world limits, resource
+selection. Production object context is now bounded; world limits, resource
 admission and the independent real-room physics, visual and sound policies are
 unchanged.
 
@@ -1733,9 +1734,9 @@ its earlier fact evidence. Users and agents retain the same native validation an
 receipt semantics. An earlier execution's receipt can still be inspected after its
 target is gone, without granting a new action.
 
-The production periodic inventory remains complete pending a final consumer audit.
-This increment adds no saved capacity, new native capability or independent world
-store. Larger-world quotas and live resource admission remain separate work.
+The bounded production context below builds on these exact read sets. They add no
+saved capacity or independent world store. Larger-world quotas and live resource
+admission remain separate work.
 
 
 ## Observation-independent controls — 2026-10-15
@@ -1758,10 +1759,11 @@ Standalone inspection and motion searches carry no write guards, so conflicting
 old edit evidence cannot prevent a refresh. Fresh edits still require their exact
 reviewed object revisions.
 
-Periodic inventory is still complete. The native headless journey also uses that
-list for object counts, pose checks and deletion assertions; those checks must
-move to explicit saved-directory and target reads before the production view can
-be bounded. Saved-world quotas and live-resource admission are separate changes.
+Native Headless and Original Book journeys now use explicit saved-directory and
+target reads for counts, poses and deletion assertions. Learner restore uses a
+closed-run identity receipt from that directory. The production context below can
+therefore omit unrelated objects. Saved-world quotas and live-resource admission
+remain separate changes.
 
 
 ### Embedded clip discovery without a loaded character
@@ -1775,3 +1777,37 @@ and remain display data. Duration describes the source timeline; `selectable`
 checks its minimum duration only. The guarded selection action separately loads
 and validates the actual humanoid model and clip before accepting a choice.
 Saved choices and runtime playback availability remain separate facts.
+
+
+### Bounded native object context — 2026-10-15
+
+A native host advertising `objectOverview.v1` supplies
+`objectOverview={version:1,scope:"context",exhaustive:false,limit:4}` alongside
+`objects`. This is a few context objects, not the saved directory, a camera view,
+or the set of loaded objects. The candidates are book, Maestro, the current
+selection and the last inspected saved object. Duplicate and missing IDs are
+omitted; other objects are not substituted to fill the view. Native code chooses
+these IDs before projecting metadata, rather than building a full list and then
+truncating it.
+
+The marker remains non-exhaustive even if a small world happens to fit. Absence
+never proves deletion, visibility, inactivity or unloaded state. An empty context
+also does not mean an empty saved world. `workspaceReady` continues to distinguish
+bound native content from startup/unavailable content. The new marker requires
+`objectSearch.v1`; hosts without directory support retain their earlier wire
+contract. Malformed, unadvertised, over-limit or contradictory overview messages
+are rejected by the shared client.
+
+Use `world.objects` and its continuation cursors to discover saved objects, then
+exact `object.definition` / `object.observation` reads for edits and properties.
+`object.presence` distinguishes saved existence from native readiness. An
+inspection carries its own item and revision even when the overview omits it.
+Changing selection does not delete an object or erase the earlier revision
+reviewed by a user or agent. The planner and final-reply instructions explicitly
+preserve these distinctions.
+
+This projection is passive. It never loads geometry, changes selection, stops a
+program, changes collision participation or defines which regions stay simulated.
+The saved quota remains 64 creations plus book/Maestro, with existing spatial and
+height-field limits. Capacity growth, resource admission and device performance
+acceptance remain separate work.

@@ -1651,9 +1651,11 @@ not chat, verifier, provider authorship, controllers or headset acceptance.
 Task-steering receipt observation and the real-provider Book parity checks now use
 explicit reads, as described below. Sparse paid-provider execution remains refused.
 The learner collector now verifies resumed identity through the explicit saved
-directory as described below. Production projection still needs a bounded-view
-contract and provider/context acceptance before its complete periodic inventory
-can be retired. Saved capacity is unchanged.
+directory as described below. Production hosts now advertise the bounded
+`objectOverview.v1` context described in [world authoring](QUEST_WORLD_AUTHORING.md#bounded-native-object-context--2026-10-15). The current production
+journeys exercise it without SparseObjectView; the empty-view fixture remains a
+separate stronger omission check. Paid-provider/context and headset acceptance
+remain open. Saved capacity is unchanged.
 
 
 ### Task steering and visible Book read sets
@@ -1719,3 +1721,20 @@ The final `native-object-identity.json` and `journey.json` retain the raw eviden
 This verifies native saved identity across a real process restart. It does not
 replay a paid lesson, restore a learner profile end to end, or establish headset,
 Store, complete-property or autonomous-program restoration acceptance.
+
+
+### Production bounded context
+
+The normal native state now advertises `objectOverview.v1` with a non-exhaustive
+context of at most four objects. Run the Headless and Book journeys without
+`-SparseObjectView` to exercise that actual production projection. Retain every
+raw observation and assert its declared limit; do not synthesize a complete list
+into it. Directory counts, poses, physics and saved identity still come from the
+explicit read helpers. `-SparseObjectView` continues to remove even the small
+context, without changing the marker or claiming the saved world is empty.
+
+Native coverage includes allocation counts with 5 versus 66 saved objects,
+self-contained off-context inspection, exact saved-directory pagination and
+selection changes without deletion. Actual native/client acceptance does not
+establish real-provider planning quality, headset rendering or large-world
+performance. These need their respective acceptance runs.

@@ -10,6 +10,13 @@ namespace Maestro.Quest.Tests
 {
     public sealed class RoomAgentWireTests
     {
+        [Test] public void ContextMetadataSerializesExactlyAndLegacyAbsenceRemainsAbsent()
+        {
+            var state=new RoomAgentState{objects=Array.Empty<RoomAgentObject>(),objectOverview=new RoomObjectOverview()};
+            var wire=JObject.Parse(RoomAgentWire.Serialize(state));
+            Assert.That(JToken.DeepEquals(wire["objectOverview"],JObject.Parse("{\"version\":1,\"scope\":\"context\",\"exhaustive\":false,\"limit\":4}")),Is.True);
+            state.objectOverview=null;wire=JObject.Parse(RoomAgentWire.Serialize(state));Assert.That(wire.ContainsKey("objectOverview"),Is.False);
+        }
         [Test] public void InspectedObjectMetadataKeepsNullsAndMovementContractWithoutAnInventory()
         {
             var item=new RoomAgentObject{id="maestro",objectRevision=3,movement=new AvatarMovementSettings{distance=.3f,speed=.65f}};

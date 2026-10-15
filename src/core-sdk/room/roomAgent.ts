@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {roomRevisionBasis} from './roomObjectContext';
+import type {RoomObjectOverview} from '../../../shared/roomObjectOverview';
 import {ROOM_PLANNER_ARGUMENT_GUIDE,roomCaptureImages} from '../../../shared/prompts/room';
 import {ROOM_PLANNER_DISCOVERY_GUIDE} from '../../../shared/prompts/catalog';
 import {decodeRoomPlannerResponse} from './roomPlannerResponse';
@@ -48,6 +49,7 @@ export interface RoomAgentState {
   workspaceReady?:boolean;
   visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null;item?:RoomObjectObservation}|null;
   selectedId?: string | null; constructionSelection?:ConstructionSelection|null; constructionManipulation?:ConstructionManipulation|null;
+  objectOverview?:RoomObjectOverview;
   objects: RoomObjectObservation[];
 }
 export interface RoomAgentLease {

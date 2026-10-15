@@ -48,6 +48,31 @@ namespace Maestro.Quest.Tests
             Assert.That(journal.Apply(Array.Empty<RoomObjectData>(),new[]{DrawingId},out error),Is.True,error);Assert.That(journal.ObserveObject(DrawingId),Is.Null);
             Assert.That(journal.Undo(),Is.True);Assert.That(journal.ObserveObject(DrawingId).name,Is.EqualTo("Renamed"));
         }
+        static RoomJournal ManyObjects(int extra)
+        {
+            var document=Journal().Snapshot();
+            document.objects=document.objects.Concat(Enumerable.Range(1,extra).Select(i=>new RoomObjectData{id=i.ToString("x32"),kind=RoomObjectKind.Block,name="Saved "+i})).ToArray();
+            return new RoomJournal(document);
+        }
+        [Test] public void ContextIsBoundedBeforeProjectionAndDoesNotInventReplacementMembers()
+        {
+            var journal=ManyObjects(63);string selected=1.ToString("x32"),inspected=2.ToString("x32");
+            var before=JsonUtility.ToJson(journal.Snapshot());var values=journal.ObserveObjectContext(selected,inspected);
+            Assert.That(values.Select(x=>x.id),Is.EqualTo(new[]{"book","maestro",selected,inspected}));Assert.That(values.Length,Is.EqualTo(RoomObjectOverview.Limit));
+            Assert.That(journal.ObserveObjectContext(selected,selected).Length,Is.EqualTo(3));
+            Assert.That(journal.ObserveObjectContext(null,"missing").Select(x=>x.id),Is.EqualTo(new[]{"book","maestro"}));
+            values[2].name="External edit";Assert.That(JsonUtility.ToJson(journal.Snapshot()),Is.EqualTo(before));
+            Assert.That(journal.Apply(Array.Empty<RoomObjectData>(),new[]{selected},out var error),Is.True,error);
+            Assert.That(journal.ObserveObjectContext(selected,inspected).Select(x=>x.id),Is.EqualTo(new[]{"book","maestro",inspected}));
+            Assert.That(journal.ObserveObject(3.ToString("x32")),Is.Not.Null,"Omission never removes a saved object");
+        }
+        [Test] public void ContextAllocationsDoNotGrowWithTheSavedDirectory()
+        {
+            var small=ManyObjects(2);var large=ManyObjects(63);string selected=1.ToString("x32"),inspected=2.ToString("x32");
+            long a=Allocations(()=>small.ObserveObjectContext(selected,inspected)),b=Allocations(()=>large.ObserveObjectContext(selected,inspected));
+            TestContext.WriteLine($"Context allocation counts: {a} (5 saved), {b} (66 saved)");
+            Assert.That(a,Is.GreaterThan(0));Assert.That(b-a,Is.LessThanOrEqualTo(2),"Context must not project the complete saved directory before truncating");
+        }
         static RoomJournal RecipeJournal(int parts)
         {
             var document=Journal().Snapshot();var item=document.objects.Single(x=>x.id==DrawingId);
@@ -55,13 +80,14 @@ namespace Maestro.Quest.Tests
             item.recipe=new RoomRecipe {parts=Enumerable.Range(0,parts).Select(i=>new RecipePart {id="part_"+i}).ToArray()};
             return new RoomJournal(document);
         }
-        static long Allocations(RoomJournal journal)
+        static long Allocations(RoomJournal journal)=>Allocations(journal.ObserveObjects);
+        static long Allocations(Func<RoomAgentObject[]> observe)
         {
-            for(int i=0;i<8;i++)journal.ObserveObjects();
+            for(int i=0;i<8;i++)observe();
             using var recorder=new ProfilerRecorder(ProfilerCategory.Memory,"GC.Alloc",1,
                 ProfilerRecorderOptions.WrapAroundWhenCapacityReached|ProfilerRecorderOptions.SumAllSamplesInFrame|ProfilerRecorderOptions.CollectOnlyOnCurrentThread);
             Assert.That(recorder.Valid,Is.True,"Allocation measurement must be available");
-            recorder.Start();for(int i=0;i<32;i++)journal.ObserveObjects();recorder.Stop();
+            recorder.Start();for(int i=0;i<32;i++)observe();recorder.Stop();
             Assert.That(recorder.Count,Is.GreaterThan(0),"An unsupported counter must not silently pass");
             return recorder.GetSample(0).Count/32;
         }
