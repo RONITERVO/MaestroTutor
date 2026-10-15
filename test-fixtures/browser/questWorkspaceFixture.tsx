@@ -1,3 +1,6 @@
+import nativeObjectSearch from './objectSearch.json';
+import {readObjectSearchPage} from '../../shared/objectSearch';
+import type {CatalogRequest,CatalogView} from '../../shared/roomCatalog';
 import nativeChannelWait from './channelWaitState.json';
 import nativeAnchorZone from './anchorZoneState.json';
 import nativeRemembered from './rememberedProgramState.json';
@@ -277,6 +280,12 @@ if(new URLSearchParams(location.search).has('moduleLibrary'))Object.assign(windo
 
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
+const objectSearchMode=new URLSearchParams(location.search).has('objectSearch');
+const objectSearchPages=nativeObjectSearch as unknown as {request:CatalogRequest;view:CatalogView}[];
+if(objectSearchMode){
+ const entries=objectSearchPages.flatMap(page=>{const value=readObjectSearchPage(page.view,page.request);if(!value)throw new Error('Invalid native object discovery fixture');return value.entries;});
+ state={...state,inspection:null,rules:undefined,selectedId:null,capabilities:['objectSearch.v1','catalog.v1','catalogVocabulary.v1','factQueries.v1','inspect.v1','workspace.v1'],objects:entries.map((entry,i)=>({...entry,objectRevision:1,position:{x:i/10,y:1,z:1},scale:1,color:white,animated:false})),status:'Recorded native search pages; browser acknowledgements are simulated.'};
+}
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
 const ruleUndo:RuleView[]=[],ruleRedo:RuleView[]=[];
 const copy=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));
@@ -291,7 +300,13 @@ setInterval(()=>{
   requestHistory.push(copy(request));if(requestHistory.length>32)requestHistory.shift();
   state={...state,ack:request.sequence,ok:true,status:'Fixture action completed'};
   for(const command of request.commands){
-   if(command.action==='execution'&&command.execution){
+   if(objectSearchMode&&command.action==='catalog'){
+    const query=command.catalog;
+    const page=query?.operation==='inspect'?objectSearchPages.find(page=>page.request.operation==='inspect'&&page.request.capability===query.capability&&page.request.version===query.version&&JSON.stringify(Object.entries(page.request.arguments??{}).sort())===JSON.stringify(Object.entries(query.arguments??{}).sort())):null;
+    if(page){state.catalog=copy(page.view);state.status='Captured native object search; this browser does not create or load room objects.';}else{state.ok=false;state.status='Only the captured native search queries are available in this development replay.';}
+   }else if(objectSearchMode&&command.action==='inspect'){
+    const object=state.objects.find(value=>value.id===command.target);if(object){state.selectedId=object.id;state.inspection={id:object.id,objectRevision:object.objectRevision!,recipe:null};}else{state.ok=false;state.status='Object is not in the native search recording.';}
+   }else if(command.action==='execution'&&command.execution){
     const input=command.execution;
     if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.library.selected.call)){state.execution=copy(nativeAvatar.library) as RoomAgentState['execution'];state.status='Recorded native library metadata; browser acknowledgement is simulated';}
     else if(avatarSelection&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAvatar.selection.selected.call)){state.execution=copy(nativeAvatar.selection) as RoomAgentState['execution'];avatarObservation=nativeAvatar.after;state.status='Recorded native model selection; browser acknowledgement is simulated';}

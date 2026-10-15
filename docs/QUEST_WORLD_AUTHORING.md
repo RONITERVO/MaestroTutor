@@ -1576,3 +1576,35 @@ closure arrays are detached copies, so callers cannot alter the shared cache.
 This reduces repeated dependency work. It does not change loading policy, physical
 simulation ownership, saved capacity or the existing limits on the world. Live
 conditions are still reevaluated before loading or retiring native objects.
+
+
+## Finding saved objects — 2026-10-15
+
+The book's Workshop has a shared saved-object search. Search name/ID words and
+optionally choose a kind, then use Previous/Next to browse. Results include objects
+outside the observed area; searching does not load or move them. Selecting a result
+uses the existing native inspector. Chat remains the default authoring interface.
+
+Agents and programs use the same `world.objects` version-1 fact:
+
+```json
+{"query":"apple","kind":"all","cursor":""}
+```
+
+The result contains `worldId`, `offset`, `total`, `next` and `entries` with exact
+`id`, `name`, `kind`. Supply `next` unchanged as the next `cursor`, keeping the
+same filter. Empty `next` means the result is complete. Pages contain up to three
+objects and may be smaller for heavily escaped names to stay within the shared
+program-value budget. Never advance by an assumed page size or shorten a name.
+
+A changed directory or workspace/temporary session invalidates old cursors.
+Restart at an empty cursor if a continuation is unavailable. Ordinary movement
+and loading do not invalidate the directory. Results are a directory, not a live
+pose snapshot or permission to edit. Read `object.definition` for current saved
+metadata/revisions and `object.presence` to distinguish saved existence from native
+readiness. A target not listed on one page must not be treated as deleted. Internal
+recipe parts remain inside their owning object.
+
+The current complete periodic scene inventory and existing object limits remain
+unchanged while other selectors and observation consumers are upgraded. This
+search does not establish larger-world or headset performance acceptance.

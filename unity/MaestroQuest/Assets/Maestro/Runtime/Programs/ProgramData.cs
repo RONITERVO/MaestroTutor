@@ -62,6 +62,8 @@ namespace Maestro.Quest.Programs
     public readonly struct ProgramValue
     {
         public const double MaximumNumber=9007199254740991d;
+        internal const int MaximumCharacters=1024;
+        internal static int MeasureCharacters(JToken value)=>Cost(value);
         public static bool ValidNumber(double value)=>double.IsFinite(value)&&Math.Abs(value)<=MaximumNumber;
         readonly ProgramDataType shape;readonly JToken data;
         public ProgramDataType Type=>shape??(ProgramDataType)ProgramType.Void;
@@ -85,7 +87,7 @@ namespace Maestro.Quest.Programs
                 ProgramDataType.Need(t.Kind==ProgramType.Record&&v is JObject obj&&obj.Count==t.Fields.Count&&t.Fields.Keys.All(obj.ContainsKey),"Record fields differ from its type");
                 foreach(var p in t.Fields)Check(v[p.Key],p.Value,depth+1);
             }
-            Check(value,type,0);int characters=Cost(value);ProgramDataType.Need(characters<=1024,"Value exceeds its 1024 character budget");
+            Check(value,type,0);int characters=Cost(value);ProgramDataType.Need(characters<=MaximumCharacters,"Value exceeds its 1024 character budget");
             return type.Kind switch {ProgramType.Number=>new ProgramValue((double)value),ProgramType.Boolean=>new ProgramValue((bool)value),ProgramType.Text=>new ProgramValue((string)value),_=>new ProgramValue(value,type,nodes,characters)};
         }
         static int Cost(JToken value) {

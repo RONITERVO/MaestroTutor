@@ -1,3 +1,5 @@
+import {ObjectSearchList} from './ObjectSearchList';
+import {objectSearchFeature} from '../../../shared/objectSearch';
 import {SweepPathEditor} from './SweepPathEditor';
 import {ConstructionSelectionControls} from './ConstructionSelectionControls';
 import {roomObjectLabel} from '../../../shared/roomSelection';
@@ -30,9 +32,9 @@ export function RoomWorkspace({client}:{client:RoomAgentClient}) {
  const [catalog,setCatalog]=useState<{insert?:CatalogInsert;initialCall?:CapabilityInvocation}|null>(null);
  useEffect(()=>{setCatalog(null);},[state?.session,state?.visible]);
  const openCatalog:OpenCatalog=(insert,initialCall)=>setCatalog({insert,initialCall});
- return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</>;
+ return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog} active={!catalog&&state?.workspaceView!=='rules'}/></div><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</>;
 }
-function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:OpenCatalog}) {
+function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCatalog:OpenCatalog;active:boolean}) {
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
  const [partId,setPartId]=useState(''),[tab,setTab]=useState<'parts'|'animation'>('parts'),[keyIndex,setKeyIndex]=useState(0);
@@ -74,7 +76,7 @@ function ObjectsWorkspace({client,onCatalog}:{client:RoomAgentClient;onCatalog:O
    <TemporaryRoomControls client={client} disabled={dirty}/>
    <RoomOwnershipDetails state={state}/>
    <ConstructionSelectionControls key={state.session} client={client} disabled={dirty} onCapture={call=>onCatalog(undefined,call)}/>
-   <div className="room-object-list" aria-label="Objects">{state.objects.map(object=><button key={object.id} disabled={pending} aria-pressed={draft?.id===object.id} onClick={()=>void select(object.id)}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {roomObjectLabel(object,state.objects)}</span><small>{object.kind}{object.animated?' · Playing':''}</small></button>)}</div>
+   {state.capabilities?.includes(objectSearchFeature)?<ObjectSearchList key={state.session} client={client} active={active} disabled={dirty} selectedId={draft?.id} onSelect={id=>void select(id)}/>:<div className="room-object-list" aria-label="Objects">{state.objects.map(object=><button key={object.id} disabled={pending} aria-pressed={draft?.id===object.id} onClick={()=>void select(object.id)}><span>{object.kind==='Assembly'?'◇':object.kind==='Maestro'?'♙':object.kind==='Book'?'▤':'○'} {roomObjectLabel(object,state.objects)}</span><small>{object.kind}{object.animated?' · Playing':''}</small></button>)}</div>}
    {recipe&&<div className="room-parts-list" aria-label="Parts"><h2>Parts & joints <small>{recipe.parts.length}</small></h2>{recipe.parts.map(node=><button key={node.id} disabled={pending} aria-pressed={part?.id===node.id} onClick={()=>{setPartId(node.id);setKeyIndex(0);void send([{action:'inspect',target:draft!.id,partId:node.id}]);}}><span>{node.id}</span><small>{node.parent?`↳ ${node.parent}`:'Root part'} · {node.shape}</small></button>)}</div>}
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Object editor">

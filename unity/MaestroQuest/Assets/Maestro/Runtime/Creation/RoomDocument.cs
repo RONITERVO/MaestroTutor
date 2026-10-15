@@ -408,6 +408,7 @@ namespace Maestro.Quest.Creation
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {
             InvalidateRetentionObjects(before,after);
+            InvalidateObjectSearch(before,after);
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
             foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=clock.Next++; }
         }

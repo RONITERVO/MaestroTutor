@@ -37708,6 +37708,75 @@
       ]
     },
     {
+      "id": "world.objects",
+      "version": 1,
+      "type": {
+        "record": {
+          "worldId": "text",
+          "offset": "number",
+          "total": "number",
+          "next": "text",
+          "entries": {
+            "list": {
+              "record": {
+                "id": "text",
+                "name": "text",
+                "kind": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Find saved objects",
+      "description": "Search every saved top-level object, including dormant creations, without loading, selecting or moving anything. Match all space-separated words against saved names, exact IDs or kinds, ignoring case. kind filters one exact kind or all. Results are ordered by stable ID, up to three per page. Start with empty cursor; pass next unchanged with the same query/kind until it is empty. A cursor becomes unavailable when searchable metadata or workspace/temporary scope changes; restart from empty cursor. Movement and native loading do not change this directory. An object absent from a page is not deleted. Read object.definition for a known ID and its current edit revision; object.presence distinguishes saved existence from native readiness. Internal recipe parts are not separate objects.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 80
+          },
+          "kind": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 16,
+            "enum": [
+              "all",
+              "Book",
+              "Maestro",
+              "Block",
+              "Ball",
+              "Cylinder",
+              "Drawing",
+              "ImportedModel",
+              "Assembly"
+            ]
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 65
+          }
+        },
+        "required": [
+          "query",
+          "kind",
+          "cursor"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "query": "",
+        "kind": "all",
+        "cursor": ""
+      },
+      "features": [
+        "factQueries.v1",
+        "objectSearch.v1"
+      ]
+    },
+    {
       "id": "object.definition",
       "version": 1,
       "type": {
@@ -46161,6 +46230,10 @@
       "sha256": "3f18b60b7b3fedded5a91b9ad26e9ad9dafc7fd8a0d94e99210fee42a0be4d66"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectSearchFact.cs",
+      "sha256": "50129dfacd0e12d65ebdb47d231bcc640fbf316d693ce0bb8c24f12839b8e344"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectWalkSettingsCapability.cs",
       "sha256": "d76094d512e810bf6cd4aa277ca60eaee246be3857912140538b2220c251b668"
     },
@@ -46690,7 +46763,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "1a7139f9432d2485965ecd111b164346cee961c1e16e457c7ec5c6e06454813e"
+      "sha256": "b33ea14e7dd99b84fd1ab7980ce3f585beb74310afc51505222318b0032b6d22"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -46702,7 +46775,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "ef5506d85162c4e004cbb460eec700c2f0bf22e5f5a031546b3a780563476a5d"
+      "sha256": "91117c58e89ae37f53e102128d67bf08f88cbc9b4d316bd25c418e50917e3e21"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -46899,6 +46972,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectPresence.cs",
       "sha256": "0a7310848630a1e3c8a4cb52550375bc3cea80ce3337fbc0c7a40002d92e4cdc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSearch.cs",
+      "sha256": "f705c22585a83529096acfb906b79cc5f41a487c4b2756079d25b1a94f364f7f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
@@ -47842,7 +47919,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "5c8cbbb458877e65d5e4796b02a00105b8790993e7f7810cb7f91c6acbc9cd46"
+      "sha256": "d13b0efd94660b70a8796b86585f41377a5b1fe7bf8b2a6830969a6ba145a6ae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -47878,7 +47955,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramData.cs",
-      "sha256": "71a8a0b90b7cba742c4e6591a3f28d1b5b67c63e5a562825208cd67f66c41540"
+      "sha256": "4ecaba68cb6393ed1f1605ab8d18c64c5923e7c80ca2b9e03186ff5851318575"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",

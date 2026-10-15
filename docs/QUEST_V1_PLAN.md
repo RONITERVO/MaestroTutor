@@ -36,6 +36,8 @@ Authored dependency topology is now reused across queries; see
 [immutable retention topology](#immutable-retention-topology--2026-10-15).
 Allocation checks now validate their recorder and idle display no longer allocates;
 see [verified allocation measurement](#verified-allocation-measurement--2026-10-15).
+Users and agents now share bounded saved-object discovery; see
+[object search](#shared-saved-object-discovery--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10429,3 +10431,51 @@ captured dormant-work code. Physical performance and release acceptance remain
 open. Evidence: .quest-evidence/allocation-recorder/.
 
 Existing headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
+
+
+## Shared saved-object discovery — 2026-10-15
+
+The native `world.objects` fact now searches the saved top-level object directory
+by name, ID words and kind. It includes dormant creations without loading,
+selecting or moving them. The book's object hierarchy uses this same fact with
+search, kind filtering and Previous/Next controls. Existing selection, inspector,
+edit revisions, Undo and program execution remain on their original shared paths.
+
+Results contain stable IDs, full names and kinds, ordered by ID. Each page holds
+up to three entries and fits the existing 1,024-character program-value budget.
+Escaped Unicode names reduce the page size instead of being truncated. The result
+reports the durable world ID, offset, total and an opaque continuation. A cursor
+binds the metadata generation, normalized filter and workspace/temporary session.
+Rename, addition, removal, kind changes and their Undo/Redo invalidate it; a stale
+continuation reports unavailable and requires a fresh search. Movement, paint,
+geometry and native loading do not invalidate the directory. The book preserves
+its inspector when paging and rejects late results from another room/session.
+
+The directory is a cached metadata projection of the authoritative journal,
+invalidated only on accepted publication. It does not copy geometry or create a
+second saved world. A returned page cannot mutate its cache. Search results are
+not edit revisions or proof of native readiness: known targets use
+`object.definition` and `object.presence` for those questions. An ID absent from a
+page is not evidence that the saved object was deleted.
+
+Fresh verification passed **65 EditMode / 21 PlayMode** checks, no failures/skips,
+including the complete current 66-object directory, exact native catalog/program
+parity, dormant lookup with no activation, filters/cursor tampering, name escaping,
+accepted/rejected edits, history, fork/reload and temporary-boundary behavior.
+**2,965 web tests / 314 files**, application and probe TypeScript checks, and the
+native catalog drift check passed. The native export adds only `world.objects`;
+existing definitions are unchanged. The original book in desktop Chromium replayed
+actual native search pages through first/next/previous/select, with no page errors.
+Wide and narrow screenshots were inspected. Browser acknowledgements are simulated;
+this is not headset or real-provider acceptance.
+
+All 3,014 frozen native inputs and 1,125 mirrored C# files match; 14 unrelated files
+remain byte-for-byte unchanged. Evidence: `.quest-evidence/object-discovery/`.
+The complete native suites, offline full-app journeys and unsigned Android build
+from **7fe48619** remain separate baseline evidence, not reruns of this change.
+
+This is the shared discovery prerequisite for larger worlds. The periodic scene
+state and other pickers still use the complete bounded object inventory; they have
+not been silently truncated. Saved-object limits, whole-document persistence,
+live resource budgets and hardware acceptance remain further work. Existing
+headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
