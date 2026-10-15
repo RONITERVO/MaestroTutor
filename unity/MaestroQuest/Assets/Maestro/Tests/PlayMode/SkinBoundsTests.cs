@@ -78,8 +78,9 @@ namespace Maestro.Quest.Tests
             var skin=model.Instance.SkinnedMeshRenderers.Single();var owned=skin.GetComponent<ImportedSkinBounds>();
             var before=skin.bounds;var pose=model.Humanoid.GetBoneTransform(HumanBodyBones.Head).localRotation;
             for(int i=0;i<8;i++)owned.Read(Matrix4x4.identity,true);
-            long allocated=GC.GetAllocatedBytesForCurrentThread();for(int i=0;i<512;i++)owned.Read(Matrix4x4.identity,true);
-            Assert.That(GC.GetAllocatedBytesForCurrentThread()-allocated,Is.LessThan(4096));
+            long allocated=ManagedAllocations.Measure(() => { for(int i=0;i<512;i++)owned.Read(Matrix4x4.identity,true); });
+            TestContext.WriteLine($"Prepared skin bounds: {allocated} managed allocation events for 512 reads");
+            Assert.That(allocated,Is.Zero);
             Assert.That(skin.bounds,Is.EqualTo(before));Assert.That(model.Humanoid.GetBoneTransform(HumanBodyBones.Head).localRotation,Is.EqualTo(pose));Assert.That(model.IsPlaying,Is.False);yield return null;
         }
         [UnityTest] public IEnumerator SkinBoundsChangedMeshOrQualityRemainUnknownAndReleaseCustomCulling()

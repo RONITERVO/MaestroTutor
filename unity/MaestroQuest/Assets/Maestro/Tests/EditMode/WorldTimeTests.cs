@@ -35,8 +35,9 @@ namespace Maestro.Quest.Tests
         }
         [Test] public void CachedCycleSamplingDoesNotAllocatePerFrame(){
             var projection=new WorldLightingProjection(new RoomLighting(),Cycle());var sum=projection.Sample(0).Ambient;
-            long before=GC.GetAllocatedBytesForCurrentThread();for(int i=0;i<1000;i++)sum+=projection.Sample(i*83.5).Ambient;long bytes=GC.GetAllocatedBytesForCurrentThread()-before;
-            Assert.That(bytes,Is.Zero);Assert.That(sum.sqrMagnitude,Is.GreaterThan(0));
+            long allocations=ManagedAllocations.Measure(() => { for(int i=0;i<1000;i++)sum+=projection.Sample(i*83.5).Ambient; });
+            TestContext.WriteLine($"Cached lighting: {allocations} managed allocation events for 1000 samples");
+            Assert.That(allocations,Is.Zero);Assert.That(sum.sqrMagnitude,Is.GreaterThan(0));
         }
         [Test] public void DefinitionsRejectUnorderedOrDuplicateFramesAndCurrentWireCannotDefaultMissingFields(){
             var doc=Room();doc.worldTime.settings=Cycle();Assert.That(doc.Validate(out var e),Is.True,e);var wire=JObject.Parse(JsonUtility.ToJson(doc));Assert.That(RoomWorldTime.ValidWire(wire),Is.True);

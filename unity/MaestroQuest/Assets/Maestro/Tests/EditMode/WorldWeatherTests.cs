@@ -18,7 +18,9 @@ namespace Maestro.Quest.Tests
             var w=new RoomWeather{startSecond=86390,transitionSeconds=20,settings=new(){rainMmPerHour=100,windX=10,cloudCover=1,fogDensity=.2f}};
             var p=new WeatherProjection(w);Assert.That(p.Sample(86380).Rain,Is.Zero);Assert.That(p.Sample(86400).Rain,Is.EqualTo(50));Assert.That(p.Sample(86410).Rain,Is.EqualTo(100));Assert.That(p.Sample(86390).Rain,Is.Zero);Assert.That(w.settings.rainMmPerHour,Is.EqualTo(100));
             var light=p.Sample(86410).Apply(new WorldLightSample{Sun=Vector3.one,Ambient=Vector3.one});Assert.That(light.Sun.x,Is.EqualTo(.1f).Within(.00001));Assert.That(light.Ambient.x,Is.EqualTo(.65f).Within(.00001));
-            long before=GC.GetAllocatedBytesForCurrentThread();float sum=0;for(int i=0;i<1000;i++)sum+=p.Sample(86390+i*.02).Rain;Assert.That(GC.GetAllocatedBytesForCurrentThread()-before,Is.Zero);Assert.That(sum,Is.GreaterThan(0));
+            float sum=0;long allocations=ManagedAllocations.Measure(() => { for(int i=0;i<1000;i++)sum+=p.Sample(86390+i*.02).Rain; });
+            TestContext.WriteLine($"Weather interpolation: {allocations} managed allocation events for 1000 samples");
+            Assert.That(allocations,Is.Zero);Assert.That(sum,Is.GreaterThan(0));
         }
         [Test]public void WeatherRejectsInvalidNumbersAndCurrentWireNeverDefaultsMissingFields(){
             var doc=Room();Assert.That(doc.Validate(out var e),Is.True,e);var wire=JObject.Parse(JsonUtility.ToJson(doc));Assert.That(RoomWeather.ValidWire(wire),Is.True);

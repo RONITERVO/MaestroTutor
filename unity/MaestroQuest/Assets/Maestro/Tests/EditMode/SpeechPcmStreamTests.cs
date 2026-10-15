@@ -108,13 +108,16 @@ namespace Maestro.Quest.Tests
         {
             var stream=new SpeechPcmStream(0,.1); var pcm=new short[128]; var output=new float[256];
             stream.TryWrite(1,pcm,0,out _); stream.Render(output,1,48000,0); stream.Read(1);
-            long before=GC.GetAllocatedBytesForCurrentThread();
-            for(int i=2;i<10002;i++) {
-                double time=i/100.0;
-                if(!stream.TryWrite(i,pcm,time,out _)) Assert.Fail("Steady stream exhausted its bound");
-                stream.Render(output,1,48000,time); stream.Read(time);
-            }
-            Assert.AreEqual(0,GC.GetAllocatedBytesForCurrentThread()-before);
+            int failedSequence=0;
+            long allocations=ManagedAllocations.Measure(() => {
+                for(int i=2;i<10002;i++) {
+                    double time=i/100.0;
+                    if(!stream.TryWrite(i,pcm,time,out _)) { failedSequence=i;break; }
+                    stream.Render(output,1,48000,time); stream.Read(time);
+                }
+            });
+            TestContext.WriteLine($"Speech render/receipts: {allocations} managed allocation events for 10000 blocks");
+            Assert.AreEqual(0,failedSequence,"Steady stream exhausted its bound");Assert.AreEqual(0,allocations);
             Assert.IsFalse(stream.Read(200).Faulted); Assert.AreEqual(10001*128,stream.Read(200).Played);
         }
 

@@ -65,11 +65,15 @@ namespace Maestro.Quest.Tests {
             var queries=new RoomEnvironmentQueries();using(var warm=queries.Begin(world))for(int i=0;i<128;i++){Assert.That(Direct(Point(i)),Is.True);Assert.That(warm.CanSimulate(Point(i),first,second),Is.True);}
             var trials=new JArray();const int count=4096;
             for(int trial=0;trial<4;trial++){
-                int accepted=0;var timer=new Stopwatch();long before=GC.GetAllocatedBytesForCurrentThread();timer.Start();
-                if(batched){using var batch=queries.Begin(world);for(int i=0;i<count;i++)if(batch.CanSimulate(Point(i),first,second))accepted++;}
-                else for(int i=0;i<count;i++)if(Direct(Point(i)))accepted++;
-                timer.Stop();long allocated=GC.GetAllocatedBytesForCurrentThread()-before;Assert.That(accepted,Is.EqualTo(count));Assert.That(allocated,Is.Zero,"Warmed environmental query loop should allocate no managed memory");
-                trials.Add(new JObject{["milliseconds"]=timer.Elapsed.TotalMilliseconds,["managedBytes"]=allocated});
+                int accepted=0;var timer=new Stopwatch();
+                long allocated=ManagedAllocations.Measure(() => {
+                    timer.Start();
+                    if(batched){using var batch=queries.Begin(world);for(int i=0;i<count;i++)if(batch.CanSimulate(Point(i),first,second))accepted++;}
+                    else for(int i=0;i<count;i++)if(Direct(Point(i)))accepted++;
+                    timer.Stop();
+                });
+                Assert.That(accepted,Is.EqualTo(count));Assert.That(allocated,Is.Zero,"Warmed environmental query loop should allocate no managed memory");
+                trials.Add(new JObject{["milliseconds"]=timer.Elapsed.TotalMilliseconds,["managedAllocationEvents"]=allocated});
             }
             return trials;
         }

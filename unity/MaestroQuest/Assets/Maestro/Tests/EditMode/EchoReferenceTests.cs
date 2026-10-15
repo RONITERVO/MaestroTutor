@@ -98,9 +98,12 @@ namespace Maestro.Quest.Tests
         {
             using var stream=Stream();var data=new float[960];var output=new float[960];
             stream.Observe(data,2,0,now);stream.Read(output,out _);
-            long before=GC.GetAllocatedBytesForCurrentThread();int received=0;
-            for(int i=1;i<=1000;i++) { stream.Observe(data,2,i*.01,now);if(stream.Read(output,out _)==EchoReferenceRead.Frame)received++; }
-            long bytes=GC.GetAllocatedBytesForCurrentThread()-before;Assert.AreEqual(1000,received);Assert.AreEqual(0,bytes);
+            int received=0;
+            long allocations=ManagedAllocations.Measure(() => {
+                for(int i=1;i<=1000;i++) { stream.Observe(data,2,i*.01,now);if(stream.Read(output,out _)==EchoReferenceRead.Frame)received++; }
+            });
+            TestContext.WriteLine($"Echo render/read: {allocations} managed allocation events for {received} frames");
+            Assert.AreEqual(1000,received);Assert.AreEqual(0,allocations);
         }
         [Test] public void ReadSamplesClockAfterConcurrentCallbackRatherThanBeforeItsLock()
         {

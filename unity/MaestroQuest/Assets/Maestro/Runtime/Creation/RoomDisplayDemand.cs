@@ -23,6 +23,12 @@ namespace Maestro.Quest.Creation
             // Retention deliberately treats missing metadata and uncertain tracking
             // as demand. Admission must not mistake that for a view of every area.
             if(dormantNative.Count==0||!DisplayReady||!Frame.Valid){ResetNativeDisplayDemand();return;}
+            RefreshDormantDisplayDemand(now);
+        }
+        void RefreshDormantDisplayDemand(double now)
+        {
+            // Keep captured demand lambdas out of the idle gate: the compiler creates
+            // their closure at method entry, even when an early return skips the work.
             var camera=(viewerTracked?.Invoke()??true)?ActiveViewerCamera():null;
             RoomObservationView direct=camera?new RoomObservationView(camera):null,predicted=null;
             if(direct?.Reliable!=true){camera=null;direct=null;}

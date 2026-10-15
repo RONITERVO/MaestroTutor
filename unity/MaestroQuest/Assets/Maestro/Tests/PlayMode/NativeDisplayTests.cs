@@ -107,8 +107,9 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator NativeDisplayIdleRoomDoesNotAllocatePerFrameDemandWork()
         {
             NativeObservationCamera();for(int i=0;i<5;i++)editor.TickNativeDisplay();
-            long before=GC.GetAllocatedBytesForCurrentThread();for(int i=0;i<512;i++)editor.TickNativeDisplay();long allocated=GC.GetAllocatedBytesForCurrentThread()-before;
-            Assert.That(allocated,Is.LessThan(32768),"A fully resident room must not build admission views or queries every frame");yield return null;
+            long allocated=ManagedAllocations.Measure(() => { for(int i=0;i<512;i++)editor.TickNativeDisplay(); });
+            TestContext.WriteLine($"Idle native display: {allocated} managed allocation events for 512 ticks");
+            Assert.That(allocated,Is.Zero,"A fully resident room must not build admission views or queries every frame");yield return null;
         }
         [UnityTest] public IEnumerator NativeDisplayRepeatedDormantObservationDoesNotCopyOrHashAuthoredGeometry()
         {
@@ -117,8 +118,9 @@ namespace Maestro.Quest.Tests
             for(int i=0;i<40&&!(bool)editor.ObserveAuthoredBounds(id)["prepared"];i++)yield return null;
             Assert.That((bool)editor.ObserveAuthoredBounds(id)["prepared"],Is.True);
             for(int i=0;i<5;i++)editor.ReadSpatialBounds(id,out _);
-            long before=GC.GetAllocatedBytesForCurrentThread();for(int i=0;i<512;i++)editor.ReadSpatialBounds(id,out _);long allocated=GC.GetAllocatedBytesForCurrentThread()-before;
-            Assert.That(allocated,Is.LessThan(32768),"A passive dormant read must not clone and serialize authored data on every frame");
+            long allocated=ManagedAllocations.Measure(() => { for(int i=0;i<512;i++)editor.ReadSpatialBounds(id,out _); });
+            TestContext.WriteLine($"Dormant spatial bounds: {allocated} managed allocation events for 512 reads");
+            Assert.That(allocated,Is.Zero,"A passive dormant read must not clone and serialize authored data on every frame");
             var bounds=editor.ReadSpatialBounds(id,out _);changed=editor.Read(id);changed.position+=Vector3.right*2;
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out error),Is.True,error);
             Assert.That(editor.ReadSpatialBounds(id,out _).Visual.Bounds.center.x,Is.EqualTo(bounds.Visual.Bounds.center.x+2).Within(.001f));Assert.That(editor.Find(id),Is.Null);

@@ -34,6 +34,8 @@ Unassigned home objects now load and retire by dependency group; see
 [independent home loading](#independent-home-loading--2026-10-15).
 Authored dependency topology is now reused across queries; see
 [immutable retention topology](#immutable-retention-topology--2026-10-15).
+Allocation checks now validate their recorder and idle display no longer allocates;
+see [verified allocation measurement](#verified-allocation-measurement--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10367,9 +10369,9 @@ allocate more because connected groups are precomputed; the benefit applies to
 reused queries, not every edit. The pre-change regression failed; the post-change bound requires at least fourfold fewer events.
 These are managed allocation-event counts, not memory bytes or headset frame time.
 The earlier .NET counter returned zero and was rejected as unsupported evidence.
-Four older echo, speech, world-time and weather tests still use that counter;
-their allocation assertions are not accepted as allocation proof pending repair.
-Their functional checks remain part of the suite.
+At this checkpoint, four older echo, speech, world-time and weather allocation
+checks still used that counter. Their measurement gap, plus four additional
+PlayMode checks, is resolved by the later [allocation measurement repair](#verified-allocation-measurement--2026-10-15).
 
 Offline Headless **c6caea81d3b943ad9e494aea65a546db** and Original Book **662fa8d8543341f3b0066798d1a6904f** passed with successful
 client/editor exits and no provider calls. **2,958 web tests / 313 files**, probe
@@ -10387,3 +10389,43 @@ Evidence: .quest-evidence/retention-topology/.
 Saved/resident/physics/behaviour budgets, larger capacity, unknown geometry and
 headset performance remain separate work. Headset/provider/signing/deployment/
 Meta holds remain. V1 is incomplete.
+
+
+## Verified allocation measurement — 2026-10-15
+
+The allocation checks now use one shared test-only Unity recorder. Each measure
+first records a known allocation on the same thread, verifies that it was observed,
+then clears the recorder before running the synchronous measured operation.
+Separate EditMode and PlayMode controls distinguish allocating and empty work.
+Assertions, reporting and delegate construction stay outside the measured span.
+This replaces every GetAllocatedBytesForCurrentThread use in the Unity sources;
+that .NET counter had returned zero even for known allocating work in this editor.
+
+The repaired check exposed **512 allocations in 512 idle display ticks**. Compiled
+IL showed a captured `now`/`this` closure constructed before the idle return.
+The idle gate now calls a separate dormant-work method only when needed, preserving
+all readiness checks and loading decisions. Compiled IL has no constructor in that
+gate, and the same 512 ticks now record **zero allocation events**.
+
+Fresh focused verification passed **38 EditMode / 33 PlayMode**, no failures or
+skips, and **204 web tests / two catalog files**. Both recorder controls detect
+an allocating operation and zero for empty work. Warm measured loops also record
+zero events for 1,000 echo frames, 10,000 speech blocks, 1,000 lighting samples,
+1,000 weather samples, 512 dormant-bounds reads and 512 prepared-skin reads.
+Environmental admission records zero events across four 4,096-query trials for
+each of its direct and batched paths. Its evidence now labels events explicitly
+instead of reporting them as bytes. This is current-thread desktop Unity evidence,
+not device-wide memory, bytes, frame time or headset acceptance.
+
+The native catalog export and web drift check passed; only RoomDisplayDemand.cs's
+source hash changed. IDs, versions, schemas, saved state and browser fixtures are
+unchanged. All 3,006 frozen native inputs and 1,121 mirrored C# files match;
+14 unrelated files remain byte-for-byte unchanged.
+
+The preceding complete native suites, offline book/headless journeys and unsigned
+Android compilation remain evidence for **7fe48619**, not a rerun of this focused
+checkpoint. The new runtime change is limited to separating the idle gate from
+captured dormant-work code. Physical performance and release acceptance remain
+open. Evidence: .quest-evidence/allocation-recorder/.
+
+Existing headset/provider/signing/deployment/Meta holds remain. V1 is incomplete.
