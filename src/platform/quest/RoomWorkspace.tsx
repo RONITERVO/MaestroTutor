@@ -1,3 +1,4 @@
+import {inspectedRoomObject} from '../../core-sdk/room/roomObjectContext';
 import {ObjectReferenceProvider} from './ObjectReferenceField';
 import {ObjectSearchList} from './ObjectSearchList';
 import {objectSearchFeature} from '../../../shared/objectSearch';
@@ -31,7 +32,7 @@ function TurnControls({label,rotation,onChange}:{label:string;rotation:Rotation;
 export function RoomWorkspace({client}:{client:RoomAgentClient}) {
  const {state}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [catalog,setCatalog]=useState<{insert?:CatalogInsert;initialCall?:CapabilityInvocation}|null>(null);
- useEffect(()=>{setCatalog(null);},[state?.session,state?.visible]);
+ useEffect(()=>{setCatalog(null);},[state?.session,state?.temporaryRoom?.id,state?.visible]);
  const openCatalog:OpenCatalog=(insert,initialCall)=>setCatalog({insert,initialCall});
  return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog} active={!catalog&&state?.workspaceView!=='rules'}/></div><ObjectReferenceProvider client={client} active={!catalog&&state?.workspaceView==='rules'}><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div></ObjectReferenceProvider>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</>;
 }
@@ -39,17 +40,17 @@ function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCa
  const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
  const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
  const [partId,setPartId]=useState(''),[tab,setTab]=useState<'parts'|'animation'>('parts'),[keyIndex,setKeyIndex]=useState(0);
- useEffect(()=>{if(!dirty&&state){setDraft(fromState(state));}},[state?.inspection?.id,state?.inspection?.objectRevision,dirty]);
+ useEffect(()=>{if(!dirty&&state){setDraft(fromState(state));}},[state?.session,state?.temporaryRoom?.id,state?.inspection?.id,state?.inspection?.objectRevision,dirty]);
  useEffect(()=>{setPartId('');setKeyIndex(0);setError('');},[draft?.id]);
  useEffect(()=>{if(!dirty&&state?.inspection?.partId)setPartId(state.inspection.partId);},[state?.inspection?.partId,dirty]);
  if(!state?.visible)return null;
- const item=state.objects.find(value=>value.id===draft?.id),recipe=draft?.recipe;
+ const currentItem=inspectedRoomObject(state),item=currentItem?.id===draft?.id?currentItem:draft?inspectedRoomObject(draft.source):undefined,recipe=draft?.recipe;
  const part=recipe?.parts.find(value=>value.id===partId)??recipe?.parts[0];
  const sweepZoom=90/Math.max(.005,...(part?.profile??[]).flatMap(p=>[Math.abs(p.x),Math.abs(p.y)]));
  const profileX=(x:number)=>part?.shape==='sweep'?100+x*sweepZoom:(x+(part?.shape==='extrude'?.5:0))*200;
  const profileY=(y:number)=>part?.shape==='sweep'?100-y*sweepZoom:(.5-y)*200;
  const track=recipe?.tracks.find(value=>value.part===part?.id),key=track?.keys[Math.min(keyIndex,track.keys.length-1)];
- const stale=Boolean(draft&&(draft.source.session!==state.session||!item||item.objectRevision!==draft.revision)),blocked=pending||stale;
+ const stale=Boolean(draft&&(draft.source.session!==state.session||draft.source.temporaryRoom?.id!==state.temporaryRoom?.id||state.inspection?.id!==draft.id||state.inspection.objectRevision!==draft.revision)),blocked=pending||stale;
  const send=async(commands:RoomCommand[],expected?:RoomAgentState)=>{
   setError('');try {const result=await client.request(commands,expected);if(!result.ok)setError(result.status);return result;}
   catch(e){setError(e instanceof Error?e.message:'The room could not complete this action.');return null;}
@@ -85,8 +86,8 @@ function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCa
    <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(stale?'This object changed while you were editing. Your draft is kept; reload the latest version before applying.':pending?'Waiting for the room…':dirty?'Draft changes · Apply saves one edit and stops this object’s recipe animation':state.status)}</div>
    {draft&&<div className="room-workspace-actions"><button disabled={pending||!dirty||stale} onClick={()=>void save()}>Apply changes</button><button disabled={pending} onClick={()=>{setDirty(false);setDraft(fromState(state));setError('');}}> {stale?'Reload latest':'Discard draft'}</button></div>}
    {item&&!recipe&&<div className="room-simple-inspector"><p>{item.kind==='ImportedModel'?'This imported asset retains its original mesh. Its placement, size and tint can be edited here.':'Edit this object directly, or describe a change in chat.'}</p>
-    <fieldset disabled={pending}><legend>Size · {item.scale.toFixed(2)}×</legend><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale-.1).toFixed(2))}])}>Smaller</button><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale+.1).toFixed(2))}])}>Larger</button></fieldset>
-    {!['Book','Maestro'].includes(item.kind)&&<fieldset disabled={pending}><legend>Colour</legend>{colours.map(color=><button key={color.name} onClick={()=>void send([{action:'paint',target:item.id,color}])}>{color.name}</button>)}</fieldset>}
+    <fieldset disabled={blocked}><legend>Size · {item.scale.toFixed(2)}×</legend><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale-.1).toFixed(2))}],state)}>Smaller</button><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale+.1).toFixed(2))}],state)}>Larger</button></fieldset>
+    {!['Book','Maestro'].includes(item.kind)&&<fieldset disabled={blocked}><legend>Colour</legend>{colours.map(color=><button key={color.name} onClick={()=>void send([{action:'paint',target:item.id,color}],state)}>{color.name}</button>)}</fieldset>}
    </div>}
    {recipe&&part&&<>
     <div className="room-workspace-tabs" role="tablist" aria-label="Edit view"><button role="tab" aria-selected={tab==='parts'} onClick={()=>setTab('parts')}>Parts</button><button role="tab" aria-selected={tab==='animation'} onClick={()=>setTab('animation')}>Animation</button></div>
@@ -117,7 +118,7 @@ function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCa
      <TurnControls label="Rest pose" rotation={part.rotation} onChange={rotation=>change(value=>{value.parts.find(node=>node.id===part.id)!.rotation=rotation;})}/>
      <fieldset><legend>Part colour</legend>{colours.map(color=><button key={color.name} onClick={()=>change(value=>{const {name:_,...pigment}=color;value.parts.find(node=>node.id===part.id)!.color=pigment;})}>{color.name}</button>)}</fieldset>
     </>:<>
-     <div className="room-workspace-actions"><button disabled={dirty||pending||!recipe.tracks.length} onClick={()=>void send([{action:'play',target:draft!.id}])}>Play from start</button><button disabled={dirty||pending} onClick={()=>void send([{action:'stop',target:draft!.id}])}>Stop</button></div>
+     <div className="room-workspace-actions"><button disabled={dirty||pending||!recipe.tracks.length} onClick={()=>void send([{action:'play',target:draft!.id}],state)}>Play from start</button><button disabled={dirty||pending} onClick={()=>void send([{action:'stop',target:draft!.id}],state)}>Stop</button></div>
      <div className="room-clip-settings"><span>{recipe.duration.toFixed(1)} seconds</span><button aria-pressed={recipe.loop} onClick={()=>change(value=>{value.loop=!value.loop;})}>Loop {recipe.loop?'on':'off'}</button></div>
      {track?<><p>Rotation keys for {part.id}</p><div className="room-timeline" aria-label="Animation keyframes">{track.keys.map((frame,index)=><button key={index} aria-pressed={keyIndex===index} onClick={()=>setKeyIndex(index)}>{frame.time.toFixed(2)}s</button>)}</div>
       {key&&<TurnControls label={`Key ${key.time.toFixed(2)}s`} rotation={key.rotation} onChange={rotation=>change(value=>{value.tracks.find(channel=>channel.part===part.id)!.keys[Math.min(keyIndex,track.keys.length-1)].rotation=rotation;})}/>}

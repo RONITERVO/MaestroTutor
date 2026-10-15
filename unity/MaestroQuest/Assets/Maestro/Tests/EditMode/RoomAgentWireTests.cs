@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Linq;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
@@ -9,6 +10,16 @@ namespace Maestro.Quest.Tests
 {
     public sealed class RoomAgentWireTests
     {
+        [Test] public void InspectedObjectMetadataKeepsNullsAndMovementContractWithoutAnInventory()
+        {
+            var item=new RoomAgentObject{id="maestro",objectRevision=3,movement=new AvatarMovementSettings{distance=.3f,speed=.65f}};
+            var state=new RoomAgentState{objects=Array.Empty<RoomAgentObject>(),inspection=new RoomInspection{id=item.id,objectRevision=3,item=item}};
+            var wire=JObject.Parse(RoomAgentWire.Serialize(state));Assert.That(wire["objects"].Count(),Is.Zero);
+            Assert.That((string)wire["inspection"]["item"]["id"],Is.EqualTo("maestro"));Assert.That((double)wire["inspection"]["item"]["movement"]["distance"],Is.EqualTo(.3));
+            Assert.That(wire["inspection"]["recipe"].Type,Is.EqualTo(JTokenType.Null));item.movement=null;
+            wire=JObject.Parse(RoomAgentWire.Serialize(state));Assert.That(wire["inspection"]["item"]["movement"].Type,Is.EqualTo(JTokenType.Null));
+            state.inspection.item=null;wire=JObject.Parse(RoomAgentWire.Serialize(state));Assert.That(((JObject)wire["inspection"]).ContainsKey("item"),Is.False);
+        }
         [Test] public void UninspectedRulesKeepAbsentMemoryNullInsteadOfInventingAnInvalidScope()
         {
             var state=new RoomAgentState {objects=Array.Empty<RoomAgentObject>(),rules=new RuleView()};

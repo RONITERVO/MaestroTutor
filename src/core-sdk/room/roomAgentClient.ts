@@ -8,17 +8,16 @@ import {validRoomCaptureMetadata,validRoomCaptureImage,sameRoomCapture,type Room
 import {validConstructionSelection,validConstructionManipulation} from '../../../shared/roomSelection';
 import {validRoomOwnership} from '../../../shared/roomOwnership';
 import {validTemporaryRoom} from '../../../shared/roomSession';
-import {capabilityResources} from '../../../shared/capabilities';
-import {validExecutionView,identifyExecution} from '../../../shared/roomExecutions';
+import {roomCommandConditions,roomRevisionBasis,roomObjectId,validRoomObjectObservation} from './roomObjectContext';
+import {validExecutionView,identifyExecution,executionForCapability} from '../../../shared/roomExecutions';
 import {validCatalogView} from '../../../shared/roomCatalog';
-import { MAX_ROOM_CAPABILITIES, requireRoomCapabilities, validObjectPhysics, validAvatarMovement, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
+import { MAX_ROOM_CAPABILITIES, requireRoomCapabilities, validPhysicsObservation, validAvatarObservation, validAvatarWalkObservation } from '../../../shared/roomControls';
 import {validActivityProfile} from '../../../shared/avatarActivities';
 import {validMotionSearchView} from '../../../shared/roomMotions';
 import {validRuleView} from './rules';
-import {parseRecipe,validPigment} from './recipe';
+import {parseRecipe} from './recipe';
 import { parseRoomCommands, type RoomAgentLease, type RoomAgentState, type RoomCommand } from './roomAgent';
 const record=(v:unknown):v is Record<string,unknown> => v!==null && typeof v==='object' && !Array.isArray(v);
-const vector=(v:unknown) => record(v) && ['x','y','z'].every(k=>typeof v[k]==='number' && Number.isFinite(v[k]));
 const integer=(v:unknown,min=0) => typeof v==='number' && Number.isInteger(v) && v>=min && v<=2147483647;
 const id=(v:unknown) => typeof v==='string' && /^[a-f0-9]{32}$/.test(v);
 export class RoomAgentClient {
@@ -48,8 +47,7 @@ export class RoomAgentClient {
     if (!record(input) || input.version!==1 || !id(input.session) || !integer(input.revision,1) || !integer(input.sceneRevision,1) || !integer(input.ack) ||
       typeof input.status!=='string' || input.status.length>2048 || !['ok','canUndo','canRedo','physicsRunning'].every(k=>typeof input[k]==='boolean') ||
       !Array.isArray(input.created) || input.created.length>16 || !input.created.every(id) || !Array.isArray(input.objects) || input.objects.length>66 || JSON.stringify(input).length>327680) return false;
-    if(input.objects.some(o=>!record(o) || typeof o.id!=='string' || !/^(book|maestro|[a-f0-9]{32})$/.test(o.id) || typeof o.name!=='string' || o.name.length>80 || typeof o.kind!=='string' || !vector(o.position) || typeof o.scale!=='number' || !Number.isFinite(o.scale) || !validPigment(o.color) || typeof o.animated!=='boolean' || o.objectRevision!==undefined&&!integer(o.objectRevision,1))) return false;
-    if(input.objects.some(o=>o.runtimeState!==undefined&&!['unavailable','inactive','active'].includes(o.runtimeState as string)||o.positionSource!==undefined&&!['saved','live'].includes(o.positionSource as string)||o.positionSource==='live'&&o.runtimeState!==undefined&&o.runtimeState!=='active'))return false;
+    if(!input.objects.every(validRoomObjectObservation)||new Set(input.objects.map(o=>o.id)).size!==input.objects.length)return false;
     if(input.capabilities!==undefined&&(!Array.isArray(input.capabilities)||input.capabilities.length>MAX_ROOM_CAPABILITIES||!input.capabilities.every(c=>typeof c==='string'&&/^[a-zA-Z][a-zA-Z0-9.]{0,63}$/.test(c))||new Set(input.capabilities).size!==input.capabilities.length))return false;
     if(input.constructionSelection!==undefined&&input.constructionSelection!==null&&!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionSelection.v1')&&!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects']))return false;
     if(input.constructionManipulation!==undefined&&input.constructionManipulation!==null&&!validConstructionManipulation(input.constructionManipulation,input.constructionSelection as RoomAgentState['constructionSelection'])||Array.isArray(input.capabilities)&&input.capabilities.includes('constructionManipulation.v1')&&(!validConstructionSelection(input.constructionSelection,input.objects as RoomAgentState['objects'])||!validConstructionManipulation(input.constructionManipulation,input.constructionSelection)))return false;
@@ -59,7 +57,6 @@ export class RoomAgentClient {
     if(input.activityProfile!==undefined&&input.activityProfile!==null&&!validActivityProfile(input.activityProfile,true))return false;
     if(input.walk!==undefined&&input.walk!==null&&!validAvatarWalkObservation(input.walk))return false;
     if(input.avatar!==undefined&&input.avatar!==null&&!validAvatarObservation(input.avatar))return false;
-    if(input.objects.some(o=>o.physics!==undefined&&!validObjectPhysics(o.physics)||o.movement!==undefined&&o.movement!==null&&!validAvatarMovement(o.movement)||['held','simulating'].some(key=>o[key]!==undefined&&typeof o[key]!=='boolean')))return false;
     if(input.visible!==undefined && typeof input.visible!=='boolean')return false;
     if(input.execution!==undefined&&input.execution!==null&&!validExecutionView(input.execution))return false;
     if(Array.isArray(input.capabilities)&&input.capabilities.includes('workspaceMaintenance.v1')&&(!record(input.execution)||!record(input.execution.workspace)))return false;
@@ -68,7 +65,12 @@ export class RoomAgentClient {
     if(input.rules!==undefined&&input.rules!==null&&!validRuleView(input.rules))return false;
     if(input.workspaceView!==undefined&&!['objects','rules'].includes(input.workspaceView as string))return false;
     const inspection=input.inspection;
-    if(inspection!==undefined && inspection!==null && (!record(inspection)||typeof inspection.id!=='string'||!input.objects.some(o=>o.id===inspection.id)||!integer(inspection.objectRevision,1)||inspection.recipe!==null&&!parseRecipe(inspection.recipe)))return false;
+    if(inspection!==undefined && inspection!==null && (!record(inspection)||!roomObjectId(inspection.id)||!integer(inspection.objectRevision,1)||inspection.recipe!==null&&!parseRecipe(inspection.recipe)))return false;
+    if(record(inspection)){
+      const listed=input.objects.find(o=>o.id===inspection.id),item=inspection.item;
+      if(item!==undefined&&(!validRoomObjectObservation(item)||item.id!==inspection.id||item.objectRevision!==inspection.objectRevision))return false;
+      if(item===undefined&&!listed||listed?.objectRevision!==undefined&&listed.objectRevision!==inspection.objectRevision)return false;
+    }
     if(record(inspection)&&inspection.partId!==undefined&&inspection.partId!==null&&inspection.partId!==''&&(typeof inspection.partId!=='string'||!/^[a-zA-Z0-9_]{1,32}$/.test(inspection.partId)))return false;
     if(input.capture!==undefined&&input.capture!==null&&!validRoomCaptureMetadata(input.capture))return false;
     if(input.chatImage!==undefined&&input.chatImage!==null&&!validChatImageRequest(input.chatImage))return false;
@@ -92,7 +94,7 @@ export class RoomAgentClient {
   }
   request(commands:RoomCommand[],expected?:RoomAgentState) {
     const lease=this.lease();if(!lease)return Promise.reject(new Error('The room is disconnected or another action is pending.'));
-    const scene=expected??lease.state();if(scene.session!==lease.state().session)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,scene.objects);
+    const scene=expected??lease.state();if(scene.session!==lease.state().session||scene.temporaryRoom?.id!==lease.state().temporaryRoom?.id)return Promise.reject(new Error('The room session changed. Reload the latest object before editing.'));return lease.execute(commands,scene.sceneRevision,roomRevisionBasis(scene));
   }
   snapshot=() => {
     const snapshot = {clientId:this.clientId,session:this.value?.session??'',...(this.captureAck?{captureAck:this.captureAck}:{}),request:this.pending?.request??null};
@@ -109,8 +111,8 @@ export class RoomAgentClient {
   };
   lease(allowPendingObservation=false):RoomAgentLease|null {
     if(!this.value || Date.now()-this.lastSeen>3000 || (this.pending && !allowPendingObservation)) return null;
-    const generation=this.generation,session=this.value.session;
-    const valid=() => generation===this.generation && this.value?.session===session && Date.now()-this.lastSeen<=3000;
+    const generation=this.generation,session=this.value.session,temporary=this.value.temporaryRoom?.id;
+    const valid=() => generation===this.generation && this.value?.session===session && this.value?.temporaryRoom?.id===temporary && Date.now()-this.lastSeen<=3000;
     return {valid,capture:(id,signal)=>new Promise<RoomCaptureImage>((resolve,reject)=>{
       let timer:ReturnType<typeof setTimeout>|undefined;let unsubscribe=()=>{};
       const finish=(image:RoomCaptureImage|null,error?:Error)=>{if(timer)clearTimeout(timer);unsubscribe();signal?.removeEventListener('abort',aborted);if(image)resolve(image);else reject(error??new Error('The virtual room snapshot is unavailable. Capture a fresh view.'));};
@@ -122,11 +124,10 @@ export class RoomAgentClient {
       if(!valid() || this.pending || this.sequence>=2147483647) return Promise.reject(new Error('Room session unavailable or busy'));
       parseRoomCommands({commands});requireRoomCapabilities(commands,this.value!);
       if(this.value!.capabilities?.includes('executionReceipts.v1'))commands=commands.map(c=>c.action==='execution'&&c.execution?{...c,execution:identifyExecution(c.execution,this.value!.execution)}:c);
-      const objects=expectedObjects??this.value!.objects;
-      const modern=objects.every(object=>integer(object.objectRevision,1));
-      const targets=new Set(commands.flatMap(command=>command.action==='execution'&&command.execution?.operation==='start'?capabilityResources(command.execution.call.id,command.execution.call.arguments):command.target?[command.target]:[]));
-      const conditions=objects.filter(object=>targets.has(object.id)).map(object=>({id:object.id,revision:object.objectRevision!}));
-      const request={version:(modern?2:1) as 1|2,session,sequence:++this.sequence,sceneRevision:expectedRevision,conditions,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
+      const start=commands.length===1&&commands[0].action==='execution'&&commands[0].execution?.operation==='start'?commands[0].execution:null;
+      const reconcile=Boolean(start?.runId&&this.value!.capabilities?.includes('executionReceipts.v1')&&start.runId!==executionForCapability(start.call.id,this.value!.execution)?.nextRunId);
+      const context=roomCommandConditions(commands,expectedObjects??roomRevisionBasis(this.value!),reconcile);
+      const request={...context,session,sequence:++this.sequence,sceneRevision:expectedRevision,commands:commands.map(command => command.action === 'create' ? {scale:1,color:{r:1,g:1,b:1,a:1},...command} : command)};
       return new Promise<RoomAgentState>((resolve,reject)=>{
         const abort=()=>{if(this.pending?.request===request)this.cancel();};
         const timer=setTimeout(abort,15000);

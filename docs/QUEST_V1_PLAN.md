@@ -43,6 +43,8 @@ Construction selection now keeps explicit member order across search pages; see
 [paged construction choices](#shared-construction-discovery--2026-10-15).
 Behaviour fields, trigger sources and reference summaries now share those saved
 identities; see [behaviour references](#shared-behaviour-object-choices--2026-10-15).
+The object inspector now carries its own native metadata and reviewed edit revisions;
+see [inspection context](#self-contained-object-inspection--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10614,3 +10616,58 @@ saved quotas and active resource admission remain separate forthcoming work.
 Per-entity scanned-room physics/navigation choices remain independent of visibility
 and sound. V1 remains incomplete. No headset, paid provider, signing, deployment
 or Meta work was performed; existing holds remain in place.
+
+
+## Self-contained object inspection — 2026-10-15
+
+Native inspection now includes the selected object's detached saved/runtime
+metadata beside its recipe and exact object revision. Known-ID inspection uses
+the same projection as ordinary observation without scanning or depending on the
+periodic inventory. Dormant and unavailable native views retain saved placement;
+inspection does not load them. The wire normalizes movement values consistently
+in both locations. Older hosts can still use a matching inventory entry.
+
+The original book and delegated planner share a compact revision basis captured
+from the state they reviewed. The inspector works with an empty displayed list,
+keeps its exact target, and retains rejected drafts. A newer native observation
+does not silently replace the author's reviewed revision. Changes to native
+session or temporary-room identity invalidate old leases and prevent applying a
+draft in a different room, even when object revisions happen to match.
+
+Modern commands refuse missing required target evidence before dispatch. Nested
+capability resources all need guards; an alias is exempt only after its creation
+in the same batch. Read-only inspection can discover an exact ID without an edit
+guard. Native receipt reconciliation is preserved after target deletion: an old
+run ID uses non-authorizing zero revisions, and native receipt handling either
+returns the original result or rejects the identity. It cannot become a new edit,
+including after Undo restores the target. Legacy hosts retain scene guards.
+
+Verification passed **33 EditMode / 31 PlayMode** focused native cases without
+failures/skips; the receipt regression was a separate one-case follow-up after
+the 30-case PlayMode group. **3,003 web tests / 318 files**, application/probe
+TypeScript and generated catalog-source checks passed. Twelve new web cases cover
+native metadata, exact revisions, missing/conflicting evidence, creation aliases,
+room boundaries, old receipts, retained drafts and delegated planner context.
+The catalog's definitions are unchanged; its three affected runtime source hashes
+were refreshed through Unity's official export.
+
+Desktop Chromium exercised the original book using an actual native-recorded
+dormant inspection with a simulated empty inventory. Its edit retained the exact
+native ID and reviewed revision; a simulated rejection kept the draft. Wide and
+narrow screenshots were inspected without horizontal overflow or page errors.
+The browser executed no native mutation and made no provider call. Native edit,
+stale-guard, deletion/Undo and receipt behavior were tested separately in Unity.
+
+All **3,014 native inputs / 1,125 mirrored C# files** match the verified source;
+14 unrelated pre-existing files remain byte-for-byte unchanged. Evidence:
+`.quest-evidence/object-inspection-context/`. Behaviour-reference evidence remains
+tied to **71f31f35**. The broader native/Android/offline journey baseline remains
+**7fe48619** and was not rerun for this increment.
+
+Periodic scene state is still complete and capacity is unchanged. Other multi-object
+consumers and selection validation still need explicit revision read sets before
+that state can be paged; missing evidence now fails visibly instead of dropping a
+guard. Saved quotas and native resource admission remain separate forthcoming work.
+Per-entity scanned-room physics/navigation choices remain independent of visibility
+and sound. V1 remains incomplete. No headset, paid provider, signing, deployment or
+Meta work was performed; existing holds remain in place.

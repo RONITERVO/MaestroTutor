@@ -37,8 +37,12 @@ namespace Maestro.Quest.Tests {
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);
             string run=(string)request.commands[0].execution["runId"];yield return NativeActionDone(run);
             Assert.That(editor.HasSavedObject(target),Is.False);Assert.That(editor.NativeActivationPending,Is.False);
+            request.conditions=new[]{new RoomObjectCondition{id=target,revision=0}};
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.HasSavedObject(target),Is.False,"Receipt reconciliation cannot need a deleted target");
             editor.Undo();Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(source));
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.HasSavedObject(target),Is.True);
+            var fresh=ObjectEditRequest(call);fresh.conditions=new[]{new RoomObjectCondition{id=target,revision=0}};
+            Assert.That(executor.Execute(fresh,out error,out _),Is.False,"A zero guard can only reconcile an old receipt, never authorize a fresh edit");Assert.That(editor.HasSavedObject(target),Is.True);
             Assert.That(editor.Find(target),Is.Not.Null);
         }
         [UnityTest] public IEnumerator CanonicalDeletionDormantTargetDoesNotAcquireOrLoadItsArea(){

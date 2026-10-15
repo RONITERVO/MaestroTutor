@@ -36,6 +36,18 @@ namespace Maestro.Quest.Tests
             Assert.That(journal.ObserveObjects()[1].objectRevision,Is.GreaterThan(after.objectRevision));
             Assert.That(journal.Redo(),Is.True);Assert.That(journal.ObserveObjects()[1].name,Is.EqualTo("Edited"));
         }
+        [Test] public void KnownObjectObservationIsDetachedAndDoesNotRequireAnInventory()
+        {
+            var journal=Journal();var value=journal.ObserveObject(DrawingId);
+            Assert.That(JsonUtility.ToJson(value),Is.EqualTo(JsonUtility.ToJson(journal.ObserveObjects().Single(x=>x.id==DrawingId))));
+            int revision=value.objectRevision;value.name="Changed outside";value.physics.mass=90;
+            Assert.That(journal.ObserveObject(DrawingId).name,Is.EqualTo("My drawing"));Assert.That(journal.ObserveObject(DrawingId).physics.mass,Is.EqualTo(2));
+            Assert.That(journal.ObserveObject(null),Is.Null);Assert.That(journal.ObserveObject("missing"),Is.Null);
+            var changed=journal.Read(DrawingId);changed.name="Renamed";Assert.That(journal.Apply(new[]{changed},Array.Empty<string>(),out var error),Is.True,error);
+            Assert.That(journal.ObserveObject(DrawingId).objectRevision,Is.GreaterThan(revision));Assert.That(journal.ObserveObject(DrawingId).name,Is.EqualTo("Renamed"));
+            Assert.That(journal.Apply(Array.Empty<RoomObjectData>(),new[]{DrawingId},out error),Is.True,error);Assert.That(journal.ObserveObject(DrawingId),Is.Null);
+            Assert.That(journal.Undo(),Is.True);Assert.That(journal.ObserveObject(DrawingId).name,Is.EqualTo("Renamed"));
+        }
         static RoomJournal RecipeJournal(int parts)
         {
             var document=Journal().Snapshot();var item=document.objects.Single(x=>x.id==DrawingId);

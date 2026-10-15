@@ -1,3 +1,4 @@
+import nativeObjectInspection from './objectInspection.json';
 import nativeObjectReferences from './objectReferences.json';
 import nativeObjectSearch from './objectSearch.json';
 import {readObjectSearchPage} from '../../shared/objectSearch';
@@ -299,6 +300,8 @@ if(behaviourChoicesMode){
  state.rules.sequences=[{id:selected.id,name:selected.name,steps:1,repeat:false}];state.rules.running=[];state.rules.bindings=[];state.rules.bindingCount=0;state.rules.buttons=[];state.rules.outcomes=[];
  state.workspaceView='rules';state.selectedId=target;state.capabilities=[...new Set([...state.capabilities!,...nativeProgram.capabilities])];
 }
+const objectInspectionMode=new URLSearchParams(location.search).has('objectInspection');
+if(objectInspectionMode)state={...structuredClone(nativeObjectInspection) as unknown as RoomAgentState,objects:[]};
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
 const ruleUndo:RuleView[]=[],ruleRedo:RuleView[]=[];
 const copy=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));
@@ -313,7 +316,7 @@ setInterval(()=>{
   requestHistory.push(copy(request));if(requestHistory.length>32)requestHistory.shift();
   state={...state,ack:request.sequence,ok:true,status:'Fixture action completed'};
   for(const command of request.commands){
-   if(objectSearchMode&&command.action==='catalog'&&(!objectSelectorsMode||command.catalog?.operation==='inspect'&&command.catalog.category==='facts'&&['world.objects','object.definition'].includes(command.catalog.capability))){
+   if(objectInspectionMode){state.ok=false;state.status='Recorded inspection fixture: the request was captured; no native edit was executed.';}else if(objectSearchMode&&command.action==='catalog'&&(!objectSelectorsMode||command.catalog?.operation==='inspect'&&command.catalog.category==='facts'&&['world.objects','object.definition'].includes(command.catalog.capability))){
     const query=command.catalog;
     const page=query?.operation==='inspect'?[...objectSearchPages,...(objectSelectorsMode?nativeObjectReferences.definitions as unknown as {request:CatalogRequest;view:CatalogView}[]:[])].find(page=>page.request.operation==='inspect'&&page.request.capability===query.capability&&page.request.version===query.version&&JSON.stringify(Object.entries(page.request.arguments??{}).sort())===JSON.stringify(Object.entries(query.arguments??{}).sort())):null;
     if(page){state.catalog=copy(page.view);state.status='Captured native object search; this browser does not create or load room objects.';}else{state.ok=false;state.status='Only the captured native search queries are available in this development replay.';}

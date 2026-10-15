@@ -1630,9 +1630,11 @@ ordered list and origin; see [construction selection](QUEST_CONSTRUCTION_SELECTI
 Capture reads every member revision through the same generated action inputs.
 The periodic scene list remains complete at its current limit. Behaviour target
 fields, trigger sources and reference summaries now use this same directory.
-Inspector context and command guards still need migration before that list can
-be paged. This step introduces no additional saved schema, catalog
-operation, capacity increase or independent browser world.
+Inspector context now carries its own native metadata and reviewed revisions; see
+[inspection and edit context](#inspection-and-edit-context--2026-10-15). Other
+complete-list consumers still need explicit read sets before paging. These changes
+introduce no additional saved schema, catalog operation, capacity increase or
+independent browser world.
 
 
 ## Behaviour references use saved identities — 2026-10-15
@@ -1656,6 +1658,34 @@ Drafts retain their edits across a temporary-room change but cannot be applied
 there, even when the two rooms have equal rule revisions. Reload latest explicitly
 replaces that stale draft. Search results and displayed definition revisions are
 not execution guards; guarded current-input reads and native validation still
-own execution. The remaining inspector and command-precondition work must keep
-that distinction before periodic state can be paged. Current world limits remain
-unchanged.
+own execution. The shared inspection and edit context below preserves that
+distinction. Current world limits remain unchanged.
+
+
+## Inspection and edit context — 2026-10-15
+
+An inspected object now carries its native metadata with the recipe and revision.
+The book and agent can read that exact object even when it is outside the displayed
+inventory. Saved placement and observed live placement remain explicitly distinct.
+Reading does not load a dormant object, and missing runtime geometry does not mean
+the saved object was deleted. Older native hosts retain the matching-list fallback.
+
+User edits and delegated planner commands share a compact set of the object IDs
+and revisions present in their reviewed observation, including the inspected ID.
+Dispatch does not substitute a newer revision. Every required modern target must
+have evidence; nested action resources are included, and a creation alias applies
+only to commands after that creation. A missing read prevents the edit and asks
+for current saved metadata. Rejected edits keep the draft; session and temporary
+room changes require reloading before applying it elsewhere.
+
+Retrieving a prior execution's receipt remains possible after the target disappears.
+That request retains the original run ID and uses zero revisions, which cannot
+authorize a fresh action. Native receipt handling recognizes the completed action
+before edit checks or rejects an unknown/mismatched identity. Undo cannot make an
+old receipt delete the restored object again.
+
+This is an inspection and guard foundation, not completion of periodic-state
+paging. Other multi-object consumers and selection validation still depend on the
+complete list and must gain explicit read sets before it is paged. World limits,
+resource admission and the independent real-room physics, visual and sound
+policies are unchanged.

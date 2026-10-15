@@ -19,22 +19,33 @@ namespace Maestro.Quest.Creation
         }
         internal RoomAgentObject[] ObserveObjects() => items.Values
             .OrderBy(item=>item.id,StringComparer.Ordinal)
-            .Select(item=>new RoomAgentObject {
+            .Select(ObserveObject).ToArray();
+        internal RoomAgentObject ObserveObject(string id) => id!=null&&items.TryGetValue(id,out var item)?ObserveObject(item):null;
+        RoomAgentObject ObserveObject(RoomObjectData item) => new RoomAgentObject {
                 id=item.id,objectRevision=ObjectRevision(item.id),name=item.name??item.kind.ToString(),kind=item.kind.ToString(),
                 position=item.position,scale=item.scale,color=ObservedAppearanceColor(item),physics=RoomControls.Physics(item),
                 movement=item.kind==RoomObjectKind.Maestro ? new AvatarMovementSettings {
                     distance=item.followDistance==0 ? 1.3f : item.followDistance,speed=item.walkSpeed==0 ? .65f : item.walkSpeed
                 } : null
-            }).ToArray();
+            };
     }
     public sealed partial class RoomEditor
     {
         internal RoomAgentObject[] ObserveObjects()
         {
-            var result=journal.ObserveObjects();var frame=Frame;
-            foreach(var value in result) {
+            var result=journal.ObserveObjects();
+            foreach(var value in result) ObserveRuntime(value);
+            return result;
+        }
+        internal RoomAgentObject ObserveObject(string id)
+        {
+            var value=journal.ObserveObject(id);if(value!=null)ObserveRuntime(value);return value;
+        }
+        void ObserveRuntime(RoomAgentObject value)
+        {
+                var frame=Frame;
                 var presence=ObjectPresence(value.id);value.runtimeState=presence.State;value.positionSource="saved";
-                var item=Find(value.id);if(!presence.Active)continue;
+                var item=Find(value.id);if(!presence.Active)return;
                 // Share the exact authored-frame read used by placement facts and saves.
                 // An unnecessary world-point round trip made unchanged objects
                 // appear to move by floating-point noise after Undo.
@@ -42,8 +53,6 @@ namespace Maestro.Quest.Creation
                 value.held=item.Grab&&item.Grab.isSelected;
                 value.simulating=item.GetComponent<RigidRoomItem>()?.Simulating??false;
                 value.animated=item.GetComponent<RecipeObject>()?.IsPlaying??false;
-            }
-            return result;
         }
     }
 }

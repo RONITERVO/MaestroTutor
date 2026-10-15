@@ -46691,11 +46691,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "ec9a6c23de02a75b8baf51ef231c52636268ddb7794f27d2a439cc4c7ecec370"
+      "sha256": "d57b4b51e154de6736266233b0831651ac056c812d62895f9a3a1e203d2131ae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
-      "sha256": "b29224d8086d16ea6b7c3847b1680891c442c6c82320c4fe756527b8d7091b21"
+      "sha256": "67e2415231edd1cb9c2a8fad656f6699ad9790de060852504bc7b7f15fe8eb7f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
@@ -46967,7 +46967,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectObservation.cs",
-      "sha256": "827755e4f40a5c76c9a20950d09b706147082fe8617984483622e17fea561560"
+      "sha256": "091918281b008caf4ea92129d4c21e8302084c27a1e349ace146938531fe7dd2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectPresence.cs",

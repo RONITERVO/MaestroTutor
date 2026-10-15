@@ -1,3 +1,4 @@
+import nativeInspection from '../../../test-fixtures/browser/objectInspection.json';
 import nativeEditProgram from '../../../test-fixtures/browser/objectEditProgram.json';
 import {sequenceProgram} from './programs';
 // Copyright 2026 Roni Tervo
@@ -604,4 +605,11 @@ it('shares repeated planning evidence without compacting durable receipts or the
  expect(projected.receiptReuse.fields['1'].objects).toBe(valueId);
  expect(result.receipts).toEqual(durable);expect(durable.map(r=>r.objects)).toEqual([objects,objects]);
  expect(result.operations).toEqual([{commands:[inspect],receiptIndex:0},{commands:[inspect],receiptIndex:1}]);
+});
+
+it('passes inspected off-inventory revision evidence from the planner snapshot to the shared transport',async()=>{
+ const observed={...structuredClone(nativeInspection),objects:[]} as unknown as RoomAgentState,target=observed.inspection!.id;
+ const ai=client([JSON.stringify({commands:[{action:'resize',target,scale:1.5}]}),'{"commands":[]}']);const execute=vi.fn(async()=>({...observed,ack:observed.ack+1}));
+ await runRoomActionTask({...input,prompt:'Make this robot larger.'},{aiClient:ai},{state:()=>observed,valid:()=>true,execute},()=>{});
+ expect(execute).toHaveBeenCalledOnce();expect(execute.mock.calls[0]).toEqual([[{action:'resize',target,scale:1.5}],observed.sceneRevision,[{id:target,objectRevision:observed.inspection!.objectRevision}]]);
 });

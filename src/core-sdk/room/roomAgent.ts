@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {roomRevisionBasis} from './roomObjectContext';
 import {ROOM_PLANNER_ARGUMENT_GUIDE,roomCaptureImages} from '../../../shared/prompts/room';
 import {ROOM_PLANNER_DISCOVERY_GUIDE} from '../../../shared/prompts/catalog';
 import {decodeRoomPlannerResponse} from './roomPlannerResponse';
@@ -33,6 +34,8 @@ export interface RoomCommand {
   visible?: boolean; atPosition?: boolean; position?: { x: number; y: number; z: number };
   scale?: number; color?: { r: number; g: number; b: number; a: number }; recipe?: unknown;
 }
+export type RoomObjectObservation = { runtimeState?:'unavailable'|'inactive'|'active'; positionSource?:'saved'|'live'; physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings|null; held?:boolean; simulating?:boolean; objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean };
+export type RoomObjectRevision = Pick<RoomObjectObservation,'id'|'objectRevision'>;
 export interface RoomAgentState {
   chatImage?: import('../../../shared/chatImages').ChatImageRequest | null;
   chatAudio?: import('../../../shared/chatAudio').ChatAudioRequest | null;
@@ -41,15 +44,15 @@ export interface RoomAgentState {
   ok: boolean; status: string; created: string[]; canUndo: boolean; canRedo: boolean; physicsRunning: boolean;
   ownership?:RoomOwnershipView|null; temporaryRoom?:TemporaryRoomView; capabilities?:string[]; physics?:PhysicsObservation|null; avatar?:AvatarMovementObservation|null; walk?:AvatarWalkObservation|null;
   execution?:ExecutionView|null; catalog?:CatalogView|null; activityProfile?:ActivityProfile|null; workspaceView?:'objects'|'rules'; rules?:RuleView|null; motions?:MotionSearchView|null;
-  visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null}|null;
+  visible?: boolean; inspection?: {id:string;partId?:string|null;objectRevision:number;recipe:RoomRecipe|null;item?:RoomObjectObservation}|null;
   selectedId?: string | null; constructionSelection?:ConstructionSelection|null; constructionManipulation?:ConstructionManipulation|null;
-  objects: { runtimeState?:'unavailable'|'inactive'|'active'; positionSource?:'saved'|'live'; physics?:ObjectPhysicsSettings; movement?:AvatarMovementSettings|null; held?:boolean; simulating?:boolean; objectRevision?:number; id: string; name: string; kind: string; position: {x:number;y:number;z:number}; scale:number; color: {r:number;g:number;b:number;a:number}; animated:boolean }[];
+  objects: RoomObjectObservation[];
 }
 export interface RoomAgentLease {
   state(): RoomAgentState;
   valid(): boolean;
   capture?(id:string,signal?:AbortSignal):Promise<RoomCaptureImage>;
-  execute(commands: RoomCommand[], expectedRevision: number, expectedObjects?: RoomAgentState['objects'], signal?: AbortSignal): Promise<RoomAgentState>;
+  execute(commands: RoomCommand[], expectedRevision: number, expectedObjects?: readonly RoomObjectRevision[], signal?: AbortSignal): Promise<RoomAgentState>;
 }
 const record = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
 /** Expand only explicit null imports from successful native inspections in this task.
@@ -210,8 +213,8 @@ export async function runRoomActionTask(input: Pick<TutorTextTurnInput,'model'|'
       // A post-action scene alone cannot tell the next planner what was removed.
       const dispatched=copy(batch);
       const receipt=await (control.signal
-        ? lease.execute(batch,current.sceneRevision,current.objects,control.signal)
-        : lease.execute(batch,current.sceneRevision,current.objects));
+        ? lease.execute(batch,current.sceneRevision,roomRevisionBasis(current),control.signal)
+        : lease.execute(batch,current.sceneRevision,roomRevisionBasis(current)));
       operations.push({commands:dispatched,receiptIndex:receipts.length});
       receipts.push(copy(receipt));
       const moduleQuery=batch.length===1&&batch[0].action==='catalog'&&batch[0].catalog?.operation==='inspect'&&batch[0].catalog.category==='modules'?batch[0].catalog:null;

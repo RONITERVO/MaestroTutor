@@ -98,6 +98,10 @@ namespace Maestro.Quest.Tests
             var state=send(new JObject{["action"]="inspect",["target"]=target,["partId"]=part});
             Assert.That(state.ok,Is.True,state.status);Assert.That(state.visible,Is.True);Assert.That(state.selectedId,Is.EqualTo(target));
             Assert.That(state.inspection.id,Is.EqualTo(target));Assert.That(state.inspection.partId,Is.EqualTo(part));
+            Assert.That(JsonUtility.ToJson(state.inspection.item),Is.EqualTo(JsonUtility.ToJson(state.objects.Single(x=>x.id==target))));
+            Assert.That(state.inspection.item.runtimeState,Is.EqualTo("unavailable"));Assert.That(state.inspection.item.positionSource,Is.EqualTo("saved"));
+            Assert.That(state.inspection.item.objectRevision,Is.EqualTo(state.inspection.objectRevision));
+            string evidence=Environment.GetEnvironmentVariable("MAESTRO_INSPECTION_EVIDENCE");if(!string.IsNullOrEmpty(evidence)){System.IO.Directory.CreateDirectory(evidence);System.IO.File.WriteAllText(System.IO.Path.Combine(evidence,"inspection.json"),RoomAgentWire.Serialize(state));}
             Assert.That(JsonUtility.ToJson(state.inspection.recipe),Is.EqualTo(JsonUtility.ToJson(editor.RecipeForEditing(editor.Read(target)))));
             Assert.That(editor.Find(target),Is.Null);Assert.That(editor.NativeEntityDormant(target),Is.True);
             Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.CanUndo,Is.EqualTo(undo));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
@@ -111,9 +115,20 @@ namespace Maestro.Quest.Tests
             Assert.That(state.inspection.id,Is.EqualTo(target));Assert.That(state.objects.Single(x=>x.id==target).runtimeState,Is.EqualTo("inactive"));
             UnityEngine.Object.Destroy(item.gameObject);yield return null;
             state=send(new JObject{["action"]="inspect",["target"]=target});Assert.That(state.ok,Is.True,state.status);
-            Assert.That(state.inspection.recipe,Is.Not.Null);Assert.That(state.objects.Single(x=>x.id==target).runtimeState,Is.EqualTo("unavailable"));
+            Assert.That(state.inspection.recipe,Is.Not.Null);Assert.That(state.inspection.item.runtimeState,Is.EqualTo("unavailable"));Assert.That(state.inspection.item.positionSource,Is.EqualTo("saved"));Assert.That(state.objects.Single(x=>x.id==target).runtimeState,Is.EqualTo("unavailable"));
             Assert.That(JToken.DeepEquals(settings,SavedFact("object.physics.settings",new JObject{["target"]=target})),Is.True);
             Assert.That((bool)editor.Find(target),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));
+        }
+        [UnityTest] public IEnumerator SavedInspectionRevisionGuardsRejectChangedTargetsButAllowUnrelatedEdits()
+        {
+            string target=RecipeTarget(false);var send=SavedInspectionClient();var state=send(new JObject{["action"]="inspect",["target"]=target});
+            int revision=state.inspection.item.objectRevision;var executor=new RoomAgentExecutor(editor);
+            var request=new RoomAgentRequest{version=2,sceneRevision=state.sceneRevision,conditions=new[]{new RoomObjectCondition{id=target,revision=revision}},commands=new[]{new RoomAgentCommand{action="resize",target=target,scale=1.5f}}};
+            var other=editor.Read("book");other.name="Unrelated book edit";Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{other},Array.Empty<string>(),out var error),Is.True,error);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Read(target).scale,Is.EqualTo(1.5f));
+            request.commands[0].scale=2;Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("changed"));Assert.That(editor.Read(target).scale,Is.EqualTo(1.5f));
+            var refreshed=send(new JObject{["action"]="inspect",["target"]=target});Assert.That(refreshed.inspection.item.objectRevision,Is.GreaterThan(revision));
+            request.conditions[0].revision=refreshed.inspection.item.objectRevision;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Read(target).scale,Is.EqualTo(2));yield return null;
         }
         [UnityTest] public IEnumerator SavedInspectionRejectsMissingPartsAndDeletedObjectsWithoutResurrection()
         {

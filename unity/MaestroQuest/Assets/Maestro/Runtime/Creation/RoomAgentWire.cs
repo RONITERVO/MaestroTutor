@@ -14,7 +14,11 @@ namespace Maestro.Quest.Creation
         {
             var json=JObject.Parse(JsonUtility.ToJson(state));
             if(state.inspection==null)json["inspection"]=JValue.CreateNull();
-            else if(state.inspection.recipe==null)json["inspection"]["recipe"]=JValue.CreateNull();
+            else {
+                if(state.inspection.recipe==null)json["inspection"]["recipe"]=JValue.CreateNull();
+                if(state.inspection.item==null)((JObject)json["inspection"]).Remove("item");
+                else ObjectMovement(json["inspection"]["item"],state.inspection.item);
+            }
             if(state.constructionSelection==null)json["constructionSelection"]=JValue.CreateNull();
             if(state.constructionManipulation==null)json["constructionManipulation"]=JValue.CreateNull();
             if(state.motions==null)json["motions"]=JValue.CreateNull();
@@ -32,8 +36,7 @@ namespace Maestro.Quest.Creation
             else Movement(json["avatar"],state.avatar.distance,state.avatar.speed);
             for(int i=0;i<state.objects.Length;i++) {
                 var item=state.objects[i];var wire=json["objects"][i];
-                if(item.movement==null)wire["movement"]=JValue.CreateNull();
-                else Movement(wire["movement"],item.movement.distance,item.movement.speed);
+                ObjectMovement(wire,item);
             }
             // Structured payloads are already detached observations. Write them
             // directly without attaching/cloning their trees into another JObject.
@@ -66,6 +69,11 @@ namespace Maestro.Quest.Creation
                 request.commands[i].catalog=(JObject)command["catalog"].DeepClone();
             }
             return true;
+        }
+        static void ObjectMovement(JToken wire,RoomAgentObject item)
+        {
+            if(item.movement==null)wire["movement"]=JValue.CreateNull();
+            else Movement(wire["movement"],item.movement.distance,item.movement.speed);
         }
         static void Movement(JToken value,float distance,float speed)
         {
