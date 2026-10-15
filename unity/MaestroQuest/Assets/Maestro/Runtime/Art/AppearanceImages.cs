@@ -11,14 +11,14 @@ using Maestro.Quest.Imports;
 using UnityEngine;
 namespace Maestro.Quest.Art {
     /// <summary>Workspace-owned, main-thread texture leases. Read/hash/inspection runs
-    /// off-thread; at most one bounded native decode runs per frame. Late file reads
+    /// off-thread; the shared image scheduler decodes at most once per frame. Late file reads
     /// never upload into a replaced workspace. Zero-owner entries release immediately.</summary>
     internal sealed class AppearanceImages:MonoBehaviour {
         internal const long MaximumResidentBytes=64L*1024*1024;
         // A refresh briefly holds old and replacement bindings together. These
         // limits bound observations without confusing owners with texture copies.
         internal const int MaximumEntries=128,MaximumOwnersPerImage=132;
-        internal sealed class Entry {internal readonly string Id=Guid.NewGuid().ToString("N");internal string Hash,State="loading",Error="";internal readonly List<Lease> Owners=new();internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task<ImageAsset> Read;}
+        internal sealed class Entry {internal readonly string Id=Guid.NewGuid().ToString("N");internal string Hash,State="loading",Error="";internal readonly List<Lease> Owners=new();internal Texture2D Texture;internal long Bytes;internal CancellationTokenSource Cancel=new();internal Task Work;internal RoomResourceOwner Scope;internal ImageResources.PayloadLease Payload;internal ImageResources.TextureLease Native;internal bool Retired;}
         internal sealed class Lease:IDisposable {
             AppearanceImages owner;Entry entry;
             internal readonly string Id=Guid.NewGuid().ToString("N");
@@ -41,7 +41,7 @@ namespace Maestro.Quest.Art {
             if(scope.Role is not ("appearance" or "unscoped"))throw new ArgumentException("Invalid appearance image owner");
             if(!entries.TryGetValue(hash,out var entry)){
                 if(entries.Count>=MaximumEntries)throw new InvalidOperationException("The appearance image entry budget is full.");
-                entry=new Entry{Hash=hash};entries.Add(hash,entry);
+                entry=new Entry{Hash=hash,Scope=scope};entries.Add(hash,entry);
             }
             if(entry.Owners.Count>=MaximumOwnersPerImage)throw new InvalidOperationException("The appearance image owner budget is full.");
             return new Lease(this,entry,scope);
@@ -58,37 +58,40 @@ namespace Maestro.Quest.Art {
             if(e==null||index>=e.Owners.Count)return null;var lease=e.Owners[index];var scope=lease.Scope;
             return new JObject{["reservationId"]=e.Id,["leaseId"]=lease.Id,["imageHash"]=e.Hash,["worldId"]=scope.World,["regionId"]=scope.Region,["target"]=scope.Target,["role"]=scope.Role};
         }
-        void StartRead(Entry e){e.Read=library.ReadAsync(e.Hash,e.Cancel.Token);_=Observe(e.Read);}
-        static async Task Observe(Task task){try{await task;}catch(Exception){}}
-        internal void Retry(string hash){if(closed||!entries.TryGetValue(hash,out var e)||e.State!="failed")return;e.State="loading";e.Error="";e.Read=null;Changed?.Invoke(hash);}
+        void StartRead(Entry e){
+            var payload=ImageResources.BeginPayload(e.Scope,SurfaceImage.MaximumBytes,e.Hash);e.Payload=payload;
+            var work=Load(e,payload);e.Work=work;payload.Hold(work);if(work.IsCompleted)e.Work=null;_=Observe(work);
+        }
+        static async Task Observe(Task task){try{await task;}catch(Exception error){Debug.LogException(error);}}
+        async Task Load(Entry e,ImageResources.PayloadLease payload){
+            ImageAsset asset=null;ImageResources.TextureLease candidate=null;var token=e.Cancel.Token;
+            try{
+                asset=await library.ReadAsync(e.Hash,token);token.ThrowIfCancellationRequested();
+                long bytes=asset.Inspection.TextureBytes;
+                if(bytes>MaximumResidentBytes-resident)throw new InvalidOperationException("Image memory is full. Remove unused image bindings, then refresh the image library.");
+                candidate=await ImageResources.DecodeAsync(asset,payload,token);token.ThrowIfCancellationRequested();
+                if(closed||e.Retired)throw new OperationCanceledException();
+                e.Native=candidate;e.Texture=candidate.Texture;candidate=null;e.Bytes=bytes;resident+=bytes;e.State="ready";
+            }catch(Exception ex){if(!closed&&!e.Retired)Failure(e,ex);}
+            finally{candidate?.Dispose();asset=null;payload.Dispose();e.Payload=null;e.Work=null;if(e.Retired)e.Cancel.Dispose();}
+            if(!closed&&!e.Retired)Changed?.Invoke(e.Hash);
+        }
+        static void Failure(Entry e,Exception ex){e.State="failed";e.Error=ex is System.IO.InvalidDataException||ex is System.IO.FileNotFoundException||ex is InvalidOperationException?ex.Message:"The image could not be loaded. Import its original file again.";}
+        internal void Retry(string hash){if(closed||!entries.TryGetValue(hash,out var e)||e.State!="failed")return;e.State="loading";e.Error="";e.Work=null;Changed?.Invoke(hash);}
         internal string State(string hash)=>entries.TryGetValue(hash,out var e)?e.State:"unloaded";
         internal string Error(string hash)=>entries.TryGetValue(hash,out var e)?e.Error:"";
         void Update(){
             if(closed)return;
-            Entry next=null;
-            foreach(var candidate in entries.Values)if(candidate.State=="loading"){next=candidate;break;}
-            if(next==null)return;
-            var e=next;
-            if(e.Read==null){if(library.Readable)StartRead(e);return;}
-            if(!e.Read.IsCompleted)return;
-            try{var asset=e.Read.GetAwaiter().GetResult();long bytes=asset.Inspection.TextureBytes;
-                if(bytes>MaximumResidentBytes-resident)throw new InvalidOperationException("Image memory is full. Remove unused image bindings, then refresh the image library.");
-                e.Texture=Decode(asset);e.Bytes=bytes;resident+=bytes;e.State="ready";e.Read=null;
-            }catch(Exception ex){e.State="failed";e.Error=ex is System.IO.InvalidDataException||ex is System.IO.FileNotFoundException||ex is InvalidOperationException?ex.Message:"The image could not be loaded. Import its original file again.";e.Read=null;}
-            Changed?.Invoke(e.Hash);
+            Entry next=null;foreach(var candidate in entries.Values)if(candidate.State=="loading"){next=candidate;break;}
+            if(next==null||next.Work!=null||!library.Readable)return;
+            try{StartRead(next);}catch(Exception ex){next.Payload?.Dispose();next.Payload=null;Failure(next,ex);Changed?.Invoke(next.Hash);}
         }
-        internal static Texture2D Decode(ImageAsset asset){
-            var info=asset.Inspection;Texture2D decoded=null,result=null;
-            try{
-                decoded=new Texture2D(2,2,TextureFormat.RGBA32,true,false){name="Imported appearance image",filterMode=FilterMode.Trilinear,wrapMode=TextureWrapMode.Repeat,anisoLevel=1};
-                if(!ImageConversion.LoadImage(decoded,SurfaceImage.DecodeBytes(asset.Content,info),info.Orientation==1)||decoded.width!=info.Width||decoded.height!=info.Height)throw new System.IO.InvalidDataException("The image decoder could not verify these pixels.");
-                if(info.Orientation==1){result=decoded;decoded=null;return result;}
-                var source=decoded.GetPixels32();var pixels=new Color32[source.Length];int w=info.DisplayWidth,h=info.DisplayHeight;
-                for(int y=0;y<info.Height;y++)for(int x=0;x<info.Width;x++){var d=SurfaceImage.Upright(x,y,info.Width,info.Height,info.Orientation);pixels[(h-1-d.Y)*w+d.X]=source[(info.Height-1-y)*info.Width+x];}
-                result=new Texture2D(w,h,TextureFormat.RGBA32,true,false){name="Imported appearance image",filterMode=FilterMode.Trilinear,wrapMode=TextureWrapMode.Repeat,anisoLevel=1};result.SetPixels32(pixels);result.Apply(true,true);return result;
-            }catch{if(result)ArtResources.Release(result);throw;}finally{if(decoded)ArtResources.Release(decoded);}
+        void Release(Entry e,Lease lease){if(!e.Owners.Remove(lease)||e.Owners.Count!=0)return;Release(e);}
+        void Release(Entry e){
+            if(e.Retired)return;e.Retired=true;entries.Remove(e.Hash);e.Cancel.Cancel();e.Payload?.Dispose();
+            resident-=e.Bytes;e.Bytes=0;e.Native?.Dispose();e.Native=null;e.Texture=null;
+            if(e.Work==null||e.Work.IsCompleted)e.Cancel.Dispose();
         }
-        void Release(Entry e,Lease lease){if(!e.Owners.Remove(lease)||e.Owners.Count!=0)return;entries.Remove(e.Hash);e.Cancel.Cancel();e.Cancel.Dispose();resident-=e.Bytes;if(e.Texture)ArtResources.Release(e.Texture);}
-        void OnDestroy(){closed=true;foreach(var e in entries.Values){e.Cancel.Cancel();e.Cancel.Dispose();e.Owners.Clear();if(e.Texture)ArtResources.Release(e.Texture);}entries.Clear();resident=0;if(placeholder)ArtResources.Release(placeholder);Changed=null;}
+        void OnDestroy(){closed=true;foreach(var e in entries.Values.ToArray()){e.Owners.Clear();Release(e);}entries.Clear();resident=0;if(placeholder)ArtResources.Release(placeholder);Changed=null;}
     }
 }

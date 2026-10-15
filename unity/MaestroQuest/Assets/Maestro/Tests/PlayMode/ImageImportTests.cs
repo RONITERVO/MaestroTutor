@@ -52,9 +52,17 @@ namespace Maestro.Quest.Tests {
             yield return null;Assert.AreEqual(0,cache.ResidentBytes);
         }
         static Color32[] ImagePixels(Texture texture){var previous=RenderTexture.active;var target=RenderTexture.GetTemporary(texture.width,texture.height,0,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB);Texture2D copy=null;try{Graphics.Blit(texture,target);RenderTexture.active=target;copy=new Texture2D(texture.width,texture.height,TextureFormat.RGBA32,false);copy.ReadPixels(new Rect(0,0,texture.width,texture.height),0,0);return copy.GetPixels32();}finally{RenderTexture.active=previous;RenderTexture.ReleaseTemporary(target);if(copy)UnityEngine.Object.DestroyImmediate(copy);}}
-        [Test] public void ImageDecodeNormalizesAllOrientationsAndPreservesAlpha(){
-            var original=ImageFiles.Png();var upright=AppearanceImages.Decode(ImageLibrary.Inspect("Original",original));Color32[] reference;try{reference=ImagePixels(upright);}finally{UnityEngine.Object.DestroyImmediate(upright);}
-            foreach(int orientation in Enumerable.Range(1,8)){var asset=ImageLibrary.Inspect("Oriented",ImageFiles.OrientPng(original,orientation));var texture=AppearanceImages.Decode(asset);try{int w=asset.Inspection.DisplayWidth,h=asset.Inspection.DisplayHeight;Assert.AreEqual(w,texture.width);Assert.AreEqual(h,texture.height);Assert.IsFalse(texture.isReadable);var actual=ImagePixels(texture);for(int y=0;y<2;y++)for(int x=0;x<3;x++){var d=SurfaceImage.Upright(x,y,3,2,orientation);Assert.AreEqual(reference[(1-y)*3+x],actual[(h-1-d.Y)*w+d.X],"orientation "+orientation+" pixel "+x+","+y);}}finally{UnityEngine.Object.DestroyImmediate(texture);}}
+        [UnityTest] public IEnumerator ImageDecodeNormalizesAllOrientationsAndPreservesAlpha(){
+            var original=ImageFiles.Png();Color32[] reference;
+            using(var payload=ImageResources.BeginPayload(new RoomResourceOwner(null,null,"unscoped"),SurfaceImage.MaximumBytes)){
+                var decoding=ImageResources.DecodeAsync(ImageLibrary.Inspect("Original",original),payload);while(!decoding.IsCompleted)yield return null;Assert.IsNull(decoding.Exception);using(var decoded=decoding.Result)reference=ImagePixels(decoded.Texture);
+            }
+            foreach(int orientation in Enumerable.Range(1,8)){
+                var asset=ImageLibrary.Inspect("Oriented",ImageFiles.OrientPng(original,orientation));
+                using var payload=ImageResources.BeginPayload(new RoomResourceOwner(null,null,"unscoped"),SurfaceImage.MaximumBytes);var decoding=ImageResources.DecodeAsync(asset,payload);while(!decoding.IsCompleted)yield return null;Assert.IsNull(decoding.Exception);
+                using(var decoded=decoding.Result){var texture=decoded.Texture;int w=asset.Inspection.DisplayWidth,h=asset.Inspection.DisplayHeight;Assert.AreEqual(w,texture.width);Assert.AreEqual(h,texture.height);Assert.IsFalse(texture.isReadable);var actual=ImagePixels(texture);for(int y=0;y<2;y++)for(int x=0;x<3;x++){var d=SurfaceImage.Upright(x,y,3,2,orientation);Assert.AreEqual(reference[(1-y)*3+x],actual[(h-1-d.Y)*w+d.X],"orientation "+orientation+" pixel "+x+","+y);}}
+            }
+            yield return null;
         }
         [UnityTest] public IEnumerator ImageBindingsShareTextureKeepOpacityAndReturnOriginalMaterial(){
             var asset=ImageLibrary.Inspect("Tiles",ImageFiles.Png());var save=editor.Images.SaveAsync(asset);while(!save.IsCompleted)yield return null;Assert.IsFalse(save.IsFaulted);

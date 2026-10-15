@@ -43657,6 +43657,75 @@
       ]
     },
     {
+      "id": "runtime.imageResources",
+      "version": 1,
+      "type": {
+        "record": {
+          "textureInstances": "number",
+          "textureBytes": "number",
+          "decodeScratchBytes": "number",
+          "payloadReads": "number",
+          "payloadBytes": "number",
+          "queuedDecodes": "number",
+          "textureInstanceLimit": "number",
+          "textureByteLimit": "number",
+          "decodeScratchByteLimit": "number",
+          "payloadReadLimit": "number",
+          "payloadByteLimit": "number",
+          "decodesPerFrame": "number"
+        }
+      },
+      "label": "Shared image lifetime budget",
+      "description": "Process-wide authored appearance-image and local/chat import-verification reservations across workspaces. Payload reads include reserved encoded buffers and pending-preview payloads; cancelled asynchronous work stays charged until drained. Native decoding is serialized to one attempt per frame; a single decode is not a frame-time guarantee. Texture bytes conservatively estimate complete RGBA32 mip chains, including at least 2x2 decoder initialization, orientation scratch textures and deferred destruction. Decode scratch estimates metadata-copy buffers, orientation arrays and readable texture source copies; after a decode it retains readable scratch textures until destruction. These logical limits are independent of saved quotas and are not measured CPU/GPU/peak process memory: decoder internals, driver copies and garbage awaiting collection are excluded. Embedded model textures, camera/browser surfaces and system placeholders have separate ownership. Existing runtime.imageBudget remains current-workspace accounting. Reads never load, retry, evict or persist.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.imageResource",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text",
+          "imageHash": "text",
+          "kind": "text",
+          "phase": "text",
+          "textureBytes": "number",
+          "payloadBytes": "number",
+          "decodeScratchBytes": "number",
+          "textureCount": "number",
+          "workPending": "boolean"
+        }
+      },
+      "label": "Shared image reservation",
+      "description": "Read a process-wide image reservation by index, from zero to runtime.imageResources.payloadReads plus textureInstances minus one. Indices may shift; reservationId is runtime-only. Kind is payload or texture. Payload phases are held (reserved or inspected bytes), working (asynchronous read/decode still in flight) and retiring. Texture phases are preparing, ready and retiring; ready does not promise that a renderer has refreshed. TextureCount includes reserved allocation slots and live scratch/output textures. Retiring textures remain charged until actual destruction. World/region and role are copied from the originating request; cache target identifies its first requester, not every current owner. Use the existing workspace runtime.imageOwner facts for current material holders. Preview targets and unscoped world/region are empty; imageHash can be empty before import inspection. A read cannot mutate resources or bypass workspace file/hash validation.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 131.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -45818,7 +45887,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceImages.cs",
-      "sha256": "a6dbbdb944215820a9749e548d708a21f1bc3de01df382c88c550002097264e3"
+      "sha256": "dd67470b2ceb5dee98182275c7785cc398435ad522c762fee16697fbb4ea88dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/AppearanceMaterials.cs",
@@ -45839,6 +45908,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedSurface.cs",
       "sha256": "909fdc7c99153df6259039e3a4c501fd7bd1e79600152ead83500dc7140902de"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/ImageResources.cs",
+      "sha256": "138a9757f530b5afd295e395c2fc5b3c852e126aaf748fe58c0e8e0fd7a426b1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/LayerPresentation.cs",
@@ -46339,6 +46412,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageImportCapability.cs",
       "sha256": "11222b4d798795dbb02c6a5e82769d56753f840c0bc0e30d7892f55a591af6eb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ImageResourceFacts.cs",
+      "sha256": "b9eb24bbc837ccf360983731885593bd4ca546a76dc49340b0961e914c4e61d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/IncludedMotionsCapability.cs",
@@ -47522,7 +47599,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageImportWorkshop.cs",
-      "sha256": "e189ba22d2a4ffc9bc587b7d0d25cdb6330dd186252b79263ca5d9d39d85b80a"
+      "sha256": "cb5760fde2ab382bff2fce3fa845a69a9957226edc88fb7b896527841018b48c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.cs",
@@ -48134,7 +48211,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "65cbb0dae74d5157b5fde6b1664eb3b51a062637e5a3b8608b2f7aa5d9df4186"
+      "sha256": "10894ce73094d55d93c3ae5b916bc82c3c429ff313696f72a4e091eef342184a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -11261,3 +11261,67 @@ Saved limits and world extent remain unchanged. Shared texture lifetime,
 transactional ink/light/window admission, simulation and transaction/storage
 costs remain work before capacity expands. Android compilation, paid providers,
 headset performance and Store acceptance were not rerun. V1 remains incomplete.
+
+
+## Shared image lifetime admission (2026-10-16)
+
+Appearance caches and local/chat image verification now share a process-wide
+ledger before reading encoded payloads or allocating native textures. Admission
+bounds are 128 texture reservations, 128 MiB of conservative native texture
+source estimates, 128 MiB of decoder scratch estimates, four payload owners and
+64 MiB of encoded payload reservations. The FIFO decoder admits at most one
+native decode attempt per frame across workspaces. Existing saved quotas and
+per-workspace appearance cache limits are unchanged.
+
+Orientation correction reserves both native textures, readable texture sources,
+pixel arrays and metadata-copy estimates. Native textures remain charged until
+Unity destruction completes; a decoded image that exceeds its inspected cost
+fails and retains the actual larger charge through rollback. Cancelled reads
+and queued decodes keep their payload reservation until work drains. Closing a
+workspace cannot publish a late texture. Completed import previews retain only
+bounded metadata instead of keeping their encoded pixels. Admission failure
+preserves existing textures, saved bytes, revisions and Undo/Redo; explicit
+retry succeeds after capacity becomes available. Separate workspaces still
+validate their own private image files and own separate physical cache entries.
+
+Shared `runtime.imageResources` and indexed `runtime.imageResource` facts expose
+these logical reservations to user and agent programs. Existing image facts
+retain current-workspace semantics. The new reservation owner identifies the
+originating request, not every current cache holder; existing image-owner facts
+provide that holder list. The committed browser fixture is actual native output
+from the accepted orientation/deferred-destruction test.
+
+Accepted evidence: **54 EditMode / 33 PlayMode**
+image, appearance and catalog checks passed with no skips; **3,086
+web tests / 329 files**, both TypeScript checks and catalog provenance
+passed. Native regressions independently exercise texture count, texture bytes,
+decoder scratch and payload count/bytes, plus cancellation, workspace closure,
+preview cleanup, save stability and retry. Existing eight-orientation pixel and
+alpha assertions run through the shared decoder.
+
+Full offline Headless `88cafdecfaf5420f840e636cb6c15f46` passed
+2,187 observations / 2,178 explicit read sets,
+177 motion samples and 15 scripted responses with zero
+provider-network attempts. Original Book `c3894f70f60b44b9857326d4fc437a2a` passed
+985 requests / 3,163 observations / 27 scripted
+planning calls, with preserved human edits, stale-write refusal, no browser
+errors and no replay on reload. Both use the bounded production context.
+All 4,288 frozen source/fixture/config inputs, 3,046
+native source/mirror inputs and 14 unrelated files were verified.
+Evidence: `.quest-evidence/image-lifetime-admission/`.
+
+The first Book attempt timed out at its initial browser handshake, before any
+lesson request or native observation. Its blank capture and zero-error log are
+preserved. A standalone fixture loaded in 5.5 seconds; the unchanged full rerun
+passed. The initial startup cause remains unestablished, not a repaired product
+defect. Details: `book-startup-failure.json` in this checkpoint.
+
+These limits are source-derived logical estimates, not measured process or GPU
+RAM. Decoder internals, driver copies and managed buffers awaiting garbage
+collection are not measured; embedded model textures, browser/camera textures
+and the system placeholder are outside this ledger. One large decode can still
+hitch, so one per frame is not a frame-time guarantee. Broad Unity suites,
+Android compilation, paid providers, headset performance and Store acceptance
+were not rerun. Transactional ink/light/window preparation, simulation admission
+and transaction/storage/extent work remain before increasing saved capacity.
+V1 remains incomplete.

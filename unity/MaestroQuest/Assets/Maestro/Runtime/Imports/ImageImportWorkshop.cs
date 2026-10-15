@@ -12,6 +12,7 @@ namespace Maestro.Quest.Imports {
     /// inspection and accepted identities cross the shared capability interface.</summary>
     public sealed class ImageImportWorkshop:MonoBehaviour {
         RoomEditor editor;IModelPicker picker;ImageAsset asset;IDisposable lease;CancellationTokenSource cancel;
+        Art.ImageResources.PayloadLease payload;JObject lastPreview;
         internal readonly ChatImageTransfer Chat=new();
         bool fromChat;
         string chatHash="";
@@ -44,7 +45,11 @@ namespace Maestro.Quest.Imports {
             if(choose){try{if(picker==null||!picker.ReadyToStart)return false;}catch(Exception){return false;}}
             issue=null;return true;
         }
-        void Begin(){fromChat=false;chatHash="";Chat.Stop();lease=editor.WriteGate.Write();cancel=new();request=Guid.NewGuid().ToString("N");error="";source="";revision=0;asset=null;began=Time.realtimeSinceStartup;}
+        void Begin(long payloadBytes=2L*SurfaceImage.MaximumBytes){
+            var pending=Art.ImageResources.BeginPayload(new RoomResourceOwner(editor.WorldIdentity,null,"preview"),payloadBytes);
+            try{lease=editor.WriteGate.Write();payload=pending;fromChat=false;chatHash="";Chat.Stop();cancel=new();request=Guid.NewGuid().ToString("N");error="";source="";revision=0;asset=null;lastPreview=null;began=Time.realtimeSinceStartup;}
+            catch{pending.Dispose();lease?.Dispose();lease=null;throw;}
+        }
         internal string Select(){
             if(!CanStart(true,out var issue))throw new InvalidOperationException(issue);Begin();phase="selecting";
             try{picker.Start(request);}catch(Exception){Fail("The image chooser could not open. Resume Maestro and try again.");ReleasePicker(request);End();}
@@ -53,7 +58,7 @@ namespace Maestro.Quest.Imports {
         internal bool CanSelectChat(string set,string hash,out string issue)=>CanStart(false,out issue)&&Chat.CanSelect(set,hash,out issue);
         internal string SelectChat(string set,string hash){
             if(!CanSelectChat(set,hash,out var issue))throw new InvalidOperationException(issue);
-            Begin();fromChat=true;chatHash=hash;phase="receiving";Chat.Start(request,set,hash,Time.realtimeSinceStartupAsDouble);return request;
+            Begin();fromChat=true;chatHash=hash;phase="receiving";try{Chat.Start(request,set,hash,Time.realtimeSinceStartupAsDouble);}catch{End();throw;}return request;
         }
         internal void SyncChat(string session,JObject wire){
             string previous=Chat.OfferSet;
@@ -68,9 +73,9 @@ namespace Maestro.Quest.Imports {
                 var selected=await Task.Run(()=>ImageLibrary.Inspect(name,bytes,token),token);token.ThrowIfCancellationRequested();
                 if(disposed)return;
                 if(selected.Hash!=expected)throw new System.IO.InvalidDataException("The chat image bytes do not match the selected image.");
-                var verified=Art.AppearanceImages.Decode(selected);Art.ArtResources.Release(verified);token.ThrowIfCancellationRequested();asset=selected;phase="preview";
+                using(var verified=await Art.ImageResources.DecodeAsync(selected,payload,token)){token.ThrowIfCancellationRequested();}asset=selected;phase="preview";
             }catch(OperationCanceledException){phase="cancelled";asset=null;}
-            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The chat image could not be decoded. Choose a PNG/JPEG within the supported bounds.");}
+            catch(Exception ex){Fail(ex is System.IO.InvalidDataException or RoomResourceLimitException?ex.Message:"The chat image could not be decoded. Choose a PNG/JPEG within the supported bounds.");}
             finally{working=false;if(disposed||phase!="preview")End();}
         }
         internal bool CanAccept(string id,string hash,out string issue){
@@ -115,9 +120,9 @@ namespace Maestro.Quest.Imports {
         }
         async Task Prepare(string path,string name,string id,CancellationToken token){
             working=true;phase="checking";
-            try{var selected=await Task.Run(()=>ImageLibrary.ReadSelected(name,path,token),token);token.ThrowIfCancellationRequested();if(disposed)return;var verified=Art.AppearanceImages.Decode(selected);Art.ArtResources.Release(verified);token.ThrowIfCancellationRequested();asset=selected;phase="preview";}
+            try{var selected=await Task.Run(()=>ImageLibrary.ReadSelected(name,path,token),token);token.ThrowIfCancellationRequested();if(disposed)return;using(var verified=await Art.ImageResources.DecodeAsync(selected,payload,token)){token.ThrowIfCancellationRequested();}asset=selected;phase="preview";}
             catch(OperationCanceledException){phase="cancelled";asset=null;}
-            catch(Exception ex){Fail(ex is System.IO.InvalidDataException?ex.Message:"The selected PNG/JPEG could not be read. Choose it again.");}
+            catch(Exception ex){Fail(ex is System.IO.InvalidDataException or RoomResourceLimitException?ex.Message:"The selected PNG/JPEG could not be read. Choose it again.");}
             finally{ReleasePicker(id);working=false;if(disposed||phase!="preview")End();}
         }
         internal async Task<JObject> Accept(string id,string hash,CancellationToken stop){
@@ -135,23 +140,24 @@ namespace Maestro.Quest.Imports {
             finally{working=false;End();}
         }
         internal async Task<JObject> Refresh(CancellationToken stop){
-            if(!CanStart(false,out var issue))throw new InvalidOperationException(issue);Begin();phase="checking";working=true;listed=false;
+            if(!CanStart(false,out var issue))throw new InvalidOperationException(issue);Begin(SurfaceImage.MaximumBytes);phase="checking";working=true;listed=false;
             using var linked=CancellationTokenSource.CreateLinkedTokenSource(stop,cancel.Token);
             try{var fresh=await editor.Images.ListAsync(linked.Token);linked.Token.ThrowIfCancellationRequested();if(disposed)throw new OperationCanceledException();entries=fresh;foreach(var entry in fresh)editor.ImageTextures.Retry(entry.Hash);listed=true;listError="";phase="completed";return Receipt();}
             catch(OperationCanceledException){phase="cancelled";listError="Image-library refresh was cancelled.";throw;}
             catch(Exception){listError="Image-library inspection failed. Existing files are preserved; repair or reimport the damaged image.";Fail(listError);throw;}
             finally{working=false;End();}
         }
-        internal JObject Receipt()=>new(){["requestId"]=request,["imageHash"]=asset?.Hash??"",["appearanceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1)};
-        internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=new JObject {["imageHash"]=asset?.Hash??"",["name"]=ImportObservation.Text(asset?.Name??""),["width"]=asset?.Inspection.DisplayWidth??0,["height"]=asset?.Inspection.DisplayHeight??0,["format"]=asset?.Inspection.Format??"",["kibibytes"]=(asset?.Content.Length??0)/1024d},["appearanceId"]=source,["revision"]=revision};
+        internal JObject Receipt()=>new(){["requestId"]=request,["imageHash"]=asset?.Hash??(string)(lastPreview?["imageHash"])??"",["appearanceId"]=source,["revision"]=revision,["temporary"]=editor&&editor.TemporaryRoom,["library"]=Library(0,1)};
+        internal JObject Observe()=>new(){["requestId"]=request,["phase"]=phase,["error"]=ImportObservation.Text(error),["preview"]=asset!=null?Preview(asset):lastPreview?.DeepClone()??Preview(null),["appearanceId"]=source,["revision"]=revision};
         internal JObject Library(int offset,int pageSize=2){
             var page=listed?entries.Skip(offset).Take(pageSize).ToArray():Array.Empty<ImageLibrary.Entry>();
             return new JObject {["ready"]=listed,["error"]=ImportObservation.Text(listError),["total"]=listed?entries.Length:0,["next"]=listed&&offset+page.Length<entries.Length?offset+page.Length:-1,["entries"]=new JArray(page.Select(e=>new JObject {["id"]=e.Hash,["name"]=ImportObservation.Text(e.Name),["width"]=e.Width,["height"]=e.Height,["format"]=e.Format}))};
         }
         void Fail(string value){phase="failed";error=ImportObservation.Text(value);}
         void ReleasePicker(string id){try{picker?.Release(id);}catch(Exception){error="The selected stream is still closing. Resume Maestro before choosing another.";}}
-        void End(){Chat.Stop();lease?.Dispose();lease=null;cancel?.Dispose();cancel=null;}
-        void Close(){Chat.Clear();disposed=true;cancel?.Cancel();if(working)return;ReleasePicker(request);if(lease!=null)phase="cancelled";End();asset=null;}
+        static JObject Preview(ImageAsset value)=>new(){["imageHash"]=value?.Hash??"",["name"]=ImportObservation.Text(value?.Name??""),["width"]=value?.Inspection.DisplayWidth??0,["height"]=value?.Inspection.DisplayHeight??0,["format"]=value?.Inspection.Format??"",["kibibytes"]=(value?.Content.Length??0)/1024d};
+        void End(){if(asset!=null)lastPreview=Preview(asset);asset=null;Chat.Stop();payload?.Dispose();payload=null;lease?.Dispose();lease=null;cancel?.Dispose();cancel=null;}
+        void Close(){Chat.Clear();disposed=true;cancel?.Cancel();if(working)return;ReleasePicker(request);if(lease!=null)phase="cancelled";End();asset=null;lastPreview=null;}
         void OnEnable()=>disposed=false;
         void OnApplicationPause(bool value){paused=value;if(value)ClearChat();}
         void OnApplicationFocus(bool value){focused=value;if(!value)ClearChat();}
