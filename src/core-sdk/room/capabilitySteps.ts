@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {behaviourCatalog} from '../../../shared/behaviourCatalog';
-import {argumentValue,type CapabilityInvocation} from '../../../shared/capabilities';
+import {argumentValue,capabilityDefinition,resolveCapabilitySchema,type CapabilityInvocation,type CapabilitySchema} from '../../../shared/capabilities';
 import {type RuleStep} from './ruleSteps';
 import {type Vec3,type Rotation} from './recipe';
 const ids:readonly string[]=behaviourCatalog.adapters.ruleStep.actionIds;
@@ -55,4 +55,10 @@ export function invocationStep(call:CapabilityInvocation,id:string):RuleStep {
   ...(p?{propId:p.objectId as string,propAvatarHash:p.avatarHash as string,propHand:['left','right'].indexOf(p.hand as string),
    propRelease:['return','drop','throw'].indexOf(p.release as string),propReleaseAt:p.releaseAt as number,
    propOffset:p.offset as Vec3,propRotation:p.rotation as Rotation}:{})};
+}
+
+/** The simple editor's target restrictions come from its existing native adapter. */
+export function stepTargetSchema(step:RuleStep):CapabilitySchema|undefined {
+ const call=stepInvocation(step),definition=capabilityDefinition(call.id);
+ return definition?resolveCapabilitySchema(definition.input,call.arguments)?.properties?.target:undefined;
 }

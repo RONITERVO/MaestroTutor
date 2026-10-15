@@ -18,7 +18,8 @@ import {createRoot} from 'react-dom/client';
 import {QuestBookSurface} from '../../src/platform/quest/QuestBookSurface';
 import {useMaestroStore,initialSettings} from '../../src/store';
 import type {RoomAgentState} from '../../src/core-sdk/room/roomAgent';
-import {simpleProgramSteps} from '../../src/core-sdk/room/programs';
+import {newRuleStep} from '../../src/core-sdk/room/rules';
+import {sequenceProgram,simpleProgramSteps} from '../../src/core-sdk/room/programs';
 import {copyRecipe,parseRecipe} from '../../src/core-sdk/room/recipe';
 import robot from './recipeRobot.json';
 import nativeProgram from './programBookState.json';
@@ -281,8 +282,9 @@ if(new URLSearchParams(location.search).has('moduleLibrary'))Object.assign(windo
 
 const prop=simpleProgramSteps(nativeRules.selected.program)?.[0]?.propId;
 if(prop)state.objects.push({id:prop,objectRevision:4,name:'Practice ball',kind:'Ball',position:{x:.3,y:.8,z:.8},scale:1,color:white,animated:false});
+const behaviourChoicesMode=new URLSearchParams(location.search).has('behaviourObjectChoices');
 const constructionSearchMode=new URLSearchParams(location.search).has('constructionSearch');
-const objectSelectorsMode=constructionSearchMode||new URLSearchParams(location.search).has('objectSelectors');
+const objectSelectorsMode=behaviourChoicesMode||constructionSearchMode||new URLSearchParams(location.search).has('objectSelectors');
 const objectSearchMode=objectSelectorsMode||new URLSearchParams(location.search).has('objectSearch');
 const objectSearchPages=(objectSelectorsMode?nativeObjectReferences.pages:nativeObjectSearch) as unknown as {request:CatalogRequest;view:CatalogView}[];
 if(objectSearchMode){
@@ -290,6 +292,13 @@ if(objectSearchMode){
  state={...state,inspection:null,rules:undefined,selectedId:null,capabilities:['objectSearch.v1','catalog.v1','catalogVocabulary.v1','factQueries.v1','structuredValues.v1','inspect.v1','workspace.v1'],objects:entries.map((entry,i)=>({...entry,objectRevision:1,position:{x:i/10,y:1,z:1},scale:1,color:white,animated:false})),status:'Recorded native search pages; browser acknowledgements are simulated.'};
 }
 if(constructionSearchMode){state.capabilities!.push('constructionSelection.v1','constructionCapture.v1','moduleLibrary.v1','creationPrototypes.v1','execution.v1','executionReceipts.v1','actionResults.v1');state.constructionSelection={stateId:'c'.repeat(32),members:[],collecting:false};state.execution={nextRunId:'e'.repeat(32),running:[],outcomes:[],selected:null,storageError:null};}
+if(behaviourChoicesMode){
+ state.rules=structuredClone(nativeProgram.rules) as RuleView;
+ const target=nativeObjectReferences.pages[1].view.value.entries.find(e=>!['book','maestro'].includes(e.id))!.id;
+ const selected=state.rules.selected!;selected.program=JSON.stringify(sequenceProgram([{...newRuleStep(0),id:'saved_action',targetId:target}]));selected.repeat=false;
+ state.rules.sequences=[{id:selected.id,name:selected.name,steps:1,repeat:false}];state.rules.running=[];state.rules.bindings=[];state.rules.bindingCount=0;state.rules.buttons=[];state.rules.outcomes=[];
+ state.workspaceView='rules';state.selectedId=target;state.capabilities=[...new Set([...state.capabilities!,...nativeProgram.capabilities])];
+}
 const undo:typeof recipe[]=[],redo:typeof recipe[]=[];
 const ruleUndo:RuleView[]=[],ruleRedo:RuleView[]=[];
 const copy=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));

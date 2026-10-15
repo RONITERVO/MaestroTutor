@@ -16,10 +16,10 @@ const state=(more:Partial<RoomAgentState>={}):RoomAgentState=>({version:1,capabi
 describe('behaviour workspace navigation',()=>{
  it.each([
   ['empty selection','',false,'maestro'],
-  ['removed selection','e'.repeat(32),false,'maestro'],
+  ['off-inventory selection','e'.repeat(32),false,'e'.repeat(32)],
   ['existing selection','e'.repeat(32),true,'e'.repeat(32)],
   ['missing selection',undefined,false,'maestro'],
- ])('opens Objects with an existing target after %s',async(_label,selectedId,addSelected,expected)=>{
+ ])('opens Objects with the exact selected ID or default Maestro after %s',async(_label,selectedId,addSelected,expected)=>{
   const initial=state({selectedId});
   if(addSelected)initial.objects.push({...initial.objects[0],id:'e'.repeat(32),name:'Ball',kind:'Ball'});
   const client=new RoomAgentClient();expect(client.receive(initial)).toBe(true);
@@ -63,7 +63,7 @@ const programState=():RoomAgentState=>state({capabilities:['behaviourPrograms.v3
 describe('program block and source editing',()=>{
  it('round trips a user block edit without losing functions, then sends the same program through the native contract',async()=>{
   const client=new RoomAgentClient();client.receive(programState());const screen=render(<RuleWorkspace client={client}/>);
-  expect(screen.getAllByText('Maestro · 0.1 seconds')).toHaveLength(2);expect(screen.getByRole('region',{name:'Function prime'})).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Edit block call_prime'}));
+  expect(screen.getAllByText((_,element)=>element?.matches('div.room-workspace-intro')===true&&element.textContent==='Maestro · maestro · 0.1 seconds')).toHaveLength(2);expect(screen.getByRole('region',{name:'Function prime'})).toBeTruthy();fireEvent.click(screen.getByRole('button',{name:'Edit block call_prime'}));
   const node=JSON.parse((screen.getByLabelText('Program JSON') as HTMLTextAreaElement).value);node.args[0].value=12;
   fireEvent.change(screen.getByLabelText('Program JSON'),{target:{value:JSON.stringify(node)}});expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true);expect(client.snapshot().request).toBeNull();
   fireEvent.click(screen.getByRole('button',{name:'Update draft'}));expect(screen.getByText('answer = prime(12)')).toBeTruthy();
@@ -142,7 +142,8 @@ it('authors physical impulse blocks through the same named contract without fake
  expect(client.receive(initial)).toBe(true);const screen=render(<RuleWorkspace client={client}/>);
  fireEvent.change(screen.getByLabelText('Step 1 action'),{target:{value:'10'}});
  expect(screen.queryByLabelText('Step 1 seconds')).toBeNull();
- expect((screen.getByLabelText('Step 1 target') as HTMLSelectElement).value).toBe(ballId);
+ expect((screen.getByLabelText('Step 1 target') as HTMLSelectElement).value).toBe('');
+ fireEvent.change(screen.getByLabelText('Step 1 target'),{target:{value:ballId}});
  fireEvent.change(screen.getByLabelText('Step 1 impulse y'),{target:{value:'1.2'}});
  fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
  const updated=client.snapshot().request!.commands[0].rule!.edits![0].sequence!;

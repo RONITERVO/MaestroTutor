@@ -1628,7 +1628,34 @@ late replies from the previous scope.
 Construction selection now uses the same paged directory while keeping an explicit
 ordered list and origin; see [construction selection](QUEST_CONSTRUCTION_SELECTION.md).
 Capture reads every member revision through the same generated action inputs.
-The periodic scene list remains complete at its current limit. Legacy rule
-selectors, summaries and command guards still need migration before
-that list can be paged. This step introduces no additional saved schema, catalog
+The periodic scene list remains complete at its current limit. Behaviour target
+fields, trigger sources and reference summaries now use this same directory.
+Inspector context and command guards still need migration before that list can
+be paged. This step introduces no additional saved schema, catalog
 operation, capacity increase or independent browser world.
+
+
+## Behaviour references use saved identities — 2026-10-15
+
+The simple behaviour editor, trigger bindings, carried-object summaries, program
+blocks and module requirements now share the same saved-object reader as the
+catalog and agent. A reference outside the displayed inventory remains selected.
+An explicit Read shows native saved metadata without loading the object or
+changing the draft. An unavailable read retains the ID; it does not establish
+that the object was deleted. Hiding the behaviour workspace cancels pending
+reference display and prevents deferred searches from starting in a hidden view.
+
+Target restrictions come from each action's existing native capability schema.
+Changing action keeps a compatible target; an incompatible target requires an
+explicit choice unless the schema allows exactly one object, such as Maestro.
+The editor never chooses the first available creation. New behaviours start with
+an explicit Maestro gesture. Move and Resize values remain authored values;
+changing action no longer initializes them from the periodic scene inventory.
+
+Drafts retain their edits across a temporary-room change but cannot be applied
+there, even when the two rooms have equal rule revisions. Reload latest explicitly
+replaces that stale draft. Search results and displayed definition revisions are
+not execution guards; guarded current-input reads and native validation still
+own execution. The remaining inspector and command-precondition work must keep
+that distinction before periodic state can be paged. Current world limits remain
+unchanged.

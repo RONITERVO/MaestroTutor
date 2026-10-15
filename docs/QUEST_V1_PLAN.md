@@ -41,6 +41,8 @@ Users and agents now share bounded saved-object discovery; see
 fact and program fields now use the same directory; see [exact object choices](#shared-object-reference-fields--2026-10-15).
 Construction selection now keeps explicit member order across search pages; see
 [paged construction choices](#shared-construction-discovery--2026-10-15).
+Behaviour fields, trigger sources and reference summaries now share those saved
+identities; see [behaviour references](#shared-behaviour-object-choices--2026-10-15).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10572,3 +10574,43 @@ before that state can be paged. Saved and live quotas still need separate admiss
 work. Per-entity scanned-room physics/navigation choices remain independent of
 visibility and sound. V1 remains incomplete, with existing device/provider/release
 holds in place.
+
+
+## Shared behaviour object choices — 2026-10-15
+
+The simple behaviour editor, trigger source chooser, carried-object references,
+advanced action summaries and module requirements now use shared native discovery
+and exact-ID definition reads. Off-page/off-inventory references stay selected;
+an unavailable read does not claim deletion or substitute another object. Target
+restrictions come from the existing native action variants. Changing action keeps
+a compatible target and otherwise requires explicit selection, except a sole
+schema-allowed target such as Maestro. New behaviours use an explicit Maestro
+gesture instead of the first visible assembly. Move/Resize values no longer come
+from the complete periodic inventory. Hiding the behaviour view prevents deferred
+reference searches, and a dirty draft cannot cross a temporary-room boundary even
+at equal rule revisions.
+
+Verification passed **30 EditMode / 2 PlayMode** focused native discovery,
+observation and catalog checks without failures/skips. **2,991 web tests / 317
+files**, application/probe TypeScript and unchanged catalog-source checks passed.
+Nine added cases cover native target restrictions, off-inventory references,
+explicit action/trigger choices, exact inspector navigation, hidden reads,
+unavailable reference summaries and stale temporary-room drafts. Desktop Chromium
+replayed these fields in the original book and retained the exact target through
+the switch to editable program source. Wide/narrow screenshots were inspected
+without horizontal overflow or page errors. Browser replies are simulated from
+native-recorded metadata; requests were read-only catalog operations, with no
+native room mutation or provider call.
+
+All **3,014 native inputs / 1,125 mirrored C# files** match the verified source;
+14 unrelated pre-existing files remain byte-for-byte unchanged. Evidence:
+`.quest-evidence/behaviour-object-choices/`. The preceding construction selection
+checks remain tied to **a0813695**. The broader native/Android/offline journey
+baseline remains **7fe48619**; those suites were not rerun for this UI change.
+
+Periodic scene state and capacity remain unchanged. Inspector context and command
+preconditions still require exact-ID resolution before that state can be paged;
+saved quotas and active resource admission remain separate forthcoming work.
+Per-entity scanned-room physics/navigation choices remain independent of visibility
+and sound. V1 remains incomplete. No headset, paid provider, signing, deployment
+or Meta work was performed; existing holds remain in place.

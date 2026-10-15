@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {ObjectReferenceSummary} from './ObjectReferenceField';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import type {CatalogRequest,CatalogView} from '../../../shared/roomCatalog';
 import type {CapabilityInvocation} from '../../../shared/capabilities';
@@ -64,7 +65,7 @@ export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabl
    <input ref={fileInput} aria-label="Module file" type="file" accept=".json,application/json" hidden onChange={event=>{const selected=event.target.files?.[0];event.target.value='';if(selected)void selectFile(selected);}}/>
    {file&&<section aria-label="Module file preview"><h4>{file.definition.name}</h4><code style={{overflowWrap:'anywhere'}}>{file.hash}</code>
     <p>Exports: {file.definition.exports.join(', ')}</p>
-    <p>Referenced objects: {(file.definition.program.resources as string[]).map(id=>state?.objects.find(o=>o.id===id)?.name??'Unavailable '+id).join(', ')||'None'}. References retain their exact IDs; missing dependencies are not replaced.</p>
+    <div><p>Referenced objects: {(file.definition.program.resources as string[]).length||'None'}. References retain their exact IDs; missing dependencies are not replaced.</p>{(file.definition.program.resources as string[]).map(id=><ObjectReferenceSummary key={id} id={id} objects={state?.objects??[]} label="File reference" disabled={disabled||busy}/>)}</div>
     <details><summary>Imported definition and exact references</summary><pre>{JSON.stringify(file.definition,null,2)}</pre></details>
     <button onClick={()=>void execute({id:'program.module.import',version:1,arguments:{hash:file.hash,definition:file.definition}})}>Import file to library</button>
    </section>}
@@ -86,7 +87,7 @@ export function ProgramModuleLibrary({client,sequence,rulesRevision,dirty,disabl
     {previous&&<p>Replace pin {previous.hash.slice(0,12)} with {inspection.capability.slice(0,12)}. Existing calls must remain valid; incompatible changes keep this draft open.</p>}
     {events.map(event=><label key={event.name}>Connect {event.name} ({event.type})<input aria-label={'Connect '+event.name} maxLength={37} value={signalTarget(event.name)} onChange={e=>setSignals({...signals,[event.name]:e.target.value})}/></label>)}
     {events.length>0&&<p>New caller signals are added with the shown types. Using an existing name connects to that room-wide signal.</p>}
-    {required.length>0&&<p>Required objects: {required.map(id=>state?.objects.find(o=>o.id===id)?.name??'Unavailable '+id).join(', ')}</p>}
+    {required.length>0&&<div><p>Required objects:</p>{required.map(id=><ObjectReferenceSummary key={id} id={id} objects={state?.objects??[]} label="Required object" disabled={disabled||pending}/>)}</div>}
     {additional.length>0&&<label className="rule-checkbox"><input type="checkbox" aria-label="Allow additional module objects" checked={grant} onChange={e=>setGrant(e.target.checked)}/>Add these {additional.length} objects to this behaviour’s declared access</label>}
     <button onClick={insert}>{replace?'Replace pinned import in draft':'Add pinned import to draft'}</button><p>This updates the draft only. Apply saves it and cancels an old run; Start is separate.</p>
     <button onClick={copyToDraft}>Replace draft with editable copy</button><p>The copy replaces this unsaved draft. Its functions and conditions can be edited in the book. Apply and Start remain separate.</p>
