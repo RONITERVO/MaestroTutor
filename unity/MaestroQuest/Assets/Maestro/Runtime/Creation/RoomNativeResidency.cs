@@ -196,7 +196,7 @@ namespace Maestro.Quest.Creation
                 foreach(var root in roots)if(root){root.SetActive(false);Art.NativeResourceLifetime.Release(root);Destroy(root);}
                 while(roots.Any(root=>root))await Task.Yield();
                 bool cancelled=failure is OperationCanceledException;
-                error=cancelled?"Area activation was cancelled or its saved input changed":failure is ModelImportException?failure.Message:"The area's native content could not be prepared";
+                error=cancelled?"Area activation was cancelled or its saved input changed":failure is ModelImportException or RoomResourceLimitException?failure.Message:"The area's native content could not be prepared";
                 foreach(var pair in entries)if(dormantNative.TryGetValue(pair.Key,out var current)&&ReferenceEquals(current,pair.Value)){current.Phase=cancelled?(current.RetiringRoot?NativeEntityPhase.Retiring:NativeEntityPhase.Dormant):NativeEntityPhase.Failed;current.Error=error;}
                 if(this){RefreshRegionCollision();UpdateSelection();}return error;
             }

@@ -21,6 +21,7 @@ namespace Maestro.Quest.Creation
         internal readonly List<Mesh> Meshes=new();
         internal GameObject Root {get;private set;}
         internal Bounds LocalBounds {get;private set;}
+        RecipeResources.Lease reservation;
         bool building,complete,ended;
         internal bool Ready=>complete&&!ended&&Root;
         internal RecipeVisual(RoomRecipe source,RoomResourceOwner owner):this(source,owner,false){}
@@ -32,7 +33,8 @@ namespace Maestro.Quest.Creation
             Encoded=JsonUtility.ToJson(source);Source=JsonUtility.FromJson<RoomRecipe>(Encoded);
             Owner=owner??throw new ArgumentNullException(nameof(owner));
             try {
-                Root=new GameObject("Recipe geometry");Root.SetActive(false);
+                reservation=RecipeResources.Begin(Source,Owner);
+                Root=new GameObject("Recipe geometry");reservation.Track(Root);Root.SetActive(false);
                 if(!deferred)foreach(var step in BuildSteps()){}
             }catch{Dispose();throw;}
         }
@@ -53,7 +55,7 @@ namespace Maestro.Quest.Creation
                     shape=new GameObject(part.shape,typeof(MeshFilter),typeof(MeshRenderer));
                     // Own the object before evaluating a mesh that may fail.
                     shape.transform.SetParent(node,false);
-                    var mesh=RecipeGeometry.Build(part);Meshes.Add(mesh);shape.GetComponent<MeshFilter>().sharedMesh=mesh;
+                    var mesh=RecipeGeometry.Build(part);reservation.Track(mesh);Meshes.Add(mesh);shape.GetComponent<MeshFilter>().sharedMesh=mesh;
                 }
                 else shape=GameObject.CreatePrimitive(part.shape == "sphere" ? PrimitiveType.Sphere : part.shape == "cylinder" ? PrimitiveType.Cylinder : PrimitiveType.Cube);
                 shape.transform.SetParent(node,false); shape.transform.localScale = Vector3.Scale(part.size,part.shape == "cylinder" ? new Vector3(1,.5f,1) : Vector3.one);
@@ -71,7 +73,7 @@ namespace Maestro.Quest.Creation
                 yield return null;
             }
             EnsurePreparing();if(!validation.Tracks())throw new ArgumentException("Invalid procedural recipe");
-            LocalBounds=bounds;complete=true;
+            LocalBounds=bounds;complete=true;reservation.Ready(Root);
         }
         internal void Attach(Transform parent)
         {
@@ -85,7 +87,7 @@ namespace Maestro.Quest.Creation
             if(Root){Root.SetActive(false);Root.transform.SetParent(null,false);ArtResources.Release(Root);Root=null;}
             foreach(var material in Materials)material.Dispose();Materials.Clear();
             foreach(var mesh in Meshes)ArtResources.Release(mesh);Meshes.Clear();
-            Nodes.Clear();Rest.Clear();Renderers.Clear();
+            Nodes.Clear();Rest.Clear();Renderers.Clear();reservation?.Retire();reservation=null;
         }
     }
 }

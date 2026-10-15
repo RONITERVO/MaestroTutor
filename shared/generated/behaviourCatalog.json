@@ -43518,6 +43518,68 @@
       ]
     },
     {
+      "id": "runtime.proceduralBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "instances": "number",
+          "preparing": "number",
+          "ready": "number",
+          "retiring": "number",
+          "parts": "number",
+          "customVertices": "number",
+          "instanceLimit": "number",
+          "partLimit": "number",
+          "customVertexLimit": "number"
+        }
+      },
+      "label": "Live procedural geometry budget",
+      "description": "Process-wide enforced admission for recipe instances, part hierarchies and generated custom-mesh source vertices. Includes private preparation, disabled instances and replaced or closed-workspace geometry until Unity destroys its roots and owned meshes. Limits are independent of saved-world capacity and leave bounded headroom for replacement. Counts are not measured RAM/VRAM or frame time; customVertices excludes shared primitive meshes, imported models, terrain, drawing, collision, material and texture costs. Reading never loads, evicts, retries or changes saved objects.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.proceduralReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text",
+          "phase": "text",
+          "parts": "number",
+          "customVertices": "number",
+          "active": "boolean"
+        }
+      },
+      "label": "Procedural geometry owner",
+      "description": "Read one runtime.proceduralBudget instance by index. Indices can shift; reservationId identifies this native allocation, not a saved object. Copied world, region and target identify its owner. Phase is preparing, ready or retiring. Ready means built geometry, not visible, audible or running behaviour; active only describes the root hierarchy. Disabled geometry and pending destruction retain their reservation. Reads are detached and cannot activate, unload or delete anything.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 127.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -46314,6 +46376,10 @@
       "sha256": "f5243e6c733284a75e0d253df794f8c6728d4f1e2b9e89ffe5842e8288975704"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProceduralResourceFacts.cs",
+      "sha256": "1bb543c5cb869e94b735491350b3b4d7b535a7a2fcb9fcf9a275ca404da517fc"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProgramMemoryCapability.cs",
       "sha256": "2bdfb36fcc7f788528dda4908460ee736230cf55198a3b5c8b6a46311a3cfe0f"
     },
@@ -46695,7 +46761,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeGeometry.cs",
-      "sha256": "ca2f25f1fb0551feb3472979063a7f4957f25a077acb72e695a43c961d457a0f"
+      "sha256": "601914c573afbfb9b0a23c120d03f9a1f89cdb81674e63b8ce2edcb378b359d5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeLathe.cs",
@@ -46726,6 +46792,10 @@
       "sha256": "88aaec3f57bfb5d83124cd4bcaac54a589a9a372f7c623b1b4a2ac4a66e3ba06"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeResources.cs",
+      "sha256": "15a4c4bc45acaa1149dec78d10a6fb4ce357cd4ca319b1e986e435daef0437c6"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeSweep.cs",
       "sha256": "57992b0fb6f119c3b8fdcda99d34b484356c3d2982070326c0fee9c4a5c24403"
     },
@@ -46735,7 +46805,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeVisual.cs",
-      "sha256": "0c1e3a5b5c294db60e6ee58e1a6adfc8d07f30e3144e6a3f87df3839f0ee92c5"
+      "sha256": "cf1ba70baf0b2a809aec4ce73b3c501e832e04158b20bfce6a02b5d91362f40e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAcousticGeometry.cs",
@@ -46847,7 +46917,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "1d1d3e5c055fb8910593e6dbd0b1f95d7ca6b595a1e86d44379e0d5a25d9d945"
+      "sha256": "8e031ad3cfc86dcc26e769f55d8ade6b126e16b60ed45e184bebe167593c650e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -47007,7 +47077,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "6c2754a5ec3c4613f906e401e8eee9bcf57aa30072feb4935f2b3e4b0a790f62"
+      "sha256": "ea4e27f5dfa4838dbb682568b8e2f8a3ba421aeaca25a86f165dbaa48cf70bcb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
@@ -47975,7 +48045,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "774f9856a386c30dc54a3a008ce09deb7eabccd72604025b655660ed8060eaa8"
+      "sha256": "937836b53c053f0179d6e52dcf7eb43344c6c9b785e52ab1ddb087442e4c356c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

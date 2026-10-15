@@ -1811,3 +1811,34 @@ program, changes collision participation or defines which regions stay simulated
 The saved quota remains 64 creations plus book/Maestro, with existing spatial and
 height-field limits. Capacity growth, resource admission and device performance
 acceptance remain separate work.
+
+
+## Procedural native resource admission
+
+Saved recipes and native instances have separate lifetimes. A process-wide
+reservation now precedes procedural hierarchy or custom-mesh allocation. The
+same reservation follows private preparation, adoption, disabled geometry and
+retirement. Unity's deferred destruction must finish for the owned root and
+custom meshes before that capacity is available again. Closing a workspace or
+cancelling a candidate does not clear its charge early.
+
+The current independent runtime bounds are 128 instances, 512 parts and 524,288
+custom-mesh source vertices, including preparation and retirement. These allow
+bounded replacement headroom relative to the current saved-world limits; they
+are not measured headset memory or performance guarantees. Shared primitive
+meshes are represented by their part count, not by custom vertices. Imported
+models, collision, terrain, ink, lights, materials and textures have separate
+costs. In particular, the existing collision resource ledger reports retained
+costs but does not yet enforce a process-wide limit.
+
+If admission is full, an edit fails before persistence and keeps the accepted
+geometry, playback and Undo history. Dormant activation also preserves the saved
+object on failure and can be retried after resources become available. The
+runtime never silently deletes or evicts an unrelated object to satisfy a
+request. Human and agent inspection share `runtime.proceduralBudget` and
+`runtime.proceduralReservation` through the existing catalog. Reading those facts
+is passive; `ready` does not prove visibility or running animation.
+
+This guard does not increase saved capacity or the supported world extent.
+Remaining saved/runtime limits and persistence costs must be separated before
+those can grow.

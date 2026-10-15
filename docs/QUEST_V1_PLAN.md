@@ -55,6 +55,8 @@ Learner restore identity now uses the saved directory across native restarts; se
 [restart evidence](#2026-10-15--explicit-saved-identity-across-native-restart).
 Production scene updates now carry a bounded, explicitly non-exhaustive context; see
 [bounded object overview](#2026-10-15--bounded-production-object-overview).
+Procedural geometry now has independent process-wide native admission; see
+[procedural reservations](#2026-10-15--procedural-native-reservations).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -11108,3 +11110,47 @@ constant would also expand image-owner limits and other coupled budgets. No paid
 provider, headset, signing, deployment or Store action ran. The broad native and
 Android suites were not rerun; their older pinned evidence remains separate.
 Real-provider and physical acceptance of this source are still open.
+
+
+## 2026-10-15 — procedural native reservations
+
+Procedural recipe preparation now reserves native instance, part and generated
+custom-mesh source-vertex costs before allocating Unity objects. The reservation
+is shared across current, closing and staged workspaces and persists through
+disabled geometry and deferred destruction. Its 128-instance / 512-part /
+524,288-custom-vertex bounds are independent of saved-world quotas and leave
+bounded replacement headroom. They are logical safeguards, not measured Quest
+memory or frame-time limits.
+
+A refused edit leaves persistence, accepted geometry, running recipe playback
+and Undo/Redo untouched. Failed dormant activation keeps the saved object and
+can retry through the same loading path. No automatic eviction or saved-object
+deletion was added. Shared catalog facts `runtime.proceduralBudget` and
+`runtime.proceduralReservation` expose copied runtime ownership and phases to
+both human and agent inspection; reads cannot allocate or load geometry.
+
+Verification for this checkpoint is recorded in
+`.quest-evidence/procedural-reservations/`. Focused native checks cover competing
+preparations, each budget dimension, wide cost arithmetic, cancellation,
+deferred destruction, exact ownership, failed persistence/admission, later
+retry, Undo/Redo and dormant activation. Actual Unity fact output is retained in
+`test-fixtures/browser/proceduralReservations.json` and validated by web tests.
+Accepted evidence: **36 EditMode / 38 PlayMode** checks (35 initial EditMode checks
+plus one added aggregate-budget case; the five resource cases were rerun),
+**3,069 web tests / 326 files**, application/probe TypeScript and generated-catalog
+provenance all passed. Headless `a735b1f9f58a4ca89ca1a7fccdeb8c9d` passed
+2,189 observations / 2,182 explicit read sets with 15 scripted provider
+responses and zero provider-network attempts. Original Book
+`fc371ad25fcb4d319eb70e1ce14aff51` passed 985 native requests /
+3,139 observations / 27 scripted planning calls, with no browser errors,
+human-edit preservation, stale agent-edit refusal and reload without replay.
+These are offline desktop integrations, not paid-provider or physical-device proof.
+All 4,260 frozen inputs, 3,024 native source/mirror inputs and 14 unrelated
+files were checked. The two added catalog facts are the only definition changes.
+
+Saved capacity, the 25-metre position bound and whole-document transaction costs
+remain unchanged. Further saved/runtime separation is required for collisions,
+object instances, ink, light/window and simulation costs. Existing collision
+resource diagnostics report ownership and source costs; they do not themselves
+enforce a process-wide collision budget. No larger-world, paid-provider, headset,
+packaging or Store acceptance is claimed. V1 remains incomplete.

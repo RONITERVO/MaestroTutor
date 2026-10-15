@@ -73,7 +73,7 @@ namespace Maestro.Quest.Creation
                     foreach(var step in prepared.PrepareGeometry(editor,data,before)){}
                 }
                 return prepared;
-            }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
+            }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException or RoomResourceLimitException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
         }
         internal static async Task<RoomEditPreparation> PrepareNativeAsync(RoomEditor editor,RoomObjectData[] values,RoomPreparationBudget budget)
         {
