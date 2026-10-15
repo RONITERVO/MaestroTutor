@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {nativeBookObjects,readNativeBookObjects} from './native-book-objects';
 import {chromium,type Browser} from 'playwright-core';
 import {createServer,type ViteDevServer} from 'vite';
 import {writeFile} from 'node:fs/promises';
@@ -91,6 +92,10 @@ try{
    if(predicate(state))return state;await pause(150);}while(Date.now()<deadline);throw new Error('Timed out waiting for '+label);};
  await page.goto(url,{waitUntil:'domcontentloaded',timeout:60000});await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state,{},{timeout:30000});
  const initial=await read();evidence.initial=initial;
+ const book=nativeBookObjects(page);
+ const objectState=async(label:string)=>{const objects=await readNativeBookObjects(page!);(evidence.readSets??=[] as unknown[]);(evidence.readSets as unknown[]).push({label,objects});await save();return objects;};
+ const closeWorkshop=async()=>{await book.workshop();await page!.getByRole('button',{name:'Back to chat',exact:true}).first().click();await wait('workshop closed',state=>!state.state!.visible);};
+ const initialObjects=await objectState('initial');await closeWorkshop();
  const contextText='For our room test, remember that my test object is named ParityBall. It is a blue ball with half the standard diameter. Do not create or change anything yet; just acknowledge this definition.';
  const submit=async(text:string)=>{const input=page!.getByRole('textbox').filter({visible:true}).last();await input.fill(text);await input.press('Enter');};
  await submit(contextText);
@@ -99,7 +104,7 @@ try{
  const contextDeadline=Date.now()+120000;
  while(!calls.some(call=>call.stage==='verifier'&&call.response)&&Date.now()<contextDeadline)await pause(100);
  assert.ok(calls.some(call=>call.stage==='verifier'&&call.response),'Context verifier did not finish');await flush();
- const contextDone=await read();assertSameRoomObjects(initial.state!,contextDone.state!);assert.equal(contextDone.messages.some(m=>m.agentTask),false);
+ const contextDone=await read();assertSameRoomObjects(initialObjects,await objectState('after-context'));await closeWorkshop();assert.equal(contextDone.messages.some(m=>m.agentTask),false);
  evidence.context=contextDone;await save();
  const turn=async(text:string,label:string)=>{
   const callStart=calls.length,before=await read();const oldIds=before.messages.map(m=>m.id);await submit(text);
@@ -124,24 +129,24 @@ try{
   return {done,task};
  };
  evidence.phase='creation';await save();
- const created=await turn('Please ask the room agent to create my test object now using the definition I gave earlier.','create');
- const ball=assertCreatedParityBall(initial.state!,created.done.state!,'blue',.5);
+ await turn('Please ask the room agent to create my test object now using the definition I gave earlier.','create');
+ const createdObjects=await objectState('created'),ball=assertCreatedParityBall(initialObjects,createdObjects,'blue',.5);await closeWorkshop();
  evidence.phase='editing';await save();
  const edited=await turn('Ask the room agent to paint that same ParityBall red, keeping its size and placement and leaving all other objects unchanged.','edit');
- assertPaintedParityBall(created.done.state!,edited.done.state!,ball.id);
+ const editedObjects=await objectState('painted');assertPaintedParityBall(createdObjects,editedObjects,ball.id);
  // Ordinary generated workshop controls call the same native Undo/Redo handlers.
- await page.evaluate(()=>window.maestroBook!.command({version:1,type:'workspace.open'}));
+ await book.workshop();
  await page.getByRole('button',{name:'Undo',exact:true}).first().click();
- const undo=await wait('native Undo',state=>state.state!.sceneRevision>edited.done.state!.sceneRevision);assertSameRoomObjects(created.done.state!,undo.state!);
+ const undo=await wait('native Undo',state=>state.state!.sceneRevision>edited.done.state!.sceneRevision);assertSameRoomObjects(createdObjects,await objectState('undo'));await book.workshop();
  await page.getByRole('button',{name:'Redo',exact:true}).first().click();
- const redo=await wait('native Redo',state=>state.state!.sceneRevision>undo.state!.sceneRevision);assertSameRoomObjects(edited.done.state!,redo.state!);
- await page.getByRole('button',{name:'Back to chat',exact:true}).first().click();await wait('workshop closed',state=>!state.state!.visible);
+ const redo=await wait('native Redo',state=>state.state!.sceneRevision>undo.state!.sceneRevision);assertSameRoomObjects(editedObjects,await objectState('redo'));
+ await closeWorkshop();
  evidence.undo=undo;evidence.redo=redo;
  const commandCount=commands.size,callCount=calls.length;
  await page.reload();await page.waitForFunction(()=>!!window.nativeBookEvidence?.().state);
  const restored=await wait('saved task reload',state=>state.messages.some(m=>m.id===edited.task.id&&m.agentTask?.phase==='completed'));
  await pause(1000);assert.equal(commands.size,commandCount,'Reload repeated a native command');assert.equal(calls.length,callCount,'Reload repeated a provider request');
- assertSameRoomObjects(edited.done.state!,restored.state!);assert.equal(restored.agentWorking,false);
+ assertSameRoomObjects(editedObjects,await objectState('restored'));await closeWorkshop();assert.equal(restored.agentWorking,false);
  const stored=await page.evaluate(id=>window.nativeBookTask!(id),edited.task.id);assert.deepEqual(stored,edited.task);
  await page.screenshot({path:join(directory,'book-provider-reloaded.png')});
  evidence.restored=restored;evidence.phase='passed';evidence.coverage={realTutorVerifierAgentReply:true,earlierContext:true,originalRequest:true,

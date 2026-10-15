@@ -49,6 +49,8 @@ Multi-object actions now retain explicit native reads without a complete invento
 see [shared object read sets](#shared-object-read-sets--2026-10-15).
 The offline headless journey now passes with an empty periodic object list; see
 [explicit object reads](#headless-journey-with-an-empty-object-view--2026-10-15).
+Task steering and visible Book parity now also use explicit reads; see
+[shared steering evidence](#2026-10-15--task-steering-and-visible-book-reads-without-full-inventory).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -10961,3 +10963,43 @@ as authored state. The corrected run is the accepted proof. All 14 unrelated
 files are unchanged. Evidence: `.quest-evidence/sparse-provider-reads/`. Migrated
 provider wrappers were not rerun against a paid provider. V1 remains incomplete;
 headset, provider, signing, deployment and Meta holds remain in place.
+
+
+### 2026-10-15 — Task steering and visible Book reads without full inventory
+
+Task-steering verification now detects the exact acknowledged native paint and
+requests public Stop without re-entering the native command lease. The task keeps
+its untouched receipt before the abort fence. Separate object/physics reads and
+manual edits wait for the stopped task. Revision preserves that manual placement;
+continuation retains the exact parent and original requests. A fresh task host
+restores statuses and refuses duplicate work without replay or provider usage.
+Pending, failed, foreign and stale execution receipts are covered by negative tests.
+
+The same proof runs offline through the actual tutor, verifier, task service,
+native handlers and durable store, with only the provider transport scripted.
+It checks 15 fixture responses and zero network attempts; synthetic usage counts
+are not billing proof. The ordinary offline Headless journey includes it, and
+`-SteeringOnly` offers an explicit offline focused mode.
+
+The real-provider Book parity helper now obtains separate read sets through visible
+catalog forms and the native object inspector. It checks explicit object/physics
+state for context, create, paint, Undo, Redo and reload, without hydrating periodic
+observations or hiding native commands. The offline Book journey exercises both
+built-in and editable-object physics reads through this adapter.
+
+Validation: full sparse Headless `8d8fed07507b43e392c2b2ec96e5c920` passed 2,183 raw
+observations / 2,175 prepared read sets, all periodic object arrays empty;
+its five task-journal receipts also have empty inventories. Full sparse Original
+Book `6d0347f1ab78489e89e3e6b2905adab2` passed 1,009 requests / 3,199 empty-inventory
+observations and 27 scripted planning calls. It read 7 built-in/editable
+objects through the shared visible adapter. Existing program, motion, human-edit,
+stale-write and reload checks passed. Web tests passed 3,040 / 323 files;
+application/probe TypeScript, catalog and five invalid-runner-mode guards passed.
+All 3,014 native inputs are unchanged and match the mirror;
+14 unrelated files are preserved. Evidence: `.quest-evidence/sparse-steering/`.
+
+No paid provider, headset, signing, deployment or Store action occurred. Production
+periodic inventory and saved limits remain unchanged. The resumed novice-lesson
+identity check still reads the initial full inventory; it and remaining live/context
+consumers must be verified before production snapshots become bounded. Broad
+native suites and Android compilation remain at their recorded earlier checkpoints.

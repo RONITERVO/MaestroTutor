@@ -5,6 +5,8 @@ import type {Locator,Page} from 'playwright-core';
 import {readRoomObjectObservation} from '../src/core-sdk/room/roomObjectContext';
 import {objectSearchRequest,readObjectSearchPage} from '../shared/objectSearch';
 import {validCatalogView,type CatalogView} from '../shared/roomCatalog';
+import {readNativeObjects} from './native-probe-read-set';
+import {behaviourFact} from '../shared/behaviourCatalog';
 import {validFactValue} from '../shared/behaviourFacts';
 
 /** Ordinary visible book controls only; no hidden native requests or scene hydration. */
@@ -71,4 +73,23 @@ export function nativeBookObjects(page:Page){
   return page.evaluate(()=>window.nativeBookEvidence!().state!.inspection!);
  };
  return {workshop,choose,fact,observation,exists,count,ids,inspect};
+}
+
+/** Exercise the same read-set validation using visible generated forms and the
+ * normal object inspector. This adapter never sends a hidden native command. */
+export async function readNativeBookObjects(page:Page){
+ const book=nativeBookObjects(page);
+ return readNativeObjects(async commands=>{
+  assert.equal(commands.length,1);const command=commands[0];
+  if(command.action==='inspect'){
+   assert.ok(command.target);await book.inspect(command.target);
+  }else{
+   assert.equal(command.action,'catalog');const request=command.catalog;
+   assert.ok(request?.operation==='inspect'&&request.category==='facts'&&request.version===1);
+   assert.ok(['world.objects','object.observation','object.physics.settings'].includes(request.capability));
+   const definition=behaviourFact(request.capability);assert.ok(definition);
+   await book.fact(request.capability,definition.label,Object.fromEntries(Object.entries(request.arguments??{}).map(([key,value])=>[key,String(value)])));
+  }
+  return page.evaluate(()=>window.nativeBookEvidence!().state!);
+ });
 }

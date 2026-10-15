@@ -16,10 +16,12 @@ param(
  [switch]$SyntheticGait,
  [switch]$SparseObjectView,
  [switch]$MotionOnly,
+ [switch]$SteeringOnly,
  [string]$ResumeLearnerRun,
  [ValidateSet('Headless','Book')][string]$Journey = 'Headless'
 )
 $ErrorActionPreference='Stop'
+if($SteeringOnly -and ($MotionOnly -or $Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'SteeringOnly is an offline Headless fixture; MotionOnly, provider, Book and resume modes are excluded.'}
 if($MotionOnly -and ($Journey -ne 'Headless' -or $ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt) -or $ResumeLearnerRun)){throw 'MotionOnly is an offline Headless fixture; provider, Book and resume modes are excluded.'}
 if($SparseObjectView -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SparseObjectView is an explicit offline Headless or Book observation fixture only.'}
 if(($SyntheticModel -or $SyntheticGait) -and ($ProviderScenario -or ![string]::IsNullOrWhiteSpace($Prompt))){throw 'SyntheticModel is an explicit offline Headless or Book fixture only.'}
@@ -73,7 +75,7 @@ foreach($running in Get-CimInstance Win32_Process -Filter "Name='Unity.exe'"){
 }
 $id=[Guid]::NewGuid().ToString('N');$directory=Join-Path $repoRoot ".quest-evidence/native-room/$id"
 New-Item -ItemType Directory -Path $directory | Out-Null
-@{version=1;id=$id;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
+@{version=1;id=$id;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'owner.json') -Encoding utf8
 if($ResumeLearnerRun){
  $previousRun=Join-Path $repoRoot ".quest-evidence/native-room/$ResumeLearnerRun"
  $previousOwner=Get-Content -LiteralPath (Join-Path $previousRun 'owner.json') -Raw | ConvertFrom-Json
@@ -116,7 +118,7 @@ try{
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json
  if($clientExit -ne 0 -or $process.ExitCode -ne 0 -or $terminal.exitCode -ne 0 -or $terminal.id -ne $id){throw "Native room probe failed. Evidence: $directory"}
  & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $log
- @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$ResumeLearnerRun} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
+ @{version=1;id=$id;clientExit=$clientExit;editorExit=$process.ExitCode;directory=$directory;providerUsed=![string]::IsNullOrWhiteSpace($Prompt);journey=$Journey;sparseObjectView=[bool]$SparseObjectView;motionOnly=[bool]$MotionOnly;steeringOnly=[bool]$SteeringOnly;providerScenario=$ProviderScenario;outcome=$(if($ProviderScenario -eq 'LearnerConversation'){'collected-requires-semantic-review'}else{'passed'});resumedFrom=$ResumeLearnerRun} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $directory 'verified.json')
  if($ProviderScenario -eq 'LearnerConversation'){Write-Output "Learner session collected (manual outcome review required): $directory"}else{Write-Output "Native room probe passed: $directory"}
 }finally{
  $env:MAESTRO_ROOM_PROBE_PROMPT=$previousPrompt;$env:MAESTRO_ROOM_PROBE_PROFILE=$previousProfile;$env:MAESTRO_ROOM_PROBE_SCENARIO=$previousScenario;$env:MAESTRO_ROOM_PROBE_SPEECH=$previousSpeech

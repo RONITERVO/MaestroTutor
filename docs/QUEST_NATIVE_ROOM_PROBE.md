@@ -1648,6 +1648,42 @@ for avatar-profile hydration and removes its unchanged programs and objects.
 Its actions are fixture-authored: this proves native execution/assertion behavior,
 not chat, verifier, provider authorship, controllers or headset acceptance.
 
-Task-steering receipt observation and the real-provider Book journey still depend
-on periodic inventory. Do not enable sparse paid-provider runs or bound production
-inventory until those consumers and their receipt/context handling are migrated.
+Task-steering receipt observation and the real-provider Book parity checks now use
+explicit reads, as described below. Sparse paid-provider execution remains refused.
+The resumed novice-lesson probe still enumerates its initial periodic object list;
+that path and remaining live/context consumers need verification before production
+inventory becomes bounded. Saved capacity is unchanged.
+
+
+### Task steering and visible Book read sets
+
+Stop is observed at the native acknowledgement, before any extra inspection. The
+probe recognizes the exact successful paint command or the matching completed
+`object.color.set` invocation; pending, failed, foreign and unrelated stale
+execution receipts cannot trigger Stop. The ordinary task runner records the
+untouched receipt before its abort fence. Explicit object/physics reads and manual
+edits wait until that task has released its command lease.
+
+`probeNativeSteering` runs this same proof through the actual tutor, verifier,
+handoff, public Stop, native handlers and durable task store, with only the
+provider transport replaced by declared fixture streams. It refuses network
+requests. Synthetic usage counts exercise parsing and are not paid-provider or
+billing evidence. It checks cancellation of the unfinished resize, preservation
+of manual placement on revision, the exact continuation/request chain, and
+restoring task statuses without replay or further provider usage. Cleanup removes
+only its fixture object and verifies the original object/physics read set.
+
+For a focused offline run, use `Run-QuestRoomProbe.ps1 -Journey Headless
+-SteeringOnly -SparseObjectView` with the usual Editor and BuildMirror parameters.
+`SteeringOnly` refuses provider, Book, MotionOnly and resume combinations. The
+normal offline Headless journey also includes this proof.
+
+`readNativeBookObjects` adapts the same read-set validator to visible generated
+fact forms and the ordinary object inspector. It reads paged membership, each
+object's observation and physics; built-in physics comes from native inspection.
+It neither dispatches hidden native reads nor fills the periodic `objects` array.
+The real-provider Book verifier uses these separate sets for context, create,
+paint, Undo, Redo and reload parity. Reload replay checks run before intentional
+inspection. The offline Original Book journey exercises this adapter against
+built-ins and editable objects. This does not certify paid-provider behavior,
+Android WebView rendering, headset input or physical room alignment.
