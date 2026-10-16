@@ -47535,7 +47535,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicsWorkResources.cs",
-      "sha256": "3e03e4a749b74725d0b5d0c8d28ee4f3d0c081822f299ecdb2d8c0685a7658a5"
+      "sha256": "fd4c76a1a10af78346a6eac7d06dee2a6bb7ceef1881d931e82e2ae85f904f83"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedDrawingSurfaces.cs",
@@ -48135,7 +48135,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SimulationWorkSchedule.cs",
-      "sha256": "ab3189c910e8d3af02af38cc08a3894181cfb2ddd9a411df95774be2e8b025b7"
+      "sha256": "55732cf5f244998a6da464b815d1e79c862fe0cd8d98aa7f762a7b72207dceed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",

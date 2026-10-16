@@ -60,7 +60,7 @@ namespace Maestro.Quest.Creation {
   static void Grant(Group group){foreach(var claim in group.Claims){claim.Granted=true;claim.Served=Step;}}
   internal static string Refusal(Claim claim,string waiting){
    BuildGroups();if(claim==null||!claims.Contains(claim))return waiting;
-   if(!claim.Group.Fits)return "The complete coupled physics/liquid group exceeds work capacity. Simplify its collision shapes or containers; saved objects are unchanged.";
+   if(!claim.Group.Fits)return "The complete physics/liquid group exceeds work capacity; simplify shapes or containers. Saved objects are unchanged.";
    if(!claim.Group.Current)return "A complete physics/liquid work dependency changed or is unavailable";
    return waiting;
   }

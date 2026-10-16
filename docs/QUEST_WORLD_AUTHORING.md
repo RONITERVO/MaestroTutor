@@ -2408,3 +2408,13 @@ six avatar joints and two input sources. Logical sample/candidate/proof allowanc
 are not measured CPU time, PhysX cost, frame time or Quest memory. Group-local
 metering and separately bounded discovery/geometry work remain necessary before
 larger worlds can be promised.
+
+
+### Physics wait and refusal facts
+
+`object.medium` remains readable when capacity is unavailable or a complete
+physics/liquid group exceeds it. Its human-readable reason fits the shared
+program text budget. `applied: false` does not prove that an object is dry; use
+the contact/medium facts according to their availability and sampling contracts.
+Waiting, refusal, resumed simulation and pause use the same fact for user and
+agent programs. This diagnostic repair changes no physics or saved data.

@@ -12076,11 +12076,36 @@ No headset, provider, Android build, signing, deployment or Meta action ran.
 Earlier audio-reset failure and unchanged successful retry remain recorded;
 desktop passes do not establish their cause or acoustic acceptance.
 
-A separate source-grounded parity check found that the physics waiting message
-can exceed the shared text limit for `object.medium`; native reproduction and
-repair remain pending. See the local `observation-text-audit.json` evidence.
+The physics observation issue found during this checkpoint is now reproduced
+and repaired; see [the diagnostic follow-up](#physics-wait-and-refusal-observations-2026-10-16).
 
 Group-local metering and bounded discovery, geometry/proof/engine work, navigation
 and external observation, and pre-serialization/transaction/history/storage bounds
 remain before larger saved capacity. Full offline Book/Headless journeys remain
 pinned to 9f38abca; Android compilation to 7fe48619. V1 remains incomplete.
+
+
+## Physics wait and refusal observations (2026-10-16)
+
+When physics waited for capacity or refused an oversized complete group,
+`object.medium` could throw `ProgramFault: Text exceeds its limit`. Its 132/138-character
+explanations exceeded the existing 128-character shared program text limit.
+The explanations now fit at 111/116 characters. Native and shared-web readers
+can inspect waiting, refused, resumed and paused physics without losing the fact.
+Simulation, scheduling, ownership, saved data, catalog definitions and limits are unchanged.
+
+Both failures were reproduced through the real native medium sampling and
+`MediumFacts.Body().TryRead` path before the fix. Both corrected reproductions
+passed, followed by **44 EditMode / 149 PlayMode focused tests** and **3,146 web tests
+/ 345 files**, app/probe TypeScript and catalog provenance. Captured native values
+are shared-web fixtures. Only the two production diagnostic literals changed;
+all catalog definitions are unchanged and source hashes were refreshed.
+
+The last full Unity suite remains pinned to **98c4808d**: **1,330 EditMode /
+1,799 PlayMode passed**, with three unchanged optional private-asset skips.
+That full suite was not rerun for this text-only production change. Evidence:
+`.quest-evidence/physics-observation-contract/`. No new offline journey, headset,
+provider, Android, acoustic, signing, deployment or Meta verification is claimed.
+
+The complete v1 goal remains unfinished. Group-local liquid execution and bounded
+discovery remain next, with the existing device/provider/release holds.

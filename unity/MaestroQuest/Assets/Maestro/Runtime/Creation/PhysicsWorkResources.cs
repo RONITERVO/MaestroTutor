@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation
     {
         internal const int MaximumReservations=128,MaximumUnits=524288;
         internal const int MissingMediumChecks=32;
-        internal const string Waiting="Physics is waiting for work capacity. Complete moving groups take turns automatically; saved objects and valid motion are preserved.";
+        internal const string Waiting="Physics is waiting for work capacity. Complete groups take turns; saved objects and valid motion are preserved.";
         sealed class Entry
         {
             internal readonly string Id=Guid.NewGuid().ToString("N");

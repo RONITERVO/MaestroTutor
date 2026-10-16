@@ -8,6 +8,7 @@ using System.Linq;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Diagnostics;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Programs;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -76,10 +77,32 @@ namespace Maestro.Quest.Tests
             try{
                 rigid.Refresh();Assert.That(rigid.Simulating,Is.False);editor.Liquids.TickMedium(.02f);
                 var denied=editor.Liquids.ObserveMediumBody(prop);Assert.That((bool)denied["applied"],Is.False);Assert.That((double)denied["displacementM3"],Is.Zero);StringAssert.Contains("work capacity",(string)denied["reason"]);
+                WriteMediumWorkEvidence("waiting",denied);Assert.That(MediumFacts.Body().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=prop},out _),Is.True,"Waiting physics must remain readable through the shared native fact");
                 ReleasePhysicsWork(held);held.Clear();rigid.Refresh();editor.Liquids.TickMedium(.02f);Assert.That((bool)editor.Liquids.ObserveMediumBody(prop)["applied"],Is.True);
+                WriteMediumWorkEvidence("resumed",editor.Liquids.ObserveMediumBody(prop));Assert.That(MediumFacts.Body().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=prop},out _),Is.True);
                 Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(400000));
                 physics.PausePhysics();Assert.That(WorkGrants(prop),Is.Empty);editor.Liquids.TickMedium(.02f);Assert.That((bool)editor.Liquids.ObserveMediumBody(prop)["applied"],Is.False);Assert.That(rigid.Simulating,Is.False);
+                WriteMediumWorkEvidence("paused",editor.Liquids.ObserveMediumBody(prop));Assert.That(MediumFacts.Body().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=prop},out _),Is.True);
             }finally{ReleasePhysicsWork(held);}yield return null;
+        }
+        static void WriteMediumWorkEvidence(string phase,JObject value){
+            string directory=Environment.GetEnvironmentVariable("MAESTRO_MEDIUM_WORK_EVIDENCE");if(string.IsNullOrEmpty(directory))return;
+            Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,phase+".json"),value.ToString());
+        }
+        [UnityTest]public IEnumerator PhysicsWorkAdmissionOversizeGroupRemainsReadableThroughMediumFact(){
+            var(pool,prop)=MediumFixture(.1f);var rigid=editor.Find(prop).GetComponent<RigidRoomItem>();PhysicsWorkResources.Release(rigid);var held=FillPhysicsWork();
+            try{
+                // Logical competing owners use real native bodies. Growing their
+                // shapes makes the complete requested group exceed the allowance.
+                foreach(var go in held)for(int i=0;i<4;i++){var shape=go.AddComponent<BoxCollider>();shape.isTrigger=true;go.GetComponent<RoomItem>().Grab.colliders.Add(shape);}
+                var members=held.Select(go=>go.GetComponent<RigidRoomItem>()).Append(rigid).ToArray();
+                Assert.That(members.Sum(body=>PhysicsWorkResources.Demand(body.PhysicsWorkColliders)),Is.GreaterThan(PhysicsWorkResources.MaximumUnits));
+                Assert.That(PhysicsWorkResources.TryAdmit(members,out var issue),Is.False);StringAssert.Contains("exceeds work capacity",issue);
+                FlowWorkResources.Advance(.05f);Assert.That(PhysicsWorkResources.Ready(rigid,out issue),Is.False);StringAssert.Contains("exceeds work capacity",issue);
+                editor.Liquids.TickMedium(.02f);var refused=editor.Liquids.ObserveMediumBody(prop);Assert.That((bool)refused["applied"],Is.False);StringAssert.Contains("exceeds work capacity",(string)refused["reason"]);
+                WriteMediumWorkEvidence("refused",refused);Assert.That(MediumFacts.Body().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=prop},out _),Is.True,"An oversize group must explain its refusal through the same fact as ordinary physics");
+                Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(400000));
+            }finally{ReleasePhysicsWork(held);physics.PausePhysics();}yield return null;
         }
         [UnityTest]public IEnumerator PhysicsWorkAdmissionReturningCapacityAndPassiveQueriesCannotRestartPausedPhysics()
         {
