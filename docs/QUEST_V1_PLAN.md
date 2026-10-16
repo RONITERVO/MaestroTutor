@@ -16,6 +16,9 @@ Consumed allowances now survive request removal and demand changes within one
 opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
 Independent quantity groups now have separate execution requests; the current
 implementation and verification status are recorded at the end of this document.
+Unsigned Android compilation now covers **eeeefd5d**, including these group changes;
+see [the current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
+The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -12457,3 +12460,23 @@ Host diagnostics keep their existing meaning. New group and paged member facts
 use the shared catalog for user, agent and program readers. All groups retain
 the existing shared publication/rollback/Undo episode. There is no claim of
 headset performance, acoustic or provider acceptance from these desktop checks.
+
+
+## Android compilation of complete-group scheduling — 2026-10-17
+
+Source **eeeefd5d** now passes a fresh Unity Android export and Java/IL2CPP compile,
+with no APK/AAB produced. All **22 selected ARM64 libraries** pass the 16 KiB ELF
+LOAD checks. The final merged manifest has one GameActivity and the Quest 3 device
+declaration. Web production build passes. Android browser results remain **128
+passed / two skipped**; Gradle reused their unchanged test outputs and lint
+analysis (**zero errors / six warnings**).
+
+The immediately preceding full native results were reused after exact checks of
+all **3,184 native inputs**; this run did not repeat those tests or the older
+offline Headless/Book journeys. All **5,101 frozen tracked inputs** and **14
+preserved local files** stayed unchanged through compilation. The local wrapper's
+limited reuse and warning review are recorded in [release build evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
+
+This supersedes the older Android source checkpoint, not device, provider,
+acoustic, package-filtering or Store acceptance. No signing, installation,
+deployment or Meta operation occurred. V1 remains incomplete.

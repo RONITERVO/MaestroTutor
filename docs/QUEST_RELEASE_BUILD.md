@@ -693,3 +693,62 @@ This check is compilation evidence only. It does not validate final APK signing,
 ZIP alignment, Store identity/entitlement, physical rendering, memory/performance,
 audibility or provider access. Actual release packaging and device acceptance
 remain separate gates. No source/test pass by itself establishes Store readiness.
+
+
+## Current Android compile checkpoint — 2026-10-17
+
+Source **eeeefd5d** (complete quantity-group scheduling) passed a fresh Android
+export using Unity **6000.3.24f1**, followed by the guarded Java/IL2CPP compilation
+and manifest, native-library and asset merges described above. The export reports
+zero errors and five build warnings. The production web build also passed.
+
+The immediately preceding full native suite already covered exactly these
+**3,184 native inputs**: **1,345 EditMode and 1,820 PlayMode passes**, with three
+optional private-asset skips. A local wrapper required development compile-only
+mode, verified those input hashes and the owned mirror, then reused those results
+instead of rerunning the suite. It retained normal mirror synchronization and the
+production export/Gradle/ELF checks. The production build helper was not changed.
+The older full offline Headless/Book journeys at **9f38abca** were not rerun.
+
+The Android browser Gradle invocation succeeded, reusing unchanged test and lint
+outputs as `UP-TO-DATE`: **128 passes, two skips, zero failures**, and **zero lint
+errors / six warnings**. These are validated cached results, not a fresh test
+execution. The new Unity export and its 41 Gradle compilation/merge tasks did
+execute. All **5,101 frozen tracked inputs** and the **14 preserved local files**
+remained byte-for-byte unchanged throughout this verification.
+
+Readback confirms:
+
+- `com.maestro.quest.development`, one `UnityPlayerGameActivity`, Quest 3 only.
+- All **22 selected ARM64 libraries**, including `libil2cpp.so` and `libunity.so`,
+  have the required architecture and 16 KiB-compatible ELF LOAD segments.
+- Five unselected ARMv7 dependency libraries remain in the merged intermediate,
+  recorded separately. No final APK ABI-filtering result is claimed.
+- No APK/AAB, signing, installation, provider, deployment or Meta action.
+
+Warnings were inspected without suppressing them. The Meta GameActivity warning
+does not match the final merged manifest, which contains the required single
+entry. Absent Agentic projection components produce harmless remove-marker
+warnings; those components are absent from the result, while the app's own
+screen-share service remains. The supported-device replace marker also has no
+competing declaration. The XR sample-cache warning concerns absent optional
+`Assets/Samples`.
+
+The project uses Unity's built-in renderer. Both GLB and VRM imports explicitly
+use `IllustratedGltfMaterials`, backed by `BuiltInGltfMaterialDescriptorGenerator`,
+rather than the unsupported URP MToon shader named in the import log. Other
+MRUK/Oculus fallback warnings remain recorded; this compile does not establish
+their visual behavior on a headset. C# name-hiding/unused-member warnings, a
+test-only obsolete physics setting, and Gradle/toolchain deprecations remain.
+
+Lint's stream warning concerns ownership transferred to the export sink, whose
+finish/abort paths close it; failed sessions discard the sink. JavaScript remains
+required by the first-party book app and subject to existing origin/bridge checks.
+Four remaining lint warnings concern redundant API-level checks in vendored code.
+
+Local evidence: `.quest-evidence/android-compile-current/` contains frozen hashes,
+the reuse guard and wrapper provenance, current logs, native-library/manifest
+receipts, browser XML reports, warning review and final audit. The project is
+`Android-compile-20261016-215517-9dec5d4f` under the owned verification mirror.
+Installed/package versions, physical/acoustic acceptance and Store gates are
+unchanged.
