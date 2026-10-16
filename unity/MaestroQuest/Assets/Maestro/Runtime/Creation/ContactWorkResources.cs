@@ -58,6 +58,12 @@ namespace Maestro.Quest.Creation
             if(!SimulationWorkSchedule.Ready(entry.Work))return false;
             error=null;return true;
         }
+        internal static bool Consume(LiquidPouring host,out string error){
+            if(!Ready(host,out error))return false;
+            var claim=entries.First(e=>ReferenceEquals(e.Host,host)).Work;
+            if(SimulationWorkSchedule.Consume(claim))return true;
+            error=Waiting;return false;
+        }
         internal static JObject ObserveSchedule(){
             Collect();int granted=entries.Count(e=>e.Work.Granted);
             return new JObject{["step"]=SimulationWorkSchedule.Step,["executions"]=granted,["executionLimit"]=MaximumExecutions,["queued"]=entries.Count-granted,["queueLimit"]=MaximumReservations,["units"]=entries.Where(e=>e.Work.Granted).Sum(e=>e.Units),["unitLimit"]=MaximumUnits};

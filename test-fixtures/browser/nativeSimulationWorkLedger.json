@@ -1,0 +1,266 @@
+{
+  "flow": {
+    "consumed": {
+      "step": 5361,
+      "committed": {
+        "discoveryUnits": 299,
+        "physicsUnits": 0,
+        "liquidUnits": 5326,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 1,
+        "contactPasses": 0
+      },
+      "consumed": {
+        "discoveryUnits": 299,
+        "physicsUnits": 0,
+        "liquidUnits": 5326,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 1,
+        "contactPasses": 0
+      },
+      "retired": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "limits": {
+        "discoveryUnits": 524288,
+        "physicsUnits": 524288,
+        "liquidUnits": 524288,
+        "contactUnits": 524288,
+        "physicsBodies": 128,
+        "liquidPasses": 32,
+        "contactPasses": 32
+      }
+    },
+    "retired": {
+      "step": 5361,
+      "committed": {
+        "discoveryUnits": 299,
+        "physicsUnits": 0,
+        "liquidUnits": 5326,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 1,
+        "contactPasses": 0
+      },
+      "consumed": {
+        "discoveryUnits": 299,
+        "physicsUnits": 0,
+        "liquidUnits": 5326,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 1,
+        "contactPasses": 0
+      },
+      "retired": {
+        "discoveryUnits": 299,
+        "physicsUnits": 0,
+        "liquidUnits": 5326,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 1,
+        "contactPasses": 0
+      },
+      "limits": {
+        "discoveryUnits": 524288,
+        "physicsUnits": 524288,
+        "liquidUnits": 524288,
+        "contactUnits": 524288,
+        "physicsBodies": 128,
+        "liquidPasses": 32,
+        "contactPasses": 32
+      }
+    },
+    "next": {
+      "step": 5362,
+      "committed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 518963,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "consumed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "retired": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "limits": {
+        "discoveryUnits": 524288,
+        "physicsUnits": 524288,
+        "liquidUnits": 524288,
+        "contactUnits": 524288,
+        "physicsBodies": 128,
+        "liquidPasses": 32,
+        "contactPasses": 32
+      }
+    }
+  },
+  "medium": {
+    "active": {
+      "committed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 4352,
+        "liquidUnits": 0,
+        "contactUnits": 43680,
+        "physicsBodies": 1,
+        "liquidPasses": 0,
+        "contactPasses": 1
+      },
+      "consumed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 4352,
+        "liquidUnits": 0,
+        "contactUnits": 43680,
+        "physicsBodies": 1,
+        "liquidPasses": 0,
+        "contactPasses": 1
+      },
+      "retired": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "limits": {
+        "discoveryUnits": 524288,
+        "physicsUnits": 524288,
+        "liquidUnits": 524288,
+        "contactUnits": 524288,
+        "physicsBodies": 128,
+        "liquidPasses": 32,
+        "contactPasses": 32
+      },
+      "step": 5355
+    },
+    "medium": {
+      "applied": true,
+      "submergedFraction": 1.0,
+      "displacementM3": 0.000274624967,
+      "buoyancyNewtons": {
+        "x": 0.0,
+        "y": 1.5,
+        "z": 0.0
+      },
+      "reason": ""
+    },
+    "contact": {
+      "known": true,
+      "immersed": true,
+      "bodyId": "420dff60036049ea955967df72236d52",
+      "kind": "hand",
+      "liquid": "Water",
+      "depthMetres": 0.200000048,
+      "sampleSpeedMetresPerSecond": 0.0,
+      "surface": {
+        "x": 4.0,
+        "y": 1.6,
+        "z": 0.0
+      },
+      "reason": ""
+    },
+    "retired": {
+      "committed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 4352,
+        "liquidUnits": 0,
+        "contactUnits": 43680,
+        "physicsBodies": 1,
+        "liquidPasses": 0,
+        "contactPasses": 1
+      },
+      "consumed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 4352,
+        "liquidUnits": 0,
+        "contactUnits": 43680,
+        "physicsBodies": 1,
+        "liquidPasses": 0,
+        "contactPasses": 1
+      },
+      "retired": {
+        "discoveryUnits": 0,
+        "physicsUnits": 4352,
+        "liquidUnits": 0,
+        "contactUnits": 43680,
+        "physicsBodies": 1,
+        "liquidPasses": 0,
+        "contactPasses": 1
+      },
+      "limits": {
+        "discoveryUnits": 524288,
+        "physicsUnits": 524288,
+        "liquidUnits": 524288,
+        "contactUnits": 524288,
+        "physicsBodies": 128,
+        "liquidPasses": 32,
+        "contactPasses": 32
+      },
+      "step": 5355
+    },
+    "next": {
+      "committed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "consumed": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "retired": {
+        "discoveryUnits": 0,
+        "physicsUnits": 0,
+        "liquidUnits": 0,
+        "contactUnits": 0,
+        "physicsBodies": 0,
+        "liquidPasses": 0,
+        "contactPasses": 0
+      },
+      "limits": {
+        "discoveryUnits": 524288,
+        "physicsUnits": 524288,
+        "liquidUnits": 524288,
+        "contactUnits": 524288,
+        "physicsBodies": 128,
+        "liquidPasses": 32,
+        "contactPasses": 32
+      },
+      "step": 5356
+    }
+  }
+}

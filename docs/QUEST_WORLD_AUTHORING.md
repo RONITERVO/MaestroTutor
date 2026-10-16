@@ -2523,3 +2523,39 @@ for complete-group execution grants, not that final scheduler. The canonical
 world, per-entity environment policies, saved formats and native limits are
 unchanged. Publication callbacks can start fresh work; an older preparation
 pass cannot defer a newer nested execution request.
+
+### Consumed simulation allowances
+
+Discovery, free-body physics, liquid transfers and contact sampling now mark
+their allowance as consumed before running the corresponding native pass.
+Removing a request, retiring its native owner, shrinking demand or separating
+dependencies cannot release the part already consumed in this opportunity.
+Unused reservations can still be released. Only the next shared clock
+opportunity clears consumed charges. This prevents regrouping from making
+already-used capacity available twice.
+
+Human and agent programs share the passive fact
+`runtime.simulationWorkLedger`, available with `runtimeDiagnostics.v1`.
+Its required `resource` argument selects `discoveryUnits`, `physicsUnits`,
+`liquidUnits`, `contactUnits`, `physicsBodies`, `liquidPasses` or `contactPasses`.
+Each read returns a bounded record:
+
+- `step` and `resource` identify the opportunity and selected allowance.
+- `committed` includes current grants and any larger consumed charges.
+- `consumed` is the largest allowance used per request in this opportunity.
+- `retired` is the consumed subset whose requests have been removed.
+- `limit` is the existing limit for that resource.
+
+Compare `step` when combining separate reads. Different resource reads are
+separate observations even if their steps match; an assembled display is not
+an atomic snapshot or permission to execute. Existing host/body budget facts
+still describe current requests; they can report no owners while this ledger
+retains consumed capacity. These reads do not collect owners, admit work,
+capture geometry, publish quantities or advance the clock.
+
+This ledger counts logical allowances, not individual operations, native
+residency, CPU time or PhysX solver cost. Reusing the same allowance does not
+grant another automatic quantity/contact tick; those clocks keep their own
+cadence. It does not yet give each complete liquid group an independent
+execution grant or preserve canonical member service age across regrouping.
+Those remain required before expanding saved/native limits.

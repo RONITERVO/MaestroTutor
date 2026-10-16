@@ -69,6 +69,12 @@ namespace Maestro.Quest.Creation
             if(!SimulationWorkSchedule.Ready(entry.Work)){error=SimulationWorkSchedule.Refusal(entry.Work,Waiting);return false;}
             error=null;return true;
         }
+        internal static bool Consume(RigidRoomItem host,out string error){
+            if(!Ready(host,out error))return false;
+            var claim=entries.First(e=>ReferenceEquals(e.Host,host)).Work;
+            if(SimulationWorkSchedule.Consume(claim))return true;
+            error=Waiting;return false;
+        }
         internal static JObject ObserveBudget()
         {
             Collect();return new JObject{["reservations"]=entries.Count,["units"]=entries.Where(e=>e.Work.Granted).Sum(e=>e.Units),["reservationLimit"]=MaximumReservations,["unitLimit"]=MaximumUnits,["samplesPerBody"]=MediumDisplacement.Samples,["collidersPerBody"]=MediumDisplacement.MaximumColliders,["nativeMediaPerSample"]=LiquidResources.MaximumInstances,["missingMediaPerSample"]=MissingMediumChecks};

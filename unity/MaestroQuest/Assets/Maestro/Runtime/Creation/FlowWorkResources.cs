@@ -115,6 +115,16 @@ namespace Maestro.Quest.Creation
             if(!SimulationWorkSchedule.Ready(entry.Work)){error=SimulationWorkSchedule.Refusal(entry.Work,Waiting);return false;}
             error=null;return true;
         }
+        internal static bool ConsumeDiscovery(LiquidPouring host,out string error){
+            if(!DiscoveryReady(host,out error))return false;
+            if(SimulationWorkSchedule.Consume(FindDiscoveryClaim(host)))return true;
+            error=Waiting;return false;
+        }
+        internal static bool Consume(LiquidPouring host,out string error){
+            if(!Ready(host,out error))return false;
+            if(SimulationWorkSchedule.Consume(FindClaim(host)))return true;
+            error=Waiting;return false;
+        }
         internal static JObject ObserveDiscovery(){
             Collect();return new JObject{["step"]=Step,["reservations"]=SimulationWorkSchedule.DiscoveryRequests,["executions"]=SimulationWorkSchedule.DiscoveryExecutions,["units"]=SimulationWorkSchedule.DiscoveryUnits,["unitLimit"]=FlowDiscoveryWork.MaximumUnits,["objectLimit"]=FlowDiscoveryWork.MaximumObjects};
         }

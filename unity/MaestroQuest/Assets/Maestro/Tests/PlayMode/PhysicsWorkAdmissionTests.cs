@@ -23,7 +23,7 @@ namespace Maestro.Quest.Tests
         {
             var hosts=new List<GameObject>();int demand=PhysicsWorkResources.Demand(1);
             try{
-                while(PhysicsWorkResources.MaximumUnits-(int)PhysicsWorkResources.ObserveBudget()["units"]>=(spare+1)*demand){
+                while(PhysicsWorkResources.MaximumUnits-(int)SimulationWorkSchedule.ObserveLedger()["committed"]["physicsUnits"]>=(spare+1)*demand){
                     var go=new GameObject("Standalone work owner");hosts.Add(go);go.transform.position=new Vector3(40+hosts.Count,2,40);
                     var collider=go.AddComponent<BoxCollider>();collider.size=Vector3.one*.01f;
                     var item=go.AddComponent<RoomItem>();item.Configure(new Collider[]{collider});

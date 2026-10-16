@@ -12,6 +12,8 @@ Physics and liquid work now receive coordinated complete-group opportunities;
 see [the current execution checkpoint](#coordinated-physics-and-liquid-execution-2026-10-16).
 Contact sampling now takes independent fair turns on that same clock; see
 [the contact checkpoint](#fair-contact-execution-and-observation-continuity-2026-10-16).
+Consumed allowances now survive request removal and demand changes within one
+opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -12371,3 +12373,54 @@ member service age and spent-capacity accounting through split/merge remain
 required. This is the preparation stage of that refactor, not its completion.
 The independent device/provider/audio-quality/Store release gates remain open.
 Evidence: .quest-evidence/flow-staged-discovery/.
+
+## Consumed simulation work ledger — 2026-10-16
+
+Before splitting execution grants by complete group, a native regression
+demonstrated that removing a host after an actual liquid transfer immediately
+made its consumed allowance available again. The receiver had already gained
+liquid; a second request then obtained capacity that should remain charged.
+The old production sources fail that test at the no-refund assertion.
+
+The scheduler now records each request's largest consumed allowance in the
+current opportunity and retains it after removal. Requested growth must fit
+alongside existing grants and retained consumption. Shrinking, splitting,
+double removal or retiring native owners cannot refund consumed work.
+An unused reservation can still release its capacity. The next clock
+opportunity clears consumed charges. Discovery, free-body physics, medium
+forces, quantity execution and contact sampling use this common accounting.
+
+The first focused run passed 11 EditMode and one native PlayMode test. The
+first broader run passed 19 EditMode and 51 PlayMode tests with 11 failures.
+Ten came from pressure helpers counting active requests while disregarding
+consumed charges retained after earlier native work. Their fill conditions now
+use committed ledger capacity, preserving the same admission/refusal checks.
+The remaining failure caught a real contract error: the combined diagnostic
+exceeded the program reader's 1,024-character budget. The fact now selects one
+resource per read, leaving that shared limit intact.
+
+The fact is runtime.simulationWorkLedger, with one required resource argument
+and step/resource/committed/consumed/retired/limit fields. Native tests read it
+through the actual program catalog; web tests use captured native receipts.
+It is passive and does not collect, admit or perform work. Existing active
+request facts retain their meaning; a removed request's consumed allowance
+can outlive it until the next opportunity.
+
+The full native suite passed 1,345 EditMode tests and 1,813 PlayMode tests, with 3
+optional private-asset skips and no failures. The full offline web suite passed 3,160
+tests in 350 files; app/probe TypeScript and catalog provenance passed. The full-run
+native ledger receipts replaced the focused captures and passed the shared reader
+checks again. All 3,176 frozen native inputs match the verification mirror. This is
+desktop validation; no device, paid-provider, Android, signing, deployment or Meta
+operation ran.
+
+The ledger is an allowance record, not an operation counter or performance
+claim. Repeated internal use of one reservation remains idempotent; the
+automatic clocks separately govern quantity/contact cadence. Independent
+complete-group grants, phase-fresh closure and persistent canonical member
+service records remain open. This increment does not solve those by relabeling
+host reservations or reducing their costs. Saved/native limits and per-actor
+real-room participation are unchanged. Device, provider, audio-quality and
+Store release gates remain open.
+
+Evidence: .quest-evidence/flow-spent-work/.

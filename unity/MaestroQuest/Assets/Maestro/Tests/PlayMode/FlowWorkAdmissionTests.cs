@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests {
  public sealed partial class RoomRulesTests {
   List<GameObject> FillFlowWork(){
    var hosts=new List<GameObject>();int demand=FlowWorkResources.Demand(editor.Liquids.FlowWorkVessels),discovery=FlowDiscoveryWork.Demand(editor.Liquids.FlowWorkVessels,editor.SpatialObjectCount);
-   try{while((int)FlowWorkResources.ObserveSchedule()["executions"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)FlowWorkResources.ObserveBudget()["units"]>=demand&&FlowDiscoveryWork.MaximumUnits-SimulationWorkSchedule.DiscoveryUnits>=discovery){
+   try{while((int)SimulationWorkSchedule.ObserveLedger()["committed"]["liquidPasses"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)SimulationWorkSchedule.ObserveLedger()["committed"]["liquidUnits"]>=demand&&FlowDiscoveryWork.MaximumUnits-(long)SimulationWorkSchedule.ObserveLedger()["committed"]["discoveryUnits"]>=discovery){
     var go=new GameObject("Independent flow sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.enabled=false;sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
     Assert.That(FlowWorkResources.TryAdmit(sampler,out var error),Is.True,error);
    }return hosts;}catch{ReleaseFlowWork(hosts);throw;}

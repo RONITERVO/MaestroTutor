@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests {
         // No fake costs, bypass flags or saved/native quota changes are used.
         List<GameObject> FillContactWork(){
             var hosts=new List<GameObject>();int demand=editor.Liquids.ContactWorkDemand;
-            try{while((int)ContactWorkResources.ObserveBudget()["reservations"]<ContactWorkResources.MaximumExecutions&&ContactWorkResources.MaximumUnits-(int)ContactWorkResources.ObserveBudget()["units"]>=demand){
+            try{while((int)SimulationWorkSchedule.ObserveLedger()["committed"]["contactPasses"]<ContactWorkResources.MaximumExecutions&&ContactWorkResources.MaximumUnits-(int)SimulationWorkSchedule.ObserveLedger()["committed"]["contactUnits"]>=demand){
                 var go=new GameObject("Independent contact sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
                 Assert.That(ContactWorkResources.TryAdmit(sampler,out var error),Is.True,error);
             }return hosts;}catch{ReleaseContactWork(hosts);throw;}

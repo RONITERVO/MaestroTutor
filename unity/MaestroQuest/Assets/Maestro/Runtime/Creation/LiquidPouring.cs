@@ -49,6 +49,7 @@ namespace Maestro.Quest.Creation {
             var physics=editor.PhysicsWorld;
             if(!FlowWorkEligible){ReleaseFlowInputs();FlowWorkResources.Release(this);InvalidateRain("Liquid flow is paused or unavailable");Finish(out _);return;}
             if(!FlowWorkResources.TryDiscover(this,out var workIssue)){WaitForFlowWork(workIssue,discovery:true);return;}
+            if(!FlowWorkResources.ConsumeDiscovery(this,out workIssue)){WaitForFlowWork(workIssue,discovery:true);return;}
             Vector3 gravity=Physics.gravity;var up=-gravity.normalized;
             Physics.SyncTransforms();bool flowing=false;
             foreach(var vessel in vessels.Values){vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;vessel.Ready=FlowVesselReady(vessel);if(vessel.Ready)vessel.Opening=new ContainerFlowGeometry.Opening(vessel.Live,vessel.Item.transform);}
@@ -61,6 +62,7 @@ namespace Maestro.Quest.Creation {
             }
             if(!FlowWorkResources.TryExecute(this,out workIssue)){WaitForFlowWork(workIssue);return;}
             var groups=CaptureFlowExecution();if(groups.Length==0)return;
+            if(!FlowWorkResources.Consume(this,out workIssue)){WaitForFlowWork(workIssue);return;}
             HideStreams();
             // Keep pour, scoop and rain phase order across groups. The live
             // journal still publishes one coherent episode for the whole host.

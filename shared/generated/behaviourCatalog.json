@@ -44040,7 +44040,7 @@
         }
       },
       "label": "Physics work budget",
-      "description": "Process-wide bounded requests for potential fixed-step free-body liquid-force work, including standalone bodies. Reservations include queued bodies; units count booked allowances. Complete connected groups and their whole-host liquid pass share one fair opportunity before gravity or fluid forces. Liquid passes conservatively couple all registered moving vessel groups because current transfer loops scan every vessel. A scheduled delay preserves native inputs, valid velocity/spin and live quantities. Real motion/source/ownership changes invalidate held motion. New requests cannot evict unrelated allowances within the opportunity. Oversize complete groups or a full queue are explicitly refused. Logical units cover bounded displacement samples, candidate media and participant environment proofs, not measured CPU time, GPU memory, frame rate or PhysX solver cost. Proof internals, pouring, scooping, rain, contact events, navigation and external observation queries are excluded. Independent of saved quotas and native allocation budgets. Reads only retire ineligible grants; they never admit work, load geometry or start physics.",
+      "description": "Process-wide bounded requests for potential fixed-step free-body liquid-force work, including standalone bodies. Reservations include queued bodies; units count booked allowances. Complete connected groups and their whole-host liquid pass share one fair opportunity before gravity or fluid forces. Liquid passes conservatively couple all registered moving vessel groups because current transfer loops scan every vessel. A scheduled delay preserves native inputs, valid velocity/spin and live quantities. Real motion/source/ownership changes invalidate held motion. New requests cannot evict unrelated allowances within the opportunity. Oversize complete groups or a full queue are explicitly refused. Consumed charges survive request removal until the next opportunity; inspect runtime.simulationWorkLedger for committed capacity. Logical units cover bounded displacement samples, candidate media and participant environment proofs, not measured CPU time, GPU memory, frame rate or PhysX solver cost. Proof internals, pouring, scooping, rain, contact events, navigation and external observation queries are excluded. Independent of saved quotas and native allocation budgets. Reads only retire ineligible grants; they never admit work, load geometry or start physics.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44118,7 +44118,7 @@
         }
       },
       "label": "Water contact work budget",
-      "description": "Process-wide bounded requests for complete room water-contact passes, including held/animated objects, six avatar joints and two tracked inputs. Reservations include queued passes; units count booked allowances. Fair admission occurs before displacement capture and contact queries on the shared simulation clock, independently of physics/flow execution. Scheduled waits make contacts unknown and discard crossing continuity; existing ripples finish naturally. Resuming cannot manufacture enter/exit/crossing events or old ripples. Oversize passes and a full request queue are explicit refusals. Logical units cover candidate/proof allowances, not measured CPU time or frame rate. Proof internals, force sampling, pouring, scooping, rain, external observations and engine costs are excluded. Independent of saved quotas and native allocation budgets. Reads may retire ineligible grants, but never admit sampling, start physics or publish events.",
+      "description": "Process-wide bounded requests for complete room water-contact passes, including held/animated objects, six avatar joints and two tracked inputs. Reservations include queued passes; units count booked allowances. Fair admission occurs before displacement capture and contact queries on the shared simulation clock, independently of physics/flow execution. Scheduled waits make contacts unknown and discard crossing continuity; existing ripples finish naturally. Resuming cannot manufacture enter/exit/crossing events or old ripples. Oversize passes and a full request queue are explicit refusals. Consumed charges survive request removal until the next opportunity; inspect runtime.simulationWorkLedger for committed capacity. Logical units cover candidate/proof allowances, not measured CPU time or frame rate. Proof internals, force sampling, pouring, scooping, rain, external observations and engine costs are excluded. Independent of saved quotas and native allocation budgets. Reads may retire ineligible grants, but never admit sampling, start physics or publish events.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44195,7 +44195,7 @@
         }
       },
       "label": "Liquid transfer work budget",
-      "description": "Process-wide bounded requests for complete room pouring/scooping/rain passes. Reservations count registered requests, including queued rooms; units count granted opportunities. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Complete dependent physics/liquid groups take fair turns on the shared early fixed-step clock, retained through a rendered frame. All registered moving vessel groups of a host share its complete pass and are admitted with both allowances together. A scheduled delay preserves input residency, accepted motion and the live episode, hides streams, invalidates rain exposure and never accrues skipped time. An unregistered refusal closes prior accepted flow. Quantity candidates are group-local, while preparation and publication still use whole-host work. Discovery is independently admitted before execution; required native inputs can prepare while execution waits. Moving physics and liquid execution still receive their complete allowances together and require current discovery readiness; inspect runtime.flowDiscoveryBudget. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible requests but never advance selection, admit work, load geometry, start physics or publish a flow episode.",
+      "description": "Process-wide bounded requests for complete room pouring/scooping/rain passes. Reservations count registered requests, including queued rooms; units count granted opportunities. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Complete dependent physics/liquid groups take fair turns on the shared early fixed-step clock, retained through a rendered frame. All registered moving vessel groups of a host share its complete pass and are admitted with both allowances together. A scheduled delay preserves input residency, accepted motion and the live episode, hides streams, invalidates rain exposure and never accrues skipped time. An unregistered refusal closes prior accepted flow. Quantity candidates are group-local, while preparation and publication still use whole-host work. Discovery is independently admitted before execution; required native inputs can prepare while execution waits. Moving physics and liquid execution still receive their complete allowances together and require current discovery readiness; inspect runtime.flowDiscoveryBudget. Consumed charges survive request removal until the next opportunity; inspect runtime.simulationWorkLedger for committed capacity. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible requests but never advance selection, admit work, load geometry, start physics or publish a flow episode.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44273,6 +44273,50 @@
       "label": "Liquid dependency discovery budget",
       "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery is independently admitted before its collision/cavity capture, candidate queries and native input preparation. Native inputs may load while liquid execution waits. Discovery grants are selected first on the shared clock; dependent physics and liquid execution remain queued until the discovery prerequisite is ready, then receive both execution allowances together. A preparation wait preserves service age and does not refund already booked execution within its opportunity. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot is reused only inside the synchronous discovery pass; later passes read current placements. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Existing saved limits and conservative whole-host execution remain.",
       "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.simulationWorkLedger",
+      "version": 1,
+      "type": {
+        "record": {
+          "step": "number",
+          "resource": "text",
+          "committed": "number",
+          "consumed": "number",
+          "retired": "number",
+          "limit": "number"
+        }
+      },
+      "label": "Simulation opportunity ledger",
+      "description": "Read one process-wide resource allowance for the current simulation opportunity. Compare step when combining separate resource reads. Committed capacity includes current grants and consumed charges retained after shrinking or removing a request. Consumed is the largest allowance already used by each request in this opportunity; retired is its subset whose requests were removed. Retired charges cannot be used again until the clock advances. Unused reservations can be released. Repeated use of one allowance does not add a new reservation and does not authorize another automatic quantity/contact tick. These are logical reservation costs, not measured operations, native residency, memory, frame time or a PhysX budget. Existing host/body schedule facts describe current requests and may be empty while this ledger still retains consumed capacity. Reads do not collect, admit, consume, load, publish or advance the clock.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "resource": {
+            "type": "string",
+            "enum": [
+              "discoveryUnits",
+              "physicsUnits",
+              "liquidUnits",
+              "contactUnits",
+              "physicsBodies",
+              "liquidPasses",
+              "contactPasses"
+            ]
+          }
+        },
+        "required": [
+          "resource"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "resource": "liquidUnits"
+      },
+      "features": [
+        "factQueries.v1",
         "runtimeDiagnostics.v1"
       ]
     },
@@ -46870,7 +46914,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactWorkFacts.cs",
-      "sha256": "26184fc59dd8f310be4a92e0e60385cac71b1c18f384b6065de06837e9eba50c"
+      "sha256": "3d346d56089ae079b67587a9f3e08efb0ca259167f8a19bdb587cbd6810cf1cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
@@ -46946,7 +46990,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowWorkFacts.cs",
-      "sha256": "b6b73572c53cf9f4be2324041b3934467ae50dcb86f64e30840e5da6ca6abe60"
+      "sha256": "4ed5ade79536428f14243eed47dbb2eea9dd5337e308b5acb6181235cf8508a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
@@ -47114,7 +47158,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsWorkFacts.cs",
-      "sha256": "dda05682c52eeba40697138902f3792c4cb4d6f4757020fd96c431d809e738a3"
+      "sha256": "f406d28552e74887e540aeb9dfbb08ffd64bd75220ea8d8fb5b4dbabf20d1fad"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProceduralResourceFacts.cs",
@@ -47199,6 +47243,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",
       "sha256": "7a9aac6abd1216ce978125b4e36d4c5ffb81f9e7a25701268a403aa357122f82"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SimulationWorkFacts.cs",
+      "sha256": "5c8cb959c8e7200f8f5bd168606506eee7e66aa84ce4bfdaf80a8e788640275a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapConstructionCapability.cs",
@@ -47378,7 +47426,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContactWorkResources.cs",
-      "sha256": "5aba1ed461c12866ac3ccf009f1257a7e365558312433e4fe77aff3247d000d6"
+      "sha256": "a85f8f8c6e55726121ca6709a3b601b9acd38939d65b80d3e954067f9925c73d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
@@ -47458,7 +47506,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
-      "sha256": "62e5126c46e1d72d42de18258f02287f48e60f19b8f5d7fb447ecc7d195fbcab"
+      "sha256": "1ce6941269bfd95451b4cd97dc42f34982da936ca803c3768e156a4c317e3993"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -47490,7 +47538,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
-      "sha256": "421ac86beeb49801c5a5726a385c6857b6bc0e38f2f333bc24169dc64ede602d"
+      "sha256": "a20e8a924b72e4e38d262085f003956c8b9b46e106f0215da5ab649acdf45da7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowGroups.cs",
@@ -47514,11 +47562,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "77c46426f6646dd03f671a26feb8eecd1de9e00c3da35c57053f4f0a4c4a2e3c"
+      "sha256": "61ac21fdf4346e6f735139bbcdca77643e6ac435253eebcf140c6f06cc0073c7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "19ab31c97bc0893361bc3fce2569b7c876e4b9e5f00b30074b5a5e2305104d32"
+      "sha256": "3b574ae7a1d196adf8974af9148fa66f76c07e243a239462ba817e3719dd57c6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -47558,7 +47606,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicsWorkResources.cs",
-      "sha256": "fd4c76a1a10af78346a6eac7d06dee2a6bb7ceef1881d931e82e2ae85f904f83"
+      "sha256": "d680faff89e01320fd7028a0e024c04dfb9131573b6c3330d352e9b706531485"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedDrawingSurfaces.cs",
@@ -48157,8 +48205,12 @@
       "sha256": "47d4026f9afcd69fd417c8fed48da4987b17a202853ee1c8e25acea62bb975a1"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SimulationWorkLedger.cs",
+      "sha256": "d2c28239fe436f34ece239a460597171877547bda1bd961d4a5fd57342357355"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SimulationWorkSchedule.cs",
-      "sha256": "de347e413d385546325b9299749f8e140c3b5498ce325e6012aa9e64c9290534"
+      "sha256": "fda469208bcc170fa09fd5615edf1cfe5136c8269b93cd3beafb9c1daa693510"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
@@ -48522,7 +48574,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "bf6847c57df484d32f7ef02764069b42f80fe5d62f724f7940223eae852a16ba"
+      "sha256": "840829ca6f53294e26c6357e9f98c777fe8079211c9c1c90a5304769067c9d2d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -48886,7 +48938,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "ab95576b6e40d977ea35b8dd4109827aeb8c32d5f0447b559d872b32a97d119d"
+      "sha256": "562887124e6ac3038f33b3fcc4783af6719d6f5fbc44ca8d2434804fb8c576f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

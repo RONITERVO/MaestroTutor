@@ -48,6 +48,7 @@ namespace Maestro.Quest.Creation {
             if(!ContactWorkEligible||!float.IsFinite(seconds)||seconds<=0||!float.IsFinite(Physics.gravity.sqrMagnitude)||Physics.gravity.sqrMagnitude<.01f){ResetContacts();ContactWorkResources.Release(this);return;}
             if(!ContactWorkResources.Ready(this,out var changedWork))WaitForContactWork(changedWork,ContactWorkResources.Queued(this));
             if(!ContactWorkResources.TryAdmit(this,out var workIssue)){WaitForContactWork(workIssue,ContactWorkResources.Queued(this));return;}
+            if(!ContactWorkResources.Consume(this,out workIssue)){WaitForContactWork(workIssue,ContactWorkResources.Queued(this));return;}
             long workStep=SimulationWorkSchedule.Step;var epoch=++contactEpoch;int roomRevision=editor.Revision;var roomMatrix=editor.transform.localToWorldMatrix;
             Physics.SyncTransforms();CaptureMedia(false);contactEvents.Clear();
             using(var environment=mediumEnvironment.Begin(world)){

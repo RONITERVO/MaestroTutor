@@ -8,10 +8,11 @@ namespace Maestro.Quest.Creation {
  // One bounded opportunity for simulation work, with independent contact passes. Dependency closure
  // is admitted atomically: a liquid pass and all of its registered moving groups
  // cannot hold opposite halves of the allowance. Residency has a separate owner.
- internal static class SimulationWorkSchedule {
+ internal static partial class SimulationWorkSchedule {
   internal sealed class Claim {
    internal int ForceUnits,FlowUnits,ContactUnits,DiscoveryUnits,Bodies,Rooms,Samplers;
    internal bool Granted;
+   internal WorkCharge Consumed;
    internal long Served,Order;
    internal Func<bool> Current;
    internal Func<bool> Prepared=()=>true;
@@ -29,7 +30,7 @@ namespace Maestro.Quest.Creation {
    internal int Bodies=>Claims.Sum(c=>c.Bodies);
    internal int Rooms=>Claims.Sum(c=>c.Rooms);
    internal bool MixedStages=>Discovery>0&&(Force>0||Flow>0||Contact>0||Bodies>0||Rooms>0||Contacts>0);
-   internal bool Fits=>!MixedStages&&Discovery<=FlowDiscoveryWork.MaximumUnits&&Force<=PhysicsWorkResources.MaximumUnits&&Flow<=FlowWorkResources.MaximumUnits&&Bodies<=PhysicsWorkResources.MaximumReservations&&Rooms<=FlowWorkResources.MaximumExecutions&&Contact<=ContactWorkResources.MaximumUnits&&Contacts<=ContactWorkResources.MaximumExecutions;
+   internal bool Fits=>Claims.All(c=>WorkCharge.Request(c).NonNegative)&&!MixedStages&&Discovery<=FlowDiscoveryWork.MaximumUnits&&Force<=PhysicsWorkResources.MaximumUnits&&Flow<=FlowWorkResources.MaximumUnits&&Bodies<=PhysicsWorkResources.MaximumReservations&&Rooms<=FlowWorkResources.MaximumExecutions&&Contact<=ContactWorkResources.MaximumUnits&&Contacts<=ContactWorkResources.MaximumExecutions;
    internal bool Current=>Complete&&Claims.All(c=>c.Current());
    internal bool Prepared=>Claims.All(c=>c.Prepared());
    // Input discovery can become ready without an execution allowance. Select
@@ -47,7 +48,7 @@ namespace Maestro.Quest.Creation {
   internal static Claim Register(Func<bool> current,int bodies,int rooms,int samplers=0){
    var claim=new Claim{Current=current,Bodies=bodies,Rooms=rooms,Samplers=samplers,Served=Step,Order=++order};claims.Add(claim);Changed();FlowWorkClock.Ensure();return claim;
   }
-  internal static void Remove(Claim claim){claims.Remove(claim);Changed();}
+  internal static void Remove(Claim claim){if(claim!=null&&claims.Remove(claim)){retiredConsumption+=claim.Consumed;Changed();}}
   internal static void Changed()=>dirty=true;
   internal static void Collect(){FlowWorkResources.CollectLocal();PhysicsWorkResources.CollectLocal();ContactWorkResources.CollectLocal();}
   static void BuildGroups(){
@@ -63,8 +64,7 @@ namespace Maestro.Quest.Creation {
   internal static bool Ready(Claim claim)=>Queued(claim)&&claim.Group.Prepared&&claim.Group.Claims.All(c=>c.Granted);
   internal static bool TryAdmit(Claim claim){
    BuildGroups();if(!Queued(claim)||!claim.Group.Prepared)return false;var group=claim.Group;
-   var outside=claims.Where(c=>c.Granted&&!ReferenceEquals(c.Group,group)).ToArray();
-   if(outside.Sum(c=>(long)c.DiscoveryUnits)+group.Discovery>FlowDiscoveryWork.MaximumUnits||outside.Sum(c=>(long)c.ForceUnits)+group.Force>PhysicsWorkResources.MaximumUnits||outside.Sum(c=>(long)c.FlowUnits)+group.Flow>FlowWorkResources.MaximumUnits||outside.Sum(c=>c.Bodies)+group.Bodies>PhysicsWorkResources.MaximumReservations||outside.Sum(c=>c.Rooms)+group.Rooms>FlowWorkResources.MaximumExecutions||outside.Sum(c=>(long)c.ContactUnits)+group.Contact>ContactWorkResources.MaximumUnits||outside.Sum(c=>c.Samplers)+group.Contacts>ContactWorkResources.MaximumExecutions)return false;
+   if(!Committed(group).Fits)return false;
    Grant(group);return true;
   }
   static void Grant(Group group){foreach(var claim in group.Claims){claim.Granted=true;claim.Served=Step;}}
@@ -81,7 +81,8 @@ namespace Maestro.Quest.Creation {
    if(!float.IsFinite(seconds)||seconds<=0)return;
    Collect();Step++;StepSeconds=Mathf.Clamp(seconds,.001f,.1f);
    FlowWorkResources.RefreshRequests();PhysicsWorkResources.RefreshRequests();ContactWorkResources.RefreshRequests();
-   foreach(var claim in claims)claim.Granted=false;
+   retiredConsumption=default;
+   foreach(var claim in claims){claim.Granted=false;claim.Consumed=default;}
    BuildGroups();long force=0,flow=0,contact=0,discovery=0;int bodies=0,rooms=0,samplers=0;
    foreach(var group in groups.OrderBy(g=>g.DiscoveryStage?0:1).ThenBy(g=>g.Claims.Min(c=>c.Served)).ThenBy(g=>g.Claims.Min(c=>c.Order))){
     if(!group.Fits||!group.Current||!group.Prepared||discovery+group.Discovery>FlowDiscoveryWork.MaximumUnits||force+group.Force>PhysicsWorkResources.MaximumUnits||flow+group.Flow>FlowWorkResources.MaximumUnits||bodies+group.Bodies>PhysicsWorkResources.MaximumReservations||rooms+group.Rooms>FlowWorkResources.MaximumExecutions||contact+group.Contact>ContactWorkResources.MaximumUnits||samplers+group.Contacts>ContactWorkResources.MaximumExecutions)continue;

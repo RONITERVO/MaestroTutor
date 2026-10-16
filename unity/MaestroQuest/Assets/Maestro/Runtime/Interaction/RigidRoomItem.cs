@@ -222,6 +222,9 @@ namespace Maestro.Quest.Interaction
                 else { InterruptAtCollisionGuard();RestoreAcceptedPhysicsPose();Refresh(); }
                 return;
             }
+            if(!body.isKinematic&&!Creation.PhysicsWorkResources.Consume(this,out _)){
+                HoldPreparedMotion();SetInputsReady(false);Refresh();return;
+            }
             RememberAcceptedPhysicsPose();
         }
         void LateUpdate()
