@@ -2031,3 +2031,52 @@ These are logical ownership limits, not measured GPU memory, solver cost or fram
 time. Per-tick simulation/query work, managed geometry buffers and engine internals
 need separate bounds before saved capacity grows. Verification is recorded in the
 [v1 plan](QUEST_V1_PLAN.md#transactional-native-liquids-2026-10-16).
+
+
+## Free-body physics work admission (2026-10-16)
+
+A free physics body reserves potential liquid-force work before gravity or
+buoyancy can advance it. This is a separate process-wide allowance from saved
+object quotas and native body, collider and liquid allocations. The limits are
+128 grants and 524,288 logical units; a work-unit limit can be reached before
+the grant limit. Each body reserves its bounded displacement sampling, native
+and missing-medium candidate checks, and participant environment proofs, even
+when its current position is dry. A proof or candidate can contain additional
+bounded geometry work. These units are not CPU instructions, measured frame
+time, memory or a PhysX solver budget.
+
+The eligible free members of one physical connection group reserve together.
+Existing grants receive credit during a group merge or demand change. Refusal
+cannot partially admit new members, resize some members, or evict unrelated
+accepted work. A changed collision count or world/target owner invalidates a
+member's old grant until complete group admission succeeds. A fixed anchor does
+not connect the work of otherwise independent moving children. Existing spatial,
+connection, ownership and per-entity real-room collision policies still apply.
+
+Missing work capacity holds the affected free bodies before PhysX or water
+forces and exposes a retryable reason through the existing physics-input facts.
+It cancels pending spatial-input momentum as well: capacity returning must not
+replay an old throw. Preparation retries while physics remains requested;
+returning capacity and passive observations cannot restart paused physics.
+Pausing, grabbing, animation ownership, deactivation and destruction release a
+body's potential-work grant. In the fixed-step force path, no displacement or
+force sampling runs for a body without a current grant. Contact detection has a
+separate, currently unbudgeted path that can populate the shared displacement
+cache; this is not a global cap on all displacement work. Saved water quantities
+are unchanged. A retiring native body stops immediately and cannot reacquire
+work or accept motion commands while its GameObject awaits destruction.
+
+`runtime.physicsWorkBudget` and `runtime.physicsWorkReservation` are detached,
+passive facts shared by human and agent programs. A member's `current` grant
+means its current demand/owner matches; it does not certify that its complete
+group, geometry, spatial inputs or simulation is ready. Standalone bodies have
+empty world/region/target scope. Indices can move and reservation IDs are only
+runtime identities. Reads may collect ineligible grants but cannot admit work.
+
+This admission applies to the fixed-step free-body liquid-force path. Pouring,
+scooping, rain, contact events, navigation, external observation queries,
+proof/geometry internals and engine solver work remain separate. Coupled flow
+needs complete-episode admission before any transfer, with unknown skipped
+contact baselines and no catch-up replay. Saved capacities remain unchanged;
+transaction/storage/spatial bounds and device measurements are still required
+before increasing them.

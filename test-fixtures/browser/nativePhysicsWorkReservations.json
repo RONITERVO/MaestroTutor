@@ -1,0 +1,43 @@
+{
+  "budget": {
+    "reservations": 1,
+    "units": 4352,
+    "reservationLimit": 128,
+    "unitLimit": 524288,
+    "samplesPerBody": 64,
+    "collidersPerBody": 64,
+    "nativeMediaPerSample": 32,
+    "missingMediaPerSample": 32
+  },
+  "current": [
+    {
+      "reservationId": "4d95e1781f044244821d3bb0389648b7",
+      "worldId": "ec2b57570b7f4630bd568a3544a224ff",
+      "regionId": "d0f0e61b52114a5b826ffc670606bb4f",
+      "target": "511273690e6947fc861180128df043a0",
+      "units": 4352,
+      "current": true
+    }
+  ],
+  "stale": [
+    {
+      "reservationId": "4d95e1781f044244821d3bb0389648b7",
+      "worldId": "ec2b57570b7f4630bd568a3544a224ff",
+      "regionId": "d0f0e61b52114a5b826ffc670606bb4f",
+      "target": "511273690e6947fc861180128df043a0",
+      "units": 4352,
+      "current": false
+    }
+  ],
+  "resized": [
+    {
+      "reservationId": "4d95e1781f044244821d3bb0389648b7",
+      "worldId": "ec2b57570b7f4630bd568a3544a224ff",
+      "regionId": "d0f0e61b52114a5b826ffc670606bb4f",
+      "target": "511273690e6947fc861180128df043a0",
+      "units": 4416,
+      "current": true
+    }
+  ],
+  "released": []
+}

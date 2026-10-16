@@ -44025,6 +44025,64 @@
       ]
     },
     {
+      "id": "runtime.physicsWorkBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservations": "number",
+          "units": "number",
+          "reservationLimit": "number",
+          "unitLimit": "number",
+          "samplesPerBody": "number",
+          "collidersPerBody": "number",
+          "nativeMediaPerSample": "number",
+          "missingMediaPerSample": "number"
+        }
+      },
+      "label": "Physics work budget",
+      "description": "Process-wide stable reservations for potential fixed-step free-body liquid-force work, including standalone bodies. Connected moving groups are admitted atomically before gravity or fluid forces; existing grants are not evicted by newcomers. Logical units cover bounded displacement samples, candidate media and participant environment proofs, not measured CPU time, GPU memory, frame rate or PhysX solver cost. Proof internals, pouring, scooping, rain, contact events, navigation and external observation queries are excluded. Independent of saved quotas and native allocation budgets. Reads only retire ineligible grants; they never admit work, load geometry or start physics.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.physicsWorkReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "units": "number",
+          "current": "boolean"
+        }
+      },
+      "label": "Physics work reservation",
+      "description": "Read one runtime.physicsWorkBudget grant by index. Indices may shift; reservationId is runtime-only. World, region and target identify the copied owner; empty scope denotes a standalone body. Current means this member still matches its reserved demand and owner, not that its complete group, geometry or physics is ready. Paused, held, inactive, animated or destroyed bodies release their potential work. Reads are detached and cannot admit work or resume physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 127.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -46853,6 +46911,10 @@
       "sha256": "f5243e6c733284a75e0d253df794f8c6728d4f1e2b9e89ffe5842e8288975704"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsWorkFacts.cs",
+      "sha256": "2d06682cba14bc30c46261f17b9d50af658304dfed05f82814c6137fa4f5d674"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProceduralResourceFacts.cs",
       "sha256": "1bb543c5cb869e94b735491350b3b4d7b535a7a2fcb9fcf9a275ca404da517fc"
     },
@@ -47210,7 +47272,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "3a7b59488f426cb69b5ce35cdc53e7ddc0c97f0a46dde668eafcf49b225c8032"
+      "sha256": "77c46426f6646dd03f671a26feb8eecd1de9e00c3da35c57053f4f0a4c4a2e3c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
@@ -47251,6 +47313,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
       "sha256": "dbe62e8f1976aff8ca029171ec9795870d7664ca83fa5c03f77fba67fe5db73f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicsWorkResources.cs",
+      "sha256": "07cd4986bdbcb7adb18323360acfd2296b9a70c61c069a844beedd6714a43d2c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedDrawingSurfaces.cs",
@@ -47646,7 +47712,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
-      "sha256": "10e4126fffae2c2137e04ede4557211c11b8f234acc314acb5aafa796df2e214"
+      "sha256": "86beabdfc5da22c541c4cc699fc794a048e2f4449e3832e2da463c9d478bfa99"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
@@ -48206,11 +48272,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "c55d38bd3036eac355f477466232121c638e8300a6a9d4787218391e6a030ed4"
+      "sha256": "ad8afd39ec533c24b622df7b8624d54a02dd61b2508bbe78d2ab68df260ff007"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "9b1a48b8a436912247ca53383ffe7c32912765bde0b106337a1fd03c279705f6"
+      "sha256": "bf6847c57df484d32f7ef02764069b42f80fe5d62f724f7940223eae852a16ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -48574,7 +48640,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "6a424b0f2fac124b2af2e8da34e3b7950c3e9308f2b06eca9a5c539a8ba14641"
+      "sha256": "3d225cf21ac24b5e6826e5ab80608a556e7c5a2e817621d334df0f2daf5e263c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -18,7 +18,7 @@ namespace Maestro.Quest.Creation {
     internal sealed class PhysicsIslandQuery {
         internal string[] Members,Targets;
         internal readonly List<(string id,Bounds motion,Bounds ground)> Sweeps=new();
-        internal RoomSpatialReadiness State=RoomSpatialReadiness.Ready,Result;internal string Error,ReadError;internal bool Checked;
+        internal RoomSpatialReadiness State=RoomSpatialReadiness.Ready,Result;internal string Error,ReadError,WorkError;internal bool Checked;
         internal void Refuse(RoomSpatialReadiness state,string error){if(State!=RoomSpatialReadiness.Unavailable){State=state;Error=error;}}
     }
     public sealed partial class RoomEditor {
@@ -78,6 +78,10 @@ namespace Maestro.Quest.Creation {
             // Share geometry checks across its members, never across frames.
             if(query.Checked){error=query.ReadError;return query.Result;}
             query.Checked=true;query.Result=query.State;query.ReadError=query.Error;
+            if(query.Result==RoomSpatialReadiness.Ready)foreach(var id in query.Members){
+                var body=Find(id)?.GetComponent<RigidRoomItem>();
+                if(body&&body.PhysicsWorkEligible&&!PhysicsWorkResources.Ready(body,out query.ReadError)){query.Result=RoomSpatialReadiness.Unavailable;break;}
+            }
             if(query.Result==RoomSpatialReadiness.Ready)foreach(var sweep in query.Sweeps){
                 query.Result=SpatialInputsReady(query.Targets,sweep.motion,sweep.ground,true,sweep.id,out query.ReadError);
                 if(query.Result!=RoomSpatialReadiness.Ready)break;
@@ -111,6 +115,7 @@ namespace Maestro.Quest.Creation {
                     if(visited.Contains(id))continue;var peer=Find(id);var rigid=peer?peer.GetComponent<RigidRoomItem>():null;
                     if(!rigid)continue;if(!rigid.Dynamic){rigid.ReleasePhysicsInputs();continue;}
                     var query=PhysicsInputs(peer);
+                    PhysicsWorkResources.TryAdmit(query.Members.Select(member=>Find(member)?.GetComponent<RigidRoomItem>()),out query.WorkError);
                     foreach(var member in query.Members){var body=Find(member)?.GetComponent<RigidRoomItem>();if(body&&body.Dynamic&&visited.Add(member))body.PreparePhysicsInputs(query);}
                 }
             }finally{preparingPhysicsIsland=false;}

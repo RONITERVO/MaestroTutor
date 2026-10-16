@@ -48,9 +48,13 @@ namespace Maestro.Quest.Creation {
             if(!editor||publishing||!float.IsFinite(seconds)||seconds<=0)return;
             foreach(var b in mediumBodies.Values){b.Applied=false;b.Lift=Vector3.zero;b.Submerged=0;b.Reason="Physics or object ownership is unavailable";}
             if(!world||!world.Running||blocked||editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen)return;
+            bool admitted=false;
+            foreach(var b in mediumBodies.Values){if(PhysicsWorkResources.Ready(b.Rigid,out var reason))admitted=true;else b.Reason=reason;}
+            if(!admitted)return;
             CaptureMedia(false);if(mediaCount==0&&missingMedia.Count==0&&mediumQueryIssue==null)return;
             using var environment=mediumEnvironment.Begin(world);
             foreach(var b in mediumBodies.Values){
+                if(!PhysicsWorkResources.Ready(b.Rigid,out var reason)){b.Reason=reason;continue;}
                 if(!b.Item||!b.Rigid||!b.Rigid.TryReadMotion(out bool available,out _,out _))continue;
                 if(b.Revision!=b.Rigid.MotionRevision){b.Displacement.Capture(b.Item);b.Revision=b.Rigid.MotionRevision;}
                 var shape=b.Displacement;if(shape.Count==0){b.Reason=shape.Reason;continue;}

@@ -11602,3 +11602,52 @@ Full offline Headless/Book journeys were not rerun for this liquid checkpoint;
 the latest evidence remains pinned to `9f38abca`. No headset, paid-provider,
 Android build, signing, deployment or Meta action ran. Current device/provider,
 acoustic and Store acceptance remain open. V1 is incomplete.
+
+
+## Stable free-body physics work admission (2026-10-16)
+
+Potential liquid-force work now has process-wide stable reservations independent
+of saved quotas and native allocations. Eligible free members of each connected
+physics group are admitted atomically. New demand cannot evict unrelated
+accepted physics. Collider-count or copied-owner changes invalidate old grants;
+retry can update them only when the whole requested group fits. The separate
+limits are 128 grants and 524,288 logical units, with bounded per-body
+occupancy/media/proof allowances. This does not measure CPU time or engine work.
+See the [shared contract](QUEST_WORLD_AUTHORING.md#free-body-physics-work-admission-2026-10-16).
+
+Refused work holds affected bodies before gravity and liquid forces, reports a
+specific waiting reason and remains retryable. It releases pending spatial
+preparation rather than retaining an old throw. A failed dormancy check no
+longer overwrites an existing capacity explanation with an empty error. Pause,
+hand/animation ownership, inactive hosts and destruction release potential
+work. Native lifetime release stops the body immediately, rejects motion
+commands and prevents reacquisition while the GameObject awaits destruction. Returning capacity or read-only queries cannot restart paused physics.
+The existing per-entity real-room policy, accepted ground, missing-water
+semantics, connection ownership and saved quantities remain authoritative.
+
+The typed catalog adds `runtime.physicsWorkBudget` and
+`runtime.physicsWorkReservation`; native capture checks current, stale, resized
+and released grants through the web validator. A current grant is only a work
+reservation, not proof that the body or its complete group can simulate.
+
+Validation: **1,327 EditMode / 1,729 PlayMode passed**, with the same **3 optional
+private-asset skips**. Eight new native checks cover logical demand bounds,
+whole-group refusal, unrelated physics continuity, demand growth/shrink,
+pending momentum cancellation, denied water sampling, retry, pause and ownership,
+retirement before destruction, and detached current/stale/resized/released
+observations. Focused checks passed **41 EditMode / 86 PlayMode** cases.
+**3,116 web tests / 335 files**, app/probe TypeScript and catalog provenance passed.
+Existing capability definitions remain unchanged; exactly two work facts were
+added. The browser fixture is actual native output, and the full run reproduces
+its lifecycle after normalizing runtime identities. **4,362 frozen inputs / 3,108
+native mirror inputs / 14 unrelated files preserved** were verified.
+Evidence: `.quest-evidence/physics-work-admission/`.
+
+Pour/scoop/rain transfer episodes, contact-event scheduling, query/proof
+internals, complete navigation/observation accounting and transaction/storage/
+spatial bounds remain before larger saved capacity. The next source audit
+records these boundaries; this checkpoint does not claim total frame-time or
+solver admission. Full offline Headless/Book journeys remain pinned to
+`9f38abca`; Android compilation to `7fe48619`. No headset, paid provider,
+Android build, signing, deployment or Meta action ran. Current device/provider,
+acoustic and Store acceptance remain open. V1 is incomplete.

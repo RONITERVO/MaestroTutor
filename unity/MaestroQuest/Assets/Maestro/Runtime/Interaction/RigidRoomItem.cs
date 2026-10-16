@@ -97,7 +97,7 @@ namespace Maestro.Quest.Interaction
         }
         void PhysicsChanged(){if(!ContactTracking){grabInputs?.Suspend();InterruptPhysicsInputs();}MotionRevision++;Refresh();}
         // Owning preparation does not admit motion: virtual ground may still be dormant.
-        bool PhysicsPreparationEnabled => InputBindingAvailable && isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && world && world.SimulationActive;
+        bool PhysicsPreparationEnabled => !nativeResourcesReleased && InputBindingAvailable && isActiveAndEnabled && item && item.isActiveAndEnabled && Dynamic && geometryReady && owners.Count == 0 && world && world.SimulationActive;
         bool PhysicsEnabled => PhysicsPreparationEnabled && world.CanSimulate(transform.position,item);
         bool BaseAllowed=>PhysicsEnabled&&!collisionInterrupted&&constraints.Count==0;
         // Held-body sweeps own contact inputs; XRI retains its body/throw setup.
@@ -165,7 +165,7 @@ namespace Maestro.Quest.Interaction
         public bool CanReceivePhysicsAction(out string error)
         {
             error=null;
-            if(!body||!item||!item.Grab) {error="Object physics is unavailable";return false;}
+            if(nativeResourcesReleased||!body||!item||!item.Grab) {error="Object physics is unavailable";return false;}
             if(!Dynamic) {error="Choose solid or bouncy physics for this object first";return false;}
             if(!geometryReady) {error="Object collision geometry is still loading";return false;}
             if(item.Grab.isSelected) {error="Release the object before changing its motion";return false;}
@@ -235,13 +235,14 @@ namespace Maestro.Quest.Interaction
             if (moving) { quietSince = Time.unscaledTime; wasMoving = true; }
             else if (wasMoving && Time.unscaledTime - quietSince > .6f) { wasMoving = false; Settled?.Invoke(item); }
         }
-        void OnDisable() { grabInputs?.Reset();InterruptPhysicsInputs();MotionRevision++;boundaryActive=false;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
+        void OnDisable() { Creation.PhysicsWorkResources.Release(this);grabInputs?.Reset();InterruptPhysicsInputs();MotionRevision++;boundaryActive=false;StopVelocity(); if (body) { body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative; body.isKinematic = true; body.useGravity = false; } }
         bool nativeResourcesReleased;
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
         void OnDestroy()=>ReleaseNativeResources();
         void ReleaseNativeResources()
         {
-            if(nativeResourcesReleased)return;nativeResourcesReleased=true;InterruptPhysicsInputs();
+            if(nativeResourcesReleased)return;nativeResourcesReleased=true;Creation.PhysicsWorkResources.Release(this);InterruptPhysicsInputs();
+            StopVelocity();if(body){body.collisionDetectionMode=CollisionDetectionMode.ContinuousSpeculative;body.isKinematic=true;body.useGravity=false;}
             if (world) world.Changed -= PhysicsChanged;
             if (item && item.Grab) { item.Grab.firstSelectEntered.RemoveListener(Grabbed); item.Grab.lastSelectExited.RemoveListener(Released); }
             if(nativeBody!=null)nativeBody.Dispose();else ArtResources.Release(material);

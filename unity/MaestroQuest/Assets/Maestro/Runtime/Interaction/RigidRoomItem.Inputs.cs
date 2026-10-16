@@ -54,11 +54,14 @@ namespace Maestro.Quest.Interaction {
             grabInputs?.Suspend();InterruptPhysicsInputs();hasInputBinding=true;boundInputEditor=editor;
         }
         bool InputOwner=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&item.Grab&&!item.Grab.isSelected&&PhysicsPreparationEnabled;
+        internal bool PhysicsWorkEligible=>InputOwner&&(!InputEditor||InputEditor.isActiveAndEnabled&&InputEditor.Identity(item)!=null);
+        internal RoomResourceOwner PhysicsWorkOwner=>new(InputEditor?InputEditor.WorldIdentity:null,InputEditor?InputEditor.Identity(item):null,"physics");
+        internal int PhysicsWorkColliders=>item&&item.Grab?item.Grab.colliders.Count:0;
         bool InputsCurrent=>InputEditor?InputEditor.PhysicsIslandReady(item,true,out _):CurrentInputs(out _);
         internal bool CurrentInputs(out string error)=>CurrentInputs(null,out error);
         internal bool CurrentInputs(PhysicsIslandQuery query,out string error){
-            error=inputStatus;var editor=InputEditor;if(!editor)return true;
-            if(editor.DormantRecoveryBlocked(item,out _,out error))return false;
+            error=inputStatus;var editor=InputEditor;if(!editor)return !PhysicsWorkEligible||PhysicsWorkResources.Ready(this,out error);
+            if(editor.DormantRecoveryBlocked(item,out _,out var recoveryError)){error=recoveryError;return false;}
             if(editor.SpatialInputsChanging){error="The authored geometry is being reconciled";return false;}
             if(!inputsReady||physicsInputs==null||physicsInputs.SourceChanged||editor.RuntimeGate.Held||editor.WriteGate.Frozen)return false;
             query??=editor.PhysicsInputs(item);
@@ -73,11 +76,18 @@ namespace Maestro.Quest.Interaction {
         void SetInputsReady(bool value){if(inputsReady!=value)MotionRevision++;inputsReady=value;}
         internal void PreparePhysicsInputs(PhysicsIslandQuery query=null){
             var editor=InputEditor;
-            if(!editor){if(hasInputBinding)ReleasePhysicsInputs();else SetInputsReady(true);return;}
+            if(!editor){
+                if(hasInputBinding)ReleasePhysicsInputs();
+                else {bool admitted=PhysicsWorkResources.TryAdmit(new[]{this},out inputStatus);if(!admitted)DiscardPreparedMotion();SetInputsReady(admitted);}
+                return;
+            }
             if(!InputOwner||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!editor.PhysicsIslandOwned(item)){ReleasePhysicsInputs();return;}
             if(editor.DormantRecoveryBlocked(item,out _,out var recoveryError)){ReleasePhysicsInputs();inputStatus=recoveryError;return;}
             query??=editor.PhysicsInputs(item);
             if(!query.Members.SequenceEqual(inputMembers)){ReleasePhysicsInputs();inputMembers=query.Members;}
+            // Resource refusal cancels pending input momentum too. It is retryable,
+            // not a permanent geometry failure and not permission to start physics.
+            if(query.WorkError!=null){ReleasePhysicsInputs();inputStatus=query.WorkError;return;}
             if(shapeFailed)return;
             // A changed accepted source starts a new observation. Do not restore
             // momentum captured against the old geometry or workspace.
