@@ -1,0 +1,70 @@
+{
+  "waiting": {
+    "sessionId": "d4c9f5d0a6484eada3c54a46c077382b",
+    "phase": "waiting",
+    "contents": {
+      "amountMl": 400.0,
+      "savedAmountMl": 400.0,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": "Required liquid-flow collision geometry is unavailable"
+  },
+  "scooping": {
+    "sessionId": "d4c9f5d0a6484eada3c54a46c077382b",
+    "phase": "waiting",
+    "scoopedMl": 0.0,
+    "drawnMl": 0.0,
+    "donors": 0,
+    "recipients": 0
+  },
+  "rain": {
+    "sessionId": "d4c9f5d0a6484eada3c54a46c077382b",
+    "phase": "waiting",
+    "collectedMl": 0.0,
+    "exposure": 0.0,
+    "ready": false,
+    "reason": "Required liquid-flow collision geometry is unavailable"
+  },
+  "flowing": {
+    "sessionId": "d99ec6a834df403d8f6f40e2ed330c09",
+    "phase": "flowing",
+    "contents": {
+      "amountMl": 383.96169338167289,
+      "savedAmountMl": 400.0,
+      "capacityMl": 500.0,
+      "transferredMl": 16.038306618327088,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  },
+  "receiver": {
+    "sessionId": "d99ec6a834df403d8f6f40e2ed330c09",
+    "phase": "flowing",
+    "contents": {
+      "amountMl": 16.038306618327088,
+      "savedAmountMl": 0.0,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  },
+  "accepted": {
+    "sessionId": "d99ec6a834df403d8f6f40e2ed330c09",
+    "phase": "idle",
+    "contents": {
+      "amountMl": 16.038306618327088,
+      "savedAmountMl": 16.038306618327088,
+      "capacityMl": 500.0,
+      "transferredMl": 0.0,
+      "spilledMl": 0.0
+    },
+    "temporary": false,
+    "error": ""
+  }
+}

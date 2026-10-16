@@ -2210,3 +2210,38 @@ body, liquid, depth, speed and surface values and provide a reason. Human and
 agent programs consume this same result and can choose to wait for fresh data.
 These are bounded sampled contacts, not continuous skin or fluid simulation.
 Per-entity real-room/virtual-ground policies and liquid quantities are unchanged.
+
+
+## Liquid spatial dependencies (2026-10-16)
+
+Before a physical pour, scoop or rain pass changes quantities, the flow owner
+prepares its relevant spatial inputs through the same owned demand used by
+navigation and contact. Potential stream bounds, full cavity bounds and the
+five rain-cover paths identify saved solids and ground. Empty receivers count,
+including cavities offset outside their visible artwork. Dormant dependencies
+are loaded and retained; unavailable collision or liquid views cause waiting.
+Unrelated distant dormant objects are not loaded merely because flow is active.
+Exact native intersection and collision queries still decide the actual result.
+
+This is a whole-pass dependency check: no vessel transfers, spills or collects
+rain while that pass lacks required geometry. A previous accepted episode closes
+and releases its writer before loading begins. A failed save reverts the episode
+and requires a physics restart. Callbacks can start fresh flow without old cleanup
+erasing it. Pause, loss of focus or an inactive world cancels its demand; a load
+cannot resume physics. Readiness notifications from successful loading do not
+cancel their own preparation or clear a failed-save stop. Recovery uses the current short timestep, without
+replaying missed pouring or rain.
+
+`object.container.live`, `object.container.scooping` and `object.container.rain`
+use their existing `waiting` phase for missing spatial inputs as well as work
+capacity. The live observation provides a reason; rain remains unknown with zero
+exposure until a fresh eligible pass. These passive facts cannot load objects,
+publish changes or start physics. Types, versions, saved inventory, collision
+policies and fluid quantities retain their existing contracts.
+
+This does not add fluid particles or claim unlimited simulation. Spatial bounds
+are conservative, and a missing dependency can delay the entire current flow
+pass. Fair scheduling of separate interacting groups and measurement of query,
+loading and native-engine costs remain required before increasing world limits.
+Rain collection dependency checks do not establish complete weather presentation
+or acoustic acceptance.

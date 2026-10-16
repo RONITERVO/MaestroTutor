@@ -9,6 +9,12 @@ namespace Maestro.Quest.Creation
     {
         readonly WeatherCover rainCover=new();
         readonly RoomContainer rainSource=new(){capacityMl=1000000};
+        Vector3 RainOpeningPoint(Vessel vessel,int sample){
+            var c=vessel.Live;var t=vessel.Item.transform;var normal=t.rotation*c.frame.rotation*Vector3.up;
+            float x=sample==1?.5f:sample==2?-.5f:0,z=sample==3?.5f:sample==4?-.5f:0;
+            var offset=new Vector3(x*(c.IsRectangular?c.rectangle.width*.5f:c.radius),c.height,z*(c.IsRectangular?c.rectangle.depth*.5f:c.radius));
+            return t.TransformPoint(c.frame.position+c.frame.rotation*offset)+normal*.001f;
+        }
         bool CollectRain(float seconds,out bool published){
             published=false;
             var weather=editor.CurrentWeather;var velocity=WeatherCover.Velocity(editor);bool flowing=false;
@@ -23,9 +29,7 @@ namespace Maestro.Quest.Creation
                 if(flux<=.001f){v.RainReason="Opening faces away from the rain";continue;}
                 int open=0,unknown=0;
                 for(int sample=0;sample<5;sample++){
-                    float x=sample==1?.5f:sample==2?-.5f:0,z=sample==3?.5f:sample==4?-.5f:0;
-                    var offset=new Vector3(x*(c.IsRectangular?c.rectangle.width*.5f:c.radius),c.height,z*(c.IsRectangular?c.rectangle.depth*.5f:c.radius));
-                    var point=t.TransformPoint(c.frame.position+c.frame.rotation*offset)+normal*.001f;
+                    var point=RainOpeningPoint(v,sample);
                     var exposure=rainCover.Exposure(editor,point,velocity,v.Item);
                     if(exposure==RainExposure.Open)open++;else if(exposure==RainExposure.Unknown)unknown++;
                 }
@@ -46,8 +50,8 @@ namespace Maestro.Quest.Creation
         }
         internal JObject ObserveRain(string id){
             if(!vessels.TryGetValue(id,out var v))return null;
-            bool running=FlowWorkEligible;string workIssue=FlowWorkIssue;
-            return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["collectedMl"]=v.Rain,["exposure"]=running&&workIssue==null?v.Exposure:0,["ready"]=running&&workIssue==null&&v.RainReady,["reason"]=blocked?Maestro.Quest.Imports.ImportObservation.Text(error):!running?"Liquid flow is paused or unavailable":workIssue??v.RainReason};
+            bool running=FlowWorkEligible;string workIssue=FlowWorkIssue??FlowInputIssue;
+            return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["collectedMl"]=v.Rain,["exposure"]=running&&workIssue==null?v.Exposure:0,["ready"]=running&&workIssue==null&&v.RainReady,["reason"]=blocked?Maestro.Quest.Imports.ImportObservation.Text(error):!running?"Liquid flow is paused or unavailable":Maestro.Quest.Imports.ImportObservation.Text(workIssue??v.RainReason)};
         }
     }
 }

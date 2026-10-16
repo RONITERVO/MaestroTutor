@@ -11784,3 +11784,53 @@ remain open before larger saved capacity. Full offline Headless/Book journeys
 remain pinned to `9f38abca`; Android compilation to `7fe48619`. No headset,
 paid provider, Android build, signing, deployment or Meta action ran.
 Device/provider, acoustic and Store acceptance remain open. V1 is incomplete.
+
+
+## Liquid spatial input preparation (2026-10-16)
+
+Physical pouring, scooping and rain now prepare required saved spatial inputs
+before changing quantities. Relevant solids, ground, empty/offset cavities and
+rain-cover paths use the shared native demand and ownership service. Missing
+geometry yields a visible wait rather than an assumed empty stream path. Distant
+unrelated content stays dormant. Earlier accepted flow publishes and releases its
+writer before new loading; failed publication rolls back and remains stopped
+through readiness-only notifications. Explicit restart still recovers. Pause and
+ineligibility cancel pending work, while a callback may begin a fresh episode
+without old cleanup erasing it. Recovery never accumulates missed intake.
+Human and agent observations share the existing typed waiting phases.
+
+See the [shared contract](QUEST_WORLD_AUTHORING.md#liquid-spatial-dependencies-2026-10-16).
+
+Validation: **1,329 EditMode /
+1,772 PlayMode passed**, zero failures and
+the same **3 optional private-asset skips**. Thirteen new native cases cover
+missing receivers/fill views/solids/roofs, offset cavities, whole-pass waiting,
+passive reads, pause cancellation, failed-save stops, reentrant callbacks and
+unrelated distant geometry. Six cases first failed against the old runtime; an
+additional reproduced readiness-notification regression transferred 16 ml after
+a failed save and is fixed. The initial roof fixture was misaligned, so that
+original failure is excluded from the runtime-regression claim; the corrected
+test proves loaded cover before retirement. Final focused checks passed **43
+EditMode / 13 PlayMode**; an earlier broader focused run passed **140 PlayMode**.
+**3,132 web tests / 339 files**, app/probe TypeScript and catalog
+provenance passed. Three fact descriptions changed; existing schemas and versions
+are unchanged. Actual native waiting/recovery/publication output validates the
+web contract and is reproduced by the full run after normalizing session IDs.
+**4,400 frozen inputs / 3,138 native mirror inputs /
+14 unrelated files preserved** were verified.
+Evidence: `.quest-evidence/flow-spatial-inputs/`.
+
+The earlier full run was deliberately interrupted to fix the readiness-only
+failed-save restart and is not acceptance. Web negative tests were corrected to
+check the generated record types; production web schemas did not change.
+The prior checkpoint's audio-reset failure and unchanged successful retry remain
+recorded. This desktop pass does not establish that failure's cause or acoustic
+acceptance.
+
+Fair scheduling of complete interacting spatial groups, navigation/observation/
+proof/engine costs and transaction/storage bounds remain open before increasing
+saved capacity. The current conservative whole-pass dependency check can delay
+an independent flow circuit. Full offline Headless/Book journeys remain pinned
+to `9f38abca`; Android compilation to `7fe48619`. No headset, paid provider,
+Android build, signing, deployment or Meta action ran. Device/provider, acoustic
+and Store acceptance remain open. V1 is incomplete.
