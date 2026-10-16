@@ -1940,3 +1940,55 @@ unpublished activation candidate. `active` describes the host GameObject, not
 visibility or passthrough readiness. Reads cannot allocate, evict or enable
 passthrough. The native lifecycle fixture and verification scope are recorded in
 [the v1 plan](QUEST_V1_PLAN.md#transactional-native-windows-2026-10-16).
+
+
+## Native physics preparation and lifetime (2026-10-16)
+
+Authored objects reserve their Rigidbody and owned PhysicsMaterial before a new
+native root is constructed or an edit is accepted. Enabled physical connections
+reserve a potential joint slot before persistence, including connections that are
+paused, broken, unaligned or waiting for their collision/input data. Existing
+bodies and connection slots are reused for ordinary edits. Disabled or removed
+connections need no replacement slot.
+
+Independent process-wide ceilings are **128 authored bodies/materials** and
+**32 potential connection joints**, across workspaces. These are logical native
+ownership limits, not measurements of PhysX memory, solver cost or Quest frame
+time. Saved quotas remain 64 creations and 16 connections per room. Built-in
+book/avatar/tools, tracked pushers and other system bodies are outside this
+ledger; broadphase/contact data and simulation/query work also need separate
+bounds before saved capacity increases.
+
+Private preparation, inactive objects and deferred destruction remain charged.
+The body lease follows the private root even before Rigidbody construction so a
+failed, never-active build can be reclaimed. A connection keeps its slot during
+pause or break. Replacing its native Joint waits for the previous Joint to be
+actually destroyed; the same slot cannot own overlapping native joints. A body
+slot is released only after its Rigidbody and owned material are both gone.
+Potential slots with no native Joint can be released immediately.
+
+Body preparation transfers only to the exact object ID and kind. Connection
+preparation validates the exact target, connection definitions and existing view
+owner before transfer. The same path covers ordinary edits, immediate saves,
+Undo/Redo, temporary-room restoration, startup and dormant native activation.
+If capacity is unavailable, the accepted document, saved bytes and history remain
+intact and the operation can be retried. No existing content is silently evicted
+to make room. Unrelated reconciliation does not create a missing peer's connection;
+an explicit edit of that peer can prepare and repair it.
+
+Admission does not start physics or alter accepted ground, per-entity real-room
+participation, ownership, collision-input readiness or throw semantics. A joint
+still requires aligned, available members and the existing physics readiness
+checks. It holds its affected actor while waiting to recreate the native joint.
+This preserves the distinction between an actor that follows authored terrain
+and one that collides with scanned room surfaces.
+
+Shared `runtime.physicsBudget` and `runtime.physicsReservation` expose detached,
+passive facts to human and agent programs when runtime diagnostics are available.
+Reservation IDs and indices are runtime identities, never saved references.
+`ready` means ownership transferred, including unpublished or paused candidates;
+`active` describes the host GameObject, and `allocated` describes whether its
+Rigidbody or Joint still exists. None certifies that an actor is simulating.
+Reading these facts cannot start physics or modify saved content. The captured
+native lifecycle fixture and verification scope are recorded in the
+[v1 plan](QUEST_V1_PLAN.md#transactional-native-physics-2026-10-16).

@@ -8,6 +8,11 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
+        void ApplyConnection(RoomObjectData data,RoomItem item,RoomEditPreparation preparation){
+            using var candidate=preparation?.TakeConnection(data);var view=item.GetComponent<RoomConnectionView>();
+            if(candidate!=null){if(!view)view=item.gameObject.AddComponent<RoomConnectionView>();view.ApplyPrepared(this,data,candidate);}
+            else view?.Refresh(); // Unrelated reconciliation never recreates a missing peer connection.
+        }
         internal void NotifyConnectionBroken(RoomItem item,RoomConnection definition){
             if(applying||Ownership.Suspended||RuntimeGate.Held||!PhysicsWorld||!PhysicsWorld.Running)return;var id=Identity(item);if(id!=null)ConnectionBroken?.Invoke(id,definition.connected,definition.kind,definition.breakForce,definition.breakTorque);
         }

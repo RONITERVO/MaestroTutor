@@ -14,6 +14,7 @@ namespace Maestro.Quest.Creation
     {
         Material pigment;
         NativeObjectResources.Lease objectInstance;
+        NativePhysicsResources.Lease physicsBody;
         bool buildStarted;
         RecipeObject recipe;
         PencilMarks drawing;
@@ -57,6 +58,7 @@ namespace Maestro.Quest.Creation
             if(buildStarted)throw new System.InvalidOperationException("The native object was already built");buildStarted=true;
             if(objectInstance==null){objectInstance=preparation?.TakeObject(data)??NativeObjectResources.Begin(data,new RoomResourceOwner(world,data.id,"object"));objectInstance.Bind(gameObject);}
             objectInstance.Validate(data);
+            physicsBody=preparation?.TakeBody(data)??NativePhysicsResources.Body(data,new RoomResourceOwner(world,data.id,"physics"));physicsBody.ValidateBody(data);physicsBody.AttachBodyRoot(gameObject);
             collisionOwner=new RoomResourceOwner(world,data.id,"collision");drawingOwner=new RoomResourceOwner(world,data.id,"ink");
             if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new RoomResourceOwner(world,data.id,"object");
             importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
@@ -92,9 +94,9 @@ namespace Maestro.Quest.Creation
             ApplyColor(data.color);
             BuildSelection(bounds);
             var item = gameObject.AddComponent<RoomItem>(); var limits = RoomDocument.ScaleLimits(data.kind);
-            item.Configure(new[] { collider }, limits.minimum, limits.maximum);item.PoseLocked=ScanDrawingAnchor.Has(data);
+            item.ConfigurePrepared(new[] { collider }, limits.minimum, limits.maximum,physicsBody);item.PoseLocked=ScanDrawingAnchor.Has(data);
             geometryBounds = bounds; originalCollider = chosenCollider = collider;
-            var rigid = gameObject.AddComponent<RigidRoomItem>(); rigid.Initialize(item);
+            var rigid = gameObject.AddComponent<RigidRoomItem>(); rigid.InitializePrepared(item,physicsBody);
             acousticItem = item; acousticBody = rigid;
             collider.gameObject.layer = RoomPhysicsLayers.Item;
             if (importedObject) { rigid.SetGeometryReady(false);SetCollisionShape(data.collisionShape,true); }
@@ -106,7 +108,7 @@ namespace Maestro.Quest.Creation
                 } else if(library!=null) LoadModel(data.modelHash,library,collider);
             }
             ApplyCollision(data.collision,preparation);SetCollisionShape(data.collisionShape);
-            objectInstance.Ready();return item;
+            physicsBody.ReadyBody();objectInstance.Ready();return item;
         }
         internal void ApplyScanLayer(RoomObjectData data) {
             if(!ScanDrawingAnchor.Has(data))return;var size=new Vector3(data.surfaces[0].width,data.surfaces[0].height,.002f);if(geometryBounds.size==size)return;
@@ -196,7 +198,7 @@ namespace Maestro.Quest.Creation
         bool nativeResourcesReleased;
         void OnDestroy()=>ReleaseNativeResources();
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
-        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;objectInstance?.Dispose();preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;objectInstance?.Dispose();physicsBody?.Dispose();preparedGeometry?.Dispose();importedCollision?.Dispose();customGeometry?.Dispose();ArtResources.Release(pigment);}
         void LateUpdate() { if (pendingCollider && !GetComponent<RoomItem>().Grab.isSelected) SetCollisionShape(collisionShape,true); }
     }
 }

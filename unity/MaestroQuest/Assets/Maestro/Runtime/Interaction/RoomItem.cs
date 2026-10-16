@@ -29,11 +29,12 @@ namespace Maestro.Quest.Interaction
         Vector3 homePosition, homeScale;
         Quaternion homeRotation;
 
-        public void Configure(Collider[] handles, float minimumScale = .5f, float maximumScale = 2f)
+        public void Configure(Collider[] handles, float minimumScale = .5f, float maximumScale = 2f)=>ConfigurePrepared(handles,minimumScale,maximumScale,null);
+        internal void ConfigurePrepared(Collider[] handles,float minimumScale,float maximumScale,Creation.NativePhysicsResources.Lease reservation)
         {
             if (Grab) return;
             homePosition = transform.localPosition; homeRotation = transform.localRotation; homeScale = transform.localScale;
-            var body = gameObject.AddComponent<Rigidbody>();
+            var body = gameObject.AddComponent<Rigidbody>();reservation?.BindBody(body);
             body.isKinematic = true; body.useGravity = false;
             Grab = gameObject.AddComponent<XRGrabInteractable>();
             Grab.enabled = false;

@@ -11474,3 +11474,67 @@ their most recent evidence remains pinned to `9f38abca`. Per-entity real-room
 collisions remain independent of authored terrain and presentation. Simulation
 admission and transaction/storage/spatial-extent work remain before increasing
 saved capacity. V1 remains incomplete.
+
+
+## Transactional native physics (2026-10-16)
+
+Authored native bodies and their PhysicsMaterials now reserve independent
+capacity before root construction. Enabled physical connections reserve potential
+joint slots before acceptance and immediate saving. Ordinary edits reuse accepted
+bodies/slots; disabled or removed connections need no replacement capacity.
+See [the physics contract](QUEST_WORLD_AUTHORING.md#native-physics-preparation-and-lifetime-2026-10-16).
+
+Separate process-wide limits admit **128 authored bodies/materials** and
+**32 potential joints**, across workspaces, private preparation, inactive hosts
+and deferred destruction. Paused, broken and unaligned enabled connections retain
+their slot. Native joint replacement waits for the old Joint to be destroyed,
+preventing overlap within one slot. A body lease follows a private root before
+Rigidbody construction and can reclaim failed, never-active partial builds.
+The Rigidbody and owned material must both be gone before its slot is released.
+
+Exact object ID/kind and connection-source/owner checks guard transfer. Initial
+startup, ordinary edits, immediate saves, history, temporary-room recovery and
+dormant activation share preparation. A saturated limit or failed save preserves
+accepted source, native views, saved bytes and history. Unrelated reconciliation
+cannot repair an unprepared missing peer connection. Explicit edits and activation
+can retry when capacity becomes available. Per-entity real-room collision policy,
+accepted virtual ground, physics intent, ownership and throw semantics are intact.
+
+Shared `runtime.physicsBudget` and `runtime.physicsReservation` provide detached,
+passive ownership facts to human and agent programs. Potential joint reservations
+can be ready with no allocated Joint; an existing Rigidbody/Joint can be kinematic,
+paused or retiring. Neither ready, active nor allocated certifies simulation.
+Reads cannot start physics or mutate saved state.
+
+Final-source verification passed **1,322 EditMode / 1,714 PlayMode tests**,
+with the same **3 optional private-asset skips**. Thirteen new native regressions
+cover independent capacity, exact transfer, partial/never-active construction,
+failed saves and late batches, live-joint preservation, pause/deferred replacement,
+history and temporary discard, dormant activation, missing-peer isolation and
+passive lifecycle capture. Focused checks passed **21 EditMode / 155 PlayMode**.
+The initial focused run passed before the final partial-build cleanup fix; the
+fresh focused and full runs both include that fix.
+
+**3,106 web tests / 333 files**, application/probe TypeScript and catalog provenance
+passed. The browser fixture is captured from real Unity body/potential-joint
+lifecycle output. All existing actions/events/facts/adapters and limits are
+unchanged; exactly two passive physics facts were added. All **4,340 frozen
+inputs**, **3,090 native source/mirror files** and **14 unrelated files** were
+verified. Evidence: `.quest-evidence/physics-admission/`. PR discussion/reviews and
+four inline findings were read; current source and regression tests already
+address the reported cancellation, Live-origin and backup issues.
+
+These are logical authored allocation limits, not measurements of PhysX memory,
+solver cost, frame time or Quest performance. System book/avatar/tools, tracked
+pushers, broadphase/contact data and simulation/query work are excluded. Saved
+quotas remain 64 creations and 16 connections. The next admission work must bound
+live media and complete physical/query work units without silently omitting
+relevant water, breaking volume conservation, or letting connected bodies move
+on incomplete input. Transaction/storage/spatial-extent bounds remain necessary
+before increasing saved capacity. The source-grounded follow-on audit is in
+`next-source-audit.json` in this checkpoint's evidence directory.
+
+Full offline Headless/Book journeys were not rerun for this physics checkpoint;
+latest runs remain pinned to `9f38abca`. No headset, paid-provider, Android build,
+signing, deployment or Meta actions were performed. Desktop checks do not establish
+current device/provider, acoustic or Store acceptance. V1 remains incomplete.

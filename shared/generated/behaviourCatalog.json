@@ -43908,6 +43908,65 @@
       ]
     },
     {
+      "id": "runtime.physicsBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "bodies": "number",
+          "joints": "number",
+          "preparing": "number",
+          "ready": "number",
+          "retiring": "number",
+          "bodyLimit": "number",
+          "jointLimit": "number"
+        }
+      },
+      "label": "Native physics budget",
+      "description": "Process-wide authored Rigidbody/material and potential connection-joint reservations across workspaces. Counts include private preparation, inactive bodies, paused or broken enabled connections and deferred native destruction. One joint slot survives retirement and recreation without overlapping native joints. Independent of saved quotas. Logical native ownership, not measured PhysX memory or frame time. Built-in book/avatar/tools, tracked pushers, system bodies, broadphase/contact data and simulation query work are excluded. Reading never creates bodies, starts physics or evicts content.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.physicsReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "kind": "text",
+          "phase": "text",
+          "active": "boolean",
+          "allocated": "boolean"
+        }
+      },
+      "label": "Native physics owner",
+      "description": "Read one runtime.physicsBudget reservation by index. Indices may shift; reservationId is runtime-only. World, region and target identify its copied owner. Kind is body or joint. Phase is preparing, ready or retiring. Ready means native ownership transferred, including unpublished candidates or a potential joint waiting for alignment and physics inputs; it does not certify simulation. Active describes the host GameObject. Allocated reports a still-existing Rigidbody or Joint, which may be kinematic, disabled or awaiting destruction. Body slots also retain their owned physics material until destruction. Reads are detached and cannot change saved data or start physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 159.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -46680,6 +46739,10 @@
       "sha256": "80f5ebb7f1902b2b6994c330010728886ba87a580530588c87fa781085949fe7"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NativePhysicsResourceFacts.cs",
+      "sha256": "f9de468443138722cb06b18261b27576ae6c4062c6a3dbf41dd7ad8d61c05723"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
       "sha256": "ec4f6016979c1f325e80f0ec90724e755a84c94d22256dc4695d16b3f8c7bd68"
     },
@@ -47013,7 +47076,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "00af7db39466a8be7860d40516695e5013f75e77d8c880aec61aad250183a6e6"
+      "sha256": "7c1ba9d88f2f1e724e749574e3a2fcc79e0cb54555ad683de8bb868ec47a1137"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -47116,6 +47179,10 @@
       "sha256": "48f9cc78984d13693667c5609ae571c55f9db783cfe2f44d727448643a37ef1d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/NativePhysicsResources.cs",
+      "sha256": "72a35c066e5cfef7aa0d4a10f4080708c5c79f26bc6d92bfeaac71e34f7d5a93"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
       "sha256": "dbe62e8f1976aff8ca029171ec9795870d7664ca83fa5c03f77fba67fe5db73f"
     },
@@ -47126,6 +47193,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedImportedModel.cs",
       "sha256": "cfc98d40bed6e068428b50109fe529a69af376529d8102f0110ea4edea8d31eb"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomConnection.cs",
+      "sha256": "d0cc194126bf2365777e6fa470414e5b957e94898de653ca36863930d0fbe7e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
@@ -47257,7 +47328,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnectionEdits.cs",
-      "sha256": "ad4a128d4c51098406b8c99c6ddb15205ac9035839ab13a3b5845cfe665f8f9d"
+      "sha256": "17d6f674051644aa6990b43e859cf19283d16f596da6a4e7924d8c742451c158"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
@@ -47297,7 +47368,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "2e41b6be30f0fb32ffa883f72b04d9e3b9697500fa4dd3353d5283f4aa92fa47"
+      "sha256": "74fd89c785354a21f6192f56af8eeec004dfce292568772392b9b627f14e2510"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -47305,7 +47376,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "6c7c921686995301f3abe8e8170290621aa4b34f5593c17b7947b942408e723f"
+      "sha256": "971860231c7d0840f2dfb75f2d1c1dbdd2f4892f2aff6479d47e7d181e58abc6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -47457,7 +47528,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "826f4caf7ba9d7b9fb698f4ffb8e71427c533b86d34f408a8735cb3b07755749"
+      "sha256": "230614c753c7bbb70860d58c3e411f60818ab0ae340328ff2d856cc7eedb0f30"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
@@ -47561,7 +47632,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
-      "sha256": "3578759abe874dd0aa5ff198f1efd932ef7487ebb8d37e2e5989ef5649325e68"
+      "sha256": "b73f9590c4d0b8dd195998c5aa73c19af1035e9a0a8108a017ff0eea15d165df"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
@@ -48069,7 +48140,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "d18652263ebf24a0504f2949e7cbfad6cea1ff96d8864748f24e3cb68646b0cf"
+      "sha256": "9b1a48b8a436912247ca53383ffe7c32912765bde0b106337a1fd03c279705f6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -48093,7 +48164,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomConnectionView.cs",
-      "sha256": "ddbbd698d107a0a86f6fdfba5188ca214bbee11f4d50983e7786fdfc19ac6bc7"
+      "sha256": "fc9890854869bc00752780e34a64de7c95cac510c80b66159a868e85e51f4e66"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomContactInputs.cs",
@@ -48129,7 +48200,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomItem.cs",
-      "sha256": "8912c1c5e621c93252b9f977cc05548995d5b800a99885ca211f9a2d85df6450"
+      "sha256": "cd3f630923aaa2968462486953f1e268e1c2686a9a896c054db81925346dac4f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
@@ -48433,7 +48504,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "78c64fca0dac94c74ad266493b877ebf57f3d48d13cb073e9b584c67fa65bb01"
+      "sha256": "55f974f29dc249a5a51d7c9c4a95a34ee194f83b23cb6f7f54266ed32c95150c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

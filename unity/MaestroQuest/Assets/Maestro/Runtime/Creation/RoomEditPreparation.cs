@@ -19,6 +19,8 @@ namespace Maestro.Quest.Creation
     {
         readonly List<IDisposable> resources=new();
         readonly Dictionary<string,NativeObjectResources.Lease> objects=new();
+        readonly Dictionary<string,NativePhysicsResources.Lease> bodies=new();
+        readonly Dictionary<string,PreparedRoomConnection> connections=new();
         readonly Dictionary<string,CollisionGeometry> collisions=new();
         readonly Dictionary<string,HeightFieldGeometry> fields=new();
         readonly Dictionary<string,RecipeVisual> recipes=new();
@@ -49,6 +51,12 @@ namespace Maestro.Quest.Creation
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
             if(!objects.TryGetValue(data.id,out var lease))return null;lease.Validate(data);
             objects.Remove(data.id);resources.Remove(lease);return lease;
+        }
+        internal NativePhysicsResources.Lease TakeBody(RoomObjectData data){
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");if(!bodies.TryGetValue(data.id,out var lease))return null;lease.ValidateBody(data);bodies.Remove(data.id);resources.Remove(lease);return lease;
+        }
+        internal PreparedRoomConnection TakeConnection(RoomObjectData data){
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");if(!connections.TryGetValue(data.id,out var candidate))return null;candidate.Validate(data);connections.Remove(data.id);resources.Remove(candidate);return candidate;
         }
         internal static RoomEditPreparation TryCreateInitial(RoomEditor editor,RoomDocument document,out string error)
         {
@@ -130,6 +138,7 @@ namespace Maestro.Quest.Creation
         {
             if(!data.IsBuiltIn&&before==null){
                 var lease=NativeObjectResources.Begin(data,new RoomResourceOwner(editor.WorldIdentity,data.id,"object"));resources.Add(lease);objects.Add(data.id,lease);yield return null;
+                var body=NativePhysicsResources.Body(data,new RoomResourceOwner(editor.WorldIdentity,data.id,"physics"));resources.Add(body);bodies.Add(data.id,body);yield return null;
             }
             var owner=new RoomResourceOwner(editor.WorldIdentity,data.id,"collision");
             if(data.kind==RoomObjectKind.Assembly&&(before==null?data.recipe!=null:JsonUtility.ToJson(before.recipe)!=JsonUtility.ToJson(data.recipe))){
@@ -147,6 +156,8 @@ namespace Maestro.Quest.Creation
             if(data.kind==RoomObjectKind.Drawing&&!ScanDrawingAnchor.Has(data)&&(!drawingView||!drawingView.DrawingMatches(data))){
                 var points=(Vector3[])data.points.Clone();var candidate=PencilGeometry.Prepare(new[]{points},data.radius,new RoomResourceOwner(editor.WorldIdentity,data.id,"ink"),"spatial");resources.Add(candidate);drawings.Add(data.id,(points,data.radius,candidate));yield return null;
             }
+            var connectionView=current?current.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>():null;
+            if(data.connections.Length>0||connectionView){var candidate=new PreparedRoomConnection(editor.WorldIdentity,data,connectionView);resources.Add(candidate);connections.Add(data.id,candidate);yield return null;}
             var surfaceView=current?current.GetComponent<DrawingSurfaceView>():null;
             if((data.surfaces?.Length??0)>0||surfaceView){
                 var candidate=new PreparedDrawingSurfaces(editor.WorldIdentity,data.id,data.surfaces,surfaceView);resources.Add(candidate);surfaces.Add(data.id,candidate);yield return null;
@@ -170,6 +181,6 @@ namespace Maestro.Quest.Creation
             if(!view.CanConfigureModelGeometry(data.modelGeometry,out var issue))throw new ModelImportException(issue);
             resources.Add(view.PrepareModelGeometry(data.modelGeometry));yield return null;
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();windows.Clear();drawings.Clear();surfaces.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();bodies.Clear();connections.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();windows.Clear();drawings.Clear();surfaces.Clear();}
     }
 }

@@ -23,6 +23,7 @@ namespace Maestro.Quest.Interaction
         internal bool ContactTracking=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&world&&world.Running&&Dynamic&&!AnimationOwned;
         internal bool ContactEnvironmentReady=>InputBindingAvailable&&geometryReady&&world&&world.CanSimulate(transform.position,item);
         PhysicsMaterial material;
+        Creation.NativePhysicsResources.Lease nativeBody;
         readonly HashSet<object> owners = new();
         readonly HashSet<object> constraints = new();
         public void SetConstraintBlocked(object owner,bool blocked){bool changed=blocked?constraints.Add(owner):constraints.Remove(owner);if(changed){MotionRevision++;Refresh();}}
@@ -61,13 +62,15 @@ namespace Maestro.Quest.Interaction
         public bool Dynamic => profile != ItemPhysics.Fixed;
         public bool Simulating => body && !body.isKinematic;
         public bool AnimationOwned => owners.Count > 0;
-        public void Initialize(RoomItem target)
+        public void Initialize(RoomItem target)=>InitializePrepared(target,null);
+        internal void InitializePrepared(RoomItem target,Creation.NativePhysicsResources.Lease reservation)
         {
+            nativeBody=reservation;
             item = target; body = target.GetComponent<Rigidbody>();
             grabInputs=target.gameObject.AddComponent<RoomGrabContactInputs>();grabInputs.Initialize(target,this);
             body.maxLinearVelocity = 15; body.maxAngularVelocity = 30;
             body.solverIterations = 8; body.solverVelocityIterations = 3;
-            material = new PhysicsMaterial("User item physics");
+            material = new PhysicsMaterial("User item physics");nativeBody?.OwnMaterial(material);
             foreach (var collider in item.Grab.colliders) collider.sharedMaterial = material;
             item.Grab.firstSelectEntered.AddListener(Grabbed);
             item.Grab.lastSelectExited.AddListener(Released);
@@ -241,7 +244,7 @@ namespace Maestro.Quest.Interaction
             if(nativeResourcesReleased)return;nativeResourcesReleased=true;InterruptPhysicsInputs();
             if (world) world.Changed -= PhysicsChanged;
             if (item && item.Grab) { item.Grab.firstSelectEntered.RemoveListener(Grabbed); item.Grab.lastSelectExited.RemoveListener(Released); }
-            ArtResources.Release(material);
+            if(nativeBody!=null)nativeBody.Dispose();else ArtResources.Release(material);
         }
     }
 }

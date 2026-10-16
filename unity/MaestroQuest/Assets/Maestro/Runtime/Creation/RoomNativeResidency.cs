@@ -181,7 +181,7 @@ namespace Maestro.Quest.Creation
                     // No awaits after publication begins. All IDs exist before
                     // any connection resolves a peer or any root becomes active.
                     foreach(var data in values){var item=candidates[data.id];AddIdentity(data.id,item);room.Register(item);if(data.kind==RoomObjectKind.ImportedModel)regionModels[data.id]=item.GetComponent<CreatedRoomObject>();}
-                    foreach(var data in values){var item=candidates[data.id];var hinge=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>();if(!hinge&&data.connections.Length>0)hinge=item.gameObject.AddComponent<Maestro.Quest.Interaction.RoomConnectionView>();if(hinge){hinge.Apply(this,data.connections);RestoreNativeConnection(data,hinge);}}
+                    foreach(var data in values){var item=candidates[data.id];ApplyConnection(data,item,prepared);var hinge=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>();if(hinge)RestoreNativeConnection(data,hinge);}
                     Check();
                     // Keep component-local visibility, including missing-anchor ink.
                     foreach(var root in roots)if(root)root.transform.SetParent(transform,false);
