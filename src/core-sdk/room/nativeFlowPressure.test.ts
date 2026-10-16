@@ -35,7 +35,7 @@ it('accepts the same native waiting and flowing facts for shared user and agent 
     expect(value.contents.amountMl).toBeLessThanOrEqual(value.contents.capacityMl);
    }
    if(!room.ready){
-    expect(room).toMatchObject({discoveryCaptures:0,executedGroups:0,executedMembers:0,pourCandidates:0});
+    expect(room).toMatchObject({discoveryCaptures:1,executedGroups:0,executedMembers:0,pourCandidates:0});
     expect(room.sources[0].phase).toBe('waiting');
    }
   }

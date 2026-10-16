@@ -48,11 +48,18 @@ namespace Maestro.Quest.Creation {
             flowExecutionWork=default;discoveryWork=default;
             var physics=editor.PhysicsWorld;
             if(!FlowWorkEligible){ReleaseFlowInputs();FlowWorkResources.Release(this);InvalidateRain("Liquid flow is paused or unavailable");Finish(out _);return;}
-            if(!FlowWorkResources.TryAdmit(this,out var workIssue)){WaitForFlowWork(workIssue);return;}
+            if(!FlowWorkResources.TryDiscover(this,out var workIssue)){WaitForFlowWork(workIssue,discovery:true);return;}
             Vector3 gravity=Physics.gravity;var up=-gravity.normalized;
             Physics.SyncTransforms();bool flowing=false;
             foreach(var vessel in vessels.Values){vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;vessel.Ready=FlowVesselReady(vessel);if(vessel.Ready)vessel.Opening=new ContainerFlowGeometry.Opening(vessel.Live,vessel.Item.transform);}
-            if(!PrepareFlowInputs(gravity,up))return;
+            uint preparation=flowPreparationVersion;
+            if(!PrepareFlowInputs(gravity,up)){
+                // Publication callbacks can start a fresh nested pass. Only the
+                // pass which still owns preparation may defer its execution.
+                if(flowPreparationVersion==unchecked(preparation+1))FlowWorkResources.DeferExecution(this);
+                return;
+            }
+            if(!FlowWorkResources.TryExecute(this,out workIssue)){WaitForFlowWork(workIssue);return;}
             var groups=CaptureFlowExecution();if(groups.Length==0)return;
             HideStreams();
             // Keep pour, scoop and rain phase order across groups. The live

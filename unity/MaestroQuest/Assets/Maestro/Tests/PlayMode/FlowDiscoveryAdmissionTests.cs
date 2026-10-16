@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests {
     Assert.That(SimulationWorkSchedule.TryAdmit(pressure),Is.True);physics.StartPhysics();editor.Liquids.Tick(.05f);CaptureFlowDiscovery("waiting");
     Assert.That(editor.Liquids.LastFlowDiscovery.Captures,Is.Zero,"Discovery must receive capacity before reading geometry");
     Assert.That(editor.NativeActivationPending,Is.False,"A denied discovery pass must not begin native loading");
-    Assert.That(FlowAmount(a),Is.EqualTo(400));Assert.That(FlowAmount(b),Is.Zero);Assert.That(FlowWorkResources.Queued(editor.Liquids),Is.True);
+    Assert.That(FlowAmount(a),Is.EqualTo(400));Assert.That(FlowAmount(b),Is.Zero);Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);Assert.That(FlowWorkResources.Queued(editor.Liquids),Is.False,"Discovery waits before requesting quantity execution");
     long step=FlowWorkResources.Step;
     for(int read=0;read<8;read++){FlowWorkResources.ObserveBudget();editor.Liquids.Observe(a);}
     Assert.That(FlowWorkResources.Step,Is.EqualTo(step));Assert.That(editor.Liquids.LastFlowDiscovery.Captures,Is.Zero);
@@ -60,7 +60,7 @@ namespace Maestro.Quest.Tests {
    RainCup();var go=new GameObject("Logical liquid owner for inventory freshness");var host=go.AddComponent<LiquidPouring>();host.enabled=false;host.Initialize(editor);host.Synchronize(editor.Snapshot());
    SimulationWorkSchedule.Claim pressure=null;
    try{
-    Assert.That(FlowWorkResources.TryAdmit(host,out var error),Is.True,error);var claim=FlowWorkResources.FindClaim(host);int previous=claim.DiscoveryUnits;
+    Assert.That(FlowWorkResources.TryAdmit(host,out var error),Is.True,error);var claim=FlowWorkResources.FindDiscoveryClaim(host);int previous=claim.DiscoveryUnits;
     pressure=SimulationWorkSchedule.Register(()=>true,0,0);pressure.DiscoveryUnits=(int)(FlowDiscoveryWork.MaximumUnits-SimulationWorkSchedule.DiscoveryUnits);Assert.That(pressure.DiscoveryUnits,Is.GreaterThan(0));
     Assert.That(SimulationWorkSchedule.TryAdmit(pressure),Is.True);
     Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Extra accepted discovery source",new(12,1,0),.1f,Color.white,out _,out error),Is.True,error);

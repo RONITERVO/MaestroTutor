@@ -1,0 +1,143 @@
+{
+  "loading": {
+    "discovery": {
+      "step": 5402,
+      "reservations": 1,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "execution": {
+      "step": 5402,
+      "executions": 0,
+      "executionLimit": 32,
+      "queued": 1,
+      "queueLimit": 64,
+      "units": 0,
+      "unitLimit": 524288
+    },
+    "pending": true,
+    "captures": 1,
+    "source": {
+      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 400.0,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Liquid flow is preparing required inputs before requesting execution"
+    },
+    "receiver": {
+      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 0.0,
+        "savedAmountMl": 0.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Liquid flow is preparing required inputs before requesting execution"
+    }
+  },
+  "preparedWaiting": {
+    "discovery": {
+      "step": 5403,
+      "reservations": 1,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "execution": {
+      "step": 5403,
+      "executions": 0,
+      "executionLimit": 32,
+      "queued": 1,
+      "queueLimit": 64,
+      "units": 0,
+      "unitLimit": 524288
+    },
+    "pending": false,
+    "captures": 1,
+    "source": {
+      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 400.0,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+    },
+    "receiver": {
+      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "phase": "waiting",
+      "contents": {
+        "amountMl": 0.0,
+        "savedAmountMl": 0.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+    }
+  },
+  "flowing": {
+    "discovery": {
+      "step": 5403,
+      "reservations": 1,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "execution": {
+      "step": 5403,
+      "executions": 1,
+      "executionLimit": 32,
+      "queued": 0,
+      "queueLimit": 64,
+      "units": 5326,
+      "unitLimit": 524288
+    },
+    "pending": false,
+    "captures": 1,
+    "source": {
+      "sessionId": "f48ebd71eb4c4539a83116719081140d",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 383.96169419066121,
+        "savedAmountMl": 400.0,
+        "capacityMl": 500.0,
+        "transferredMl": 16.038305809338777,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    },
+    "receiver": {
+      "sessionId": "f48ebd71eb4c4539a83116719081140d",
+      "phase": "flowing",
+      "contents": {
+        "amountMl": 16.038305809338777,
+        "savedAmountMl": 0.0,
+        "capacityMl": 500.0,
+        "transferredMl": 0.0,
+        "spilledMl": 0.0
+      },
+      "temporary": false,
+      "error": ""
+    }
+  }
+}

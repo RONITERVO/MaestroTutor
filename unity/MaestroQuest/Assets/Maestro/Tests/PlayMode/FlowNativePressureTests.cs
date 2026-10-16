@@ -126,7 +126,7 @@ namespace Maestro.Quest.Tests {
     var last=fixtures.Last();
     double Received(NativeFlowFixture f)=>(double)f.Editor.Liquids.Observe(f.Receivers[0])["contents"]["amountMl"];
     Assert.That(Received(last),Is.Zero,"Conservative host charges initially exclude the last real room");
-    Assert.That(last.Editor.Liquids.LastFlowDiscovery.Captures,Is.Zero);
+    Assert.That(last.Editor.Liquids.LastFlowDiscovery.Captures,Is.EqualTo(1),"Discovery can prepare inputs while execution waits");
     long step=FlowWorkResources.Step;
     for(int read=0;read<5;read++)foreach(var f in fixtures)NativeFlowHost(f.Editor,f.Sources,f.Receivers);
     Assert.That(FlowWorkResources.Step,Is.EqualTo(step),"Passive inspection cannot serve waiting work");

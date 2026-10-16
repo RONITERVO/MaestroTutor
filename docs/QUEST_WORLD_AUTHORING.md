@@ -2447,15 +2447,21 @@ below; complete-group execution scheduling with stable fairness remains open.
 
 Before discovering liquid dependencies, the runtime reserves a logical discovery
 allowance using saved object and container counts. Dormant objects and empty
-containers count too. The grant covers discovery, the host's liquid execution
-and dependent physics together. It can therefore be requested before any geometry
-is loaded, including when physics prepares first. If capacity is unavailable,
-the liquid pass waits without doing discovery or starting native input loading.
+containers count too. Discovery receives an independent grant before quantity
+execution is requested. Required native inputs can load while execution waits.
+The shared clock chooses discovery grants first; moving physics and liquid
+execution then receive their complete execution allowances together, gated on
+current discovery readiness. Discovery can be requested before geometry exists,
+including when physics prepares first. When discovery itself has no capacity,
+the liquid pass waits without capture or liquid-driven native loading.
 
-A count or owner change requires a current grant. An unsuccessful increase
-retains the earlier booked charge without claiming a partial update or evicting
-another owner. The shared clock preserves the existing priority for complete,
-unchanged requests that fit; reads do not advance priority.
+A count or owner change requires a current grant for that stage. An unsuccessful
+increase retains that stage's earlier booked charge without evicting another
+owner. Discovery and execution are separate requests; cyclic cross-stage
+dependencies are rejected. An unavailable prerequisite keeps execution queued
+without claiming it has run. A preparation wait retains service age and valid
+physics momentum; already booked execution remains charged until the next
+opportunity. Reads do not advance priority.
 
 Each admitted discovery captures collision bounds once and reuses them only
 inside that synchronous pass. Subsequent passes read current placements, so
@@ -2496,8 +2502,24 @@ dormancy and per-world Undo survive the wait and a real receiver's 1+3 / 2+2
 group changes. This is shared-process contention evidence, not a nine-room user
 workflow, a larger single-world format or Quest performance acceptance.
 
-Execution charging still uses all saved containers. The planned group scheduler
-must admit discovery before it knows execution groups, validate spatial inputs
-at execution, and preserve service age and spent capacity through regrouping.
+Execution charging still uses all saved containers. Discovery now runs before
+execution admission. The planned group scheduler
+must additionally validate spatial inputs at execution and preserve service age
+and spent capacity through regrouping.
 It must keep actual moving-body dependencies together and avoid making input
 loading depend on an execution grant that itself waits for those inputs.
+
+
+### Preparation and execution are different states
+
+A booked discovery allowance may mean the room is still loading geometry.
+A room with prepared inputs can still be waiting for an execution opportunity.
+Neither state changes liquid quantities or accumulates missed rain/transfers.
+After loading, the next liquid pass captures current placements again; it never
+executes a discovery snapshot retained across native loading or physics.
+
+Execution admission still charges the whole host. This staging is a prerequisite
+for complete-group execution grants, not that final scheduler. The canonical
+world, per-entity environment policies, saved formats and native limits are
+unchanged. Publication callbacks can start fresh work; an older preparation
+pass cannot defer a newer nested execution request.

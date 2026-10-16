@@ -44195,7 +44195,7 @@
         }
       },
       "label": "Liquid transfer work budget",
-      "description": "Process-wide bounded requests for complete room pouring/scooping/rain passes. Reservations count registered requests, including queued rooms; units count granted opportunities. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Complete dependent physics/liquid groups take fair turns on the shared early fixed-step clock, retained through a rendered frame. All registered moving vessel groups of a host share its complete pass and are admitted with both allowances together. A scheduled delay preserves input residency, accepted motion and the live episode, hides streams, invalidates rain exposure and never accrues skipped time. An unregistered refusal closes prior accepted flow. Quantity candidates are group-local, while preparation and publication still use whole-host work. Discovery has a separate allowance, granted atomically with liquid and dependent physics work; inspect runtime.flowDiscoveryBudget. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible requests but never advance selection, admit work, load geometry, start physics or publish a flow episode.",
+      "description": "Process-wide bounded requests for complete room pouring/scooping/rain passes. Reservations count registered requests, including queued rooms; units count granted opportunities. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Complete dependent physics/liquid groups take fair turns on the shared early fixed-step clock, retained through a rendered frame. All registered moving vessel groups of a host share its complete pass and are admitted with both allowances together. A scheduled delay preserves input residency, accepted motion and the live episode, hides streams, invalidates rain exposure and never accrues skipped time. An unregistered refusal closes prior accepted flow. Quantity candidates are group-local, while preparation and publication still use whole-host work. Discovery is independently admitted before execution; required native inputs can prepare while execution waits. Moving physics and liquid execution still receive their complete allowances together and require current discovery readiness; inspect runtime.flowDiscoveryBudget. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible requests but never advance selection, admit work, load geometry, start physics or publish a flow episode.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44271,7 +44271,7 @@
         }
       },
       "label": "Liquid dependency discovery budget",
-      "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery admission precedes its collision/cavity capture, candidate queries and native input preparation; discovery, liquid execution and dependent physics receive capacity atomically. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot is reused only inside the synchronous discovery pass; later passes read current placements. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Existing saved limits and conservative whole-host execution remain.",
+      "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery is independently admitted before its collision/cavity capture, candidate queries and native input preparation. Native inputs may load while liquid execution waits. Discovery grants are selected first on the shared clock; dependent physics and liquid execution remain queued until the discovery prerequisite is ready, then receive both execution allowances together. A preparation wait preserves service age and does not refund already booked execution within its opportunity. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot is reused only inside the synchronous discovery pass; later passes read current placements. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Existing saved limits and conservative whole-host execution remain.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -46946,7 +46946,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowWorkFacts.cs",
-      "sha256": "bd9a84d58acdaeca848cc3ebf17041de14e59d93378a06b85ed02f8254ee0bd2"
+      "sha256": "b6b73572c53cf9f4be2324041b3934467ae50dcb86f64e30840e5da6ca6abe60"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
@@ -47450,7 +47450,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowDiscoveryWork.cs",
-      "sha256": "7b3ecdf8f50b348621f877f1cd4ebf67f0ffb418d23764fb96e520692f769405"
+      "sha256": "bcbc574b59f921c4c9608f41a3c204a333b6da1deff2b5eba6bb89ee3894bee4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkClock.cs",
@@ -47458,7 +47458,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
-      "sha256": "7c2df3596b05e1beb47398e77f4ac4a2d9eef277da792a25b8df94e76a6d3989"
+      "sha256": "62e5126c46e1d72d42de18258f02287f48e60f19b8f5d7fb447ecc7d195fbcab"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -47506,7 +47506,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
-      "sha256": "253778eee63d7ed8372efa5d4e3d6be029ca791e9754bc6262b421ee76050a99"
+      "sha256": "e6cb13fff1de70150121c464c2374a2e23388de4e6c4a156c078ddaecf5c440b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
@@ -47518,7 +47518,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "86c9b60d79be31769763e216fc86be5418a7d7755221f757199d2fd638840d9f"
+      "sha256": "19ab31c97bc0893361bc3fce2569b7c876e4b9e5f00b30074b5a5e2305104d32"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -48158,7 +48158,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SimulationWorkSchedule.cs",
-      "sha256": "591bde6c13489dd9ffca53acc133753c0089af2feedd4c87ea0a79e6ce6ea6bb"
+      "sha256": "de347e413d385546325b9299749f8e140c3b5498ce325e6012aa9e64c9290534"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",

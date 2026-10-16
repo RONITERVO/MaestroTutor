@@ -1,10 +1,10 @@
 {
   "trace": [
     {
-      "step": 108,
+      "step": 5349,
       "rooms": [
         {
-          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "worldId": "5b9a4bc099594a2186323b4446fa347b",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -12,7 +12,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169419066121,
@@ -25,7 +25,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169419066121,
@@ -40,7 +40,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038305809338777,
@@ -53,7 +53,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038305809338777,
@@ -76,7 +76,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "worldId": "534397a718794b56a53f06a30aba17f3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -84,7 +84,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -99,7 +99,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -122,7 +122,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "worldId": "eb3015841a914fd49bd15a1c417b53fc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -130,7 +130,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -145,7 +145,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -168,7 +168,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "worldId": "dc031632c2074a3a90321ba096e741a0",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -176,7 +176,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -191,7 +191,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -214,7 +214,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "worldId": "ff8e2a1820094a2dad0130133d6d8424",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -222,7 +222,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -237,7 +237,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -260,7 +260,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "ff2f597b71e844099236e6220765028e",
+          "worldId": "430cc837a2eb4d72aab08fa59c077baf",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -268,7 +268,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -283,7 +283,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -306,7 +306,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "worldId": "c98687c3d97e4b58ab78e78686599bdd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -314,7 +314,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -329,7 +329,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -352,7 +352,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "worldId": "c86fac6d788e4c069d8301ebd13bc1a9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -360,7 +360,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -375,7 +375,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -398,7 +398,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "worldId": "4a74ea19d0a54b178a04090a776ecad2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -406,7 +406,7 @@
           "ready": false,
           "sources": [
             {
-              "sessionId": "f352411c7daa457183269618273438e2",
+              "sessionId": "6c605814796a435bbb442f57d1070a9b",
               "phase": "waiting",
               "contents": {
                 "amountMl": 400.0,
@@ -421,7 +421,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "f352411c7daa457183269618273438e2",
+              "sessionId": "6c605814796a435bbb442f57d1070a9b",
               "phase": "waiting",
               "contents": {
                 "amountMl": 0.0,
@@ -439,9 +439,9 @@
           "pourSegments": 0,
           "pourCandidates": 0,
           "scoopCandidates": 0,
-          "discoveryCaptures": 0,
-          "collisionReads": 0,
-          "cavityReads": 0
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
         }
       ],
       "flowBudget": {
@@ -455,10 +455,10 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 108,
+        "step": 5349,
         "reservations": 9,
-        "executions": 8,
-        "units": 69040,
+        "executions": 9,
+        "units": 77670,
         "unitLimit": 524288,
         "objectLimit": 66
       },
@@ -472,10 +472,10 @@
       }
     },
     {
-      "step": 109,
+      "step": 5350,
       "rooms": [
         {
-          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "worldId": "5b9a4bc099594a2186323b4446fa347b",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -483,7 +483,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27889089770366,
@@ -496,7 +496,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27889089770366,
@@ -511,7 +511,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.72110910229631,
@@ -524,7 +524,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.72110910229631,
@@ -547,7 +547,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "worldId": "534397a718794b56a53f06a30aba17f3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -555,7 +555,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -570,7 +570,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -593,7 +593,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "worldId": "eb3015841a914fd49bd15a1c417b53fc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -601,7 +601,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -616,7 +616,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -639,7 +639,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "worldId": "dc031632c2074a3a90321ba096e741a0",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -647,7 +647,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -662,7 +662,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -685,7 +685,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "worldId": "ff8e2a1820094a2dad0130133d6d8424",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -693,7 +693,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -708,7 +708,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -731,7 +731,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "ff2f597b71e844099236e6220765028e",
+          "worldId": "430cc837a2eb4d72aab08fa59c077baf",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -739,7 +739,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -754,7 +754,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -777,7 +777,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "worldId": "c98687c3d97e4b58ab78e78686599bdd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -785,7 +785,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -800,7 +800,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -823,7 +823,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "worldId": "c86fac6d788e4c069d8301ebd13bc1a9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -831,7 +831,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -846,7 +846,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -869,7 +869,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "worldId": "4a74ea19d0a54b178a04090a776ecad2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -877,7 +877,7 @@
           "ready": false,
           "sources": [
             {
-              "sessionId": "f352411c7daa457183269618273438e2",
+              "sessionId": "6c605814796a435bbb442f57d1070a9b",
               "phase": "waiting",
               "contents": {
                 "amountMl": 400.0,
@@ -892,7 +892,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "f352411c7daa457183269618273438e2",
+              "sessionId": "6c605814796a435bbb442f57d1070a9b",
               "phase": "waiting",
               "contents": {
                 "amountMl": 0.0,
@@ -910,9 +910,9 @@
           "pourSegments": 0,
           "pourCandidates": 0,
           "scoopCandidates": 0,
-          "discoveryCaptures": 0,
-          "collisionReads": 0,
-          "cavityReads": 0
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
         }
       ],
       "flowBudget": {
@@ -926,10 +926,10 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 109,
+        "step": 5350,
         "reservations": 9,
-        "executions": 8,
-        "units": 69040,
+        "executions": 9,
+        "units": 77670,
         "unitLimit": 524288,
         "objectLimit": 66
       },
@@ -943,10 +943,10 @@
       }
     },
     {
-      "step": 110,
+      "step": 5351,
       "rooms": [
         {
-          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "worldId": "5b9a4bc099594a2186323b4446fa347b",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -954,7 +954,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95168150618,
@@ -967,7 +967,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95168150618,
@@ -982,7 +982,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.04831849381992,
@@ -995,7 +995,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.04831849381992,
@@ -1018,7 +1018,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "worldId": "534397a718794b56a53f06a30aba17f3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1026,7 +1026,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1041,7 +1041,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1064,7 +1064,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "worldId": "eb3015841a914fd49bd15a1c417b53fc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1072,7 +1072,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1087,7 +1087,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1110,7 +1110,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "worldId": "dc031632c2074a3a90321ba096e741a0",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1118,7 +1118,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1133,7 +1133,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1156,7 +1156,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "worldId": "ff8e2a1820094a2dad0130133d6d8424",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1164,7 +1164,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1179,7 +1179,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1202,7 +1202,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "ff2f597b71e844099236e6220765028e",
+          "worldId": "430cc837a2eb4d72aab08fa59c077baf",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1210,7 +1210,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1225,7 +1225,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1248,7 +1248,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "worldId": "c98687c3d97e4b58ab78e78686599bdd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1256,7 +1256,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1271,7 +1271,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1294,7 +1294,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "worldId": "c86fac6d788e4c069d8301ebd13bc1a9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1302,7 +1302,7 @@
           "ready": false,
           "sources": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "waiting",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -1317,7 +1317,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "waiting",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -1335,12 +1335,12 @@
           "pourSegments": 0,
           "pourCandidates": 0,
           "scoopCandidates": 0,
-          "discoveryCaptures": 0,
-          "collisionReads": 0,
-          "cavityReads": 0
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
         },
         {
-          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "worldId": "4a74ea19d0a54b178a04090a776ecad2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1348,7 +1348,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "sessionId": "35c84a56aafa42749ef09b24b3163d36",
               "phase": "flowing",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -1363,7 +1363,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "sessionId": "35c84a56aafa42749ef09b24b3163d36",
               "phase": "flowing",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -1397,10 +1397,10 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 110,
+        "step": 5351,
         "reservations": 9,
-        "executions": 8,
-        "units": 69040,
+        "executions": 9,
+        "units": 77670,
         "unitLimit": 524288,
         "objectLimit": 66
       },
@@ -1414,10 +1414,10 @@
       }
     },
     {
-      "step": 111,
+      "step": 5352,
       "rooms": [
         {
-          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "worldId": "5b9a4bc099594a2186323b4446fa347b",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -1425,7 +1425,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.9801617667876,
@@ -1438,7 +1438,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.9801617667876,
@@ -1453,7 +1453,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019838233212326,
@@ -1466,7 +1466,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.04831849381992,
@@ -1489,7 +1489,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "worldId": "534397a718794b56a53f06a30aba17f3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1497,7 +1497,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.98015852957587,
@@ -1512,7 +1512,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019841470424105,
@@ -1535,7 +1535,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "worldId": "eb3015841a914fd49bd15a1c417b53fc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1543,7 +1543,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.98015852957587,
@@ -1558,7 +1558,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019841470424105,
@@ -1581,7 +1581,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "worldId": "dc031632c2074a3a90321ba096e741a0",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1589,7 +1589,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.98015852957587,
@@ -1604,7 +1604,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019841470424105,
@@ -1627,7 +1627,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "worldId": "ff8e2a1820094a2dad0130133d6d8424",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1635,7 +1635,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.98015852957587,
@@ -1650,7 +1650,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019841470424105,
@@ -1673,7 +1673,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "ff2f597b71e844099236e6220765028e",
+          "worldId": "430cc837a2eb4d72aab08fa59c077baf",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1681,7 +1681,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.98015852957587,
@@ -1696,7 +1696,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019841470424105,
@@ -1719,7 +1719,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "worldId": "c98687c3d97e4b58ab78e78686599bdd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1727,7 +1727,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 337.98015852957587,
@@ -1742,7 +1742,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 62.019841470424105,
@@ -1765,7 +1765,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "worldId": "c86fac6d788e4c069d8301ebd13bc1a9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1773,7 +1773,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "flowing",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -1788,7 +1788,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "flowing",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -1811,7 +1811,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "worldId": "4a74ea19d0a54b178a04090a776ecad2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1819,7 +1819,7 @@
           "ready": false,
           "sources": [
             {
-              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "sessionId": "35c84a56aafa42749ef09b24b3163d36",
               "phase": "waiting",
               "contents": {
                 "amountMl": 383.96169338167289,
@@ -1834,7 +1834,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "sessionId": "35c84a56aafa42749ef09b24b3163d36",
               "phase": "waiting",
               "contents": {
                 "amountMl": 16.038306618327088,
@@ -1852,9 +1852,9 @@
           "pourSegments": 0,
           "pourCandidates": 0,
           "scoopCandidates": 0,
-          "discoveryCaptures": 0,
-          "collisionReads": 0,
-          "cavityReads": 0
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
         }
       ],
       "flowBudget": {
@@ -1868,10 +1868,10 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 111,
+        "step": 5352,
         "reservations": 9,
-        "executions": 8,
-        "units": 69040,
+        "executions": 9,
+        "units": 77670,
         "unitLimit": 524288,
         "objectLimit": 66
       },
@@ -1886,10 +1886,10 @@
       "topology": "merged"
     },
     {
-      "step": 112,
+      "step": 5353,
       "rooms": [
         {
-          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "worldId": "5b9a4bc099594a2186323b4446fa347b",
           "vessels": 16,
           "nativeVessels": 4,
           "dormantVessels": 12,
@@ -1897,7 +1897,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.3644321176551,
@@ -1910,7 +1910,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.3644321176551,
@@ -1925,7 +1925,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635567882344859,
@@ -1938,7 +1938,7 @@
               "error": ""
             },
             {
-              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "sessionId": "580c46eaff4f4b8c8ab4bfde23ad0c91",
               "phase": "flowing",
               "contents": {
                 "amountMl": 61.664048142952453,
@@ -1961,7 +1961,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "worldId": "534397a718794b56a53f06a30aba17f3",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -1969,7 +1969,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.36442807058165,
@@ -1984,7 +1984,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "sessionId": "7cc35bb6a83746c4b6ba351c55e94dc0",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635571929418333,
@@ -2007,7 +2007,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "worldId": "eb3015841a914fd49bd15a1c417b53fc",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2015,7 +2015,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.36442807058165,
@@ -2030,7 +2030,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "sessionId": "8874647013ff4e06afab85cf3eb28172",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635571929418333,
@@ -2053,7 +2053,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "worldId": "dc031632c2074a3a90321ba096e741a0",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2061,7 +2061,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.36442807058165,
@@ -2076,7 +2076,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "sessionId": "223dfd59d701472c94558bd6fa6ef4d3",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635571929418333,
@@ -2099,7 +2099,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "worldId": "ff8e2a1820094a2dad0130133d6d8424",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2107,7 +2107,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.36442807058165,
@@ -2122,7 +2122,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "sessionId": "018234df99964aad9266874e9f6c1ef2",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635571929418333,
@@ -2145,7 +2145,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "ff2f597b71e844099236e6220765028e",
+          "worldId": "430cc837a2eb4d72aab08fa59c077baf",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2153,7 +2153,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.36442807058165,
@@ -2168,7 +2168,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "sessionId": "a5694d1c11e74a85b0e3b0867952c652",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635571929418333,
@@ -2191,7 +2191,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "worldId": "c98687c3d97e4b58ab78e78686599bdd",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2199,7 +2199,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 323.36442807058165,
@@ -2214,7 +2214,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "sessionId": "db56af6c39d544678427b22d580490f5",
               "phase": "flowing",
               "contents": {
                 "amountMl": 76.635571929418333,
@@ -2237,7 +2237,7 @@
           "cavityReads": 16
         },
         {
-          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "worldId": "c86fac6d788e4c069d8301ebd13bc1a9",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2245,7 +2245,7 @@
           "ready": false,
           "sources": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "waiting",
               "contents": {
                 "amountMl": 352.95167907859582,
@@ -2260,7 +2260,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "sessionId": "76959c1238cc45c3969ff684ec9a3b95",
               "phase": "waiting",
               "contents": {
                 "amountMl": 47.048320921404176,
@@ -2278,12 +2278,12 @@
           "pourSegments": 0,
           "pourCandidates": 0,
           "scoopCandidates": 0,
-          "discoveryCaptures": 0,
-          "collisionReads": 0,
-          "cavityReads": 0
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
         },
         {
-          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "worldId": "4a74ea19d0a54b178a04090a776ecad2",
           "vessels": 16,
           "nativeVessels": 2,
           "dormantVessels": 14,
@@ -2291,7 +2291,7 @@
           "ready": true,
           "sources": [
             {
-              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "sessionId": "35c84a56aafa42749ef09b24b3163d36",
               "phase": "flowing",
               "contents": {
                 "amountMl": 368.27888927952381,
@@ -2306,7 +2306,7 @@
           ],
           "receivers": [
             {
-              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "sessionId": "35c84a56aafa42749ef09b24b3163d36",
               "phase": "flowing",
               "contents": {
                 "amountMl": 31.721110720476176,
@@ -2340,10 +2340,10 @@
         "rainSamples": 5
       },
       "discoveryBudget": {
-        "step": 112,
+        "step": 5353,
         "reservations": 9,
-        "executions": 8,
-        "units": 69040,
+        "executions": 9,
+        "units": 77670,
         "unitLimit": 524288,
         "objectLimit": 66
       },

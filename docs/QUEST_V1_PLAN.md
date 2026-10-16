@@ -12323,3 +12323,51 @@ fresh geometry across loading/physics, stable service age across split/merge,
 and charges for work already consumed within an opportunity. Cold preparation
 must not deadlock with coupled physics and liquid grants. All independent
 headset/provider/audio/Store gates and existing holds remain open.
+
+
+## Discovery before native preparation and execution (2026-10-16)
+
+The preserved old-code regression confirmed that a cold liquid receiver could
+not begin loading while quantity execution capacity was occupied: discovery
+never ran. The runtime now admits discovery independently. Required native
+inputs can prepare while execution is queued, and a fresh synchronous capture
+runs after loading before quantities change.
+
+Discovery grants are chosen first on the shared opportunity clock. Moving
+physics and liquid execution still require their complete coupled allowances
+and current discovery readiness. An unavailable prerequisite leaves execution
+queued and preserves valid momentum. Input waiting retains service age and does
+not refund an already booked grant during that opportunity. Cross-stage
+dependency edges are explicitly refused, preventing discovery from waiting on
+the execution capacity that needs its inputs.
+
+The first broader run passed six EditMode tests and 36 PlayMode tests but failed
+three. Two assertions still assumed the old single queue; they now distinguish
+queued discovery from unbooked execution while retaining their loading and
+recovery checks. The third exposed an implementation bug: after a publication
+callback started fresh nested flow, the outer pass deferred that new request.
+A preparation-version guard now lets only the owning pass defer execution.
+The corrected focused run passed all six EditMode and 39 PlayMode tests.
+An additional explicit cross-stage rejection is included in the full run.
+
+The full native sweep passed all 1,334 EditMode tests and 1,811 PlayMode tests, with 3
+optional private-asset skips and no failures. The retained-wall DSP/reset regression
+passed in this run; that does not identify the historical later configuration event or
+resolve acoustic-quality/SDK issues. The full offline web suite passed 3,156 tests
+across 349 files; app/probe TypeScript and catalog provenance passed. Current full-run
+native captures were copied to the shared web fixtures and checked again before
+delivery. All 3,168 frozen native inputs match the tested mirror. No device, paid
+provider, Android, signing, deployment or Meta operation ran.
+
+The shared catalog describes the stages without changing fact IDs or record
+types. Captured native budget/container receipts exercise the same web reader.
+The cold-loading case uses a real native receiver and a logical pressure claim;
+the separate nine-room reproduction uses actual native resource owners.
+All nine valid rooms can now discover inputs even when one room waits to execute.
+Their conservative quantity charges and all saved/native limits remain unchanged.
+
+Complete-group execution allowances, phase-fresh dependency closure, persistent
+member service age and spent-capacity accounting through split/merge remain
+required. This is the preparation stage of that refactor, not its completion.
+The independent device/provider/audio-quality/Store release gates remain open.
+Evidence: .quest-evidence/flow-staged-discovery/.

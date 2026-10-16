@@ -16,12 +16,38 @@ namespace Maestro.Quest.Tests {
    Assert.That(FlowDiscoveryWork.Demand(-1,2),Is.EqualTo(int.MaxValue));Assert.That(FlowDiscoveryWork.Demand(2,1),Is.EqualTo(int.MaxValue));
    Assert.That(FlowDiscoveryWork.Demand(1,int.MaxValue),Is.EqualTo(int.MaxValue));Assert.That(FlowDiscoveryWork.Demand(int.MaxValue,int.MaxValue),Is.EqualTo(int.MaxValue));
   }
-  [Test]public void FlowDiscoveryOversizeCoupledRequestCannotAcquirePartialAllowances(){
+  [Test]public void FlowDiscoveryPreparationGateLeavesExecutionQueuedUntilReady() {
+   var discovery=SimulationWorkSchedule.Register(()=>true,0,0);discovery.DiscoveryUnits=1;
+   var execution=SimulationWorkSchedule.Register(()=>true,0,1);execution.FlowUnits=FlowWorkResources.MaximumUnits;
+   execution.Prepared=()=>SimulationWorkSchedule.Ready(discovery);
+   try {
+    Assert.That(SimulationWorkSchedule.Queued(execution),Is.True);
+    Assert.That(SimulationWorkSchedule.TryAdmit(execution),Is.False);Assert.That(execution.Granted,Is.False);
+    SimulationWorkSchedule.Advance(.05f);
+    Assert.That(discovery.Granted,Is.True);Assert.That(execution.Granted,Is.True,"Discovery grants must be selected before dependent execution eligibility");
+   }finally{SimulationWorkSchedule.Remove(execution);SimulationWorkSchedule.Remove(discovery);}
+  }
+  [Test]public void FlowDiscoveryLostPreparationDoesNotRefundAlreadyBookedExecution() {
+   bool prepared=true;
+   var execution=SimulationWorkSchedule.Register(()=>true,0,1);execution.FlowUnits=FlowWorkResources.MaximumUnits;execution.Prepared=()=>prepared;
+   var peer=SimulationWorkSchedule.Register(()=>true,0,1);peer.FlowUnits=1;
+   try {
+    Assert.That(SimulationWorkSchedule.TryAdmit(execution),Is.True);prepared=false;
+    Assert.That(SimulationWorkSchedule.Queued(execution),Is.True);
+    Assert.That(SimulationWorkSchedule.Ready(execution),Is.False);
+    Assert.That(SimulationWorkSchedule.TryAdmit(peer),Is.False,"The old grant still occupies this opportunity");
+    long age=execution.Served;SimulationWorkSchedule.Advance(.05f);
+    Assert.That(peer.Granted,Is.True);Assert.That(execution.Served,Is.EqualTo(age),"Input waiting cannot pretend to serve the execution request");
+    prepared=true;SimulationWorkSchedule.Advance(.05f);
+    Assert.That(execution.Granted,Is.True);Assert.That(peer.Granted,Is.False);
+   }finally{SimulationWorkSchedule.Remove(peer);SimulationWorkSchedule.Remove(execution);}
+  }
+  [Test]public void FlowDiscoveryCannotDependOnExecutionCapacityEvenWhenBothWouldFit(){
    var discovery=SimulationWorkSchedule.Register(()=>true,0,0);var execution=SimulationWorkSchedule.Register(()=>true,0,0);
    try{
-    discovery.DiscoveryUnits=FlowDiscoveryWork.MaximumUnits;execution.DiscoveryUnits=1;execution.FlowUnits=1;execution.Dependencies=new[]{discovery};SimulationWorkSchedule.Changed();
+    discovery.DiscoveryUnits=1;execution.FlowUnits=1;execution.Dependencies=new[]{discovery};SimulationWorkSchedule.Changed();
     Assert.That(SimulationWorkSchedule.TryAdmit(execution),Is.False);Assert.That(SimulationWorkSchedule.Ready(discovery),Is.False);Assert.That(SimulationWorkSchedule.Queued(execution),Is.False);
-    StringAssert.Contains("exceeds",SimulationWorkSchedule.Refusal(execution,"waiting"));
+    StringAssert.Contains("independent",SimulationWorkSchedule.Refusal(execution,"waiting"));
     Assert.That(discovery.Granted||execution.Granted,Is.False);
    }finally{SimulationWorkSchedule.Remove(execution);SimulationWorkSchedule.Remove(discovery);}
   }

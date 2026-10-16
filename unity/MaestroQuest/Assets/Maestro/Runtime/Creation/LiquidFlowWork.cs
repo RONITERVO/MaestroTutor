@@ -25,11 +25,11 @@ namespace Maestro.Quest.Creation
         string FlowWorkIssue=>FlowWorkEligible&&!FlowWorkResources.Ready(this,out var issue)?issue:null;
         string FlowPhase(string id)=>blocked?"failed":(FlowWorkIssue??FlowInputIssue(id))!=null?"waiting":Owns(id)?"flowing":"idle";
         void InvalidateRain(string reason){foreach(var v in vessels.Values){v.Exposure=0;v.RainReady=false;v.RainReason=reason;}}
-        void WaitForFlowWork(string reason){
+        void WaitForFlowWork(string reason,bool discovery=false){
             // Only the active flow tick closes accepted work. Admission checks in
             // physics preparation must not mutate the journal or re-enter a save.
             InvalidateRain(reason);HideStreams();
-            if(FlowWorkResources.Queued(this))return; // A missed opportunity is not a new episode.
+            if(discovery?FlowWorkResources.QueuedDiscovery(this):FlowWorkResources.Queued(this))return; // A missed opportunity is not a new episode.
             ReleaseFlowInputs();Finish(out _);
         }
     }

@@ -28,7 +28,7 @@ it('preserves fresh native discovery across moved obstacles with one collision c
  }
  const fact=behaviourFact('runtime.flowDiscoveryBudget');
  expect(fact?.features).toEqual(['runtimeDiagnostics.v1']);
- expect(fact?.description).toContain('atomically');
+ expect(fact?.description).toContain('independently admitted');
  expect(fact?.description).toContain('not measured CPU time');
  expect(validFactValue('runtime.flowDiscoveryBudget',{...native.waiting.budget,units:'unknown'})).toBe(false);
  expect(validFactValue('runtime.flowDiscoveryBudget',{...native.waiting.budget,startPhysics:true})).toBe(false);

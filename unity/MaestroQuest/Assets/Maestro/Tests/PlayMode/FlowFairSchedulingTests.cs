@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests {
    var(from,to)=FixedFlowCups();Assert.That(editor.RetireNativeArea(NativeAreaFor(to),out var error),Is.True,error);physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(editor.NativeActivationPending,Is.True);
    FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();
    try{
-    editor.Liquids.Tick(.05f);Assert.That(FlowWorkResources.Queued(editor.Liquids),Is.True);Assert.That(FlowWorkResources.Ready(editor.Liquids,out _),Is.False);Assert.That(editor.NativeActivationPending,Is.True);
+    editor.Liquids.Tick(.05f);Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);Assert.That(FlowWorkResources.FindClaim(editor.Liquids).Granted,Is.False,"Pending input loading must not reserve quantity execution");Assert.That(FlowWorkResources.Ready(editor.Liquids,out _),Is.False);Assert.That(editor.NativeActivationPending,Is.True);
     yield return NavigationLoadingDone();Assert.That(editor.Find(to),Is.Not.Null,"A scheduling delay must not cancel the already-owned native load");Assert.That(Liquid(from),Is.EqualTo(400));Assert.That(Liquid(to),Is.Zero);
    }finally{ReleaseFlowWork(held);}
    editor.Liquids.Tick(.05f);Assert.That(Liquid(to),Is.GreaterThan(0).And.LessThanOrEqualTo(18.75));physics.PausePhysics();yield return null;

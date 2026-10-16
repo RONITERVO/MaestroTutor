@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 namespace Maestro.Quest.Creation {
- // Logical discovery allowance, independently accounted but granted atomically
- // with the host's flow and dependent physics. No geometry is needed to price it.
+ // Logical discovery allowance, independently admitted before flow execution.
+ // No geometry is needed to price it; preparing inputs cannot need an execution grant.
  internal static class FlowDiscoveryWork {
   internal const int MaximumUnits=524288,MaximumObjects=RoomDocument.MaximumObjects+2;
   internal static int Demand(int vessels,int objects){
