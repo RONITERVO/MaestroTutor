@@ -2,7 +2,7 @@
   "budget": {
     "reservations": 1,
     "units": 43680,
-    "reservationLimit": 32,
+    "reservationLimit": 64,
     "unitLimit": 524288,
     "samplesPerBody": 64,
     "collidersPerBody": 64,
@@ -11,27 +11,27 @@
   },
   "current": [
     {
-      "reservationId": "33789c1b621c4f32838ce1be182db6cc",
-      "worldId": "df90ccd7c39b42afbdcdf3c21076f55f",
-      "regionId": "b8859e4f77de4afe86ff97ba495a130a",
+      "reservationId": "9dd819cd352745918eeef4e7db2c6ddb",
+      "worldId": "e4c6afe1725246f4827811e5e7b94b44",
+      "regionId": "75eb7b3cb8374227946ba7a0821e0dbe",
       "units": 43680,
       "current": true
     }
   ],
   "stale": [
     {
-      "reservationId": "33789c1b621c4f32838ce1be182db6cc",
-      "worldId": "df90ccd7c39b42afbdcdf3c21076f55f",
-      "regionId": "b8859e4f77de4afe86ff97ba495a130a",
+      "reservationId": "9dd819cd352745918eeef4e7db2c6ddb",
+      "worldId": "e4c6afe1725246f4827811e5e7b94b44",
+      "regionId": "75eb7b3cb8374227946ba7a0821e0dbe",
       "units": 43680,
       "current": false
     }
   ],
   "resized": [
     {
-      "reservationId": "33789c1b621c4f32838ce1be182db6cc",
-      "worldId": "df90ccd7c39b42afbdcdf3c21076f55f",
-      "regionId": "b8859e4f77de4afe86ff97ba495a130a",
+      "reservationId": "9dd819cd352745918eeef4e7db2c6ddb",
+      "worldId": "e4c6afe1725246f4827811e5e7b94b44",
+      "regionId": "75eb7b3cb8374227946ba7a0821e0dbe",
       "units": 43744,
       "current": true
     }

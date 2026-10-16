@@ -35660,7 +35660,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. Expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Value/source is the vessel ID. participantId identifies a created prop, maestro, input:left or input:right; kind distinguishes object/avatar/hand/controller. phase is entered/exited for aggregate membership changes, or crossed when a sampled point travels across the finite free surface and ends dry beyond the cavity between samples. Multiple samples collapse to one representative event per phase and participant; this is not exhaustive continuous collision detection. speed is sampled physical metres/second capped at 30, depth is sampled metres, x/y/z is a representative surface point in authored coordinates. A queued point remains in its authored room. Before delivery, participant pose/tracking/ownership and source water geometry/quantity must still match the sampled state. Changed participants are discarded without dropping independent valid participants. A nested sampling pass or changed room discards the remaining old batch. Discarded edges do not add ripples. Use a condition on phase/kind/participantId to attach a sound or behavior; ongoing submerged movement only refreshes ripples, not event spam.",
+      "description": "Complete contact passes take independent fair turns on the shared simulation clock, at most one automatic pass per opportunity. Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. A missed sampling opportunity, expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Value/source is the vessel ID. participantId identifies a created prop, maestro, input:left or input:right; kind distinguishes object/avatar/hand/controller. phase is entered/exited for aggregate membership changes, or crossed when a sampled point travels across the finite free surface and ends dry beyond the cavity between samples. Multiple samples collapse to one representative event per phase and participant; this is not exhaustive continuous collision detection. speed is sampled physical metres/second capped at 30, depth is sampled metres, x/y/z is a representative surface point in authored coordinates. A queued point remains in its authored room. Before delivery, participant pose/tracking/ownership and source water geometry/quantity must still match the sampled state. Changed participants are discarded without dropping independent valid participants. A nested sampling pass, new scheduling opportunity or changed room discards the remaining old batch. Discarded edges do not add ripples. Use a condition on phase/kind/participantId to attach a sound or behavior; ongoing submerged movement only refreshes ripples, not event spam.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -39552,7 +39552,7 @@
         }
       },
       "label": "Object or Maestro water contact",
-      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. Expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Read the last sampled aggregate for a created prop or Maestro. surface is an authored-coordinate projection, depth is physical metres. When dry, surface is only the first sampled position.",
+      "description": "Complete contact passes take independent fair turns on the shared simulation clock, at most one automatic pass per opportunity. Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. A missed sampling opportunity, expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Read the last sampled aggregate for a created prop or Maestro. surface is an authored-coordinate projection, depth is physical metres. When dry, surface is only the first sampled position.",
       "input": {
         "type": "object",
         "properties": {
@@ -39598,7 +39598,7 @@
         }
       },
       "label": "Tracked hand or controller water contact",
-      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. Expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Pointing a ray at distant water does not touch it. Tracked physical inputs use the global real-room policy.",
+      "description": "Complete contact passes take independent fair turns on the shared simulation clock, at most one automatic pass per opportunity. Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. A missed sampling opportunity, expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Pointing a ray at distant water does not touch it. Tracked physical inputs use the global real-room policy.",
       "input": {
         "type": "object",
         "properties": {
@@ -44118,7 +44118,7 @@
         }
       },
       "label": "Water contact work budget",
-      "description": "Process-wide stable potential-work reservations for complete room water-contact passes, including held/animated objects, six avatar joints and two tracked inputs. Admission occurs before displacement capture and contact queries. Capacity refusal makes contacts unknown and discards their baseline; resuming cannot manufacture enter/exit/crossing events or old ripples. Logical units cover candidate/proof allowances, not measured CPU time or frame rate. Proof internals, force sampling, pouring, scooping, rain, external observations and engine costs are excluded. Independent of saved quotas and native allocation budgets. Reads may retire ineligible grants, but never admit sampling, start physics or publish events.",
+      "description": "Process-wide bounded requests for complete room water-contact passes, including held/animated objects, six avatar joints and two tracked inputs. Reservations include queued passes; units count booked allowances. Fair admission occurs before displacement capture and contact queries on the shared simulation clock, independently of physics/flow execution. Scheduled waits make contacts unknown and discard crossing continuity; existing ripples finish naturally. Resuming cannot manufacture enter/exit/crossing events or old ripples. Oversize passes and a full request queue are explicit refusals. Logical units cover candidate/proof allowances, not measured CPU time or frame rate. Proof internals, force sampling, pouring, scooping, rain, external observations and engine costs are excluded. Independent of saved quotas and native allocation budgets. Reads may retire ineligible grants, but never admit sampling, start physics or publish events.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44136,14 +44136,14 @@
         }
       },
       "label": "Water contact work reservation",
-      "description": "Read one runtime.contactWorkBudget grant by index. Indices may shift; reservationId is runtime-only. World and region identify the copied room owner. Current means the complete potential demand and owner still match, not that geometry, tracking or any contact is known. Demand growth cannot evict another grant or admit a room prefix. Paused, inactive or destroyed sampling hosts release work; held and animated objects remain contact participants. Reads are detached and cannot resume sampling.",
+      "description": "Read one runtime.contactWorkBudget request by index, including waiting passes. Indices may shift; reservationId is runtime-only. World and region identify the copied room owner. Current means a complete sampling allowance is booked and its demand and owner still match, not that geometry, tracking or any contact is known. Demand growth cannot evict another grant or admit a room prefix. Paused, inactive or destroyed sampling hosts release work; held and animated objects remain contact participants. Reads are detached and cannot resume sampling.",
       "input": {
         "type": "object",
         "properties": {
           "index": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 31.0
+            "maximum": 63.0
           }
         },
         "required": [
@@ -44156,6 +44156,26 @@
       },
       "features": [
         "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.contactWorkSchedule",
+      "version": 1,
+      "type": {
+        "record": {
+          "step": "number",
+          "executions": "number",
+          "executionLimit": "number",
+          "queued": "number",
+          "queueLimit": "number",
+          "units": "number",
+          "unitLimit": "number"
+        }
+      },
+      "label": "Contact sampling opportunities",
+      "description": "Read the same opportunity clock as runtime.physicsWorkSchedule and runtime.flowWorkSchedule. Complete contact passes take independent fair turns; booked allowances may await refreshed demand. A finite unchanged fitting pass gets a turn under continuing demand. Automatic contact sampling runs at most once per opportunity. A missed opportunity breaks crossing continuity, and stale tracking/geometry still makes observations unknown. Existing ripples may finish; missed events and accumulated time are never replayed. Reading cannot advance the clock, acquire sampling, start physics or emit contacts. Logical units are not measured device performance.",
+      "features": [
         "runtimeDiagnostics.v1"
       ]
     },
@@ -46831,7 +46851,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactWorkFacts.cs",
-      "sha256": "efccad60e2a97eb9f65869e902a086055c2321be6e9097e45961099379c53e98"
+      "sha256": "26184fc59dd8f310be4a92e0e60385cac71b1c18f384b6065de06837e9eba50c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
@@ -46999,7 +47019,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumContactFacts.cs",
-      "sha256": "b90285a72b5228f5e528d97bc2ca9d391ac77a3ecd91ebf2aab0d78c558f31f4"
+      "sha256": "939f4e368e1cfad0faf444d7ba41b31eac7469b40ee57c05c421386c4c8ba9f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumFacts.cs",
@@ -47339,7 +47359,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContactWorkResources.cs",
-      "sha256": "96fa5e2ec963fc5548ebc9d000c01e4deadaecebf73f9c615ed0d93aa92f7789"
+      "sha256": "5aba1ed461c12866ac3ccf009f1257a7e365558312433e4fe77aff3247d000d6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
@@ -47439,15 +47459,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContactValidity.cs",
-      "sha256": "7f7ca25d0bf5100b0f94ec68dd9ce5184f14546134b44fbf9286297e79bb4b85"
+      "sha256": "6d957d12b282972e5f92dccff6dcec48e255b92a2157430d6e96f5c5a6cbe015"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContactWork.cs",
-      "sha256": "062969c899cf84da910f52aa6dbd72dad7f9d42d157656930ff3b23de2142870"
+      "sha256": "ae3265501f704ed076adc4a65a4c3c3e2a9766886f4c427b6cdbde6b8de0cda5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
-      "sha256": "677b8d452773a00798fdc0a37ada7b2268f3a6875d9ef222df1195fe526af222"
+      "sha256": "421ac86beeb49801c5a5726a385c6857b6bc0e38f2f333bc24169dc64ede602d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowGroups.cs",
@@ -47475,7 +47495,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "8f26816c28073d0163631ae1cd077d30fc73ee35d226229dc361c25ef64e5bcd"
+      "sha256": "edf285c581e31276a7db3e72ceebd40d1a3f23bead659f39957e51acc6a1b550"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -48115,7 +48135,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SimulationWorkSchedule.cs",
-      "sha256": "7fdf7d9aad7eb3c3935b5013535bf1ff67f5d0dd57fccd5dc6011dac2484cc30"
+      "sha256": "ab3189c910e8d3af02af38cc08a3894181cfb2ddd9a411df95774be2e8b025b7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
@@ -48843,7 +48863,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "3623f32ab15c82da90f625346a589421dc959059221981af80ffeaae7408f12d"
+      "sha256": "2fd1410b8760301cf67de699e799cd234feaa199aec5e49fb2111616233aa35d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

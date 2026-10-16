@@ -17,10 +17,16 @@ namespace Maestro.Quest.Creation
                 return demand;
             }
         }
-        void WaitForContactWork(string reason)
+        long automaticContactStep=-1;
+        internal void TickAutomaticContacts(){
+            long step=SimulationWorkSchedule.Step;if(automaticContactStep==step)return;
+            automaticContactStep=step;TickContacts(SimulationWorkSchedule.StepSeconds);
+        }
+        void WaitForContactWork(string reason,bool scheduled=false)
         {
             contactEpoch++;contactEvents.Clear();
             foreach(var state in contacts.Values)Forget(state,reason);
+            if(scheduled)return; // Existing ripples finish naturally; a missed sample creates no new ripple.
             foreach(var vessel in vessels.Values)if(vessel.Item)vessel.Item.GetComponent<ContainerFillView>()?.ClearRipples();
         }
     }

@@ -25,6 +25,7 @@ namespace Maestro.Quest.Creation {
   }
   bool ContactParticipantCurrent(string id,ContactState state,bool exactPose,out string reason){
    reason=state?.Reason??"Not sampled";if(state?.Known!=true)return false;
+   reason="A contact sampling opportunity was missed";if(SimulationWorkSchedule.Step-state.WorkStep>1)return false;
    reason="Contact sample expired";double now=ContactNow;if(!FreshContact(now,state.At,ContactLifetime))return false;
    int index=ContactInputIndex(id);
    if(index>=0){

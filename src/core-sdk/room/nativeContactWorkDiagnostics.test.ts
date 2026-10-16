@@ -9,7 +9,7 @@ import {parseProgram,type BehaviourProgram} from './programs';
 
 it('accepts actual native work grants without confusing a reservation with a known contact',()=>{
  expect(validFactValue('runtime.contactWorkBudget',native.budget)).toBe(true);
- expect(native.budget).toMatchObject({reservationLimit:32,unitLimit:524288,samplesPerBody:64,collidersPerBody:64,avatarSamples:6,inputSamples:2});
+ expect(native.budget).toMatchObject({reservationLimit:64,unitLimit:524288,samplesPerBody:64,collidersPerBody:64,avatarSamples:6,inputSamples:2});
  expect(native.budget.units).toBeLessThanOrEqual(native.budget.unitLimit);
  for(const phase of [native.current,native.stale,native.resized]){
   expect(phase).toHaveLength(1);expect(validFactValue('runtime.contactWorkReservation',phase[0])).toBe(true);
@@ -26,8 +26,8 @@ it('bounds passive work queries and explicitly excludes unmeasured simulation co
  expect(behaviourFact('runtime.contactWorkBudget')?.description).toContain('pouring, scooping, rain');
  expect(behaviourFact('runtime.contactWorkBudget')?.description).toContain('not measured CPU time');
  expect(behaviourFact('runtime.contactWorkReservation')?.description).toContain('not that geometry');
- for(const index of [0,31])expect(validateFactArguments('runtime.contactWorkReservation',1,{index})).toBeNull();
- for(const args of [{index:-1},{index:32},{index:.5},{index:'0'},{index:0,startPhysics:true}])expect(validateFactArguments('runtime.contactWorkReservation',1,args)).not.toBeNull();
+ for(const index of [0,31,63])expect(validateFactArguments('runtime.contactWorkReservation',1,{index})).toBeNull();
+ for(const args of [{index:-1},{index:64},{index:.5},{index:'0'},{index:0,startPhysics:true}])expect(validateFactArguments('runtime.contactWorkReservation',1,args)).not.toBeNull();
  expect(validFactValue('runtime.contactWorkBudget',{...native.budget,units:'unknown'})).toBe(false);
  expect(validFactValue('runtime.contactWorkReservation',{...native.current[0],privatePath:'hidden'})).toBe(false);
  expect(validFactValue('runtime.contactWorkReservation',{...native.current[0],current:'yes'})).toBe(false);

@@ -22,9 +22,9 @@ namespace Maestro.Quest.Creation {
             internal Vector3[] AvatarPose;
             internal RoomItem Item;internal string Kind="",BodyId="",Liquid="",Reason="Not sampled";
             internal bool Known;internal uint Revision;internal int Count;
-            internal double At;internal float Depth,Speed,RippleAt=-10;internal Vector3 Point;internal Matrix4x4 Pose;internal uint InputUpdate;
+            internal long WorkStep;internal double At;internal float Depth,Speed,RippleAt=-10;internal Vector3 Point;internal Matrix4x4 Pose;internal uint InputUpdate;
         }
-        sealed class ContactInput {internal Vector3 Point;internal string Kind="controller";internal bool Tracked;internal double At;internal uint Update;}
+        sealed class ContactInput {internal Vector3 Point;internal string Kind="controller";internal bool Tracked;internal long WorkStep;internal double At;internal uint Update;}
         readonly ContactInput[] contactInputs={new(),new()};
         readonly Dictionary<string,ContactState> contacts=new(StringComparer.Ordinal);
         readonly List<ContactDelivery> contactEvents=new();
@@ -46,9 +46,9 @@ namespace Maestro.Quest.Creation {
         void ContactGateChanged(){if(editor.RuntimeGate.Held)ResetContacts();}
         internal void TickContacts(float seconds){
             if(!ContactWorkEligible||!float.IsFinite(seconds)||seconds<=0||!float.IsFinite(Physics.gravity.sqrMagnitude)||Physics.gravity.sqrMagnitude<.01f){ResetContacts();ContactWorkResources.Release(this);return;}
-            if(!ContactWorkResources.Ready(this,out var changedWork))WaitForContactWork(changedWork);
-            if(!ContactWorkResources.TryAdmit(this,out var workIssue)){WaitForContactWork(workIssue);return;}
-            var epoch=++contactEpoch;int roomRevision=editor.Revision;var roomMatrix=editor.transform.localToWorldMatrix;
+            if(!ContactWorkResources.Ready(this,out var changedWork))WaitForContactWork(changedWork,ContactWorkResources.Queued(this));
+            if(!ContactWorkResources.TryAdmit(this,out var workIssue)){WaitForContactWork(workIssue,ContactWorkResources.Queued(this));return;}
+            long workStep=SimulationWorkSchedule.Step;var epoch=++contactEpoch;int roomRevision=editor.Revision;var roomMatrix=editor.transform.localToWorldMatrix;
             Physics.SyncTransforms();CaptureMedia(false);contactEvents.Clear();
             using(var environment=mediumEnvironment.Begin(world)){
                 foreach(var b in mediumBodies.Values){
@@ -71,7 +71,7 @@ namespace Maestro.Quest.Creation {
             if(contactEvents.Count>0)foreach(var delivery in contactEvents.ToArray()){
                 // A listener may replace/edit/rebase the room. Remaining events
                 // belong to the sampled source, even if IDs are reused afterward.
-                if(!ContactWorkResources.Ready(this,out _)||contactEpoch!=epoch||editor.Revision!=roomRevision||!roomMatrix.Equals(editor.transform.localToWorldMatrix))break;
+                if(SimulationWorkSchedule.Step!=workStep||!ContactWorkResources.Ready(this,out _)||contactEpoch!=epoch||editor.Revision!=roomRevision||!roomMatrix.Equals(editor.transform.localToWorldMatrix))break;
                 if(!ContactDeliveryCurrent(in delivery))continue;
                 var value=delivery.Value;Ripple(value.BodyId,value.Point,value.Speed,delivery.Participant);
                 editor.EmitMediumContact(in value);
@@ -80,8 +80,13 @@ namespace Maestro.Quest.Creation {
         void SampleContact(string id,string kind,RoomItem item,uint revision,Vector3[] points,int count,bool authored,float seconds,in RoomEnvironmentQueries.Batch environment){
             if(!contacts.TryGetValue(id,out var state))contacts[id]=state=new();
             if(state.Item!=item||state.Revision!=revision||state.Kind!=kind||state.Count!=count)Forget(state,"Contact baseline changed");
-            double now=ContactNow;if(state.Known&&!FreshContact(now,state.At,ContactLifetime))Forget(state,"Contact sample expired");
-            state.Item=item;state.Revision=revision;state.Kind=kind;state.Count=count;state.At=now;state.Pose=item?item.transform.localToWorldMatrix:default;
+            double now=ContactNow;double elapsedSinceSample=now-state.At;
+            if(state.Known&&SimulationWorkSchedule.Step-state.WorkStep>1)Forget(state,"A contact sampling opportunity was missed");
+            if(state.Known&&!FreshContact(now,state.At,ContactLifetime))Forget(state,"Contact sample expired");
+            // Explicit deterministic steps retain their declared interval. Real
+            // samples cannot turn a longer observed gap into an inflated speed.
+            float sampleSeconds=(float)Math.Max(seconds,elapsedSinceSample);
+            state.Item=item;state.Revision=revision;state.Kind=kind;state.Count=count;state.At=now;state.WorkStep=SimulationWorkSchedule.Step;state.Pose=item?item.transform.localToWorldMatrix:default;
             int inputIndex=ContactInputIndex(id);state.InputUpdate=inputIndex>=0?contactInputs[inputIndex].Update:0;
             // Preserve the sampled world pose directly; roundtripping room coordinates
             // loses precision after a large translation or non-unit world scale.
@@ -93,7 +98,7 @@ namespace Maestro.Quest.Creation {
                 var previous=authored?editor.Frame.PointToWorld(state.Previous[i]):state.Previous[i];
                 var coverage=new Bounds(current,Vector3.zero);if(previousKnown)coverage.Encapsulate(previous);
                 if(!CapturedMediumAvailability(coverage,id).Ready){unknown=true;break;}
-                if(previousKnown)speed=Mathf.Max(speed,Mathf.Min(30,Vector3.Distance(previous,current)/seconds));
+                if(previousKnown)speed=Mathf.Max(speed,Mathf.Min(30,Vector3.Distance(previous,current)/sampleSeconds));
                 if(SampleMedium(current,item,id,in environment,out var medium,out var d,out bool ready)){
                     if(!ready){unknown=true;break;}
                     if(!found||medium.Volume<volume||medium.Id==chosen.Id&&d>depth){found=true;chosen=medium;depth=d;volume=medium.Volume;point=current;}

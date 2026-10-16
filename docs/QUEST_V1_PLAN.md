@@ -10,6 +10,8 @@ and their stricter successor gates remain recorded below.
 
 Physics and liquid work now receive coordinated complete-group opportunities;
 see [the current execution checkpoint](#coordinated-physics-and-liquid-execution-2026-10-16).
+Contact sampling now takes independent fair turns on that same clock; see
+[the contact checkpoint](#fair-contact-execution-and-observation-continuity-2026-10-16).
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -12030,3 +12032,55 @@ geometry/proof/engine work, navigation/external observation, and pre-serializati
 transaction/history/storage bounds remain before larger saved capacity. Full
 offline Book/Headless journeys remain pinned to 9f38abca; Android compilation to
 7fe48619. V1 remains incomplete.
+
+
+## Fair contact execution and observation continuity (2026-10-16)
+
+Continuing contact samplers could reserve the entire allowance indefinitely,
+leaving a later room unable to observe water contacts. Complete contact passes
+now take fair, independent turns on the same clock as physics and liquid work.
+Waiting for a contact sample does not hold unrelated motion or liquid transfers.
+The request queue holds up to 64 passes; the execution limit remains 32 and the
+logical work allowance remains 524,288 units. Saved/native limits are unchanged.
+
+Automatic sampling runs at most once per opportunity. A missed opportunity makes
+contact observations unknown and establishes a fresh baseline when sampling
+resumes, without invented entry/exit/crossing events or speed. Existing ripple
+visuals can finish naturally during a scheduled wait. Speed accounts for at least
+the observed elapsed interval. A new opportunity cancels the remaining old
+callback batch; tracking, exact pose, geometry, ownership and source edits retain
+their existing validation. `runtime.contactWorkSchedule` and the contact facts use
+the shared typed catalog. The waiting reason now fits the existing 128-character
+program value limit, verified through both native and web fact readers.
+
+Desktop verification passed **1,330 EditMode /
+1,799 PlayMode tests**, zero failures and three
+unchanged optional private-asset skips. Focused checks: **44 EditMode / 148 PlayMode**.
+Six new native cases cover sustained contact pressure, bounded queue fairness,
+one automatic pass per turn, missed-observation continuity, independent movement/
+liquid execution, callback cancellation, and elapsed-time speed. The starvation
+case failed against the previous runtime before the implementation changed.
+
+**3,145 web tests / 344 files**, app/probe TypeScript and catalog
+provenance passed. The native waiting/resumed trace is validated through the same
+shared facts used by user and agent programs. That parity check exposed an
+overlong native waiting reason; it was corrected without increasing the shared
+text limit, and the native test now also uses the typed fact path. The superseded
+partial full run and failed web run remain recorded. **4,426 frozen inputs /
+3,154 matching native mirror inputs / 14 protected files**
+were verified. Evidence: `.quest-evidence/contact-fair-sampling/`.
+
+Pressure fixtures use actual native contact sampling with logical competing
+owners; they do not establish capacity for 64 fully provisioned Quest worlds.
+No headset, provider, Android build, signing, deployment or Meta action ran.
+Earlier audio-reset failure and unchanged successful retry remain recorded;
+desktop passes do not establish their cause or acoustic acceptance.
+
+A separate source-grounded parity check found that the physics waiting message
+can exceed the shared text limit for `object.medium`; native reproduction and
+repair remain pending. See the local `observation-text-audit.json` evidence.
+
+Group-local metering and bounded discovery, geometry/proof/engine work, navigation
+and external observation, and pre-serialization/transaction/history/storage bounds
+remain before larger saved capacity. Full offline Book/Headless journeys remain
+pinned to 9f38abca; Android compilation to 7fe48619. V1 remains incomplete.

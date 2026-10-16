@@ -20,12 +20,12 @@ namespace Maestro.Quest.Creation {
         readonly SortedDictionary<string,Vessel> vessels=new(StringComparer.Ordinal);
         readonly Dictionary<string,RoomContainer> original=new(),contents=new();
         readonly Collider[] immersionHits=new Collider[64];readonly RaycastHit[] hits=new RaycastHit[64];readonly Vector3[] path=new Vector3[Segments+1];
-        RoomEditor editor;RoomPhysicsWorld world;IDisposable write;bool publishing,blocked;float nextSample,lastSample,quiet,elapsed;string session=Guid.NewGuid().ToString("N"),error="";
+        RoomEditor editor;RoomPhysicsWorld world;IDisposable write;bool publishing,blocked;float quiet,elapsed;string session=Guid.NewGuid().ToString("N"),error="";
         internal bool Active=>write!=null;
         internal bool Owns(string target)=>Active&&contents.ContainsKey(target);
         internal string Error=>error;
         long automaticFlowStep=-1;
-        internal void Initialize(RoomEditor owner){FlowWorkClock.Ensure();editor=owner;world=owner.PhysicsWorld;lastSample=Time.unscaledTime;if(world)world.Changed+=PhysicsChanged;editor.RuntimeGate.Changed+=ContactGateChanged;}
+        internal void Initialize(RoomEditor owner){FlowWorkClock.Ensure();editor=owner;world=owner.PhysicsWorld;if(world)world.Changed+=PhysicsChanged;editor.RuntimeGate.Changed+=ContactGateChanged;}
         internal void Synchronize(RoomDocument document){
             flowEpoch++;ResetContacts();
             var ids=new HashSet<string>();
@@ -41,7 +41,7 @@ namespace Maestro.Quest.Creation {
                 if(Owns(id))Cancel("A container was removed; the unfinished liquid flow was reverted");Release(vessels[id]);vessels.Remove(id);
             }
         }
-        void LateUpdate(){if(automaticFlowStep!=FlowWorkResources.Step){automaticFlowStep=FlowWorkResources.Step;Tick(FlowWorkResources.StepSeconds);}float now=Time.unscaledTime;if(now<nextSample)return;nextSample=now+.05f;float elapsedSinceSample=Mathf.Min(now-lastSample,.1f);lastSample=now;TickContacts(elapsedSinceSample);}
+        void LateUpdate(){if(automaticFlowStep!=FlowWorkResources.Step){automaticFlowStep=FlowWorkResources.Step;Tick(FlowWorkResources.StepSeconds);}TickAutomaticContacts();}
         internal void Tick(float seconds){
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);
@@ -160,7 +160,6 @@ namespace Maestro.Quest.Creation {
             // A native readiness change is neither a new simulation request nor
             // permission to recover from a failed save. Keep its load and stop.
             if(flowInputIntent!=world.SimulationIntent){ReleaseFlowInputs();blocked=false;}
-            lastSample=Time.unscaledTime;nextSample=lastSample+.05f;
         }
         void OnApplicationPause(bool paused){contactsPaused=paused;if(paused){ReleaseFlowInputs();ResetContacts();Finish(out _);}}
         void OnApplicationFocus(bool focused){contactsFocused=focused;if(!focused){ReleaseFlowInputs();ResetContacts();Finish(out _);}}

@@ -2363,7 +2363,48 @@ that its bodies are currently simulating.
 
 Whole-host coupling is a conservative bound for today's all-vessel loops. Finer
 admission requires group-local transfer enumeration and separately bounded
-discovery first. Contact sampling still has its own stable work reservations;
-its event freshness rules must be designed before fair rotation. Broader engine,
-navigation, external observation and storage/history work also remain bounded
-separately before larger authored worlds can be supported.
+discovery first. Contact sampling takes independent fair turns on the shared
+clock; see [Fair water-contact sampling](#fair-water-contact-sampling-2026-10-16)
+for observation continuity and missed-event rules. Broader engine, navigation,
+external observation and storage/history work also remain bounded separately
+before larger authored worlds can be supported.
+
+
+## Fair water-contact sampling (2026-10-16)
+
+Continuing contact samplers could reserve the entire allowance indefinitely,
+leaving a later room unable to observe water contacts. Complete contact passes
+now take fair, independent turns on the same clock as physics and liquid work.
+Waiting for a contact sample does not hold unrelated motion or liquid transfers.
+The request queue holds up to 64 passes; the execution limit remains 32 and the
+logical work allowance remains 524,288 units. Saved/native limits are unchanged.
+
+Automatic sampling runs at most once per opportunity. A missed opportunity makes
+contact observations unknown and establishes a fresh baseline when sampling
+resumes, without invented entry/exit/crossing events or speed. Existing ripple
+visuals can finish naturally during a scheduled wait. Speed accounts for at least
+the observed elapsed interval. A new opportunity cancels the remaining old
+callback batch; tracking, exact pose, geometry, ownership and source edits retain
+their existing validation. `runtime.contactWorkSchedule` and the contact facts use
+the shared typed catalog. The waiting reason now fits the existing 128-character
+program value limit, verified through both native and web fact readers.
+
+A request or booked allowance is not proof of a known contact. Read
+`input.medium.contactState` or `object.medium.contactState`; `known: false` means
+unavailable, never dry. A newly booked allowance cannot make a missed sample
+current. A short valid interval may use the last sample until refreshed; existing
+0.2-second sample and 0.15-second tracking expiry still apply, with real-time
+expiry and exact-pose checks before callback delivery.
+
+The scheduler orders complete passes by oldest unserved opportunity and then
+registration order. A finite unchanged fitting request receives a turn while
+other eligible consumers continue. Passive reads and request-call order cannot
+advance the clock or execute sampling. Oversize passes and full request queues
+are explicit refusals. Observing or waiting does not apply forces, change water
+quantities, add history, acquire native geometry or restart paused physics.
+
+Each pass is still charged for its whole room, including held/animated objects,
+six avatar joints and two input sources. Logical sample/candidate/proof allowances
+are not measured CPU time, PhysX cost, frame time or Quest memory. Group-local
+metering and separately bounded discovery/geometry work remain necessary before
+larger worlds can be promised.

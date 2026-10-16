@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests {
         // No fake costs, bypass flags or saved/native quota changes are used.
         List<GameObject> FillContactWork(){
             var hosts=new List<GameObject>();int demand=editor.Liquids.ContactWorkDemand;
-            try{while((int)ContactWorkResources.ObserveBudget()["reservations"]<ContactWorkResources.MaximumReservations&&ContactWorkResources.MaximumUnits-(int)ContactWorkResources.ObserveBudget()["units"]>=demand){
+            try{while((int)ContactWorkResources.ObserveBudget()["reservations"]<ContactWorkResources.MaximumExecutions&&ContactWorkResources.MaximumUnits-(int)ContactWorkResources.ObserveBudget()["units"]>=demand){
                 var go=new GameObject("Independent contact sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
                 Assert.That(ContactWorkResources.TryAdmit(sampler,out var error),Is.True,error);
             }return hosts;}catch{ReleaseContactWork(hosts);throw;}
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests {
             try{
                 Assert.That(CapturedContactSamples(),Is.Zero);ContactPoint(new Vector3(4,1.4f,0));Assert.That(CapturedContactSamples(),Is.Zero,"Refused contacts must not populate the shared displacement cache");Assert.That((bool)editor.Liquids.ObserveContact(prop)["known"],Is.False);Assert.That((bool)editor.Liquids.ObserveContact("input:left")["known"],Is.False);
                 StringAssert.Contains("sampling capacity",(string)editor.Liquids.ObserveContact(prop)["reason"]);Assert.That(events,Is.Empty);Assert.That(editor.Find(pool).GetComponent<ContainerFillView>().RippleCount,Is.Zero);
-                Assert.That((double)editor.Liquids.ObserveMediumBody(prop)["displacementM3"],Is.Zero);Assert.That(ContactWorkResources.ObserveBudget().ToString(),Is.EqualTo(budget));
+                Assert.That((double)editor.Liquids.ObserveMediumBody(prop)["displacementM3"],Is.Zero);Assert.That((int)ContactWorkResources.ObserveBudget()["reservations"],Is.EqualTo((int)JObject.Parse(budget)["reservations"]+1));Assert.That((int)ContactWorkResources.ObserveBudget()["units"],Is.EqualTo((int)JObject.Parse(budget)["units"]));Assert.That(ContactWorkResources.Queued(editor.Liquids),Is.True);
                 Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));using(var write=editor.WriteGate.TryWrite(out var error))Assert.That(write,Is.Not.Null,error);
             }finally{ReleaseContactWork(held);}physics.PausePhysics();yield return null;
         }
