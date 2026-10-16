@@ -215,6 +215,7 @@ namespace Maestro.Quest.Tests
             var emitter = new GameObject("Retained obstruction speech"); emitter.transform.SetParent(root.transform, false); emitter.transform.position = new Vector3(0, 0, 2);
             var speech = emitter.AddComponent<NativeSpeechOutput>(); RoomAcoustics.AcousticResidency retained = null;
             double[] energy = new double[6];
+            using var audioTrace = new AudioConfigurationTrace();
             try
             {
                 for (int stage = 0; stage < energy.Length; stage++)
@@ -242,8 +243,9 @@ namespace Maestro.Quest.Tests
                         Assert.That(speech.TryWrite(generation, packet + 1, pcm, out var issue), Is.True, issue);
                     }
                     double end = Time.realtimeSinceStartupAsDouble + 8;
-                    while (speech.Read().playedSamples < 19200 && Time.realtimeSinceStartupAsDouble < end) yield return null;
-                    Assert.That(speech.Read().playedSamples, Is.EqualTo(19200)); var result = probe.Read(); energy[stage] = result.Left + result.Right;
+                    while (speech.Read().playedSamples < 19200 && speech.Read().generation == generation && Time.realtimeSinceStartupAsDouble < end) yield return null;
+                    Assert.That(speech.Read().generation, Is.EqualTo(generation), audioTrace.Describe(speech, "retained wall stage " + stage + " interrupted"));
+                    Assert.That(speech.Read().playedSamples, Is.EqualTo(19200), audioTrace.Describe(speech, "retained wall stage " + stage)); var result = probe.Read(); energy[stage] = result.Left + result.Right;
                     speech.Stop(); yield return null;
                 }
                 Assert.That(energy[5], Is.GreaterThan(.0001));

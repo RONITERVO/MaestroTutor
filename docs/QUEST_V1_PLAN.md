@@ -12236,3 +12236,51 @@ and merges, coupling only real quantity/motion dependencies without duplicate
 booking. Broader geometry/proof/engine, navigation, external observations and
 transaction/history/storage costs still need bounds before larger saved worlds.
 V1 and its independent device/provider/audio/Store gates remain incomplete.
+
+
+## Actual audio-reset lifecycle and book parity (2026-10-16)
+
+The preceding full native run recorded 0 played samples after the retained-wall
+test expected 19,200. Its log included a configuration change after the explicit
+reset. Inspection confirmed that configuration changes deliberately cancel native
+speech. A successful isolated retry did not identify the origin of that later
+notification.
+
+A new real-engine regression now resets audio after speech has partially played.
+It verifies failure through BookSpeechSession, generation and revision fencing
+against late audio, conservative microphone suppression, and explicit recovery
+through a fresh request. Retired wall geometry survives the reset; the fresh
+voice drains all 19,200 samples and remains measurably obstructed until the wall
+is released. Captured native receipts are replayed by SpeechBookClient, checking
+the same interruption and fresh completion visible to the original web app.
+The first browser replay exposed a test-only revision assumption; the native
+requests now match the browser's actual reset/release sequence.
+
+The older DSP regression retains its full assertions and deadline, but reports
+an interrupted generation immediately with stage and configuration-event evidence.
+No production audio code, protocol, catalog, saved format or playback policy
+changes. There is no automatic replay and no silent test retry.
+
+Verification passed **31 focused PlayMode tests** covering the native speech
+output, book session and acoustic lifecycle, plus **21 web tests / two files**,
+app/probe TypeScript and catalog provenance. The browser replay uses unmodified
+native receipts and matching synthetic session identity and PCM counts. In the
+actual reset capture, 2,751 samples had played before cancellation;
+the fresh request drained all 19,200. Measured retained-wall energy was
+0.442772, versus 2.248948 after release. These are synthetic
+desktop DSP observations, not microphone recordings or headset audio acceptance.
+
+All 3,164 native inputs match the tested mirror. Production code and the generated
+catalog are unchanged; the acoustic assertions and deadlines are preserved.
+The preceding full native sweep remains **1,332 EditMode passed; 1,805 PlayMode
+passed, two failures and three optional private-asset skips**, with the corrected
+resizing expectation and unchanged audio case passing its later 30-test follow-up.
+No new full native sweep was needed for this test/documentation change.
+The later configuration event from that historical failure is not attributed to
+a specific device or proven fixed. Evidence: .quest-evidence/audio-reset-lifecycle/.
+No headset, provider, Android, signing, deployment or Meta operation ran.
+
+The historical full-run failure, native SDK crash and generated echo-quality
+failures remain independent evidence. Real-device audio acceptance is still open.
+Complete-group simulation metering and the broader v1/device/provider/Store gates
+remain unfinished; existing holds continue.

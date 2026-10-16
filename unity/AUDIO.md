@@ -1413,3 +1413,46 @@ Close. It does not use a TLS override or retain media. It complements the offlin
 paced-stream journeys; neither establishes Unity Android transport or headset
 acoustic/Live acceptance. Device, paid-provider, signing, deployment and Meta
 holds remain in place.
+
+
+## Audio reset and book speech ownership (2026-10-16)
+
+An audio configuration change cancels the current native speech generation.
+Queued PCM and its old completion cannot reopen that generation. The book reports
+a failed voice, keeps microphone suppression conservative, retires the browser
+owner and requires a new request after a ready handshake. Cancellation is not
+successful playback and must never silently replay a learner's interrupted reply.
+
+The actual-reset regression now exercises that complete path with generated PCM:
+partially played speech, an engine reset, the native failed receipt, a late old
+request, a closed handshake, and a fresh fully drained request. It retires the
+wall's native view and source mesh before resetting audio; the retained acoustic
+geometry is restored, still obstructs the fresh voice, and can then be released.
+The browser consumes the captured native receipts, including its actual
+reset/release revision sequence, without substituting a generic successful reply.
+
+The older retained-wall DSP test now stops waiting when its speech generation
+changes and reports the stage, voice counters and bounded audio-configuration
+event trace. Playback counts, eight-second deadline, energy thresholds and
+geometry assertions are unchanged. It does not retry or replay failed samples.
+This makes later interruptions diagnosable; it does not prove why the historical
+full-run device-change notification occurred or establish headset audio quality.
+
+Verification passed **31 focused PlayMode tests** covering the native speech
+output, book session and acoustic lifecycle, plus **21 web tests / two files**,
+app/probe TypeScript and catalog provenance. The browser replay uses unmodified
+native receipts and matching synthetic session identity and PCM counts. In the
+actual reset capture, 2,751 samples had played before cancellation;
+the fresh request drained all 19,200. Measured retained-wall energy was
+0.442772, versus 2.248948 after release. These are synthetic
+desktop DSP observations, not microphone recordings or headset audio acceptance.
+
+All 3,164 native inputs match the tested mirror. Production code and the generated
+catalog are unchanged; the acoustic assertions and deadlines are preserved.
+The preceding full native sweep remains **1,332 EditMode passed; 1,805 PlayMode
+passed, two failures and three optional private-asset skips**, with the corrected
+resizing expectation and unchanged audio case passing its later 30-test follow-up.
+No new full native sweep was needed for this test/documentation change.
+The later configuration event from that historical failure is not attributed to
+a specific device or proven fixed. Evidence: .quest-evidence/audio-reset-lifecycle/.
+No headset, provider, Android, signing, deployment or Meta operation ran.
