@@ -44155,7 +44155,7 @@
         }
       },
       "label": "Liquid transfer work budget",
-      "description": "Process-wide stable potential-work reservations for complete room pouring/scooping/rain passes. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Refusal closes prior accepted flow and releases its writer, hides streams, invalidates rain exposure and never accrues skipped time. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible grants but never admit work, load geometry, start physics or publish a flow episode.",
+      "description": "Process-wide bounded requests for complete room pouring/scooping/rain passes. Reservations count registered requests, including queued rooms; units count granted opportunities. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Ready requests take fair turns on the early fixed-step clock, retained through a rendered frame. A scheduled delay preserves input residency, accepted motion and the live episode, hides streams, invalidates rain exposure and never accrues skipped time. An unregistered refusal closes prior accepted flow. Current per-room spatial groups still share a whole-host opportunity because the bounded pass scans all vessels. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible requests but never advance selection, admit work, load geometry, start physics or publish a flow episode.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44173,15 +44173,15 @@
           "current": "boolean"
         }
       },
-      "label": "Liquid transfer work reservation",
-      "description": "Read one runtime.flowWorkBudget grant by index. Indices may shift; reservationId is runtime-only. World/region identify the copied room owner. Current means complete potential demand and owner still match, not that native geometry, a transfer or simulation is ready. Resizing credits the old grant and cannot evict peers or admit a room prefix. Paused, inactive or destroyed hosts release potential work; explicit internal ticks can step a disabled automatic loop for desktop verification. Reads are detached and cannot resume transfers or physics.",
+      "label": "Liquid transfer work request",
+      "description": "Read one runtime.flowWorkBudget request by index, including pending requests. Indices may shift; reservationId is runtime-only. World/region identify the copied room owner. Current means this opportunity is granted and complete potential demand and owner still match, not that native geometry, a transfer or simulation is ready. Resizing credits the old grant and cannot evict peers or admit a room prefix. Earlier unserved requests receive priority at the next opportunity; call order and repeated reads do not advance it. Paused, inactive or destroyed hosts release requests; explicit internal ticks can step a disabled automatic loop for desktop verification. Reads are detached and cannot resume transfers or physics.",
       "input": {
         "type": "object",
         "properties": {
           "index": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 31.0
+            "maximum": 63.0
           }
         },
         "required": [
@@ -44194,6 +44194,26 @@
       },
       "features": [
         "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.flowWorkSchedule",
+      "version": 1,
+      "type": {
+        "record": {
+          "step": "number",
+          "executions": "number",
+          "executionLimit": "number",
+          "queued": "number",
+          "queueLimit": "number",
+          "units": "number",
+          "unitLimit": "number"
+        }
+      },
+      "label": "Liquid simulation opportunities",
+      "description": "Read the current early fixed-step opportunity, granted whole-host passes and queued requests. The queue is bounded separately from simultaneous executions. The clock advances at approximately 20Hz with at least one rendered frame per opportunity; pauses do not accumulate fluid/rain debt. Priority is oldest unserved opportunity, then stable registration order. A complete request fitting the work limit receives a turn under sustained finite demand; oversize or queue-full requests are refused. This is scheduling evidence, not measured device performance. Reading cannot advance the clock or claim work.",
+      "features": [
         "runtimeDiagnostics.v1"
       ]
     },
@@ -46867,7 +46887,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowWorkFacts.cs",
-      "sha256": "badf159304c030a7c79ab4a6493bc02d7cee15b720778495aa4860e3b593d924"
+      "sha256": "ec275cb91ce4e2d1ef6286f5f6d2aff3f8ed5126adb99990ded41fa24cc4b8aa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
@@ -47370,8 +47390,12 @@
       "sha256": "31563a2ba43eeb84537fa28f2e120f30aabe52a2c3b5c402a392ace1b35cc728"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkClock.cs",
+      "sha256": "69a944c8b818e6f5f3971cec740f9759df24f326be0fb8ff5d1baf491903f172"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
-      "sha256": "489b88669e5095896d3968eb8fd6db10a59db21a6662de54125968d251978ab8"
+      "sha256": "9d6e8b4909a94b4d2402bfce5af07c9cf176872cc45f6d15360427648a711e51"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -47411,7 +47435,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
-      "sha256": "cc7817d2b04bbb84ce2efd09ec39a507d4fb2cbf81fad2a87e64ea75a03315c2"
+      "sha256": "59c1d2ba7fb9e5f05c1193d5b92d793bcd81ae0ca9c5c7186658c12e7a4d10b9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowPublication.cs",
@@ -47419,7 +47443,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
-      "sha256": "7abd6c34e4a58f9c0160c5c6fe03c985d5142fd0d8b88d8b675f3578609d0fc2"
+      "sha256": "cba3987de7a17acee1bc0840a1168da570fed181b0245b6ea0001130f34ff52c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
@@ -47431,7 +47455,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "519c48dfc47934c82c27e9795aeeaa3c0c99eaeb0e4905919227495215250b02"
+      "sha256": "8f26816c28073d0163631ae1cd077d30fc73ee35d226229dc361c25ef64e5bcd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -47867,7 +47891,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
-      "sha256": "2357895d8d246d3586057dc3ebbe8c146daa2a7b535bbabfbb1ff906f02d29e8"
+      "sha256": "18f7dbf34f9a2e2e3299610b1db50d19bcd5e0206f16eb4a3dd5a937de147d44"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
@@ -48427,7 +48451,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "ad8afd39ec533c24b622df7b8624d54a02dd61b2508bbe78d2ab68df260ff007"
+      "sha256": "3b387bc88007faec74c3e3be1721a5b5b04cce82a0dccfc0c84bc505c7a295f3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
@@ -48795,7 +48819,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "4b249b1be653a57a991fe5dca1e7b235cbdd0b7e16850c9225f0d129c149737c"
+      "sha256": "a33d6975f6e600e7177381f9ae8828757e75385c455e1b9f18cac9d246edd1dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

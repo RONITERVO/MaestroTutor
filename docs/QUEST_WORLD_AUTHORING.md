@@ -2129,31 +2129,35 @@ it does not certify Quest performance or complete the world scheduler.
 
 ## Liquid flow work admission (2026-10-16)
 
-Each resident room reserves a complete pouring, scooping and rain pass before
+Each resident room requests a complete pouring, scooping and rain pass before
 querying transfer geometry or changing live quantities. Process-wide limits are
-32 hosts and 524,288 logical work units, independently of saved or native object
-capacity. Demand counts all registered vessels, including empty receiving cups
+64 queued/active requests, 32 simultaneous opportunities and 524,288 logical work
+units, independently of saved or native object capacity. Demand counts all registered vessels, including empty receiving cups
 and temporarily missing views. It includes potential vessel pairs, 32 stream
 segments, bounded hit/candidate searches, five scoop paths and five rain samples.
 This is a logical allowance, not measured CPU time, memory, frame time or PhysX
 cost. Geometry/proof internals and external observations are not included.
 
-Reservations are stable and scoped to the world/region. Resizing credits the old
-charge and either admits the complete new demand or preserves the old charge;
-it never evicts another host or transfers through a partially admitted room.
+Request identities are stable and scoped to the world/region; execution grants
+rotate fairly on the shared early fixed-step opportunity. Resizing within a turn
+credits the old charge and either admits the complete new demand or preserves the
+old charge. A caller cannot evict another host or transfer through a partially
+admitted room. The next opportunity prioritizes older unserved requests.
 Moving free containers and their physically connected groups need the same
 admission before gravity resumes. An unrelated dry body can keep running.
 Hands and authored animations keep ownership; admission cannot restart paused
 physics. Disabled automatic loops retain explicit internal stepping for desktop
 tests, while inactive roots cannot step.
 
-When work is unavailable, the flow tick finishes only the previously accepted
-quantity changes, releases its writer, hides streams and makes rain exposure
-unknown. Further ticks wait without transferring or accumulating skipped time.
-If that final save fails, the entire unfinished episode reverts, emits no success
-events and requires an explicit physics restart. Waiting does not become a
-permanent geometry failure. Saved quantities retain the existing single-episode
-Undo behavior. Admission is separate from geometry proof: a current work grant
+A scheduled delay preserves the live episode and its input residency, hides
+streams and makes rain exposure unknown. Connected free bodies retain valid
+motion while held for execution. Further ticks wait without transferring or
+accumulating skipped time. A request that cannot enter the bounded queue instead
+finishes previously accepted quantity changes and releases its writer. If that
+save fails, the entire unfinished episode reverts, emits no success events and
+requires an explicit physics restart. Waiting does not become a permanent
+geometry failure. Saved quantities retain the existing single-episode Undo
+behavior. Admission is separate from geometry proof: a current work grant
 alone does not make an opening, path or receiving vessel ready.
 
 Completed events copy accepted amounts and liquid identities before committing.
@@ -2163,20 +2167,21 @@ world-frame changes or a new episode stop the old batch's remaining callbacks,
 even if object IDs are unchanged. Old cleanup cannot erase the newly started
 flow. These events report accepted changes; they are not replayed after a pause.
 
-The shared catalog exposes `runtime.flowWorkBudget` and
-`runtime.flowWorkReservation` as detached, passive diagnostics.
+The shared catalog exposes `runtime.flowWorkBudget`, `runtime.flowWorkReservation`
+and `runtime.flowWorkSchedule` as detached, passive diagnostics.
 `object.container.live`, `object.container.scooping` and `object.container.rain`
 can report `phase=waiting`. The live fact exposes the reason; rain reports
 `ready=false` and zero exposure until a fresh admitted pass. Existing types and
-versions remain unchanged. Reads may retire ineligible reservations but cannot
-admit work, load geometry, resume physics or publish a flow episode.
+versions remain unchanged for the existing observations. Reads may retire
+ineligible requests but cannot advance selection, admit work, load geometry,
+resume physics or publish a flow episode.
 
 Per-entity collision participation is unchanged: the real room may constrain a
 cup while a virtual NPC uses terrain below its floor. Visibility/occlusion and
 audio remain independent of collision choice. This checkpoint does not establish
 unlimited world size or Quest performance; navigation, observation/proof/engine
-work, spatial cohorts, fairness and transaction/storage bounds remain separate
-release work before increasing saved capacity.
+work, per-group metering, coordinated fairness across other work classes and
+transaction/storage bounds remain release work before increasing saved capacity.
 
 
 ## Water contact continuity (2026-10-16)
@@ -2262,9 +2267,50 @@ collection still checks the resulting amount, liquid identity and exact cover.
 Preparation alone neither changes contents nor creates rain intake.
 
 This does not add fluid particles or claim unlimited simulation. Spatial bounds
-are conservative. Work-capacity admission is still reserved for the whole liquid
-host; spatial independence does not yet provide fair per-group work scheduling.
-Fair scheduling and measurement of query, loading and native-engine costs remain
+are conservative. Work-capacity admission covers the whole liquid host because
+the bounded transfer pass still scans all registered vessels. Complete hosts now
+take fair turns as described below; independent spatial groups are not yet
+separately metered. Measurement of query, loading and native-engine costs remains
 required before increasing world limits.
 Rain collection dependency checks do not establish complete weather presentation
 or acoustic acceptance.
+
+
+## Fair liquid simulation opportunities (2026-10-16)
+
+The runtime keeps at most 64 liquid-work requests and grants at most 32 complete
+host passes within the existing 524,288 logical-unit allowance. Older unserved
+requests get priority, then stable registration order. Eligible continuing work
+cannot retain the entire allowance indefinitely. Oversize and queue-full requests
+are explicit refusals; fairness applies to accepted requests that fit the limit.
+The current maximum remains 16 saved containers per room. A grant includes every
+interacting group in that room, rather than granting a prefix of a cascade.
+Discovery and execution retain the previous conservative whole-host cost.
+
+An early fixed-step clock selects opportunities at approximately 20Hz, keeping
+each through at least one rendered frame. Moving containers and connected bodies
+check that same grant before gravity. The automatic liquid loop samples once per
+opportunity and never backfills skipped pouring/rain time. This is a bounded
+scheduling contract, not a measurement of CPU, PhysX or device frame time. Internal
+manual test ticks remain explicit simulation steps, not a public agent API.
+
+Waiting for a turn preserves native input residency and the current liquid
+journal episode. It does not publish an Undo entry each time the grant rotates.
+Valid free-body velocity is held and restored after a fresh complete input check;
+grabbing, teleporting, replacing geometry or stopping physics invalidates it.
+A genuine unavailable input, failed publication or lifecycle stop keeps its prior
+stricter rules. Scheduled holds do not change the contact identity solely because
+execution is deferred. Rain exposure becomes unknown until the next actual pass.
+
+User and agent diagnostics share `runtime.flowWorkSchedule`: the current step,
+granted execution count, queued count and limits. Existing `runtime.flowWorkBudget`
+fields/types remain; reservations now include pending registered requests, while
+units count current grants. `runtime.flowWorkReservation.current` additionally
+requires this opportunity's grant. IDs are runtime-only; no saved world identity
+or capability-specific replica is introduced. Passive reads cannot advance the
+clock, claim a turn, load objects or start physics.
+
+Pressure verification uses competing logical consumers of a real native fixture;
+it does not claim that 64 fully provisioned rooms fit Quest memory. Native object,
+liquid, geometry and saved-world caps remain separate. Fairness for other work
+classes and per-group metering remain open before expanding saved capacity.

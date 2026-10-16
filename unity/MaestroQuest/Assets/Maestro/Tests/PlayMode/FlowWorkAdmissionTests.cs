@@ -17,8 +17,8 @@ namespace Maestro.Quest.Tests {
  public sealed partial class RoomRulesTests {
   List<GameObject> FillFlowWork(){
    var hosts=new List<GameObject>();int demand=FlowWorkResources.Demand(editor.Liquids.FlowWorkVessels);
-   try{while((int)FlowWorkResources.ObserveBudget()["reservations"]<FlowWorkResources.MaximumReservations&&FlowWorkResources.MaximumUnits-(int)FlowWorkResources.ObserveBudget()["units"]>=demand){
-    var go=new GameObject("Independent flow sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
+   try{while((int)FlowWorkResources.ObserveSchedule()["executions"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)FlowWorkResources.ObserveBudget()["units"]>=demand){
+    var go=new GameObject("Independent flow sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.enabled=false;sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
     Assert.That(FlowWorkResources.TryAdmit(sampler,out var error),Is.True,error);
    }return hosts;}catch{ReleaseFlowWork(hosts);throw;}
   }
@@ -43,16 +43,16 @@ namespace Maestro.Quest.Tests {
    try{for(int i=0;i<40;i++)editor.Liquids.Tick(.1f);var rain=editor.Liquids.ObserveRain(id);Assert.That((string)rain["phase"],Is.EqualTo("waiting"));Assert.That((bool)rain["ready"],Is.False);Assert.That((double)rain["exposure"],Is.Zero);Assert.That(Liquid(id),Is.Zero);StringAssert.Contains("work capacity",(string)rain["reason"]);}finally{ReleaseFlowWork(held);}
    editor.Liquids.Tick(.1f);double expected=60*editor.Read(id).containers[0].FootprintArea*.1*1000/3600;Assert.That(Liquid(id),Is.EqualTo(expected).Within(.000001));physics.PausePhysics();yield return null;
   }
-  [UnityTest]public IEnumerator FlowWorkAdmissionRefusalPublishesAcceptedEpisodeAndReleasesWriterBeforeCallbacks(){
+  [UnityTest]public IEnumerator FlowWorkAdmissionScheduledDelayKeepsEpisodeUntilExplicitPause(){
    var(_,from,to)=PouringCups();editor.Liquids.Tick(.05f);double accepted=Liquid(to);FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();int events=0;
    editor.ContainerPoured+=(id,amount,_,_,_)=>{Assert.That(id,Is.EqualTo(from));Assert.That(amount,Is.EqualTo(accepted));Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);Assert.That(editor.Liquids.Active,Is.False);events++;};
-   try{editor.Liquids.Tick(.05f);Assert.That(events,Is.EqualTo(1));Assert.That(Liquid(to),Is.EqualTo(accepted));Assert.That(editor.Read(to).containers[0].amountMl,Is.EqualTo(accepted));Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);editor.Liquids.Tick(.1f);Assert.That(events,Is.EqualTo(1));}finally{ReleaseFlowWork(held);}
+   try{editor.Liquids.Tick(.05f);Assert.That(events,Is.Zero);Assert.That(Liquid(to),Is.EqualTo(accepted));Assert.That(editor.Read(to).containers[0].amountMl,Is.Zero);Assert.That(editor.WriteGate.CanFreeze(out _),Is.False);editor.Liquids.Tick(.1f);Assert.That(events,Is.Zero);physics.PausePhysics();Assert.That(events,Is.EqualTo(1));}finally{ReleaseFlowWork(held);}
    physics.PausePhysics();editor.Undo();Assert.That(Liquid(from),Is.EqualTo(400));Assert.That(Liquid(to),Is.Zero);yield return null;
   }
-  [UnityTest]public IEnumerator FlowWorkAdmissionRefusalFailedSaveRollsBackAndCannotResumeUntilRestart(){
+  [UnityTest]public IEnumerator FlowWorkAdmissionWaitingEpisodeFailedSaveRollsBackAndCannotResumeUntilRestart(){
    var(_,from,to)=PouringCups();editor.Liquids.Tick(.05f);FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();int events=0;editor.ContainerPoured+=(_,_,_,_,_)=>events++;
    string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
-   try{editor.Liquids.Tick(.05f);Assert.That(Liquid(from),Is.EqualTo(400));Assert.That(Liquid(to),Is.Zero);Assert.That((string)editor.Liquids.Observe(to)["phase"],Is.EqualTo("failed"));Assert.That(events,Is.Zero);Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);}finally{Directory.Delete(pending);ReleaseFlowWork(held);}
+   try{editor.Liquids.Tick(.05f);Assert.That(editor.Liquids.Active,Is.True);physics.PausePhysics();Assert.That(Liquid(from),Is.EqualTo(400));Assert.That(Liquid(to),Is.Zero);Assert.That((string)editor.Liquids.Observe(to)["phase"],Is.EqualTo("failed"));Assert.That(events,Is.Zero);Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);}finally{Directory.Delete(pending);ReleaseFlowWork(held);}
    editor.Liquids.Tick(.1f);Assert.That(Liquid(to),Is.Zero);physics.PausePhysics();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(to),Is.GreaterThan(0));physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionGrowthCannotEvictPeersAndShrinkKeepsReservation(){
@@ -72,12 +72,12 @@ namespace Maestro.Quest.Tests {
    editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);ContainerRun(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
    string dry=PhysicsInputBall(new Vector3(-8,2,-8));StartIsland();yield return IslandActive(ids);FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();
    try{foreach(var id in ids){var body=editor.Find(id).GetComponent<Rigidbody>();body.linearVelocity=Vector3.right*3;editor.Find(id).GetComponent<RigidRoomItem>().Refresh();}
-    var before=editor.Find(ids[0]).transform.position;float dryY=editor.Find(dry).transform.position.y;
-    for(int i=0;i<3;i++)yield return new WaitForFixedUpdate();
-    foreach(var id in ids){Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);Assert.That((bool)PhysicsInputFact(id)["momentumHeld"],Is.False);}
-    Assert.That(Vector3.Distance(editor.Find(ids[0]).transform.position,before),Is.LessThan(.001f));Assert.That(editor.Find(dry).transform.position.y,Is.LessThan(dryY));Assert.That(physics.Running,Is.True);
+    var before=editor.Find(ids[0]).transform.position;
+
+    foreach(var id in ids){Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);Assert.That((bool)PhysicsInputFact(id)["momentumHeld"],Is.True);}
+    Assert.That(Vector3.Distance(editor.Find(ids[0]).transform.position,before),Is.LessThan(.001f));Assert.That(editor.Find(dry).GetComponent<Rigidbody>().isKinematic,Is.False);Assert.That(physics.Running,Is.True);
    }finally{ReleaseFlowWork(held);}
-   yield return IslandActive(ids);foreach(var id in ids)Assert.That(Mathf.Abs(editor.Find(id).GetComponent<Rigidbody>().linearVelocity.x),Is.LessThan(.05f));physics.PausePhysics();yield return null;
+   yield return IslandActive(ids);foreach(var id in ids)Assert.That(editor.Find(id).GetComponent<Rigidbody>().linearVelocity.x,Is.GreaterThan(.1f));physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionPassiveLifecycleFactsStayDetachedAndNeverRestartPhysics(){
    root.AddComponent<RuntimeDiagnostics>();string id=RainCup();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out var error),Is.True,error);var current=new JArray(FlowGrant());
@@ -97,7 +97,7 @@ namespace Maestro.Quest.Tests {
    FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();int events=0;
    void Resume(){events++;if(events==1){ReleaseFlowWork(held);held.Clear();editor.Liquids.Tick(.05f);}}
    editor.ContainerPoured+=(_,_,_,_,_)=>Resume();editor.ContainerRainCollected+=(_,_)=>Resume();
-   try{editor.Liquids.Tick(.05f);Assert.That(events,Is.EqualTo(1));Assert.That(editor.Liquids.Active,Is.True);Assert.That((bool)editor.Liquids.ObserveRain(to)["ready"],Is.True);Assert.That((double)editor.Liquids.ObserveRain(to)["collectedMl"],Is.GreaterThan(0));Assert.That(editor.Liquids.GetComponentsInChildren<LineRenderer>().Any(x=>x.enabled),Is.True);Assert.That(Liquid(to),Is.GreaterThan(editor.Read(to).containers[0].amountMl));}finally{ReleaseFlowWork(held);}physics.PausePhysics();yield return null;
+   try{editor.Liquids.Tick(.05f);Assert.That(events,Is.Zero);Assert.That(editor.Liquids.Finish(out error),Is.True,error);Assert.That(events,Is.EqualTo(1));Assert.That(editor.Liquids.Active,Is.True);Assert.That((bool)editor.Liquids.ObserveRain(to)["ready"],Is.True);Assert.That((double)editor.Liquids.ObserveRain(to)["collectedMl"],Is.GreaterThan(0));Assert.That(editor.Liquids.GetComponentsInChildren<LineRenderer>().Any(x=>x.enabled),Is.True);Assert.That(Liquid(to),Is.GreaterThan(editor.Read(to).containers[0].amountMl));}finally{ReleaseFlowWork(held);}physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionCallbackCanBeginNextEpisodeWithoutOldCleanupErasingIt(){
    var(_,from,to)=PouringCups();Assert.That(editor.SetWeather(editor.WeatherRevision,1,new(){rainMmPerHour=60},0,out var error),Is.True,error);editor.Liquids.Tick(.05f);int events=0;

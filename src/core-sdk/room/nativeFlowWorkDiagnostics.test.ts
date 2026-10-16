@@ -9,7 +9,7 @@ import {parseProgram,type BehaviourProgram} from './programs';
 
 it('accepts captured native complete-pass flow reservations independently of geometry readiness',()=>{
  expect(validFactValue('runtime.flowWorkBudget',native.budget)).toBe(true);
- expect(native.budget).toMatchObject({reservationLimit:32,unitLimit:524288,streamSegments:32,queryHits:64,scoopSamples:5,rainSamples:5});
+ expect(native.budget).toMatchObject({reservationLimit:64,unitLimit:524288,streamSegments:32,queryHits:64,scoopSamples:5,rainSamples:5});
  expect(native.budget.units).toBeLessThanOrEqual(native.budget.unitLimit);
  for(const phase of [native.current,native.stale,native.resized]){
   expect(phase).toHaveLength(1);expect(validFactValue('runtime.flowWorkReservation',phase[0])).toBe(true);
@@ -25,8 +25,8 @@ it('bounds passive flow work diagnostics without promising unmeasured device per
  expect(behaviourFact('runtime.flowWorkReservation')?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
  expect(behaviourFact('runtime.flowWorkBudget')?.description).toContain('not measured CPU time');
  expect(behaviourFact('runtime.flowWorkReservation')?.description).toContain('not that native geometry');
- for(const index of [0,31])expect(validateFactArguments('runtime.flowWorkReservation',1,{index})).toBeNull();
- for(const args of [{index:-1},{index:32},{index:.5},{index:'0'},{index:0,startPhysics:true}])expect(validateFactArguments('runtime.flowWorkReservation',1,args)).not.toBeNull();
+ for(const index of [0,63])expect(validateFactArguments('runtime.flowWorkReservation',1,{index})).toBeNull();
+ for(const args of [{index:-1},{index:64},{index:.5},{index:'0'},{index:0,startPhysics:true}])expect(validateFactArguments('runtime.flowWorkReservation',1,args)).not.toBeNull();
  expect(validFactValue('runtime.flowWorkBudget',{...native.budget,units:'unknown'})).toBe(false);
  expect(validFactValue('runtime.flowWorkReservation',{...native.current[0],privatePath:'hidden'})).toBe(false);
  expect(validFactValue('runtime.flowWorkReservation',{...native.current[0],current:'yes'})).toBe(false);

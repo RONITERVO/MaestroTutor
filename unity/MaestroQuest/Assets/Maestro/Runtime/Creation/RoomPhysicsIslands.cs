@@ -78,7 +78,6 @@ namespace Maestro.Quest.Creation {
             // Share geometry checks across its members, never across frames.
             if(query.Checked){error=query.ReadError;return query.Result;}
             query.Checked=true;query.Result=query.State;query.ReadError=query.Error;
-            if(query.Result==RoomSpatialReadiness.Ready&&!FlowWorkReady(query,out query.ReadError))query.Result=RoomSpatialReadiness.Unavailable;
             if(query.Result==RoomSpatialReadiness.Ready)foreach(var id in query.Members){
                 var body=Find(id)?.GetComponent<RigidRoomItem>();
                 if(body&&body.PhysicsWorkEligible&&!PhysicsWorkResources.Ready(body,out query.ReadError)){query.Result=RoomSpatialReadiness.Unavailable;break;}
@@ -116,14 +115,15 @@ namespace Maestro.Quest.Creation {
                     if(visited.Contains(id))continue;var peer=Find(id);var rigid=peer?peer.GetComponent<RigidRoomItem>():null;
                     if(!rigid)continue;if(!rigid.Dynamic){rigid.ReleasePhysicsInputs();continue;}
                     var query=PhysicsInputs(peer);
-                    if(PrepareFlowWork(query,out query.WorkError))PhysicsWorkResources.TryAdmit(query.Members.Select(member=>Find(member)?.GetComponent<RigidRoomItem>()),out query.WorkError);
+                    PrepareFlowWork(query,out _);
+                    PhysicsWorkResources.TryAdmit(query.Members.Select(member=>Find(member)?.GetComponent<RigidRoomItem>()),out query.WorkError);
                     foreach(var member in query.Members){var body=Find(member)?.GetComponent<RigidRoomItem>();if(body&&body.Dynamic&&visited.Add(member))body.PreparePhysicsInputs(query);}
                 }
             }finally{preparingPhysicsIsland=false;}
         }
         internal bool PhysicsIslandReady(RoomItem item,bool joints,out string error){
             error=null;var query=PhysicsInputs(item);
-            if(PhysicsInputsReady(query,out error)!=RoomSpatialReadiness.Ready)return false;
+            if(PhysicsInputsReady(query,out error)!=RoomSpatialReadiness.Ready||!FlowWorkReady(query,out error))return false;
             foreach(var id in query.Members){
                 var peer=Find(id);var rigid=peer?peer.GetComponent<RigidRoomItem>():null;
                 if(!peer||!peer.isActiveAndEnabled||!rigid||!rigid.isActiveAndEnabled){error="Connected physics member "+id+" is unavailable";return false;}

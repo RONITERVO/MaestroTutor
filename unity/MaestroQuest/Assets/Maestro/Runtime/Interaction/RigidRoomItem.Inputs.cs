@@ -67,7 +67,7 @@ namespace Maestro.Quest.Interaction {
             query??=editor.PhysicsInputs(item);
             if(!query.Members.SequenceEqual(inputMembers)){error="The physical connection group changed";return false;}
             if(query.Targets.Any(id=>Array.BinarySearch(physicsInputs.Targets,id,StringComparer.Ordinal)<0)){error="The physics input set changed";return false;}
-            return editor.PhysicsInputsReady(query,out error)==RoomSpatialReadiness.Ready;
+            return editor.PhysicsInputsReady(query,out error)==RoomSpatialReadiness.Ready&&editor.FlowWorkReady(query,out error);
         }
         internal string PhysicsInputStatus {
             get {if(CurrentInputs(out var error)&&InputEditor)InputEditor.PhysicsIslandReady(item,true,out error);return error??"Physics inputs changed; wait for the next step or restart physics after fixing unavailable inputs";}
@@ -97,9 +97,11 @@ namespace Maestro.Quest.Interaction {
             }
             physicsInputs??=new RoomSpatialInputs(editor,editor.Identity(item),()=>InputOwner&&editor.PhysicsIslandOwned(item),false,purpose:"Physics");
             bool ready=physicsInputs.Require(query.Targets,(string[] _,out string error)=>editor.PhysicsInputsReady(query,out error),out inputStatus);
-            if(!ready&&physicsInputs.Pending){
+            // Geometry residency is independent of this short execution turn. A
+            // scheduled hold preserves motion without changing contact identity.
+            if((!ready&&physicsInputs.Pending)||(ready&&editor.FlowWorkDeferred(query))){
                 if(!preparedMomentum&&!body.isKinematic){preparedVelocity=body.linearVelocity;preparedSpin=body.angularVelocity;preparedMomentum=true;}
-            }else if(!ready)DiscardPreparedMotion();
+            }else if(!ready||!editor.FlowWorkReady(query,out _))DiscardPreparedMotion();
             SetInputsReady(ready);
         }
         void DiscardPreparedMotion(){preparedMomentum=false;preparedVelocity=preparedSpin=Vector3.zero;}

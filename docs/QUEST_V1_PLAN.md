@@ -11926,3 +11926,57 @@ Fair scheduling, bounded discovery/proof/engine work and transaction/history/sto
 costs remain before larger saved capacity. No headset, paid-provider, Android
 build, signing, deployment or Meta action ran. Full offline Book/Headless journeys
 remain pinned to `9f38abca`; Android compilation to `7fe48619`. V1 remains incomplete.
+
+
+## Fair liquid simulation opportunities (2026-10-16)
+
+Liquid simulation work now takes fair, bounded turns. Existing continuing owners
+cannot reserve the entire allowance indefinitely. Up to 64 requests compete for
+at most 32 complete host passes and the unchanged 524,288 logical-unit allowance.
+The early fixed-step clock selects opportunities and keeps each through a
+rendered frame. Automatic liquid sampling and moving-container physics use the
+same grant. Current 16-container-per-room and native resource limits are unchanged.
+
+A scheduled delay preserves geometry residency, the shared liquid episode and
+valid connected-body motion. It does not repeatedly save, cancel an existing
+load or accumulate missed pouring/rain. Actual motion/geometry/ownership changes
+still discard stale momentum; pause, failed saving and reentrant publication
+retain their original contracts. The shared typed runtime.flowWorkSchedule fact
+exposes queue/grant state without advancing it. Existing diagnostic result schemas
+and versions remain, with request indexing expanded to the bounded waiting queue.
+
+Charging remains deliberately host-wide: current stream/immersion/scoop loops
+scan all vessels. Spatial groups remain complete and independently ready, but
+separate per-group metering is not yet implemented. Pressure tests use logical
+competing consumers of a real native fixture, not 64 fully provisioned rooms.
+
+See the [shared contract](QUEST_WORLD_AUTHORING.md#fair-liquid-simulation-opportunities-2026-10-16).
+
+Desktop verification passed **1,330 EditMode /
+1,789 PlayMode tests**, zero failures and three
+unchanged optional private-asset skips. Five new native cases cover sustained
+starvation, queue bounds and passive/call-order stability, pending load ownership,
+stale throw invalidation and invalid clock input. Existing conservation, save,
+Undo, reentrancy, connected motion and spatial-input checks also pass. Focused
+checks: **44 EditMode / 69 PlayMode**. The valid starvation case first failed
+against the old runtime. Two earlier pressure setup failures are retained and
+excluded from regression claims.
+
+**3,139 web tests / 342 files**, app/probe TypeScript and catalog
+provenance passed. Native observations validate the same waiting-to-flow path
+under sustained demand and the same bounded schedule types in user/agent programs.
+The first web run passed tests but TypeScript rejected Array.at in the new test;
+ordinary array indexing fixed the target mismatch, and the full web checks passed
+again. **4,416 frozen inputs / 3,148 native mirror inputs /
+14 protected files** were verified. Evidence:
+`.quest-evidence/flow-fair-scheduling/`. A final whitespace-only test cleanup is
+recorded separately from the tested source fingerprints; runtime code is identical.
+
+Earlier audio-reset failure and unchanged successful retry remain recorded;
+these desktop passes do not establish their cause or acoustic/device acceptance.
+
+Coordinated fairness across physics/contact work, per-group metering, bounded
+geometry/proof/engine work and transaction/history/storage costs remain before
+larger saved capacity. No headset, provider, Android build, signing, deployment or
+Meta action ran. Full offline Book/Headless journeys remain pinned to 9f38abca;
+Android compilation to 7fe48619. V1 remains incomplete.

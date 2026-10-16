@@ -1,0 +1,671 @@
+{
+  "incumbents": 8,
+  "vesselsPerGroup": 16,
+  "trace": [
+    {
+      "frame": 0,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 26,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 1,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 2,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 3,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 4,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 5,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 6,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 7,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 8,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 9,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 10,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 11,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 12,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 13,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 14,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 15,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 16,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 17,
+      "contents": {
+        "sessionId": "569e28185f4e47fbbc6833a510c4e68c",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 27,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 18,
+      "contents": {
+        "sessionId": "eab377bdd5714daf89ec7e572865d6ef",
+        "phase": "flowing",
+        "contents": {
+          "amountMl": 383.96169419066121,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 16.038305809338777,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": ""
+      },
+      "budget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 28,
+        "executions": 8,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 491392,
+        "unitLimit": 524288
+      }
+    }
+  ]
+}

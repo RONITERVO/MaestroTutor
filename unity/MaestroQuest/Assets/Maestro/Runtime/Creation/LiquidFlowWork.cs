@@ -19,7 +19,9 @@ namespace Maestro.Quest.Creation
         void WaitForFlowWork(string reason){
             // Only the active flow tick closes accepted work. Admission checks in
             // physics preparation must not mutate the journal or re-enter a save.
-            ReleaseFlowInputs();InvalidateRain(reason);Finish(out _);
+            InvalidateRain(reason);HideStreams();
+            if(FlowWorkResources.Queued(this))return; // A missed opportunity is not a new episode.
+            ReleaseFlowInputs();Finish(out _);
         }
     }
     public sealed partial class RoomEditor
@@ -32,6 +34,7 @@ namespace Maestro.Quest.Creation
         internal bool PrepareFlowWork(PhysicsIslandQuery query,out string error){
             error=null;return !PhysicsNeedsFlow(query)||FlowWorkResources.TryAdmit(Liquids,out error);
         }
+        internal bool FlowWorkDeferred(PhysicsIslandQuery query)=>PhysicsNeedsFlow(query)&&FlowWorkResources.Queued(Liquids)&&!FlowWorkResources.Ready(Liquids,out _);
         internal bool FlowWorkReady(PhysicsIslandQuery query,out string error){
             error=null;return !PhysicsNeedsFlow(query)||FlowWorkResources.Ready(Liquids,out error);
         }

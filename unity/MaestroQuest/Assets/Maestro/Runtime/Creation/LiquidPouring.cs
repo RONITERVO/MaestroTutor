@@ -24,7 +24,8 @@ namespace Maestro.Quest.Creation {
         internal bool Active=>write!=null;
         internal bool Owns(string target)=>Active&&contents.ContainsKey(target);
         internal string Error=>error;
-        internal void Initialize(RoomEditor owner){editor=owner;world=owner.PhysicsWorld;lastSample=Time.unscaledTime;if(world)world.Changed+=PhysicsChanged;editor.RuntimeGate.Changed+=ContactGateChanged;}
+        long automaticFlowStep=-1;
+        internal void Initialize(RoomEditor owner){FlowWorkClock.Ensure();editor=owner;world=owner.PhysicsWorld;lastSample=Time.unscaledTime;if(world)world.Changed+=PhysicsChanged;editor.RuntimeGate.Changed+=ContactGateChanged;}
         internal void Synchronize(RoomDocument document){
             flowEpoch++;ResetContacts();
             var ids=new HashSet<string>();
@@ -40,7 +41,7 @@ namespace Maestro.Quest.Creation {
                 if(Owns(id))Cancel("A container was removed; the unfinished liquid flow was reverted");Release(vessels[id]);vessels.Remove(id);
             }
         }
-        void LateUpdate(){float now=Time.unscaledTime;if(now<nextSample)return;nextSample=now+.05f;float elapsedSinceSample=Mathf.Min(now-lastSample,.1f);lastSample=now;Tick(elapsedSinceSample);TickContacts(elapsedSinceSample);}
+        void LateUpdate(){if(automaticFlowStep!=FlowWorkResources.Step){automaticFlowStep=FlowWorkResources.Step;Tick(FlowWorkResources.StepSeconds);}float now=Time.unscaledTime;if(now<nextSample)return;nextSample=now+.05f;float elapsedSinceSample=Mathf.Min(now-lastSample,.1f);lastSample=now;TickContacts(elapsedSinceSample);}
         internal void Tick(float seconds){
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);

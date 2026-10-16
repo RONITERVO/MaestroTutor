@@ -4,6 +4,11 @@ using Maestro.Quest.Creation;
 using NUnit.Framework;
 namespace Maestro.Quest.Tests {
  public sealed class FlowWorkAdmissionTests {
+  [Test]public void FlowWorkAdmissionInvalidOpportunityCannotAdvanceClock(){
+   long before=FlowWorkResources.Step;
+   foreach(float seconds in new[]{0,-1,float.NaN,float.PositiveInfinity})FlowWorkResources.Advance(seconds);
+   Assert.That(FlowWorkResources.Step,Is.EqualTo(before));
+  }
   [Test]public void FlowWorkAdmissionBoundsCompletePotentialDemand(){
    Assert.That(FlowWorkResources.Demand(-1),Is.Zero);Assert.That(FlowWorkResources.Demand(0),Is.Zero);
    Assert.That(FlowWorkResources.Demand(1),Is.EqualTo(2579));Assert.That(FlowWorkResources.Demand(2),Is.EqualTo(5326));
