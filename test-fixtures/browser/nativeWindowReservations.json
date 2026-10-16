@@ -1,0 +1,99 @@
+{
+  "budget": {
+    "masks": 32,
+    "bundles": 32,
+    "preparing": 62,
+    "ready": 2,
+    "retiring": 0,
+    "maskLimit": 32,
+    "bundleLimit": 32
+  },
+  "preparing": [
+    {
+      "reservationId": "4206556e94c641daa2ec2639d1b5e4c3",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "bundle",
+      "window": "",
+      "phase": "preparing",
+      "active": false
+    },
+    {
+      "reservationId": "2ab8f686c94c4a9bbd392bcfe6bad3c4",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "mask",
+      "window": "Window",
+      "phase": "preparing",
+      "active": false
+    }
+  ],
+  "ready": [
+    {
+      "reservationId": "4206556e94c641daa2ec2639d1b5e4c3",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "bundle",
+      "window": "",
+      "phase": "ready",
+      "active": true
+    },
+    {
+      "reservationId": "2ab8f686c94c4a9bbd392bcfe6bad3c4",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "mask",
+      "window": "Window",
+      "phase": "ready",
+      "active": true
+    }
+  ],
+  "disabled": [
+    {
+      "reservationId": "4206556e94c641daa2ec2639d1b5e4c3",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "bundle",
+      "window": "",
+      "phase": "ready",
+      "active": false
+    },
+    {
+      "reservationId": "2ab8f686c94c4a9bbd392bcfe6bad3c4",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "mask",
+      "window": "Window",
+      "phase": "ready",
+      "active": false
+    }
+  ],
+  "retiring": [
+    {
+      "reservationId": "4206556e94c641daa2ec2639d1b5e4c3",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "bundle",
+      "window": "",
+      "phase": "retiring",
+      "active": false
+    },
+    {
+      "reservationId": "2ab8f686c94c4a9bbd392bcfe6bad3c4",
+      "worldId": "91caeae35ea642cfab84efa76dac09ef",
+      "regionId": "7168508496a949019f6d28a076dbe302",
+      "target": "9b6152ec8dc240baaf77b47a6ceefa06",
+      "kind": "mask",
+      "window": "Window",
+      "phase": "retiring",
+      "active": false
+    }
+  ]
+}

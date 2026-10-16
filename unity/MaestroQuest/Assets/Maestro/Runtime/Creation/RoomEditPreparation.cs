@@ -24,6 +24,7 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,RecipeVisual> recipes=new();
         readonly Dictionary<string,PreparedImportedModel> models=new();
         readonly Dictionary<string,PreparedRoomLights> lights=new();
+        readonly Dictionary<string,PreparedRoomWindows> windows=new();
         readonly Dictionary<string,(Vector3[] Points,float Radius,PencilGeometry Geometry)> drawings=new();
         readonly Dictionary<string,PreparedDrawingSurfaces> surfaces=new();
         internal void EnlistModel(PreparedImportedModel model,RoomJournal.PreparedEdit edit)
@@ -62,6 +63,9 @@ namespace Maestro.Quest.Creation
             var prepared=new RoomEditPreparation();error=null;
             try{foreach(var data in document.objects)foreach(var step in prepared.PrepareGeometry(editor,data,editor.Find(data.id)?editor.Read(data.id):null)){}return prepared;}
             catch(Exception failure){prepared.Dispose();error=failure is ModelImportException or RoomResourceLimitException?failure.Message:"The saved room could not be prepared; temporary changes remain available";return null;}
+        }
+        internal PreparedRoomWindows TakeWindows(RoomObjectData data){
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");if(!windows.TryGetValue(data.id,out var candidate))return null;candidate.Validate(data);windows.Remove(data.id);resources.Remove(candidate);return candidate;
         }
         internal PreparedRoomLights TakeLights(RoomObjectData data)
         {
@@ -147,6 +151,10 @@ namespace Maestro.Quest.Creation
             if((data.surfaces?.Length??0)>0||surfaceView){
                 var candidate=new PreparedDrawingSurfaces(editor.WorldIdentity,data.id,data.surfaces,surfaceView);resources.Add(candidate);surfaces.Add(data.id,candidate);yield return null;
             }
+            var windowView=current?current.GetComponent<RoomWindowView>():null;
+            if(data.windows.Length>0||windowView){
+                surfaces.TryGetValue(data.id,out var anchors);var candidate=new PreparedRoomWindows(editor.WorldIdentity,data,windowView,anchors);resources.Add(candidate);windows.Add(data.id,candidate);yield return null;
+            }
             var lightView=current?current.GetComponent<RoomLightView>():null;
             if(data.lights.Length>0||lightView){
                 var candidate=new PreparedRoomLights(editor.WorldIdentity,data.id,data.lights,lightView);resources.Add(candidate);lights.Add(data.id,candidate);yield return null;
@@ -162,6 +170,6 @@ namespace Maestro.Quest.Creation
             if(!view.CanConfigureModelGeometry(data.modelGeometry,out var issue))throw new ModelImportException(issue);
             resources.Add(view.PrepareModelGeometry(data.modelGeometry));yield return null;
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();drawings.Clear();surfaces.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();windows.Clear();drawings.Clear();surfaces.Clear();}
     }
 }

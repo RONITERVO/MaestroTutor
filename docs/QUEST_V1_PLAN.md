@@ -11423,3 +11423,54 @@ Headless/Book journeys were not rerun here; their most recent evidence remains
 pinned to `9f38abca`. Window creation/replacement admission remains next, followed
 by simulation admission and transaction/storage/spatial-extent work before saved
 capacity expansion. V1 remains incomplete.
+
+## Transactional native windows (2026-10-16)
+
+Authored passthrough windows now prepare detached, inactive masks and their shared
+quad/material bundle before journal acceptance or immediate-save persistence.
+Preparation cannot request passthrough. Adoption applies accepted visibility before
+requesting the underlay, so a fully hidden opening cannot briefly reveal the room.
+Stable window IDs reuse masks across reveal, shape, size and anchor edits. Rebinding
+detaches retained masks before removing their previous surface. Removing the last
+window also releases its native bundle without reserving a replacement.
+See [the window contract](QUEST_WORLD_AUTHORING.md#native-window-preparation-and-lifetime-2026-10-16).
+
+Independent process-wide limits reserve 32 masks and 32 shared bundles across
+workspaces, private candidates, inactive hosts and deferred destruction. Saved
+quotas remain four windows/object and sixteen/room. Exact-target/source transfer,
+failed batches and immediate saves, Undo/Redo, temporary discard and dormant
+activation share the preparation path. Explicit visual-only edits can recover
+missing surface anchors before acceptance; unrelated reconciliation cannot
+allocate a missing peer's windows. Failure preserves accepted masks and their
+properties, source, saved bytes and history.
+
+Shared `runtime.windowBudget` and `runtime.windowReservation` expose detached,
+passive owner/lifetime facts to both users and agents. `ready` may include an
+unpublished native candidate; `active` describes the host GameObject. Neither
+certifies visibility or working passthrough. Reads never allocate masks, evict
+content or request the underlay. Compositor resources and internal rendering
+allocations are excluded; these logical limits do not measure GPU memory or
+establish Quest performance.
+
+Full desktop verification passed **1,317 EditMode / 1,706 PlayMode** tests,
+with **3 optional private-asset skips**. Eleven new native regressions cover
+independent mask/bundle saturation, exact-source transfer, never-active cleanup,
+stable mask reattachment, failed batches and immediate saves, temporary/history
+recovery, dormant activation, missing-peer isolation and private/hidden window
+presentation. The focused run passed **20 EditMode / 158 PlayMode** checks.
+The full run also verifies a refused property-only save preserves an existing
+window's mask, reveal value and passthrough request.
+
+**3,101 web tests / 332 files**, app/probe TypeScript and catalog provenance
+passed. A captured native lifecycle fixture validates the same typed web facts
+and programs. Existing capabilities are unchanged; only two window diagnostics
+were added. All **4,328 frozen inputs**, **3,080 native source/mirror
+files** and **14 unrelated files** were verified. Evidence:
+`.quest-evidence/window-admission/`.
+
+No Android build, headset, paid-provider, signing, deployment or Meta action ran.
+Full offline Headless/Book journeys were not rerun for this window checkpoint;
+their most recent evidence remains pinned to `9f38abca`. Per-entity real-room
+collisions remain independent of authored terrain and presentation. Simulation
+admission and transaction/storage/spatial-extent work remain before increasing
+saved capacity. V1 remains incomplete.

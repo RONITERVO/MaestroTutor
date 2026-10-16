@@ -53,6 +53,7 @@ namespace Maestro.Quest.Creation
                 }
             }catch{Dispose();throw;}
         }
+        internal Transform PlannedSurface(string id)=>!ended?changes.FirstOrDefault(c=>c.Definition.id==id)?.Patch.Root:null;
         internal void Validate(string identity,DrawingSurface[] definitions){
             if(ended||target!=identity||encoded!=Encode(definitions)||changes.Any(c=>!c.Patch.Root||c.Ink.Values.Any(s=>!s.Marks||!s.Marks.GeometryReady)))throw new InvalidOperationException("Surface source changed or preparation has ended");
         }

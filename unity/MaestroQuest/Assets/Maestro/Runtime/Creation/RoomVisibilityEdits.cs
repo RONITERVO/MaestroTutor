@@ -61,9 +61,12 @@ namespace Maestro.Quest.Creation
             }
         }
         void ApplyVisibility(RoomObjectData data,RoomItem item,RoomDocument document,RoomEditPreparation preparation) {
-            ApplyLights(data,item,preparation);
-            var windows=item.GetComponent<RoomWindowView>();if(!windows&&data.windows.Length>0)windows=item.gameObject.AddComponent<RoomWindowView>();if(windows)windows.Apply(data,GetComponentInParent<VirtualRoomView>());
-            windows?.ConfigureVisibility(data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);
+            // Visual-only edits must adopt prepared anchors before their windows.
+            // Ordinary object configuration may already have consumed the same plan.
+            ApplySurfaces(data,item,preparation);ApplyLights(data,item,preparation);
+            using var candidate=preparation?.TakeWindows(data);var windows=item.GetComponent<RoomWindowView>();var layer=data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual;
+            if(candidate!=null){if(!windows)windows=item.gameObject.AddComponent<RoomWindowView>();windows.Apply(data,GetComponentInParent<VirtualRoomView>(),layer,candidate);}
+            else windows?.ConfigureVisibility(layer); // Missing peers never allocate during unrelated reconciliation.
             var view=item.GetComponent<RoomAppearanceView>();
             if(!view&&(data.appearanceBindings.Length>0||data.visibilityLayer!=""))view=item.gameObject.AddComponent<RoomAppearanceView>();
             if(view){view.ConfigureImages(ImageTextures,new RoomResourceOwner(WorldIdentity,data.id,"appearance"));view.ConfigureLayer(data,document.appearances,data.visibilityLayer==""?null:visibleLayers[data.visibilityLayer].Visual);}

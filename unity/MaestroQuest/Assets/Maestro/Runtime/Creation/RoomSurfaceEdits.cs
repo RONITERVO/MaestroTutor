@@ -50,6 +50,10 @@ namespace Maestro.Quest.Creation
             }
             data.surfaces=list.ToArray();var candidate=Snapshot();var next=data;candidate.objects=candidate.objects.Select(x=>x.id==target?next:x).ToArray();return candidate.Validate(out error);
         }
+        void ApplySurfaces(RoomObjectData data,Maestro.Quest.Interaction.RoomItem item,RoomEditPreparation preparation){
+            using var ink=preparation?.TakeSurfaces(data);var surfaces=item.GetComponent<DrawingSurfaceView>();
+            if(ink!=null){item.GetComponent<RoomWindowView>()?.DetachAnchors();if(!surfaces)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();surfaces.Apply(data.id,data.surfaces,ink);}else surfaces?.Reanchor();
+        }
         internal bool EditSurface(string target,int revision,JObject args,out string strokeId,out string error)
         {
             if(!PrepareSurfaceEdit(target,revision,args,out var data,out strokeId,out error))return false;

@@ -43849,6 +43849,65 @@
       ]
     },
     {
+      "id": "runtime.windowBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "masks": "number",
+          "bundles": "number",
+          "preparing": "number",
+          "ready": "number",
+          "retiring": "number",
+          "maskLimit": "number",
+          "bundleLimit": "number"
+        }
+      },
+      "label": "Native window budget",
+      "description": "Process-wide authored window mask and shared mesh/material bundle reservations across workspaces. Includes private preparation, inactive hosts and deferred destruction. One bundle serves a native view's masks and is released when its last window is removed. Limits are independent of saved-room quotas. Logical admission costs, not measured GPU memory or frame time; internal rendering, compositor and passthrough resources are excluded. Reading never allocates a mask, enables passthrough or evicts content.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.windowReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "kind": "text",
+          "window": "text",
+          "phase": "text",
+          "active": "boolean"
+        }
+      },
+      "label": "Native window owner",
+      "description": "Read one runtime.windowBudget reservation by index. Indices may shift; reservationId is runtime-only. World, region and target identify its copied owner. Kind is mask or bundle; window is empty for a shared bundle. Phase is preparing, ready or retiring. Ready means native ownership transferred, including unpublished activation candidates; it does not certify publication or visibility. Active describes the host GameObject, not passthrough readiness. Resources remain charged until their owned native allocations are destroyed. Reads are detached and cannot change saved data or request passthrough.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 63.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -46797,6 +46856,10 @@
       "sha256": "6b40d08fbf788f602be717ed9b54c0586e82abbdf2ba4bfe499126bf54497eb8"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowResourceFacts.cs",
+      "sha256": "2688d8171d03cd5bd14836fee7de588b9d1498636f5d28b542396db04bf2ec75"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorkspaceActivationCapabilities.cs",
       "sha256": "41291c4504ba8289406e2973eb482323f5dd99f17419d8b0432eb192d954543d"
     },
@@ -47058,7 +47121,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedDrawingSurfaces.cs",
-      "sha256": "1fac2ae69db522cc1ba24f8d5d0ab377e3066cb90e56312104fa46395ce03236"
+      "sha256": "d85df1eb1b3b2b8b77a097d259b729be7a72c7e7739dd5362fd9f9e88ba7f8fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedImportedModel.cs",
@@ -47067,6 +47130,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
       "sha256": "cf3a0df35657bc0a068f282b13b448692dbcef81f3415cd9669302a05a7b9b22"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomWindows.cs",
+      "sha256": "ef7021e1b0657ccd4540f25bd8d7c7acefac9af4d773e42027888b6354dea55e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeExtrusion.cs",
@@ -47230,7 +47297,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "f04e1cf3fb47d73bcac5b622e4b274a6f13bf6e1c4d104e4474dbf3a351b6d8f"
+      "sha256": "2e41b6be30f0fb32ffa883f72b04d9e3b9697500fa4dd3353d5283f4aa92fa47"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -47386,7 +47453,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
-      "sha256": "a4fc79297d94e68d8715c9303af7dc884fe36ea8e026cac883a7045d06aa5e6a"
+      "sha256": "29bbec1bbba2700a078c667f80a7915cbed19164dab641b223f9f8198e19a679"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
@@ -47494,7 +47561,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
-      "sha256": "d00506a1436d36413ebff29458c876d5b12a5b22e2ba8ac4a00ec768861bacd9"
+      "sha256": "3578759abe874dd0aa5ff198f1efd932ef7487ebb8d37e2e5989ef5649325e68"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
@@ -47546,7 +47613,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "c0734e6925f4da48de92c004d546f7ee45b863860cbaf30417207218b6e746a1"
+      "sha256": "7951f0b984d44ac9cabe7b24f552131cb476a0f82a97238319e5de0d7d13ede5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomTerrainReservoir.cs",
@@ -47578,7 +47645,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
-      "sha256": "c02f1e38862ddbdf1b74da2d080daabd050a5cc7caccc1b503e43c0809959aed"
+      "sha256": "f911d227d4c1970b7bd46969a5147f16b8e63fb99acee5ab6b7292d6934ddfca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
@@ -47606,7 +47673,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWindowView.cs",
-      "sha256": "2fcda94b44bad818a03dd2a5020990692e979425bb6346e9c949a3a03c5aaa25"
+      "sha256": "347ce2689ffced97de1f7f17adc7a3eaf6081da89f6c7f74edbfe7fdcce185d2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldIdentity.cs",
@@ -47679,6 +47746,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WeatherCover.cs",
       "sha256": "8d803b7dee834c73092eae33c07db7c17e2b52f58a0a325ba4c2701bced82602"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WindowResources.cs",
+      "sha256": "872a50426f5eb85e679bb06ba75cfb049e952e82385ef3d8bb982868c616b1ee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/WorldAudio.Control.cs",
@@ -48362,7 +48433,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "334b4090e1dd6764035b5b8fa876fc6e8d8a806fc9723d11aedb7547b333c217"
+      "sha256": "78c64fca0dac94c74ad266493b877ebf57f3d48d13cb073e9b584c67fa65bb01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

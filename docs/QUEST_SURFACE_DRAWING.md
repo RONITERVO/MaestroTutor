@@ -288,8 +288,8 @@ shape or curvature prepares new geometry. Replacing a recipe part reattaches the
 same patch root and its window; resizing a planar patch updates the existing
 window mask's scale. Disabling drawing stops new contact strokes while leaving
 existing ink visible. Scanned-layer anchors remain invisible and add no panel.
-Window creation/replacement still uses its existing bounded implementation;
-transactional native window admission is the next separate checkpoint.
+Window creation/replacement also uses transactional native admission; see
+[window lifetime](QUEST_WORLD_AUTHORING.md#native-window-preparation-and-lifetime-2026-10-16).
 
 Live preview updates reuse their pigment material. If native preview preparation
 fails, capture ends with the sampled stroke retained as an unsaved draft. Its

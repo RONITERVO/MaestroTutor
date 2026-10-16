@@ -656,7 +656,7 @@ latency, readability and sustained memory/performance remain separate gates.
 
 A passthrough opening is a saved `RoomWindow` component on an existing plane surface of a created object. `object.window.edit` and `object.windows` use the same revision-guarded source through the original book forms, delegated agent and programs. Configure a plane using `object.surface.edit`, then select its exact surface ID. The plane owns position, rotation and dimensions; the window owns its stable ID, rectangular/elliptical shape and reveal amount. This keeps placement, editing and source inspection shared with surface ink. Drawing enabled/disabled controls new ink, while reveal and the object's visibility-layer opacity control the opening. Ordinary texture opacity, real-world collision profiles and real-depth settings remain separate.
 
-An ordinary object's opening follows the object or its recipe part, including virtual-world movement. For a physical attachment, `drawing.layer.edit` creates the existing exact scanned-surface host; its `Canvas` can have a window with no ink. That host stays in the physical frame. Lost, changed-room or missing anchors hide both ink and window until the exact binding is available again; there is no nearest-wall substitution. Rebinding and surface resizing use the same boundary checks. The object can carry ink and an opening together. Remove a referencing window before removing or curving its plane.
+An ordinary object's opening follows the object or its recipe part, including virtual-world movement. For a physical attachment, `drawing.layer.edit` creates the existing exact scanned-surface host; its `Canvas` can have a window with no ink. That host stays in the physical frame. Lost, changed-room or missing anchors hide both ink and window until the exact binding is available again; there is no nearest-wall substitution. Rebinding and surface resizing use the same boundary checks. The object can carry ink and an opening together. Remove or rebind a referencing window before removing or curving its plane.
 
 Rendering multiplies framebuffer RGB and alpha together to expose the headset's existing passthrough underlay. Opaque foreground geometry uses depth; the mask shares the transparent queue with translucent surfaces so nearer transparent objects composite afterward. Mask depth is the authored plane, not a measurement of the real scene. As with ordinary sorted transparency, intersecting transparent geometry has ordering limitations. Overlapping masks multiply the coverage left behind. A frame should have an actual open centre when that is the intended construction; the component is not a mesh-cutting operation. The view keeps the underlay available at full backdrop opacity only while an active opening requests it. It never opts into camera sharing. Without a running headset passthrough subsystem the source remains editable and masks are not rendered. `renderingReady` reports that prerequisite, not physical alignment or visual acceptance.
 
@@ -1894,3 +1894,49 @@ for individual owners. Reads are passive and return detached metadata. A ready
 lease records accepted ownership; enabled/active collider counts do not prove
 simulation, contact or visible geometry. These resource limits do not change
 which real-room surfaces an entity collides with or its virtual-world terrain.
+
+
+## Native window preparation and lifetime (2026-10-16)
+
+Window masks and their per-view shared quad/material bundle now prepare before
+journal acceptance and immediate-save persistence. Prepared masks are detached,
+inactive and render-disabled. Preparation never creates a window view or requests
+passthrough. The complete accepted visibility state is applied before the native
+view can request the underlay; a hidden opening does not briefly enable it.
+Passthrough readiness remains a separate observation, not a consequence of
+successfully preparing geometry on a desktop.
+
+Independent process-wide limits admit 32 mask roots and 32 shared bundles across
+all workspaces, including private preparation, inactive owners and deferred
+destruction. The saved limits remain four windows per object and sixteen per
+room. A bundle owns the quad mesh and material shared by one native view's masks.
+The last window's removal releases that bundle as well as its masks. Its charge
+remains until owned native objects are actually destroyed. Never-active owners
+are also reaped. These are logical allocation counts, not measurements of RAM,
+GPU memory, compositor resources, garbage awaiting collection or frame time.
+
+Stable window IDs reuse their masks when reveal, rectangular/elliptical shape,
+plane size or anchor changes. Rebinding detaches retained masks before an old
+surface is destroyed. Surface roots still retain their ink and windows when
+recipe parts are rebuilt. Visual-only window edits consume prepared surface
+anchors before attaching masks, including explicit recovery of a missing surface
+view. Unrelated reconciliation does not recreate missing peer windows. Removing
+windows needs no replacement capacity; replacing an identity or restoring missing
+native geometry can require spare capacity until old resources finish retiring.
+
+Failed preparation, a later batch refusal or an immediate-save failure preserves
+accepted source, views and history. Undo/Redo, temporary-room discard and dormant
+activation use the same preparation path and retain retry on refusal. Native
+allocation does not change the older queued-save entry point's persistence
+policy. A candidate can be adopted only by its exact target with unchanged window
+and referenced-plane definitions and surviving anchors.
+
+`runtime.windowBudget` and `runtime.windowReservation` expose passive typed
+ownership diagnostics through the same user/agent catalog. They require the
+runtime diagnostics service. A bundle has an empty window ID; mask reservations
+carry the stable window ID. Runtime reservation IDs and indices are not saved
+identities. `ready` means native ownership was transferred, which can include an
+unpublished activation candidate. `active` describes the host GameObject, not
+visibility or passthrough readiness. Reads cannot allocate, evict or enable
+passthrough. The native lifecycle fixture and verification scope are recorded in
+[the v1 plan](QUEST_V1_PLAN.md#transactional-native-windows-2026-10-16).
