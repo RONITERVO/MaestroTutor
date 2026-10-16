@@ -34,6 +34,22 @@ namespace Maestro.Quest.Creation {
    foreach(var probe in group.Plan.Probes){state=editor.SpatialInputsReady(Array.Empty<string>(),probe.Bounds,probe.Bounds,false,probe.Actor,out reason);if(state!=RoomSpatialReadiness.Ready)return state;}
    reason=null;return RoomSpatialReadiness.Ready;
   }
+  Vessel[][] CaptureFlowExecution(){
+   // Execute only complete, prepared quantity groups. Shared read-only solids
+   // remain in spatial proofs/PhysX; they do not become quantity candidates.
+   var result=new List<Vessel[]>();
+   foreach(var group in flowGroups.Values){
+    if(!group.Ready)continue;
+    var members=group.Plan.Members.Select(id=>vessels.TryGetValue(id,out var vessel)?vessel:null).ToArray();
+    if(members.Any(vessel=>vessel==null||!vessel.Ready)){
+     FlowGroupIssue(group,"Liquid-flow members changed; preparing a fresh pass");
+     return Array.Empty<Vessel[]>(); // Never execute a prefix of a stale plan.
+    }
+    result.Add(members);
+   }
+   flowExecutionWork.Groups=result.Count;flowExecutionWork.Members=result.Sum(members=>members.Length);
+   return result.ToArray();
+  }
   bool PrepareFlowInputs(Vector3 gravity,Vector3 up){
    uint version=++flowPreparationVersion;flowPassIssue=null;flowInputIntent=world.SimulationIntent;
    var plans=CaptureFlowGroups(gravity,up);var next=new Dictionary<string,FlowGroup>(StringComparer.Ordinal);bool close=false;

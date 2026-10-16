@@ -12107,5 +12107,53 @@ That full suite was not rerun for this text-only production change. Evidence:
 `.quest-evidence/physics-observation-contract/`. No new offline journey, headset,
 provider, Android, acoustic, signing, deployment or Meta verification is claimed.
 
-The complete v1 goal remains unfinished. Group-local liquid execution and bounded
-discovery remain next, with the existing device/provider/release holds.
+The complete v1 goal remains unfinished. Group-local quantity enumeration is now
+implemented below; bounded discovery and per-group scheduling remain open.
+
+
+## Liquid quantity execution by complete group (2026-10-16)
+
+The native quantity pass now enumerates each complete prepared liquid group for
+pouring, immersion, scooping and rain. Stream and scoop candidates come only from
+that group's members. A separate ready circuit no longer enumerates the waiting
+circuit's containers. Required solids and rain cover still participate in spatial
+proofs and PhysX queries; sharing a read-only roof does not merge quantities.
+
+The complete group is captured after native input preparation. If any member has
+changed or is unready, no prefix of that plan executes. Each pass rebuilds the
+groups from current geometry, including empty receivers and transitive
+dependencies. Moving a receiver between circuits therefore changes the candidate
+set before the next quantity pass. Pour, scoop and rain phase order and the
+single host journal remain: live quantities publish together, with one Undo,
+and failed publication rolls back unaccepted changes.
+
+The previous room-wide loops failed all three new native reproductions. For two
+independent two-vessel circuits, the same 28 stream segments made 112 candidate
+visits before and 56 after; immersion visits fell from 8 to 4 and scoop visits
+from 16 to 8. With one unavailable circuit, stream candidate visits fell from 56
+to 28 while the ready circuit still conserved its water. A moved receiver formed
+a three-vessel circuit plus one isolated source, with 10 scoop visits; returning
+it restored two complete pairs and 8 visits. These are instrumented visits in
+actual native loops, not frame-time or CPU measurements.
+
+All three new native reproductions pass after the change. Expanded focused
+verification passed **44 EditMode / 182 PlayMode tests**, including
+pouring, scooping, rain, spatial readiness, rollback, contact continuity and
+coordinated physics/liquid scheduling. **3,146 web tests / 345 files**, app/probe
+TypeScript and catalog provenance passed. All catalog definitions are unchanged;
+the four changed runtime source hashes were refreshed.
+
+The last full Unity suite remains pinned to **98c4808d**: **1,330 EditMode /
+1,799 PlayMode passed**, with three unchanged optional private-asset skips.
+Full offline Book/Headless journeys remain pinned to **9f38abca**, and Android
+compilation to **7fe48619**. No new headset, real-provider, acoustic, Android,
+signing, deployment or Meta acceptance is claimed. Local evidence:
+.quest-evidence/flow-group-execution/.
+
+This step deliberately retains whole-host work allowances and physics/liquid
+coupling. Discovery, input preparation, stream cleanup and publication still have
+room-wide work. Separately admitting discovery, accounting for geometry/proofs
+and engine work, preserving fairness through split/merge, and assigning execution
+allowances to actual complete groups remain required before increasing capacity.
+Saved/native limits, catalog definitions and saved formats are unchanged.
+The full v1 remains incomplete; device/provider/release holds remain in place.

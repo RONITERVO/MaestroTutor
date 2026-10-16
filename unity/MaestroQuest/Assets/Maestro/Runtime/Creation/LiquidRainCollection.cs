@@ -15,10 +15,10 @@ namespace Maestro.Quest.Creation
             var offset=new Vector3(x*(c.IsRectangular?c.rectangle.width*.5f:c.radius),c.height,z*(c.IsRectangular?c.rectangle.depth*.5f:c.radius));
             return t.TransformPoint(c.frame.position+c.frame.rotation*offset)+normal*.001f;
         }
-        bool CollectRain(float seconds,out bool published){
+        bool CollectRain(Vessel[][] groups,float seconds,out bool published){
             published=false;
             var weather=editor.CurrentWeather;var velocity=WeatherCover.Velocity(editor);bool flowing=false;
-            foreach(var v in vessels.Values){
+            foreach(var members in groups)foreach(var v in members){
                 v.Exposure=0;v.RainReady=false;v.RainReason="";
                 if(!v.Ready){v.RainReason="Container is unavailable for physics";continue;}
                 if(weather.Rain<=0){v.RainReason="There is no rain";continue;}
@@ -29,6 +29,7 @@ namespace Maestro.Quest.Creation
                 if(flux<=.001f){v.RainReason="Opening faces away from the rain";continue;}
                 int open=0,unknown=0;
                 for(int sample=0;sample<5;sample++){
+                    flowExecutionWork.RainSamples++;
                     var point=RainOpeningPoint(v,sample);
                     var exposure=rainCover.Exposure(editor,point,velocity,v.Item);
                     if(exposure==RainExposure.Open)open++;else if(exposure==RainExposure.Unknown)unknown++;

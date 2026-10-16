@@ -9,6 +9,13 @@ namespace Maestro.Quest.Creation
     public sealed partial class LiquidPouring
     {
         uint flowEpoch;
+        // Actual visits in the last quantity pass, not discovery/PhysX time or
+        // a scheduling allowance. A value copy cannot alter the running sample.
+        internal struct FlowExecutionWork {
+            internal int Groups,Members,PourSegments,PourCandidates,ImmersionChecks,ImmersionCandidates,ScoopRecipients,ScoopCandidates,RainSamples;
+        }
+        FlowExecutionWork flowExecutionWork;
+        internal FlowExecutionWork LastFlowExecution=>flowExecutionWork;
         // Like contact sampling, an explicit internal tick can step a disabled
         // automatic loop in desktop tests. An inactive workspace cannot step.
         internal bool FlowWorkEligible=>gameObject.activeInHierarchy&&!contactsPaused&&contactsFocused&&editor&&editor.isActiveAndEnabled&&world&&world.Running&&!blocked&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen&&editor.CanSaveRoom&&editor.Frame.Valid&&vessels.Count>0&&float.IsFinite(Physics.gravity.sqrMagnitude)&&Physics.gravity.sqrMagnitude>=.01f;

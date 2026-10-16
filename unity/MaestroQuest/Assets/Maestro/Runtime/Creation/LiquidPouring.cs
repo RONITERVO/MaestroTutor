@@ -45,6 +45,7 @@ namespace Maestro.Quest.Creation {
         internal void Tick(float seconds){
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);
+            flowExecutionWork=default;
             var physics=editor.PhysicsWorld;
             if(!FlowWorkEligible){ReleaseFlowInputs();FlowWorkResources.Release(this);InvalidateRain("Liquid flow is paused or unavailable");Finish(out _);return;}
             if(!FlowWorkResources.TryAdmit(this,out var workIssue)){WaitForFlowWork(workIssue);return;}
@@ -52,14 +53,17 @@ namespace Maestro.Quest.Creation {
             Physics.SyncTransforms();bool flowing=false;
             foreach(var vessel in vessels.Values){vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;vessel.Ready=FlowVesselReady(vessel);if(vessel.Ready)vessel.Opening=new ContainerFlowGeometry.Opening(vessel.Live,vessel.Item.transform);}
             if(!PrepareFlowInputs(gravity,up))return;
-            foreach(var v in vessels.Values){
-                if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();
+            var groups=CaptureFlowExecution();if(groups.Length==0)return;
+            HideStreams();
+            // Keep pour, scoop and rain phase order across groups. The live
+            // journal still publishes one coherent episode for the whole host.
+            foreach(var members in groups)foreach(var v in members){
                 if(!v.Ready||v.Live.amountMl<=0)continue;
                 double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up,RoomTerrainReservoir.Native(v.Live,v.Item.transform));
-                double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,up))continue;
+                double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,members,up))continue;
                 var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward);if(!physics.CanSimulate(origin,v.Item))continue;var velocity=outward*.15f;
                 var body=v.Body;if(body&&!body.isKinematic)velocity+=Vector3.ClampMagnitude(body.GetPointVelocity(origin),3);
-                if(!Trace(v,origin,velocity,gravity,up,out var receiver,out int count))continue;
+                if(!Trace(v,members,origin,velocity,gravity,up,out var receiver,out int count))continue;
                 if(receiver!=null&&ChangesEpisodeIdentity(v,receiver)){Finish(out _);return;}
                 if(!Begin(out var issue)){error=issue;blocked=true;editor.ReportStatus(issue);return;}
                 Touch(v);double moved=0;
@@ -69,10 +73,12 @@ namespace Maestro.Quest.Creation {
                 if(moved+spill<=0)continue;v.DipBudget=Math.Max(0,v.DipBudget-moved-spill);
                 contents[v.Id]=v.Live;if(receiver!=null)contents[receiver.Id]=receiver.Live;flowing=true;Preview(v);ShowStream(v,count,requested/seconds);
             }
-            foreach(var recipient in vessels.Values){
+            foreach(var members in groups)foreach(var recipient in members){
                 if(!recipient.Ready||recipient.Live.amountMl>=recipient.Live.capacityMl)continue;
+                flowExecutionWork.ScoopRecipients++;
                 Vessel donor=null;float smallest=float.PositiveInfinity;
-                foreach(var candidate in vessels.Values){
+                foreach(var candidate in members){
+                    flowExecutionWork.ScoopCandidates++;
                     if(candidate==recipient||!candidate.Ready||candidate.DipBudget<=.000001)continue;
                     if(!ContainerScoopingGeometry.TryContact(candidate.Live,candidate.Item.transform,recipient.Live,recipient.Item.transform,up,out var contact)||contact.DonorFootprint>=smallest||!ClearScoopPath(contact,candidate.Item,recipient.Item))continue;
                     donor=candidate;smallest=contact.DonorFootprint;
@@ -87,7 +93,7 @@ namespace Maestro.Quest.Creation {
                 donor.DipBudget-=moved;donor.Drawn+=moved;donor.Dippers.Add(recipient.Id);recipient.Scooped+=moved;recipient.Donors.Add(donor.Id);
                 contents[donor.Id]=donor.Live;contents[recipient.Id]=recipient.Live;flowing=true;Preview(donor);Preview(recipient);
             }
-            flowing|=CollectRain(seconds,out bool published);if(published)return;
+            flowing|=CollectRain(groups,seconds,out bool published);if(published)return;
             if(!Active)return;elapsed+=seconds;quiet=flowing?0:quiet+seconds;
             if(quiet>=.3f||elapsed>=10)Finish(out _);
         }
@@ -95,11 +101,13 @@ namespace Maestro.Quest.Creation {
         // events must retain the old identity. Publish first and retry geometry
         // next tick; a failed publication rolls back and blocks all further flow.
         bool ChangesEpisodeIdentity(Vessel source,Vessel receiver)=>Owns(receiver.Id)&&receiver.Live.amountMl==0&&!source.Live.SameLiquid(receiver.Live);
-        bool Immersed(Vessel vessel,Vector3 up){
+        bool Immersed(Vessel vessel,Vessel[] members,Vector3 up){
             // An immersed full bucket must not endlessly pour below the reservoir's
             // surface and refill. Reuse the same bounded, unobstructed cavity proof;
             // lifting restores normal gravity-driven pouring on the next tick.
-            foreach(var reservoir in vessels.Values){
+            flowExecutionWork.ImmersionChecks++;
+            foreach(var reservoir in members){
+                flowExecutionWork.ImmersionCandidates++;
                 if(reservoir==vessel||!reservoir.Ready)continue;
                 if(ContainerScoopingGeometry.TryImmersion(reservoir.Live,reservoir.Item.transform,vessel.Live,vessel.Item.transform,up,out var contact)&&ClearScoopPath(contact,reservoir.Item,vessel.Item))return true;
             }
@@ -120,13 +128,15 @@ namespace Maestro.Quest.Creation {
         bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Item.GetComponent<ContainerFillView>()?.NativeReady==true&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
         bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;flowEpoch++;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
         void Touch(Vessel v){if(contents.ContainsKey(v.Id))return;original[v.Id]=v.Saved.Copy();contents[v.Id]=v.Live;}
-        bool Trace(Vessel source,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){
+        bool Trace(Vessel source,Vessel[] members,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){
             receiver=null;count=1;path[0]=origin;const float step=.025f;
             for(int i=1;i<=Segments;i++){
                 float t=i*step;var next=origin+velocity*t+gravity*(.5f*t*t);var previous=path[count-1];var delta=next-previous;float length=delta.magnitude;
                 if(length<1e-6f)continue;
+                flowExecutionWork.PourSegments++;
                 float closest=1;Vessel entering=null;
-                foreach(var candidate in vessels.Values){
+                foreach(var candidate in members){
+                    flowExecutionWork.PourCandidates++;
                     if(candidate==source||!candidate.Ready)continue;
                     if(candidate.Opening.Enters(previous,next,up,out float fraction)&&fraction<closest){closest=fraction;entering=candidate;}
                 }

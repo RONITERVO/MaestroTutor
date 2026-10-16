@@ -2418,3 +2418,25 @@ program text budget. `applied: false` does not prove that an object is dry; use
 the contact/medium facts according to their availability and sampling contracts.
 Waiting, refusal, resumed simulation and pause use the same fact for user and
 agent programs. This diagnostic repair changes no physics or saved data.
+
+
+## Complete liquid groups and quantity execution (2026-10-16)
+
+Each liquid pass first prepares complete dependency groups. Containers that can
+exchange quantities, including empty receivers and transitive cavity paths,
+belong together. Read-only solids and rain cover remain required spatial inputs
+without merging otherwise independent quantities.
+
+Pouring, immersion, scooping and rain then enumerate those complete groups.
+Stream receivers and scoop donors are searched only among the group's members.
+A waiting circuit does not enter the candidate loops of a separate ready one.
+Moving a container rebuilds membership before the next pass; an incomplete
+prepared group never executes partially. Pour, scoop and rain retain their phase
+order and one shared journal episode, publication and Undo.
+
+The scheduler still charges the whole host conservatively and couples moving
+liquid dependencies at that scope. This change does not promise smaller grants,
+more saved/native objects or higher headset frame rates. Actual candidate-visit
+samples are internal execution evidence; they exclude discovery, spatial proofs,
+engine work and room-wide cleanup/publication. Separately admitted discovery and
+complete-group scheduling with stable fairness are the next scaling steps.
