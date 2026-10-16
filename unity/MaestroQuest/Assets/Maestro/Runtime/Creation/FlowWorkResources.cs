@@ -6,8 +6,8 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 namespace Maestro.Quest.Creation
 {
-    // Fair, complete-host opportunities. The current bounded pass still scans all
-    // vessels; charging only its smaller spatial groups would undercount that work.
+    // Fair, complete-host opportunities. Discovery has a distinct allowance, but
+    // both are granted together; preparation/publication still have host-wide work.
     // This allowance does not own a journal write lease or native residency.
     internal static class FlowWorkResources
     {
@@ -23,7 +23,7 @@ namespace Maestro.Quest.Creation
         }
         sealed class Entry {
             internal readonly string Id=Guid.NewGuid().ToString("N");
-            internal LiquidPouring Host;internal RoomResourceOwner Owner;internal int Vessels,Units;
+            internal LiquidPouring Host;internal RoomResourceOwner Owner;internal int Vessels,Units,Objects,DiscoveryUnits;
             internal SimulationWorkSchedule.Claim Work;
         }
         static readonly List<Entry> entries=new();
@@ -32,28 +32,28 @@ namespace Maestro.Quest.Creation
         static int GrantedCount=>entries.Count(e=>e.Work.Granted);
         static long GrantedUnits=>entries.Where(e=>e.Work.Granted).Sum(e=>(long)e.Units);
         internal static void Advance(float seconds)=>SimulationWorkSchedule.Advance(seconds);
-        static bool Current(Entry e)=>e.Host&&e.Host.FlowWorkEligible&&e.Vessels==e.Host.FlowWorkVessels&&SameOwner(e.Owner,e.Host.FlowWorkOwner);
+        static bool Current(Entry e)=>e.Host&&e.Host.FlowWorkEligible&&e.Vessels==e.Host.FlowWorkVessels&&e.Objects==e.Host.FlowDiscoveryObjects&&SameOwner(e.Owner,e.Host.FlowWorkOwner);
         internal static bool Queued(LiquidPouring host)=>SimulationWorkSchedule.Queued(FindClaim(host));
         internal static SimulationWorkSchedule.Claim FindClaim(LiquidPouring host)=>entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host))?.Work;
         static bool SameOwner(RoomResourceOwner a,RoomResourceOwner b)=>a.World==b.World&&a.Region==b.Region;
         static void Remove(Entry e){entries.Remove(e);SimulationWorkSchedule.Remove(e.Work);}
         internal static void Release(LiquidPouring host){foreach(var e in entries.Where(e=>ReferenceEquals(e.Host,host)).ToArray())Remove(e);}
         internal static void Collect()=>SimulationWorkSchedule.Collect();
-        internal static void CollectLocal(){foreach(var e in entries.Where(e=>!e.Host||!e.Host.FlowWorkEligible||Demand(e.Host.FlowWorkVessels)>MaximumUnits).ToArray())Remove(e);}
-        internal static void RefreshRequests(){foreach(var e in entries){e.Owner=e.Host.FlowWorkOwner;e.Vessels=e.Host.FlowWorkVessels;e.Units=Demand(e.Vessels);e.Work.FlowUnits=e.Units;}}
+        internal static void CollectLocal(){foreach(var e in entries.Where(e=>!e.Host||!e.Host.FlowWorkEligible||Demand(e.Host.FlowWorkVessels)>MaximumUnits||FlowDiscoveryWork.Demand(e.Host.FlowWorkVessels,e.Host.FlowDiscoveryObjects)>FlowDiscoveryWork.MaximumUnits).ToArray())Remove(e);}
+        internal static void RefreshRequests(){foreach(var e in entries){e.Owner=e.Host.FlowWorkOwner;e.Vessels=e.Host.FlowWorkVessels;e.Units=Demand(e.Vessels);e.Objects=e.Host.FlowDiscoveryObjects;e.DiscoveryUnits=FlowDiscoveryWork.Demand(e.Vessels,e.Objects);e.Work.FlowUnits=e.Units;e.Work.DiscoveryUnits=e.DiscoveryUnits;}}
         internal static bool TryAdmit(LiquidPouring host,out string error){
             Collect();error=Waiting;if(!host||!host.FlowWorkEligible)return false;
-            int count=host.FlowWorkVessels,demand=Demand(count);var owner=host.FlowWorkOwner;
+            int count=host.FlowWorkVessels,demand=Demand(count),objects=host.FlowDiscoveryObjects,discovery=FlowDiscoveryWork.Demand(count,objects);var owner=host.FlowWorkOwner;
             var old=entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host));
             if(old==null){
-                if(entries.Count>=MaximumReservations||demand>MaximumUnits)return false;
-                old=new Entry{Host=host,Owner=owner,Vessels=count,Units=demand};var captured=old;
-                old.Work=SimulationWorkSchedule.Register(()=>Current(captured),0,1);old.Work.FlowUnits=demand;entries.Add(old);
+                if(entries.Count>=MaximumReservations||demand>MaximumUnits||discovery>FlowDiscoveryWork.MaximumUnits)return false;
+                old=new Entry{Host=host,Owner=owner,Vessels=count,Units=demand,Objects=objects,DiscoveryUnits=discovery};var captured=old;
+                old.Work=SimulationWorkSchedule.Register(()=>Current(captured),0,1);old.Work.FlowUnits=demand;old.Work.DiscoveryUnits=discovery;entries.Add(old);
             }
-            var previous=(old.Owner,old.Vessels,old.Units);old.Owner=owner;old.Vessels=count;old.Units=demand;old.Work.FlowUnits=demand;
+            var previous=(old.Owner,old.Vessels,old.Units,old.Objects,old.DiscoveryUnits);old.Owner=owner;old.Vessels=count;old.Units=demand;old.Objects=objects;old.DiscoveryUnits=discovery;old.Work.FlowUnits=demand;old.Work.DiscoveryUnits=discovery;
             if(SimulationWorkSchedule.TryAdmit(old.Work)){error=null;return true;}
             error=SimulationWorkSchedule.Refusal(old.Work,Waiting);
-            (old.Owner,old.Vessels,old.Units)=previous;old.Work.FlowUnits=old.Units;return false;
+            (old.Owner,old.Vessels,old.Units,old.Objects,old.DiscoveryUnits)=previous;old.Work.FlowUnits=old.Units;old.Work.DiscoveryUnits=old.DiscoveryUnits;return false;
         }
         internal static bool Ready(LiquidPouring host,out string error){
             error=Waiting;if(!host||!host.FlowWorkEligible){error="Liquid flow is paused or unavailable";return false;}
@@ -61,6 +61,9 @@ namespace Maestro.Quest.Creation
             if(entry==null)return false;
             if(!SimulationWorkSchedule.Ready(entry.Work)){error=SimulationWorkSchedule.Refusal(entry.Work,Waiting);return false;}
             error=null;return true;
+        }
+        internal static JObject ObserveDiscovery(){
+            Collect();return new JObject{["step"]=Step,["reservations"]=SimulationWorkSchedule.DiscoveryRequests,["executions"]=SimulationWorkSchedule.DiscoveryExecutions,["units"]=SimulationWorkSchedule.DiscoveryUnits,["unitLimit"]=FlowDiscoveryWork.MaximumUnits,["objectLimit"]=FlowDiscoveryWork.MaximumObjects};
         }
         internal static JObject ObserveBudget(){
             Collect();return new JObject{["reservations"]=entries.Count,["units"]=GrantedUnits,["reservationLimit"]=MaximumReservations,["unitLimit"]=MaximumUnits,["streamSegments"]=LiquidPouring.Segments,["queryHits"]=QueryHits,["scoopSamples"]=ScoopSamples,["rainSamples"]=RainSamples};

@@ -45,7 +45,7 @@ namespace Maestro.Quest.Creation {
         internal void Tick(float seconds){
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);
-            flowExecutionWork=default;
+            flowExecutionWork=default;discoveryWork=default;
             var physics=editor.PhysicsWorld;
             if(!FlowWorkEligible){ReleaseFlowInputs();FlowWorkResources.Release(this);InvalidateRain("Liquid flow is paused or unavailable");Finish(out _);return;}
             if(!FlowWorkResources.TryAdmit(this,out var workIssue)){WaitForFlowWork(workIssue);return;}

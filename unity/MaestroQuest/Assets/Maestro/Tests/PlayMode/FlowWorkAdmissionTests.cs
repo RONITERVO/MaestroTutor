@@ -16,8 +16,8 @@ using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests {
  public sealed partial class RoomRulesTests {
   List<GameObject> FillFlowWork(){
-   var hosts=new List<GameObject>();int demand=FlowWorkResources.Demand(editor.Liquids.FlowWorkVessels);
-   try{while((int)FlowWorkResources.ObserveSchedule()["executions"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)FlowWorkResources.ObserveBudget()["units"]>=demand){
+   var hosts=new List<GameObject>();int demand=FlowWorkResources.Demand(editor.Liquids.FlowWorkVessels),discovery=FlowDiscoveryWork.Demand(editor.Liquids.FlowWorkVessels,editor.SpatialObjectCount);
+   try{while((int)FlowWorkResources.ObserveSchedule()["executions"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)FlowWorkResources.ObserveBudget()["units"]>=demand&&FlowDiscoveryWork.MaximumUnits-SimulationWorkSchedule.DiscoveryUnits>=discovery){
     var go=new GameObject("Independent flow sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.enabled=false;sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
     Assert.That(FlowWorkResources.TryAdmit(sampler,out var error),Is.True,error);
    }return hosts;}catch{ReleaseFlowWork(hosts);throw;}
@@ -59,13 +59,16 @@ namespace Maestro.Quest.Tests {
    editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);
    for(int i=0;i<13;i++)TemplateRun(ex,TemplateCall("cup",new Vector3(3+i*.3f,1,0)));
    StartIsland();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out var error),Is.True,error);var original=FlowGrant();var held=FillFlowWork();
-   try{Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.EqualTo(11));string peer=FlowWorkResources.Observe(1).ToString();var added=new List<string>();
+   try{Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.EqualTo(11));var peer=FlowWorkResources.Observe(1);var added=new List<string>();
     // Two small resizes fit; the sixteenth real cup exceeds the remaining shared units.
     for(int i=0;i<2;i++)added.Add((string)TemplateRun(ex,TemplateCall("cup",new Vector3(7+i*.3f,1,0)))["selected"]["output"]["objectId"]);
     Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);int units=(int)FlowWorkResources.ObserveBudget()["units"];
     added.Add((string)TemplateRun(ex,TemplateCall("cup",new Vector3(8,1,0)))["selected"]["output"]["objectId"]);
-    Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out _),Is.False);Assert.That((int)FlowWorkResources.ObserveBudget()["units"],Is.EqualTo(units));Assert.That(FlowWorkResources.Observe(1).ToString(),Is.EqualTo(peer));
-    foreach(var id in added)Assert.That(editor.DeleteObject(id,out error),Is.True,error);Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);Assert.That((string)FlowWorkResources.Observe(0)["reservationId"],Is.EqualTo((string)original["reservationId"]));
+    Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out _),Is.False);Assert.That((int)FlowWorkResources.ObserveBudget()["units"],Is.EqualTo(units));// These logical peers share this editor: inventory growth makes their
+    // discovery stale, but must preserve every previously booked value.
+    var peerAfter=FlowWorkResources.Observe(1);Assert.That((bool)peerAfter["current"],Is.False);
+    peerAfter["current"]=peer["current"];Assert.That(peerAfter.ToString(),Is.EqualTo(peer.ToString()));
+    foreach(var id in added)Assert.That(editor.DeleteObject(id,out error),Is.True,error);Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);Assert.That((string)FlowWorkResources.Observe(0)["reservationId"],Is.EqualTo((string)original["reservationId"]));Assert.That(FlowWorkResources.Observe(1).ToString(),Is.EqualTo(peer.ToString()),"Restoring the original inventory makes the unchanged peer grant current again");
    }finally{ReleaseFlowWork(held);}physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionCouplesMovingContainerGroupButLeavesUnrelatedDryBodyActive(){

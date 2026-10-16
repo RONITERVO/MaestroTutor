@@ -19,23 +19,41 @@ namespace Maestro.Quest.Creation
             var support=RoomGroundQuery.SupportEnvelope(target.position,.2f,.025f,.025f);
             return SpatialMovementTargets(body,needsGround?support:null);
         }
-        internal string[] SpatialMovementTargets(Bounds body,Bounds? ground)
-        {
-            if(journal==null)return Array.Empty<string>();
-            var groundIds=ground.HasValue?journal.GroundCandidates().Select(c=>c.target).ToHashSet(StringComparer.Ordinal):null;
-            var targets=new List<string>();
+        internal sealed class MovementCandidates {
+            internal readonly struct Candidate {
+                internal readonly string Id;internal readonly RoomSpatialExtent Collision;internal readonly bool Ground;
+                internal Candidate(string id,RoomSpatialExtent collision,bool ground){Id=id;Collision=collision;Ground=ground;}
+            }
+            internal readonly Candidate[] Values;
+            internal int Visits {get;private set;}
+            internal int BoundsReads=>Values.Length;
+            internal MovementCandidates(Candidate[] values){Values=values;}
+            internal string[] Targets(Bounds body,Bounds? ground,string actor=null){
+                var result=new List<string>();
+                foreach(var candidate in Values){
+                    Visits++;if(candidate.Id==actor)continue;
+                    var collision=candidate.Collision;
+                    // Unknown cold geometry is required even when its artwork
+                    // appears distant; visual bounds never prove clearance.
+                    bool needed=!collision.Known||collision.HasBounds&&collision.Bounds.Intersects(body);
+                    if(!needed&&ground.HasValue&&candidate.Ground)
+                        needed=!collision.HasBounds||collision.Bounds.Intersects(ground.Value);
+                    if(needed)result.Add(candidate.Id);
+                }
+                return result.ToArray(); // Canonical snapshot order is already ordinal.
+            }
+        }
+        internal MovementCandidates CaptureMovementCandidates(bool includeGround){
+            if(journal==null)return new(Array.Empty<MovementCandidates.Candidate>());
+            var groundIds=includeGround?journal.GroundCandidates().Select(c=>c.target).ToHashSet(StringComparer.Ordinal):null;
+            var candidates=new List<MovementCandidates.Candidate>();
             foreach(var id in journal.SavedObjectIds()){
                 var item=Find(id);
                 if(item&&item.GetComponent<IPhysicalRoomBinding>()?.PhysicalFrame==true)continue;
-                var collision=ReadCollisionBounds(id);
-                // Visual bounds cannot prove collision clearance. Unknown cold
-                // colliders are loaded even when their artwork appears distant.
-                bool needed=!collision.Known||collision.HasBounds&&collision.Bounds.Intersects(body);
-                if(!needed&&ground.HasValue&&groundIds.Contains(id))
-                    needed=!collision.Known||!collision.HasBounds||collision.Bounds.Intersects(ground.Value);
-                if(needed)targets.Add(id);
+                candidates.Add(new(id,ReadCollisionBounds(id),groundIds?.Contains(id)==true));
             }
-            return targets.OrderBy(id=>id,StringComparer.Ordinal).ToArray();
+            return new(candidates.ToArray());
         }
+        internal string[] SpatialMovementTargets(Bounds body,Bounds? ground)=>CaptureMovementCandidates(ground.HasValue).Targets(body,ground);
     }
 }

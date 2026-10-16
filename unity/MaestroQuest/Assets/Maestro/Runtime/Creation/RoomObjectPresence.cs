@@ -21,11 +21,13 @@ namespace Maestro.Quest.Creation
     }
     public sealed partial class RoomJournal
     {
+        internal int SavedObjectCount=>items.Count;
         internal string[] SavedObjectIds()=>items.Keys.OrderBy(id=>id,StringComparer.Ordinal).ToArray();
         internal bool ContainsObject(string target)=>target!=null&&items.ContainsKey(target);
     }
     public sealed partial class RoomEditor
     {
+        internal int SpatialObjectCount=>journal?.SavedObjectCount??0;
         public bool HasSavedObject(string target)=>journal?.ContainsObject(target)==true;
         internal RoomObjectPresence ObjectPresence(string target)=>new(HasSavedObject(target),Find(target));
         internal bool TryGetNativeObject(string target,out RoomItem item,out string error)

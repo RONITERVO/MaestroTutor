@@ -2361,9 +2361,10 @@ constraint is retained, while movement is deferred. Use `object.physics.inputs`
 to inspect actual movement readiness; the presence of a joint alone is not proof
 that its bodies are currently simulating.
 
-Whole-host coupling is a conservative bound for today's all-vessel loops. Finer
-admission requires group-local transfer enumeration and separately bounded
-discovery first. Contact sampling takes independent fair turns on the shared
+Whole-host coupling remains a conservative bound for preparation/publication.
+Group-local quantity enumeration and a separately accounted discovery allowance
+are described below. Finer execution admission still needs stable group fairness.
+Contact sampling takes independent fair turns on the shared
 clock; see [Fair water-contact sampling](#fair-water-contact-sampling-2026-10-16)
 for observation continuity and missed-event rules. Broader engine, navigation,
 external observation and storage/history work also remain bounded separately
@@ -2438,5 +2439,41 @@ The scheduler still charges the whole host conservatively and couples moving
 liquid dependencies at that scope. This change does not promise smaller grants,
 more saved/native objects or higher headset frame rates. Actual candidate-visit
 samples are internal execution evidence; they exclude discovery, spatial proofs,
-engine work and room-wide cleanup/publication. Separately admitted discovery and
-complete-group scheduling with stable fairness are the next scaling steps.
+engine work and room-wide cleanup/publication. Discovery admission is described
+below; complete-group execution scheduling with stable fairness remains open.
+
+
+## Liquid discovery and shared admission (2026-10-16)
+
+Before discovering liquid dependencies, the runtime reserves a logical discovery
+allowance using saved object and container counts. Dormant objects and empty
+containers count too. The grant covers discovery, the host's liquid execution
+and dependent physics together. It can therefore be requested before any geometry
+is loaded, including when physics prepares first. If capacity is unavailable,
+the liquid pass waits without doing discovery or starting native input loading.
+
+A count or owner change requires a current grant. An unsuccessful increase
+retains the earlier booked charge without claiming a partial update or evicting
+another owner. The shared clock preserves the existing priority for complete,
+unchanged requests that fit; reads do not advance priority.
+
+Each admitted discovery captures collision bounds once and reuses them only
+inside that synchronous pass. Subsequent passes read current placements, so
+moving an obstacle or container is reflected before the next transfer. Unknown
+or missing geometry remains conservative; a snapshot is not permission to ignore
+unavailable dependencies.
+
+The shared runtime.flowDiscoveryBudget fact requires runtimeDiagnostics.v1:
+step is the shared opportunity; reservations include waiting claims; executions
+count booked grants; units is their conservative logical charge; unitLimit is
+524,288; objectLimit follows the existing 64 creations plus book and Maestro.
+A booking does not certify discovery, loading or simulation completed. Passive
+reads cannot acquire geometry, change quantities or start physics. User and agent
+programs use the same typed record.
+
+These units cover bounded metadata/candidate/trajectory and connection visits.
+They exclude geometry/proof internals, sorting, allocation, native loading,
+engine costs and measured frame time. Discovery still examines the host inventory;
+execution charging and preparation/publication remain conservative whole-host
+work. Saved/native capacity is unchanged. Larger worlds still require complete
+group scheduling, broader cost accounting and real-device evidence.

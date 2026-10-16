@@ -12152,8 +12152,87 @@ signing, deployment or Meta acceptance is claimed. Local evidence:
 
 This step deliberately retains whole-host work allowances and physics/liquid
 coupling. Discovery, input preparation, stream cleanup and publication still have
-room-wide work. Separately admitting discovery, accounting for geometry/proofs
-and engine work, preserving fairness through split/merge, and assigning execution
-allowances to actual complete groups remain required before increasing capacity.
+room-wide work. The discovery allowance is implemented below. Accounting for
+geometry/proofs and engine work, preserving fairness through split/merge, and
+assigning execution allowances to actual complete groups remain required before
+increasing capacity.
 Saved/native limits, catalog definitions and saved formats are unchanged.
 The full v1 remains incomplete; device/provider/release holds remain in place.
+
+
+## Admitted liquid dependency discovery (2026-10-16)
+
+Liquid dependency discovery now has its own logical allowance on the shared
+simulation clock. The scheduler grants that allowance atomically with the
+host's liquid work and its dependent physics. Independent discovery and execution
+reservations cannot hold opposite halves while waiting for each other. Contact
+sampling remains independent. Physics may register this complete demand before
+the liquid pass discovers any geometry.
+
+Demand uses the canonical saved object count and registered vessel count,
+including dormant objects and empty receivers. It does not need collision reads,
+a copied room document or native acquisition. Changing either count or the owner
+invalidates the old readiness; a rejected increase restores the prior booked
+charge and does not evict peers. Existing work, saved and native caps remain.
+The discovery limit is 524,288 logical units; its inventory ceiling follows the
+existing 64 creations plus book/Maestro. This is not acceptance of a maximum-size
+native world, nor a CPU, allocation, PhysX or frame-time measurement.
+
+Admission precedes the liquid pass's collision/cavity capture, candidate queries
+and native input preparation. One collision snapshot is reused inside that
+synchronous discovery only. Every later pass captures current placements again;
+it is never reused across loading, physics or another liquid tick. In the two
+native circuits with a moved real obstacle, collision-extent reads fall from 60
+to 10 per discovery, while the same six probes still visit 60 candidates. The
+next pass detects the moved obstruction, spills only the affected stream and
+preserves conservation. This reduces repeated bounds reads, not all room-wide
+discovery, proof or engine work.
+
+The shared typed runtime.flowDiscoveryBudget fact reports the step, registered
+requests, booked grants, booked units and limits. User and agent programs use
+the same definition and strict record validation. Booked work is not completed
+discovery or native readiness; it can be stale until refreshed. Passive reads
+cannot capture geometry, load native content, advance the clock or alter water.
+
+Both original native failures were reproduced before the fix: discovery ran
+under a fully occupied discovery allowance and the same bounds were read for
+every probe. Four native scenarios now cover cold loading under continuing
+pressure, real moved-obstacle freshness, inventory growth with an unsuccessful
+grant resize, and physics preparing before liquid discovery. Pressure claims
+are deliberately logical scheduler competitors; they do not represent a tested
+number of simultaneously provisioned worlds.
+
+Verification completed **1,332/1,332 EditMode** tests. The full PlayMode run
+finished with **1,805 passed, two failures and three optional private-asset skips**.
+All four discovery scenarios passed. One older resizing test expected a peer
+grant to remain current after its shared room inventory grew. Its identity and
+booked values were unchanged, but discovery was correctly stale. The corrected
+test checks that distinction and that shrinking back restores the original
+receipt. No production source changed after the full run.
+
+A focused follow-up passed **30/30 PlayMode tests**, including
+discovery, quantity execution, allowance admission and the unchanged acoustic
+class. The original retained-wall/audio-reset failure reported 0 played samples
+instead of 19,200; its log includes audio configuration changes. The unchanged
+retry passed, but the cause remains unestablished and the original full run is
+not green. The three unchanged skips require optional private models outside CI.
+
+The initial web run timed out in one existing headless room-journey case at its
+unchanged five-second limit. That file passed all 25 tests unchanged in isolation.
+The full rerun with four workers passed **3,150 tests / 346 files**, followed by
+app/probe TypeScript and catalog provenance. No assertion or timeout was weakened.
+The new fact is exported from native code; captured native values pass the
+shared web reader and program typing.
+
+All 3,162 native source/package/project inputs match the verified mirror, and
+14 unrelated pre-existing changes remain untouched. Evidence:
+.quest-evidence/flow-discovery-admission/. Offline Book/Headless journeys remain
+pinned to 9f38abca and Android compilation to 7fe48619. No new headset, paid-provider,
+acoustic acceptance, Android build, signing, deployment or Meta action is claimed.
+
+Whole-host preparation/publication and conservative execution charging remain.
+The next execution change must preserve fairness through actual group splits
+and merges, coupling only real quantity/motion dependencies without duplicate
+booking. Broader geometry/proof/engine, navigation, external observations and
+transaction/history/storage costs still need bounds before larger saved worlds.
+V1 and its independent device/provider/audio/Store gates remain incomplete.
