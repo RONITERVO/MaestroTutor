@@ -35660,7 +35660,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Value/source is the vessel ID. participantId identifies a created prop, maestro, input:left or input:right; kind distinguishes object/avatar/hand/controller. phase is entered/exited for aggregate membership changes, or crossed when a sampled point travels across the finite free surface and ends dry beyond the cavity between samples. Multiple samples collapse to one representative event per phase and participant; this is not exhaustive continuous collision detection. speed is sampled physical metres/second capped at 30, depth is sampled metres, x/y/z is a representative surface point in authored coordinates. A queued point remains in its authored room. Use a condition on phase/kind/participantId to attach a sound or behavior; ongoing submerged movement only refreshes ripples, not event spam.",
+      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. Expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Value/source is the vessel ID. participantId identifies a created prop, maestro, input:left or input:right; kind distinguishes object/avatar/hand/controller. phase is entered/exited for aggregate membership changes, or crossed when a sampled point travels across the finite free surface and ends dry beyond the cavity between samples. Multiple samples collapse to one representative event per phase and participant; this is not exhaustive continuous collision detection. speed is sampled physical metres/second capped at 30, depth is sampled metres, x/y/z is a representative surface point in authored coordinates. A queued point remains in its authored room. Before delivery, participant pose/tracking/ownership and source water geometry/quantity must still match the sampled state. Changed participants are discarded without dropping independent valid participants. A nested sampling pass or changed room discards the remaining old batch. Discarded edges do not add ripples. Use a condition on phase/kind/participantId to attach a sound or behavior; ongoing submerged movement only refreshes ripples, not event spam.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -39552,7 +39552,7 @@
         }
       },
       "label": "Object or Maestro water contact",
-      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Read the last sampled aggregate for a created prop or Maestro. surface is an authored-coordinate projection, depth is physical metres. When dry, surface is only the first sampled position.",
+      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. Expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Read the last sampled aggregate for a created prop or Maestro. surface is an authored-coordinate projection, depth is physical metres. When dry, surface is only the first sampled position.",
       "input": {
         "type": "object",
         "properties": {
@@ -39598,7 +39598,7 @@
         }
       },
       "label": "Tracked hand or controller water contact",
-      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Pointing a ray at distant water does not touch it. Tracked physical inputs use the global real-room policy.",
+      "description": "Contacts sample at up to 20 Hz: rigid props use the shared 4x4x4 occupancy grid; Maestro uses six visible mapped joints (feet, hands, hips and head); each hand uses its tracked index fingertip, each controller its aim-pose origin. This is bounded sampled contact, not whole-skin or fluid simulation. known=false means unavailable, never dry. Samples expire after 0.2 seconds; tracking expires after 0.15 seconds, using real elapsed time even within a slow frame. Expired samples and tracking source changes establish a fresh baseline before testing movement; missed intervals never create crossing, entry, exit, speed or ripple effects. Physics, participant and vessel environment policies, geometry, lifecycle and workspace holds apply. Spawn, reload, geometry/ownership changes and tracking reacquisition establish a baseline without entry/exit events. Nested water chooses the smallest containing cavity then stable ID. Contacts change no quantities or velocities. Transient ripples use at most eight one-second waves per vessel on its clipped surface. Pointing a ray at distant water does not touch it. Tracked physical inputs use the global real-room policy.",
       "input": {
         "type": "object",
         "properties": {
@@ -46959,7 +46959,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumContactFacts.cs",
-      "sha256": "24016c035ca9f7ec1aceca90e61ce6dc6447afab545c98747645dafeae1e2670"
+      "sha256": "b90285a72b5228f5e528d97bc2ca9d391ac77a3ecd91ebf2aab0d78c558f31f4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumFacts.cs",
@@ -47394,12 +47394,16 @@
       "sha256": "56a434d698990d4df76192d886c82d8a338c61e4b1d44b2c77872ea1405e6a5d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContactValidity.cs",
+      "sha256": "7f7ca25d0bf5100b0f94ec68dd9ce5184f14546134b44fbf9286297e79bb4b85"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContactWork.cs",
       "sha256": "062969c899cf84da910f52aa6dbd72dad7f9d42d157656930ff3b23de2142870"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
-      "sha256": "116b6d4757e496ca490da0e3348a9b432ee8732fd86214e5abc858fdec331119"
+      "sha256": "677b8d452773a00798fdc0a37ada7b2268f3a6875d9ef222df1195fe526af222"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowPublication.cs",

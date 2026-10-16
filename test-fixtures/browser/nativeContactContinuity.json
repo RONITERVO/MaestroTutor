@@ -1,0 +1,85 @@
+{
+  "baseline": {
+    "known": true,
+    "immersed": false,
+    "bodyId": "",
+    "kind": "hand",
+    "liquid": "",
+    "depthMetres": 0.0,
+    "sampleSpeedMetresPerSecond": 0.0,
+    "surface": {
+      "x": 4.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    "reason": ""
+  },
+  "expired": {
+    "known": false,
+    "immersed": false,
+    "bodyId": "",
+    "kind": "hand",
+    "liquid": "",
+    "depthMetres": 0.0,
+    "sampleSpeedMetresPerSecond": 0.0,
+    "surface": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "reason": "Contact sample expired"
+  },
+  "refreshed": {
+    "known": false,
+    "immersed": false,
+    "bodyId": "",
+    "kind": "hand",
+    "liquid": "",
+    "depthMetres": 0.0,
+    "sampleSpeedMetresPerSecond": 0.0,
+    "surface": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "reason": "Tracking continuity changed"
+  },
+  "recovered": {
+    "known": true,
+    "immersed": true,
+    "bodyId": "f7965de513c04de4b42e01abc3840b6f",
+    "kind": "hand",
+    "liquid": "Water",
+    "depthMetres": 0.200000048,
+    "sampleSpeedMetresPerSecond": 0.0,
+    "surface": {
+      "x": 4.0,
+      "y": 1.6,
+      "z": 0.0
+    },
+    "reason": ""
+  },
+  "following": {
+    "known": true,
+    "immersed": false,
+    "bodyId": "",
+    "kind": "hand",
+    "liquid": "",
+    "depthMetres": 0.0,
+    "sampleSpeedMetresPerSecond": 12.0,
+    "surface": {
+      "x": 4.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    "reason": ""
+  },
+  "events": [
+    {
+      "phase": "exited",
+      "participantId": "input:left",
+      "bodyId": "f7965de513c04de4b42e01abc3840b6f",
+      "kind": "hand"
+    }
+  ]
+}

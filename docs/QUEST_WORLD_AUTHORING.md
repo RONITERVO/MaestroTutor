@@ -2177,3 +2177,36 @@ audio remain independent of collision choice. This checkpoint does not establish
 unlimited world size or Quest performance; navigation, observation/proof/engine
 work, spatial cohorts, fairness and transaction/storage bounds remain separate
 release work before increasing saved capacity.
+
+
+## Water contact continuity (2026-10-16)
+
+A valid sample expires after 0.2 seconds and tracked input after 0.15 seconds,
+using real elapsed time even within a slow frame. A missed interval, tracking
+loss or hand/controller source change invalidates the old baseline immediately.
+Resuming establishes the current contact first, with zero inferred movement;
+entry, exit, crossing, speed and ripples cannot be reconstructed across the gap.
+A hand/controller source roundtrip still breaks continuity even when it happens
+between two sampling passes. This also applies to props and Maestro's joints.
+
+Queued contact events retain the sampled participant and water source. Before
+each callback, the participant's identity, pose, tracking update and ownership,
+and the water's identity, geometry, transform and live quantity must still match.
+If an earlier rule changes one participant or source, its stale event is skipped
+and its contact becomes unknown; independent valid participants still deliver.
+A nested sampling pass or room/frame change supersedes the remaining old batch.
+Edge ripples are added only for events actually delivered. Continuous valid
+submerged movement still refreshes ripples without emitting extra events.
+
+Avatar checks retain the sampled joint positions directly in world coordinates,
+so an unchanged pose is not rejected by room-coordinate roundtrip precision
+when a world is translated, rotated or scaled. The authored-coordinate history
+used for subsequent movement remains separate.
+
+The existing `object.medium.contactState`, `input.medium.contactState` and
+`object.medium.contact` definitions describe these rules in the shared catalog;
+there are no new fields or version changes. Unknown observations clear derived
+body, liquid, depth, speed and surface values and provide a reason. Human and
+agent programs consume this same result and can choose to wait for fresh data.
+These are bounded sampled contacts, not continuous skin or fluid simulation.
+Per-entity real-room/virtual-ground policies and liquid quantities are unchanged.

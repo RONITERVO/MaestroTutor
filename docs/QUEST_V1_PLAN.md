@@ -11741,3 +11741,46 @@ storage bounds remain open before larger saved capacity. Full offline Headless/
 Book journeys remain pinned to `9f38abca`; Android compilation to `7fe48619`.
 No headset, paid provider, Android build, signing, deployment or Meta action ran.
 Device/provider, acoustic and Store acceptance remain open. V1 is incomplete.
+
+
+## Contact source and temporal continuity (2026-10-16)
+
+Expired contact samples and hand/controller tracking changes now discard old
+movement baselines before resampling. The real elapsed clock also expires stale
+work within a slow callback. Reacquisition establishes the current contact with
+zero inferred speed and cannot manufacture entry/exit/crossing events or ripples
+across a missed interval. Props and visible Maestro joints use the same rule.
+See the [shared contract](QUEST_WORLD_AUTHORING.md#water-contact-continuity-2026-10-16).
+
+Each queued event revalidates its participant identity, pose, tracking update
+and ownership plus its water source geometry, transform and current quantity.
+An invalid event becomes unknown and adds no edge ripple; independent valid
+participants still deliver. Nested sampling or a changed room supersedes the
+remaining old batch. Avatar pose comparison retains captured world positions
+directly, preserving valid events after large translation, rotation and scale.
+Human/agent contact observations and event definitions share these semantics.
+
+Validation: **1,329 EditMode / 1,758 PlayMode passed** in the full run,
+with the same **3 optional private-asset skips** and **one audio-reset failure**.
+That unchanged audio test observed zero played samples during a second audio
+configuration change, then passed in an isolated repeat. The original failure
+is retained; its hardware cause is unestablished. This is not a clean full-suite
+pass or acoustic acceptance. Thirteen new native regressions cover expired inputs,
+object/avatar samples, missed crossings, tracking-source roundtrips, fresh poses,
+callback ownership/joint/source changes, reentrant passes, slow callbacks and
+unchanged avatar poses in translated/rotated/scaled worlds. Twelve regressions
+first failed against the old runtime. The focused suite passed **43 EditMode /
+127 PlayMode**. **3,129 web tests / 338 files**, app/probe TypeScript and
+catalog provenance passed. Three existing catalog descriptions changed; fields,
+types and versions are unchanged. Actual native output validates the shared web
+contract, and the full run reproduces it after normalizing runtime body IDs.
+**4,394 frozen inputs / 3,134 native mirror inputs /
+14 unrelated files preserved** were verified.
+Evidence: `.quest-evidence/contact-source-continuity/`.
+
+Spatial simulation cohorts/fairness, missing flow receiver/solid dependencies,
+navigation/observation/proof/engine accounting and transaction/storage bounds
+remain open before larger saved capacity. Full offline Headless/Book journeys
+remain pinned to `9f38abca`; Android compilation to `7fe48619`. No headset,
+paid provider, Android build, signing, deployment or Meta action ran.
+Device/provider, acoustic and Store acceptance remain open. V1 is incomplete.
