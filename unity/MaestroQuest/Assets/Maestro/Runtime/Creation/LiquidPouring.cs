@@ -12,10 +12,10 @@ namespace Maestro.Quest.Creation {
     // the affected contents is blocked until the short live episode is published.
     [DefaultExecutionOrder(400)]
     public sealed partial class LiquidPouring:MonoBehaviour {
-        internal const int Segments=32;
+        internal const int Segments=LiquidResources.StreamPoints-1;
         sealed class Vessel {
             internal string Id;internal RoomContainer Saved,Live;internal RoomItem Item;internal RigidRoomItem Rigid;internal Rigidbody Body;internal bool Ready;internal ContainerFlowGeometry.Opening Opening;
-            internal LineRenderer Stream;internal Material Material;internal double Received,Spilled,Scooped,Drawn,DipBudget,Rain;internal float Exposure;internal bool RainReady;internal string RainReason="Physics is paused";internal readonly HashSet<string> Receivers=new(),Donors=new(),Dippers=new();
+            internal double Received,Spilled,Scooped,Drawn,DipBudget,Rain;internal float Exposure;internal bool RainReady;internal string RainReason="Physics is paused";internal readonly HashSet<string> Receivers=new(),Donors=new(),Dippers=new();
         }
         readonly SortedDictionary<string,Vessel> vessels=new(StringComparer.Ordinal);
         readonly Dictionary<string,RoomContainer> original=new(),contents=new();
@@ -51,7 +51,7 @@ namespace Maestro.Quest.Creation {
             Physics.SyncTransforms();bool flowing=false;
             var authoring=editor.GetComponent<AnimationWorkshop>();foreach(var vessel in vessels.Values){vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;vessel.Ready=Available(vessel)&&authoring?.ControlsTarget(vessel.Id)!=true;if(vessel.Ready)vessel.Opening=new ContainerFlowGeometry.Opening(vessel.Live,vessel.Item.transform);}
             foreach(var v in vessels.Values){
-                if(v.Stream)v.Stream.enabled=false;
+                if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();
                 if(!v.Ready||v.Live.amountMl<=0)continue;
                 double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up,RoomTerrainReservoir.Native(v.Live,v.Item.transform));
                 double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,up))continue;
@@ -115,7 +115,7 @@ namespace Maestro.Quest.Creation {
             }
             return false;
         }
-        bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
+        bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Item.GetComponent<ContainerFillView>()?.NativeReady==true&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
         bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
         void Touch(Vessel v){if(contents.ContainsKey(v.Id))return;original[v.Id]=v.Saved.Copy();contents[v.Id]=v.Live;}
         bool Trace(Vessel source,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){
@@ -140,11 +140,8 @@ namespace Maestro.Quest.Creation {
             }
             return true; // The bounded stream ends as uncollected spill; no persistent pool is implied.
         }
-        void Preview(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.Apply(new[]{v.Live});}
-        void ShowStream(Vessel v,int count,double rate){
-            if(!v.Stream){var go=new GameObject("Liquid stream");go.transform.SetParent(transform,false);v.Stream=go.AddComponent<LineRenderer>();v.Stream.useWorldSpace=true;v.Stream.numCapVertices=2;v.Stream.numCornerVertices=2;v.Stream.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;v.Stream.receiveShadows=false;v.Material=IllustratedMaterials.Create(v.Live.color,0);v.Stream.sharedMaterial=v.Material;}
-            v.Material.SetColor("_Color",v.Live.color);v.Stream.startColor=v.Stream.endColor=v.Live.color;v.Stream.startWidth=v.Stream.endWidth=Mathf.Clamp((float)Math.Sqrt(rate)*.0002f,.0015f,.008f);v.Stream.positionCount=count;for(int i=0;i<count;i++)v.Stream.SetPosition(i,path[i]);v.Stream.enabled=true;
-        }
+        void Preview(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ApplyLive(new[]{v.Live});}
+        void ShowStream(Vessel v,int count,double rate){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ShowStream(path,count,rate,v.Live.color);}
         internal bool Finish(out string issue){
             issue=null;if(!Active||publishing){HideStreams();return true;}
             publishing=true;bool ok=false;
@@ -158,7 +155,7 @@ namespace Maestro.Quest.Creation {
             write?.Dispose();write=null;original.Clear();contents.Clear();quiet=elapsed=0;
             foreach(var v in vessels.Values){v.Received=v.Spilled=v.Scooped=v.Drawn=v.Rain=0;v.Receivers.Clear();v.Donors.Clear();v.Dippers.Clear();var saved=editor?editor.Read(v.Id)?.containers?.FirstOrDefault():null;if(saved!=null)v.Saved=saved.Copy();v.Live=v.Saved.Copy();Preview(v);}HideStreams();
         }
-        void HideStreams(){foreach(var v in vessels.Values)if(v.Stream)v.Stream.enabled=false;}
+        void HideStreams(){foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
         internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(error)};}
 
         internal JObject ObserveScooping(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["scoopedMl"]=v.Scooped,["drawnMl"]=v.Drawn,["donors"]=v.Donors.Count,["recipients"]=v.Dippers.Count};}
@@ -167,7 +164,7 @@ namespace Maestro.Quest.Creation {
         void OnApplicationPause(bool paused){contactsPaused=paused;if(paused){ResetContacts();Finish(out _);}}
         void OnApplicationFocus(bool focused){contactsFocused=focused;if(!focused){ResetContacts();Finish(out _);}}
         void OnDisable(){ResetContacts();Finish(out _);}
-        static void Release(Vessel v){if(v.Stream)Destroy(v.Stream.gameObject);ArtResources.Release(v.Material);}
+        static void Release(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
         void OnDestroy(){if(editor)editor.RuntimeGate.Changed-=ContactGateChanged;ResetContacts();Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
     }
 }

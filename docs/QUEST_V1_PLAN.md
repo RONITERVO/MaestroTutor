@@ -57,6 +57,8 @@ Production scene updates now carry a bounded, explicitly non-exhaustive context;
 [bounded object overview](#2026-10-15--bounded-production-object-overview).
 Procedural geometry now has independent process-wide native admission; see
 [procedural reservations](#2026-10-15--procedural-native-reservations).
+Native liquid surfaces and streams now share independent preparation and lifetime;
+see [liquid reservations](#transactional-native-liquids-2026-10-16).
 Current capacity remains bounded. Saved-room display uses observed-area demand;
 independent unseen areas stay dormant while shared areas/connections load together.
 Shared Maestro attention now supports object and authored-point targets through the
@@ -11538,3 +11540,65 @@ Full offline Headless/Book journeys were not rerun for this physics checkpoint;
 latest runs remain pinned to `9f38abca`. No headset, paid-provider, Android build,
 signing, deployment or Meta actions were performed. Desktop checks do not establish
 current device/provider, acoustic or Store acceptance. V1 remains incomplete.
+
+
+## Transactional native liquids (2026-10-16)
+
+Containers now prepare both their liquid surface and potential stream before
+acceptance, including empty vessels. Filling, physical pouring, rain and cavity
+edits reuse those native instances. Separate process-wide admission allows
+**32 liquid owners** across workspaces, private preparation, inactive hosts and
+deferred destruction. Saved capacity remains **16 containers per room**.
+See the [shared lifetime contract](QUEST_WORLD_AUTHORING.md#liquid-preparation-and-lifetime-2026-10-16).
+
+Each owner holds one surface mesh, two materials and both renderers. Failed
+preparation, never-active owners and destroyed native roots can be reclaimed;
+slots remain charged until their Unity objects are gone. Exact target,
+container-source and previous-owner checks protect transfer. Ordinary edits,
+immediate saves, Undo/Redo, temporary discard and dormant activation use the
+same preparation. Admission refusal or failed immediate saving preserves
+accepted quantity, native mesh/material, saved bytes and history. Unrelated
+reconciliation does not recreate a missing peer view. The older queued-save
+entry point retains its existing persistence policy.
+
+Live-medium capture now uses the independent native capacity. An inconsistent
+capacity reports unavailable rather than silently returning a prefix. Missing
+native water remains a spatial dependency for affected movement and physics;
+it cannot become dry space or silently borrow an outer pool. Existing live
+amount, cavity relevance, terrain and per-participant real-room policies remain
+authoritative. Empty and distant missing vessels retain their existing handling.
+Native ownership does not start physics or alter transfer/publication semantics.
+
+`runtime.liquidBudget` and `runtime.liquidReservation` add detached passive facts
+for human and agent programs. Ready/active/allocated describes ownership and
+native roots, not water presence or simulation readiness. The shared browser
+fixture comes from actual Unity private/ready/inactive/retiring lifecycle output.
+Exactly two facts were added; existing actions, events, facts, adapters and limits
+remain unchanged.
+
+Final-source verification passed **1,326 EditMode / 1,722 PlayMode tests**,
+with the same **3 optional private-asset skips**. Twelve new native regressions
+cover independent admission, exact transfer, never-active cleanup, failed saves
+and late batches, history, temporary discard, dormant activation, missing-water
+isolation and physical pouring at full capacity. Focused coverage passed
+**40 EditMode / 145 PlayMode** tests, including water below the scanned room with
+mixed participant policies. The full native lifecycle matches the browser fixture.
+
+**3,111 web tests / 334 files**, application/probe TypeScript and catalog
+provenance passed. All **4,352 frozen inputs**, **3,100 native source/mirror
+files** and **14 unrelated files** were verified. Evidence:
+`.quest-evidence/liquid-admission/`. PR discussion, reviews and inline findings
+were reread before the push; no new or changed reports required another change.
+
+These logical allocation limits do not measure GPU memory, frame time, fluid
+solver cost or Quest performance. Per-tick simulation/query work, managed
+geometry buffers and engine internals remain outside this ledger. The read-only
+follow-on audit in `next-source-audit.json` records complete connected-actor and
+coupled-fluid work admission, revision-bound results, unknown contact baselines
+and no catch-up replay as the next requirements. Transaction/storage/spatial
+bounds remain necessary before increasing saved capacity.
+
+Full offline Headless/Book journeys were not rerun for this liquid checkpoint;
+the latest evidence remains pinned to `9f38abca`. No headset, paid-provider,
+Android build, signing, deployment or Meta action ran. Current device/provider,
+acoustic and Store acceptance remain open. V1 is incomplete.

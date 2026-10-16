@@ -64,7 +64,7 @@ namespace Maestro.Quest.Creation
             foreach(var id in editor.LiquidIds()){
                 vessels.TryGetValue(id,out var vessel);
                 var item=editor.Find(id);
-                if(item&&item.isActiveAndEnabled&&vessel!=null&&vessel.Item==item&&vessel.Rigid&&(!vessel.Live.TerrainFloor||RoomTerrainReservoir.Native(vessel.Live,item.transform)!=null))continue;
+                if(item&&item.isActiveAndEnabled&&vessel!=null&&vessel.Item==item&&item.GetComponent<ContainerFillView>()?.NativeReady==true&&vessel.Rigid&&(!vessel.Live.TerrainFloor||RoomTerrainReservoir.Native(vessel.Live,item.transform)!=null))continue;
                 var extent=editor.MissingLiquidExtent(id,vessel?.Live,out var contents);
                 // An accepted empty vessel contains no medium, regardless of its view.
                 if(contents!=null&&contents.amountMl<=0)continue;

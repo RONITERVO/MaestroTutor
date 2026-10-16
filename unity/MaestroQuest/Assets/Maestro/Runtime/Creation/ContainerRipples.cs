@@ -32,6 +32,6 @@ namespace Maestro.Quest.Creation {
             if(!renderer)return;rippleProperties??=new MaterialPropertyBlock();renderer.GetPropertyBlock(rippleProperties);
             rippleProperties.SetFloat("_LiquidRippleCount",RippleCount);rippleProperties.SetVectorArray("_LiquidRipples",rippleData);rippleProperties.SetVectorArray("_LiquidRippleWeights",rippleWeights);renderer.SetPropertyBlock(rippleProperties);
         }
-        void OnDisable()=>ClearRipples();
+        void OnDisable(){ClearRipples();HideStream();}
     }
 }

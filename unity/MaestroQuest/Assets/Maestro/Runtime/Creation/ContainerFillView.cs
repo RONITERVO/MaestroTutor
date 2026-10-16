@@ -12,14 +12,33 @@ namespace Maestro.Quest.Creation {
         readonly List<Vector3> normals=new(74);
         readonly Vector3[] bottom=new Vector3[Segments],top=new Vector3[Segments];
         RoomContainer data;GameObject surface;Mesh mesh;Material material;MeshRenderer renderer;
+        LiquidResources.Lease reservation;string target="";
+        internal LiquidResources.Lease ReusableReservation=>reservation!=null&&reservation.Available&&reservation.Phase=="ready"&&reservation.Host==this?reservation:null;
+        internal bool NativeReady=>isActiveAndEnabled&&data!=null&&ReusableReservation!=null;
         Quaternion lastRotation;Vector3 lastUp;float nextRefresh;bool dirty;
-        public void Apply(RoomContainer[] containers){
+        // Standalone diagnostic construction uses the same bounded preparation.
+        // Live quantity updates and normal reconciliation may never allocate here.
+        public void Apply(RoomContainer[] containers){using var prepared=new PreparedRoomLiquid(null,target,containers,this);ApplyPrepared(target,containers,prepared);}
+        internal void ApplyPrepared(string identity,RoomContainer[] containers,PreparedRoomLiquid prepared){
+            var next=prepared.Take(this,identity,containers);
+            if(next!=reservation){
+                ClearRipples();reservation?.Dispose();reservation=next;
+                surface=next?.Surface;mesh=next?.Mesh;material=next?.SurfaceMaterial;renderer=next?.Renderer;
+                if(next!=null){next.Surface.transform.SetParent(transform,false);next.Stream.transform.SetParent(transform,false);next.Stream.SetActive(true);}
+            }
+            target=identity??"";ApplyLive(containers);
+        }
+        internal void ApplyLive(RoomContainer[] containers){
             data=containers?.Length==1?containers[0].Copy():null;dirty=true;
-            if(data==null||data.amountMl<=0||data.TerrainFloor&&RoomTerrainReservoir.Native(data,transform)==null){ClearRipples();if(surface)surface.SetActive(false);return;}
-            if(!surface){surface=new GameObject("Measured liquid surface");surface.transform.SetParent(transform,false);mesh=new Mesh{name="Bounded liquid level"};mesh.MarkDynamic();surface.AddComponent<MeshFilter>().sharedMesh=mesh;renderer=surface.AddComponent<MeshRenderer>();material=IllustratedMaterials.Create(data.color,0);renderer.sharedMaterial=material;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;}
-            surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);
+            if(ReusableReservation==null||data==null||data.amountMl<=0||data.TerrainFloor&&RoomTerrainReservoir.Native(data,transform)==null){ClearRipples();if(surface)surface.SetActive(false);return;}
+            renderer.enabled=true;surface.SetActive(true);surface.transform.SetLocalPositionAndRotation(data.frame.position+data.frame.rotation*(Vector3.up*data.height*.5f),data.frame.rotation);material.SetColor("_Color",data.color);
             Refresh();RoomAppearanceView.VisualsChanged(this);
         }
+        internal void ShowStream(Vector3[] points,int count,double rate,Color color){
+            if(!NativeReady||points==null||count<0||count>LiquidResources.StreamPoints||count>points.Length)return;
+            var line=reservation.Line;reservation.StreamMaterial.SetColor("_Color",color);line.startColor=line.endColor=color;line.startWidth=line.endWidth=Mathf.Clamp((float)System.Math.Sqrt(rate)*.0002f,.0015f,.008f);line.positionCount=count;for(int i=0;i<count;i++)line.SetPosition(i,points[i]);line.enabled=true;
+        }
+        internal void HideStream(){if(reservation?.Line)reservation.Line.enabled=false;}
         static Vector3 GravityUp=>float.IsFinite(Physics.gravity.sqrMagnitude)&&Physics.gravity.sqrMagnitude>.01f?-Physics.gravity.normalized:Vector3.up;
         void LateUpdate(){if(surface&&surface.activeSelf&&(dirty||Time.unscaledTime>=nextRefresh&&(Quaternion.Angle(lastRotation,surface.transform.rotation)>.25f||Vector3.Angle(lastUp,GravityUp)>.25f)))Refresh();UpdateRipples();}
         internal void Refresh(){
@@ -56,6 +75,6 @@ namespace Maestro.Quest.Creation {
         bool nativeResourcesReleased;
         void OnDestroy()=>ReleaseNativeResources();
         void Maestro.Quest.Art.INativeResourceOwner.ReleaseNativeResources()=>ReleaseNativeResources();
-        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;ArtResources.Release(mesh);ArtResources.Release(material);if(surface)Destroy(surface);}
+        void ReleaseNativeResources(){if(nativeResourcesReleased)return;nativeResourcesReleased=true;reservation?.Dispose();reservation=null;}
     }
 }

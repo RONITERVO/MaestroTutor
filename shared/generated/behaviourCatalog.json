@@ -43967,6 +43967,64 @@
       ]
     },
     {
+      "id": "runtime.liquidBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "instances": "number",
+          "preparing": "number",
+          "ready": "number",
+          "retiring": "number",
+          "instanceLimit": "number",
+          "streamPointLimit": "number"
+        }
+      },
+      "label": "Native liquid budget",
+      "description": "Process-wide authored liquid surface and potential stream owners across workspaces, including empty containers, private preparation, inactive hosts and deferred destruction. Each owner reserves one surface mesh, two materials and its two renderers before acceptance; live filling and pouring reuse them. Independent of saved container quotas. Logical ownership, not measured GPU memory, fluid solver cost or frame time. Per-tick simulation/query work, managed geometry buffers and engine internals are excluded. Reads never create water, load a view or start physics.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.liquidReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "phase": "text",
+          "active": "boolean",
+          "surfaceAllocated": "boolean",
+          "streamAllocated": "boolean"
+        }
+      },
+      "label": "Native liquid owner",
+      "description": "Read one runtime.liquidBudget reservation by index. Indices may shift; reservationId is runtime-only. World, region and target identify its copied owner. Phase is preparing, ready or retiring. Ready means native ownership transferred, including an unpublished or empty container; it does not certify water availability or simulation. Active describes the host GameObject. SurfaceAllocated and streamAllocated report still-existing native roots, which can be hidden or awaiting destruction. Reads are detached and cannot change saved quantities or start physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -46695,6 +46753,10 @@
       "sha256": "3e53b4a31708a194da216773c220262f9dc68ae49163d87430f1c907880198fa"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LiquidResourceFacts.cs",
+      "sha256": "146e1d16396b92091cc0525bf8d8613387b2b27c1deec6801a316eb9704b6ede"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LiveAudioFacts.cs",
       "sha256": "ac0240747590466330b1339939a8a42724877253fac53a73e839b0e38044d831"
     },
@@ -47052,7 +47114,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
-      "sha256": "5c8a8989557a90de428e61b407324ca0c058caa3625f2ed327397c03b032280b"
+      "sha256": "6c4504da45e51f1ac3ce28a9e90768b6e9c1bfcfa9144a7c4861dcd0d3e93eed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
@@ -47060,7 +47122,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerRipples.cs",
-      "sha256": "88be7cf179c58d716129fafe65b73f062416db65a4b3e8bc26c613087cb51008"
+      "sha256": "7444962981022f123aa84eaf57ccc565525a9638cad6897403d59fb5439c4e67"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerScoopingGeometry.cs",
@@ -47148,15 +47210,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
-      "sha256": "3b16c3c68a9b5ec3ef64237c493b58c9a8275e718e3f398f7d35c091cf2c6366"
+      "sha256": "3a7b59488f426cb69b5ce35cdc53e7ddc0c97f0a46dde668eafcf49b225c8032"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "098d6a5cf88bab118dca83767eb3e7dda6214df772a41f31a420dd37010e7a6d"
+      "sha256": "14df17a1639089df990a86fd387e7db4caf1c34579189ea7f7792963fcc232b3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
       "sha256": "fa5cd79780bd73af107b6ffc2f4bdef878a3b0899a31d78d1a8ab2292c17e454"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidResources.cs",
+      "sha256": "5d40f352d20e9b041888bdbdd58a65d980cb4293bc588f02b9d9ab4adec83455"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRouteFootprint.cs",
@@ -47201,6 +47267,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
       "sha256": "cf3a0df35657bc0a068f282b13b448692dbcef81f3415cd9669302a05a7b9b22"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLiquid.cs",
+      "sha256": "aaae18f21bc8b3a963098054cac5f43ff581ed6c879c92649aba80e1301b08c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomWindows.cs",
@@ -47368,7 +47438,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "74fd89c785354a21f6192f56af8eeec004dfce292568772392b9b627f14e2510"
+      "sha256": "24d78c71d03db7ead1154992c4bd87cb5560fe8f58bcef398c67c291195e29d3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -47480,7 +47550,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMediumAvailability.cs",
-      "sha256": "ad3bf9e453c47008d1bbb52ab7eb17e43f213c599fe225b2c38605a0eb0d2ae9"
+      "sha256": "d154b395fc6639fc89d09201200974ae3b8600a18b7356f6ef730b64258f5db9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelCreation.cs",
@@ -47524,7 +47594,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
-      "sha256": "29bbec1bbba2700a078c667f80a7915cbed19164dab641b223f9f8198e19a679"
+      "sha256": "3c1038fe94fa9bb411628a7c74c7060ff4a667feddd658bb4a39b00dfd60aae5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
@@ -47632,7 +47702,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
-      "sha256": "b73f9590c4d0b8dd195998c5aa73c19af1035e9a0a8108a017ff0eea15d165df"
+      "sha256": "393d71ed0ae38d750fd2f3060794263fe27fb9cac92ef12c952c1bbed72eedc9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
@@ -48504,7 +48574,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "55f974f29dc249a5a51d7c9c4a95a34ee194f83b23cb6f7f54266ed32c95150c"
+      "sha256": "6a424b0f2fac124b2af2e8da34e3b7950c3e9308f2b06eca9a5c539a8ba14641"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

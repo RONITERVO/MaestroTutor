@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation {
             internal float Submerged,Volume;internal Vector3 Lift;internal bool Applied;internal string Reason="Physics has not sampled this object";
         }
         readonly RoomEnvironmentQueries mediumEnvironment=new();
-        readonly LiquidMediumGeometry[] media=new LiquidMediumGeometry[RoomContainer.MaximumPerRoom];int mediaCount;
+        readonly LiquidMediumGeometry[] media=new LiquidMediumGeometry[LiquidResources.MaximumInstances];int mediaCount;
         readonly SortedDictionary<string,MediumBody> mediumBodies=new(StringComparer.Ordinal);
         internal void SynchronizeMedia(RoomDocument document){
             mediumBodies.Clear();
@@ -21,7 +21,13 @@ namespace Maestro.Quest.Creation {
         }
         internal void CaptureMedia(bool requireReadyGeometry=true){
             mediaCount=0;CaptureMissingMedia();var gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f){if(vessels.Count>0)mediumQueryIssue="Liquid queries need a known gravity direction";return;}var up=-gravity.normalized;
-            foreach(var v in vessels.Values){if(mediaCount==media.Length)break;if(!v.Item||!v.Item.isActiveAndEnabled||!v.Rigid||requireReadyGeometry&&!v.Rigid.GeometryReady||v.Live.amountMl<=0||v.Live.TerrainFloor&&RoomTerrainReservoir.Native(v.Live,v.Item.transform)==null)continue;media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);}
+            foreach(var v in vessels.Values){
+                if(!v.Item||!v.Item.isActiveAndEnabled||v.Item.GetComponent<ContainerFillView>()?.NativeReady!=true||!v.Rigid||requireReadyGeometry&&!v.Rigid.GeometryReady||v.Live.amountMl<=0||v.Live.TerrainFloor&&RoomTerrainReservoir.Native(v.Live,v.Item.transform)==null)continue;
+                // The array covers the independent global admission maximum. If an
+                // invariant is violated, no consumer may interpret a prefix as all water.
+                if(mediaCount==media.Length){mediaCount=0;mediumQueryIssue="Live liquid capacity is inconsistent; inspect the native liquid owners before moving";return;}
+                media[mediaCount++]=new(v.Id,v.Item,v.Live,up,v.Body);
+            }
         }
         internal bool SampleMedium(Vector3 point,RoomItem participant,string ignore,out LiquidMediumGeometry chosen,out float depth,out bool ready){
             using var environment=mediumEnvironment.Begin(world);

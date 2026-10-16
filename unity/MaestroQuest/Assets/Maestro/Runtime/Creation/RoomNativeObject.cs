@@ -24,7 +24,11 @@ namespace Maestro.Quest.Creation
                 if(ScanDrawingAnchor.Has(data)){var layer=item.GetComponent<ScannedDrawingView>()??item.gameObject.AddComponent<ScannedDrawingView>();layer.Apply(this,data);}
                 var tip=item.GetComponent<DrawingTipView>();if(!tip&&(data.drawingTips?.Length??0)>0)tip=item.gameObject.AddComponent<DrawingTipView>();if(tip)tip.Apply(this,data.id,data.drawingTips);
                 var field=ApplyHeightFields(data.id,item,data.heightFields,preparation);
-                var liquid=item.GetComponent<ContainerFillView>();if(!liquid&&(data.containers?.Length??0)>0)liquid=item.gameObject.AddComponent<ContainerFillView>();if(liquid)liquid.Apply(data.containers);
+                using(var liquidPreparation=preparation?.TakeLiquid(data)){
+                    var liquid=item.GetComponent<ContainerFillView>();
+                    if(liquidPreparation!=null){if(!liquid)liquid=item.gameObject.AddComponent<ContainerFillView>();liquid.ApplyPrepared(data.id,data.containers,liquidPreparation);}
+                    else liquid?.ApplyLive(data.containers); // Reconciliation cannot allocate a missing peer's liquid view.
+                }
                 var sculpt=item.GetComponent<SculptTipView>();if(!sculpt&&(data.sculptTips?.Length??0)>0)sculpt=item.gameObject.AddComponent<SculptTipView>();if(sculpt)sculpt.Apply(this,data.id,data.sculptTips);
                 var materialContents=item.GetComponent<MaterialToolContentsView>();if(!materialContents&&data.sculptTips?.Any(t=>t.IsMaterial)==true)materialContents=item.gameObject.AddComponent<MaterialToolContentsView>();if(materialContents)materialContents.Apply(data.sculptTips?.FirstOrDefault(),data.materialStores?.FirstOrDefault());
                 item.GetComponent<CreatedRoomObject>()?.ApplyModelGeometry(data.modelGeometry);

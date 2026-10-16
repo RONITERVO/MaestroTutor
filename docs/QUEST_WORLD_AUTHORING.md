@@ -1992,3 +1992,42 @@ Rigidbody or Joint still exists. None certifies that an actor is simulating.
 Reading these facts cannot start physics or modify saved content. The captured
 native lifecycle fixture and verification scope are recorded in the
 [v1 plan](QUEST_V1_PLAN.md#transactional-native-physics-2026-10-16).
+
+
+## Liquid preparation and lifetime (2026-10-16)
+
+A container reserves its surface mesh, two materials and both surface/stream
+renderers before an edit is accepted. This includes empty containers, so filling,
+rain and pouring reuse admitted resources. Contents, colour and cavity edits
+reuse the same owned instances. Removing the container releases them. There is
+one independent process-wide limit of **32 native liquid owners**, across
+workspaces; the saved quota remains **16 containers per room**.
+
+Private preparation, inactive owners and resources awaiting Unity destruction
+remain charged. An aborted candidate or a destroyed, never-active host is
+reclaimed on registry collection without requiring its Update/OnDestroy callbacks. Exact target,
+container definitions and existing view owner must still match at transfer.
+Immediate saves, ordinary edits, history, temporary-room restoration and dormant
+activation share this preparation. Admission refusal or failed immediate saving
+preserves accepted contents, native views, history and saved bytes; the operation
+can retry after capacity is freed. The older queued-save entry point retains its
+existing persistence policy.
+Unrelated reconciliation cannot allocate a lost peer's liquid view.
+
+All admitted live media fit the independent native capacity. An inconsistent
+capacity reports unavailable input rather than returning a silently truncated
+water set. A missing or disabled native water view likewise remains an explicit
+spatial dependency for affected physics and movement; absence cannot mean dry
+space. This retains the existing cavity relevance, live quantity, gravity and
+terrain checks. It does not enable physics, change actor collision policies or
+alter volume accounting/publication.
+
+`runtime.liquidBudget` and `runtime.liquidReservation` expose copied passive
+ownership facts to human and agent programs with runtime diagnostics available.
+A ready owner may still be empty, inactive or unpublished; it does not certify
+water availability or simulation. Allocation fields report native root existence,
+including deferred destruction. Reads cannot create water or load missing views.
+These are logical ownership limits, not measured GPU memory, solver cost or frame
+time. Per-tick simulation/query work, managed geometry buffers and engine internals
+need separate bounds before saved capacity grows. Verification is recorded in the
+[v1 plan](QUEST_V1_PLAN.md#transactional-native-liquids-2026-10-16).

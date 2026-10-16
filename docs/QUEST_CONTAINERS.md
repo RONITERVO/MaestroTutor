@@ -243,3 +243,13 @@ pour-back, failed publication, saved quantities and temporary-room discard.
 The shared fixture exercises the generated program in both runtimes. Quest
 reachability, real scan alignment, surface clarity and sustained performance
 remain device gates; no fluid-performance claim follows from desktop checks.
+
+
+## Liquid native ownership
+
+Empty and filled containers now reserve their surface and potential pouring
+stream before acceptance. Filling and pouring reuse those resources; failure
+preserves accepted water and allows an explicit retry. Saved container quotas
+and per-tick simulation limits are separate. See the shared
+[preparation and lifetime contract](QUEST_WORLD_AUTHORING.md#liquid-preparation-and-lifetime-2026-10-16)
+for native admission, missing-water behavior and user/agent diagnostics.
