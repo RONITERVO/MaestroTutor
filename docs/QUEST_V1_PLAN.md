@@ -2,14 +2,14 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
-The current installed development checkpoint is **D85F3CB7**. Headset work is
-paused until the owner confirms cooling and charging; mouth-positioned speech and
-native room acoustics have not yet been installed for physical acceptance.
-The preceding packaged development checkpoint **408DF5C9 / 2195cf50** has local
-packaging evidence only and is not installed. It includes all three camera
-sources, chat-image import and editable passthrough windows. Its logs retained a
-Unity camera lifecycle diagnostic; the following source correction and stricter
-verification gate supersede that diagnostic acceptance, not its package bytes.
+The installed development checkpoint remains **D85F3CB7 / f58dab48**. The latest
+packaged development APK is **5899972E / 5100f612**, not installed. Current desktop
+source is later than both. Device and paid-provider testing remain on hold; no
+new physical or acoustic acceptance is claimed. Historical packaging diagnostics
+and their stricter successor gates remain recorded below.
+
+Physics and liquid work now receive coordinated complete-group opportunities;
+see [the current execution checkpoint](#coordinated-physics-and-liquid-execution-2026-10-16).
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -11980,3 +11980,53 @@ geometry/proof/engine work and transaction/history/storage costs remain before
 larger saved capacity. No headset, provider, Android build, signing, deployment or
 Meta action ran. Full offline Book/Headless journeys remain pinned to 9f38abca;
 Android compilation to 7fe48619. V1 remains incomplete.
+
+
+## Coordinated physics and liquid execution (2026-10-16)
+
+Continuing physics consumers could keep a later complete moving group frozen.
+Physics and liquid execution now share an opportunity clock and dependency graph.
+A moving vessel group receives both allowances together; all registered moving
+vessel groups sharing today's whole-host liquid pass are conservatively coupled.
+Unrelated dry groups remain independent. Existing request, work and saved limits
+are unchanged. Oversize groups and full queues are explicit refusals.
+
+A scheduled wait retains native inputs, valid velocity/spin, intact native joints
+and their drive references, contact identity and the live liquid journal episode.
+Real edits, teleports, ownership changes, failed preparation and lifecycle stops
+keep their interruption rules. Prepared continuous physics/flow inputs acknowledge
+only exact automatic physical-placement checkpoints. Ordinary action guards and
+unfinished acquisitions remain strict; a later checkpoint cannot revive an edit.
+The new typed runtime.physicsWorkSchedule fact shares the liquid clock and catalog.
+
+See the [shared contract](QUEST_WORLD_AUTHORING.md#coordinated-physics-and-liquid-opportunities-2026-10-16).
+
+Desktop verification passed **1,330 EditMode /
+1,793 PlayMode tests**, zero failures and three
+unchanged optional private-asset skips. Focused checks: **44 EditMode / 127 PlayMode**.
+Four new PlayMode cases cover sustained force pressure, coupled force/liquid
+pressure with intact joints and motion, full-queue refusal, and exact checkpoint
+acknowledgement that cannot weaken ordinary or edited-input guards. The starvation
+case first failed against the old runtime. The combined test also exposed and
+verified repairs for joint retirement and automatic-save motion loss.
+
+**3,142 web tests / 343 files**, app/probe TypeScript and catalog
+provenance passed. A real native trace with 119 continuing force consumers and
+32 liquid consumers verifies complete admission and restored motion for four
+bodies across two separate physical groups. Shared tests validate those same
+observations. One old diagnostic-description assertion was updated; native
+source remained unchanged through the full run. **4,422 frozen inputs /
+3,152 matching native mirror inputs / 14 protected files**
+were verified. Evidence: `.quest-evidence/physics-flow-scheduling/`.
+
+Pressure fixtures use real native moving groups plus synthetic competing owners;
+they do not establish capacity for fully provisioned Quest worlds. No headset,
+provider, Android build, signing, deployment or Meta action ran. Earlier audio-reset
+failure and unchanged successful retry remain recorded; desktop passes do not
+establish their cause or acoustic acceptance.
+
+Contact sampling fairness/freshness, per-group metering and bounded discovery,
+geometry/proof/engine work, navigation/external observation, and pre-serialization/
+transaction/history/storage bounds remain before larger saved capacity. Full
+offline Book/Headless journeys remain pinned to 9f38abca; Android compilation to
+7fe48619. V1 remains incomplete.

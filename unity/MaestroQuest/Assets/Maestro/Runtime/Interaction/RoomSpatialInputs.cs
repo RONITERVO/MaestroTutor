@@ -10,7 +10,7 @@ namespace Maestro.Quest.Interaction {
     internal delegate RoomSpatialReadiness SpatialInputCheck(string[] targets,out string error);
     internal sealed class RoomSpatialInputs:IDisposable {
         readonly RoomEditor editor;readonly string actor;readonly Func<bool> admitted;
-        readonly bool accumulate;readonly Func<float> clock;readonly string purpose;
+        readonly bool accumulate,followPhysicsPlacements;readonly Func<float> clock;readonly string purpose;
         RoomNativeDemand demand;string[] targets=Array.Empty<string>();float deadline;
         string failure;bool disposed;
         internal bool Pending {get;private set;}
@@ -19,8 +19,8 @@ namespace Maestro.Quest.Interaction {
         // Continuous following can plan again from a newer accepted world. A
         // failed/cancelled load is different and still requires a fresh owner.
         internal bool SourceChanged=>demand!=null&&demand.Preparation.IsCompleted&&!demand.Preparation.IsFaulted&&!demand.Preparation.IsCanceled&&demand.Preparation.Result==null&&demand.Error!=null;
-        internal RoomSpatialInputs(RoomEditor editor,string actor,Func<bool> admitted,bool accumulate,Func<float> clock=null,string purpose="Navigation"){
-            this.purpose=purpose;this.editor=editor;this.actor=actor;this.admitted=admitted;this.accumulate=accumulate;this.clock=clock??(()=>Time.unscaledTime);
+        internal RoomSpatialInputs(RoomEditor editor,string actor,Func<bool> admitted,bool accumulate,Func<float> clock=null,string purpose="Navigation",bool followPhysicsPlacements=false){
+            this.followPhysicsPlacements=followPhysicsPlacements;this.purpose=purpose;this.editor=editor;this.actor=actor;this.admitted=admitted;this.accumulate=accumulate;this.clock=clock??(()=>Time.unscaledTime);
         }
         bool Owned=>!disposed&&editor&&editor.isActiveAndEnabled&&!editor.RuntimeGate.Held&&!editor.WriteGate.Frozen&&editor.Frame.Valid&&admitted();
         internal bool Require(Bounds body,Bounds ground,bool water,out string error){
@@ -35,7 +35,7 @@ namespace Maestro.Quest.Interaction {
             if(accumulate)next=next.Concat(targets).Distinct(StringComparer.Ordinal).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
             if(demand==null||!next.SequenceEqual(targets)){
                 var previous=demand;targets=next;
-                demand=editor.DemandNativeEntities(targets,()=>targets,()=>!disposed&&editor&&editor.isActiveAndEnabled&&editor.Frame.Valid&&admitted());
+                demand=editor.DemandNativeEntities(targets,()=>targets,()=>!disposed&&editor&&editor.isActiveAndEnabled&&editor.Frame.Valid&&admitted(),followPhysicsPlacements);
                 if(!wasPending)deadline=clock()+30;previous?.Dispose();
             }
             if(!demand.Preparation.IsCompleted){

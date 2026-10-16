@@ -1,6 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using Maestro.Quest.Interaction;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation
 {
@@ -26,6 +28,16 @@ namespace Maestro.Quest.Creation
     }
     public sealed partial class RoomEditor
     {
+        internal LiquidPouring PhysicsFlowFor(IEnumerable<RigidRoomItem> members)=>Liquids&&members.Any(body=>body&&body.PhysicsWorkEligible&&Liquids.FlowTarget(body.PhysicsWorkOwner.Target))?Liquids:null;
+        internal bool ExecutionWorkReady(PhysicsIslandQuery query,out string error){
+            error=null;
+            foreach(var id in query.Members){var body=Find(id)?.GetComponent<RigidRoomItem>();if(body&&body.PhysicsWorkEligible&&!PhysicsWorkResources.Ready(body,out error))return false;}
+            return FlowWorkReady(query,out error);
+        }
+        internal bool ExecutionWorkDeferred(PhysicsIslandQuery query){
+            var members=query.Members.Select(id=>Find(id)?.GetComponent<RigidRoomItem>()).Where(body=>body&&body.PhysicsWorkEligible).ToArray();
+            return members.All(PhysicsWorkResources.Queued)&&!ExecutionWorkReady(query,out _);
+        }
         bool PhysicsNeedsFlow(PhysicsIslandQuery query){
             if(!Liquids)return false;
             foreach(var id in query.Members){var body=Find(id)?.GetComponent<RigidRoomItem>();if(body&&body.PhysicsWorkEligible&&Liquids.FlowTarget(id))return true;}
@@ -34,7 +46,6 @@ namespace Maestro.Quest.Creation
         internal bool PrepareFlowWork(PhysicsIslandQuery query,out string error){
             error=null;return !PhysicsNeedsFlow(query)||FlowWorkResources.TryAdmit(Liquids,out error);
         }
-        internal bool FlowWorkDeferred(PhysicsIslandQuery query)=>PhysicsNeedsFlow(query)&&FlowWorkResources.Queued(Liquids)&&!FlowWorkResources.Ready(Liquids,out _);
         internal bool FlowWorkReady(PhysicsIslandQuery query,out string error){
             error=null;return !PhysicsNeedsFlow(query)||FlowWorkResources.Ready(Liquids,out error);
         }

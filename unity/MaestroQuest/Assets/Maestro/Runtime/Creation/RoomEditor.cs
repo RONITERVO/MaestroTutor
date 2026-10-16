@@ -593,7 +593,10 @@ namespace Maestro.Quest.Creation
                 var item = pair.Value; if (!item || item.Grab.isSelected) continue;
                 var rigid = item.GetComponent<RigidRoomItem>();
                 if (!rigid || !rigid.Dynamic || rigid.AnimationOwned) continue;
-                if (Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(pair.Key,position,rotation)) MarkDirty();
+                int before=ObjectRevision(pair.Key);
+                if (Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(pair.Key,position,rotation)) {
+                    AcceptNativePhysicsPlacement(pair.Key,before,ObjectRevision(pair.Key));MarkDirty();
+                }
             }
         }
         float captureAt;

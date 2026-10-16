@@ -25,7 +25,7 @@ it('bounds passive work queries and explicitly excludes unmeasured simulation co
  expect(behaviourFact('runtime.physicsWorkReservation')?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
  expect(behaviourFact('runtime.physicsWorkBudget')?.description).toContain('pouring, scooping, rain');
  expect(behaviourFact('runtime.physicsWorkBudget')?.description).toContain('not measured CPU time');
- expect(behaviourFact('runtime.physicsWorkReservation')?.description).toContain('not that its complete group');
+ expect(behaviourFact('runtime.physicsWorkReservation')?.description).toContain('not that native geometry or physics is ready');
  for(const index of [0,127])expect(validateFactArguments('runtime.physicsWorkReservation',1,{index})).toBeNull();
  for(const args of [{index:-1},{index:128},{index:.5},{index:'0'},{index:0,startPhysics:true}])expect(validateFactArguments('runtime.physicsWorkReservation',1,args)).not.toBeNull();
  expect(validFactValue('runtime.physicsWorkBudget',{...native.budget,units:'unknown'})).toBe(false);

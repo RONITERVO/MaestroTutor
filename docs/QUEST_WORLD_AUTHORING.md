@@ -2314,3 +2314,56 @@ Pressure verification uses competing logical consumers of a real native fixture;
 it does not claim that 64 fully provisioned rooms fit Quest memory. Native object,
 liquid, geometry and saved-world caps remain separate. Fairness for other work
 classes and per-group metering remain open before expanding saved capacity.
+
+
+## Coordinated physics and liquid opportunities (2026-10-16)
+
+Physics and liquid work share one opportunity clock and one dependency graph.
+Every connected moving group is indivisible. Because the current liquid pass
+scans all of a host's vessels, all registered moving vessel groups using that
+pass are conservatively joined for admission, even when their native joints are
+separate. The scheduler grants that complete dependency group both its force
+allowance and liquid allowance together. Dry unrelated bodies remain separate.
+An accepted finite, unchanged group fitting both limits gets a turn under
+continuing demand, ordered by oldest unserved opportunity and registration order.
+
+The existing limits remain: 128 physics requests, 64 liquid requests, at most
+32 simultaneous whole-host liquid passes, and 524,288 logical units in each work
+class. Request queues and booked execution allowances are distinct. A group too
+large to fit, an incomplete dependency or a full queue is an explicit refusal;
+scheduling does not promise to make an impossible group run. Current saved-world
+and native-resource limits are unchanged. This does not measure PhysX, geometry
+proof internals, frame time, thermal behavior or Quest memory capacity.
+
+A normal wait preserves spatial input ownership, pending loads, valid body
+velocity/spin, intact native joints and their drive references, and the live
+liquid journal episode. It does not create a contact identity, replay an impulse,
+add an Undo entry or accumulate missed force/flow time. Real geometry, placement,
+connection, ownership and lifecycle changes retain their interruption rules.
+Geometry preparation is independent of the short execution allowance; actual
+movement and medium forces require both current inputs and complete admission.
+
+Saving a completed physical movement is an owned position checkpoint. Prepared
+continuous physics/flow inputs acknowledge only its exact before/after object
+revision, then continue to recheck live spatial proofs. Ordinary action guards
+and unfinished native acquisition remain strict. An intervening author edit
+cannot be acknowledged away or revived by a later checkpoint.
+
+`runtime.physicsWorkSchedule` and `runtime.flowWorkSchedule` expose the same step.
+Both report booked allowances and waiting requests, independently of readiness:
+a booked allowance can be stale until refreshed. A reservation's `current` flag
+requires the full coupled work group and matching member demand/owners, but does
+not certify native geometry or actual motion. Passive observations cannot change
+priority, claim an allowance, load geometry or start physics. User and agent use
+the same typed facts; no saved schema or separate agent world is introduced.
+An intact connection can report `phase: waiting` with `active: true`: the native
+constraint is retained, while movement is deferred. Use `object.physics.inputs`
+to inspect actual movement readiness; the presence of a joint alone is not proof
+that its bodies are currently simulating.
+
+Whole-host coupling is a conservative bound for today's all-vessel loops. Finer
+admission requires group-local transfer enumeration and separately bounded
+discovery first. Contact sampling still has its own stable work reservations;
+its event freshness rules must be designed before fair rotation. Broader engine,
+navigation, external observation and storage/history work also remain bounded
+separately before larger authored worlds can be supported.

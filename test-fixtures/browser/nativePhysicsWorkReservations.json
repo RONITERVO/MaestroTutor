@@ -11,30 +11,30 @@
   },
   "current": [
     {
-      "reservationId": "4d95e1781f044244821d3bb0389648b7",
-      "worldId": "ec2b57570b7f4630bd568a3544a224ff",
-      "regionId": "d0f0e61b52114a5b826ffc670606bb4f",
-      "target": "511273690e6947fc861180128df043a0",
+      "reservationId": "cf820e6a58964251bdfafd38d1d7404d",
+      "worldId": "7816355a165b4036b2600f10dc35465b",
+      "regionId": "91e14fb8e76344a7903e33a48ced2bf8",
+      "target": "f5e20150c5974d3ebf245456e302a894",
       "units": 4352,
       "current": true
     }
   ],
   "stale": [
     {
-      "reservationId": "4d95e1781f044244821d3bb0389648b7",
-      "worldId": "ec2b57570b7f4630bd568a3544a224ff",
-      "regionId": "d0f0e61b52114a5b826ffc670606bb4f",
-      "target": "511273690e6947fc861180128df043a0",
+      "reservationId": "cf820e6a58964251bdfafd38d1d7404d",
+      "worldId": "7816355a165b4036b2600f10dc35465b",
+      "regionId": "91e14fb8e76344a7903e33a48ced2bf8",
+      "target": "f5e20150c5974d3ebf245456e302a894",
       "units": 4352,
       "current": false
     }
   ],
   "resized": [
     {
-      "reservationId": "4d95e1781f044244821d3bb0389648b7",
-      "worldId": "ec2b57570b7f4630bd568a3544a224ff",
-      "regionId": "d0f0e61b52114a5b826ffc670606bb4f",
-      "target": "511273690e6947fc861180128df043a0",
+      "reservationId": "cf820e6a58964251bdfafd38d1d7404d",
+      "worldId": "7816355a165b4036b2600f10dc35465b",
+      "regionId": "91e14fb8e76344a7903e33a48ced2bf8",
+      "target": "f5e20150c5974d3ebf245456e302a894",
       "units": 4416,
       "current": true
     }

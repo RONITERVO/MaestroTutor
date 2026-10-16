@@ -58,7 +58,16 @@ namespace Maestro.Quest.Interaction
             var world=editor.PhysicsWorld;
             if(!world||!world.CanSimulate(transform.position,item)||!world.CanSimulate(other.transform.position,other)){Suspend("paused");return;}
             editor.PreparePhysicsIsland(item);
-            if(!editor.PhysicsIslandReady(item,false,out var inputError)){Suspend("loading",inputError??"Preparing connected physics inputs");return;}
+            if(!editor.PhysicsIslandReady(item,false,out var inputError)){
+                // A short execution hold keeps the exact native joint and drive
+                // reference. All free members are kinematic before the solver.
+                // Real placement/geometry/ownership changes still retire it.
+                bool unchanged=ownScale==transform.lossyScale&&otherScale==other.transform.lossyScale&&ownPlacement==rigid.PlacementRevision&&otherPlacement==otherRigid.PlacementRevision;
+                if(joint&&unchanged&&editor.ExecutionWorkDeferred(editor.PhysicsInputs(item))&&editor.PhysicsIslandReady(item,false,out _,requireWork:false)){
+                    Phase="waiting";Error=inputError;return;
+                }
+                Suspend("loading",inputError??"Preparing connected physics inputs");return;
+            }
             if(ownScale!=transform.lossyScale||otherScale!=other.transform.lossyScale||ownPlacement!=rigid.PlacementRevision||otherPlacement!=otherRigid.PlacementRevision)Retire();
             if(joint){Phase="active";Error="";rigid.SetConstraintBlocked(this,false);return;}
             if(retiring||!reservation.CanCreateJoint){Suspend("pausing");return;} // Destroy completes at the frame boundary, before another joint is admitted.

@@ -24,47 +24,42 @@ namespace Maestro.Quest.Creation
         sealed class Entry {
             internal readonly string Id=Guid.NewGuid().ToString("N");
             internal LiquidPouring Host;internal RoomResourceOwner Owner;internal int Vessels,Units;
-            internal bool Granted;internal long Served,Order;
+            internal SimulationWorkSchedule.Claim Work;
         }
         static readonly List<Entry> entries=new();
-        static long order;
-        internal static long Step {get;private set;}
-        internal static float StepSeconds {get;private set;}=.05f;
-        static int GrantedCount=>entries.Count(e=>e.Granted);
-        static long GrantedUnits=>entries.Where(e=>e.Granted).Sum(e=>(long)e.Units);
-        // Only the early fixed-step driver advances selection. Neither requests,
-        // diagnostics nor a different ordering of callers advances this clock.
-        internal static void Advance(float seconds){
-            if(!float.IsFinite(seconds)||seconds<=0)return;
-            Collect();Step++;StepSeconds=UnityEngine.Mathf.Clamp(seconds,.001f,.1f);
-            foreach(var entry in entries){entry.Granted=false;entry.Owner=entry.Host.FlowWorkOwner;entry.Vessels=entry.Host.FlowWorkVessels;entry.Units=Demand(entry.Vessels);}
-            long remaining=MaximumUnits;int slots=MaximumExecutions;
-            foreach(var entry in entries.OrderBy(e=>e.Served).ThenBy(e=>e.Order)){
-                if(slots==0||entry.Units>remaining)continue;
-                entry.Granted=true;entry.Served=Step;remaining-=entry.Units;slots--;
-            }
-        }
-        internal static bool Queued(LiquidPouring host)=>host&&host.FlowWorkEligible&&entries.Any(e=>ReferenceEquals(e.Host,host)&&e.Vessels==host.FlowWorkVessels&&SameOwner(e.Owner,host.FlowWorkOwner));
+        internal static long Step=>SimulationWorkSchedule.Step;
+        internal static float StepSeconds=>SimulationWorkSchedule.StepSeconds;
+        static int GrantedCount=>entries.Count(e=>e.Work.Granted);
+        static long GrantedUnits=>entries.Where(e=>e.Work.Granted).Sum(e=>(long)e.Units);
+        internal static void Advance(float seconds)=>SimulationWorkSchedule.Advance(seconds);
+        static bool Current(Entry e)=>e.Host&&e.Host.FlowWorkEligible&&e.Vessels==e.Host.FlowWorkVessels&&SameOwner(e.Owner,e.Host.FlowWorkOwner);
+        internal static bool Queued(LiquidPouring host)=>SimulationWorkSchedule.Queued(FindClaim(host));
+        internal static SimulationWorkSchedule.Claim FindClaim(LiquidPouring host)=>entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host))?.Work;
         static bool SameOwner(RoomResourceOwner a,RoomResourceOwner b)=>a.World==b.World&&a.Region==b.Region;
-        internal static void Release(LiquidPouring host)=>entries.RemoveAll(e=>ReferenceEquals(e.Host,host));
-        internal static void Collect()=>entries.RemoveAll(e=>!e.Host||!e.Host.FlowWorkEligible||Demand(e.Host.FlowWorkVessels)>MaximumUnits);
+        static void Remove(Entry e){entries.Remove(e);SimulationWorkSchedule.Remove(e.Work);}
+        internal static void Release(LiquidPouring host){foreach(var e in entries.Where(e=>ReferenceEquals(e.Host,host)).ToArray())Remove(e);}
+        internal static void Collect()=>SimulationWorkSchedule.Collect();
+        internal static void CollectLocal(){foreach(var e in entries.Where(e=>!e.Host||!e.Host.FlowWorkEligible||Demand(e.Host.FlowWorkVessels)>MaximumUnits).ToArray())Remove(e);}
+        internal static void RefreshRequests(){foreach(var e in entries){e.Owner=e.Host.FlowWorkOwner;e.Vessels=e.Host.FlowWorkVessels;e.Units=Demand(e.Vessels);e.Work.FlowUnits=e.Units;}}
         internal static bool TryAdmit(LiquidPouring host,out string error){
             Collect();error=Waiting;if(!host||!host.FlowWorkEligible)return false;
             int count=host.FlowWorkVessels,demand=Demand(count);var owner=host.FlowWorkOwner;
             var old=entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host));
             if(old==null){
                 if(entries.Count>=MaximumReservations||demand>MaximumUnits)return false;
-                old=new Entry{Host=host,Owner=owner,Vessels=count,Units=demand,Served=Step,Order=++order};entries.Add(old);
+                old=new Entry{Host=host,Owner=owner,Vessels=count,Units=demand};var captured=old;
+                old.Work=SimulationWorkSchedule.Register(()=>Current(captured),0,1);old.Work.FlowUnits=demand;entries.Add(old);
             }
-            long total=GrantedUnits+demand-(old.Granted?old.Units:0);
-            if(GrantedCount+(old.Granted?0:1)>MaximumExecutions||total>MaximumUnits)return false;
-            // Credit a resize within this opportunity without evicting a peer.
-            old.Owner=owner;old.Vessels=count;old.Units=demand;old.Granted=true;old.Served=Step;error=null;return true;
+            var previous=(old.Owner,old.Vessels,old.Units);old.Owner=owner;old.Vessels=count;old.Units=demand;old.Work.FlowUnits=demand;
+            if(SimulationWorkSchedule.TryAdmit(old.Work)){error=null;return true;}
+            error=SimulationWorkSchedule.Refusal(old.Work,Waiting);
+            (old.Owner,old.Vessels,old.Units)=previous;old.Work.FlowUnits=old.Units;return false;
         }
         internal static bool Ready(LiquidPouring host,out string error){
             error=Waiting;if(!host||!host.FlowWorkEligible){error="Liquid flow is paused or unavailable";return false;}
-            var entry=entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host));if(entry==null||!entry.Granted)return false;
-            if(entry.Vessels!=host.FlowWorkVessels||!SameOwner(entry.Owner,host.FlowWorkOwner)){error="The complete liquid-flow demand or world owner changed; waiting for admission";return false;}
+            var entry=entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host));
+            if(entry==null)return false;
+            if(!SimulationWorkSchedule.Ready(entry.Work)){error=SimulationWorkSchedule.Refusal(entry.Work,Waiting);return false;}
             error=null;return true;
         }
         internal static JObject ObserveBudget(){

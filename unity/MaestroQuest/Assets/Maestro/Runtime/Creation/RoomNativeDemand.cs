@@ -41,19 +41,31 @@ namespace Maestro.Quest.Creation
         sealed class NativeResidencyOwner
         {
             internal RoomJournal Journal;internal int Generation;internal string[] Targets;
+            internal Action<string,int,int> AcceptPhysicsPlacement;
         }
         readonly HashSet<NativeResidencyOwner> nativeResidencyOwners=new();
-        internal RoomNativeDemand DemandNativeEntities(string[] targets,Func<IEnumerable<string>> latestTargets,Func<bool> admission)
+        internal RoomNativeDemand DemandNativeEntities(string[] targets,Func<IEnumerable<string>> latestTargets,Func<bool> admission,bool followPhysicsPlacements=false)
         {
-            var captured=CaptureNativeActionInput(targets);
+            var captured=CaptureNativeActionInput(targets,out var acceptPlacement);
             var held=targets.ToHashSet(StringComparer.Ordinal);
             // A conservative unknown envelope may narrow after loading. It may
             // shed dependencies, but newly relevant entities require a new action.
             bool Current()=>captured()&&(latestTargets==null||latestTargets().All(held.Contains));
             var owner=new NativeResidencyOwner{Journal=journal,Generation=nativeGeneration,Targets=targets};
             nativeResidencyOwners.Add(owner);
-            try{return new RoomNativeDemand(this,targets,Current,admission,()=>nativeResidencyOwners.Remove(owner));}
+            try{
+                var demand=new RoomNativeDemand(this,targets,Current,admission,()=>nativeResidencyOwners.Remove(owner));
+                if(followPhysicsPlacements)owner.AcceptPhysicsPlacement=(id,before,after)=>{
+                    // Pending acquisition retains its strict staging guards. A
+                    // prepared continuous sampler rechecks live spatial proofs.
+                    if(demand.Preparation.Status==TaskStatus.RanToCompletion&&demand.Preparation.Result==null)acceptPlacement?.Invoke(id,before,after);
+                };
+                return demand;
+            }
             catch{nativeResidencyOwners.Remove(owner);throw;}
+        }
+        void AcceptNativePhysicsPlacement(string id,int before,int after){
+            foreach(var owner in nativeResidencyOwners)if(ReferenceEquals(journal,owner.Journal)&&nativeGeneration==owner.Generation)owner.AcceptPhysicsPlacement?.Invoke(id,before,after);
         }
         void RetainNativeActionInputs(RoomRetentionGraph graph)
         {

@@ -59,7 +59,7 @@ namespace Maestro.Quest.Interaction {
         internal int PhysicsWorkColliders=>item&&item.Grab?item.Grab.colliders.Count:0;
         bool InputsCurrent=>InputEditor?InputEditor.PhysicsIslandReady(item,true,out _):CurrentInputs(out _);
         internal bool CurrentInputs(out string error)=>CurrentInputs(null,out error);
-        internal bool CurrentInputs(PhysicsIslandQuery query,out string error){
+        internal bool CurrentInputs(PhysicsIslandQuery query,out string error,bool requireWork=true){
             error=inputStatus;var editor=InputEditor;if(!editor)return !PhysicsWorkEligible||PhysicsWorkResources.Ready(this,out error);
             if(editor.DormantRecoveryBlocked(item,out _,out var recoveryError)){error=recoveryError;return false;}
             if(editor.SpatialInputsChanging){error="The authored geometry is being reconciled";return false;}
@@ -67,7 +67,7 @@ namespace Maestro.Quest.Interaction {
             query??=editor.PhysicsInputs(item);
             if(!query.Members.SequenceEqual(inputMembers)){error="The physical connection group changed";return false;}
             if(query.Targets.Any(id=>Array.BinarySearch(physicsInputs.Targets,id,StringComparer.Ordinal)<0)){error="The physics input set changed";return false;}
-            return editor.PhysicsInputsReady(query,out error)==RoomSpatialReadiness.Ready&&editor.FlowWorkReady(query,out error);
+            return editor.PhysicsInputsReady(query,out error)==RoomSpatialReadiness.Ready&&(!requireWork||editor.ExecutionWorkReady(query,out error));
         }
         internal string PhysicsInputStatus {
             get {if(CurrentInputs(out var error)&&InputEditor)InputEditor.PhysicsIslandReady(item,true,out error);return error??"Physics inputs changed; wait for the next step or restart physics after fixing unavailable inputs";}
@@ -78,7 +78,10 @@ namespace Maestro.Quest.Interaction {
             var editor=InputEditor;
             if(!editor){
                 if(hasInputBinding)ReleasePhysicsInputs();
-                else {bool admitted=PhysicsWorkResources.TryAdmit(new[]{this},out inputStatus);if(!admitted)DiscardPreparedMotion();SetInputsReady(admitted);}
+                else {
+                    bool admitted=PhysicsWorkResources.TryAdmit(new[]{this},out inputStatus),queued=PhysicsWorkResources.Queued(this);
+                    if(!admitted&&queued)HoldPreparedMotion();else if(!admitted)DiscardPreparedMotion();SetInputsReady(queued);
+                }
                 return;
             }
             if(!InputOwner||editor.RuntimeGate.Held||editor.WriteGate.Frozen||!editor.PhysicsIslandOwned(item)){ReleasePhysicsInputs();return;}
@@ -95,15 +98,16 @@ namespace Maestro.Quest.Interaction {
             if(query.State==RoomSpatialReadiness.Unavailable){
                 ReleasePhysicsInputs();inputMembers=query.Members;shapeFailed=true;inputStatus=query.Error;return;
             }
-            physicsInputs??=new RoomSpatialInputs(editor,editor.Identity(item),()=>InputOwner&&editor.PhysicsIslandOwned(item),false,purpose:"Physics");
+            physicsInputs??=new RoomSpatialInputs(editor,editor.Identity(item),()=>InputOwner&&editor.PhysicsIslandOwned(item),false,purpose:"Physics",followPhysicsPlacements:true);
             bool ready=physicsInputs.Require(query.Targets,(string[] _,out string error)=>editor.PhysicsInputsReady(query,out error),out inputStatus);
             // Geometry residency is independent of this short execution turn. A
             // scheduled hold preserves motion without changing contact identity.
-            if((!ready&&physicsInputs.Pending)||(ready&&editor.FlowWorkDeferred(query))){
-                if(!preparedMomentum&&!body.isKinematic){preparedVelocity=body.linearVelocity;preparedSpin=body.angularVelocity;preparedMomentum=true;}
-            }else if(!ready||!editor.FlowWorkReady(query,out _))DiscardPreparedMotion();
+            if((!ready&&physicsInputs.Pending)||(ready&&editor.ExecutionWorkDeferred(query))){
+                HoldPreparedMotion();
+            }else if(!ready||!editor.ExecutionWorkReady(query,out _))DiscardPreparedMotion();
             SetInputsReady(ready);
         }
+        void HoldPreparedMotion(){if(!preparedMomentum&&!body.isKinematic){preparedVelocity=body.linearVelocity;preparedSpin=body.angularVelocity;preparedMomentum=true;}}
         void DiscardPreparedMotion(){preparedMomentum=false;preparedVelocity=preparedSpin=Vector3.zero;}
         void RestorePreparedMotion(){
             if(!preparedMomentum)return;

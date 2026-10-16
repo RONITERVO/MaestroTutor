@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests
         }
         static void ReleasePhysicsWork(IEnumerable<GameObject> hosts){foreach(var go in hosts)if(go)UnityEngine.Object.DestroyImmediate(go);PhysicsWorkResources.Collect();}
         JObject[] WorkGrants(string target){var budget=PhysicsWorkResources.ObserveBudget();return Enumerable.Range(0,(int)budget["reservations"]).Select(PhysicsWorkResources.Observe).Where(x=>(string)x["target"]==target).ToArray();}
-        [UnityTest]public IEnumerator PhysicsWorkAdmissionDeniesACompleteGroupWithoutEvictingUnrelatedPhysicsAndRetriesWithoutOldMomentum()
+        [UnityTest]public IEnumerator PhysicsWorkAdmissionQueuesACompleteGroupWithoutEvictingUnrelatedPhysicsAndPreservesMotion()
         {
             var ids=PhysicsIslandChain();var free=PhysicsInputBall(new(-12,3,-8));StartIsland();yield return IslandActive(ids);
             var bodies=ids.Select(id=>editor.Find(id).GetComponent<RigidRoomItem>()).ToArray();
@@ -43,19 +43,19 @@ namespace Maestro.Quest.Tests
             var held=FillPhysicsWork(1);
             try{
                 string before=PhysicsWorkResources.ObserveBudget().ToString();foreach(var body in bodies)body.Refresh();
-                Assert.That(PhysicsWorkResources.ObserveBudget().ToString(),Is.EqualTo(before));
-                foreach(var id in ids){Assert.That(WorkGrants(id),Is.Empty);Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);StringAssert.Contains("work capacity",editor.Find(id).GetComponent<RigidRoomItem>().PhysicsInputStatus);}
+                Assert.That((int)PhysicsWorkResources.ObserveBudget()["units"],Is.EqualTo((int)JObject.Parse(before)["units"]));
+                foreach(var id in ids){Assert.That(WorkGrants(id),Has.Length.EqualTo(1));Assert.That((bool)WorkGrants(id)[0]["current"],Is.False);Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);StringAssert.Contains("work capacity",editor.Find(id).GetComponent<RigidRoomItem>().PhysicsInputStatus);}
                 Assert.That(editor.Find(free).GetComponent<RigidRoomItem>().Simulating,Is.True);
                 for(int i=0;i<2;i++){UnityEngine.Object.DestroyImmediate(held[0]);held.RemoveAt(0);}
                 foreach(var body in bodies)body.Refresh();yield return IslandActive(ids);
-                foreach(var body in bodies){Assert.That(PhysicsWorkResources.Ready(body,out var issue),Is.True,issue);Assert.That(Mathf.Abs(body.GetComponent<Rigidbody>().linearVelocity.x),Is.LessThan(.1f));}
+                foreach(var body in bodies){Assert.That(PhysicsWorkResources.Ready(body,out var issue),Is.True,issue);Assert.That(body.GetComponent<Rigidbody>().linearVelocity.x,Is.GreaterThan(2));}
             }finally{ReleasePhysicsWork(held);}physics.PausePhysics();
         }
-        [UnityTest]public IEnumerator PhysicsWorkAdmissionRefusalDiscardsMomentumEvenWhileSpatialInputsArePending()
+        [UnityTest]public IEnumerator PhysicsWorkAdmissionScheduledWaitPreservesPendingMomentumButPauseCancelsIt()
         {
             var(_,ids)=PendingPhysicsIsland();var bodies=ids.Select(id=>editor.Find(id).GetComponent<RigidRoomItem>()).ToArray();
             foreach(var body in bodies)PhysicsWorkResources.Release(body);var held=FillPhysicsWork(1);
-            try{foreach(var body in bodies)body.Refresh();foreach(var id in ids){Assert.That((bool)PhysicsInputFact(id)["momentumHeld"],Is.False);Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);}physics.PausePhysics();}
+            try{foreach(var body in bodies)body.Refresh();foreach(var id in ids){Assert.That((bool)PhysicsInputFact(id)["momentumHeld"],Is.True);Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);}physics.PausePhysics();}
             finally{ReleasePhysicsWork(held);}yield return NavigationLoadingDone();
             foreach(var body in bodies)Assert.That(body.Simulating,Is.False);
         }

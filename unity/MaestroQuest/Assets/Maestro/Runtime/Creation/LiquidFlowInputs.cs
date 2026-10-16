@@ -59,7 +59,7 @@ namespace Maestro.Quest.Creation {
    uint before=flowEpoch;
    foreach(var group in next.Values){
     if(!group.Plan.Active){group.Inputs?.Dispose();group.Inputs=null;FlowGroupIssue(group,group.Issue??"Container is unavailable for physics");continue;}
-    group.Inputs??=new RoomSpatialInputs(editor,"",()=>FlowWorkEligible,false,purpose:"Liquid flow");
+    group.Inputs??=new RoomSpatialInputs(editor,"",()=>FlowWorkEligible,false,purpose:"Liquid flow",followPhysicsPlacements:true);
     group.Ready=group.Inputs.Require(group.Plan.Targets,(string[] ids,out string issue)=>CheckFlowInputs(group,ids,out issue),out var reason);
     if(version!=flowPreparationVersion)return false; // A nested pass/lifecycle now owns the state.
     if(!group.Ready){

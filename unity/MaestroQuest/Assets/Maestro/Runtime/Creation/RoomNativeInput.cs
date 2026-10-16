@@ -26,18 +26,23 @@ namespace Maestro.Quest.Creation
         // A later edit to another object is not a reason to cancel this action.
         // Keep identities/revisions, never a second copy of recipes or saved state.
         // Shared resources used by the targets are part of the same input guard.
-        internal Func<bool> CaptureNativeActionInput(string[] targets)
+        internal Func<bool> CaptureNativeActionInput(string[] targets)=>CaptureNativeActionInput(targets,out _);
+        Func<bool> CaptureNativeActionInput(string[] targets,out Action<string,int,int> acceptPhysicsPlacement)
         {
+            acceptPhysicsPlacement=null;
             var source=journal;int generation=nativeGeneration;
             if(source==null)return ()=>false;
             var ids=targets.Distinct(StringComparer.Ordinal).ToArray();
             var values=ids.Select(Read).ToArray();if(values.Any(v=>v==null))return ()=>false;
-            var objects=ids.Select(id=>(id,revision:ObjectRevision(id))).ToArray();
+            var objects=ids.ToDictionary(id=>id,ObjectRevision,StringComparer.Ordinal);
+            // Only the owning native demand can acknowledge this exact before /
+            // after pair. An intervening edit cannot be revived by a later save.
+            acceptPhysicsPlacement=(id,before,after)=>{if(ReferenceEquals(journal,source)&&nativeGeneration==generation&&objects.TryGetValue(id,out var expected)&&expected==before)objects[id]=after;};
             var appearances=values.SelectMany(v=>v.appearanceBindings).Select(v=>v.appearanceId).Distinct(StringComparer.Ordinal).Select(id=>(id,revision:AppearanceRevision(id))).ToArray();
             var environments=values.Select(v=>v.environmentProfile).Where(id=>!string.IsNullOrEmpty(id)).Distinct(StringComparer.Ordinal).Select(id=>(id,revision:EnvironmentRevision(id))).ToArray();
             var visibility=values.Select(v=>v.visibilityLayer).Where(id=>!string.IsNullOrEmpty(id)).Distinct(StringComparer.Ordinal).Select(id=>(id,revision:VisibilityRevision(id))).ToArray();
             return ()=>this&&isActiveAndEnabled&&ReferenceEquals(journal,source)&&nativeGeneration==generation&&
-                objects.All(v=>v.revision!=0&&ObjectRevision(v.id)==v.revision)&&
+                objects.All(v=>v.Value!=0&&ObjectRevision(v.Key)==v.Value)&&
                 appearances.All(v=>AppearanceRevision(v.id)==v.revision)&&
                 environments.All(v=>EnvironmentRevision(v.id)==v.revision)&&
                 visibility.All(v=>VisibilityRevision(v.id)==v.revision);

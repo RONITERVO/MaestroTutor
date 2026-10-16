@@ -78,10 +78,6 @@ namespace Maestro.Quest.Creation {
             // Share geometry checks across its members, never across frames.
             if(query.Checked){error=query.ReadError;return query.Result;}
             query.Checked=true;query.Result=query.State;query.ReadError=query.Error;
-            if(query.Result==RoomSpatialReadiness.Ready)foreach(var id in query.Members){
-                var body=Find(id)?.GetComponent<RigidRoomItem>();
-                if(body&&body.PhysicsWorkEligible&&!PhysicsWorkResources.Ready(body,out query.ReadError)){query.Result=RoomSpatialReadiness.Unavailable;break;}
-            }
             if(query.Result==RoomSpatialReadiness.Ready)foreach(var sweep in query.Sweeps){
                 query.Result=SpatialInputsReady(query.Targets,sweep.motion,sweep.ground,true,sweep.id,out query.ReadError);
                 if(query.Result!=RoomSpatialReadiness.Ready)break;
@@ -116,20 +112,22 @@ namespace Maestro.Quest.Creation {
                     if(!rigid)continue;if(!rigid.Dynamic){rigid.ReleasePhysicsInputs();continue;}
                     var query=PhysicsInputs(peer);
                     PrepareFlowWork(query,out _);
-                    PhysicsWorkResources.TryAdmit(query.Members.Select(member=>Find(member)?.GetComponent<RigidRoomItem>()),out query.WorkError);
+                    var workMembers=query.Members.Select(member=>Find(member)?.GetComponent<RigidRoomItem>()).Where(body=>body&&body.PhysicsWorkEligible).ToArray();
+                    PhysicsWorkResources.TryAdmit(workMembers,out query.WorkError);
+                    if(workMembers.All(PhysicsWorkResources.Queued))query.WorkError=null; // A scheduled wait is not missing geometry.
                     foreach(var member in query.Members){var body=Find(member)?.GetComponent<RigidRoomItem>();if(body&&body.Dynamic&&visited.Add(member))body.PreparePhysicsInputs(query);}
                 }
             }finally{preparingPhysicsIsland=false;}
         }
-        internal bool PhysicsIslandReady(RoomItem item,bool joints,out string error){
+        internal bool PhysicsIslandReady(RoomItem item,bool joints,out string error,bool requireWork=true){
             error=null;var query=PhysicsInputs(item);
-            if(PhysicsInputsReady(query,out error)!=RoomSpatialReadiness.Ready||!FlowWorkReady(query,out error))return false;
+            if(PhysicsInputsReady(query,out error)!=RoomSpatialReadiness.Ready||requireWork&&!ExecutionWorkReady(query,out error))return false;
             foreach(var id in query.Members){
                 var peer=Find(id);var rigid=peer?peer.GetComponent<RigidRoomItem>():null;
                 if(!peer||!peer.isActiveAndEnabled||!rigid||!rigid.isActiveAndEnabled){error="Connected physics member "+id+" is unavailable";return false;}
                 if(rigid.AnimationOwned){error="An animation or carried prop owns a connected member";return false;}
                 if(!rigid.GeometryReady||!PhysicsWorld||!PhysicsWorld.CanSimulate(peer.transform.position,peer)){error="A connected member's physics environment is unavailable";return false;}
-                if(rigid.Dynamic&&!peer.Grab.isSelected&&!rigid.CurrentInputs(query,out error))return false;
+                if(rigid.Dynamic&&!peer.Grab.isSelected&&!rigid.CurrentInputs(query,out error,requireWork))return false;
                 var view=peer.GetComponent<RoomConnectionView>();
                 var link=journal.PhysicalLink(id);
                 if(rigid.Dynamic&&link!=null&&!PhysicsLinkBroken(id,link)&&(!view||!view.isActiveAndEnabled||joints&&!view.Active)){
