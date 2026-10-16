@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation
         bool primarySelected,constructionSelected;
         internal bool ConstructionMarked=>constructionSelected&&selection&&selection.activeSelf;
         Color tint;
-        RoomResourceOwner modelOwner,collisionOwner;
+        RoomResourceOwner modelOwner,collisionOwner,drawingOwner;
         Collider originalCollider, chosenCollider;
         ItemCollider collisionShape;
         CollisionGeometry customGeometry;
@@ -57,7 +57,7 @@ namespace Maestro.Quest.Creation
             if(buildStarted)throw new System.InvalidOperationException("The native object was already built");buildStarted=true;
             if(objectInstance==null){objectInstance=preparation?.TakeObject(data)??NativeObjectResources.Begin(data,new RoomResourceOwner(world,data.id,"object"));objectInstance.Bind(gameObject);}
             objectInstance.Validate(data);
-            collisionOwner=new RoomResourceOwner(world,data.id,"collision");
+            collisionOwner=new RoomResourceOwner(world,data.id,"collision");drawingOwner=new RoomResourceOwner(world,data.id,"ink");
             if(data.kind==RoomObjectKind.ImportedModel)modelOwner=new RoomResourceOwner(world,data.id,"object");
             importedObject=data.kind==RoomObjectKind.ImportedModel;requestedModelGeometry=data.modelGeometry.Copy();
             Bounds bounds;
@@ -73,7 +73,8 @@ namespace Maestro.Quest.Creation
             }
             else if (data.kind == RoomObjectKind.Drawing)
             {
-                drawing = gameObject.AddComponent<PencilMarks>(); drawing.SetPaths(new[] { data.points }, data.radius);
+                using var ink=preparation?.TakeDrawing(data)??PencilGeometry.Prepare(new[]{data.points},data.radius,drawingOwner,"spatial");
+                drawing=gameObject.AddComponent<PencilMarks>();drawing.SetPrepared(ink);
                 drawingPoints=(Vector3[])data.points.Clone();drawingRadius=data.radius;
                 bounds = GetComponent<MeshFilter>().sharedMesh.bounds;
                 var box = gameObject.AddComponent<BoxCollider>(); box.center = bounds.center;
@@ -115,7 +116,9 @@ namespace Maestro.Quest.Creation
         public void ApplyRecipe(RoomRecipe value)=>ApplyRecipe(value,null);
         internal void ApplyRecipe(RoomRecipe value,RoomEditPreparation preparation)
         {
-            if (!recipe || !recipe.Apply(value,preparation,collisionOwner.Target)) return;
+            if(!recipe)return;var surfaces=GetComponent<DrawingSurfaceView>();bool changed;
+            surfaces?.DetachAnchors();try{changed=recipe.Apply(value,preparation,collisionOwner.Target);}finally{surfaces?.Reanchor();}
+            if(!changed)return;
             recipe.Tint(tint);
             geometryBounds=recipe.LocalBounds;
             var box=(BoxCollider)originalCollider; box.center=geometryBounds.center; box.size=geometryBounds.size;

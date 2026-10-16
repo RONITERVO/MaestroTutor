@@ -78,7 +78,15 @@ namespace Maestro.Quest.Creation
             if(attached){int extra=points.Count==0?1:DrawingSurfaceGeometry.Segments(captureSurface,points[^1],point,radius);if(renderedPoints+extra>DrawingSurfaceGeometry.MaximumRenderedPoints){End(id);return;}renderedPoints+=extra;}
             points.Add(point);if(points.Count>=(attached?DrawingSurface.MaximumPoints:RoomDocument.MaximumStrokePoints)){End(id);return;}
             if(points.Count<2||Time.unscaledTime<nextPreview)return;nextPreview=Time.unscaledTime+1f/30;
-            preview.SetPaths(new[]{PreviewPoints()},radius);preview.SetColor(color);
+            if(!RenderPreview(out errorText))End(id,false,false);
+        }
+        bool RenderPreview(out string error){
+            error=null;if(!preview)return true;
+            try{
+                int count=attached?DrawingSurfaceGeometry.PointCount(captureSurface,points.ToArray(),radius):points.Count;
+                using var geometry=new PencilGeometry(count,()=>new[]{PreviewPoints()},radius,new RoomResourceOwner(Editor.WorldIdentity,attached?surfaceTarget:toolTarget??"","preview"),"draft:"+SessionId,reusePigment:preview);
+                preview.SetPrepared(geometry);preview.SetColor(color);return true;
+            }catch(Exception failure){error=failure is RoomResourceLimitException?failure.Message:"The drawing preview could not be prepared";return false;}
         }
         public Vector3 PointerPoint(Ray ray)
         {
@@ -87,15 +95,15 @@ namespace Maestro.Quest.Creation
         }
         Vector3[] PreviewPoints()=>attached?DrawingSurfaceGeometry.Path(captureSurface,points.ToArray(),radius):points.Select(preview.transform.InverseTransformPoint).ToArray();
         public void End(int id)=>End(id,true);
-        void End(int id,bool save)
+        void End(int id,bool save,bool updatePreview=true)
         {
             if(owner!=id)return;owner=-1;
             if(erasure!=null){if(!Editor||erasure.Count==0){Clear();return;}if(save)Resolve(SessionId,false,out _,out _);else {errorText="Erasing interrupted; retry or discard the retained edit";Editor.ReportStatus(errorText);}return;}
             if(!Editor||points.Count<2){Clear();return;}
             var origin=attached?Vector3.zero:Editor.transform.InverseTransformPoint(points[0]);
             retained=new RoomObjectData {kind=RoomObjectKind.Drawing,position=origin,color=color,radius=radius,points=attached?points.ToArray():points.Select(p=>Editor.transform.InverseTransformPoint(p)-origin).ToArray()};
-            if(preview){preview.SetPaths(new[]{PreviewPoints()},radius);preview.SetColor(color);}
-            points.Clear();if(save)Resolve(SessionId,false,out _,out _);else {errorText="Surface drawing interrupted; release the object, then retry or discard the retained stroke";Editor.ReportStatus(errorText);}
+            if(updatePreview&&!RenderPreview(out errorText))save=false;
+            points.Clear();if(save)Resolve(SessionId,false,out _,out _);else {errorText=string.IsNullOrEmpty(errorText)?"Drawing interrupted; retry or discard the retained stroke":errorText+". The captured stroke is retained; its preview may be incomplete. Retry or discard the stroke.";Editor.ReportStatus(errorText);}
         }
         internal bool CanResolve(string session,bool discard,out string error)
         {
@@ -135,7 +143,7 @@ namespace Maestro.Quest.Creation
             }
             return Editor.CreateDrawing("",retained.position,1,retained.color,retained.radius,retained.points,out id,out error);
         }
-        void Clear(){if(erasure!=null&&Editor)Editor.Find(surfaceTarget)?.GetComponent<DrawingSurfaceView>()?.PreviewErasure(surfaceId,System.Array.Empty<string>());erasure=null;surfaceOwner?.Dispose();surfaceOwner=null;attached=false;captureSurface=null;surfaceTarget=surfaceId=surfaceBefore=toolTarget=null;retained=null;points.Clear();owner=-1;errorText="";SessionId=Guid.NewGuid().ToString("N");if(preview)Destroy(preview.gameObject);preview=null;write?.Dispose();write=null;}
+        void Clear(){if(erasure!=null&&Editor)Editor.Find(surfaceTarget)?.GetComponent<DrawingSurfaceView>()?.PreviewErasure(surfaceId,System.Array.Empty<string>());erasure=null;surfaceOwner?.Dispose();surfaceOwner=null;attached=false;captureSurface=null;surfaceTarget=surfaceId=surfaceBefore=toolTarget=null;retained=null;points.Clear();owner=-1;errorText="";SessionId=Guid.NewGuid().ToString("N");if(preview){NativeResourceLifetime.Release(preview.gameObject);Destroy(preview.gameObject);}preview=null;write?.Dispose();write=null;}
         public void Cancel(int id)=>End(id);
         void OnApplicationPause(bool paused){if(paused&&IsDrawing)End(owner);}
         void OnApplicationFocus(bool focused){if(!focused&&IsDrawing)End(owner);}

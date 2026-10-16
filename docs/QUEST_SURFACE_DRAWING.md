@@ -260,3 +260,53 @@ generated input guards. The audited development APK is recorded in
 [the delivery record](QUEST_V1_PLAN.md). Real Quest alignment,
 contact feel, scan reload/rescan recovery and sustained-load performance remain
 required before release.
+
+
+## Native ink preparation and lifetime (2026-10-16)
+
+Authored spatial strokes, planar/curved surface ink and live pencil previews use
+one native resource ledger. A stroke reserves its projected geometry before path
+expansion, mesh creation and material initialization. Room edits prepare detached
+candidates before journal acceptance; immediate-save edits also prepare before
+storage. A failed preparation or immediate save preserves the accepted drawing,
+saved bytes and Undo/Redo. The older queued-save entry point retains its existing
+persistence policy; native preparation does not turn it into an immediate save.
+
+The process-wide limits are 128 native surface roots, 384 native stroke
+reservations and 196,608 reserved vertices, independently fixed from saved-room
+quotas. One source point reserves three vertices; curved subdivision counts as
+source points, while consecutive duplicate points may render fewer vertices.
+Private candidates, live previews, inactive hosts and resources awaiting Unity's
+deferred destruction all remain charged. An actual mesh exceeding its reservation
+is refused and charged at its larger cost until disposal completes. System
+artwork and selection outlines are excluded. These are logical allocation limits,
+not measurements of CPU/GPU memory or guarantees of Quest frame time.
+
+Unchanged ink retains its mesh and material. Color, patch dimensions, drawing
+permission and anchor-pose edits reuse geometry. Changing a curved surface's
+shape or curvature prepares new geometry. Replacing a recipe part reattaches the
+same patch root and its window; resizing a planar patch updates the existing
+window mask's scale. Disabling drawing stops new contact strokes while leaving
+existing ink visible. Scanned-layer anchors remain invisible and add no panel.
+Window creation/replacement still uses its existing bounded implementation;
+transactional native window admission is the next separate checkpoint.
+
+Live preview updates reuse their pigment material. If native preview preparation
+fails, capture ends with the sampled stroke retained as an unsaved draft. Its
+preview may be incomplete; Retry saves the complete captured source when capacity
+is available, and Discard releases it. Room-session, anchor and ownership checks
+still apply. No failed operation silently deletes earlier ink to make room.
+
+`runtime.inkBudget` and `runtime.inkReservation` expose passive typed diagnostics
+through the shared catalog for user and agent programs. They require the runtime
+diagnostics service. Reservation IDs and indices are runtime-only. A `ready`
+reservation means a native host exists, including an inactive private candidate;
+it does not mean the edit was published or is visible. The owner records world,
+region, target, role and source. Reads cannot allocate or evict ink. Never-active
+hosts are reaped without releasing their resource charges before native
+destruction. Undo/Redo, temporary-room discard and dormant activation use the same
+preparation path and preserve retry when admission is refused.
+
+Native regressions and a captured native lifecycle fixture cover these contracts;
+current test counts and desktop-only coverage are recorded in
+[the v1 plan](QUEST_V1_PLAN.md#transactional-native-ink-2026-10-16).

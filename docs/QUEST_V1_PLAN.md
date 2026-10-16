@@ -11376,3 +11376,50 @@ Transactional spatial/surface ink and passthrough windows remain next, followed
 by simulation admission and transaction/storage/spatial-extent work before saved
 capacity expansion. Per-entity real-room collisions remain independent of virtual
 terrain and presentation. V1 is incomplete.
+
+
+## Transactional native ink (2026-10-16)
+
+Spatial drawings, surface ink and live pencil previews now reserve and prepare
+geometry/materials before room acceptance. Immediate-save authoring also prepares
+before persistence. Unchanged strokes and patch roots are reused; color, size,
+drawing-permission and pose edits do not rebuild ink. Recipe replacement detaches
+and reattaches the same patch roots so their ink and windows survive. Retained
+window masks update scale on patch resize. Scanned-ink anchors add no renderer.
+See [the ink contract](QUEST_SURFACE_DRAWING.md#native-ink-preparation-and-lifetime-2026-10-16).
+
+Independent process-wide limits account for 128 surface roots, 384 strokes and
+196,608 reserved vertices across workspaces, private candidates, previews,
+inactive hosts and deferred destruction. Failed preparation or immediate saving
+preserves accepted ink, saved bytes and history. Undo/Redo, temporary discard and
+dormant activation preserve retry after refusal. A failed preview retains all
+captured stroke samples, even if its visible preview is incomplete. Shared
+`runtime.inkBudget` and `runtime.inkReservation` expose copied ownership and
+lifetime facts to both users and agents. A ready host may still be a private
+candidate; diagnostics do not claim publication or visibility.
+
+Full desktop verification passed **1,314 EditMode / 1,698 PlayMode** tests,
+with **3 optional private-asset skips**. Eleven new native regressions cover
+independent budgets across worlds, projection before allocation, actual-cost
+mismatch, never-active cleanup, partial initialization, source-exact transfer,
+failed batches and saves, unchanged window/ink reuse, history/temporary recovery,
+dormant activation, preview retry/discard and deferred native lifetime. The first
+focused run caught and corrected an unwanted renderer on scanned-ink anchors.
+The expanded focused run passed 149/150 PlayMode checks; its failing new test had
+injected storage failure into the older queued-save entry point. It now exercises
+the surface editor's immediate-save path and passes in the full run.
+
+**3,096 web tests / 331 files**, app/probe TypeScript and catalog provenance
+passed. Only the two ink diagnostics were added to the catalog; existing
+capabilities are unchanged. A native lifecycle capture validates web facts and
+programs. All **4,314 frozen inputs**, **3,068
+native source/mirror files** and **14 unrelated files** were
+verified. Evidence: `.quest-evidence/ink-admission/`.
+
+This is logical allocation admission, not measured GPU memory or Quest frame
+time. System artwork and selection outlines are excluded. No Android build,
+headset, paid-provider, signing, deployment or Meta action ran. Full offline
+Headless/Book journeys were not rerun here; their most recent evidence remains
+pinned to `9f38abca`. Window creation/replacement admission remains next, followed
+by simulation admission and transaction/storage/spatial-extent work before saved
+capacity expansion. V1 remains incomplete.

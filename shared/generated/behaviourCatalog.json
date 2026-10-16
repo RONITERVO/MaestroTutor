@@ -43786,6 +43786,69 @@
       ]
     },
     {
+      "id": "runtime.inkBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "surfaces": "number",
+          "strokes": "number",
+          "vertices": "number",
+          "preparing": "number",
+          "ready": "number",
+          "retiring": "number",
+          "surfaceLimit": "number",
+          "strokeLimit": "number",
+          "vertexLimit": "number"
+        }
+      },
+      "label": "Native ink budget",
+      "description": "Process-wide authored drawing-surface, stroke and source-vertex reservations across workspaces, including live pencil previews, private preparation, inactive hosts and deferred destruction. Each source point reserves three vertices; duplicate points may render fewer. Independent of saved-room quotas. Logical admission costs, not measured GPU memory or frame time. System artwork and selection outlines are excluded. Reading never creates or evicts ink.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.inkReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "target": "text",
+          "role": "text",
+          "source": "text",
+          "kind": "text",
+          "phase": "text",
+          "vertices": "number",
+          "active": "boolean"
+        }
+      },
+      "label": "Native ink owner",
+      "description": "Read one runtime.inkBudget reservation by index across surfaces and strokes. Indices may shift; reservationId is runtime-only. World, region, target, role and source identify its copied owner. Phase is preparing, ready or retiring. Ready means a native host exists, including a private candidate; it does not certify publication or visibility. Active describes the host GameObject, not whether it is visible. Retiring resources remain charged until owned native allocations are destroyed. Reads are detached and cannot change saved data or load resources.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 511.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -45963,7 +46026,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedMaterials.cs",
-      "sha256": "ccdf1ca34818ec9615f1bdfe4f5dcf4dac4917440af6309f9eafd7f4dc0da7bf"
+      "sha256": "c2d470436e47728880a2613b14f29d51d2154c16fe3884ba1df9dfccf072186d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/IllustratedSurface.cs",
@@ -45994,8 +46057,12 @@
       "sha256": "d9035d20f3b8fd7c3a898fb3f5d010c8e858e13186cb801757267d712aba5bae"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilGeometry.cs",
+      "sha256": "5963084980b7427444d2d7d3d31ac6187f02785f92a62e6a79483d4b2c4e1585"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilMarks.cs",
-      "sha256": "7324de7311e57a9c3514b1fcacbc7883021a066109fa03876c959d647dc68803"
+      "sha256": "d002d537cb4f53b0ccec1dfc6bda3c6bbd870e930a732c4fedee1b4b5cfa0dca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilModelStyle.cs",
@@ -46003,7 +46070,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/PencilStrokeMesh.cs",
-      "sha256": "a406cd9be49d5853510a653958bcc2d93ef2bd92f536019d02d10c2f39eb4157"
+      "sha256": "a6642581d0cb2aaa65e65c5a521a24fff6e9ebaccdeb5dc84ccc1cada32fe3f6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Art/VisibilityMaterials.cs",
@@ -46482,6 +46549,10 @@
       "sha256": "ca8d281d811b711136f59e34bc815da3900aa2c0500b9f74894afb401c51938a"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/InkResourceFacts.cs",
+      "sha256": "fa32519e9577e54adfec7264582303bb68386bb970df503c2b80ead5c8e60a21"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LatheProfileFact.cs",
       "sha256": "398a7bb55685ba28fe568132c1152803911afa835a3a2554481183f2c6653162"
     },
@@ -46871,7 +46942,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedDrawing.cs",
-      "sha256": "503ccfa43be3d4b348c8787f7f61ccc2f9dd2ddcc3c04cd58b104b850e2d9b52"
+      "sha256": "4de56d95ae6b8b937fb20a3f993a13d381dec4c6247d6b4c1ae603c834051ae0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedModelGeometry.cs",
@@ -46879,7 +46950,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreatedRoomObject.cs",
-      "sha256": "72fc83d08c7afc1f3dbda091a89dcb698cd936614c4a4d6b6412ae63324f9e87"
+      "sha256": "00af7db39466a8be7860d40516695e5013f75e77d8c880aec61aad250183a6e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
@@ -46911,7 +46982,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingSurfaceView.cs",
-      "sha256": "01b981e8d5d005ce78b76811019c586fd33cfc6be176f591c5120e085cba7937"
+      "sha256": "b866866c71bd55d1b64745bdf8bd0c900d28e6cb7e48f567fb28ed4321208218"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/DrawingTip.cs",
@@ -46932,6 +47003,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldView.cs",
       "sha256": "b1bb685247298b4ebbd602bc74e44921e81ded1f30d284cb0f21885ec3e89234"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/InkResources.cs",
+      "sha256": "11404e0e0e9b17a417194d903f0e1fb24afffce04ea5d59c7e652cc3ff543afd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LightResources.cs",
@@ -46980,6 +47055,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
       "sha256": "dbe62e8f1976aff8ca029171ec9795870d7664ca83fa5c03f77fba67fe5db73f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedDrawingSurfaces.cs",
+      "sha256": "1fac2ae69db522cc1ba24f8d5d0ab377e3066cb90e56312104fa46395ce03236"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedImportedModel.cs",
@@ -47151,7 +47230,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "3ffe01f605587dbfebcd2afa9f1b5f11b44350945b08ef934693214d86b018b2"
+      "sha256": "f04e1cf3fb47d73bcac5b622e4b274a6f13bf6e1c4d104e4474dbf3a351b6d8f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -47307,7 +47386,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
-      "sha256": "2b908c7c03d87634a24ebc5db92de529facbed7f418afad4cf5a2b97cc74c218"
+      "sha256": "a4fc79297d94e68d8715c9303af7dc884fe36ea8e026cac883a7045d06aa5e6a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
@@ -47415,7 +47494,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
-      "sha256": "d0869426eee9b1c7dfa3bc2edcd7a2ffdfbf15e31a6dab3818159ec6311ee8ba"
+      "sha256": "d00506a1436d36413ebff29458c876d5b12a5b22e2ba8ac4a00ec768861bacd9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
@@ -47527,7 +47606,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWindowView.cs",
-      "sha256": "9e3d4db7ea3f6b2ffa4810945e2b9a9a472e631166bdf1f0a203b70f681f2a56"
+      "sha256": "2fcda94b44bad818a03dd2a5020990692e979425bb6346e9c949a3a03c5aaa25"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldIdentity.cs",
@@ -47563,7 +47642,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
-      "sha256": "be669487b1f688473be8d5426b5695e29e25f73c96462a26030d174b7881ad08"
+      "sha256": "4ddc78c264c0d8cf79cd1f260977e54febf2d0220b1a0687037b7f82c69a0250"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Material.cs",
@@ -48283,7 +48362,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "d13acc1a2bdb662137acf512227351d56e5ae875067ef28d149b6d857e8cc85f"
+      "sha256": "334b4090e1dd6764035b5b8fa876fc6e8d8a806fc9723d11aedb7547b333c217"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Maestro.Quest.Art;
 using System.Threading.Tasks;
 using Maestro.Quest.Imports;
 using UnityEngine;
@@ -22,6 +24,8 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,RecipeVisual> recipes=new();
         readonly Dictionary<string,PreparedImportedModel> models=new();
         readonly Dictionary<string,PreparedRoomLights> lights=new();
+        readonly Dictionary<string,(Vector3[] Points,float Radius,PencilGeometry Geometry)> drawings=new();
+        readonly Dictionary<string,PreparedDrawingSurfaces> surfaces=new();
         internal void EnlistModel(PreparedImportedModel model,RoomJournal.PreparedEdit edit)
         {
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
@@ -64,6 +68,15 @@ namespace Maestro.Quest.Creation
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
             if(!lights.TryGetValue(data.id,out var candidate))return null;candidate.Validate(data.id,data.lights);
             lights.Remove(data.id);resources.Remove(candidate);return candidate;
+        }
+        internal PencilGeometry TakeDrawing(RoomObjectData data){
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");if(!drawings.TryGetValue(data.id,out var value))return null;
+            if(data.kind!=RoomObjectKind.Drawing||value.Radius!=data.radius||!value.Points.SequenceEqual(data.points)||!value.Geometry.Ready)throw new InvalidOperationException("Drawing source changed after preparation");
+            drawings.Remove(data.id);resources.Remove(value.Geometry);return value.Geometry;
+        }
+        internal PreparedDrawingSurfaces TakeSurfaces(RoomObjectData data){
+            if(ended)throw new InvalidOperationException("Room edit preparation has ended");if(!surfaces.TryGetValue(data.id,out var value))return null;value.Validate(data.id,data.surfaces);
+            surfaces.Remove(data.id);resources.Remove(value);return value;
         }
         bool ended;
         internal CollisionGeometry TakeCollision(string target,CollisionRecipe source)
@@ -126,7 +139,15 @@ namespace Maestro.Quest.Creation
             if(field!=null&&(previous==null||JsonUtility.ToJson(field)!=JsonUtility.ToJson(previous))){
                 var candidate=new HeightFieldGeometry(field,owner);resources.Add(candidate);fields.Add(data.id,candidate);yield return null;
             }
-            var current=before!=null?editor.Find(data.id):null;var lightView=current?current.GetComponent<RoomLightView>():null;
+            var current=before!=null?editor.Find(data.id):null;var drawingView=current?current.GetComponent<CreatedRoomObject>():null;
+            if(data.kind==RoomObjectKind.Drawing&&!ScanDrawingAnchor.Has(data)&&(!drawingView||!drawingView.DrawingMatches(data))){
+                var points=(Vector3[])data.points.Clone();var candidate=PencilGeometry.Prepare(new[]{points},data.radius,new RoomResourceOwner(editor.WorldIdentity,data.id,"ink"),"spatial");resources.Add(candidate);drawings.Add(data.id,(points,data.radius,candidate));yield return null;
+            }
+            var surfaceView=current?current.GetComponent<DrawingSurfaceView>():null;
+            if((data.surfaces?.Length??0)>0||surfaceView){
+                var candidate=new PreparedDrawingSurfaces(editor.WorldIdentity,data.id,data.surfaces,surfaceView);resources.Add(candidate);surfaces.Add(data.id,candidate);yield return null;
+            }
+            var lightView=current?current.GetComponent<RoomLightView>():null;
             if(data.lights.Length>0||lightView){
                 var candidate=new PreparedRoomLights(editor.WorldIdentity,data.id,data.lights,lightView);resources.Add(candidate);lights.Add(data.id,candidate);yield return null;
             }
@@ -141,6 +162,6 @@ namespace Maestro.Quest.Creation
             if(!view.CanConfigureModelGeometry(data.modelGeometry,out var issue))throw new ModelImportException(issue);
             resources.Add(view.PrepareModelGeometry(data.modelGeometry));yield return null;
         }
-        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();}
+        public void Dispose(){if(ended)return;ended=true;for(int i=resources.Count-1;i>=0;i--)resources[i].Dispose();resources.Clear();objects.Clear();collisions.Clear();fields.Clear();recipes.Clear();models.Clear();lights.Clear();drawings.Clear();surfaces.Clear();}
     }
 }

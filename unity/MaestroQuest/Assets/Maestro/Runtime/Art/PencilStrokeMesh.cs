@@ -11,7 +11,7 @@ namespace Maestro.Quest.Art
     {
         public const int MaximumPoints = 10000;
 
-        public static Mesh Build(IReadOnlyList<Vector3[]> paths, float radius, uint seed = 71)
+        internal static int PointCount(IReadOnlyList<Vector3[]> paths, float radius)
         {
             if (paths == null) throw new ArgumentNullException(nameof(paths));
             if (!float.IsFinite(radius) || radius <= 0 || radius > .1f) throw new ArgumentOutOfRangeException(nameof(radius));
@@ -23,6 +23,12 @@ namespace Maestro.Quest.Art
                 foreach (var point in path)
                     if (!float.IsFinite(point.x) || !float.IsFinite(point.y) || !float.IsFinite(point.z)) throw new ArgumentException("Drawing coordinates must be finite.", nameof(paths));
             }
+            return total;
+        }
+        public static Mesh Build(IReadOnlyList<Vector3[]> paths,float radius,uint seed=71)=>Build(paths,radius,seed,null);
+        internal static Mesh Build(IReadOnlyList<Vector3[]> paths,float radius,uint seed,Action<Mesh> allocated)
+        {
+            int total=PointCount(paths,radius);
             var vertices = new List<Vector3>(total * 3);
             var colors = new List<Color>(total * 3);
             var indices = new List<int>(total * 18);
@@ -67,11 +73,14 @@ namespace Maestro.Quest.Art
                 indices.Add(end); indices.Add(end + 1); indices.Add(end + 2);
             }
             var mesh = new Mesh { name = "Physical pencil strokes" };
+            try{
+            allocated?.Invoke(mesh);
             mesh.SetVertices(vertices); mesh.SetTriangles(indices, 0); mesh.SetColors(colors);
             mesh.SetUVs(2, vertices); // Rest-space pigment coordinates survive skeletal animation.
             mesh.RecalculateNormals(); mesh.RecalculateBounds();
             mesh.SetUVs(3, new List<Vector3>(mesh.normals));
             return mesh;
+            }catch{ArtResources.Release(mesh);throw;}
         }
 
         static float Next(ref uint state)

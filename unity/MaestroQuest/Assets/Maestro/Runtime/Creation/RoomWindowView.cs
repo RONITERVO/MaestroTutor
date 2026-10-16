@@ -24,7 +24,11 @@ namespace Maestro.Quest.Creation
         internal void Apply(RoomObjectData owner,VirtualRoomView presentation) {
             var surfaces=GetComponent<DrawingSurfaceView>();
             string next=string.Join("|",owner.windows.Select(w=>JsonUtility.ToJson(w)));
-            if(encoded==next&&view==presentation&&masks.Count==owner.windows.Length&&masks.All(m=>m.Object&&surfaces&&m.Object.transform.parent==surfaces.Surface(m.Data.surface)))return;
+            if(encoded==next&&view==presentation&&masks.Count==owner.windows.Length&&masks.All(m=>m.Object&&surfaces&&m.Object.transform.parent==surfaces.Surface(m.Data.surface))){
+                // A retained surface root can change size without rebuilding ink.
+                foreach(var mask in masks){var source=owner.surfaces.First(s=>s.id==mask.Data.surface);mask.Object.transform.localScale=new Vector3(source.width,source.height,1);}
+                Refresh();return;
+            }
             ClearMasks();encoded=next;if(view&&view!=presentation)view.SetWindowRequest(this,false);view=presentation;
             foreach(var data in owner.windows){
                 var surface=owner.surfaces.First(s=>s.id==data.surface);var anchor=surfaces?surfaces.Surface(data.surface):null;

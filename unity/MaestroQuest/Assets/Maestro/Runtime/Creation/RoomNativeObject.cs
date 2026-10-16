@@ -18,9 +18,10 @@ namespace Maestro.Quest.Creation
             if(configure) {
                 item.GetComponent<RecipeObject>()?.ConfigureAppearanceBindings(data.appearanceBindings);
                 item.GetComponent<CreatedRoomObject>()?.ApplyRecipe(data.recipe,preparation);
-                item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data);
+                item.GetComponent<CreatedRoomObject>()?.ApplyDrawing(data,preparation);
                 item.GetComponent<CreatedRoomObject>()?.ApplyScanLayer(data);
-                var surfaces=item.GetComponent<DrawingSurfaceView>();if(!surfaces&&(data.surfaces?.Length??0)>0)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();if(surfaces)surfaces.Apply(data.surfaces);
+                using var ink=preparation?.TakeSurfaces(data);var surfaces=item.GetComponent<DrawingSurfaceView>();
+                if(ink!=null){if(!surfaces)surfaces=item.gameObject.AddComponent<DrawingSurfaceView>();surfaces.Apply(data.id,data.surfaces,ink);}else surfaces?.Reanchor();
                 if(ScanDrawingAnchor.Has(data)){var layer=item.GetComponent<ScannedDrawingView>()??item.gameObject.AddComponent<ScannedDrawingView>();layer.Apply(this,data);}
                 var tip=item.GetComponent<DrawingTipView>();if(!tip&&(data.drawingTips?.Length??0)>0)tip=item.gameObject.AddComponent<DrawingTipView>();if(tip)tip.Apply(this,data.id,data.drawingTips);
                 var field=ApplyHeightFields(data.id,item,data.heightFields,preparation);

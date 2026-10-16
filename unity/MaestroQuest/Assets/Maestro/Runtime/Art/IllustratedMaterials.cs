@@ -51,17 +51,21 @@ namespace Maestro.Quest.Art
             var material=Create(color,grain);material.SetFloat("_WorldLighting",0);return material;
         }
 
-        public static Material Create(Color color, float grain = .07f)
+        public static Material Create(Color color,float grain=.07f)=>Create(color,grain,null);
+        internal static Material Create(Color color,float grain,System.Action<Material> allocated)
         {
             var shader = Shader.Find("Maestro/Watercolor");
             if (shader == null) throw new System.InvalidOperationException("Maestro watercolor shader was not included in the build.");
-            var material = new Material(shader) { name = "Watercolor " + ColorUtility.ToHtmlStringRGB(color), enableInstancing = true };
+            var material=new Material(shader);
+            try{
+            allocated?.Invoke(material);material.name="Watercolor "+ColorUtility.ToHtmlStringRGB(color);material.enableInstancing=true;
             material.SetColor("_Color", color);
             material.SetFloat("_Grain", grain);
             material.SetFloat("_Shading", grain > 0 ? .12f : 0);
             material.SetTexture("_PigmentTex", Pigment());
             material.SetShaderPassEnabled("PENCIL", grain > 0);
             return material;
+            }catch{ArtResources.Release(material);throw;}
         }
 
         static Texture2D Pigment()
