@@ -163,8 +163,8 @@ namespace Maestro.Quest.Creation {
         void PhysicsChanged(){ResetContacts();if(!editor||!world)return;if(!world.Running)Finish(out _);else{blocked=false;lastSample=Time.unscaledTime;nextSample=lastSample+.05f;}}
         void OnApplicationPause(bool paused){contactsPaused=paused;if(paused){ResetContacts();Finish(out _);}}
         void OnApplicationFocus(bool focused){contactsFocused=focused;if(!focused){ResetContacts();Finish(out _);}}
-        void OnDisable(){ResetContacts();Finish(out _);}
+        void OnDisable(){ContactWorkResources.Release(this);ResetContacts();Finish(out _);}
         static void Release(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
-        void OnDestroy(){if(editor)editor.RuntimeGate.Changed-=ContactGateChanged;ResetContacts();Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
+        void OnDestroy(){ContactWorkResources.Release(this);if(editor)editor.RuntimeGate.Changed-=ContactGateChanged;ResetContacts();Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
     }
 }

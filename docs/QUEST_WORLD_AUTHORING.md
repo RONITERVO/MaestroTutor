@@ -2061,8 +2061,8 @@ returning capacity and passive observations cannot restart paused physics.
 Pausing, grabbing, animation ownership, deactivation and destruction release a
 body's potential-work grant. In the fixed-step force path, no displacement or
 force sampling runs for a body without a current grant. Contact detection has a
-separate, currently unbudgeted path that can populate the shared displacement
-cache; this is not a global cap on all displacement work. Saved water quantities
+separate admitted pass, described below, that can populate the shared displacement
+cache; this force allowance alone is not a global cap on all displacement work. Saved water quantities
 are unchanged. A retiring native body stops immediately and cannot reacquire
 work or accept motion commands while its GameObject awaits destruction.
 
@@ -2080,3 +2080,48 @@ needs complete-episode admission before any transfer, with unknown skipped
 contact baselines and no catch-up replay. Saved capacities remain unchanged;
 transaction/storage/spatial bounds and device measurements are still required
 before increasing them.
+
+
+## Water contact work admission (2026-10-16)
+
+Each resident room's water-contact pass reserves its complete potential sampling
+work before shared displacement capture or contact geometry queries. Its
+independent process-wide limits are 32 sampling hosts and 524,288 logical units.
+The reservation includes every registered non-built-in body, including fixed,
+held, animated and temporarily unavailable bodies; up to 64 displacement samples
+and 64 colliders per body; six Maestro joints; and both tracked inputs. Native
+and known-missing liquid candidates, swept surface crossings and participant
+proofs are included as bounded allowances, even when a participant is currently
+dry. Nested proof/query internals and engine costs are excluded. Logical units
+are not measured CPU instructions, memory or a frame-time guarantee.
+
+A changed demand or world/region owner makes the old reservation stale. Admission
+credits that host's previous cost and changes the entire reservation atomically;
+refusal preserves other hosts and the old charge, without sampling a prefix.
+Pausing, deactivating or destroying a host releases its allowance. The existing
+manual internal tick remains available for deterministic desktop tests while
+the automatic loop is disabled; inactive roots cannot step.
+
+Waiting makes every contact unknown, clears ripples and discards previous sample
+positions. A successful retry establishes a fresh baseline: movement during the
+gap cannot manufacture entry, exit, crossing or catch-up effects. Returning
+capacity, focus or passive diagnostic reads cannot restart paused physics.
+This observation allowance does not take hand/animation ownership, stop otherwise
+admitted body forces, change liquid quantities or hold the room's write gate.
+Events are delivered only after the full admitted pass. If a listener replaces,
+synchronizes, edits or rebases the room, remaining callbacks from that sampled
+source are discarded, including when object IDs are reused.
+
+Human and agent programs share `runtime.contactWorkBudget` and
+`runtime.contactWorkReservation`. Reads are detached and passive; `current`
+means the potential cost and copied scope still match, not that geometry,
+tracking or any particular contact is known. Existing contact-state facts expose
+unknown and the waiting reason. Real-room and virtual-ground proofs still apply
+separately to each participant: a virtual prop or Maestro may use terrain below
+the scanned floor without giving physical hands that same scan opt-out.
+
+Pouring, scooping and rain-transfer episodes need separate admission before
+quantity changes. External observation queries, navigation, proof internals,
+engine work, transaction/storage limits and larger world capacities also remain
+separate work. This checkpoint establishes contact consistency under refusal;
+it does not certify Quest performance or complete the world scheduler.

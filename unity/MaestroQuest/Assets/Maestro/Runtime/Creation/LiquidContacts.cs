@@ -29,6 +29,7 @@ namespace Maestro.Quest.Creation {
         readonly List<LiquidContact> contactEvents=new();
         readonly Vector3[] contactPoints=new Vector3[MediumDisplacement.Samples];
         static readonly PoseJoint[] contactJoints={PoseJoint.LeftFoot,PoseJoint.RightFoot,PoseJoint.LeftHand,PoseJoint.RightHand,PoseJoint.Hips,PoseJoint.Head};
+        uint contactEpoch;
         bool contactsPaused,contactsFocused=true;
         bool ContactReady=>!contactsPaused&&contactsFocused&&editor&&world&&world.Running&&!blocked&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen&&editor.Frame.Valid;
         internal void SetContactInput(int index,Vector3? point,bool hand){
@@ -38,10 +39,13 @@ namespace Maestro.Quest.Creation {
         }
         static string InputId(int index)=>index==0?"input:left":"input:right";
         static void Forget(ContactState state,string reason){state.Known=false;state.BodyId=state.Liquid="";state.Depth=state.Speed=0;state.Reason=reason;}
-        void ResetContacts(){contacts.Clear();foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ClearRipples();}
+        void ResetContacts(){contactEpoch++;contacts.Clear();foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ClearRipples();}
         void ContactGateChanged(){if(editor.RuntimeGate.Held)ResetContacts();}
         internal void TickContacts(float seconds){
-            if(!ContactReady||!float.IsFinite(seconds)||seconds<=0||!float.IsFinite(Physics.gravity.sqrMagnitude)||Physics.gravity.sqrMagnitude<.01f){ResetContacts();return;}
+            if(!ContactWorkEligible||!float.IsFinite(seconds)||seconds<=0||!float.IsFinite(Physics.gravity.sqrMagnitude)||Physics.gravity.sqrMagnitude<.01f){ResetContacts();ContactWorkResources.Release(this);return;}
+            if(!ContactWorkResources.Ready(this,out var changedWork))WaitForContactWork(changedWork);
+            if(!ContactWorkResources.TryAdmit(this,out var workIssue)){WaitForContactWork(workIssue);return;}
+            var epoch=contactEpoch;int roomRevision=editor.Revision;var roomMatrix=editor.transform.localToWorldMatrix;
             Physics.SyncTransforms();CaptureMedia(false);contactEvents.Clear();
             using(var environment=mediumEnvironment.Begin(world)){
                 foreach(var b in mediumBodies.Values){
@@ -63,7 +67,12 @@ namespace Maestro.Quest.Creation {
             }
             // Consumers queue programs. Copy this rare edge batch before invoking
             // callbacks, since an edit in a listener may replace the live room.
-            if(contactEvents.Count>0)foreach(var value in contactEvents.ToArray())if(ContactReady&&editor.Find(value.BodyId))editor.EmitMediumContact(in value);
+            if(contactEvents.Count>0)foreach(var value in contactEvents.ToArray()){
+                // A listener may replace/edit/rebase the room. Remaining events
+                // belong to the sampled source, even if IDs are reused afterward.
+                if(!ContactWorkResources.Ready(this,out _)||contactEpoch!=epoch||editor.Revision!=roomRevision||!roomMatrix.Equals(editor.transform.localToWorldMatrix))break;
+                if(editor.Find(value.BodyId))editor.EmitMediumContact(in value);
+            }
         }
         void SampleContact(string id,string kind,RoomItem item,uint revision,Vector3[] points,int count,bool authored,float seconds,in RoomEnvironmentQueries.Batch environment){
             if(!contacts.TryGetValue(id,out var state))contacts[id]=state=new();
@@ -106,7 +115,7 @@ namespace Maestro.Quest.Creation {
         void Ripple(string body,Vector3 point,float speed,ContactState state){if(vessels.TryGetValue(body,out var v)&&v.Item){v.Item.GetComponent<ContainerFillView>()?.AddRipple(point,speed);state.RippleAt=Time.unscaledTime;}}
         internal JObject ObserveContact(string id){
             bool input=id=="input:left"||id=="input:right";if(!input&&(!editor||!editor.Find(id)))return null;
-            contacts.TryGetValue(id,out var state);bool known=ContactReady&&state?.Known==true&&Time.unscaledTime-state.At<=.2f;
+            contacts.TryGetValue(id,out var state);bool workReady=ContactWorkResources.Ready(this,out var workIssue);bool known=workReady&&state?.Known==true&&Time.unscaledTime-state.At<=.2f;
             if(known&&input){var tracked=contactInputs[id=="input:left"?0:1];known=tracked.Tracked&&Time.unscaledTime-tracked.At<=.15f&&tracked.Kind==state.Kind;}
             if(known&&state.Item){var rigid=state.Item.GetComponent<RigidRoomItem>();known=state.Item.isActiveAndEnabled&&(state.Kind=="avatar"?state.Item.GetComponent<MaestroAvatar>()?.ModelBusy==false:rigid&&rigid.GeometryReady&&rigid.MotionRevision==state.Revision);}
             if(known&&state.BodyId!="")known=vessels.TryGetValue(state.BodyId,out var v)&&v.Item&&v.Item.isActiveAndEnabled&&v.Rigid&&v.Rigid.GeometryReady&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),state.Item)&&world.CanSimulate(editor.Frame.PointToWorld(state.Point),v.Item);
@@ -118,7 +127,7 @@ namespace Maestro.Quest.Creation {
                 }
             }
             var point=known?state.Point:Vector3.zero;
-            return new JObject{["known"]=known,["immersed"]=known&&state.BodyId!="",["bodyId"]=known?state.BodyId:"",["kind"]=state?.Kind??(input?"input":"object"),["liquid"]=known?state.Liquid:"",["depthMetres"]=known?state.Depth:0,["sampleSpeedMetresPerSecond"]=known?state.Speed:0,["surface"]=WorkspaceViewpoint.Point(point),["reason"]=known?"":!ContactReady?"Contact sampling is paused":state?.Reason!=""?state?.Reason??"Not sampled":"Contact sample expired"};
+            return new JObject{["known"]=known,["immersed"]=known&&state.BodyId!="",["bodyId"]=known?state.BodyId:"",["kind"]=state?.Kind??(input?"input":"object"),["liquid"]=known?state.Liquid:"",["depthMetres"]=known?state.Depth:0,["sampleSpeedMetresPerSecond"]=known?state.Speed:0,["surface"]=WorkspaceViewpoint.Point(point),["reason"]=known?"":!workReady?workIssue:state?.Reason!=""?state?.Reason??"Not sampled":"Contact sample expired"};
         }
     }
 }

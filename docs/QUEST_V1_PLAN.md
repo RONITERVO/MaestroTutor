@@ -11651,3 +11651,47 @@ solver admission. Full offline Headless/Book journeys remain pinned to
 `9f38abca`; Android compilation to `7fe48619`. No headset, paid provider,
 Android build, signing, deployment or Meta action ran. Current device/provider,
 acoustic and Store acceptance remain open. V1 is incomplete.
+
+
+## Complete water-contact work admission (2026-10-16)
+
+Water-contact sampling now reserves a complete room pass before displacement
+capture and geometry queries. The potential demand includes held/animated/fixed
+objects, temporarily unavailable geometry, six Maestro joints and both tracked
+inputs. Stable process-wide limits are independent of saved/native quotas;
+resizing credits the old grant and refuses atomically without evicting peers.
+See the [shared contract](QUEST_WORLD_AUTHORING.md#water-contact-work-admission-2026-10-16).
+
+Refusal makes contacts unknown and clears their previous positions/ripples.
+Retry establishes a fresh baseline, so missing intervals cannot become synthetic
+entry/exit/crossing events. Returning focus or capacity cannot restart paused
+physics. Contact observations do not change water amounts or hold write access.
+Callbacks run after sampling and stop when an earlier listener changes the
+sampled room, including synchronization with the same IDs. Existing per-entity
+real-room and virtual-ground policies remain unchanged.
+
+Two additive catalog facts expose the same detached work diagnostics to user
+and agent: `runtime.contactWorkBudget` and `runtime.contactWorkReservation`.
+Current grants certify only matching potential demand/scope, not contact truth.
+
+Validation: **1,328 EditMode / 1,735 PlayMode passed**, with the same **3 optional
+private-asset skips**. Seven new native checks cover logical demand bounds,
+complete-pass refusal before shared displacement capture, preserved water/save
+state and write access, fresh recovery baselines, growth/shrink without eviction,
+passive pause/focus/inactive lifecycles, stale event callbacks and detached
+current/stale/resized/released observations. The focused suite passed
+**42 EditMode / 101 PlayMode**, including existing real/virtual ground cases.
+**3,121 web tests / 336 files**, app/probe TypeScript and catalog provenance passed.
+Existing definitions are unchanged; two contact-work facts were added. Actual
+native output validates the browser contract, and the full run reproduces the
+same lifecycle after normalizing runtime IDs. **4,374 frozen inputs / 3,118
+native mirror inputs / 14 unrelated files preserved** were verified.
+Evidence: `.quest-evidence/contact-work-admission/`.
+
+Pour/scoop/rain episodes still need complete admission and coupling to motion
+before quantity changes. Query/proof internals, navigation/observation/engine
+work, transaction/storage/spatial bounds and larger saved capacity remain open.
+Full offline Headless/Book journeys remain pinned to `9f38abca`; Android
+compilation to `7fe48619`. No headset, paid provider, Android build, signing,
+deployment or Meta action ran. Device/provider, acoustic and Store acceptance
+remain open. V1 is incomplete.

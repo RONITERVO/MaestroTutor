@@ -44083,6 +44083,63 @@
       ]
     },
     {
+      "id": "runtime.contactWorkBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservations": "number",
+          "units": "number",
+          "reservationLimit": "number",
+          "unitLimit": "number",
+          "samplesPerBody": "number",
+          "collidersPerBody": "number",
+          "avatarSamples": "number",
+          "inputSamples": "number"
+        }
+      },
+      "label": "Water contact work budget",
+      "description": "Process-wide stable potential-work reservations for complete room water-contact passes, including held/animated objects, six avatar joints and two tracked inputs. Admission occurs before displacement capture and contact queries. Capacity refusal makes contacts unknown and discards their baseline; resuming cannot manufacture enter/exit/crossing events or old ripples. Logical units cover candidate/proof allowances, not measured CPU time or frame rate. Proof internals, force sampling, pouring, scooping, rain, external observations and engine costs are excluded. Independent of saved quotas and native allocation budgets. Reads may retire ineligible grants, but never admit sampling, start physics or publish events.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.contactWorkReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "units": "number",
+          "current": "boolean"
+        }
+      },
+      "label": "Water contact work reservation",
+      "description": "Read one runtime.contactWorkBudget grant by index. Indices may shift; reservationId is runtime-only. World and region identify the copied room owner. Current means the complete potential demand and owner still match, not that geometry, tracking or any contact is known. Demand growth cannot evict another grant or admit a room prefix. Paused, inactive or destroyed sampling hosts release work; held and animated objects remain contact participants. Reads are detached and cannot resume sampling.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -46675,6 +46732,10 @@
       "sha256": "93f3553f7464c133a7ac76f2d1c3fb4e095d33824685239807964cf39dc5d797"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactWorkFacts.cs",
+      "sha256": "efccad60e2a97eb9f65869e902a086055c2321be6e9097e45961099379c53e98"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
       "sha256": "c90e7b66d4f7b7213e85de3b5873d1fbeeaee5e3d367d9a19f0a4cc0d7607921"
     },
@@ -47175,6 +47236,10 @@
       "sha256": "58e6ec2bda5e967a3a43b0d80ce51d11669b536356dc23d5318542e7eeb208a9"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContactWorkResources.cs",
+      "sha256": "96fa5e2ec963fc5548ebc9d000c01e4deadaecebf73f9c615ed0d93aa92f7789"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFillView.cs",
       "sha256": "6c4504da45e51f1ac3ce28a9e90768b6e9c1bfcfa9144a7c4861dcd0d3e93eed"
     },
@@ -47263,8 +47328,12 @@
       "sha256": "56a434d698990d4df76192d886c82d8a338c61e4b1d44b2c77872ea1405e6a5d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContactWork.cs",
+      "sha256": "062969c899cf84da910f52aa6dbd72dad7f9d42d157656930ff3b23de2142870"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContacts.cs",
-      "sha256": "b6273e80af3d6c7de52e0d1430a2bb98e409703dc23865f3b9ca1b5acbe0f2db"
+      "sha256": "116b6d4757e496ca490da0e3348a9b432ee8732fd86214e5abc858fdec331119"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
@@ -47276,7 +47345,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "14df17a1639089df990a86fd387e7db4caf1c34579189ea7f7792963fcc232b3"
+      "sha256": "20f5fe55c12b7ec043f2d65ee70b977e5c20643a1c71a7280fc73c594c606be4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -48640,7 +48709,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "3d225cf21ac24b5e6826e5ab80608a556e7c5a2e817621d334df0f2daf5e263c"
+      "sha256": "f9f5f75ceace837a7224f6dcc2a41077c1841fcc37f97075aad87e6c437b940f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
