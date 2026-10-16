@@ -39467,7 +39467,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing. Waiting means complete transfer-work capacity or required spatial inputs are unavailable; error explains it. Before changing quantities, the active flow pass prepares relevant saved solids, ground and receiving/donor cavities, including empty or offset cavities and rain cover. Missing geometry is never treated as an empty path. Any prior accepted episode closes and releases its writer before preparation; skipped time is not accrued. Passive facts never load geometry or restart physics. Inspect runtime.flowWorkBudget and runtime.flowWorkReservation.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing. Waiting means complete transfer-work capacity or required spatial inputs are unavailable; error explains it. Before changing quantities, the active flow pass prepares relevant saved solids, ground and receiving/donor cavities, including empty or offset cavities and rain cover. Preparation includes streams that a currently empty tilted receiver could produce after earlier intake in that same pass, and rain cover for cavities that could drain before collection. Missing geometry is never treated as an empty path. Any prior accepted episode closes and releases its writer before preparation; skipped time is not accrued. Passive facts never load geometry or restart physics. Inspect runtime.flowWorkBudget and runtime.flowWorkReservation.",
       "input": {
         "type": "object",
         "properties": {
@@ -44549,7 +44549,7 @@
         }
       },
       "label": "Rain collected by a container",
-      "description": "Current shared liquid-flow episode's Water intake from precipitation. Collected quantity resets after publication or rollback. exposure is the open fraction of five aperture samples; unknown samples are excluded. Collection needs running physics, an available upward/wind-facing cavity and empty or matching Water contents. Rate uses projected opening area and active real time; camera visibility and authored clock speed do not multiply it. Read object.container.live for total and accepted quantities. Pause/save failure uses the same rollback and Undo as pouring. phase=waiting reports unavailable complete-pass work or spatial inputs, including saved roof and obstacle geometry along the rain paths; ready is false and exposure is zero until a fresh admitted pass. Skipped time never accumulates rain intake.",
+      "description": "Current shared liquid-flow episode's Water intake from precipitation. Collected quantity resets after publication or rollback. exposure is the open fraction of five aperture samples; unknown samples are excluded. Collection needs running physics, an available upward/wind-facing cavity and empty or matching Water contents. Rate uses projected opening area and active real time; camera visibility and authored clock speed do not multiply it. Read object.container.live for total and accepted quantities. Pause/save failure uses the same rollback and Undo as pouring. phase=waiting reports unavailable complete-pass work or spatial inputs, including saved roof and obstacle geometry along the rain paths; ready is false and exposure is zero until a fresh admitted pass. Cover is prepared before any quantities change, including initially full or incompatible vessels that earlier pouring/scooping could make eligible. Skipped time never accumulates rain intake.",
       "input": {
         "type": "object",
         "properties": {
@@ -46799,7 +46799,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "fe5e910ec07f5a90b538fbff66409e4ff7ec6f4392c9dc3e7311b0f469880c3c"
+      "sha256": "59be927a71199a3ffdf0752871a3196da382ea5d009cc7bd21a7ec78c792cdc7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
@@ -47231,7 +47231,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
-      "sha256": "4fa937a53f7b512c8339dd4decadbf6362d7fff3558974af1db5ab09901b33c3"
+      "sha256": "d28015b5d885da31812d1b5f0068815d6604adb1a0464a7f07cd75889d06f850"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
@@ -47307,7 +47307,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
-      "sha256": "cd14ff86b094b8ed74012d7a535a020be77438c27875afa272a00509b80c5eb3"
+      "sha256": "ab44ef7caedaae753406ae9c938da52b2e0688b2ecd78658ccf431bb6b9d8b0d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerRipples.cs",
@@ -47407,7 +47407,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
-      "sha256": "eb28d24c839546e962db61e013677c4cf5ea8418f56cfc2dd5fc3a48b3e5f5ff"
+      "sha256": "ec25da006f1d81a159f56ca7e94a7a8a0f22001086157a177cb9b185736267ef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowPublication.cs",

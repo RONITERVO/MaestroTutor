@@ -2239,6 +2239,16 @@ exposure until a fresh eligible pass. These passive facts cannot load objects,
 publish changes or start physics. Types, versions, saved inventory, collision
 policies and fluid quantities retain their existing contracts.
 
+Preparation covers possible eligibility changes within the same pass. A tilted
+empty receiver can receive water and then pour during its own turn; its potential
+stream must be ready before the earlier donor transfers anything. The stream
+bound uses the cavity's retained capacity at its current pose, with the same
+geometry as actual pouring. An upright dry cavity does not acquire stream-only
+obstacles. Rain-facing cavities prepare cover even when initially full or holding
+a different liquid, because earlier pouring/scooping can drain them. Actual
+collection still checks the resulting amount, liquid identity and exact cover.
+Preparation alone neither changes contents nor creates rain intake.
+
 This does not add fluid particles or claim unlimited simulation. Spatial bounds
 are conservative, and a missing dependency can delay the entire current flow
 pass. Fair scheduling of separate interacting groups and measurement of query,

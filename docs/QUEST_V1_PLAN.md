@@ -11834,3 +11834,45 @@ an independent flow circuit. Full offline Headless/Book journeys remain pinned
 to `9f38abca`; Android compilation to `7fe48619`. No headset, paid provider,
 Android build, signing, deployment or Meta action ran. Device/provider, acoustic
 and Store acceptance remain open. V1 is incomplete.
+
+
+## Whole-pass liquid eligibility (2026-10-16)
+
+Liquid dependency preparation now covers changes within one simulation pass.
+An initially empty tilted receiver can fill and pour onward in that same pass;
+its possible outgoing path is prepared before the first donor transfers anything.
+A full or incompatible vessel can drain before rain collection, so rain-facing
+cavities prepare their cover before quantities change. The same cavity geometry
+calculates retained capacity and actual pouring; no speculative contents are
+created. Upright dry cavities avoid stream-only loads. Existing conservation,
+publication, collision policies and shared human/agent waiting contracts remain
+unchanged. Exact queries still decide each transfer and rain intake.
+
+See the [shared contract](QUEST_WORLD_AUTHORING.md#liquid-spatial-dependencies-2026-10-16).
+
+Validation: **1,329 EditMode /
+1,775 PlayMode passed**, zero failures and
+three unchanged optional private-asset skips. Three new native cases cover the
+same-pass cascade, draining-before-rain and selective dry-cavity preparation.
+Both regression cases first failed against the old runtime. The cascade fixture
+first used an unsupported object scale; that fixture failure is excluded. Its
+corrected form proves the loaded obstruction intersects the future stream and
+is outside the initial stream bounds. Focused checks passed **43 EditMode /
+3 PlayMode**. **3,134 web tests / 340 files**, app/probe TypeScript
+and catalog provenance passed. Two web cases validate actual native waiting,
+recovery, conservation and accepted publication. The full native run reproduces
+the captured fixture after session-ID normalization. Two fact descriptions changed;
+fields, types and versions are unchanged. **4,404 frozen inputs /
+3,140 native mirror inputs / 14 unrelated files preserved**
+were verified. Evidence: `.quest-evidence/flow-pass-eligibility/`.
+
+Earlier audio-reset failure and unchanged successful retry evidence is retained;
+this desktop pass does not establish its cause or acoustic/device acceptance.
+
+Conservative whole-pass readiness can still delay independent flow circuits.
+Complete interacting groups, fair work scheduling and bounded discovery/proof,
+engine and transaction/storage costs remain before increasing saved capacity.
+No headset, paid-provider, Android build, signing, deployment or Meta action ran.
+Full offline Book/Headless journeys remain pinned to `9f38abca`; Android compilation
+to `7fe48619`. Device/provider, acoustic and Store acceptance remain open.
+V1 is incomplete.

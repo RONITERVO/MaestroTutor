@@ -34,14 +34,18 @@ namespace Maestro.Quest.Creation {
     if(!vessel.Ready)continue;
     var extent=editor.MissingLiquidExtent(vessel.Id,vessel.Live,out _);
     if(extent.Known&&extent.HasBounds)FlowProbeAt(extent.Bounds,vessel.Id,true);
-    if(vessel.Live.amountMl>0&&ContainerFlowGeometry.Excess(vessel.Live,vessel.Item.transform.rotation,up,RoomTerrainReservoir.Native(vessel.Live,vessel.Item.transform))>.000001){
+    // Earlier donors can fill this vessel before its own turn in the same pass.
+    // Prove every possible stream at this pose, independent of initial quantity.
+    if(vessel.Live.capacityMl-ContainerFlowGeometry.RetainedCapacity(vessel.Live,vessel.Item.transform.rotation,up,RoomTerrainReservoir.Native(vessel.Live,vessel.Item.transform))>=.000001){
      var origin=ContainerFlowGeometry.Lip(vessel.Live,vessel.Item.transform,up,out var outward);var velocity=outward*.15f;
      if(vessel.Body&&!vessel.Body.isKinematic)velocity+=Vector3.ClampMagnitude(vessel.Body.GetPointVelocity(origin),3);
      var bounds=new Bounds(origin,Vector3.zero);
      for(int i=1;i<=Segments;i++){float t=i*.025f;var next=origin+velocity*t+gravity*(.5f*t*t);bounds.Encapsulate(next);if(!world.CanSimulate(next,vessel.Item))break;}
      FlowProbeAt(bounds,vessel.Id,true);
     }
-    if(weather.Rain<=0||vessel.Live.amountMl>=vessel.Live.capacityMl||vessel.Live.amountMl>0&&!vessel.Live.SameLiquid(rainSource))continue;
+    // Pouring/scooping can make room or empty a different liquid before rain.
+    // Actual collection still checks the resulting amount and liquid identity.
+    if(weather.Rain<=0)continue;
     var normal=vessel.Item.transform.rotation*vessel.Live.frame.rotation*Vector3.up;
     if(Vector3.Dot(normal,-rainVelocity)/6<=.001f)continue;
     var rainBounds=new Bounds(RainOpeningPoint(vessel,0),Vector3.zero);

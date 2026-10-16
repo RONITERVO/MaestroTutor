@@ -47,12 +47,13 @@ namespace Maestro.Quest.Creation {
         }
         static double Disk(double x){if(x<=-1)return 0;if(x>=1)return 1;return .5+(Math.Asin(x)+x*Math.Sqrt(1-x*x))/Math.PI;}
         static double Integral(double x){if(x<=-1)return 0;if(x>=1)return x;double root=Math.Sqrt(1-x*x);return x*.5+(x*Math.Asin(x)+root-root*root*root/3)/Math.PI;}
-        internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up,TerrainLiquidGeometry terrain=null) {
+        internal static double RetainedCapacity(RoomContainer container,Quaternion worldRotation,Vector3 up,TerrainLiquidGeometry terrain=null) {
             var n=Quaternion.Inverse(worldRotation*container.frame.rotation)*up;
-            if(n.y<=0)return container.amountMl;
+            if(n.y<=0)return 0;
             double lip=n.y*container.height*.5-container.HorizontalExtent(n);
-            return Math.Max(0,container.amountMl-container.capacityMl*FractionBelow(container,n,lip,terrain));
+            return container.capacityMl*FractionBelow(container,n,lip,terrain);
         }
+        internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up,TerrainLiquidGeometry terrain=null)=>Math.Max(0,container.amountMl-RetainedCapacity(container,worldRotation,up,terrain));
         internal static Vector3 Lip(RoomContainer container,Transform root,Vector3 up,out Vector3 outward) {
             var rotation=root.rotation*container.frame.rotation;var n=Quaternion.Inverse(rotation)*up;
             var radial=new Vector3(-n.x,0,-n.z);radial=radial.sqrMagnitude>1e-8f?radial.normalized:Vector3.right;
