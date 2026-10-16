@@ -39,6 +39,10 @@ namespace Maestro.Quest.Creation {
             var line=reservation.Line;reservation.StreamMaterial.SetColor("_Color",color);line.startColor=line.endColor=color;line.startWidth=line.endWidth=Mathf.Clamp((float)System.Math.Sqrt(rate)*.0002f,.0015f,.008f);line.positionCount=count;for(int i=0;i<count;i++)line.SetPosition(i,points[i]);line.enabled=true;
         }
         internal void HideStream(){if(reservation?.Line)reservation.Line.enabled=false;}
+        // This reusable renderer has no authored/rest geometry while owner-disabled.
+        // Match the exact reservation owner, never an arbitrary disabled renderer.
+        internal bool IsInactiveOwnedStream(Renderer value)=>value&&reservation!=null&&reservation.Host==this&&reservation.Line==value&&
+            !value.enabled;
         static Vector3 GravityUp=>float.IsFinite(Physics.gravity.sqrMagnitude)&&Physics.gravity.sqrMagnitude>.01f?-Physics.gravity.normalized:Vector3.up;
         void LateUpdate(){if(surface&&surface.activeSelf&&(dirty||Time.unscaledTime>=nextRefresh&&(Quaternion.Angle(lastRotation,surface.transform.rotation)>.25f||Vector3.Angle(lastUp,GravityUp)>.25f)))Refresh();UpdateRipples();}
         internal void Refresh(){

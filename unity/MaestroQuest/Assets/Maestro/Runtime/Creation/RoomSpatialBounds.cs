@@ -62,12 +62,15 @@ namespace Maestro.Quest.Creation
             if(!item)return Unknown;var created=item.GetComponent<CreatedRoomObject>();
             if(imported&&(!created||!created.ModelGeometryReady))return Unknown;
             var result=new RoomSpatialBounds{Visual=RoomSpatialExtent.Empty,Collision=RoomSpatialExtent.Empty};
-            var inverse=item.transform.worldToLocalMatrix;
+            var inverse=item.transform.worldToLocalMatrix;var liquid=item.GetComponent<ContainerFillView>();
             // Include disabled children too: visibility and selection can change
             // independently of geometry. Do not read collider.bounds (empty when
             // disabled), invoke Physics.SyncTransforms, or bake meshes on a read.
             item.GetComponentsInChildren(true,renderers);
             foreach(var renderer in renderers){
+                // A pooled, unused pouring effect must not make an idle container
+                // permanently unknown. Active/unowned effects remain conservative.
+                if(liquid&&liquid.IsInactiveOwnedStream(renderer))continue;
                 result.VisualLayers|=1<<renderer.gameObject.layer;
                 if(renderer is MeshRenderer){
                     // TextMesh also uses MeshRenderer, without a MeshFilter.

@@ -19,6 +19,8 @@ implementation and verification status are recorded at the end of this document.
 Unsigned Android compilation now covers **eeeefd5d**, including these group changes;
 see [the current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
+The current full offline Headless and Book journeys pass after an idle-liquid
+residency correction; see [the current integration checkpoint](#idle-liquid-container-residency-2026-10-17).
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -12480,3 +12482,44 @@ limited reuse and warning review are recorded in [release build evidence](QUEST_
 This supersedes the older Android source checkpoint, not device, provider,
 acoustic, package-filtering or Store acceptance. No signing, installation,
 deployment or Meta operation occurred. V1 remains incomplete.
+
+
+## Idle liquid container residency (2026-10-17)
+
+A fresh full Headless journey passed, but the original Book journey exposed an
+idle liquid container that could never retire after leaving view. Its reserved,
+disabled pouring LineRenderer made the prepared visual envelope unknown, which
+continually renewed conservative viewer demand. A temporary timing diagnostic
+reproduced the failure with reliable viewer sampling; it was removed before
+verification.
+
+Visual bounds now omit only the exact disabled stream owned by that container's
+liquid reservation. Active streams, including streams hidden by ordinary
+visibility settings, and unrelated disabled renderers remain conservative.
+Two native regressions cover this distinction and offscreen retirement/restoration
+with the same saved liquid quantity, snapshot and revision. Their baseline idle
+bounds assertions failed before the runtime correction.
+
+Full native verification passed **1,345 EditMode / 1,822 PlayMode** tests with
+three optional private-asset skips and no failures. Full offline web verification
+passed **3,167 tests in 351 files**. App/probe TypeScript and native catalog
+provenance pass; capability definitions are unchanged.
+
+The fresh Headless journey d968af0e80324f03a3e1e103d4ecc905 passed with 2,184 native
+observations, 2,175 explicit read sets, 176 motion samples and 15 scripted steering
+requests. All 16 steering checks passed with zero real-provider network attempts.
+The original Book journey daa8c38d05414730a3e65ac8e8319877 passed with 3,223 observations
+and 1,003 commands. Its unchanged offscreen-retirement assertion now passes:
+resident count reaches zero, then an ordinary Book action reacquires the object.
+Human edits survive, stale agent paint is refused and reload does not replay work.
+Both journeys retain empty periodic object lists and use explicit discovery.
+
+All **5,103 frozen inputs**, **3,186 native mirror inputs** and **14 preserved
+local files** matched after verification. Current Book screenshots were reviewed
+for layout; expert help verbosity and headset readability remain separate
+usability work. This is desktop Unity/original-web integration with scripted
+providers. Android compilation remains at eeeefd5d and needs refreshing for this
+fix. Device, real-provider, acoustic and Store acceptance remain open; no signing,
+installation, deployment or Meta operation occurred. V1 remains incomplete.
+
+Evidence: .quest-evidence/current-room-journeys-20261017/completed.json.

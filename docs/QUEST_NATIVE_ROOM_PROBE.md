@@ -1738,3 +1738,31 @@ self-contained off-context inspection, exact saved-directory pagination and
 selection changes without deletion. Actual native/client acceptance does not
 establish real-provider planning quality, headset rendering or large-world
 performance. These need their respective acceptance runs.
+
+
+## Idle liquid effects and full offline journeys (2026-10-17)
+
+The normal sparse-object Book journey creates a liquid container before assigning
+it to an area, moves it into view, then behind the viewer. Its existing 25-second
+retirement assertion exposed an unused pouring renderer that made the area's
+visual bounds permanently unknown. The fix excludes only the exact owner-disabled
+stream reservation. Active and unrelated renderers retain conservative bounds;
+generic visibility changes do not shrink an active stream's prepared envelope.
+
+The unchanged full Book journey now reports dormant/residentCount 0 and restores
+the object through its ordinary generated move form. The corresponding evidence
+is book-native-area-retirement.json in run daa8c38d05414730a3e65ac8e8319877.
+The completed journey includes 3,223 observations, 1,003 native commands, preserved
+human edits, stale-agent refusal, original chat and reload without replay.
+
+The matching full Headless run d968af0e80324f03a3e1e103d4ecc905 records 2,184
+observations, 2,175 explicit read sets and 176 motion samples. Steering evidence includes 15 scripted
+requests and 16 passing semantic checks, with zero real-provider network
+attempts. Every periodic object list remains empty in both journeys.
+
+Both native editors and clients exited successfully. Full source/mirror and
+preserved-file checks are recorded in
+.quest-evidence/current-room-journeys-20261017/completed.json. These runs use
+explicitly scripted offline providers and desktop browser rendering; physical
+Quest input, texture quality, scans, real-provider planning and Android compilation
+of the new fix require their own acceptance.
