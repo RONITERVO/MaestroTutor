@@ -11695,3 +11695,49 @@ Full offline Headless/Book journeys remain pinned to `9f38abca`; Android
 compilation to `7fe48619`. No headset, paid provider, Android build, signing,
 deployment or Meta action ran. Device/provider, acoustic and Store acceptance
 remain open. V1 is incomplete.
+
+
+## Complete liquid flow work admission (2026-10-16)
+
+Pouring, scooping and rain now reserve a complete room pass before transfer
+queries or quantity changes. Demand includes empty receivers and missing views;
+resizing credits the old reservation and cannot evict peers or admit a prefix.
+Free moving containers and their connected groups require this same work before
+gravity, while unrelated dry objects can continue and hands/animations retain
+ownership. Per-entity real-room and virtual-ground policies are unchanged.
+See the [shared contract](QUEST_WORLD_AUTHORING.md#liquid-flow-work-admission-2026-10-16).
+
+Refusal closes only prior accepted flow, releases write access, hides streams and
+invalidates rain exposure. Skipped time cannot accumulate intake. Failed saving
+reverts the entire unfinished episode and requires an explicit physics restart.
+Completed events copy accepted amounts/identity and release write access before
+callbacks. A rule may edit the room or begin new flow; remaining old-source events
+stop, and old cleanup cannot hide fresh streams or clear the new episode.
+
+The shared catalog adds `runtime.flowWorkBudget` and
+`runtime.flowWorkReservation`; live pouring/scooping/rain observations document
+waiting and its reason. These detached diagnostics cannot admit, start or publish
+work. A current grant certifies potential demand/scope, not geometry, successful
+transfer, frame time or engine cost.
+
+Validation: **1,329 EditMode / 1,746 PlayMode passed**, with the same **3 optional
+private-asset skips**. Twelve new native checks cover bounded demand, whole-pass
+pour/scoop/rain refusal, no elapsed-time catch-up, atomic growth/shrink, connected
+motion coupling, preserved unrelated motion, accepted-flow publication and
+failed-save rollback, passive lifecycle/readback, immutable callback batches and
+reentrant recovery without hiding fresh streams or clearing new episodes.
+The focused suite passed **43 EditMode / 114 PlayMode**.
+**3,126 web tests / 337 files**, app/probe TypeScript and catalog provenance
+passed. Two flow-work facts were added; six existing descriptions now document
+waiting/publication semantics. Existing types and versions are unchanged.
+Actual native output validates the browser contract, and the full run reproduces
+the same lifecycle after normalizing runtime IDs. **4,388 frozen inputs /
+3,130 native mirror inputs / 14 unrelated files preserved** were verified.
+Evidence: `.quest-evidence/flow-work-admission/`.
+
+Contact temporal gaps and per-participant callback changes, spatial simulation
+cohorts/fairness, navigation/observation/proof/engine accounting and transaction/
+storage bounds remain open before larger saved capacity. Full offline Headless/
+Book journeys remain pinned to `9f38abca`; Android compilation to `7fe48619`.
+No headset, paid provider, Android build, signing, deployment or Meta action ran.
+Device/provider, acoustic and Store acceptance remain open. V1 is incomplete.

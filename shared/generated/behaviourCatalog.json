@@ -35790,7 +35790,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A native pouring episode was accepted by the shared room journal (or temporary fork). Value/source is the outgoing vessel ID. transferredMl is the total received by containers; spilledMl left the bounded container model, and does not imply a persistent puddle. receivers counts distinct receiving containers. Emitted after successful publication only; failed saves, cancellation, Undo and reload do not emit/replay it. Continuous flow checkpoints after ten seconds. Before an empty participating vessel changes liquid identity or colour, the prior episode publishes first; new intake is reconsidered next tick. Each outgoing total therefore retains its own liquid identity. Paused lifecycle listeners may miss the event; inspect current contents instead.",
+      "description": "A native pouring episode was accepted by the shared room journal (or temporary fork). Value/source is the outgoing vessel ID. transferredMl is the total received by containers; spilledMl left the bounded container model, and does not imply a persistent puddle. receivers counts distinct receiving containers. Emitted after successful publication only; failed saves, cancellation, Undo and reload do not emit/replay it. Continuous flow checkpoints after ten seconds. Before an empty participating vessel changes liquid identity or colour, the prior episode publishes first; new intake is reconsidered next tick. Each outgoing total therefore retains its own liquid identity. Publication releases its write lease before callbacks. If a listener changes the accepted room or begins another episode, remaining events from the old source are discarded. Paused lifecycle listeners may miss the event; inspect current contents instead.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -35840,7 +35840,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds, or earlier before an empty participating vessel adopts a different liquid identity or colour. Intake is reconsidered next tick only after the prior episode saves, so reported quantities retain the correct liquid identity. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
+      "description": "A physical liquid-flow episode containing scooping was accepted by the room journal or temporary fork. Value/source is the receiving vessel ID; scoopedMl is its total intake and donors counts distinct source vessels. Emitted only after successful publication; failed saves, Undo and reload do not emit it. Pouring retains its separate object.container.poured event. A continuous episode checkpoints after ten seconds, or earlier before an empty participating vessel adopts a different liquid identity or colour. Intake is reconsidered next tick only after the prior episode saves, so reported quantities retain the correct liquid identity. Publication releases its write lease before callbacks. If a listener changes the accepted room or begins another episode, remaining events from the old source are discarded. Lifecycle-paused listeners may miss an event; inspect current contents instead.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -35884,7 +35884,7 @@
       "activity": null,
       "objectEvent": true,
       "valueType": "text",
-      "description": "A shared physical liquid-flow episode containing precipitation was accepted. Source/value is the receiving container ID; collectedMl is external Water intake during that episode. Only successful saves emit; failed saving, Undo and reload do not. Lifecycle-paused listeners can miss the event; inspect accepted contents.",
+      "description": "A shared physical liquid-flow episode containing precipitation was accepted. Source/value is the receiving container ID; collectedMl is external Water intake during that episode. Only successful saves emit; failed saving, Undo and reload do not. Publication releases its write lease before callbacks. If a listener changes the accepted room or begins another episode, remaining events from the old source are discarded. Lifecycle-paused listeners can miss the event; inspect accepted contents.",
       "features": [
         "eventPrograms.v1",
         "eventFields.v1",
@@ -39467,7 +39467,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing. Waiting means complete transfer-work capacity is unavailable; error explains it. Any prior accepted episode closes before waiting, and skipped time is not accrued. Inspect runtime.flowWorkBudget and runtime.flowWorkReservation.",
       "input": {
         "type": "object",
         "properties": {
@@ -39505,7 +39505,7 @@
         }
       },
       "label": "Live liquid scooping",
-      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. An empty participating vessel changing liquid identity or colour first closes its prior episode. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. Shared bounded buoyancy/drag is described by object.medium. No level displacement, air simulation or terrain pools.",
+      "description": "Current physical-flow episode: scoopedMl entered this vessel through its submerged opening; drawnMl was taken from it by other vessels. donors/recipients count distinct counterpart vessels. These counters reset on publication or rollback. An empty participating vessel changing liquid identity or colour first closes its prior episode. Read object.container.live for current and accepted quantities. An upward-facing smaller open cavity must fit inside the donor with its entire opening below the measured surface, with a clear bounded path. The same conserved quantities, physics pause, grips, save/Undo and temporary-room episode are used for pouring and scooping. Shared bounded buoyancy/drag is described by object.medium. No level displacement, air simulation or terrain pools. Waiting means the complete pour/scoop/rain pass lacks work capacity; object.container.live.error gives the reason. Waiting does not accumulate intake.",
       "input": {
         "type": "object",
         "properties": {
@@ -44140,6 +44140,64 @@
       ]
     },
     {
+      "id": "runtime.flowWorkBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservations": "number",
+          "units": "number",
+          "reservationLimit": "number",
+          "unitLimit": "number",
+          "streamSegments": "number",
+          "queryHits": "number",
+          "scoopSamples": "number",
+          "rainSamples": "number"
+        }
+      },
+      "label": "Liquid transfer work budget",
+      "description": "Process-wide stable potential-work reservations for complete room pouring/scooping/rain passes. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Refusal closes prior accepted flow and releases its writer, hides streams, invalidates rain exposure and never accrues skipped time. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible grants but never admit work, load geometry, start physics or publish a flow episode.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.flowWorkReservation",
+      "version": 1,
+      "type": {
+        "record": {
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "vessels": "number",
+          "units": "number",
+          "current": "boolean"
+        }
+      },
+      "label": "Liquid transfer work reservation",
+      "description": "Read one runtime.flowWorkBudget grant by index. Indices may shift; reservationId is runtime-only. World/region identify the copied room owner. Current means complete potential demand and owner still match, not that native geometry, a transfer or simulation is ready. Resizing credits the old grant and cannot evict peers or admit a room prefix. Paused, inactive or destroyed hosts release potential work; explicit internal ticks can step a disabled automatic loop for desktop verification. Reads are detached and cannot resume transfers or physics.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
       "id": "room.sessionId",
       "version": 1,
       "type": "text",
@@ -44491,7 +44549,7 @@
         }
       },
       "label": "Rain collected by a container",
-      "description": "Current shared liquid-flow episode's Water intake from precipitation. Collected quantity resets after publication or rollback. exposure is the open fraction of five aperture samples; unknown samples are excluded. Collection needs running physics, an available upward/wind-facing cavity and empty or matching Water contents. Rate uses projected opening area and active real time; camera visibility and authored clock speed do not multiply it. Read object.container.live for total and accepted quantities. Pause/save failure uses the same rollback and Undo as pouring.",
+      "description": "Current shared liquid-flow episode's Water intake from precipitation. Collected quantity resets after publication or rollback. exposure is the open fraction of five aperture samples; unknown samples are excluded. Collection needs running physics, an available upward/wind-facing cavity and empty or matching Water contents. Rate uses projected opening area and active real time; camera visibility and authored clock speed do not multiply it. Read object.container.live for total and accepted quantities. Pause/save failure uses the same rollback and Undo as pouring. phase=waiting reports unavailable complete-pass work; ready is false and exposure is zero until a fresh admitted pass. Skipped time never accumulates rain intake.",
       "input": {
         "type": "object",
         "properties": {
@@ -46741,11 +46799,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "1a2a45c4bca1b9a2cf794c45842553f04228d78b89879654560679b338ba6a83"
+      "sha256": "77d001695920c86dea3dfe80fa82b5a5987597cb00b6d4533ea1d1cc989446b5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
-      "sha256": "d796de37ee1c719acd684bd00f5e0d0dfa31868832b9032c2d19485d76dfd9a5"
+      "sha256": "60d35bc24b57cfd581e8da8fcc08907d86504e8d9252c1f2848157454b86d5e0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
@@ -46806,6 +46864,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
       "sha256": "346b90a17039aa9d18d122d311355c9eef34f91e6245837a262f8212bff0448c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowWorkFacts.cs",
+      "sha256": "badf159304c030a7c79ab4a6493bc02d7cee15b720778495aa4860e3b593d924"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
@@ -47169,7 +47231,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
-      "sha256": "9405b3092b54a56115cbbda784f92d62005aa442aa514b7c1e06abc0a761eebd"
+      "sha256": "2d620007198c6d69a3f70dea3dbc99f6fb8bb15a03d34b52f3f3d756e83d20a3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
@@ -47308,6 +47370,10 @@
       "sha256": "31563a2ba43eeb84537fa28f2e120f30aabe52a2c3b5c402a392ace1b35cc728"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
+      "sha256": "489b88669e5095896d3968eb8fd6db10a59db21a6662de54125968d251978ab8"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
       "sha256": "da4cf0bf86c5fda4ccc3eb943f83e5e12553d7926dce260e1d0e9e1ccd3eebaa"
     },
@@ -47336,6 +47402,14 @@
       "sha256": "116b6d4757e496ca490da0e3348a9b432ee8732fd86214e5abc858fdec331119"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowPublication.cs",
+      "sha256": "23b307e6cc0356542b2c9e12abcf1beb605f48a94691bf622898563fea0903c5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
+      "sha256": "d4c38f7b1d18d4d1250f622185d5ad698295bbf77ed8cc64f856963fb779a5a9"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
       "sha256": "4a1dd16af6afce0cf8208c68a36658a6af8815e87b7f05ab21e1eb6f230b5b27"
     },
@@ -47345,11 +47419,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "20f5fe55c12b7ec043f2d65ee70b977e5c20643a1c71a7280fc73c594c606be4"
+      "sha256": "f14f3f7a12ede0bfdff8846a3d320b77925299e9efb2c402e75276d72dfc1fca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
-      "sha256": "fa5cd79780bd73af107b6ffc2f4bdef878a3b0899a31d78d1a8ab2292c17e454"
+      "sha256": "52fe56752454f6946c65305aa37c059deb4940e9a56bbea8294eff0a12481d9f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidResources.cs",
@@ -47781,7 +47855,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
-      "sha256": "86beabdfc5da22c541c4cc699fc794a048e2f4449e3832e2da463c9d478bfa99"
+      "sha256": "2357895d8d246d3586057dc3ebbe8c146daa2a7b535bbabfbb1ff906f02d29e8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
@@ -48709,7 +48783,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "f9f5f75ceace837a7224f6dcc2a41077c1841fcc37f97075aad87e6c437b940f"
+      "sha256": "4b249b1be653a57a991fe5dca1e7b235cbdd0b7e16850c9225f0d129c149737c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -26,7 +26,7 @@ namespace Maestro.Quest.Creation {
         internal string Error=>error;
         internal void Initialize(RoomEditor owner){editor=owner;world=owner.PhysicsWorld;lastSample=Time.unscaledTime;if(world)world.Changed+=PhysicsChanged;editor.RuntimeGate.Changed+=ContactGateChanged;}
         internal void Synchronize(RoomDocument document){
-            ResetContacts();
+            flowEpoch++;ResetContacts();
             var ids=new HashSet<string>();
             foreach(var data in document.objects){
                 if(data.containers?.Length!=1)continue;ids.Add(data.id);
@@ -45,9 +45,9 @@ namespace Maestro.Quest.Creation {
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);
             var physics=editor.PhysicsWorld;
-            if(!physics||!physics.Running||editor.Ownership.Suspended||editor.WriteGate.Frozen||!editor.CanSaveRoom){Finish(out _);return;}
-            Vector3 gravity=Physics.gravity;if(!float.IsFinite(gravity.sqrMagnitude)||gravity.sqrMagnitude<.01f){Finish(out _);return;}var up=-gravity.normalized;
-            if(blocked){HideStreams();return;}
+            if(!FlowWorkEligible){FlowWorkResources.Release(this);InvalidateRain("Liquid flow is paused or unavailable");Finish(out _);return;}
+            if(!FlowWorkResources.TryAdmit(this,out var workIssue)){WaitForFlowWork(workIssue);return;}
+            Vector3 gravity=Physics.gravity;var up=-gravity.normalized;
             Physics.SyncTransforms();bool flowing=false;
             var authoring=editor.GetComponent<AnimationWorkshop>();foreach(var vessel in vessels.Values){vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;vessel.Ready=Available(vessel)&&authoring?.ControlsTarget(vessel.Id)!=true;if(vessel.Ready)vessel.Opening=new ContainerFlowGeometry.Opening(vessel.Live,vessel.Item.transform);}
             foreach(var v in vessels.Values){
@@ -85,7 +85,7 @@ namespace Maestro.Quest.Creation {
                 donor.DipBudget-=moved;donor.Drawn+=moved;donor.Dippers.Add(recipient.Id);recipient.Scooped+=moved;recipient.Donors.Add(donor.Id);
                 contents[donor.Id]=donor.Live;contents[recipient.Id]=recipient.Live;flowing=true;Preview(donor);Preview(recipient);
             }
-            flowing|=CollectRain(seconds);
+            flowing|=CollectRain(seconds,out bool published);if(published)return;
             if(!Active)return;elapsed+=seconds;quiet=flowing?0:quiet+seconds;
             if(quiet>=.3f||elapsed>=10)Finish(out _);
         }
@@ -116,7 +116,7 @@ namespace Maestro.Quest.Creation {
             return false;
         }
         bool Available(Vessel v)=>v.Item&&v.Item.isActiveAndEnabled&&v.Item.GetComponent<ContainerFillView>()?.NativeReady==true&&v.Rigid&&v.Rigid.GeometryReady&&(!v.Live.TerrainFloor||RoomTerrainReservoir.Native(v.Live,v.Item.transform)!=null)&&editor.PhysicsWorld.CanSimulate(v.Item.transform.position,v.Item);
-        bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
+        bool Begin(out string issue){issue=null;if(Active)return true;write=editor.WriteGate.TryWrite(out issue);if(write==null)return false;flowEpoch++;session=Guid.NewGuid().ToString("N");quiet=elapsed=0;error="";return true;}
         void Touch(Vessel v){if(contents.ContainsKey(v.Id))return;original[v.Id]=v.Saved.Copy();contents[v.Id]=v.Live;}
         bool Trace(Vessel source,Vector3 origin,Vector3 velocity,Vector3 gravity,Vector3 up,out Vessel receiver,out int count){
             receiver=null;count=1;path[0]=origin;const float step=.025f;
@@ -142,29 +142,21 @@ namespace Maestro.Quest.Creation {
         }
         void Preview(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ApplyLive(new[]{v.Live});}
         void ShowStream(Vessel v,int count,double rate){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.ShowStream(path,count,rate,v.Live.color);}
-        internal bool Finish(out string issue){
-            issue=null;if(!Active||publishing){HideStreams();return true;}
-            publishing=true;bool ok=false;
-            try{ok=editor&&editor.CommitLiquidPour(original,contents,out issue);if(!ok){error=issue??"The liquid flow could not be saved; its liquid quantities were reverted";blocked=true;editor?.ReportStatus(error);}else{
-                foreach(var v in vessels.Values.ToArray()){if(v.Received+v.Spilled>0)editor.Poured(v.Id,v.Received,v.Spilled,v.Receivers.Count,v.Live.liquid);if(v.Scooped>0)editor.Scooped(v.Id,v.Scooped,v.Donors.Count,v.Live.liquid);if(v.Rain>0)editor.RainCollected(v.Id,v.Rain);}
-            }}finally{ClearEpisode();publishing=false;}
-            return ok;
-        }
         void Cancel(string reason){error=reason;blocked=true;ClearEpisode();if(editor)editor.ReportStatus(reason);}
         void ClearEpisode(){
             write?.Dispose();write=null;original.Clear();contents.Clear();quiet=elapsed=0;
             foreach(var v in vessels.Values){v.Received=v.Spilled=v.Scooped=v.Drawn=v.Rain=0;v.Receivers.Clear();v.Donors.Clear();v.Dippers.Clear();var saved=editor?editor.Read(v.Id)?.containers?.FirstOrDefault():null;if(saved!=null)v.Saved=saved.Copy();v.Live=v.Saved.Copy();Preview(v);}HideStreams();
         }
         void HideStreams(){foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
-        internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(error)};}
+        internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(blocked?error:FlowWorkIssue??error)};}
 
-        internal JObject ObserveScooping(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["scoopedMl"]=v.Scooped,["drawnMl"]=v.Drawn,["donors"]=v.Donors.Count,["recipients"]=v.Dippers.Count};}
+        internal JObject ObserveScooping(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["scoopedMl"]=v.Scooped,["drawnMl"]=v.Drawn,["donors"]=v.Donors.Count,["recipients"]=v.Dippers.Count};}
 
-        void PhysicsChanged(){ResetContacts();if(!editor||!world)return;if(!world.Running)Finish(out _);else{blocked=false;lastSample=Time.unscaledTime;nextSample=lastSample+.05f;}}
+        void PhysicsChanged(){flowEpoch++;ResetContacts();if(!editor||!world)return;if(!world.Running)Finish(out _);else{blocked=false;lastSample=Time.unscaledTime;nextSample=lastSample+.05f;}}
         void OnApplicationPause(bool paused){contactsPaused=paused;if(paused){ResetContacts();Finish(out _);}}
         void OnApplicationFocus(bool focused){contactsFocused=focused;if(!focused){ResetContacts();Finish(out _);}}
-        void OnDisable(){ContactWorkResources.Release(this);ResetContacts();Finish(out _);}
+        void OnDisable(){FlowWorkResources.Release(this);ContactWorkResources.Release(this);ResetContacts();Finish(out _);}
         static void Release(Vessel v){if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
-        void OnDestroy(){ContactWorkResources.Release(this);if(editor)editor.RuntimeGate.Changed-=ContactGateChanged;ResetContacts();Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
+        void OnDestroy(){FlowWorkResources.Release(this);ContactWorkResources.Release(this);if(editor)editor.RuntimeGate.Changed-=ContactGateChanged;ResetContacts();Finish(out _);if(world)world.Changed-=PhysicsChanged;foreach(var v in vessels.Values)Release(v);vessels.Clear();write?.Dispose();write=null;}
     }
 }

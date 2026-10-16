@@ -2125,3 +2125,55 @@ quantity changes. External observation queries, navigation, proof internals,
 engine work, transaction/storage limits and larger world capacities also remain
 separate work. This checkpoint establishes contact consistency under refusal;
 it does not certify Quest performance or complete the world scheduler.
+
+
+## Liquid flow work admission (2026-10-16)
+
+Each resident room reserves a complete pouring, scooping and rain pass before
+querying transfer geometry or changing live quantities. Process-wide limits are
+32 hosts and 524,288 logical work units, independently of saved or native object
+capacity. Demand counts all registered vessels, including empty receiving cups
+and temporarily missing views. It includes potential vessel pairs, 32 stream
+segments, bounded hit/candidate searches, five scoop paths and five rain samples.
+This is a logical allowance, not measured CPU time, memory, frame time or PhysX
+cost. Geometry/proof internals and external observations are not included.
+
+Reservations are stable and scoped to the world/region. Resizing credits the old
+charge and either admits the complete new demand or preserves the old charge;
+it never evicts another host or transfers through a partially admitted room.
+Moving free containers and their physically connected groups need the same
+admission before gravity resumes. An unrelated dry body can keep running.
+Hands and authored animations keep ownership; admission cannot restart paused
+physics. Disabled automatic loops retain explicit internal stepping for desktop
+tests, while inactive roots cannot step.
+
+When work is unavailable, the flow tick finishes only the previously accepted
+quantity changes, releases its writer, hides streams and makes rain exposure
+unknown. Further ticks wait without transferring or accumulating skipped time.
+If that final save fails, the entire unfinished episode reverts, emits no success
+events and requires an explicit physics restart. Waiting does not become a
+permanent geometry failure. Saved quantities retain the existing single-episode
+Undo behavior. Admission is separate from geometry proof: a current work grant
+alone does not make an opening, path or receiving vessel ready.
+
+Completed events copy accepted amounts and liquid identities before committing.
+The episode releases write access before delivering callbacks, so a user/agent
+rule can edit the world or start another episode. Synchronization, accepted edits,
+world-frame changes or a new episode stop the old batch's remaining callbacks,
+even if object IDs are unchanged. Old cleanup cannot erase the newly started
+flow. These events report accepted changes; they are not replayed after a pause.
+
+The shared catalog exposes `runtime.flowWorkBudget` and
+`runtime.flowWorkReservation` as detached, passive diagnostics.
+`object.container.live`, `object.container.scooping` and `object.container.rain`
+can report `phase=waiting`. The live fact exposes the reason; rain reports
+`ready=false` and zero exposure until a fresh admitted pass. Existing types and
+versions remain unchanged. Reads may retire ineligible reservations but cannot
+admit work, load geometry, resume physics or publish a flow episode.
+
+Per-entity collision participation is unchanged: the real room may constrain a
+cup while a virtual NPC uses terrain below its floor. Visibility/occlusion and
+audio remain independent of collision choice. This checkpoint does not establish
+unlimited world size or Quest performance; navigation, observation/proof/engine
+work, spatial cohorts, fairness and transaction/storage bounds remain separate
+release work before increasing saved capacity.

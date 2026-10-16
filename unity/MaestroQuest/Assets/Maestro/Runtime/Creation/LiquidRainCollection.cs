@@ -9,7 +9,8 @@ namespace Maestro.Quest.Creation
     {
         readonly WeatherCover rainCover=new();
         readonly RoomContainer rainSource=new(){capacityMl=1000000};
-        bool CollectRain(float seconds){
+        bool CollectRain(float seconds,out bool published){
+            published=false;
             var weather=editor.CurrentWeather;var velocity=WeatherCover.Velocity(editor);bool flowing=false;
             foreach(var v in vessels.Values){
                 v.Exposure=0;v.RainReady=false;v.RainReason="";
@@ -34,7 +35,7 @@ namespace Maestro.Quest.Creation
                 double requested=Math.Min(c.capacityMl-c.amountMl,weather.Rain*area*flux*v.Exposure*seconds*1000/3600);
                 if(requested<=.000001){v.RainReason="Rain intake is below simulation precision";continue;}
                 // Preserve the identity of an earlier pour/scoop episode before an empty vessel adopts rainwater.
-                if(Owns(v.Id)&&c.amountMl==0&&!c.SameLiquid(rainSource)){Finish(out _);return flowing;}
+                if(Owns(v.Id)&&c.amountMl==0&&!c.SameLiquid(rainSource)){published=true;Finish(out _);return flowing;}
                 v.RainReady=true;
                 if(!Begin(out var issue)){error=issue;blocked=true;v.RainReady=false;v.RainReason=issue;editor.ReportStatus(issue);return flowing;}
                 Touch(v);rainSource.amountMl=requested;
@@ -45,8 +46,8 @@ namespace Maestro.Quest.Creation
         }
         internal JObject ObserveRain(string id){
             if(!vessels.TryGetValue(id,out var v))return null;
-            bool running=world&&world.Running&&!editor.Ownership.Suspended&&!editor.RuntimeGate.Held;
-            return new JObject{["sessionId"]=session,["phase"]=blocked?"failed":Owns(id)?"flowing":"idle",["collectedMl"]=v.Rain,["exposure"]=v.Exposure,["ready"]=running&&!blocked&&v.RainReady,["reason"]=blocked?Maestro.Quest.Imports.ImportObservation.Text(error):!running?"Physics is paused":v.RainReason};
+            bool running=FlowWorkEligible;string workIssue=FlowWorkIssue;
+            return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["collectedMl"]=v.Rain,["exposure"]=running&&workIssue==null?v.Exposure:0,["ready"]=running&&workIssue==null&&v.RainReady,["reason"]=blocked?Maestro.Quest.Imports.ImportObservation.Text(error):!running?"Liquid flow is paused or unavailable":workIssue??v.RainReason};
         }
     }
 }
