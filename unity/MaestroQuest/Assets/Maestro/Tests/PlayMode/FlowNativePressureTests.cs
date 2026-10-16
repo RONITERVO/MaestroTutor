@@ -100,7 +100,7 @@ namespace Maestro.Quest.Tests {
     Assert.That(fixtures.Sum(f=>f.Dormant.Count),Is.EqualTo(124));
     evidence["rooms"]=9;evidence["savedContainers"]=144;evidence["nativeContainers"]=20;evidence["dormantContainers"]=124;
     evidence["hostUnits"]=fixtures.Sum(f=>FlowWorkResources.Demand(f.Editor.Liquids.FlowWorkVessels));
-    evidence["flowUnitLimit"]=FlowWorkResources.MaximumUnits;
+    evidence["flowUnitLimit"]=FlowWorkResources.MaximumUnits;evidence["groupUnits"]=10*FlowWorkResources.Demand(2);
     evidence["resourceBudgets"]=new JObject {
      ["objects"]=NativeObjectResources.ObserveBudget(),["physics"]=NativePhysicsResources.ObserveBudget(),
      ["recipes"]=RecipeResources.ObserveBudget(),["collision"]=CollisionResources.ObserveBudget(),
@@ -125,8 +125,10 @@ namespace Maestro.Quest.Tests {
     Assert.That(FlowAmount(b),Is.GreaterThan(0));Assert.That(FlowAmount(d),Is.GreaterThan(0));
     var last=fixtures.Last();
     double Received(NativeFlowFixture f)=>(double)f.Editor.Liquids.Observe(f.Receivers[0])["contents"]["amountMl"];
-    Assert.That(Received(last),Is.Zero,"Conservative host charges initially exclude the last real room");
-    Assert.That(last.Editor.Liquids.LastFlowDiscovery.Captures,Is.EqualTo(1),"Discovery can prepare inputs while execution waits");
+    Assert.That(Received(last),Is.GreaterThan(0),"All ten ready circuits must fit without paying for 124 unrelated dormant cups");
+    Assert.That(fixtures.Sum(f=>f.Editor.Liquids.LastFlowExecution.Groups),Is.EqualTo(10));
+    Assert.That((long)FlowWorkResources.ObserveBudget()["units"],Is.EqualTo(10*FlowWorkResources.Demand(2)));
+    Assert.That(last.Editor.Liquids.LastFlowDiscovery.Captures,Is.EqualTo(1));
     long step=FlowWorkResources.Step;
     for(int read=0;read<5;read++)foreach(var f in fixtures)NativeFlowHost(f.Editor,f.Sources,f.Receivers);
     Assert.That(FlowWorkResources.Step,Is.EqualTo(step),"Passive inspection cannot serve waiting work");

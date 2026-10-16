@@ -34,7 +34,7 @@ namespace Maestro.Quest.Creation {
    foreach(var vessel in vessels.Values){discoveryWork.CavityReads++;cavities[vessel.Id]=editor.MissingLiquidExtent(vessel.Id,vessel.Live,out _,out var matrix,out var rotation);poses[vessel.Id]=vessel.Item?(vessel.Item.transform.localToWorldMatrix,vessel.Item.transform.rotation):(matrix,rotation);}
    var seeds=vessels.ToDictionary(pair=>pair.Key,_=>new FlowSeed(),StringComparer.Ordinal);var weather=editor.CurrentWeather;var rainVelocity=WeatherCover.Velocity(editor);
    foreach(var vessel in vessels.Values){
-    var seed=seeds[vessel.Id];seed.Members.Add(vessel.Id);seed.Targets.Add(vessel.Id);seed.Ready=vessel.Ready;var extent=cavities[vessel.Id];
+    var seed=seeds[vessel.Id];seed.Members.Add(vessel.Id);seed.Targets.Add(vessel.Id);seed.Ready=vessel.Ready||vessel.Rigid&&vessel.Rigid.PhysicsWorkEligible;var extent=cavities[vessel.Id];
     if(!extent.Known||!extent.HasBounds){seed.Unknown=true;seed.Members.UnionWith(vessels.Keys);seed.Targets.UnionWith(vessels.Keys);continue;}
     FlowProbeAt(seed,extent.Bounds,vessel.Id,true,cavities,spatial);
     var pose=poses[vessel.Id];var terrain=vessel.Item?RoomTerrainReservoir.Native(vessel.Live,vessel.Item.transform):null;
@@ -47,7 +47,7 @@ namespace Maestro.Quest.Creation {
      FlowProbeAt(seed,possible,vessel.Id,true,cavities,spatial);
     }else if(vessel.Live.capacityMl-ContainerFlowGeometry.RetainedCapacity(vessel.Live,pose.rotation,up,terrain)>=.000001){
      var origin=ContainerFlowGeometry.Lip(vessel.Live,pose.matrix,pose.rotation,up,out var outward);var velocity=outward*.15f;
-     if(vessel.Body&&!vessel.Body.isKinematic)velocity+=Vector3.ClampMagnitude(vessel.Body.GetPointVelocity(origin),3);
+     if(vessel.Rigid)velocity+=Vector3.ClampMagnitude(vessel.Rigid.FlowPointVelocity(origin),3);
      var bounds=new Bounds(origin,Vector3.zero);
      for(int i=1;i<=Segments;i++){discoveryWork.PathSegments++;float t=i*.025f;var point=origin+velocity*t+gravity*(.5f*t*t);bounds.Encapsulate(point);if(vessel.Item&&!world.CanSimulate(point,vessel.Item))break;}
      FlowProbeAt(seed,bounds,vessel.Id,true,cavities,spatial);

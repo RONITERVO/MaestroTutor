@@ -107,6 +107,14 @@ namespace Maestro.Quest.Interaction {
             }else if(!ready||!editor.ExecutionWorkReady(query,out _))DiscardPreparedMotion();
             SetInputsReady(ready);
         }
+        // A scheduled kinematic hold still has a real trajectory. This is a
+        // pure read: checking Allowed here would recurse into flow admission.
+        internal (Vector3 Linear,Vector3 Angular) FlowMotion=>preparedMomentum
+            ?(Vector3.ClampMagnitude(preparedVelocity,15),Vector3.ClampMagnitude(preparedSpin,30))
+            :body&&!body.isKinematic?(body.linearVelocity,body.angularVelocity):(Vector3.zero,Vector3.zero);
+        internal Vector3 FlowPointVelocity(Vector3 point){
+            var motion=FlowMotion;return body?motion.Linear+Vector3.Cross(motion.Angular,point-body.worldCenterOfMass):Vector3.zero;
+        }
         void HoldPreparedMotion(){if(!preparedMomentum&&!body.isKinematic){preparedVelocity=body.linearVelocity;preparedSpin=body.angularVelocity;preparedMomentum=true;}}
         void DiscardPreparedMotion(){preparedMomentum=false;preparedVelocity=preparedSpin=Vector3.zero;}
         void RestorePreparedMotion(){

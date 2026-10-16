@@ -2502,12 +2502,10 @@ dormancy and per-world Undo survive the wait and a real receiver's 1+3 / 2+2
 group changes. This is shared-process contention evidence, not a nine-room user
 workflow, a larger single-world format or Quest performance acceptance.
 
-Execution charging still uses all saved containers. Discovery now runs before
-execution admission. The planned group scheduler
-must additionally validate spatial inputs at execution and preserve service age
-and spent capacity through regrouping.
-It must keep actual moving-body dependencies together and avoid making input
-loading depend on an execution grant that itself waits for those inputs.
+That historical whole-host pressure result is superseded by complete-group
+execution below. Discovery still runs before execution admission. Actual moving
+body dependencies remain coupled without making native loading depend on an
+execution grant.
 
 
 ### Preparation and execution are different states
@@ -2518,8 +2516,8 @@ Neither state changes liquid quantities or accumulates missed rain/transfers.
 After loading, the next liquid pass captures current placements again; it never
 executes a discovery snapshot retained across native loading or physics.
 
-Execution admission still charges the whole host. This staging is a prerequisite
-for complete-group execution grants, not that final scheduler. The canonical
+This earlier staging checkpoint retained whole-host execution admission. The
+complete-group scheduler described below supersedes that charging model. The canonical
 world, per-entity environment policies, saved formats and native limits are
 unchanged. Publication callbacks can start fresh work; an older preparation
 pass cannot defer a newer nested execution request.
@@ -2559,3 +2557,67 @@ grant another automatic quantity/contact tick; those clocks keep their own
 cadence. It does not yet give each complete liquid group an independent
 execution grant or preserve canonical member service age across regrouping.
 Those remain required before expanding saved/native limits.
+
+
+### Independent quantity-group execution
+
+Discovery is still bounded per room host. Execution is admitted per complete
+interacting quantity group: independent pouring circuits no longer pay for each
+other or for unrelated dormant containers. Empty receivers and missing cavities
+remain part of the closure when geometry or a physical connection requires them.
+Read-only obstacles and roofs can be shared without coupling quantity groups.
+
+A moving container's group and its connected body requests receive their
+allowances together. Before discovery is available, a conservative placeholder
+keeps the motion queued without authorizing execution. A scheduled kinematic
+hold retains linear/angular velocity; trajectory discovery includes that held
+motion. Native input readiness is distinct from queued, booked and executable
+work. Loading never needs a quantity-execution grant first.
+
+Every preparation captures fresh placement. A synchronous fence rejects changes
+to world/source, native object identity, root transforms, gravity or container
+motion during preparation; the next pass discovers again. Physics refreshes its
+query after flow preparation because loading callbacks can change topology.
+A grant does not authorize an older spatial snapshot. Fair booking is separate
+from the current-pose execution check, so ordinary motion does not force
+admission back to caller order at every clock boundary.
+
+Service age/order belongs to canonical container identity. Regrouping, request
+recreation and native retirement preserve it; canonical deletion and world
+replacement create new identity. Automatic quantity execution cannot process
+the same member twice in one opportunity, including after merges/splits.
+Used allowances remain charged through the existing consumed-work ledger.
+Explicit internal test ticks remain independently stepped; there is no missed
+time catch-up in the user runtime.
+
+All quantity groups retain the same atomic publication, rollback and Undo
+episode. A wait affecting unfinished quantities still closes that shared
+episode before preparation; independent ready groups can continue afterward.
+This does not raise saved or native limits: 16 containers per room, 32 native
+liquid instances, 64 registered work hosts, 32 simultaneous quantity-group
+allowances and 524,288 liquid work units remain distinct limits.
+
+The old runtime.flowWorkBudget and runtime.flowWorkSchedule keep host counts.
+A host reservation reports the current canonical vessel count separately from
+its last requested group costs; a stale discovery can therefore show a newer
+vessel count before those costs have been rebuilt.
+Use runtime.flowGroupSchedule, runtime.flowGroup and
+runtime.flowGroupMember for group/membership readiness and costs. One member
+per read keeps records within the shared program-value budget. Check step,
+reservationId and firstMember across reads; indices and group membership
+can change. These facts are passive and shared by user and agent.
+
+The revised nine-room desktop fixture has ten ready two-container circuits.
+They need 53,260 execution units, so all run in the same opportunity while 124
+unrelated saved cups remain dormant. The older whole-host charge was 552,816.
+This proves the charging/closure improvement for that fixture, not maximum
+world size, measured CPU cost or Quest frame-time acceptance.
+
+Joint preparation uses the complete prepared allowance before a native joint exists.
+Actual motion and quantity transfer still require the connected joints to be active;
+otherwise requiring an active joint to grant its own creation would deadlock.
+
+Group and member reads include membershipRevision. Compare it with step,
+reservationId and firstMember and restart enumeration when it differs: a merge
+within the same step can retain both the reservation and first member. Readiness
+and quantities remain momentary observations, not an atomic snapshot across calls.

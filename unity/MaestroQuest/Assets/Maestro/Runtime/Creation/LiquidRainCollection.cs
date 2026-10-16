@@ -51,7 +51,7 @@ namespace Maestro.Quest.Creation
         }
         internal JObject ObserveRain(string id){
             if(!vessels.TryGetValue(id,out var v))return null;
-            bool running=FlowWorkEligible;string workIssue=FlowWorkIssue??FlowInputIssue(id);
+            bool running=FlowWorkEligible;string workIssue=FlowInputIssue(id)??FlowWorkIssue(id);
             return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["collectedMl"]=v.Rain,["exposure"]=running&&workIssue==null?v.Exposure:0,["ready"]=running&&workIssue==null&&v.RainReady,["reason"]=blocked?Maestro.Quest.Imports.ImportObservation.Text(error):!running?"Liquid flow is paused or unavailable":Maestro.Quest.Imports.ImportObservation.Text(workIssue??v.RainReason)};
         }
     }

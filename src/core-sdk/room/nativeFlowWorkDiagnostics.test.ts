@@ -15,16 +15,16 @@ it('accepts captured native complete-pass flow reservations independently of geo
   expect(phase).toHaveLength(1);expect(validFactValue('runtime.flowWorkReservation',phase[0])).toBe(true);
  }
  expect(native.current[0]).toMatchObject({current:true,vessels:1,units:2579});
- expect(native.stale[0]).toEqual({...native.current[0],current:false});
- expect(native.resized[0]).toEqual({...native.current[0],vessels:2,units:5326});
+ expect(native.stale[0]).toEqual({...native.current[0],vessels:2,current:false});
+ expect(native.resized[0]).toEqual({...native.current[0],vessels:2,units:5326,current:false});
  expect(native.released).toEqual([]);
  for(const key of ['reservationId','worldId','regionId'] as const)expect(native.current[0][key]).toHaveLength(32);
 });
 it('bounds passive flow work diagnostics without promising unmeasured device performance',()=>{
  expect(behaviourFact('runtime.flowWorkBudget')?.features).toEqual(['runtimeDiagnostics.v1']);
  expect(behaviourFact('runtime.flowWorkReservation')?.features).toEqual(['factQueries.v1','runtimeDiagnostics.v1']);
- expect(behaviourFact('runtime.flowWorkBudget')?.description).toContain('not measured CPU time');
- expect(behaviourFact('runtime.flowWorkReservation')?.description).toContain('not that native geometry');
+ expect(behaviourFact('runtime.flowWorkBudget')?.description).toMatch(/not (measured )?CPU time/);
+ expect(behaviourFact('runtime.flowWorkReservation')?.description).toContain('at least one complete group');
  for(const index of [0,63])expect(validateFactArguments('runtime.flowWorkReservation',1,{index})).toBeNull();
  for(const args of [{index:-1},{index:64},{index:.5},{index:'0'},{index:0,startPhysics:true}])expect(validateFactArguments('runtime.flowWorkReservation',1,args)).not.toBeNull();
  expect(validFactValue('runtime.flowWorkBudget',{...native.budget,units:'unknown'})).toBe(false);

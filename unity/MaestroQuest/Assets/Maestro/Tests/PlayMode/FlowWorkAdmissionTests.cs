@@ -15,13 +15,16 @@ using UnityEngine;
 using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests {
  public sealed partial class RoomRulesTests {
-  List<GameObject> FillFlowWork(){
-   var hosts=new List<GameObject>();int demand=FlowWorkResources.Demand(editor.Liquids.FlowWorkVessels),discovery=FlowDiscoveryWork.Demand(editor.Liquids.FlowWorkVessels,editor.SpatialObjectCount);
-   try{while((int)SimulationWorkSchedule.ObserveLedger()["committed"]["liquidPasses"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)SimulationWorkSchedule.ObserveLedger()["committed"]["liquidUnits"]>=demand&&FlowDiscoveryWork.MaximumUnits-(long)SimulationWorkSchedule.ObserveLedger()["committed"]["discoveryUnits"]>=discovery){
-    var go=new GameObject("Independent flow sampler");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.enabled=false;sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());
-    Assert.That(FlowWorkResources.TryAdmit(sampler,out var error),Is.True,error);
-   }return hosts;}catch{ReleaseFlowWork(hosts);throw;}
+  // Logical contenders isolate allowance pressure from native geometry. Actual
+  // multi-room/native allocation is covered separately by FlowNativePressure.
+  List<SimulationWorkSchedule.Claim> FillFlowWork(){
+   var claims=new List<SimulationWorkSchedule.Claim>();int demand=FlowWorkResources.Demand(editor.Liquids.FlowWorkVessels);
+   try{while((int)SimulationWorkSchedule.ObserveLedger()["committed"]["liquidPasses"]<FlowWorkResources.MaximumExecutions&&FlowWorkResources.MaximumUnits-(int)SimulationWorkSchedule.ObserveLedger()["committed"]["liquidUnits"]>=demand){
+    var claim=SimulationWorkSchedule.Register(()=>true,0,1);claim.FlowUnits=demand;claims.Add(claim);
+    Assert.That(SimulationWorkSchedule.TryAdmit(claim),Is.True);
+   }return claims;}catch{ReleaseFlowWork(claims);throw;}
   }
+  static void ReleaseFlowWork(IEnumerable<SimulationWorkSchedule.Claim> claims){foreach(var claim in claims)SimulationWorkSchedule.Remove(claim);}
   static void ReleaseFlowWork(IEnumerable<GameObject> hosts){foreach(var go in hosts)if(go)UnityEngine.Object.DestroyImmediate(go);FlowWorkResources.Collect();}
   JObject FlowGrant(){Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.EqualTo(1));return FlowWorkResources.Observe(0);}
   [UnityTest]public IEnumerator FlowWorkAdmissionRefusesPourWithoutQuantityWriteOrCatchUp(){
@@ -56,19 +59,25 @@ namespace Maestro.Quest.Tests {
    editor.Liquids.Tick(.1f);Assert.That(Liquid(to),Is.Zero);physics.PausePhysics();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(to),Is.GreaterThan(0));physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionGrowthCannotEvictPeersAndShrinkKeepsReservation(){
-   editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);
-   for(int i=0;i<13;i++)TemplateRun(ex,TemplateCall("cup",new Vector3(3+i*.3f,1,0)));
+   editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);var initial=new List<string>();
+   for(int i=0;i<13;i++){
+    string id=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3+i*.002f,1,0)))["selected"]["output"]["objectId"];initial.Add(id);
+    Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
+   }
    StartIsland();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out var error),Is.True,error);var original=FlowGrant();var held=FillFlowWork();
-   try{Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.EqualTo(11));var peer=FlowWorkResources.Observe(1);var added=new List<string>();
-    // Two small resizes fit; the sixteenth real cup exceeds the remaining shared units.
-    for(int i=0;i<2;i++)added.Add((string)TemplateRun(ex,TemplateCall("cup",new Vector3(7+i*.3f,1,0)))["selected"]["output"]["objectId"]);
-    Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);int units=(int)FlowWorkResources.ObserveBudget()["units"];
-    added.Add((string)TemplateRun(ex,TemplateCall("cup",new Vector3(8,1,0)))["selected"]["output"]["objectId"]);
-    Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out _),Is.False);Assert.That((int)FlowWorkResources.ObserveBudget()["units"],Is.EqualTo(units));// These logical peers share this editor: inventory growth makes their
-    // discovery stale, but must preserve every previously booked value.
-    var peerAfter=FlowWorkResources.Observe(1);Assert.That((bool)peerAfter["current"],Is.False);
-    peerAfter["current"]=peer["current"];Assert.That(peerAfter.ToString(),Is.EqualTo(peer.ToString()));
-    foreach(var id in added)Assert.That(editor.DeleteObject(id,out error),Is.True,error);Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);Assert.That((string)FlowWorkResources.Observe(0)["reservationId"],Is.EqualTo((string)original["reservationId"]));Assert.That(FlowWorkResources.Observe(1).ToString(),Is.EqualTo(peer.ToString()),"Restoring the original inventory makes the unchanged peer grant current again");
+   var peer=held[0];var cost=peer.FlowUnits;var added=new List<string>();
+   try{
+    for(int i=0;i<3;i++){
+     string id=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3+(13+i)*.002f,1,0)))["selected"]["output"]["objectId"];added.Add(id);
+     Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
+     bool admitted=FlowWorkResources.TryAdmit(editor.Liquids,out _);
+     Assert.That(admitted,Is.EqualTo(i<2),"The third complete-group growth exceeds the remaining allowance");
+     Assert.That(peer.Granted,Is.True);Assert.That(peer.FlowUnits,Is.EqualTo(cost),"Growth cannot evict or resize peers");
+    }
+    foreach(var id in added)Assert.That(editor.DeleteObject(id,out error),Is.True,error);
+    Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);
+    Assert.That((string)FlowWorkResources.Observe(0)["reservationId"],Is.EqualTo((string)original["reservationId"]));
+    Assert.That((int)FlowWorkResources.Observe(0)["units"],Is.EqualTo(FlowWorkResources.Demand(13)));
    }finally{ReleaseFlowWork(held);}physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionCouplesMovingContainerGroupButLeavesUnrelatedDryBodyActive(){
@@ -88,11 +97,11 @@ namespace Maestro.Quest.Tests {
    var doc=editor.Snapshot();var source=doc.objects.Single(x=>x.id==id).Copy();source.id=Guid.NewGuid().ToString("N");doc.objects=doc.objects.Append(source).ToArray();editor.Liquids.Synchronize(doc);
    var stale=new JArray(FlowGrant());Assert.That((bool)stale[0]["current"],Is.False);Assert.That((bool)current[0]["current"],Is.True);
    int revision=editor.Revision;string saved=JsonUtility.ToJson(editor.Snapshot());var budget=CollisionFact("runtime.flowWorkBudget");var detached=CollisionFact("runtime.flowWorkBudget");detached["units"]=0;Assert.That((int)CollisionFact("runtime.flowWorkBudget")["units"],Is.GreaterThan(0));
-   Assert.That(CollisionFact("runtime.flowWorkReservation",new JObject{["index"]=0}).ToString(),Is.EqualTo(stale[0].ToString()));Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);var resized=new JArray(FlowGrant());Assert.That((int)resized[0]["vessels"],Is.EqualTo(2));Assert.That((string)resized[0]["reservationId"],Is.EqualTo((string)current[0]["reservationId"]));
+   Assert.That(CollisionFact("runtime.flowWorkReservation",new JObject{["index"]=0}).ToString(),Is.EqualTo(stale[0].ToString()));Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out _),Is.False,"A canonical-only duplicate cannot execute without native geometry");var resized=new JArray(FlowGrant());Assert.That((int)resized[0]["vessels"],Is.EqualTo(2));Assert.That((string)resized[0]["reservationId"],Is.EqualTo((string)current[0]["reservationId"]));
    physics.PausePhysics();var released=new JArray();Assert.That((int)CollisionFact("runtime.flowWorkBudget")["reservations"],Is.Zero);Assert.That(FlowWorkResources.Observe(0),Is.Null);editor.Liquids.Tick(.1f);Assert.That(physics.Running,Is.False);
    Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
    string path=Environment.GetEnvironmentVariable("MAESTRO_FLOW_WORK_EVIDENCE");if(!string.IsNullOrEmpty(path))File.WriteAllText(path,new JObject{["budget"]=budget,["current"]=current,["stale"]=stale,["resized"]=resized,["released"]=released}.ToString());
-   physics.StartPhysics();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);editor.Liquids.SendMessage("OnApplicationFocus",false);Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.Zero);editor.Liquids.SendMessage("OnApplicationFocus",true);Assert.That(physics.Running,Is.False);editor.Liquids.Tick(.1f);Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.Zero);
+   editor.Liquids.Synchronize(editor.Snapshot());physics.StartPhysics();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);editor.Liquids.SendMessage("OnApplicationFocus",false);Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.Zero);editor.Liquids.SendMessage("OnApplicationFocus",true);Assert.That(physics.Running,Is.False);editor.Liquids.Tick(.1f);Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.Zero);
    physics.StartPhysics();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out error),Is.True,error);root.SetActive(false);Assert.That((int)FlowWorkResources.ObserveBudget()["reservations"],Is.Zero);root.SetActive(true);physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionRecoveryCallbackKeepsFreshStreamsAndRainObservation(){

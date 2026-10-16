@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests {
     Assert.That(editor.MissingLiquidExtent(id,editor.Read(id).containers[0],out _).Bounds.Intersects(editor.MissingLiquidExtent(to,editor.Read(to).containers[0],out _).Bounds),Is.True,"The complete receiving group must stay coupled");
    }
    Assert.That(editor.Liquids.FlowWorkVessels,Is.EqualTo(16));physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(from),Is.LessThan(400),"The actual native group must be able to flow before adding pressure");physics.PausePhysics();editor.Undo();Assert.That(Liquid(from),Is.EqualTo(400));physics.StartPhysics();FlowWorkResources.Release(editor.Liquids);
-   var held=FillFlowWork();foreach(var go in held){var sampler=go.GetComponent<LiquidPouring>();sampler.enabled=false;Assert.That(FlowWorkResources.TryAdmit(sampler,out var error),Is.True,error);}var trace=new JArray();
+   var held=FillFlowWork();foreach(var claim in held)Assert.That(SimulationWorkSchedule.TryAdmit(claim),Is.True);var trace=new JArray();
    try{
     Assert.That(held.Count,Is.LessThan(FlowWorkResources.MaximumReservations),"Exercise work-unit pressure, not the owner-count ceiling");
     var before=FlowWorkResources.ObserveBudget();bool admitted=FlowWorkResources.TryAdmit(editor.Liquids,out var denial);
@@ -29,7 +29,7 @@ namespace Maestro.Quest.Tests {
     for(int frame=0;frame<32&&Liquid(from)==400;frame++){
      // Incumbents remain eligible and keep asking; the newcomer cannot win by
      // waiting for them to disappear. Reading facts never advances the queue.
-     foreach(var go in (frame%2==0?held:held.AsEnumerable().Reverse()))FlowWorkResources.TryAdmit(go.GetComponent<LiquidPouring>(),out _);
+     foreach(var go in (frame%2==0?held:held.AsEnumerable().Reverse()))SimulationWorkSchedule.TryAdmit(go);
      for(int read=0;read<8;read++){FlowWorkResources.ObserveBudget();editor.Liquids.Observe(from);}
      editor.Liquids.Tick(.05f);trace.Add(new JObject{["frame"]=frame,["contents"]=editor.Liquids.Observe(from),["budget"]=FlowWorkResources.ObserveBudget(),["schedule"]=FlowWorkResources.ObserveSchedule()});yield return new WaitForFixedUpdate();
     }
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests {
    }finally{ReleaseFlowWork(held);physics.PausePhysics();}
   }
   [UnityTest]public IEnumerator FlowFairSchedulingBoundedQueueServesAllOwnersWithoutReadOrCallOrderBias(){
-   string id=RainCup();FlowWorkResources.Release(editor.Liquids);var hosts=new List<GameObject>();var samplers=new List<LiquidPouring>();
+   string id=RainCup();Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);FlowWorkResources.Release(editor.Liquids);var hosts=new List<GameObject>();var samplers=new List<LiquidPouring>();
    try{
     for(int i=0;i<FlowWorkResources.MaximumReservations+1;i++){
      var go=new GameObject("Logical competing liquid consumer");hosts.Add(go);var sampler=go.AddComponent<LiquidPouring>();sampler.enabled=false;sampler.Initialize(editor);sampler.Synchronize(editor.Snapshot());samplers.Add(sampler);
@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests {
    var(from,to)=FixedFlowCups();Assert.That(editor.RetireNativeArea(NativeAreaFor(to),out var error),Is.True,error);physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(editor.NativeActivationPending,Is.True);
    FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();
    try{
-    editor.Liquids.Tick(.05f);Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);Assert.That(FlowWorkResources.FindClaim(editor.Liquids).Granted,Is.False,"Pending input loading must not reserve quantity execution");Assert.That(FlowWorkResources.Ready(editor.Liquids,out _),Is.False);Assert.That(editor.NativeActivationPending,Is.True);
+    editor.Liquids.Tick(.05f);Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);Assert.That(FlowWorkResources.ExecutionClaims(editor.Liquids).Any(claim=>claim.Granted),Is.False,"Pending input loading must not reserve quantity execution");Assert.That(FlowWorkResources.Ready(editor.Liquids,out _),Is.False);Assert.That(editor.NativeActivationPending,Is.True);
     yield return NavigationLoadingDone();Assert.That(editor.Find(to),Is.Not.Null,"A scheduling delay must not cancel the already-owned native load");Assert.That(Liquid(from),Is.EqualTo(400));Assert.That(Liquid(to),Is.Zero);
    }finally{ReleaseFlowWork(held);}
    editor.Liquids.Tick(.05f);Assert.That(Liquid(to),Is.GreaterThan(0).And.LessThanOrEqualTo(18.75));physics.PausePhysics();yield return null;

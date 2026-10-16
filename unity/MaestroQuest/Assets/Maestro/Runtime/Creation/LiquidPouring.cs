@@ -14,6 +14,7 @@ namespace Maestro.Quest.Creation {
     public sealed partial class LiquidPouring:MonoBehaviour {
         internal const int Segments=LiquidResources.StreamPoints-1;
         sealed class Vessel {
+            internal SimulationWorkSchedule.ServiceRecord WorkService=new();internal long AutomaticStep=-1;
             internal string Id;internal RoomContainer Saved,Live;internal RoomItem Item;internal RigidRoomItem Rigid;internal Rigidbody Body;internal bool Ready;internal ContainerFlowGeometry.Opening Opening;
             internal double Received,Spilled,Scooped,Drawn,DipBudget,Rain;internal float Exposure;internal bool RainReady;internal string RainReason="Physics is paused";internal readonly HashSet<string> Receivers=new(),Donors=new(),Dippers=new();
         }
@@ -41,28 +42,23 @@ namespace Maestro.Quest.Creation {
                 if(Owns(id))Cancel("A container was removed; the unfinished liquid flow was reverted");Release(vessels[id]);vessels.Remove(id);
             }
         }
-        void LateUpdate(){if(automaticFlowStep!=FlowWorkResources.Step){automaticFlowStep=FlowWorkResources.Step;Tick(FlowWorkResources.StepSeconds);}TickAutomaticContacts();}
-        internal void Tick(float seconds){
+        void LateUpdate(){if(automaticFlowStep!=FlowWorkResources.Step){automaticFlowStep=FlowWorkResources.Step;TickPass(FlowWorkResources.StepSeconds,true);}TickAutomaticContacts();}
+        internal void Tick(float seconds)=>TickPass(seconds,false);
+        internal void TickPass(float seconds,bool automatic){
             if(!editor||publishing)return;
             if(!float.IsFinite(seconds)||seconds<=0)return;seconds=Mathf.Min(seconds,.1f);
             flowExecutionWork=default;discoveryWork=default;
             var physics=editor.PhysicsWorld;
             if(!FlowWorkEligible){ReleaseFlowInputs();FlowWorkResources.Release(this);InvalidateRain("Liquid flow is paused or unavailable");Finish(out _);return;}
-            if(!FlowWorkResources.TryDiscover(this,out var workIssue)){WaitForFlowWork(workIssue,discovery:true);return;}
-            if(!FlowWorkResources.ConsumeDiscovery(this,out workIssue)){WaitForFlowWork(workIssue,discovery:true);return;}
-            Vector3 gravity=Physics.gravity;var up=-gravity.normalized;
-            Physics.SyncTransforms();bool flowing=false;
-            foreach(var vessel in vessels.Values){vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;vessel.Ready=FlowVesselReady(vessel);if(vessel.Ready)vessel.Opening=new ContainerFlowGeometry.Opening(vessel.Live,vessel.Item.transform);}
-            uint preparation=flowPreparationVersion;
-            if(!PrepareFlowInputs(gravity,up)){
-                // Publication callbacks can start a fresh nested pass. Only the
-                // pass which still owns preparation may defer its execution.
-                if(flowPreparationVersion==unchecked(preparation+1))FlowWorkResources.DeferExecution(this);
+            if(!PrepareWorkInputs(out var workIssue)){
+                if(!FlowWorkResources.DiscoveryReady(this,out _))WaitForFlowWork(workIssue,discovery:true);
                 return;
             }
+            PrepareGroupMotion();
+            Vector3 gravity=Physics.gravity;var up=-gravity.normalized;bool flowing=false;
+            foreach(var vessel in vessels.Values)vessel.DipBudget=vessel.Live.capacityMl*.75*seconds;
             if(!FlowWorkResources.TryExecute(this,out workIssue)){WaitForFlowWork(workIssue);return;}
-            var groups=CaptureFlowExecution();if(groups.Length==0)return;
-            if(!FlowWorkResources.Consume(this,out workIssue)){WaitForFlowWork(workIssue);return;}
+            var groups=CaptureFlowExecution(automatic);if(groups.Length==0)return;
             HideStreams();
             // Keep pour, scoop and rain phase order across groups. The live
             // journal still publishes one coherent episode for the whole host.
@@ -71,7 +67,7 @@ namespace Maestro.Quest.Creation {
                 double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up,RoomTerrainReservoir.Native(v.Live,v.Item.transform));
                 double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,members,up))continue;
                 var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward);if(!physics.CanSimulate(origin,v.Item))continue;var velocity=outward*.15f;
-                var body=v.Body;if(body&&!body.isKinematic)velocity+=Vector3.ClampMagnitude(body.GetPointVelocity(origin),3);
+                if(v.Rigid)velocity+=Vector3.ClampMagnitude(v.Rigid.FlowPointVelocity(origin),3);
                 if(!Trace(v,members,origin,velocity,gravity,up,out var receiver,out int count))continue;
                 if(receiver!=null&&ChangesEpisodeIdentity(v,receiver)){Finish(out _);return;}
                 if(!Begin(out var issue)){error=issue;blocked=true;editor.ReportStatus(issue);return;}
@@ -169,7 +165,7 @@ namespace Maestro.Quest.Creation {
             foreach(var v in vessels.Values){v.Received=v.Spilled=v.Scooped=v.Drawn=v.Rain=0;v.Receivers.Clear();v.Donors.Clear();v.Dippers.Clear();var saved=editor?editor.Read(v.Id)?.containers?.FirstOrDefault():null;if(saved!=null)v.Saved=saved.Copy();v.Live=v.Saved.Copy();Preview(v);}HideStreams();
         }
         void HideStreams(){foreach(var v in vessels.Values)if(v.Item)v.Item.GetComponent<ContainerFillView>()?.HideStream();}
-        internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(blocked?error:FlowWorkIssue??FlowInputIssue(id)??error)};}
+        internal JObject Observe(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["contents"]=new JObject{["amountMl"]=v.Live.amountMl,["savedAmountMl"]=v.Saved.amountMl,["capacityMl"]=v.Live.capacityMl,["transferredMl"]=v.Received,["spilledMl"]=v.Spilled},["temporary"]=editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(blocked?error:FlowInputIssue(id)??FlowWorkIssue(id)??error)};}
 
         internal JObject ObserveScooping(string id){if(!vessels.TryGetValue(id,out var v))return null;return new JObject{["sessionId"]=session,["phase"]=FlowPhase(id),["scoopedMl"]=v.Scooped,["drawnMl"]=v.Drawn,["donors"]=v.Donors.Count,["recipients"]=v.Dippers.Count};}
 

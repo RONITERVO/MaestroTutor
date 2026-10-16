@@ -12,6 +12,8 @@ it('reads real native room pressure without equating saved inventory and native 
  expect(first.rooms.reduce((sum,room)=>sum+room.nativeVessels,0)).toBe(20);
  expect(first.rooms.reduce((sum,room)=>sum+room.dormantVessels,0)).toBe(124);
  expect(native.hostUnits).toBeGreaterThan(native.flowUnitLimit);
+ expect(native.groupUnits).toBe(53260);
+ expect(first.flowBudget.units).toBe(native.groupUnits);
  expect(native.discoveryUnits).toBeLessThan(native.discoveryUnitLimit);
  expect(native.resourceBudgets.liquids.instances).toBeLessThan(native.resourceBudgets.liquids.instanceLimit);
  expect(native.resourceBudgets.physics.bodies).toBeLessThan(native.resourceBudgets.physics.bodyLimit);
@@ -40,14 +42,14 @@ it('accepts the same native waiting and flowing facts for shared user and agent 
    }
   }
  }
- const waiting=native.trace[0].rooms[8];
- expect(waiting.ready).toBe(false);
- expect(waiting.receivers[0].contents.amountMl).toBe(0);
- const resumed=native.trace.find(sample=>sample.rooms[8].receivers[0].contents.amountMl>0);
- expect(resumed).toBeDefined();
- expect(resumed!.step).toBeGreaterThan(native.trace[0].step);
- expect(resumed!.rooms[8].receivers[0].contents.amountMl).toBeLessThanOrEqual(18.75);
- expect(resumed!.rooms[8].sources[0].phase).toBe('flowing');
+ const first=native.trace[0];
+ expect(first.rooms.every(room=>room.ready)).toBe(true);
+ expect(first.rooms.reduce((count,room)=>count+room.executedGroups,0)).toBe(10);
+ for(const room of first.rooms){
+  expect(room.receivers[0].contents.amountMl).toBeGreaterThan(0);
+  expect(room.receivers[0].contents.amountMl).toBeLessThanOrEqual(18.75);
+  expect(room.sources[0].phase).toBe('flowing');
+ }
 });
 
 it('preserves captured real regrouping under pressure without loading distant cavities',()=>{

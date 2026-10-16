@@ -20,12 +20,14 @@ namespace Maestro.Quest.Tests {
   }
   [UnityTest]public IEnumerator FlowDiscoveryPressureDefersGeometryAndServesColdRoomUnderContinuingDemand(){
    var(a,b)=FixedFlowCups();Assert.That(editor.RetireNativeArea(NativeAreaFor(b),out var error),Is.True,error);
+   FlowWorkResources.Advance(.05f); // Setup discovery was real spent work, even after its owner paused.
    var pressure=SimulationWorkSchedule.Register(()=>true,0,0);pressure.DiscoveryUnits=FlowDiscoveryWork.MaximumUnits;
    try{
     Assert.That(SimulationWorkSchedule.TryAdmit(pressure),Is.True);physics.StartPhysics();editor.Liquids.Tick(.05f);CaptureFlowDiscovery("waiting");
     Assert.That(editor.Liquids.LastFlowDiscovery.Captures,Is.Zero,"Discovery must receive capacity before reading geometry");
     Assert.That(editor.NativeActivationPending,Is.False,"A denied discovery pass must not begin native loading");
-    Assert.That(FlowAmount(a),Is.EqualTo(400));Assert.That(FlowAmount(b),Is.Zero);Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);Assert.That(FlowWorkResources.Queued(editor.Liquids),Is.False,"Discovery waits before requesting quantity execution");
+    Assert.That(FlowAmount(a),Is.EqualTo(400));Assert.That(FlowAmount(b),Is.Zero);Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);Assert.That(FlowWorkResources.Queued(editor.Liquids),Is.True,"Retain conservative member dependencies while discovery waits");
+    Assert.That(FlowWorkResources.ExecutionClaims(editor.Liquids).All(claim=>!claim.Granted),Is.True,"A queued dependency cannot execute before discovery");
     long step=FlowWorkResources.Step;
     for(int read=0;read<8;read++){FlowWorkResources.ObserveBudget();editor.Liquids.Observe(a);}
     Assert.That(FlowWorkResources.Step,Is.EqualTo(step));Assert.That(editor.Liquids.LastFlowDiscovery.Captures,Is.Zero);
@@ -60,13 +62,13 @@ namespace Maestro.Quest.Tests {
    RainCup();var go=new GameObject("Logical liquid owner for inventory freshness");var host=go.AddComponent<LiquidPouring>();host.enabled=false;host.Initialize(editor);host.Synchronize(editor.Snapshot());
    SimulationWorkSchedule.Claim pressure=null;
    try{
-    Assert.That(FlowWorkResources.TryAdmit(host,out var error),Is.True,error);var claim=FlowWorkResources.FindDiscoveryClaim(host);int previous=claim.DiscoveryUnits;
+    Assert.That(FlowWorkResources.TryAdmit(host,out var error),Is.True,error);var claim=FlowWorkResources.FindDiscoveryClaim(host);int previous=claim.DiscoveryUnits,captures=host.LastFlowDiscovery.Captures;
     pressure=SimulationWorkSchedule.Register(()=>true,0,0);pressure.DiscoveryUnits=(int)(FlowDiscoveryWork.MaximumUnits-SimulationWorkSchedule.DiscoveryUnits);Assert.That(pressure.DiscoveryUnits,Is.GreaterThan(0));
     Assert.That(SimulationWorkSchedule.TryAdmit(pressure),Is.True);
     Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Extra accepted discovery source",new(12,1,0),.1f,Color.white,out _,out error),Is.True,error);
     long step=FlowWorkResources.Step;Assert.That(FlowWorkResources.Ready(host,out _),Is.False,"Same vessels with a larger canonical scene need a fresh allowance");
     Assert.That(FlowWorkResources.TryAdmit(host,out _),Is.False);Assert.That(claim.DiscoveryUnits,Is.EqualTo(previous),"Refused growth retains the prior booked charge instead of evicting another owner");
-    FlowWorkResources.ObserveDiscovery();Assert.That(FlowWorkResources.Step,Is.EqualTo(step));Assert.That(host.LastFlowDiscovery.Captures,Is.Zero);
+    FlowWorkResources.ObserveDiscovery();Assert.That(FlowWorkResources.Step,Is.EqualTo(step));Assert.That(host.LastFlowDiscovery.Captures,Is.EqualTo(captures),"Refused growth must not perform another geometry capture");
     SimulationWorkSchedule.Remove(pressure);pressure=null;
     Assert.That(FlowWorkResources.TryAdmit(host,out error),Is.True,error);Assert.That(claim.DiscoveryUnits,Is.GreaterThan(previous));Assert.That(FlowWorkResources.Ready(host,out _),Is.True);
    }finally{if(pressure!=null)SimulationWorkSchedule.Remove(pressure);UnityEngine.Object.DestroyImmediate(go);physics.PausePhysics();}

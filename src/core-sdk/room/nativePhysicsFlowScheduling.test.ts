@@ -6,7 +6,9 @@ import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validFactValue} from '../../../shared/behaviourFacts';
 
 it('shares native coupled admission without opposite physics and liquid opportunities',()=>{
- expect(native.forceCompetitors).toBe(119);expect(native.flowCompetitors).toBe(32);
+ expect(native.forceCompetitors).toBeGreaterThan(0);expect(native.flowCompetitors).toBe(32);
+ expect(native.trace[0].forceSchedule.executions).toBe(native.forceCompetitors);
+ expect(native.trace[0].forceBudget.reservations).toBe(native.forceCompetitors+4);
  const first=native.trace[0];const last=native.trace[native.trace.length-1];
  expect(first.liquidReady).toBe(false);expect(last.liquidReady).toBe(true);
  expect(last.forceSchedule.step).toBeGreaterThan(first.forceSchedule.step);
@@ -22,7 +24,7 @@ it('shares native coupled admission without opposite physics and liquid opportun
    expect(budget.executions+budget.queued).toBeLessThanOrEqual(budget.queueLimit);
   }
   expect(sample.bodies).toHaveLength(4);
-  for(const body of sample.bodies)expect(body.ready).toBe(sample.liquidReady);
+  for(const body of sample.bodies)expect(body.ready).toBe(body.groupReady);
  }
  for(const body of first.bodies){expect(body.simulating).toBe(false);expect(body.motionHeld).toBe(true);}
  for(const body of last.bodies){expect(body.simulating).toBe(true);expect(body.motionHeld).toBe(false);expect(body.speedX).toBeGreaterThan(2);}

@@ -34,7 +34,7 @@ namespace Maestro.Quest.Tests {
     foreach(var body in bodies)Assert.That(body.GetComponent<Rigidbody>().linearVelocity.x,Is.GreaterThan(2),"A scheduled wait must preserve the valid throw");
    }finally{ReleasePhysicsWork(held);physics.PausePhysics();}
   }
-  [UnityTest]public IEnumerator PhysicsFlowSchedulingCouplesSeparateMovingGroupsWithTheSameWholeLiquidPass(){
+  [UnityTest]public IEnumerator PhysicsFlowSchedulingAdmitsEachCompleteMovingQuantityGroup(){
    root.AddComponent<RuntimeDiagnostics>();editor.Liquids.enabled=false;
    var ids=PhysicsIslandChain();string separate=PhysicsInputBall(new Vector3(-8,3,-8));var all=ids.Append(separate).ToArray();var ex=new RoomAgentExecutor(editor);
    foreach(var id in new[]{ids[0],separate})ContainerRun(ex,ContainerCall(id,new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
@@ -49,14 +49,14 @@ namespace Maestro.Quest.Tests {
     bool served=false;long startStep=FlowWorkResources.Step;
     for(int frame=0;frame<256&&FlowWorkResources.Step-startStep<8;frame++){
      foreach(var go in (frame%2==0?force:force.AsEnumerable().Reverse()))go.GetComponent<RigidRoomItem>().Refresh();
-     foreach(var go in (frame%2==0?flow:flow.AsEnumerable().Reverse()))FlowWorkResources.TryAdmit(go.GetComponent<LiquidPouring>(),out _);
+     foreach(var go in (frame%2==0?flow:flow.AsEnumerable().Reverse()))SimulationWorkSchedule.TryAdmit(go);
      foreach(var body in bodies)body.Refresh();
      for(int i=0;i<jointIds.Length;i++)Assert.That(editor.Find(new[]{ids[0],ids[2]}[i]).GetComponent<Joint>().GetInstanceID(),Is.EqualTo(jointIds[i]),"Scheduling must retain the native joint and its drive reference");
      for(int i=0;i<bodies.Length;i++)Assert.That(bodies[i].MotionRevision,Is.EqualTo(motionRevisions[i]),$"Scheduling must not create a new contact identity: frame={frame}, body={i}, input={PhysicsInputFact(bodies[i].PhysicsWorkOwner.Target)}, joint={bodies[i].GetComponent<RoomConnectionView>()?.Phase}");
      long step=FlowWorkResources.Step;
      bool liquidReady=FlowWorkResources.Ready(editor.Liquids,out _);
-     foreach(var body in bodies)Assert.That(PhysicsWorkResources.Ready(body,out _),Is.EqualTo(liquidReady),"No half-admitted complete liquid pass or independent container island");
-     if(trace.Count==0||(long)trace[trace.Count-1]["forceSchedule"]["step"]!=step||liquidReady)trace.Add(new JObject{["frame"]=frame,["liquidReady"]=liquidReady,["forceBudget"]=CollisionFact("runtime.physicsWorkBudget"),["flowBudget"]=CollisionFact("runtime.flowWorkBudget"),["forceSchedule"]=CollisionFact("runtime.physicsWorkSchedule"),["flowSchedule"]=CollisionFact("runtime.flowWorkSchedule"),["bodies"]=new JArray(bodies.Select(body=>new JObject{["target"]=body.PhysicsWorkOwner.Target,["ready"]=PhysicsWorkResources.Ready(body,out _),["simulating"]=body.Simulating,["motionHeld"]=(bool)PhysicsInputFact(body.PhysicsWorkOwner.Target)["momentumHeld"],["speedX"]=body.GetComponent<Rigidbody>().linearVelocity.x}))});
+     foreach(var body in bodies)Assert.That(PhysicsWorkResources.Ready(body,out _),Is.EqualTo(FlowWorkResources.Ready(editor.Liquids,body.PhysicsWorkOwner.Target==separate?separate:ids[0],out _)),"No half-admitted moving quantity group");
+     if(trace.Count==0||(long)trace[trace.Count-1]["forceSchedule"]["step"]!=step||liquidReady)trace.Add(new JObject{["frame"]=frame,["liquidReady"]=liquidReady,["forceBudget"]=CollisionFact("runtime.physicsWorkBudget"),["flowBudget"]=CollisionFact("runtime.flowWorkBudget"),["forceSchedule"]=CollisionFact("runtime.physicsWorkSchedule"),["flowSchedule"]=CollisionFact("runtime.flowWorkSchedule"),["bodies"]=new JArray(bodies.Select(body=>new JObject{["target"]=body.PhysicsWorkOwner.Target,["ready"]=PhysicsWorkResources.Ready(body,out _),["groupReady"]=FlowWorkResources.Ready(editor.Liquids,body.PhysicsWorkOwner.Target==separate?separate:ids[0],out _),["simulating"]=body.Simulating,["motionHeld"]=(bool)PhysicsInputFact(body.PhysicsWorkOwner.Target)["momentumHeld"],["speedX"]=body.GetComponent<Rigidbody>().linearVelocity.x}))});
      Assert.That(FlowWorkResources.Step,Is.EqualTo(step),"Observations must not advance admission");
      served=bodies.All(x=>x.Simulating)&&liquidReady;if(served)break;
      yield return new WaitForFixedUpdate();
@@ -64,7 +64,7 @@ namespace Maestro.Quest.Tests {
     string output=Environment.GetEnvironmentVariable("MAESTRO_PHYSICS_FLOW_EVIDENCE");if(!string.IsNullOrEmpty(output))File.WriteAllText(output,new JObject{["forceCompetitors"]=force.Count,["flowCompetitors"]=flow.Count,["trace"]=trace}.ToString());
     Assert.That(served,Is.True,"Both resources must eventually be available in the same opportunity");
     foreach(var body in bodies)Assert.That(body.GetComponent<Rigidbody>().linearVelocity.x,Is.GreaterThan(2));
-    Assert.That(force.All(go=>go&&go.GetComponent<RigidRoomItem>().PhysicsWorkEligible),Is.True);Assert.That(flow.All(go=>go&&go.GetComponent<LiquidPouring>().FlowWorkEligible),Is.True);
+    Assert.That(force.All(go=>go&&go.GetComponent<RigidRoomItem>().PhysicsWorkEligible),Is.True);Assert.That(flow.All(SimulationWorkSchedule.Queued),Is.True);
    }finally{ReleaseFlowWork(flow);ReleasePhysicsWork(force);physics.PausePhysics();}
   }
   [UnityTest]public IEnumerator PhysicsFlowSchedulingQueueFullRefusalDiscardsMotionAndCannotReplayAnOldThrow(){

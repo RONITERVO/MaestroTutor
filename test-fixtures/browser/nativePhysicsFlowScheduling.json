@@ -1,13 +1,13 @@
 {
-  "forceCompetitors": 119,
+  "forceCompetitors": 115,
   "flowCompetitors": 32,
   "trace": [
     {
       "frame": 0,
       "liquidReady": false,
       "forceBudget": {
-        "reservations": 123,
-        "units": 517888,
+        "reservations": 119,
+        "units": 500480,
         "reservationLimit": 128,
         "unitLimit": 524288,
         "samplesPerBody": 64,
@@ -16,8 +16,8 @@
         "missingMediaPerSample": 32
       },
       "flowBudget": {
-        "reservations": 33,
-        "units": 170432,
+        "reservations": 1,
+        "units": 0,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -26,48 +26,52 @@
         "rainSamples": 5
       },
       "forceSchedule": {
-        "step": 435,
-        "executions": 119,
+        "step": 8179,
+        "executions": 115,
         "executionLimit": 128,
         "queued": 4,
         "queueLimit": 128,
-        "units": 517888,
+        "units": 500480,
         "unitLimit": 524288
       },
       "flowSchedule": {
-        "step": 435,
-        "executions": 32,
+        "step": 8179,
+        "executions": 0,
         "executionLimit": 32,
         "queued": 1,
         "queueLimit": 64,
-        "units": 170432,
+        "units": 0,
         "unitLimit": 524288
       },
       "bodies": [
         {
-          "target": "c09c16823d1649f59f4834d14b7f4728",
+          "target": "d9092afc23954a3b9663b957a93462a9",
           "ready": false,
+          "groupReady": false,
           "simulating": false,
           "motionHeld": true,
           "speedX": 0.0
         },
         {
-          "target": "56ad9e60d16241128d35c2966178045b",
+          "target": "68efc586443742adb77c8659f32fcc8b",
           "ready": false,
+          "groupReady": false,
           "simulating": false,
           "motionHeld": true,
           "speedX": 0.0
         },
         {
-          "target": "2073ba9ac10e4392a623e8342c414114",
+          "target": "381a6ed1017b404bb63dcc26bbddeda8",
           "ready": false,
+          "groupReady": false,
           "simulating": false,
           "motionHeld": true,
           "speedX": 0.0
         },
         {
-          "target": "a17bd0e2c9514c259d1e0f6ea1fd406f",
+          "target": "4cece87a46a3405099bc474773ca373f",
           "ready": false,
+          "groupReady": false,
           "simulating": false,
           "motionHeld": true,
           "speedX": 0.0
@@ -76,82 +80,10 @@
     },
     {
       "frame": 12,
-      "liquidReady": false,
-      "forceBudget": {
-        "reservations": 123,
-        "units": 517888,
-        "reservationLimit": 128,
-        "unitLimit": 524288,
-        "samplesPerBody": 64,
-        "collidersPerBody": 64,
-        "nativeMediaPerSample": 32,
-        "missingMediaPerSample": 32
-      },
-      "flowBudget": {
-        "reservations": 33,
-        "units": 170432,
-        "reservationLimit": 64,
-        "unitLimit": 524288,
-        "streamSegments": 32,
-        "queryHits": 64,
-        "scoopSamples": 5,
-        "rainSamples": 5
-      },
-      "forceSchedule": {
-        "step": 436,
-        "executions": 119,
-        "executionLimit": 128,
-        "queued": 4,
-        "queueLimit": 128,
-        "units": 517888,
-        "unitLimit": 524288
-      },
-      "flowSchedule": {
-        "step": 436,
-        "executions": 32,
-        "executionLimit": 32,
-        "queued": 1,
-        "queueLimit": 64,
-        "units": 170432,
-        "unitLimit": 524288
-      },
-      "bodies": [
-        {
-          "target": "c09c16823d1649f59f4834d14b7f4728",
-          "ready": false,
-          "simulating": false,
-          "motionHeld": true,
-          "speedX": 0.0
-        },
-        {
-          "target": "56ad9e60d16241128d35c2966178045b",
-          "ready": false,
-          "simulating": false,
-          "motionHeld": true,
-          "speedX": 0.0
-        },
-        {
-          "target": "2073ba9ac10e4392a623e8342c414114",
-          "ready": false,
-          "simulating": false,
-          "motionHeld": true,
-          "speedX": 0.0
-        },
-        {
-          "target": "a17bd0e2c9514c259d1e0f6ea1fd406f",
-          "ready": false,
-          "simulating": false,
-          "motionHeld": true,
-          "speedX": 0.0
-        }
-      ]
-    },
-    {
-      "frame": 28,
       "liquidReady": true,
       "forceBudget": {
-        "reservations": 123,
-        "units": 522240,
+        "reservations": 119,
+        "units": 517888,
         "reservationLimit": 128,
         "unitLimit": 524288,
         "samplesPerBody": 64,
@@ -160,8 +92,8 @@
         "missingMediaPerSample": 32
       },
       "flowBudget": {
-        "reservations": 33,
-        "units": 170432,
+        "reservations": 1,
+        "units": 5158,
         "reservationLimit": 64,
         "unitLimit": 524288,
         "streamSegments": 32,
@@ -170,48 +102,52 @@
         "rainSamples": 5
       },
       "forceSchedule": {
-        "step": 437,
-        "executions": 120,
+        "step": 8180,
+        "executions": 119,
         "executionLimit": 128,
-        "queued": 3,
+        "queued": 0,
         "queueLimit": 128,
-        "units": 522240,
+        "units": 517888,
         "unitLimit": 524288
       },
       "flowSchedule": {
-        "step": 437,
-        "executions": 32,
+        "step": 8180,
+        "executions": 1,
         "executionLimit": 32,
-        "queued": 1,
+        "queued": 0,
         "queueLimit": 64,
-        "units": 170432,
+        "units": 5158,
         "unitLimit": 524288
       },
       "bodies": [
         {
-          "target": "c09c16823d1649f59f4834d14b7f4728",
+          "target": "d9092afc23954a3b9663b957a93462a9",
           "ready": true,
+          "groupReady": true,
           "simulating": true,
           "motionHeld": false,
           "speedX": 2.9988
         },
         {
-          "target": "56ad9e60d16241128d35c2966178045b",
+          "target": "68efc586443742adb77c8659f32fcc8b",
           "ready": true,
+          "groupReady": true,
           "simulating": true,
           "motionHeld": false,
           "speedX": 2.9988
         },
         {
-          "target": "2073ba9ac10e4392a623e8342c414114",
+          "target": "381a6ed1017b404bb63dcc26bbddeda8",
           "ready": true,
+          "groupReady": true,
           "simulating": true,
           "motionHeld": false,
           "speedX": 2.9988
         },
         {
-          "target": "a17bd0e2c9514c259d1e0f6ea1fd406f",
+          "target": "4cece87a46a3405099bc474773ca373f",
           "ready": true,
+          "groupReady": true,
           "simulating": true,
           "motionHeld": false,
           "speedX": 2.9988

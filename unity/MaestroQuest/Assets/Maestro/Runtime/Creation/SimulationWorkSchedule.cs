@@ -9,13 +9,19 @@ namespace Maestro.Quest.Creation {
  // is admitted atomically: a liquid pass and all of its registered moving groups
  // cannot hold opposite halves of the allowance. Residency has a separate owner.
  internal static partial class SimulationWorkSchedule {
+  internal sealed class ServiceRecord { internal long Served,Order; }
   internal sealed class Claim {
    internal int ForceUnits,FlowUnits,ContactUnits,DiscoveryUnits,Bodies,Rooms,Samplers;
    internal bool Granted;
    internal WorkCharge Consumed;
-   internal long Served,Order;
+   internal ServiceRecord Service;
+   internal long Served {get=>Service.Served;set=>Service.Served=value;}
+   internal long Order=>Service.Order;
    internal Func<bool> Current;
    internal Func<bool> Prepared=()=>true;
+   // Fresh poses gate execution, not age-based booking at the clock boundary.
+   // Otherwise normally moving groups lose all fair grants before recapture.
+   internal Func<bool> ExecutionCurrent=()=>true;
    internal Claim[] Dependencies=Array.Empty<Claim>();
    internal Group Group;
   }
@@ -45,14 +51,15 @@ namespace Maestro.Quest.Creation {
   internal static long DiscoveryUnits=>claims.Where(c=>c.Granted).Sum(c=>(long)c.DiscoveryUnits);
   internal static long Step {get;private set;}
   internal static float StepSeconds {get;private set;}=.05f;
-  internal static Claim Register(Func<bool> current,int bodies,int rooms,int samplers=0){
-   var claim=new Claim{Current=current,Bodies=bodies,Rooms=rooms,Samplers=samplers,Served=Step,Order=++order};claims.Add(claim);Changed();FlowWorkClock.Ensure();return claim;
+  internal static Claim Register(Func<bool> current,int bodies,int rooms,int samplers=0,ServiceRecord service=null){
+   service??=new ServiceRecord();if(service.Order==0){service.Order=++order;service.Served=Step;}
+   var claim=new Claim{Current=current,Bodies=bodies,Rooms=rooms,Samplers=samplers,Service=service};claims.Add(claim);Changed();FlowWorkClock.Ensure();return claim;
   }
   internal static void Remove(Claim claim){if(claim!=null&&claims.Remove(claim)){retiredConsumption+=claim.Consumed;Changed();}}
   internal static void Changed()=>dirty=true;
   internal static void Collect(){FlowWorkResources.CollectLocal();PhysicsWorkResources.CollectLocal();ContactWorkResources.CollectLocal();}
   static void BuildGroups(){
-   if(!dirty)return;dirty=false;PhysicsWorkResources.LinkRequests();groups=new();
+   if(!dirty)return;dirty=false;PhysicsWorkResources.LinkRequests();FlowWorkResources.LinkRequests();groups=new();
    var index=claims.Select((c,i)=>(c,i)).ToDictionary(x=>x.c,x=>x.i);int[] parent=Enumerable.Range(0,claims.Count).ToArray();
    int Root(int i){while(parent[i]!=i){parent[i]=parent[parent[i]];i=parent[i];}return i;}
    foreach(var claim in claims)foreach(var peer in claim.Dependencies)if(peer!=null&&index.TryGetValue(peer,out int other))parent[Root(other)]=Root(index[claim]);
@@ -61,7 +68,7 @@ namespace Maestro.Quest.Creation {
    foreach(var claim in claims)if(claim.Dependencies.Any(peer=>peer==null||!index.ContainsKey(peer)))claim.Group.Complete=false;
   }
   internal static bool Queued(Claim claim){BuildGroups();return claim!=null&&claims.Contains(claim)&&claim.Group.Fits&&claim.Group.Current;}
-  internal static bool Ready(Claim claim)=>Queued(claim)&&claim.Group.Prepared&&claim.Group.Claims.All(c=>c.Granted);
+  internal static bool Ready(Claim claim)=>Queued(claim)&&claim.Group.Prepared&&claim.Group.Claims.All(c=>c.Granted&&c.ExecutionCurrent());
   internal static bool TryAdmit(Claim claim){
    BuildGroups();if(!Queued(claim)||!claim.Group.Prepared)return false;var group=claim.Group;
    if(!Committed(group).Fits)return false;

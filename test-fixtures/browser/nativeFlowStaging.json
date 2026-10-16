@@ -1,7 +1,7 @@
 {
   "loading": {
     "discovery": {
-      "step": 5402,
+      "step": 5382,
       "reservations": 1,
       "executions": 1,
       "units": 299,
@@ -9,7 +9,7 @@
       "objectLimit": 66
     },
     "execution": {
-      "step": 5402,
+      "step": 5382,
       "executions": 0,
       "executionLimit": 32,
       "queued": 1,
@@ -20,7 +20,7 @@
     "pending": true,
     "captures": 1,
     "source": {
-      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
       "phase": "waiting",
       "contents": {
         "amountMl": 400.0,
@@ -30,10 +30,10 @@
         "spilledMl": 0.0
       },
       "temporary": false,
-      "error": "Liquid flow is preparing required inputs before requesting execution"
+      "error": "Preparing liquid flow ground, obstacles and water"
     },
     "receiver": {
-      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
       "phase": "waiting",
       "contents": {
         "amountMl": 0.0,
@@ -43,12 +43,12 @@
         "spilledMl": 0.0
       },
       "temporary": false,
-      "error": "Liquid flow is preparing required inputs before requesting execution"
+      "error": "Preparing liquid flow ground, obstacles and water"
     }
   },
   "preparedWaiting": {
     "discovery": {
-      "step": 5403,
+      "step": 5383,
       "reservations": 1,
       "executions": 1,
       "units": 299,
@@ -56,7 +56,7 @@
       "objectLimit": 66
     },
     "execution": {
-      "step": 5403,
+      "step": 5383,
       "executions": 0,
       "executionLimit": 32,
       "queued": 1,
@@ -67,7 +67,7 @@
     "pending": false,
     "captures": 1,
     "source": {
-      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
       "phase": "waiting",
       "contents": {
         "amountMl": 400.0,
@@ -77,10 +77,10 @@
         "spilledMl": 0.0
       },
       "temporary": false,
-      "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      "error": "Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved."
     },
     "receiver": {
-      "sessionId": "becbc645c0cf4419b9b23634c41df38a",
+      "sessionId": "71a45edf18524a9db890b63b8f0a64d6",
       "phase": "waiting",
       "contents": {
         "amountMl": 0.0,
@@ -90,12 +90,12 @@
         "spilledMl": 0.0
       },
       "temporary": false,
-      "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+      "error": "Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved."
     }
   },
   "flowing": {
     "discovery": {
-      "step": 5403,
+      "step": 5383,
       "reservations": 1,
       "executions": 1,
       "units": 299,
@@ -103,7 +103,7 @@
       "objectLimit": 66
     },
     "execution": {
-      "step": 5403,
+      "step": 5383,
       "executions": 1,
       "executionLimit": 32,
       "queued": 0,
@@ -114,23 +114,23 @@
     "pending": false,
     "captures": 1,
     "source": {
-      "sessionId": "f48ebd71eb4c4539a83116719081140d",
+      "sessionId": "d354ff3854554b5bad1e4120b0f65d5c",
       "phase": "flowing",
       "contents": {
-        "amountMl": 383.96169419066121,
+        "amountMl": 383.9616933816729,
         "savedAmountMl": 400.0,
         "capacityMl": 500.0,
-        "transferredMl": 16.038305809338777,
+        "transferredMl": 16.038306618327088,
         "spilledMl": 0.0
       },
       "temporary": false,
       "error": ""
     },
     "receiver": {
-      "sessionId": "f48ebd71eb4c4539a83116719081140d",
+      "sessionId": "d354ff3854554b5bad1e4120b0f65d5c",
       "phase": "flowing",
       "contents": {
-        "amountMl": 16.038305809338777,
+        "amountMl": 16.038306618327088,
         "savedAmountMl": 0.0,
         "capacityMl": 500.0,
         "transferredMl": 0.0,

@@ -22,8 +22,8 @@ namespace Maestro.Quest.Creation
         internal int FlowWorkVessels=>vessels.Count;
         internal RoomResourceOwner FlowWorkOwner=>new(editor.WorldIdentity,null,"liquid");
         internal bool FlowTarget(string id)=>vessels.ContainsKey(id);
-        string FlowWorkIssue=>FlowWorkEligible&&!FlowWorkResources.Ready(this,out var issue)?issue:null;
-        string FlowPhase(string id)=>blocked?"failed":(FlowWorkIssue??FlowInputIssue(id))!=null?"waiting":Owns(id)?"flowing":"idle";
+        string FlowWorkIssue(string id)=>FlowWorkEligible&&!FlowWorkResources.Ready(this,id,out var issue)?issue:null;
+        string FlowPhase(string id)=>blocked?"failed":(FlowInputIssue(id)??FlowWorkIssue(id))!=null?"waiting":Owns(id)?"flowing":"idle";
         void InvalidateRain(string reason){foreach(var v in vessels.Values){v.Exposure=0;v.RainReady=false;v.RainReason=reason;}}
         void WaitForFlowWork(string reason,bool discovery=false){
             // Only the active flow tick closes accepted work. Admission checks in
@@ -51,10 +51,12 @@ namespace Maestro.Quest.Creation
             return false;
         }
         internal bool PrepareFlowWork(PhysicsIslandQuery query,out string error){
-            error=null;return !PhysicsNeedsFlow(query)||FlowWorkResources.TryAdmit(Liquids,out error);
+            error=null;return !PhysicsNeedsFlow(query)||(Liquids.PreparingGroupMotion||Liquids.PrepareWorkInputs(out error))&&FlowWorkResources.TryExecute(Liquids,out error);
         }
         internal bool FlowWorkReady(PhysicsIslandQuery query,out string error){
-            error=null;return !PhysicsNeedsFlow(query)||FlowWorkResources.Ready(Liquids,out error);
+            error=null;if(!PhysicsNeedsFlow(query))return true;
+            foreach(var id in query.Members)if(Liquids.FlowTarget(id)&&!FlowWorkResources.Ready(Liquids,id,out error))return false;
+            return true;
         }
     }
 }

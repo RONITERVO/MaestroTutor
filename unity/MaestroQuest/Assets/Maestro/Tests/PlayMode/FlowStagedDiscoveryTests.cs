@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Linq;
 using System.Collections;
 using System.IO;
 using Maestro.Quest.Creation;
@@ -15,14 +16,14 @@ namespace Maestro.Quest.Tests {
    editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);
    ContainerRun(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
    StartIsland();yield return IslandActive(ids);
-   FlowWorkResources.Release(editor.Liquids);
+   FlowWorkResources.Release(editor.Liquids);FlowWorkResources.Advance(.05f);
    var pressure=SimulationWorkSchedule.Register(()=>true,0,0);pressure.DiscoveryUnits=FlowDiscoveryWork.MaximumUnits;
    try {
     Assert.That(SimulationWorkSchedule.TryAdmit(pressure),Is.True);
     foreach(var id in ids){var body=editor.Find(id).GetComponent<Rigidbody>();body.linearVelocity=Vector3.right*3;editor.Find(id).GetComponent<RigidRoomItem>().Refresh();}
     foreach(var id in ids) {
      Assert.That(editor.Find(id).GetComponent<Rigidbody>().isKinematic,Is.True);
-     Assert.That((bool)PhysicsInputFact(id)["momentumHeld"],Is.True,"A discovery turn must be a scheduled hold, not discarded motion");
+     Assert.That((bool)PhysicsInputFact(id)["momentumHeld"],Is.True,"A discovery turn must retain motion: "+PhysicsInputFact(id)+", discoveryQueued="+FlowWorkResources.QueuedDiscovery(editor.Liquids)+", executionQueued="+FlowWorkResources.Queued(editor.Liquids)+", bodyQueued="+PhysicsWorkResources.Queued(editor.Find(id).GetComponent<RigidRoomItem>()));
     }
     Assert.That(FlowWorkResources.QueuedDiscovery(editor.Liquids),Is.True);
     Assert.That(FlowWorkResources.Queued(editor.Liquids),Is.True);
@@ -43,7 +44,7 @@ namespace Maestro.Quest.Tests {
     physics.StartPhysics();editor.Liquids.Tick(.05f);evidence["loading"]=Capture();
     Assert.That(editor.Liquids.LastFlowDiscovery.Captures,Is.EqualTo(1),"Input discovery must not wait for a quantity execution grant");
     Assert.That(editor.NativeActivationPending,Is.True,"Actual cold receiver loading should start under execution pressure");
-    Assert.That(FlowWorkResources.FindClaim(editor.Liquids).Granted,Is.False);
+    Assert.That(FlowWorkResources.ExecutionClaims(editor.Liquids).Any(claim=>claim.Granted),Is.False);
     Assert.That(FlowAmount(from),Is.EqualTo(400));Assert.That(FlowAmount(to),Is.Zero);
     yield return NavigationLoadingDone();
     Assert.That(editor.Find(to),Is.Not.Null);

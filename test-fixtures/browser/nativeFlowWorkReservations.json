@@ -11,9 +11,9 @@
   },
   "current": [
     {
-      "reservationId": "6b6781d0b6a24d4ea42fd28a68078de5",
-      "worldId": "7bc9953baf0846f697a9429d92babae4",
-      "regionId": "b929f1e2aa09480dab1a3e3e6a534de6",
+      "reservationId": "c46013942ad64d8dbfd76a80961dbb73",
+      "worldId": "e1b7fe529d6f481ba745ad20fa3a7158",
+      "regionId": "af7bf3224cc348188c0feb49959a8778",
       "vessels": 1,
       "units": 2579,
       "current": true
@@ -21,22 +21,22 @@
   ],
   "stale": [
     {
-      "reservationId": "6b6781d0b6a24d4ea42fd28a68078de5",
-      "worldId": "7bc9953baf0846f697a9429d92babae4",
-      "regionId": "b929f1e2aa09480dab1a3e3e6a534de6",
-      "vessels": 1,
+      "reservationId": "c46013942ad64d8dbfd76a80961dbb73",
+      "worldId": "e1b7fe529d6f481ba745ad20fa3a7158",
+      "regionId": "af7bf3224cc348188c0feb49959a8778",
+      "vessels": 2,
       "units": 2579,
       "current": false
     }
   ],
   "resized": [
     {
-      "reservationId": "6b6781d0b6a24d4ea42fd28a68078de5",
-      "worldId": "7bc9953baf0846f697a9429d92babae4",
-      "regionId": "b929f1e2aa09480dab1a3e3e6a534de6",
+      "reservationId": "c46013942ad64d8dbfd76a80961dbb73",
+      "worldId": "e1b7fe529d6f481ba745ad20fa3a7158",
+      "regionId": "af7bf3224cc348188c0feb49959a8778",
       "vessels": 2,
       "units": 5326,
-      "current": true
+      "current": false
     }
   ],
   "released": []

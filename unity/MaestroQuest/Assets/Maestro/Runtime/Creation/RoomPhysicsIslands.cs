@@ -112,6 +112,7 @@ namespace Maestro.Quest.Creation {
                     if(!rigid)continue;if(!rigid.Dynamic){rigid.ReleasePhysicsInputs();continue;}
                     var query=PhysicsInputs(peer);
                     PrepareFlowWork(query,out _);
+                    query=PhysicsInputs(peer); // Loading callbacks may change placement or topology.
                     var workMembers=query.Members.Select(member=>Find(member)?.GetComponent<RigidRoomItem>()).Where(body=>body&&body.PhysicsWorkEligible).ToArray();
                     PhysicsWorkResources.TryAdmit(workMembers,out query.WorkError);
                     if(workMembers.All(PhysicsWorkResources.Queued))query.WorkError=null; // A scheduled wait is not missing geometry.

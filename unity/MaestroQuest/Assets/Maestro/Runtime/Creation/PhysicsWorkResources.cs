@@ -36,10 +36,11 @@ namespace Maestro.Quest.Creation
         internal static void LinkRequests(){
             foreach(var e in entries){
                 var peers=e.Members.Where(x=>x&&x.PhysicsWorkEligible).Select(x=>entries.FirstOrDefault(p=>ReferenceEquals(p.Host,x))?.Work);
-                if(!ReferenceEquals(e.Flow,null))peers=peers.Append(FlowWorkResources.FindClaim(e.Flow));
+                if(!ReferenceEquals(e.Flow,null))peers=peers.Concat(e.Members.Where(x=>x&&e.Flow.FlowTarget(x.PhysicsWorkOwner.Target)).Select(x=>FlowWorkResources.FindClaim(e.Flow,x.PhysicsWorkOwner.Target)));
                 e.Work.Dependencies=peers.ToArray();
             }
         }
+        internal static SimulationWorkSchedule.Claim FindClaim(RigidRoomItem host)=>entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host))?.Work;
         internal static bool Queued(RigidRoomItem host)=>SimulationWorkSchedule.Queued(entries.FirstOrDefault(e=>ReferenceEquals(e.Host,host))?.Work);
         internal static bool TryAdmit(IEnumerable<RigidRoomItem> members,out string error)
         {

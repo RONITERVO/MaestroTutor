@@ -18,7 +18,7 @@ namespace Maestro.Quest.Creation {
   readonly Dictionary<string,FlowGroup> flowByTarget=new(StringComparer.Ordinal);
   string flowPassIssue;int flowInputIntent;uint flowPreparationVersion;
   string FlowInputIssue(string id)=>FlowWorkEligible?flowPassIssue??(flowByTarget.TryGetValue(id,out var group)?group.Issue:null):null;
-  void ReleaseFlowInputs(){flowPreparationVersion++;foreach(var group in flowGroups.Values)group.Inputs?.Dispose();flowGroups.Clear();flowByTarget.Clear();flowPassIssue=null;}
+  void ReleaseFlowInputs(){flowPreparationVersion++;foreach(var group in flowGroups.Values)group.Inputs?.Dispose();flowGroups.Clear();flowByTarget.Clear();flowPassIssue=null;flowPlacementFence=null;}
   bool FlowVesselReady(Vessel vessel)=>Available(vessel)&&editor.GetComponent<AnimationWorkshop>()?.ControlsTarget(vessel.Id)!=true;
   void FlowGroupIssue(FlowGroup group,string reason){
    group.Ready=false;group.Issue=reason;
@@ -34,17 +34,22 @@ namespace Maestro.Quest.Creation {
    foreach(var probe in group.Plan.Probes){state=editor.SpatialInputsReady(Array.Empty<string>(),probe.Bounds,probe.Bounds,false,probe.Actor,out reason);if(state!=RoomSpatialReadiness.Ready)return state;}
    reason=null;return RoomSpatialReadiness.Ready;
   }
-  Vessel[][] CaptureFlowExecution(){
+  Vessel[][] CaptureFlowExecution(bool automatic){
    // Execute only complete, prepared quantity groups. Shared read-only solids
    // remain in spatial proofs/PhysX; they do not become quantity candidates.
    var result=new List<Vessel[]>();
    foreach(var group in flowGroups.Values){
-    if(!group.Ready)continue;
+    if(!group.Ready||!GroupMotionReady(group)||automatic&&group.Plan.Members.Any(id=>vessels[id].AutomaticStep==FlowWorkResources.Step))continue;
     var members=group.Plan.Members.Select(id=>vessels.TryGetValue(id,out var vessel)?vessel:null).ToArray();
     if(members.Any(vessel=>vessel==null||!vessel.Ready)){
      FlowGroupIssue(group,"Liquid-flow members changed; preparing a fresh pass");
      return Array.Empty<Vessel[]>(); // Never execute a prefix of a stale plan.
     }
+    if(!FlowWorkResources.Consume(this,group.Plan.Members,out var workIssue)){
+     foreach(var id in group.Plan.Members){var waiting=vessels[id];waiting.Exposure=0;waiting.RainReady=false;waiting.RainReason=workIssue;}
+     continue;
+    }
+    if(automatic)foreach(var member in members)member.AutomaticStep=FlowWorkResources.Step;
     result.Add(members);
    }
    flowExecutionWork.Groups=result.Count;flowExecutionWork.Members=result.Sum(members=>members.Length);
@@ -52,6 +57,7 @@ namespace Maestro.Quest.Creation {
   }
   bool PrepareFlowInputs(Vector3 gravity,Vector3 up){
    uint version=++flowPreparationVersion;flowPassIssue=null;flowInputIntent=world.SimulationIntent;
+   CaptureFlowPlacementFence();
    var plans=CaptureFlowGroups(gravity,up);var next=new Dictionary<string,FlowGroup>(StringComparer.Ordinal);bool close=false;
    foreach(var plan in plans){var group=flowGroups.TryGetValue(plan.Key,out var old)?old:new FlowGroup();group.Plan=plan;group.Ready=false;next.Add(plan.Key,group);}
    foreach(var pair in flowGroups)if(!next.ContainsKey(pair.Key)){pair.Value.Inputs?.Dispose();}
@@ -83,6 +89,11 @@ namespace Maestro.Quest.Creation {
      if(group.Plan.Members.Any(Owns)){group.Inputs.Dispose();group.Inputs=null;Finish(out _);return false;}
     }else group.Issue=null;
     if(flowEpoch!=before){flowPassIssue="Liquid-flow geometry changed; preparing a fresh pass";InvalidateRain(flowPassIssue);return false;}
+   }
+   if(!FlowPlacementCurrent()){
+    flowPassIssue="Liquid-flow placement changed; preparing a fresh pass";
+    foreach(var group in next.Values)FlowGroupIssue(group,flowPassIssue);
+    return false;
    }
    foreach(var vessel in vessels.Values)vessel.Ready&=flowByTarget.TryGetValue(vessel.Id,out var group)&&group.Ready;
    return vessels.Values.Any(v=>v.Ready);

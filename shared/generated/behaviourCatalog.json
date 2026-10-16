@@ -39467,7 +39467,7 @@
         }
       },
       "label": "Live container contents",
-      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing. Waiting means complete transfer-work capacity or this container interaction group's required spatial inputs are unavailable; error explains it. Before changing quantities, each complete interacting group prepares relevant saved solids, ground and receiving/donor cavities, including empty or offset cavities and rain cover. Quantity paths close transitively, including retained or anchored dormant poses and connected moving bodies; sharing a read-only obstacle or roof alone does not join separate groups. Ready independent groups can advance while another waits or loads. Work-capacity admission remains shared by the whole liquid host. Preparation includes streams that a currently empty tilted receiver could produce after earlier intake in that same pass, and rain cover for cavities that could drain before collection. Missing geometry is never treated as an empty path. Regrouping already-ready inputs preserves the live episode. If a group that owns unfinished quantities needs unavailable inputs, the existing shared episode publishes before preparation and releases its writer before callbacks. Continued waiting does not repeatedly checkpoint independent flow. All groups still share atomic publication and rollback; skipped time is not accrued. Passive facts never load geometry or restart physics. Inspect runtime.flowWorkBudget and runtime.flowWorkReservation.",
+      "description": "Current native liquid quantity during physical pouring or scooping, separate from the last accepted object.container definition. Flowing contents are published together after 0.3 seconds without flow, at grip release, pause or Save, at bounded ten-second checkpoints, and before an empty participating vessel adopts a different liquid identity or colour; one Undo restores that episode. Failed publication reverts all episode quantities and stops further pouring until physics is restarted. transferredMl/spilledMl are outgoing pouring totals for this source in the current episode, reset after publication. Scooping has separate object.container.scooping counters. No per-drop rigidbodies, carried fluid mass or mixing. Terrain reservoirs share the same measured inventory, level and publication. Shared bounded buoyancy/drag is described by object.medium. Amounts use logical millilitres independent of visual resizing. Waiting means complete transfer-work capacity or this container interaction group's required spatial inputs are unavailable; error explains it. Before changing quantities, each complete interacting group prepares relevant saved solids, ground and receiving/donor cavities, including empty or offset cavities and rain cover. Quantity paths close transitively, including retained or anchored dormant poses and connected moving bodies; sharing a read-only obstacle or roof alone does not join separate groups. Ready independent groups can advance while another waits or loads. Each complete quantity group receives its own execution allowance, atomically coupled with its moving-body dependencies. Independent groups do not pay for unrelated dormant inventory. Preparation includes streams that a currently empty tilted receiver could produce after earlier intake in that same pass, and rain cover for cavities that could drain before collection. Missing geometry is never treated as an empty path. Regrouping already-ready inputs preserves the live episode. If a group that owns unfinished quantities needs unavailable inputs, the existing shared episode publishes before preparation and releases its writer before callbacks. Continued waiting does not repeatedly checkpoint independent flow. All groups still share atomic publication and rollback; skipped time is not accrued. Passive facts never load geometry or restart physics. Inspect runtime.flowWorkBudget and runtime.flowWorkReservation.",
       "input": {
         "type": "object",
         "properties": {
@@ -44040,7 +44040,7 @@
         }
       },
       "label": "Physics work budget",
-      "description": "Process-wide bounded requests for potential fixed-step free-body liquid-force work, including standalone bodies. Reservations include queued bodies; units count booked allowances. Complete connected groups and their whole-host liquid pass share one fair opportunity before gravity or fluid forces. Liquid passes conservatively couple all registered moving vessel groups because current transfer loops scan every vessel. A scheduled delay preserves native inputs, valid velocity/spin and live quantities. Real motion/source/ownership changes invalidate held motion. New requests cannot evict unrelated allowances within the opportunity. Oversize complete groups or a full queue are explicitly refused. Consumed charges survive request removal until the next opportunity; inspect runtime.simulationWorkLedger for committed capacity. Logical units cover bounded displacement samples, candidate media and participant environment proofs, not measured CPU time, GPU memory, frame rate or PhysX solver cost. Proof internals, pouring, scooping, rain, contact events, navigation and external observation queries are excluded. Independent of saved quotas and native allocation budgets. Reads only retire ineligible grants; they never admit work, load geometry or start physics.",
+      "description": "Process-wide bounded requests for potential fixed-step free-body liquid-force work, including standalone bodies. Reservations include queued bodies; units count booked allowances. Complete connected bodies and their interacting liquid quantity group share one fair opportunity before gravity or fluid forces. Unrelated liquid circuits are admitted independently; an undiscovered liquid dependency remains queued without execution. A scheduled delay preserves native inputs, valid velocity/spin and live quantities. Real motion/source/ownership changes invalidate held motion. New requests cannot evict unrelated allowances within the opportunity. Oversize complete groups or a full queue are explicitly refused. Consumed charges survive request removal until the next opportunity; inspect runtime.simulationWorkLedger for committed capacity. Logical units cover bounded displacement samples, candidate media and participant environment proofs, not measured CPU time, GPU memory, frame rate or PhysX solver cost. Proof internals, pouring, scooping, rain, contact events, navigation and external observation queries are excluded. Independent of saved quotas and native allocation budgets. Reads only retire ineligible grants; they never admit work, load geometry or start physics.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44195,7 +44195,7 @@
         }
       },
       "label": "Liquid transfer work budget",
-      "description": "Process-wide bounded requests for complete room pouring/scooping/rain passes. Reservations count registered requests, including queued rooms; units count granted opportunities. All registered vessels, including empty receivers and missing native views, contribute to demand. Admission precedes quantity changes; free moving vessels and their connected groups also require it before gravity. Hands and authored animations retain ownership. Complete dependent physics/liquid groups take fair turns on the shared early fixed-step clock, retained through a rendered frame. All registered moving vessel groups of a host share its complete pass and are admitted with both allowances together. A scheduled delay preserves input residency, accepted motion and the live episode, hides streams, invalidates rain exposure and never accrues skipped time. An unregistered refusal closes prior accepted flow. Quantity candidates are group-local, while preparation and publication still use whole-host work. Discovery is independently admitted before execution; required native inputs can prepare while execution waits. Moving physics and liquid execution still receive their complete allowances together and require current discovery readiness; inspect runtime.flowDiscoveryBudget. Consumed charges survive request removal until the next opportunity; inspect runtime.simulationWorkLedger for committed capacity. Logical units cover pairwise cavities, bounded stream candidates/hits, exposure and participant-proof allowances; they are not measured CPU time, frame rate, memory or a PhysX budget. Geometry/proof internals, forces, contacts, external observations and engine costs are excluded. Reads may retire ineligible requests but never advance selection, admit work, load geometry, start physics or publish a flow episode.",
+      "description": "Process-wide liquid-work host registrations. Reservations retain their host meaning, including waiting rooms; units sum booked complete quantity-group member allowances. Independent quantity groups are admitted separately with their own moving-body dependencies. Shared read-only solids or roofs do not join groups. Discovery remains independently bounded per host, and all groups retain one atomic quantity publication and Undo episode. Empty receivers and missing cavities participate in their actual dependency closure. Waiting retains valid motion and inputs without catch-up; source, placement and ownership changes require fresh preparation. Scheduled holds contribute their retained velocity/spin to flow trajectory discovery. Consumed charges survive request removal and regrouping until the next opportunity; inspect runtime.simulationWorkLedger. Inspect runtime.flowGroupSchedule, runtime.flowGroup and runtime.flowGroupMember for actual group admission. Logical units bound potential work, not CPU time, frame rate, memory or PhysX cost. Reads never admit work, load geometry, start physics or publish quantities.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44214,7 +44214,7 @@
         }
       },
       "label": "Liquid transfer work request",
-      "description": "Read one runtime.flowWorkBudget request by index, including pending requests. Indices may shift; reservationId is runtime-only. World/region identify the copied room owner. Current means this opportunity is granted and complete potential demand and owner still match, not that native geometry, a transfer or simulation is ready. Resizing credits the old grant and cannot evict peers or admit a room prefix. Earlier unserved requests receive priority at the next opportunity; call order and repeated reads do not advance it. Paused, inactive or destroyed hosts release requests; explicit internal ticks can step a disabled automatic loop for desktop verification. Reads are detached and cannot resume transfers or physics.",
+      "description": "Read one host registration by index. Indices may shift; reservationId is runtime-only. World/region identify the copied owner. units sums requested group demand, including conservative undiscovered placeholders. Current means at least one complete group is ready in this opportunity; it does not mean every group in the host can execute or any quantity has transferred. Inspect runtime.flowGroup for the complete-group readiness and costs. Group resizing cannot evict peers or refund consumed work. Canonical service identity survives native view retirement and regrouping. Paused, inactive or destroyed hosts release requests; explicit internal ticks can step a disabled automatic loop for desktop verification. Reads are detached and cannot resume transfers or physics.",
       "input": {
         "type": "object",
         "properties": {
@@ -44252,7 +44252,7 @@
         }
       },
       "label": "Liquid simulation opportunities",
-      "description": "Read the current early fixed-step opportunity, granted whole-host passes and queued requests. The queue is bounded separately from simultaneous executions. The clock advances at approximately 20Hz with at least one rendered frame per opportunity; pauses do not accumulate fluid/rain debt. Priority is oldest unserved coupled group, then stable registration order. A finite unchanged group fitting physics, liquid and discovery work limits receives a turn under continuing demand; oversize or queue-full requests are refused. Booked allowances may be stale until refreshed; a current reservation requires the whole group to match. This is scheduling evidence, not measured device performance. Reading cannot advance the clock or claim work.",
+      "description": "Read the shared early fixed-step clock and host counts: executions counts hosts with any booked group; queued counts hosts with none. executionLimit remains 32, an upper bound on these hosts because the actual shared limit is 32 complete quantity groups; inspect runtime.flowGroupSchedule for that finer count. Booked allowances may be stale until refreshed and do not prove execution. Priority uses oldest unserved canonical member, then stable registration order, retained across regrouping and native view replacement. A finite unchanged complete group that fits receives a turn under continuing demand. Automatic work runs at most once per canonical member per opportunity, with no accumulated time debt. Reading cannot advance the clock or claim work.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -44271,8 +44271,120 @@
         }
       },
       "label": "Liquid dependency discovery budget",
-      "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery is independently admitted before its collision/cavity capture, candidate queries and native input preparation. Native inputs may load while liquid execution waits. Discovery grants are selected first on the shared clock; dependent physics and liquid execution remain queued until the discovery prerequisite is ready, then receive both execution allowances together. A preparation wait preserves service age and does not refund already booked execution within its opportunity. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot is reused only inside the synchronous discovery pass; later passes read current placements. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Existing saved limits and conservative whole-host execution remain.",
+      "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery is independently admitted before its collision/cavity capture, candidate queries and native input preparation. Native inputs may load while liquid execution waits. Discovery grants are selected first on the shared clock; dependent physics and liquid execution remain queued until the discovery prerequisite is ready, then receive both execution allowances together. A preparation wait preserves service age and does not refund already booked execution within its opportunity. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot is reused only inside the synchronous discovery pass; later passes read current placements. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Saved/native limits are unchanged. Execution is independently admitted per complete quantity group.",
       "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.flowGroupSchedule",
+      "version": 1,
+      "type": {
+        "record": {
+          "step": "number",
+          "groups": "number",
+          "active": "number",
+          "booked": "number",
+          "ready": "number",
+          "executionLimit": "number",
+          "groupLimit": "number",
+          "units": "number",
+          "unitLimit": "number"
+        }
+      },
+      "label": "Liquid group opportunities",
+      "description": "Complete quantity groups, separately from the host counts in runtime.flowWorkSchedule. Groups include inactive dormant cavities; active counts requested groups. Booked means all member allowances are reserved, possibly stale; ready additionally requires current discovery, placement, native input readiness and complete physics dependencies. This permits joint preparation; physical motion and quantity transfer separately require active joints. At most 32 group allowances coexist, under the unchanged process liquid-unit limit. A conservative undiscovered placeholder never executes. Indices may shift at regrouping; inspect step, reservationId, membershipRevision and firstMember together. Reading cannot advance service, load geometry or execute quantities. These are logical allowances, not measured CPU or headset capacity.",
+      "features": [
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.flowGroup",
+      "version": 1,
+      "type": {
+        "record": {
+          "step": "number",
+          "reservationId": "text",
+          "worldId": "text",
+          "regionId": "text",
+          "membershipRevision": "number",
+          "firstMember": "text",
+          "members": "number",
+          "units": "number",
+          "active": "boolean",
+          "discovered": "boolean",
+          "booked": "boolean",
+          "ready": "boolean",
+          "lastServed": "number"
+        }
+      },
+      "label": "Liquid quantity group",
+      "description": "Read one complete quantity group by runtime.flowGroupSchedule index. membershipRevision changes when this host's group definitions change, including within one step; compare it on member reads and restart the read if it differs. Readiness is a momentary observation, not an atomic snapshot across queries. firstMember is a canonical object ID, not a stable group ID across merges/splits. members includes empty and missing receiving/donor cavities; shared read-only geometry does not couple independent groups. discovered=false is a conservative queue placeholder, never permission to execute. Service age belongs to canonical members and survives regrouping and native retirement; explicit canonical removal or world replacement creates new service identity. All groups share the host's atomic publication and Undo. Automatic quantity work cannot repeat a canonical member in one opportunity, even if it changes groups or its work request is recreated. No missed-time catch-up.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1023.0
+          }
+        },
+        "required": [
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "runtimeDiagnostics.v1"
+      ]
+    },
+    {
+      "id": "runtime.flowGroupMember",
+      "version": 1,
+      "type": {
+        "record": {
+          "step": "number",
+          "reservationId": "text",
+          "membershipRevision": "number",
+          "firstMember": "text",
+          "target": "text",
+          "units": "number",
+          "lastServed": "number",
+          "order": "number"
+        }
+      },
+      "label": "Liquid group member",
+      "description": "Read a single member of runtime.flowGroup without exceeding the program record budget. Check step, reservationId, membershipRevision and firstMember against the group read because indices may change. units is this member's share of complete-group demand; it cannot be admitted independently of its group. order is the canonical service registration order, not array order. Passive reads do not serve the group.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 1023.0
+          },
+          "memberIndex": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 15.0
+          }
+        },
+        "required": [
+          "index",
+          "memberIndex"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "index": 0,
+        "memberIndex": 0
+      },
+      "features": [
+        "factQueries.v1",
         "runtimeDiagnostics.v1"
       ]
     },
@@ -46922,7 +47034,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
-      "sha256": "1912c1e81a2f2f2a2f2989351fd626ca4e03e9fe345aa4cc0c03b861ee254ae0"
+      "sha256": "fb50505640af19b1f99b1e7252901cdcf9064838f8ac3e48dd3916f608e47f07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerScoopingFacts.cs",
@@ -46989,8 +47101,12 @@
       "sha256": "346b90a17039aa9d18d122d311355c9eef34f91e6245837a262f8212bff0448c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowGroupFacts.cs",
+      "sha256": "8881a771d75239a54fad9c7426ec3d3c9dac7b89b0ceb422137b7581dcfc0dc4"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowWorkFacts.cs",
-      "sha256": "4ed5ade79536428f14243eed47dbb2eea9dd5337e308b5acb6181235cf8508a0"
+      "sha256": "00c4daaa761a81e25c44a159102551aa5e15916a6b1e92adb78a47fbfd20914f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
@@ -47158,7 +47274,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsWorkFacts.cs",
-      "sha256": "f406d28552e74887e540aeb9dfbb08ffd64bd75220ea8d8fb5b4dbabf20d1fad"
+      "sha256": "754a2db000039a92089f9e46e7df49c3fbba4ff4cb266e5eefd5b211c5a12d13"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ProceduralResourceFacts.cs",
@@ -47506,7 +47622,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkResources.cs",
-      "sha256": "1ce6941269bfd95451b4cd97dc42f34982da936ca803c3768e156a4c317e3993"
+      "sha256": "4de43d71f9ebdb51907b213e5c3043b7fa0fca736c2aa4c7b9aa8d825d1b314d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/HeightFieldGeometry.cs",
@@ -47541,12 +47657,16 @@
       "sha256": "a20e8a924b72e4e38d262085f003956c8b9b46e106f0215da5ab649acdf45da7"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowFence.cs",
+      "sha256": "af5aa2952410ba71ecf64a46fa86134066404b2aaeb1c2b33e4e9c9a5344735b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowGroups.cs",
-      "sha256": "68c3e346c5ebd3555135ad7fc33908f5e296242fdffc936854c21888dc37ed5a"
+      "sha256": "4e3d2f0007ced945fa4e5390e7b215d0cad18c99136ee658a82a34740b149f40"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
-      "sha256": "78d0995caf0d4a99fcd325cb5c2302431cd790844593f1514a0bcdf7ec108014"
+      "sha256": "096bbb0681cf55712d18dd0fe1becb1553a6b77556f7f6e8e1ada2eb3a0c1eeb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowPublication.cs",
@@ -47554,7 +47674,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
-      "sha256": "e6cb13fff1de70150121c464c2374a2e23388de4e6c4a156c078ddaecf5c440b"
+      "sha256": "be65d947e13f609c84ad7c2e834c4986d9ed7fea0d63a46fc03c1f4e8a3e3faa"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidGroupWork.cs",
+      "sha256": "89e7e877a84c21fb814bfcf546c0da9aed9d56b0f4c1338cd1c87b56a3f30382"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
@@ -47566,11 +47690,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "3b574ae7a1d196adf8974af9148fa66f76c07e243a239462ba817e3719dd57c6"
+      "sha256": "b1e99e1b1d47e5b022acda45dce815e60492f63630de10cca8f70e31142eff8e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
-      "sha256": "8e167f7b7734221d9e10f308bc3eb98b053b0ec21bca305ce03b77e2e0148f6e"
+      "sha256": "57ce2376edf02918ac56660b3bfe995bf30ec15effc2c38242512d10c19aaea8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidResources.cs",
@@ -47606,7 +47730,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicsWorkResources.cs",
-      "sha256": "d680faff89e01320fd7028a0e024c04dfb9131573b6c3330d352e9b706531485"
+      "sha256": "87755162c9fb72e8ee303fa7bf595600e01ddfcfbba5f22eae3c1fa05437417a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedDrawingSurfaces.cs",
@@ -48002,7 +48126,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
-      "sha256": "fd70396b61aff8a791d119d0401806f30bda6f9b3ab1dd1ef94010c594176bf3"
+      "sha256": "1cb2d8cd4c1b12a1c26ad3478f5854ffde2892498246f9b7410df4e07de4b933"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",
@@ -48210,7 +48334,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SimulationWorkSchedule.cs",
-      "sha256": "fda469208bcc170fa09fd5615edf1cfe5136c8269b93cd3beafb9c1daa693510"
+      "sha256": "c2cfb44b4edf5c61f42c9bd33e877974e3c5c7273793ce90c572fd19fb6eac67"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialDrawing.cs",
@@ -48570,7 +48694,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "4620cd0d36b0f8dae8aaa078c7cbbfa1f3f55ea779bded271556edc15feadcd3"
+      "sha256": "33507c06cb20828a3b52bd089f57cbb11a36392b57ea65f561f970c17443e989"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
@@ -48938,7 +49062,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "562887124e6ac3038f33b3fcc4783af6719d6f5fbc44ca8d2434804fb8c576f9"
+      "sha256": "bb48d2eaee871c8cf8459b1606c6274cd855071d661f79d426947b803c08944e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

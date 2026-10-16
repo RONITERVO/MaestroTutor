@@ -1,7 +1,7 @@
 {
   "flow": {
     "consumed": {
-      "step": 5361,
+      "step": 5377,
       "committed": {
         "discoveryUnits": 299,
         "physicsUnits": 0,
@@ -40,7 +40,7 @@
       }
     },
     "retired": {
-      "step": 5361,
+      "step": 5377,
       "committed": {
         "discoveryUnits": 299,
         "physicsUnits": 0,
@@ -79,7 +79,7 @@
       }
     },
     "next": {
-      "step": 5362,
+      "step": 5378,
       "committed": {
         "discoveryUnits": 0,
         "physicsUnits": 0,
@@ -156,7 +156,7 @@
         "liquidPasses": 32,
         "contactPasses": 32
       },
-      "step": 5355
+      "step": 5371
     },
     "medium": {
       "applied": true,
@@ -172,7 +172,7 @@
     "contact": {
       "known": true,
       "immersed": true,
-      "bodyId": "420dff60036049ea955967df72236d52",
+      "bodyId": "c680cccc3cec445ca013df8605eb3537",
       "kind": "hand",
       "liquid": "Water",
       "depthMetres": 0.200000048,
@@ -221,7 +221,7 @@
         "liquidPasses": 32,
         "contactPasses": 32
       },
-      "step": 5355
+      "step": 5371
     },
     "next": {
       "committed": {
@@ -260,7 +260,7 @@
         "liquidPasses": 32,
         "contactPasses": 32
       },
-      "step": 5356
+      "step": 5372
     }
   }
 }

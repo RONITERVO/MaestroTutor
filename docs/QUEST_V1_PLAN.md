@@ -14,6 +14,8 @@ Contact sampling now takes independent fair turns on that same clock; see
 [the contact checkpoint](#fair-contact-execution-and-observation-continuity-2026-10-16).
 Consumed allowances now survive request removal and demand changes within one
 opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
+Independent quantity groups now have separate execution requests; the current
+implementation and verification status are recorded at the end of this document.
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -12424,3 +12426,34 @@ real-room participation are unchanged. Device, provider, audio-quality and
 Store release gates remain open.
 
 Evidence: .quest-evidence/flow-spent-work/.
+
+
+## Independent complete quantity-group execution — 2026-10-16
+
+Group/member observations carry a membership revision so readers can detect
+same-step regrouping before combining a group description with paged members. Native and
+shared-reader tests cover this while keeping observations passive.
+
+The full native suite passed 1,345 EditMode tests and 1,820 PlayMode tests, with three
+optional private-asset skips and no failures. The full offline web suite passed 3,167
+tests in 351 files. App/probe TypeScript and the actual native catalog
+export/provenance checks passed. All seven current native capture fixtures were copied
+and rechecked through shared readers. All 3,184 frozen native inputs match the
+verification mirror. This is desktop validation; no device, paid-provider, Android,
+signing, deployment or Meta operation ran. This supersedes the earlier whole-host execution-cost checkpoints,
+without changing per-entity room collision policy, saved formats or native limits.
+
+Canonical member claims close over current quantity dependencies and moving-body
+islands. Independent circuits request their own complete allowance; discovery
+remains a separate per-host stage. Service identity survives regrouping and native
+retirement. Automatic execution stamps prevent repeated work by a canonical
+member in one opportunity; the spent ledger prevents refund after removal or
+resizing. Every pass recaptures geometry, including retained scheduled momentum,
+and rejects placement changes during preparation. Physics rechecks its query
+after preparation callbacks. Fair reservations are selected independently of
+fresh-pose execution checks, preserving service under continuous movement.
+
+Host diagnostics keep their existing meaning. New group and paged member facts
+use the shared catalog for user, agent and program readers. All groups retain
+the existing shared publication/rollback/Undo episode. There is no claim of
+headset performance, acoustic or provider acceptance from these desktop checks.
