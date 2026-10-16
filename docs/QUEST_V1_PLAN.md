@@ -12284,3 +12284,42 @@ The historical full-run failure, native SDK crash and generated echo-quality
 failures remain independent evidence. Real-device audio acceptance is still open.
 Complete-group simulation metering and the broader v1/device/provider/Store gates
 remain unfinished; existing holds continue.
+
+
+## Native flow pressure within accepted limits (2026-10-16)
+
+The initial sizing candidate incorrectly treated the 64-creation limit as a
+64-container limit. The native reproduction rejected it before scheduling:
+the saved format allows only 16 liquid containers per room. That failed fixture
+is retained in local evidence and is not a scalability result.
+
+The corrected regression provisions nine real, independently saved RoomEditors
+using accepted editor transactions, real cup geometry and native retirement.
+Each room validates at 16 saved containers. The combined state has 144 saved,
+20 native and 124 dormant containers, with no pending or retiring liquid leases.
+Two independent native circuits share the first room; each other room has one.
+These are real resource owners, not the logical competing samplers used in
+earlier scheduler tests.
+
+Whole-host execution demand is 552,816 against a 524,288 allowance; discovery
+demand is 77,670. Eight rooms initially execute, and the ninth waits without
+discovery or native loading. It receives a turn after two explicit opportunities,
+with no accumulated intake. The first room then moves a real receiver between
+circuits under continuing pressure: complete groups change from 2+2 to 1+3 and
+back, with scoop candidate counts changing from 8 to 10 and back. Water is
+conserved; distant cups remain dormant; publishing and Undo stay in their world.
+
+Verification: **37/37 focused PlayMode tests**, **20/20 web tests across eight files**, app/probe TypeScript and catalog provenance passed. Captured native runtime/container facts
+are checked by the shared web reader. No production code, generated catalog,
+scheduler charge, saved/native limit or device acceptance changed. The earlier
+full native sweep remains recorded with its original failures; this focused
+regression does not reclassify that sweep as green. Evidence:
+.quest-evidence/flow-native-pressure/.
+
+This fixture demonstrates shared-process scheduling pressure, not a supported
+nine-room user workflow, a larger single world, CPU savings or Quest performance.
+Complete-group execution admission remains required. Its staging must preserve
+fresh geometry across loading/physics, stable service age across split/merge,
+and charges for work already consumed within an opportunity. Cold preparation
+must not deadlock with coupled physics and liquid grants. All independent
+headset/provider/audio/Store gates and existing holds remain open.

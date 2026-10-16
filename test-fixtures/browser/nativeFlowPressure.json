@@ -1,0 +1,2416 @@
+{
+  "trace": [
+    {
+      "step": 108,
+      "rooms": [
+        {
+          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169419066121,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038305809338777,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169419066121,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038305809338777,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038305809338777,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038305809338777,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 28,
+          "pourCandidates": 56,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "ff2f597b71e844099236e6220765028e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": false,
+          "sources": [
+            {
+              "sessionId": "f352411c7daa457183269618273438e2",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 400.0,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "f352411c7daa457183269618273438e2",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 0.0,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "executedGroups": 0,
+          "executedMembers": 0,
+          "pourSegments": 0,
+          "pourCandidates": 0,
+          "scoopCandidates": 0,
+          "discoveryCaptures": 0,
+          "collisionReads": 0,
+          "cavityReads": 0
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 108,
+        "reservations": 9,
+        "executions": 8,
+        "units": 69040,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      }
+    },
+    {
+      "step": 109,
+      "rooms": [
+        {
+          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27889089770366,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.72110910229631,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27889089770366,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.72110910229631,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.72110910229631,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.72110910229631,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 28,
+          "pourCandidates": 56,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "ff2f597b71e844099236e6220765028e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": false,
+          "sources": [
+            {
+              "sessionId": "f352411c7daa457183269618273438e2",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 400.0,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "f352411c7daa457183269618273438e2",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 0.0,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "executedGroups": 0,
+          "executedMembers": 0,
+          "pourSegments": 0,
+          "pourCandidates": 0,
+          "scoopCandidates": 0,
+          "discoveryCaptures": 0,
+          "collisionReads": 0,
+          "cavityReads": 0
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 109,
+        "reservations": 9,
+        "executions": 8,
+        "units": 69040,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      }
+    },
+    {
+      "step": 110,
+      "rooms": [
+        {
+          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95168150618,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.04831849381992,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95168150618,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.04831849381992,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.04831849381992,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.04831849381992,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 28,
+          "pourCandidates": 56,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "ff2f597b71e844099236e6220765028e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": false,
+          "sources": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "executedGroups": 0,
+          "executedMembers": 0,
+          "pourSegments": 0,
+          "pourCandidates": 0,
+          "scoopCandidates": 0,
+          "discoveryCaptures": 0,
+          "collisionReads": 0,
+          "cavityReads": 0
+        },
+        {
+          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 110,
+        "reservations": 9,
+        "executions": 8,
+        "units": 69040,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      }
+    },
+    {
+      "step": 111,
+      "rooms": [
+        {
+          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.9801617667876,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.04831849381992,
+                "spilledMl": 14.971519739392409
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.9801617667876,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019838233212326,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019838233212326,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.04831849381992,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 46,
+          "pourCandidates": 74,
+          "scoopCandidates": 10,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.98015852957587,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019841470424105,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019841470424105,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.98015852957587,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019841470424105,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019841470424105,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.98015852957587,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019841470424105,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019841470424105,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.98015852957587,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019841470424105,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019841470424105,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "ff2f597b71e844099236e6220765028e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.98015852957587,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019841470424105,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019841470424105,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 337.98015852957587,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 62.019841470424105,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 62.019841470424105,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": false,
+          "sources": [
+            {
+              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 383.96169338167289,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "executedGroups": 0,
+          "executedMembers": 0,
+          "pourSegments": 0,
+          "pourCandidates": 0,
+          "scoopCandidates": 0,
+          "discoveryCaptures": 0,
+          "collisionReads": 0,
+          "cavityReads": 0
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 111,
+        "reservations": 9,
+        "executions": 8,
+        "units": 69040,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      },
+      "topology": "merged"
+    },
+    {
+      "step": 112,
+      "rooms": [
+        {
+          "worldId": "d3fe10c5f9f04b19a6b61ac3a756bc07",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.3644321176551,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 61.664048142952453,
+                "spilledMl": 14.971519739392409
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.3644321176551,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635567882344859,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635567882344859,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "1b5fb5c3547d485a953696b5e1d46442",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 61.664048142952453,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 28,
+          "pourCandidates": 56,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "6def9b79a3304405a158644555a93d8b",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.36442807058165,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635571929418333,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "11a7903cd2bf4c1b8f7a18a2106631d6",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635571929418333,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3d6cc33cf1da47e897402d5ddfa0d39c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.36442807058165,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635571929418333,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c21de6744dad4538b5a5a3245179d985",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635571929418333,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "3024e8835af842bbbd9e14b9c000e7bd",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.36442807058165,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635571929418333,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c58e323ce0cb4ba097212e15c464cc70",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635571929418333,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8d6226578eb34046a29b03f003cdab98",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.36442807058165,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635571929418333,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e37ed4d29a554156adf336626837cecf",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635571929418333,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "ff2f597b71e844099236e6220765028e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.36442807058165,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635571929418333,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "691962b4b48f44d1b12cf61b44ca6d4f",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635571929418333,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "14553298eff94f9d9777cf863e25b33c",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 323.36442807058165,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 76.635571929418333,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "d2cb178a07cd47a0b0b2c1f330e82257",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 76.635571929418333,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "af49971e82434e2ba0ce7ead63a41d04",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": false,
+          "sources": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 352.95167907859582,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "e9706b2c41564504a6590bdb64f810f0",
+              "phase": "waiting",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": "Liquid flow is waiting for work capacity. Ready rooms take turns automatically; saved quantities are preserved."
+            }
+          ],
+          "executedGroups": 0,
+          "executedMembers": 0,
+          "pourSegments": 0,
+          "pourCandidates": 0,
+          "scoopCandidates": 0,
+          "discoveryCaptures": 0,
+          "collisionReads": 0,
+          "cavityReads": 0
+        },
+        {
+          "worldId": "fcaf2d3bb7a549da950f4a79bf7c9069",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.27888927952381,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "3d342c34ee3342468d22c71b3b13d078",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 491392,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 112,
+        "reservations": 9,
+        "executions": 8,
+        "units": 69040,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      },
+      "topology": "split"
+    }
+  ],
+  "rooms": 9,
+  "savedContainers": 144,
+  "nativeContainers": 20,
+  "dormantContainers": 124,
+  "hostUnits": 552816,
+  "flowUnitLimit": 524288,
+  "resourceBudgets": {
+    "objects": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "instanceLimit": 128
+    },
+    "physics": {
+      "bodies": 20,
+      "joints": 0,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "bodyLimit": 128,
+      "jointLimit": 32
+    },
+    "recipes": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "parts": 40,
+      "customVertices": 10000,
+      "instanceLimit": 128,
+      "partLimit": 512,
+      "customVertexLimit": 524288
+    },
+    "collision": {
+      "entries": 20,
+      "colliders": 420,
+      "meshColliders": 420,
+      "sourceTriangles": 5680,
+      "entryLimit": 256,
+      "colliderLimit": 2048,
+      "triangleLimit": 1048576
+    },
+    "liquids": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "instanceLimit": 32,
+      "streamPointLimit": 33
+    }
+  },
+  "discoveryUnits": 77670,
+  "discoveryUnitLimit": 524288,
+  "conservationAndUndo": true
+}

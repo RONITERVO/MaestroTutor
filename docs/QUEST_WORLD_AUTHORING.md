@@ -2477,3 +2477,27 @@ engine costs and measured frame time. Discovery still examines the host inventor
 execution charging and preparation/publication remain conservative whole-host
 work. Saved/native capacity is unchanged. Larger worlds still require complete
 group scheduling, broader cost accounting and real-device evidence.
+
+
+### Saved and native container limits
+
+The current saved format permits **16 liquid containers per room**, within the
+separate limit of 64 creations plus book and Maestro. The process-wide native
+liquid limit is **32**. A dormant container still belongs to the saved inventory
+and discovery; it does not own a live surface or stream. None of these counts is
+a frame-time or memory guarantee.
+
+A desktop regression provisions nine independently saved native rooms with
+16 containers each: 20 live containers and 124 retired containers in total.
+Whole-host execution requests total 552,816 logical units against the 524,288
+allowance, while discovery requests total 77,670. Eight rooms initially receive
+a turn; the ninth waits, then progresses under continuing demand. Water,
+dormancy and per-world Undo survive the wait and a real receiver's 1+3 / 2+2
+group changes. This is shared-process contention evidence, not a nine-room user
+workflow, a larger single-world format or Quest performance acceptance.
+
+Execution charging still uses all saved containers. The planned group scheduler
+must admit discovery before it knows execution groups, validate spatial inputs
+at execution, and preserve service age and spent capacity through regrouping.
+It must keep actual moving-body dependencies together and avoid making input
+loading depend on an execution grant that itself waits for those inputs.
