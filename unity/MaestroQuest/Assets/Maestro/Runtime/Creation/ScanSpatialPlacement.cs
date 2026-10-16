@@ -16,10 +16,14 @@ namespace Maestro.Quest.Creation
         {TryProject(editor,local,out var projected);return projected;}
         internal bool TryProject(RoomEditor editor,RoomSpatialBounds local,out RoomSpatialBounds projected)
         {
-            projected=RoomSpatialBounds.Unknown;
+            projected=RoomSpatialBounds.Unknown;if(!TryPlacement(editor,out var matrix,out _))return false;
+            projected=local.Transform(matrix);return true;
+        }
+        internal bool TryPlacement(RoomEditor editor,out Matrix4x4 matrix,out Quaternion rotation){
+            matrix=Matrix4x4.identity;rotation=Quaternion.identity;
             var scan=editor&&editor.PhysicsWorld?editor.PhysicsWorld.GetComponent<ScannedRoom>():null;
-            if(!scan||!scan.ResolveDrawing(editor.transform,anchor,width,height,null,out _,out var position,out var rotation,out _))return false;
-            projected=local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one));return true;
+            if(!scan||!scan.ResolveDrawing(editor.transform,anchor,width,height,null,out _,out var position,out rotation,out _))return false;
+            matrix=Matrix4x4.TRS(position,rotation,Vector3.one);return true;
         }
     }
 }

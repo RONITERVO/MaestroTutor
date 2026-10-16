@@ -11876,3 +11876,53 @@ No headset, paid-provider, Android build, signing, deployment or Meta action ran
 Full offline Book/Headless journeys remain pinned to `9f38abca`; Android compilation
 to `7fe48619`. Device/provider, acoustic and Store acceptance remain open.
 V1 is incomplete.
+
+
+## Independent liquid interaction groups (2026-10-16)
+
+Liquid spatial readiness now belongs to complete interacting groups. A missing
+receiver or obstacle in one circuit no longer stalls an independent ready
+circuit. Potential stream and cavity paths close transitively, including an
+initially empty tilted receiver that can pour after intake and connected moving
+bodies. Shared read-only roofs/solids alone do not join quantity groups. Dormant
+ordinary cavities use retained/anchored poses and the same lip geometry as live
+pouring; unavailable terrain beds retain a conservative possible-stream envelope.
+
+Regrouping ready inputs preserves the live episode. An owned group that needs
+unavailable inputs publishes the existing shared episode once before loading.
+Continued waiting does not repeatedly checkpoint unrelated progress. All groups
+retain conserved inventory, atomic publication/rollback and Undo. Publication
+callbacks can begin fresh flow without outer cleanup erasing it; failed saving
+requires an explicit restart. Work-capacity admission remains host-wide.
+
+See the [shared contract](QUEST_WORLD_AUTHORING.md#liquid-spatial-dependencies-2026-10-16).
+
+Current desktop verification: **1,329 EditMode /
+1,785 PlayMode passed**, zero failures and
+three unchanged optional private-asset skips. Ten new native cases cover separate
+circuits, shared obstacles, dormant input loading, transitive dependencies,
+moving membership, transformed worlds, publication callbacks and rollback.
+Three regression cases first failed against the old runtime. Focused checks:
+43 EditMode / 31 PlayMode. An initial missing namespace and a shared-solid fixture
+that did not overlap both paths are retained as setup failures, not runtime
+regression evidence; the corrected fixture proves both shared input and distinct
+cavities before checking independence. The first full run found three existing
+liquid-identity regressions caused by premature publication on ready regrouping;
+that run was stopped and retained. The corrected runtime passes all three in
+the focused and final full runs, preserving the original identity boundary.
+
+**3,136 web tests / 341 files**, app/probe TypeScript and catalog
+provenance passed. Two web tests validate actual native simultaneous waiting/flow,
+conservation, bounded recovery and accepted publication. The full native run
+matches the captured fixture after session-ID normalization. Three fact
+descriptions changed; schemas and versions did not. **4,410 frozen inputs /
+3,144 native mirror inputs / 14 unrelated files preserved**
+were verified. Evidence: `.quest-evidence/flow-interaction-groups/`.
+
+Earlier audio-reset failure and unchanged successful retry remain recorded;
+this desktop run does not establish their cause or acoustic/device acceptance.
+
+Fair scheduling, bounded discovery/proof/engine work and transaction/history/storage
+costs remain before larger saved capacity. No headset, paid-provider, Android
+build, signing, deployment or Meta action ran. Full offline Book/Headless journeys
+remain pinned to `9f38abca`; Android compilation to `7fe48619`. V1 remains incomplete.

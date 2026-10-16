@@ -2223,10 +2223,22 @@ are loaded and retained; unavailable collision or liquid views cause waiting.
 Unrelated distant dormant objects are not loaded merely because flow is active.
 Exact native intersection and collision queries still decide the actual result.
 
-This is a whole-pass dependency check: no vessel transfers, spills or collects
-rain while that pass lacks required geometry. A previous accepted episode closes
-and releases its writer before loading begins. A failed save reverts the episode
-and requires a physics restart. Callbacks can start fresh flow without old cleanup
+Quantity-changing paths form complete interaction groups, including transitive
+cavity overlap, possible streams and connected moving bodies. A group cannot
+transfer, spill or collect rain while its required geometry is unavailable.
+Independent ready groups can continue while another waits or loads. Sharing a
+read-only solid obstacle or roof alone does not join their quantity dependencies.
+Missing ordinary containers use their retained or anchored pose and the same lip
+geometry as live pouring; nearby circuits need not merge merely because a view
+is dormant. Unknown cavity bounds conservatively join groups. An unavailable
+terrain bed retains a broad possible-stream envelope until its geometry loads.
+
+All groups retain one shared journal episode and atomic save/rollback. Regrouping
+already-ready inputs preserves that episode, including a bucket moving between
+basins. If an owned group needs unavailable inputs, the prior episode publishes
+once and releases its writer before callbacks/preparation. Continued
+waiting does not repeatedly checkpoint independent flow. A failed save reverts
+the episode and requires a physics restart. Callbacks can start fresh flow without old cleanup
 erasing it. Pause, loss of focus or an inactive world cancels its demand; a load
 cannot resume physics. Readiness notifications from successful loading do not
 cancel their own preparation or clear a failed-save stop. Recovery uses the current short timestep, without
@@ -2250,8 +2262,9 @@ collection still checks the resulting amount, liquid identity and exact cover.
 Preparation alone neither changes contents nor creates rain intake.
 
 This does not add fluid particles or claim unlimited simulation. Spatial bounds
-are conservative, and a missing dependency can delay the entire current flow
-pass. Fair scheduling of separate interacting groups and measurement of query,
-loading and native-engine costs remain required before increasing world limits.
+are conservative. Work-capacity admission is still reserved for the whole liquid
+host; spatial independence does not yet provide fair per-group work scheduling.
+Fair scheduling and measurement of query, loading and native-engine costs remain
+required before increasing world limits.
 Rain collection dependency checks do not establish complete weather presentation
 or acoustic acceptance.

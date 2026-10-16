@@ -54,14 +54,15 @@ namespace Maestro.Quest.Creation {
             return container.capacityMl*FractionBelow(container,n,lip,terrain);
         }
         internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up,TerrainLiquidGeometry terrain=null)=>Math.Max(0,container.amountMl-RetainedCapacity(container,worldRotation,up,terrain));
-        internal static Vector3 Lip(RoomContainer container,Transform root,Vector3 up,out Vector3 outward) {
-            var rotation=root.rotation*container.frame.rotation;var n=Quaternion.Inverse(rotation)*up;
+        internal static Vector3 Lip(RoomContainer container,Transform root,Vector3 up,out Vector3 outward)=>Lip(container,root.localToWorldMatrix,root.rotation,up,out outward);
+        internal static Vector3 Lip(RoomContainer container,Matrix4x4 root,Quaternion worldRotation,Vector3 up,out Vector3 outward) {
+            var rotation=worldRotation*container.frame.rotation;var n=Quaternion.Inverse(rotation)*up;
             var radial=new Vector3(-n.x,0,-n.z);radial=radial.sqrMagnitude>1e-8f?radial.normalized:Vector3.right;
             var lip=container.IsRectangular
                 ? new Vector3(Mathf.Abs(n.x)<1e-8f?0:-Mathf.Sign(n.x)*container.rectangle.width*.5f,0,Mathf.Abs(n.z)<1e-8f?0:-Mathf.Sign(n.z)*container.rectangle.depth*.5f)
                 : radial*container.radius;
             outward=rotation*(lip.sqrMagnitude>1e-12f?lip.normalized:radial);
-            return root.TransformPoint(container.frame.position+container.frame.rotation*(Vector3.up*container.height+lip));
+            return root.MultiplyPoint3x4(container.frame.position+container.frame.rotation*(Vector3.up*container.height+lip));
         }
         internal readonly struct Opening {
             readonly Vector3 mouth,normal;readonly Quaternion inverse;readonly float radius,halfWidth,halfDepth;readonly bool rectangle;

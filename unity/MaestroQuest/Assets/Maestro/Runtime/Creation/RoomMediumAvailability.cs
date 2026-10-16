@@ -32,9 +32,10 @@ namespace Maestro.Quest.Creation
         // A cavity can extend beyond the object's artwork and solid colliders.
         // Project its own accepted dimensions, using the same retained idle pose
         // as native activation. Do not load geometry or clone a recipe/animation.
-        internal RoomSpatialExtent MissingLiquidExtent(string id,RoomContainer live,out RoomContainer contents)
+        internal RoomSpatialExtent MissingLiquidExtent(string id,RoomContainer live,out RoomContainer contents)=>MissingLiquidExtent(id,live,out contents,out _,out _);
+        internal RoomSpatialExtent MissingLiquidExtent(string id,RoomContainer live,out RoomContainer contents,out Matrix4x4 placement,out Quaternion worldRotation)
         {
-            contents=null;if(journal==null||!journal.LiquidMetadata(id,out var saved,out var position,out var rotation,out var scale,out var anchor))return default;
+            placement=Matrix4x4.identity;worldRotation=Quaternion.identity;contents=null;if(journal==null||!journal.LiquidMetadata(id,out var saved,out var position,out var rotation,out var scale,out var anchor))return default;
             contents=live??saved;
             var item=Find(id);
             if(item){if(!Frame.Read(item.transform,out position,out rotation,out scale))return default;}
@@ -42,8 +43,10 @@ namespace Maestro.Quest.Creation
             var size=new Vector3(contents.IsRectangular?contents.rectangle.width:contents.radius*2,contents.height,contents.IsRectangular?contents.rectangle.depth:contents.radius*2);
             var extent=RoomSpatialExtent.Empty;extent.Include(new Bounds(Vector3.up*(contents.height*.5f),size),Matrix4x4.TRS(contents.frame.position,contents.frame.rotation,Vector3.one));
             var local=new RoomSpatialBounds{Collision=extent};
-            var authored=anchor?.Project(this,local)??local.Transform(Matrix4x4.TRS(position,rotation,Vector3.one*scale));
-            return authored.Transform(transform.localToWorldMatrix).Collision;
+            var authoredPlacement=Matrix4x4.TRS(position,rotation,Vector3.one*scale);
+            if(anchor!=null&&!anchor.TryPlacement(this,out authoredPlacement,out rotation))return default;
+            placement=transform.localToWorldMatrix*authoredPlacement;worldRotation=transform.rotation*rotation;
+            return local.Transform(authoredPlacement).Transform(transform.localToWorldMatrix).Collision;
         }
         internal bool LiquidNativePending(string id)=>NativeContentPending(id);
     }
