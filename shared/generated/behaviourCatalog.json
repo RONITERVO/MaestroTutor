@@ -23248,7 +23248,7 @@
         "authoring.idle",
         "room.active"
       ],
-      "description": "Enable/disable touch-and-lift material packing with a local footprint radius, requested local litres and explicit ball mass. Hands: separate from the accepted surface after enabling, touch with an index fingertip, then lift. Controller: hold trigger with its pointer within 25 cm, then release or leave the surface. One contact previews one ball; dragging/waiting cannot multiply material. Uses the same object.material.pack evaluator, saved measured store, sphere recipe/collision and atomic Undo. Ball appears above the original contact with 25 mm clearance; solid obstructions refuse, including scanned geometry. It is not automatically held or thrown. Grab it normally after successful publication. Choosing settings changes no objects and never starts physics. Enabling puts away drawing, sculpting and construction selection. Failed saves/tracking loss retain the draft; inspect material.pack.capture and use object.field.resolve to retry/discard. Retry requires the original source/pose and clear ball space. Settings are session-local, quantities independent of world scale. No finger/granular/compaction physics.",
+      "description": "Enable/disable touch-and-lift material packing with a local footprint radius, requested local litres and explicit ball mass. Hands: separate from the accepted surface after enabling, touch with an index fingertip, then lift. Controller: hold trigger with its pointer within 25 cm, then release or leave the surface. One contact previews one ball; dragging/waiting cannot multiply material. Uses the same object.material.pack evaluator, saved measured store, sphere recipe/collision and atomic Undo. Ball appears above the original contact with 25 mm clearance; solid obstructions refuse, including scanned geometry. It is not automatically held or thrown. Grab it normally after successful publication. Choosing settings changes no objects and never starts physics. Enabling puts away drawing, sculpting and construction selection. Failures before native acceptance and tracking loss retain the draft; accepted edits continue saving and cannot be repeated. The saving phase waits for confirmation; inspect material.pack.capture and use object.field.resolve to retry/discard. Retry requires the original source/pose and clear ball space. Settings are session-local, quantities independent of world scale. No finger/granular/compaction physics.",
       "example": {
         "enabled": true,
         "radius": 0.12,
@@ -23668,7 +23668,7 @@
         "authoring.idle",
         "room.active"
       ],
-      "description": "Choose off/raise/lower/level plus local brush radius and height for the next physical gesture. Controller: hold trigger with its pointer within 25 cm of the accepted field. Tracked hands: touch the accepted top with an index fingertip (15 mm contact band), move, and lift to finish; first separate after enabling or interruption. These use the same object.field.sculpt evaluator and one save/Undo per gesture, at most 32 sampled points. A stationary contact does not repeatedly add/remove height. Visible geometry previews the draft; collision and saved data update together only after successful publication. Failed or interrupted drafts require explicit Retry/Discard; no automatic retry after pause or tracking loss. Solid obstructions block physical contact. Settings are session-local and independent of saved object sculpt tips. Enabling sculpting puts away the pencil and construction selection; changing modes requires finishing/discarding an active draft. No shape changes, physics start or playback happen merely from choosing a mode. These controls are the same as the physical tray.",
+      "description": "Choose off/raise/lower/level plus local brush radius and height for the next physical gesture. Controller: hold trigger with its pointer within 25 cm of the accepted field. Tracked hands: touch the accepted top with an index fingertip (15 mm contact band), move, and lift to finish; first separate after enabling or interruption. These use the same object.field.sculpt evaluator and one save/Undo per gesture, at most 32 sampled points. A stationary contact does not repeatedly add/remove height. Visible geometry previews the draft; collision changes on native acceptance; saving completes in the background. Saving is observable, and success is reported only after confirmation. Failure or interruption before acceptance retains a draft for explicit Retry/Discard; an accepted edit cannot be retried as a draft. Stop after acceptance lets its save drain; no automatic retry after pause or tracking loss. Solid obstructions block physical contact. Settings are session-local and independent of saved object sculpt tips. Enabling sculpting puts away the pencil and construction selection; changing modes requires finishing/discarding an active draft. No shape changes, physics start or playback happen merely from choosing a mode. These controls are the same as the physical tray.",
       "example": {
         "mode": "lower",
         "radius": 0.08,
@@ -23717,14 +23717,14 @@
           "physicalSculpting.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
         "sculpt.retained",
         "sculpt.session.current"
       ],
-      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. For a material scoop/deposit, retry instead publishes the frozen field and carrier balance together after verifying both originals and the saved tip. Both are restored by one Undo. For hand/controller packing, retry invokes object.material.pack with the frozen footprint, quantity and position; the source pose must match and the ball space must still be clear. One Undo restores the field and removes the ball. Inspect material.pack.capture for its last saved session/object identity; inspect object.material.capture for scoop amounts. This does not enable a tool, start physics or play an animation.",
+      "description": "Read object.field.capture and resolve its exact retained sessionId. Retry uses the same frozen sampled path and object.field.sculpt evaluator, with one saved edit/Undo; the saved field must still match the original and ownership must be reacquired. Discard restores the accepted visual and removes only the in-memory draft. Collision has remained on the accepted mesh throughout preview. Changed/missing fields and a different room session refuse retry. A successful receipt cannot resolve a later draft. Active gestures cannot be resolved. Retained drafts block workspace/temporary-room changes; destroying the app/room loses unsaved memory. For a material scoop/deposit, retry instead publishes the frozen field and carrier balance together after verifying both originals and the saved tip. Both are restored by one Undo. For hand/controller packing, retry invokes object.material.pack with the frozen footprint, quantity and position; the source pose must match and the ball space must still be clear. One Undo restores the field and removes the ball. Inspect material.pack.capture for its last saved session/object identity; inspect object.material.capture for scoop amounts. This does not enable a tool, start physics or play an animation. Physical release and explicit Retry share the ordered background-save queue. The saving phase cannot be resolved again. Before acceptance Stop retains the exact draft; after acceptance it removes the draft and lets saving finish. A failed accepted save blocks further saves; inspect the room instead of retrying. Discard is immediate. Completion confirms the result.",
       "example": {
         "operation": "retry",
         "sessionId": "00000000000000000000000000000000"
@@ -39482,7 +39482,7 @@
         }
       },
       "label": "Physical sculpt draft",
-      "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit/pack has one point and zero height; inspect object.material.capture or material.pack.capture for quantities and the last packed ball identity. Preview is visible only; collision/saved heights remain accepted. Unsaved needs explicit Retry/Discard. Read object.field.capture.path for exact points. Reads do not change the draft.",
+      "description": "Current shared shape or material gesture, field target, brush settings, sampled point count and bounded error. Material take/deposit/pack has one point and zero height; inspect object.material.capture or material.pack.capture for quantities and the last packed ball identity. Before acceptance the preview is visible only. Saving includes queueing/preparation and native acceptance followed by durable publication; collision updates at acceptance. Unsaved needs explicit Retry/Discard. An accepted failure is no longer a retryable draft; inspect its status and room state. Read object.field.capture.path for exact points. Reads do not change the draft.",
       "features": [
         "physicalSculpting.v1"
       ]
@@ -39561,7 +39561,7 @@
         }
       },
       "label": "Physical material draft",
-      "description": "Current contact or retained measured scoop/deposit, exact session and both saved/preview carrier amounts. Field geometry and carried heap preview one bounded transfer. No volume is published until contact ends and one atomic save succeeds. Use object.field.resolve with this sessionId to retry/discard an interrupted draft; read object.field.capture.path for its one local centre. Reads do not begin, retry or repeat a gesture. Local litres do not imply world-space volume or rigid mass.",
+      "description": "Current contact or retained measured scoop/deposit, exact session and both saved/preview carrier amounts. Field geometry and carried heap preview one bounded transfer. The saving phase covers queueing, preparation and confirmation. Native acceptance applies both balances together; completion confirms their background save. Before acceptance interruption retains both drafts; after acceptance the edit cannot be retried. Use object.field.resolve with this sessionId to retry/discard an interrupted draft; read object.field.capture.path for its one local centre. Reads do not begin, retry or repeat a gesture. Local litres do not imply world-space volume or rigid mass.",
       "features": [
         "physicalMaterialTools.v1"
       ]
@@ -47398,11 +47398,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialPackToolCapability.cs",
-      "sha256": "486930f2f4fa118be503ff07fcfb971989d8be0bd883104bb748edb29bd8b5c8"
+      "sha256": "1121fae5602a4f678aa8c91a04931c893780baea2cb11fcca50938788ccfc8d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialScoopFacts.cs",
-      "sha256": "d2f9a74b551dfb91c417f4a3fae0d89d15f70e0da6ffe3995f1f1c178cf8e00b"
+      "sha256": "bc7f01c560e6eb13ecba19d9fc69f1671781aa4fdb7c0ba15766d48a295b3209"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialStoreCapability.cs",
@@ -47474,7 +47474,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
-      "sha256": "0ebadc4b48e57c545197f7d6f49c5f6efda67c6ebc7595f6fed906279d33ed3e"
+      "sha256": "ce12a40526297398929d33fcc7a82f3e28ebc2c9090b7bf32f3a0113fd111c93"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsEnvironmentCapability.cs",
@@ -48158,7 +48158,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "0e262390df37ac2d3ace2b82f3cad96da00a570626e5241d953efef34f43e656"
+      "sha256": "630655f73c586fc4d9e2a661236542a62afd5b693163e0e470ae8ca0b9d252a8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48174,7 +48174,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditFields.cs",
-      "sha256": "a3283269be1411985ef6b5990fc29b7fb592202cc782f2a968a302dee4be67c4"
+      "sha256": "6b886812c79081b8ad2c0231758a0d7fdfb1165f60ba11d12c1680af42ee653a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
@@ -48186,7 +48186,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "c751a56d9a28cf867230a25b7aa50b03d11d6719389274645e67ec3ec80f088e"
+      "sha256": "246206c16a22131cfe1131026ebcf3c6c5d0ea69e0fff3ade95092236341f6b5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48282,7 +48282,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialScoop.cs",
-      "sha256": "f458635e2a099e935c0d7fe53c28c04a334eb84dd8548f8c78cb0fdd37104652"
+      "sha256": "754f57724adebecdfe08e157fdc01f0bef399b18570c24d4913a6e93dc2292b9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialStore.cs",
@@ -48457,6 +48457,10 @@
       "sha256": "fae607ee6898f4173ebe6cbf14f769177ef73fc057c84a4a7186a8b726df0b07"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSculptGesture.cs",
+      "sha256": "296969387382832b606f51d370ca3a63c17fbc6ffd6fc14dad939609c660a12a"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
       "sha256": "fb0066f2dc09e6dcf270d9dfaf8184797697042a0599d99a8ce7c4d90008266a"
     },
@@ -48610,15 +48614,19 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Material.cs",
-      "sha256": "a3d22250389b0cfa3118cd14ee6d2081c426066c4e59be09fc1eb0ccac765333"
+      "sha256": "42a23f3aaa1bf4a16d1a2b19e73bf8e781fa680250aaf35634f88fd4a90f57ae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Packing.cs",
-      "sha256": "060eeff0744587ddea0b939fc0c3d47f96cc0e289920a0247f2f4d9ca448e369"
+      "sha256": "7b9db1db927c81f02bd820c25a4e1dedd1978aa66bec39113deef479f1d5e99b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.Resolution.cs",
+      "sha256": "900bacadae065b3addfde7af5eb7ed409632d2d7c35fed379c0be5b592abdc0e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SpatialSculpting.cs",
-      "sha256": "71e8aaf3e4a2be4e304e4fa941717b786a50bc8b91a12e9118bf49892a1b21a2"
+      "sha256": "5c9c5b887d83778692773857c1f3870c80cce73e9521f78189568c37626e8afd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/SurfaceEraseSelection.cs",

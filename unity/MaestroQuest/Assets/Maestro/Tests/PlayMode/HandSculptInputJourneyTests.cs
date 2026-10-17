@@ -93,6 +93,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(capture.SessionId, Is.EqualTo(session));
                 Assert.That(editor.Read(id).heightFields[0].heights, Is.EqualTo(before.heights), "Contact is only a preview");
                 Send(contact + Vector3.up * .2f); yield return null; yield return null;
+                yield return FinishSculptSave(capture);
                 Assert.That(capture.Busy, Is.False, editor.Status);
                 Assert.That(editor.Read(id).heightFields[0].VolumeLitres, Is.LessThan(before.VolumeLitres));
                 Assert.That(editor.Snapshot().objects.Length, Is.EqualTo(originalCount + (packing ? 1 : 0)));

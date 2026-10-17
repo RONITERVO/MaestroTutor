@@ -37,7 +37,7 @@ namespace Maestro.Quest.Creation {
             write=Editor.WriteGate.TryWrite(out error);if(write==null){Editor.ReportStatus(error);return;}
             SessionId=Guid.NewGuid().ToString("N");target=at;tool=null;mode="pack";radius=PackingRadius;height=0;role=RoomActorRole.Control;roomSession=Editor.TemporarySessionId;
             source=Editor.Read(at)?.heightFields?.FirstOrDefault()?.Copy();if(source==null){Clear();return;}before=JsonUtility.ToJson(source);
-            if(!Editor.Ownership.TryAcquire("sculpt:"+SessionId,"Your material packing tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>Finish(false),out lease,out error,preservePlacement:true)||!Unchanged(out error)){Editor.ReportStatus(error);Clear();return;}
+            if(!Editor.Ownership.TryAcquire("sculpt:"+SessionId,"Your material packing tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>Interrupt(),out lease,out error,preservePlacement:true)||!Unchanged(out error)){Editor.ReportStatus(error);Clear();return;}
             var item=Editor.Find(at);var view=item.GetComponent<HeightFieldView>();
             packingPosition=item.transform.position;packingRotation=item.transform.rotation;packingScale=item.transform.lossyScale;
             // Physical contact/clearance use world space; the shared evaluator saves room-local poses.
@@ -71,17 +71,10 @@ namespace Maestro.Quest.Creation {
             if(amount!=packingAmount||!field.heightFields[0].heights.SequenceEqual(draft.heights)){error="The packing result changed; discard this draft";return false;}
             return PackingSpaceClear(Editor.transform.TransformPoint(ball.position),ball.recipe.parts[0].size.x/2,out error);
         }
-        bool CommitPacking(out int changed,out string error){
-            changed=0;if(!PreparePacking(out error))return false;
-            var args=(JObject)packingArgs.DeepClone();args["source"]["revision"]=Editor.ObjectRevision(target);
-            if(!Editor.PackMaterial(args,out var id,out var amount,out error))return false;
-            lastPackSession=SessionId;lastPackedObject=id;lastPackedAmount=amount;
-            changed=source.heights.Zip(draft.heights,(a,b)=>a!=b?1:0).Sum();return true;
-        }
         void ClearPacking(){
             if(packingPreview){packingPreview.SetActive(false);ArtResources.Release(packingPreview);}packingPreview=null;ArtResources.Release(packingPaint);packingPaint=null;
             packingArgs=null;packingAmount=0;
         }
-        internal JObject ObservePacking()=>new(){["sessionId"]=SessionId,["phase"]=Packing?(Active?"contact":"unsaved"):"idle",["field"]=Packing?target:"",["requestedLitres"]=Packing?(double)packingArgs["amountLitres"]:0,["amountLitres"]=packingAmount,["position"]=Packing?packingArgs["position"].DeepClone():new JObject{["x"]=0,["y"]=0,["z"]=0},["lastSaved"]=new JObject{["sessionId"]=lastPackSession,["objectId"]=lastPackedObject,["amountLitres"]=lastPackedAmount},["error"]=Maestro.Quest.Imports.ImportObservation.Text(Packing?errorText:"")};
+        internal JObject ObservePacking()=>new(){["sessionId"]=SessionId,["phase"]=Packing?(Active?"contact":Resolving?"saving":"unsaved"):"idle",["field"]=Packing?target:"",["requestedLitres"]=Packing?(double)packingArgs["amountLitres"]:0,["amountLitres"]=packingAmount,["position"]=Packing?packingArgs["position"].DeepClone():new JObject{["x"]=0,["y"]=0,["z"]=0},["lastSaved"]=new JObject{["sessionId"]=lastPackSession,["objectId"]=lastPackedObject,["amountLitres"]=lastPackedAmount},["error"]=Maestro.Quest.Imports.ImportObservation.Text(Packing?errorText:"")};
     }
 }

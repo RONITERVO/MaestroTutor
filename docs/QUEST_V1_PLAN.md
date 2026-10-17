@@ -24,6 +24,8 @@ Later desktop checks cover saved physics, movement, gait and water preferences;
 see [shared settings completion](#shared-settings-completion--2026-10-17).
 Shared container and terrain actions now also await native application and durable
 saving through the ordered edit queue; see [terrain completion](#shared-terrain-authoring-and-transfer-completion--2026-10-17).
+Physical sculpting, scooping and hand/controller packing now share completion and
+interruption semantics; see [physical gesture completion](#physical-sculpt-scoop-and-packing-completion--2026-10-18).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -13850,3 +13852,57 @@ build, device, paid provider, signing, deployment or Meta action ran. The earlie
 full-native-suite checkpoint and unresolved Meta audio SDK crash remain separate;
 production reflections stay disabled. This is affected desktop/offline evidence,
 not headset, provider, acoustic or Store acceptance. Full v1 remains incomplete.
+
+
+## Physical sculpt, scoop and packing completion — 2026-10-18
+
+Releasing a sculpt, scoop or packing gesture now starts the same ordered
+completion/save path used by book, agent and program edits. The physical capture
+owns progression; explicit retry returns a handle to that same operation.
+Capture facts report saving while queued, preparing or awaiting durability.
+Duplicate resolution cannot repeat a dose or create a second packed ball.
+Mesh/collision and both material balances still change in one native transaction.
+
+Before acceptance, cancellation, pause/focus loss or invalidation retains the exact
+draft for explicit retry/discard. After acceptance, interruption clears the
+retryable draft and lets saving drain. An accepted publication failure preserves
+live state and earlier saved files, blocks further writes, and identifies a packed
+ball for inspection. Completion receipts and packing lastSaved appear only after
+confirmed saving; old operation handles cannot stop a later gesture.
+
+Material scooping uses an internal content scope that preserves current root
+position/rotation/scale at acceptance and Undo/Redo. It cannot create/remove
+identities or edit world resources. Ordinary held-tool release records runtime
+movement without invalidating the material candidate. Resizing remains authored:
+it saves the new scale and invalidates an older unaccepted candidate, leaving the
+material draft for explicit retry. Shape and packing retain full geometry
+transactions. No saved format, public capability ID or current capacity changes.
+
+Verification passes **90 EditMode and 117 PlayMode cases**,
+including two new scoped-journal and six new pending-gesture regressions, plus
+**3,190 web tests**, application TypeScript and catalog checks.
+Earlier retained runs exposed outdated synchronous assertions, a fixture whose
+manual grip input remained pressed, and full-object candidates rejecting carrier
+motion. The content scope and runtime release path address the actual movement
+issue. A new resize test then caught a comparison against an already-mutated pose;
+capturing the prior scale fixed it. The focused seven-case rerun and final broader
+run pass. Test deadlines and full-object revision guards were not relaxed.
+
+Complete offline Headless d1ed7b638f5540349a21cff6e73fcf00 passes with
+2,280 observations/2,271 read sets.
+Original Book fa6b433e1d9d4084bc659ed9e2a93194 passes with
+3,410 observations/1,070 requests.
+These retain actual native receipts for shared world editing, terrain and
+conserved transfers, ordinary Undo, preserved human edits, stale-request refusal,
+empty periodic inventories and reload without replay. The six new physical
+gesture cases run in Unity PlayMode, separately from these complete offline
+journeys; this is not a new headset or provider acceptance run.
+
+Evidence: .quest-evidence/physical-sculpt-completion-20261018/. All
+3,272 native inputs, 5,190 source inputs and 14 protected local files
+are checked. No Android build, device, paid provider, signing, deployment or Meta
+action ran. The earlier full-native-suite checkpoint and unresolved intermittent
+Meta audio SDK crash remain separate; production reflections stay disabled.
+Legacy synchronous material authoring/packing APIs, other synchronous editing
+and lifecycle paths, owner-thread geometry/snapshot costs, physical latency,
+capacity and the broader release gates remain open. Full v1 is incomplete.

@@ -4,15 +4,18 @@ namespace Maestro.Quest.Creation
 {
     // An internal transaction intent, not a stored format or public capability ID.
     // Each scope declares exactly what history can restore and native views can update.
-    internal enum RoomEditScope { Full, Visual, LiquidContents }
+    internal enum RoomEditScope { Full, Visual, LiquidContents, Content }
     internal static class RoomEditFields
     {
         internal static bool CanApply(RoomObjectData current,RoomObjectData requested,RoomEditScope scope)=>
+            scope==RoomEditScope.Content?current.id==requested.id&&current.kind==requested.kind:
             scope!=RoomEditScope.LiquidContents||
             current.containers?.Length==1&&current.containers[0]!=null&&requested.containers?.Length==1&&requested.containers[0]!=null;
         internal static RoomObjectData Apply(RoomObjectData current,RoomObjectData requested,RoomEditScope scope) {
             var value=current.Copy();
-            if(scope==RoomEditScope.Visual) {
+            if(scope==RoomEditScope.Content) {
+                value=requested.Copy();value.position=current.position;value.rotation=current.rotation;value.scale=current.scale;
+            } else if(scope==RoomEditScope.Visual) {
                 var source=requested.Copy();value.visibilityLayer=source.visibilityLayer;value.lights=source.lights;value.windows=source.windows;
             } else if(scope==RoomEditScope.LiquidContents) {
                 var source=requested.containers[0];var target=value.containers[0];
@@ -35,8 +38,8 @@ namespace Maestro.Quest.Creation
                 }
                 Liquids?.Synchronize(journal.Snapshot());UpdateSelection();return;
             }
-            if(history)Reconcile(poseChanges:edit.ChangedObjects,preparation:preparation);
-            else Reconcile(edit.ChangedObjects,applyPose,preparation:preparation);
+            if(history&&!edit.PreservesPlacement)Reconcile(poseChanges:edit.ChangedObjects,preparation:preparation);
+            else Reconcile(edit.ChangedObjects,applyPose&&!edit.PreservesPlacement,preparation:preparation);
         }
     }
 }

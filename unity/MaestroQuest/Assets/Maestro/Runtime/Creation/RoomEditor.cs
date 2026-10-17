@@ -148,8 +148,15 @@ namespace Maestro.Quest.Creation
             if(handOwners.Remove(id,out var lease))lease.Dispose();
             if(applying)return;
             FinishLiquidPour(out _);
+            // A released sculpt/scoop tool can keep moving while its component
+            // edit saves. Record placement as runtime progress, so this release
+            // cannot invalidate the already prepared gesture or repeat its dose.
             var before = journal.Read(id); if (before == null) return;
+            float previousScale=before.scale;
             var after = Pose(before, item.transform);
+            // Two-hand resizing remains an authored change. Keep its normal commit
+            // and invalidate an older gesture instead of silently dropping the scale.
+            if(GetComponent<SpatialSculpting>()?.ResolvingTool(id)==true&&previousScale==after.scale){RememberPlacement(id);ItemReleased?.Invoke(id);return;}
             if (!Commit(new[] { after }, Array.Empty<string>(), "Placed — saving", true)) ApplyPose(item, journal.Read(id));
             ItemReleased?.Invoke(id);
         }

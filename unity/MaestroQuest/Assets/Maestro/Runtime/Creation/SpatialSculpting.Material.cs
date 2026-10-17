@@ -25,7 +25,7 @@ namespace Maestro.Quest.Creation {
             source=surface.Copy();before=JsonUtility.ToJson(source);draft=source.Copy();materialSource=store.Copy();materialDraft=store.Copy();materialTip=tip.Copy();depositing=deposit;requestedLitres=tip.amountLitres;
             var patch=MaterialTransfer.Endpoint.Surface(draft,point,radius);var held=MaterialTransfer.Endpoint.Stored(materialDraft);
             if(!MaterialTransfer.Apply(deposit?held:patch,deposit?patch:held,requestedLitres,out materialResult,out error)){Editor.ReportStatus(error);Clear();return;}
-            if(!Editor.Ownership.TryAcquire("sculpt:"+SessionId,"Held material tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>Finish(false),out lease,out error,preservePlacement:true)||!Unchanged(out error)){Editor.ReportStatus(error);Clear();return;}
+            if(!Editor.Ownership.TryAcquire("sculpt:"+SessionId,"Held material tool",role,new[]{new BehaviourCatalog.Claim(target,"wholeTarget")},_=>Interrupt(),out lease,out error,preservePlacement:true)||!Unchanged(out error)){Editor.ReportStatus(error);Clear();return;}
             owner=-2;points.Clear();points.Add(point);errorText="";
             Editor.Find(target)?.GetComponent<HeightFieldView>()?.Preview(draft);MaterialPreview(materialDraft);
             Editor.ReportStatus(deposit?"Deposit preview — lift to save both material balances":"Scoop preview — lift to save the surface and carried material");
@@ -41,14 +41,10 @@ namespace Maestro.Quest.Creation {
             if(current==null||!Editor.Find(tool)||JsonUtility.ToJson(current.materialStores?.FirstOrDefault())!=JsonUtility.ToJson(materialSource)||JsonUtility.ToJson(current.sculptTips?.FirstOrDefault())!=JsonUtility.ToJson(materialTip)){error="The carrier or its material changed; discard this draft";return false;}return true;
         }
         bool PrepareMaterial(out RoomObjectData[] data,out string error)=>Editor.PrepareMaterialScoop(target,tool,source,materialSource,materialTip,draft,materialDraft,out data,out error);
-        bool CommitMaterial(out int changed,out string error){
-            changed=0;if(!PrepareMaterial(out var data,out error)||!Editor.CommitMaterialScoop(data,out error))return false;
-            changed=source.heights.Zip(draft.heights,(a,b)=>a!=b?1:0).Sum();return true;
-        }
         void MaterialPreview(RoomMaterialStore preview){if(Editor)Editor.Find(tool)?.GetComponent<MaterialToolContentsView>()?.Preview(preview);}
         void ClearMaterial(){MaterialPreview(null);materialSource=materialDraft=null;materialTip=null;requestedLitres=0;depositing=false;materialResult=default;}
         internal JObject ObserveMaterial()=>new(){
-            ["sessionId"]=SessionId,["phase"]=Material?(Active?"contact":"unsaved"):"idle",["tool"]=Material?tool:"",["field"]=Material?target:"",["direction"]=Material?(depositing?"deposit":"take"):"none",
+            ["sessionId"]=SessionId,["phase"]=Material?(Active?"contact":Resolving?"saving":"unsaved"):"idle",["tool"]=Material?tool:"",["field"]=Material?target:"",["direction"]=Material?(depositing?"deposit":"take"):"none",
             ["balance"]=new JObject{["requestedLitres"]=requestedLitres,["savedLitres"]=materialSource?.amountLitres??0,["previewLitres"]=materialDraft?.amountLitres??0,
             ["removedLitres"]=materialResult.RemovedLitres,["addedLitres"]=materialResult.AddedLitres,["roundingLitres"]=materialResult.RoundingLitres},
             ["temporary"]=Editor&&Editor.TemporaryRoom,["error"]=Maestro.Quest.Imports.ImportObservation.Text(Material?errorText:"")};

@@ -352,9 +352,9 @@ replay it. Temporary-room results remain local until Keep.
 
 The existing full-component transaction also revalidates terrain-backed liquid
 capacity: a changed bed preserves the water amount or refuses overflow. Height
-fields still require fixed owners. Physical sculpt/packing gestures and legacy
-synchronous editor APIs retain their existing resolution paths; this increment
-does not make every authoring path asynchronous. Snapshot capture and native
+fields still require fixed owners. Physical sculpt/scoop/packing gestures now use
+this pending-save boundary too (see below). Legacy synchronous editor APIs and
+other authoring families still need migration; not every edit is asynchronous. Snapshot capture and native
 mesh/collision reconciliation still run on the owner thread, and physical Quest
 latency remains unverified.
 
@@ -385,8 +385,10 @@ band and must first separate after enabling or interruption. This is deliberate
 shape authoring: a stationary contact does not repeatedly add/remove height.
 
 Each gesture samples at most 32 local X/Z points. The renderer previews its draft
-at up to 20 Hz; collision and saved source stay on the accepted mesh until one
-successful save/Undo at release, lift or the sample limit. Large discontinuities
+at up to 20 Hz. Release, lift or the sample limit starts one queued save/Undo.
+Collision and live source update together on native acceptance; completion waits
+for the background save. The preview is removed on acceptance, so it cannot
+cover the new collision with an old draft. Large discontinuities
 end the current path rather than carving through the skipped space. Solid
 obstructions block physical contact. Tool settings are in field-local metres;
 contact distances are world metres. Preview/collision separation needs explicit
@@ -401,13 +403,25 @@ Manual tools use control ownership, while program-held tools cannot preempt a
 human surface edit. No animation or physics starts from configuring a tip.
 
 `object.field.capture` reports the gesture/session, target, brush settings and
-bounded error; `object.field.capture.path` pages its exact points. A failed save,
-tracking interruption or pause retains the visual draft in memory and blocks
-workspace/temporary-room changes. `object.field.resolve` explicitly retries or
+bounded error, including the `saving` phase while queued, preparing or awaiting
+durable confirmation; `object.field.capture.path` pages its exact points. Failure,
+tracking interruption or pause before acceptance retains the visual draft in
+memory and blocks workspace/temporary-room changes. `object.field.resolve` explicitly retries or
 discards the exact retained session. Retry requires the original field, room
 session and ownership; successful receipt replay cannot apply the same gesture
 twice. Discard restores the accepted visual. App destruction loses unsaved drafts.
-The physical tray's Retry/Discard controls use the same resolution path.
+The physical tray's Retry/Discard controls use the same resolution path. Retry is
+a completion action; discard is immediate. Pending resolution refuses a second
+retry/discard. After native acceptance, Stop/pause removes the retryable draft
+and lets the save drain. An accepted save failure leaves the live edit in place,
+blocks further saving and requires inspection/recovery rather than another retry.
+Receipts remain immutable and cannot affect a later gesture. Temporary-room
+completion is local until Keep; snapshot/native geometry work still runs on the
+owner thread and Quest latency is not yet accepted. The held scoop uses an
+internal content-only transaction: root movement survives acceptance and Undo,
+while authored resizing still invalidates an older candidate. The scope cannot
+create/remove objects, change identity/kind or edit world resources. Packing
+retains the full transaction because it creates a new ball.
 
 Room v16, paired snapshot v15 and archive v15 preserve sculpt-tip source through
 copy, captured prototypes and workspace saves. The book and agent discover the

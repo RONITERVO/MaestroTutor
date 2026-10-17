@@ -12,6 +12,34 @@ namespace Maestro.Quest.Tests
         static RoomJournal Room()=>new(new RoomDocument{version=2,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro}}});
         static RoomObjectData Block()=>new(){id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.Block};
         static string State(RoomJournal journal)=>JsonUtility.ToJson(journal.Snapshot());
+        [Test] public void ContentEditsPreserveMovingPlacementThroughAcceptanceUndoAndRedo()
+        {
+            var journal=Room();var block=Block();Assert.IsTrue(journal.Apply(new[]{block},Array.Empty<string>(),out var error),error);
+            var requested=journal.Read(block.id);requested.color=Color.red;requested.position=Vector3.one*10;
+            Assert.IsTrue(journal.Prepare(new[]{requested},Array.Empty<string>(),out var edit,out error,scope:RoomEditScope.Content),error);
+            using(edit){
+                Assert.AreEqual(Vector3.zero,edit.ReadObject(block.id).position);Assert.IsTrue(edit.PreservesPlacement);
+                Assert.IsTrue(journal.UpdatePlacement(block.id,Vector3.right,Quaternion.Euler(0,30,0),runtime:true));
+                Assert.IsTrue(edit.Accept(journal,out error,allowRuntimeProgress:true),error);
+            }
+            Assert.AreEqual(Vector3.right,journal.Read(block.id).position);Assert.AreEqual(Color.red,journal.Read(block.id).color);
+            Assert.IsTrue(journal.UpdatePlacement(block.id,Vector3.up,Quaternion.identity,runtime:true));
+            Assert.IsTrue(journal.Undo());Assert.AreEqual(block.color,journal.Read(block.id).color);Assert.AreEqual(Vector3.up,journal.Read(block.id).position);
+            Assert.IsTrue(journal.Redo());Assert.AreEqual(Color.red,journal.Read(block.id).color);Assert.AreEqual(Vector3.up,journal.Read(block.id).position);
+        }
+        [Test] public void ContentScopeRefusesIdentityMembershipMetadataAndConcurrentAuthoredChanges()
+        {
+            var journal=Room();var block=Block();Assert.IsTrue(journal.Apply(new[]{block},Array.Empty<string>(),out var error),error);
+            Assert.IsFalse(journal.Prepare(new[]{Block()},Array.Empty<string>(),out _,out _,scope:RoomEditScope.Content));
+            Assert.IsFalse(journal.Prepare(Array.Empty<RoomObjectData>(),new[]{block.id},out _,out _,scope:RoomEditScope.Content));
+            var changed=block.Copy();changed.kind=RoomObjectKind.Ball;
+            Assert.IsFalse(journal.Prepare(new[]{changed},Array.Empty<string>(),out _,out _,scope:RoomEditScope.Content));
+            Assert.IsFalse(journal.Prepare(new[]{block},Array.Empty<string>(),out _,out _,scope:RoomEditScope.Content,lighting:new RoomLighting()));
+            changed=block.Copy();changed.color=Color.red;
+            Assert.IsTrue(journal.Prepare(new[]{changed},Array.Empty<string>(),out var edit,out error,scope:RoomEditScope.Content),error);
+            using(edit){var newer=block.Copy();newer.color=Color.blue;Assert.IsTrue(journal.Apply(new[]{newer},Array.Empty<string>(),out error),error);
+                Assert.IsFalse(edit.Accept(journal,out _,allowRuntimeProgress:true));Assert.AreEqual(Color.blue,journal.Read(block.id).color);}
+        }
         [Test] public void PreparationCopiesInputsAndReturnedCandidatesWithoutMutatingSourceOrRevisions()
         {
             var journal=Room();var block=Block();var time=new RoomWorldTime{settings=new(){running=true,frames=new[]{new WorldLightKeyframe{second=1},new WorldLightKeyframe{second=2}}}};

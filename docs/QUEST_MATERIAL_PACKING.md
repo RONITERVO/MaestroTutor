@@ -112,24 +112,34 @@ While the user or a program holds a tool, contact within 15 world millimetres of
 an accepted field starts one bounded transfer preview. The tip's local +Z is the
 opening normal: aligned with field-up by at least 0.6 takes material; aligned
 oppositely deposits it. Sideways contact does neither. Dragging or waiting cannot
-multiply the dose. Lift, contact loss or release commits both quantities with one
-save and Undo. Loose tools are inert. Contact uses the same solid obstruction
+multiply the dose. Lift, contact loss or release queues both quantities as one
+edit and Undo. Native acceptance applies both together; completion confirms the
+background save. Loose tools are inert. Contact uses the same solid obstruction
 checks as physical sculpting. Saved tip radius uses field-local metres; quantities
 remain local litres independent of scale or rigid-body mass.
 
 Visible field geometry and the carrier's bounded heap show the draft; collision
-continues to use accepted heights until publication. The heap is presentation,
+continues to use accepted heights until native acceptance. The heap is presentation,
 with no collider, per-grain physics, inferred density or airborne spilling. Its
 size indicates fraction of capacity, not a second measurement of material.
 `object.material.capture` exposes tool, field, direction and a `balance` record
 with saved/preview/requested/removed/added/rounding litres. The shared field
 capture exposes its one exact centre.
 
-Save failure, tracking/focus interruption and actor takeover retain the draft.
+Before acceptance, save failure, tracking/focus interruption and actor takeover
+retain the draft. While queued/preparing/saving, the shared capture reports
+`saving` and rejects duplicate resolution. After acceptance, Stop or interruption
+removes the draft and lets the save drain; an unconfirmed save blocks further
+writes and requires inspection, never automatic replay.
 `object.field.resolve` explicitly retries/discards that exact session; retries
 verify both original components, the tip and room session, and reacquire surface
 ownership. A retained draft prevents editing the carrier or switching workspaces.
-Moving a held carrier is allowed; successful publication saves its current pose.
+Moving a held carrier is allowed. Its content-only transaction preserves current
+root placement at acceptance and Undo/Redo. Releasing the tool during saving
+records runtime position/rotation progress; the prepared material edit does not
+overwrite it. Ordinary placement checkpoints persist later movement. A two-hand
+resize remains an authored placement change: it is saved normally and invalidates
+an older unaccepted material candidate, requiring explicit retry. No scale is lost.
 No interruption automatically repeats a transfer. Discard restores accepted
 visuals. Destroying the app loses an unsaved in-memory draft.
 
@@ -159,7 +169,7 @@ fixes one footprint and one quantity; dragging or waiting cannot accumulate more
 The surface and a noninteractive ball preview are visible while accepted collision
 and saved data stay unchanged. The ball is placed above the original contact with
 25 mm clearance. A bounded solid-overlap query refuses occupied space, including
-scanned surfaces. It checks again on publication/retry.
+scanned surfaces. It checks again while queued, on native acceptance and on retry.
 
 The ordinary `object.material.pack` evaluator supplies exact source loss, sphere
 size, collision, measured store and explicit mass. Successful publication saves
@@ -172,8 +182,13 @@ Physical contact, the preview and obstruction checks use world coordinates; save
 ball placement uses the editor's room coordinates, including after Recall moves
 or rotates the room.
 The shared `object.field.capture.path` gives its single local contact point.
-Tracking/focus loss, ownership interruption or a failed save retains the draft;
-`object.field.resolve` retries/discards that exact session. Retry requires the
+Before native acceptance, tracking/focus loss, ownership interruption or a failed
+save retains the draft; `object.field.resolve` retries/discards that exact session.
+The `saving` phase includes ordered queueing, preparation and durable confirmation.
+After acceptance the ball and field remain live, Stop lets their save drain and
+no retryable draft remains. Failed accepted saving blocks further writes; the
+action interruption status identifies the already-created ball for inspection.
+`lastSaved` updates only after confirmed completion, not merely acceptance. Retry requires the
 original field and world pose, current capacity/ownership and clear ball space.
 Discard restores accepted visuals. No automatic retry occurs after resume.
 `lastSaved` is the most recent successful physical packing session and object ID

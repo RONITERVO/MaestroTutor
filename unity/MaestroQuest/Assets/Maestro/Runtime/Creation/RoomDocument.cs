@@ -348,11 +348,11 @@ namespace Maestro.Quest.Creation
                     (timeEdit!=WorldTimeEdit.Exact?(worldTime==null||weather!=null||weatherTransition):(weather==null||worldTime!=null)))return false;
                 if(timeEdit is not (WorldTimeEdit.Exact or WorldTimeEdit.Settings or WorldTimeEdit.Position))return false;
             }
-            if(scope is not (RoomEditScope.Full or RoomEditScope.Visual or RoomEditScope.LiquidContents))return false;
+            if(scope is not (RoomEditScope.Full or RoomEditScope.Visual or RoomEditScope.LiquidContents or RoomEditScope.Content))return false;
             if(scope!=RoomEditScope.Full) {
                 error="Scoped edits cannot create, remove or change unrelated object content";
                 if(removals.Length>0||observedBefore!=null||structureEdits!=null||audioEdits!=null||environmentEdits!=null||appearanceEdits!=null||regionEdits!=null)return false;
-                if(scope==RoomEditScope.LiquidContents&&(visibilityEdits!=null||lighting!=null||worldTime!=null||weather!=null))return false;
+                if(scope!=RoomEditScope.Visual&&(visibilityEdits!=null||lighting!=null||worldTime!=null||weather!=null))return false;
                 replacements=replacements.Select(x=>x.Copy()).ToArray();
                 foreach(var value in replacements) {
                     if(!items.TryGetValue(value.id,out var current)||!RoomEditFields.CanApply(current,value,scope))return false;
