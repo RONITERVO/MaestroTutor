@@ -291,7 +291,7 @@ try{
   const catalog=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.create',version:1}}]);
   const definition=catalog.catalog?.definition as {example?:Record<string,unknown>}|undefined;
   if(!definition?.example)throw new Error('The native create capability has no example.');
-  const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Native probe ball'}}}}]);
+  const created=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Native probe ball'}}}}]));
   const selected=created.execution?.selected;
   if(selected?.phase!=='completed'||typeof selected.output?.objectId!=='string')throw new Error('Creation did not produce a completed native receipt.');
   const target=selected.output.objectId;const original=await nativeObjects.observation(target);
@@ -355,7 +355,7 @@ try{
   const cases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/lathe-contract.json','utf8'));
   const cup=cases[0].recipe;
   // This checks live collision ownership; keep the cup inside the stationary viewer's frustum.
-  const lathe=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Native profile cup',x:.2,y:1.4,z:1.5,scale:1,recipe:cup}}}}]);
+  const lathe=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Native profile cup',x:.2,y:1.4,z:1.5,scale:1,recipe:cup}}}}]));
   const cupId=lathe.execution?.selected?.output?.objectId;if(typeof cupId!=='string')throw new Error('Lathe creation did not return an object.');
   const inspected=await execute([{action:'inspect',target:cupId}]);
   if(inspected.inspection?.recipe?.parts[0].shape!=='lathe')throw new Error('The shared client cannot inspect the native lathe.');
@@ -404,7 +404,7 @@ try{
   await execute([{action:'undo'}]);if(await nativeObjects.exists(cupId))throw new Error('Lathe Undo did not remove the created geometry.');
   const extrusionCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/extrusion-contract.json','utf8'));
   const extrusionRecipe=extrusionCases[0].recipe;
-  const extrusionCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable bracket',x:.2,y:1,z:.5,scale:1,recipe:extrusionRecipe}}}}]);
+  const extrusionCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable bracket',x:.2,y:1,z:.5,scale:1,recipe:extrusionRecipe}}}}]));
   const extrusionId=extrusionCreated.execution?.selected?.output?.objectId;if(typeof extrusionId!=='string')throw new Error('Extrusion creation did not return an object');
   const extrusionBefore=await execute([{action:'inspect',target:extrusionId}]);if(extrusionBefore.inspection?.recipe?.parts[0].shape!=='extrude')throw new Error('Native extrusion source is not inspectable');
   const extrusionPart=structuredClone(extrusionBefore.inspection.recipe.parts[0]);extrusionPart.profile![3].x=0;
@@ -415,7 +415,7 @@ try{
   await writeFile(join(directory,'extrusion-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, profile readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:extrusionBefore,after:extrusionAfter,read:extrusionRead,undo:extrusionUndo,restored:extrusionRestored},null,2));
   await execute([{action:'undo'}]);
   const sweepCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/sweep-contract.json','utf8'));
-  const sweepCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable handle',x:.2,y:1,z:.5,scale:1,recipe:sweepCases[0].recipe}}}}]);
+  const sweepCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Editable handle',x:.2,y:1,z:.5,scale:1,recipe:sweepCases[0].recipe}}}}]));
   const sweepId=sweepCreated.execution?.selected?.output?.objectId;if(typeof sweepId!=='string')throw new Error('Sweep creation did not return an object');
   const sweepBefore=await execute([{action:'inspect',target:sweepId}]);if(sweepBefore.inspection?.recipe?.parts[0].shape!=='sweep')throw new Error('Native sweep source is not inspectable');
   const sweepPart=structuredClone(sweepBefore.inspection.recipe.parts[0]);sweepPart.path![2].z=.05;
@@ -426,7 +426,7 @@ try{
   await writeFile(join(directory,'sweep-authoring.json'),JSON.stringify({boundary:'Real full-app native recipe creation, editing, path readback and Undo. Browser replays these exact acknowledgements; no headset performance proof.',before:sweepBefore,after:sweepAfter,read:sweepRead,undo:sweepUndo,restored:sweepRestored},null,2));
   await execute([{action:'undo'}]);
   const patternCases=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/pattern-contract.json','utf8'));
-  const patternCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Pattern panel',x:.2,y:1,z:.5,scale:1,recipe:patternCases[1].recipe}}}}]);
+  const patternCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Pattern panel',x:.2,y:1,z:.5,scale:1,recipe:patternCases[1].recipe}}}}]));
   const patternId=patternCreated.execution?.selected?.output?.objectId;if(typeof patternId!=='string')throw new Error('Pattern creation failed');
   const patternBefore=await execute([{action:'inspect',target:patternId}]);if(!patternBefore.inspection?.recipe)throw new Error('Pattern source missing');
   const patternPart=structuredClone(patternBefore.inspection.recipe.parts[0]);patternPart.pattern={kind:'stripes',plane:'xz',columns:4,rows:8,secondary:'#eeddcc'};
@@ -441,7 +441,7 @@ try{
   const templateDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.create',version:1}}]);
   const templateSchema=templateDefinition.catalog?.definition as {input:{oneOf:{examples:Record<string,unknown>[]}[]}};
   const templateArgs=templateSchema.input.oneOf.find(branch=>branch.examples[0]?.kind==='template')?.examples[0];if(!templateArgs)throw new Error('Starter templates unavailable');
-  const templateAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:templateArgs}}}]);
+  const templateAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:templateArgs}}}]));
   const templateId=templateAfter.execution?.selected?.output?.objectId;if(typeof templateId!=='string')throw new Error('Template creation returned no object');
   const templateRead=await execute([{action:'inspect',target:templateId}]);
   if((await nativeObjects.observation(templateId)).name!=='Cup'||templateRead.inspection?.recipe?.parts.length!==2)throw new Error('Template geometry did not expand');
@@ -454,7 +454,7 @@ try{
   const brickSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json','utf8'));
   const {createHash}=await import('node:crypto');const brickHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/brick.json')).digest('hex');
   const snowHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json')).digest('hex');
-  const fieldCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Editable snow'}}}}]);
+  const fieldCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Editable snow'}}}}]));
   const fieldId=fieldCreated.execution?.selected?.output?.objectId;if(typeof fieldId!=='string')throw new Error('Height surface creation failed');
   const groundPosition=(await nativeObjects.observation(fieldId)).position;
   const groundRead=(position:{x:number;y:number;z:number})=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.ground',version:1,arguments:{position,radius:.05}}}]);
@@ -546,7 +546,7 @@ try{
   const fieldRestored=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field.samples',version:1,arguments:{target:fieldId,revision:await nativeObjects.revision(fieldId),offset:144}}}]);
   if(Math.abs((fieldRestored.catalog?.value as {heights:number[]}).heights[0]-.08)>.000001)throw new Error('Surface Undo did not restore heights');
   await writeFile(join(directory,'height-field-authoring.json'),JSON.stringify({boundary:'Real shared-client/native surface creation, sculpt, readback and Undo. Physical collision is tested separately; no headset/provider proof.',created:fieldCreated,search:fieldSearch,definition:fieldDefinition,before:fieldBefore,call:fieldCall,after:fieldAfter,read:fieldRead,undo:fieldUndo,restored:fieldRestored},null,2));
-  const receivingField=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Receiving snow',x:1.5}}}}]);
+  const receivingField=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:snowHash,name:'Receiving snow',x:1.5}}}}]));
   const receivingId=receivingField.execution?.selected?.output?.objectId;if(typeof receivingId!=='string')throw new Error('Receiving height surface creation failed');
   const transferFieldRead=async(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field',version:1,arguments:{target}}}]);
   const transferBeforeSource=await transferFieldRead(fieldId),transferBeforeDestination=await transferFieldRead(receivingId);
@@ -581,7 +581,7 @@ try{
   // A carried store has one authoritative balance; surface/store transfers share the native kernel.
   const materialValue=(state:RoomAgentState)=>{if(state.catalog?.operation!=='inspect'||!('value' in state.catalog))throw new Error('Expected a native material fact');return state.catalog.value as {revision:number;configured?:boolean;definition:{amountLitres:number;capacityLitres:number;material:string;color:{r:number;g:number;b:number;a:number}}};};
   const materialRead=(id:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.material',version:1,arguments:{target:id}}}]);
-  const transferCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,shape:'block',name:'Carried material store',x:1,y:1,z:.7}}}}]);
+  const transferCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,shape:'block',name:'Carried material store',x:1,y:1,z:.7}}}}]));
   const storeId=transferCreated.execution?.selected?.output?.objectId;if(typeof storeId!=='string')throw new Error('Material carrier was not created');
   const materialSourceBefore=await transferFieldRead(fieldId);const sourceMaterial=materialValue(materialSourceBefore).definition;
   await execute([{action:'execution',execution:{operation:'start',call:{id:'object.material.edit',version:1,arguments:{operation:'configure',target:storeId,revision:await nativeObjects.revision(storeId),definition:{capacityLitres:1,amountLitres:0,material:sourceMaterial.material,color:sourceMaterial.color}}}}}]);
@@ -606,7 +606,7 @@ try{
   await execute([{action:'undo'}]);
   await execute([{action:'undo'}]);
   const sculptHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/sculpt-brush.json')).digest('hex');
-  const sculptCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:sculptHash,name:'Editable sculpt brush'}}}}]);
+  const sculptCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:sculptHash,name:'Editable sculpt brush'}}}}]));
   const sculptId=sculptCreated.execution?.selected?.output?.objectId;if(typeof sculptId!=='string')throw new Error('Sculpt brush creation failed');
   const sculptSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'sculpt tip',offset:0}}]);
   const sculptDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.sculptTip.edit',version:1}}]);
@@ -624,7 +624,7 @@ try{
   await writeFile(join(directory,'physical-sculpt-authoring.json'),JSON.stringify({boundary:'Real full-app shared-client/native sculpt-tip edit, settings, facts and Undo. Physical gestures are separate PlayMode tests; no headset/provider proof.',created:sculptCreated,search:sculptSearch,definition:sculptDefinition,before:sculptBefore,after:sculptAfter,read:sculptRead,undo:sculptUndo,restored:sculptRestored,tool:sculptTool,idle:sculptIdle},null,2));
   await execute([{action:'undo'}]);
   const scoopHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/material-scoop.json')).digest('hex');
-  const scoopCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:scoopHash,name:'Editable material scoop'}}}}]);
+  const scoopCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,templateHash:scoopHash,name:'Editable material scoop'}}}}]));
   const scoopId=(scoopCreated.execution?.selected?.output as {objectId?:unknown}|undefined)?.objectId;if(typeof scoopId!=='string')throw new Error('Material scoop was not created');
   const physicalPackingSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'physical material packing tool',offset:0}}]);
   const physicalPackingDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'material.pack.tool.set',version:1}}]);
@@ -653,8 +653,8 @@ try{
   const scoopUndo=await execute([{action:'undo'}]),scoopRestored=await readScoop();if(materialScoopValueOf(scoopRestored).definition.amountLitres!==.25)throw new Error('Scoop Undo did not restore its dose');
   await writeFile(join(directory,'material-scoop-authoring.json'),JSON.stringify({boundary:'Full native app template, shared sculpt-tip action, material/capture facts and Undo. Physical contact is separately verified in Unity PlayMode; no headset/provider proof.',created:scoopCreated,search:scoopSearch,definition:scoopDefinition,before:scoopBefore,call:scoopCall,after:scoopAfter,read:scoopRead,store:scoopStore,idle:scoopIdle,undo:scoopUndo,restored:scoopRestored},null,2));
   await execute([{action:'undo'}]);
-  const liquidA=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,name:'Source cup'}}}}]);
-  const liquidB=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,name:'Receiving cup',x:.8}}}}]);
+  const liquidA=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,name:'Source cup'}}}}]));
+  const liquidB=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...templateArgs,name:'Receiving cup',x:.8}}}}]));
   const liquidFrom=liquidA.execution?.selected?.output?.objectId,liquidTo=liquidB.execution?.selected?.output?.objectId;
   if(typeof liquidFrom!=='string'||typeof liquidTo!=='string')throw new Error('Container templates returned no object identities');
   const liquidRead=async(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container',version:1,arguments:{target}}}]);
@@ -700,7 +700,7 @@ try{
   for(const [template,amount,capacity] of [['bucket',0,2000],['basin',32000,40000]] as const){
     const hash=createHash('sha256').update(await readFile(`unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/${template}.json`)).digest('hex');
     const before=structuredClone(lease.state()),beforeCount=await nativeObjects.count();
-    const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+    const created=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]));
     const id=created.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Missing scoop-template object identity');
     const contents=await liquidRead(id),definition=(contents.catalog?.value as {definition:{amountMl:number;capacityMl:number}}).definition;
     if(definition.amountMl!==amount||definition.capacityMl!==capacity)throw new Error('Scoop-template quantities differ from the source');
@@ -709,7 +709,7 @@ try{
   }
   await writeFile(join(directory,'scooping-templates.json'),JSON.stringify({boundary:'Ordinary shared creation, accepted quantities and one Undo; physical scooping is tested separately.',templates:scoopTemplates},null,2));
   const poolHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/shallow-pool.json')).digest('hex');
-  const poolCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:poolHash,name:'Shallow pool',x:.4,y:1,z:.6,scale:1}}}}]);
+  const poolCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:poolHash,name:'Shallow pool',x:.4,y:1,z:.6,scale:1}}}}]));
   const poolId=poolCreated.execution?.selected?.output?.objectId;if(typeof poolId!=='string')throw new Error('Pool creation returned no object identity');
   const rectangleBefore=structuredClone(lease.state());
   const rectangleSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Configure or fill a liquid container',offset:0}}]);
@@ -727,7 +727,7 @@ try{
   await execute([{action:'undo'}]);
   const chalkSource=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json','utf8'));
   const chalkHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalkboard.json')).digest('hex');
-  const chalkCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:chalkHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+  const chalkCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:chalkHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]));
   const chalkId=chalkCreated.execution?.selected?.output?.objectId;if(typeof chalkId!=='string')throw new Error('Chalkboard template did not create an object');
   const chalkTool=await execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.tool.set',version:1,arguments:{mode:'surface',red:1,green:1,blue:1,radius:.003}}}}]);
   const chalkToolRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'drawing.tool',version:1}}]);
@@ -752,7 +752,7 @@ try{
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await execute([{action:'execution',execution:{operation:'start',call:{id:'drawing.tool.set',version:1,arguments:{mode:'off',red:1,green:1,blue:1,radius:.003}}}}]);
   await writeFile(join(directory,'surface-authoring.json'),JSON.stringify({boundary:'Real Unity native states and shared transport; browser acknowledgements replayed separately. No headset or provider proof.',before:chalkCreated,tool:chalkTool,toolRead:chalkToolRead,search:surfaceSearch,definition:surfaceDefinition,current:surfaceCurrent,after:surfaceAfter,read:inkRead,erased,erasedRead,undo:surfaceUndo},null,2));
-  const curvedCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Curved drawing sample'}}}}]);
+  const curvedCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Curved drawing sample'}}}}]));
   const curvedId=curvedCreated.execution?.selected?.output?.objectId;if(typeof curvedId!=='string')throw new Error('Curved drawing sample missing');
   const curvedSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Edit a drawing surface',offset:0}}]);
   const curvedActionDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.surface.edit',version:1}}]);
@@ -783,7 +783,7 @@ try{
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   await writeFile(join(directory,'curved-surface-authoring.json'),JSON.stringify({boundary:'Actual Unity full-app surface configuration, editable arc ink, typed readback and Undo through the shared client. Browser replays exact receipts; physical interaction and rendering are separate native tests.',before:curvedCreated,search:curvedSearch,definition:curvedActionDefinition,current:curvedCurrent,after:curvedConfigure,read:curvedRead,ink:curvedInk,points:curvedPoints,undone:curvedUndone},null,2));
   const tipHash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/chalk.json')).digest('hex');
-  const tipCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:tipHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+  const tipCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:tipHash,name:'',x:.4,y:1,z:.6,scale:1}}}}]));
   const tipId=tipCreated.execution?.selected?.output?.objectId;if(typeof tipId!=='string')throw new Error('Chalk template did not create a tool');
   const tipSearch=await execute([{action:'catalog',catalog:{operation:'search',query:"Configure an object's drawing tip",offset:0}}]);
   const tipDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.drawingTip.edit',version:1}}]);
@@ -802,7 +802,7 @@ try{
   const drawingKit=[];
   for(const name of ['pencil','brush','eraser']){
    const hash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/'+name+'.json')).digest('hex');
-   const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]);
+   const created=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'',x:.4,y:1,z:.6,scale:1}}}}]));
    const id=created.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Drawing-kit object missing');
    const current=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.drawingTip',version:1,arguments:{target:id}}}]);
    const tip=current.catalog?.value as {revision:number;definition:{mode:string}};if(tip?.definition.mode!==(name==='eraser'?'erase':'draw'))throw new Error('Drawing-kit mode differs');
@@ -819,7 +819,7 @@ try{
   // Live joint readback needs observed native pieces; saved authoring also works offscreen.
   const layoutIds:string[]=[];let layoutBefore=templateUndo;
   for(let i=0;i<2;i++){
-   layoutBefore=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.4,z:2,scale:1}}}}]);
+   layoutBefore=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.4,z:2,scale:1}}}}]));
    const id=layoutBefore.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Layout member missing');layoutIds.push(id);
   }
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
@@ -1149,9 +1149,9 @@ try{
   if(!Array.isArray(activeButtonIds)||activeButtonIds.length!==2||!activeButtonIds.every(id=>typeof id==='string'))throw new Error('Active spring button did not create two members');
   // Real full-app contact capture on the synthetic floor, with both inputs in view.
   // Keep their relative throw geometry and clearance from the walking fixtures.
-  const catchHolderCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Catch socket',x:1.5,y:1,z:4,scale:1,recipe:{version:1,parts:[{id:'Socket',parent:null,shape:'box',position:{x:0,y:0,z:0},size:{x:.08,y:.08,z:.08},rotation:{x:0,y:0,z:0,w:1},color:{r:.2,g:.6,b:.6,a:1}}],tracks:[],duration:1,playing:false,loop:false}}}}}]);
+  const catchHolderCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Catch socket',x:1.5,y:1,z:4,scale:1,recipe:{version:1,parts:[{id:'Socket',parent:null,shape:'box',position:{x:0,y:0,z:0},size:{x:.08,y:.08,z:.08},rotation:{x:0,y:0,z:0,w:1},color:{r:.2,g:.6,b:.6,a:1}}],tracks:[],duration:1,playing:false,loop:false}}}}}]));
   const catchHolder=catchHolderCreated.execution?.selected?.output?.objectId;if(typeof catchHolder!=='string')throw new Error('Catch holder creation failed');
-  const catchCreated=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Catch ball',x:.8,y:1,z:4.3}}}}]);
+  const catchCreated=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...definition.example,name:'Catch ball',x:.8,y:1,z:4.3}}}}]));
   const catchTarget=catchCreated.execution?.selected?.output?.objectId;if(typeof catchTarget!=='string')throw new Error('Catch ball creation failed');
   const catchSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Catch a physical object',offset:0}}]);
   const catchDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.physics.catch',version:1}}]);

@@ -82,8 +82,8 @@ namespace Maestro.Quest.Creation
             RoomJournal.PreparedEdit edit=null;
             try {
                 if(!prepare(out var replacements,out error)||!journal.Prepare(replacements,removals,out edit,out error))return false;
-                // Component changes do not acquire or reset physical pose. Deletion
-                // needs only the saved identity, including unavailable native objects.
+                // Creation/component changes do not hold existing physical poses.
+                // Deletion needs only saved identity, including unavailable models.
                 pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,null,validate,message,false,publicationCheckpoint);
                 edit=null;write=null;return true;
             } finally {edit?.Dispose();write?.Dispose();}

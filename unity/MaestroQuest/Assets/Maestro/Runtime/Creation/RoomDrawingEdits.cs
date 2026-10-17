@@ -16,8 +16,10 @@ namespace Maestro.Quest.Creation
         internal bool CreateDrawing(string name,Vector3 position,float scale,Color color,float radius,Vector3[] points,out string id,out string error)
         {
             id=null;if(!CanCreateDrawing(points,radius,out error))return false;
-            return CommitCreatedObject(new RoomObjectData {id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.Drawing,name=name,position=position,scale=scale,color=color,radius=radius,points=(Vector3[])points.Clone()},out id,out error);
+            return CommitCreatedObject(PrepareDrawingObject(name,position,scale,color,radius,points),out id,out error);
         }
+        static RoomObjectData PrepareDrawingObject(string name,Vector3 position,float scale,Color color,float radius,Vector3[] points)=>
+            new() {id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.Drawing,name=name,position=position,scale=scale,color=color,radius=radius,points=(Vector3[])points.Clone()};
         internal bool PrepareDrawingEdit(string target,int revision,int index,int remove,Vector3[] points,float? radius,out RoomObjectData data,out string error)
         {
             data=null;if(!CanEditObject(target,true,out error))return false;

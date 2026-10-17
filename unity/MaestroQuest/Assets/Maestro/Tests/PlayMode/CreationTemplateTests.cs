@@ -17,10 +17,16 @@ namespace Maestro.Quest.Tests
     {
         RoomAgentRequest TemplateRequest(JObject call){var request=ObjectEditRequest(call);request.conditions=Array.Empty<RoomObjectCondition>();return request;}
         JObject TemplateRun(RoomAgentExecutor executor,JObject call){Assert.That(executor.Execute(TemplateRequest(call),out var error,out _),Is.True,error);return (JObject)executor.Executions.Observe().DeepClone();}
+        // Setup for component/physics tests; no execution receipt is invented.
+        // Named template creation is exercised below and by PendingCreationTests.
+        string CreateTemplateFixture(JObject call){
+            var args=(JObject)call["arguments"];var entry=CreationTemplates.Find((string)args["templateHash"]);Assert.IsNotNull(entry);
+            string name=(string)args["name"];Assert.IsTrue(editor.CreateRecipe(string.IsNullOrEmpty(name)?entry.Name:name,ObjectCapabilityData.Position(args),(float)args["scale"],entry.Recipe,entry.Collision,entry.Physics,out var id,out var error,entry.Surfaces,entry.DrawingTips,entry.SnapPoints,entry.Containers,entry.HeightFields,entry.SculptTips,entry.MaterialStores),error);return id;
+        }
         JObject TemplateCall(string id,Vector3 position)=>new() {["id"]="object.create",["version"]=1,["arguments"]=new JObject {["kind"]="template",["templateHash"]=CreationTemplates.All.First(e=>e.Id==id).Hash,["name"]="",["x"]=position.x,["y"]=position.y,["z"]=position.z,["scale"]=1}};
         [UnityTest] public IEnumerator TemplateCreationSavesCompleteEditableObjectInOneUndoAndReceiptReplayDoesNotDuplicate() {
             var executor=new RoomAgentExecutor(editor);var request=TemplateRequest(TemplateCall("cup",new Vector3(2,1,0)));int count=editor.Snapshot().objects.Length;
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);var receipt=(JObject)executor.Executions.Observe().DeepClone();string target=(string)receipt["selected"]["output"]["objectId"];Assert.That(target,Is.Not.Null,receipt.ToString());yield return null;
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);var receipt=(JObject)executor.Executions.Observe().DeepClone();string target=(string)receipt["selected"]["output"]["objectId"];Assert.That(target,Is.Not.Null,receipt.ToString());yield return null;
             var data=editor.Read(target);Assert.That(data.name,Is.EqualTo("Cup"));Assert.That(data.recipe.parts.Length,Is.EqualTo(2));Assert.That(data.collision.Pieces,Is.EqualTo(21));Assert.That(data.physics,Is.EqualTo(ItemPhysics.Solid));Assert.That(data.mass,Is.EqualTo(.3f));Assert.That(editor.Find(target).Grab.colliders.Count,Is.EqualTo(21));
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
             Assert.That(new RoomStorage(directory).Load(out _).objects.Single(o=>o.id==target).collision.Pieces,Is.EqualTo(21));
@@ -37,7 +43,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator StarterDominoesToppleAndStackingBricksRestOnSyntheticFloor() {
             RoomPhysicsLayers.Configure();var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(2,-.1f,0);floor.transform.localScale=new Vector3(3,.2f,3);floor.layer=RoomPhysicsLayers.Scanned;
-            var executor=new RoomAgentExecutor(editor);string Create(string id,Vector3 position)=>(string)TemplateRun(executor,TemplateCall(id,position))["selected"]["output"]["objectId"];
+            var executor=new RoomAgentExecutor(editor);string Create(string id,Vector3 position)=>CreateTemplateFixture(TemplateCall(id,position));
             var first=editor.Find(Create("domino",new Vector3(2,.083f,0)));var second=editor.Find(Create("domino",new Vector3(2,.083f,.08f)));
             var bottom=editor.Find(Create("brick",new Vector3(2.4f,.031f,0)));var top=editor.Find(Create("brick",new Vector3(2.4f,.105f,0)));
             Physics.SyncTransforms();physics.SetSurfaces(true,"Synthetic starter-kit floor");physics.StartPhysics();

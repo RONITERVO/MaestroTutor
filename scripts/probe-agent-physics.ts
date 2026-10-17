@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {completeProbeAction} from './native-probe-contract';
 import assert from 'node:assert/strict';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -50,10 +51,10 @@ export async function runAgentPhysicsProof(input:{client:HeadlessClient;before:R
  // performs simulation start, trajectory discovery/launch and subsequent pause.
  await execute([{action:'move',target,position:{x:.2,y:1,z:2.5}}]);
  await execute([{action:'physicsSettings',target,physics:{mode:'solid',shape:'sphere',mass:.5}}]);
- const setup=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{
+ const setup=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{
   kind:'recipe',name:'Probe-only fixed wall',x:2.2,y:.5,z:2.5,scale:1,recipe:{version:1,parts:[{id:'Wall',parent:null,shape:'box',
    position:{x:0,y:0,z:0},size:{x:.1,y:1,z:2},rotation:{x:0,y:0,z:0,w:1},color:{r:.5,g:.5,b:.5,a:1}}],
-   tracks:[],duration:1,playing:false,loop:false}}}}}]);
+   tracks:[],duration:1,playing:false,loop:false}}}}}]));
  const setupObjects=await readNativeObjects(execute);
  assert.equal(setupObjects.objects.find(o=>o.id===setup.execution?.selected?.output?.objectId)?.physics.mode,'fixed');
  evidence.setup=setup;evidence.setupObjects=setupObjects;assert.equal(setup.physicsRunning,false);

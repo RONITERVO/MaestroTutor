@@ -16,9 +16,9 @@ Consumed allowances now survive request removal and demand changes within one
 opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
 Independent quantity groups now have separate execution requests; the current
 implementation and verification status are recorded at the end of this document.
-Current desktop and unsigned Android checks cover shared placement, paint/delete
-completion, ordered admission and accepted saved-room identity. See
-[shared paint and deletion completion](#shared-paint-and-deletion-completion--2026-10-17)
+Current desktop and unsigned Android checks cover all five shared creation kinds,
+placement, paint/delete completion, ordered admission and accepted saved-room
+identity. See [shared creation completion](#shared-creation-completion--2026-10-17)
 and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
 
@@ -13170,3 +13170,70 @@ documentation updates. No APK/AAB, signing, installation, paid provider,
 deployment or Meta action occurred. Snapshot capture/native reconciliation and
 other synchronous authoring APIs still need their separate performance work;
 these results do not establish frame-time or physical acceptance.
+
+## Shared creation completion — 2026-10-17
+
+All five variants of object.create now use the common persisted edit operation:
+primitive, recipe, copy, drawing and starter template. The book, agent and programs
+wait for the same native and durable result. Exact new IDs are returned only on
+completion, including program result bindings and replayable receipts.
+
+Creation shares arrival-order admission with move/rotate/resize/paint/delete.
+Queued requests do not allocate a candidate or native geometry; capacity,
+workspace, copy-source revision and ownership are checked before preparing and
+accepting. Native preparation and the journal retain their existing aggregate
+bounds. The same content builders serve the older synchronous editor APIs.
+Template components are preserved, copies retain exact source assets and stop
+copied playback, and drawing inputs are detached from the caller.
+
+Cancellation before acceptance leaves no ghost or Undo entry. After acceptance,
+stopping identifies the created object while its save drains; it cannot retract
+the creation or turn an uncertain save into a successful output. Receipt replay
+does not recreate an object after Undo. Temporary-room creations become durable
+through Keep.
+
+The offline Headless journey exposed a prepared-save publication failure during
+a composed build/reset program. Preserved primary/backup bytes are unchanged from
+before the movement. Its original error lacked OS details, so the exact exception
+is unknown. A controlled real Windows reader lock reproduced a missing recovery
+path: accepted staged workers bypassed the existing bounded replacement helper.
+They now use that helper only for known no-effect Windows failures, retaining the
+same staged bytes. Synchronous staged callers still do not sleep. Persistent or
+ambiguous failure still blocks later saves; diagnostics now include the phase,
+exception type and error code without paths or user data.
+
+Evidence is retained in .quest-evidence/creation-save-20261017/. Verification
+covers 1,437 EditMode and 1,874 PlayMode cases, with three optional private-asset
+skips, plus 3,184 web tests in 351 files. These counts combine the recorded full
+runs and explicit corrections: a three-case fixture rerun restored original
+runtime reenables, then 72 storage and 24 native lifecycle checks covered the
+isolated publication fix. The full suites were not rerun after that fix. Three
+new lock-regression cases retain their failing-before/passing-after reports.
+Application/probe TypeScript, 32 probe contract cases and catalog checks pass.
+
+Both full offline journeys pass with empty periodic object inventories and
+explicit reads. Headless records 2,227 observations, 2,218 read sets, 177 native
+motion samples and 16 passing steering checks, with zero external provider
+attempts. Book records 3,238 observations and 1,009 requests. Creation completion
+is observed through an actual receipt read, with one creation start; the scripted
+response is paced against native completion without injecting a native result.
+The original 24-query/3-action/32-plan ceilings remain unchanged. An earlier
+scripted-provider immediate-completion assumption is retained as a failed run.
+
+Human edits are preserved, stale agent paint is refused, reload does not replay
+actions, capture pixels match and idle regions retire/reacquire. Desktop visual
+inspection covers the expanded original-chat result trace and the 819×614 advanced
+form. These are scripted-provider checks, not real-model or novice acceptance.
+
+Fresh unsigned Android export/compilation passes: zero export errors, five build
+warnings, 41 executed compile/merge tasks and 22 selected ARM64 libraries with
+16 KiB-compatible ELF LOAD segments. Browser tests (128 passes/two skips) and lint
+(zero errors/six warnings) are verified cached results against 106 unchanged
+inputs. All 3,230 native inputs, 5,152 tracked/new inputs and 14 protected local
+files are checked before these documentation updates. No APK/AAB, signing,
+installation, paid-provider, deployment or Meta action occurred.
+
+Snapshot capture/native reconciliation and other synchronous authoring remain
+separate performance work. This checkpoint does not establish headset frame time,
+physical interaction, real-provider, acoustic or Store acceptance. Saved capacity,
+device/provider holds and remaining release gates are unchanged.

@@ -16,7 +16,7 @@ namespace Maestro.Quest.Tests {
   [UnityTest]public IEnumerator FlowFairSchedulingServesLaterCompleteGroupUnderSustainedDemand(){
    var(from,to)=FixedFlowCups();var ex=new RoomAgentExecutor(editor);var position=editor.Find(to).transform.position;
    for(int i=0;i<14;i++){
-    string id=(string)TemplateRun(ex,TemplateCall("cup",position+Vector3.right*(.002f*i)))["selected"]["output"]["objectId"];
+    string id=CreateTemplateFixture(TemplateCall("cup",position+Vector3.right*(.002f*i)));
     Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
     Assert.That(editor.MissingLiquidExtent(id,editor.Read(id).containers[0],out _).Bounds.Intersects(editor.MissingLiquidExtent(to,editor.Read(to).containers[0],out _).Bounds),Is.True,"The complete receiving group must stay coupled");
    }

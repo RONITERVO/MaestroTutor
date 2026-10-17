@@ -28,8 +28,8 @@ namespace Maestro.Quest.Programs
         Kind Selected(JObject args)=>Kinds.Single(k=>k.Adapter.Matches(args));
         public override string Id=>"object.create";
         public override string Label=>"Create object";
-        public override string Description=>"Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, an editable pencil stroke, or a bundled starter template. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Stop leaves created objects in the room. Imported models still use the existing asset import workflow.";
-        public override string Duration=>"instant";
+        public override string Description=>"Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, an editable pencil stroke, or a bundled starter template. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Imported models still use the existing asset import workflow."+PersistedEditOperation.CreationPersistence;
+        public override string Duration=>"completion";
         public override string Ownership=>"kindChannels";
         public override IReadOnlyList<string> Channels=>Kinds.SelectMany(k=>k.Provider.Channels).Distinct().ToArray();
         internal override IEnumerable<string> NativeEntities(JObject args){var kind=Selected(args);return kind.Provider.NativeEntities(kind.Adapter.Native(args));}

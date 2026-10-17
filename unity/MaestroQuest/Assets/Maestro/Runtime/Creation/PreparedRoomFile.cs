@@ -130,7 +130,7 @@ namespace Maestro.Quest.Creation
 
         // Call under the room/memory coordinator after native authorization.
         // Disk identity cannot prove in-memory edit ownership.
-        internal bool PublishPrepared(PreparedSave prepared,out string error,bool wait=false)
+        internal bool PublishPrepared(PreparedSave prepared,out string error,bool wait=false,Action<int> waitForRetry=null)
         {
             error="The "+label+" save preparation was already used or belongs to another store.";
             if(prepared==null||!prepared.Take(this,out var content,out var baseline,out bool existed,out bool validPrimary))return false;
@@ -140,7 +140,7 @@ namespace Maestro.Quest.Creation
                 if(wait)Monitor.Enter(retainedGate);
                 else if(!Monitor.TryEnter(retainedGate)){error="Room file inspection is busy; the edit was not published.";return false;}
                 var bytes=content.Bytes;
-                string pending=primary+".pending";bool staged=false;
+                string pending=primary+".pending",phase="validate";bool staged=false;
                 try {
                     if(ReadOnly||HasNewerFiles(directory,stem,version)){ReadOnly=true;error="Saved "+label+" is unavailable for editing; its files are preserved.";return false;}
                     error="The saved "+label+" changed during preparation; inspect it before retrying.";
@@ -148,6 +148,7 @@ namespace Maestro.Quest.Creation
                     if(!MatchesPreparation(baseline,existed)){error="The saved "+label+" changed during preparation; inspect it before retrying.";return false;}
                     Directory.CreateDirectory(directory);
                     // Do not claim another writer's unfinished staging file.
+                    phase="stage";
                     if(content.Stage!=null){content.Stage.MoveTo(pending);staged=true;}
                     else using(var stream=new FileStream(pending,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                         staged=true;stream.Write(bytes,0,bytes.Length);stream.Flush(true);
@@ -155,11 +156,15 @@ namespace Maestro.Quest.Creation
                     if(!CheckAcceptedPrimary(out error))return false;
                     if(!MatchesPreparation(baseline,existed)){error="The saved "+label+" changed during preparation; inspect it before retrying.";return false;}
                     if(existed) {
+                        phase="backup";
                         File.Copy(primary,validPrimary?primary+".backup":primary+".unreadable",true);
-                        // Prepared interactive saves make one attempt. Keep Windows
-                        // retry sleeps out of this non-yielding owner-thread commit.
-                        if(content.Stage!=null)File.Replace(pending,primary,null);
-                        else Maestro.Quest.Persistence.FilePublication.Replace(pending,primary,null);
+                        // An accepted worker may recover only the known no-effect
+                        // Windows failures, using the same staged bytes. Synchronous
+                        // staged callers still never sleep on the interaction thread.
+                        phase="replace";
+                        if(content.Stage!=null&&!wait)File.Replace(pending,primary,null);
+                        else Maestro.Quest.Persistence.FilePublication.Replace(pending,primary,null,
+                            Maestro.Quest.Persistence.FilePublication.Windows,File.Replace,waitForRetry??Thread.Sleep);
                     } else File.Move(pending,primary);
                     // The worker proved these exact bytes, including the staged
                     // content check above. Reuse its hash instead of hashing the
@@ -169,7 +174,9 @@ namespace Maestro.Quest.Creation
                     error=null;return true;
                 }
                 catch(Exception failure) when(failure is IOException||failure is UnauthorizedAccessException||failure is NotSupportedException) {
-                    error="Could not publish the prepared "+label+"; inspect the saved files before retrying.";return false;
+                    // Preserve useful diagnostics without including local paths or data.
+                    error="Could not publish the prepared "+label+"; inspect the saved files before retrying. "+
+                        phase+" failed ("+failure.GetType().Name+", 0x"+failure.HResult.ToString("X8")+").";return false;
                 }
                 finally {
                     try{if(staged)try{if(File.Exists(pending))File.Delete(pending);}catch(IOException){}catch(UnauthorizedAccessException){}}

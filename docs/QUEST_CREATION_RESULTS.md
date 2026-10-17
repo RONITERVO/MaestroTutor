@@ -3,7 +3,9 @@
 Historical development checkpoint. The retired creation IDs and test counts below
 describe that checkpoint, not the current public contract. See
 [Typed object creation](QUEST_CREATION_VOCABULARY.md) for the current
-`object.create` primitive/recipe vocabulary and verification.
+`object.create` primitive/recipe/copy/drawing/template vocabulary and completion
+contract. In the current implementation, named creation uses background preparation
+and publication; the instant, synchronous-save description below is historical.
 
 The native catalog now includes `object.create.primitive` version 1. It creates a
 ball, block or cylinder through the same `RoomEditor.CreatePrimitive` path as the

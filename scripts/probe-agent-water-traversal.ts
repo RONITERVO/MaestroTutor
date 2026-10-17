@@ -7,7 +7,7 @@ import type {HeadlessClient} from '../src/headless/client';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {capabilityDefinition} from '../shared/capabilities';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 import {readWaterActorPose} from './probe-water-traversal';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 type Settings={target:string;revision:number;mode:string;effectiveMode:string;maxDepthMetres:number;temporary:boolean};
@@ -22,7 +22,7 @@ async function preservedState(execute:Execute,robot:string){
  return {poses,simulation};
 }
 export async function prepareAgentWaterTraversal(execute:Execute){
- const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...capabilityDefinition('object.create')!.example!,shape:'block',name:'WaterRobot',x:3,y:1,z:0}}}}]);
+ const created=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...capabilityDefinition('object.create')!.example!,shape:'block',name:'WaterRobot',x:3,y:1,z:0}}}}]));
  assert.equal(created.execution?.selected?.phase,'completed');const robot=created.execution!.selected!.output!.objectId as string;
  return {robot,baseline:await preservedState(execute,robot)};
 }

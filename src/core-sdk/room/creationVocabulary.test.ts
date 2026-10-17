@@ -13,6 +13,7 @@ it.each(cases)('shares the native creation contract for $name',entry=>{
  if(entry.valid){expect(boundedCapabilityCall(entry.call)).toBe(true);if(entry.call.arguments.kind==='copy'){expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([entry.call.arguments.target]);expect(()=>invocationStep(entry.call,'create')).toThrow();}else if(entry.call.arguments.kind==='drawing'){expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([]);expect(()=>invocationStep(entry.call,'create')).toThrow();}else{expect(capabilityResources(entry.call.id,entry.call.arguments)).toEqual([]);expect(stepInvocation(invocationStep(entry.call,'create'))).toEqual(entry.call);}}
 });
 it('preserves the creation kind, recipe and exact result wiring without exposing old public IDs',()=>{
+ expect(capabilityDefinition('object.create')?.duration).toBe('completion');
  expect(capabilityDefinition('object.create.primitive')).toBeNull();expect(capabilityDefinition('object.create.recipe')).toBeNull();
  for(const kind of [12,13]){const program=sequenceProgram([newRuleStep(kind)]);expect(parseProgram(JSON.stringify(program)).program).toEqual(program);expect(program.functions[0].body[0]).toMatchObject({capability:'object.create',arguments:{kind:kind===12?'primitive':'recipe'}});}
 });

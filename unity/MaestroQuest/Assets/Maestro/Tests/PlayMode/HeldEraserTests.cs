@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests {
         (string target,string tool,DrawingTipView view,Transform patch) EraserStage(){
             var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());string target=editor.Identity(block);
             foreach(float x in new[]{-.03f,.03f}){var call=SurfaceAdd();call["arguments"]["points"]=new JArray(new JObject{["x"]=x,["y"]=-.04,["z"]=0},new JObject{["x"]=x,["y"]=.04,["z"]=0});SurfaceRun(ex,call);}
-            var receipt=TemplateRun(ex,TemplateCall("eraser",new Vector3(2,1,0)));string tool=(string)receipt["selected"]["output"]["objectId"];var view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);return(target,tool,view,block.GetComponent<DrawingSurfaceView>().Surface("Front"));
+            string tool=CreateTemplateFixture(TemplateCall("eraser",new Vector3(2,1,0)));var view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);return(target,tool,view,block.GetComponent<DrawingSurfaceView>().Surface("Front"));
         }
         void PlaceRootTip(string tool,Transform patch,float x,float z=0){var item=editor.Find(tool);item.transform.rotation=patch.rotation;item.transform.position=patch.TransformPoint(new Vector3(x,0,z))-item.transform.TransformVector(editor.Read(tool).drawingTips[0].position);}
         [UnityTest] public IEnumerator HeldEraserGesturePreviewsTwoStrokesAndPublishesOneUndo(){
@@ -52,7 +52,7 @@ namespace Maestro.Quest.Tests {
         }
         [UnityTest] public IEnumerator HeldEraserPencilAndBrushDefaultsDrawThroughTheSamePhysicalTip(){
             var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());var patch=block.GetComponent<DrawingSurfaceView>().Surface("Front");string target=editor.Identity(block);
-            foreach(string id in new[]{"pencil","brush"}){var receipt=TemplateRun(ex,TemplateCall(id,new Vector3(2,1,0)));string tool=(string)receipt["selected"]["output"]["objectId"];var view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);PlaceRootTip(tool,patch,-.03f);view.Sample(true,RoomActorRole.Control);PlaceRootTip(tool,patch,.03f);view.Sample(true,RoomActorRole.Control);view.Sample(false,RoomActorRole.Control);Assert.That(editor.Read(target).surfaces[0].strokes.Last().radius,Is.EqualTo(editor.Read(tool).drawingTips[0].radius));editor.Find(tool).transform.position=new Vector3(3,1,0);patch=block.GetComponent<DrawingSurfaceView>().Surface("Front");}
+            foreach(string id in new[]{"pencil","brush"}){string tool=CreateTemplateFixture(TemplateCall(id,new Vector3(2,1,0)));var view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);PlaceRootTip(tool,patch,-.03f);view.Sample(true,RoomActorRole.Control);PlaceRootTip(tool,patch,.03f);view.Sample(true,RoomActorRole.Control);view.Sample(false,RoomActorRole.Control);Assert.That(editor.Read(target).surfaces[0].strokes.Last().radius,Is.EqualTo(editor.Read(tool).drawingTips[0].radius));editor.Find(tool).transform.position=new Vector3(3,1,0);patch=block.GetComponent<DrawingSurfaceView>().Surface("Front");}
             Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));yield return null;
         }
     }

@@ -13,7 +13,10 @@ bundled JSON into the identical recipe-creation path, with no special toy runtim
 Each new object has independent editable source and uses existing paint, copy,
 recipe/collision/settings edits, animation playback and saved/temporary semantics.
 A template does not add bindings or programs, start room physics, or auto-play an
-animation. Successful receipt replay cannot create it twice.
+animation. Successful receipt replay cannot create it twice. Template creation
+uses the shared completion operation: its exact object ID becomes available after
+native application and saving, or after the local edit in temporary play. Stop and
+uncertain-save recovery follow [the common creation contract](QUEST_CREATION_VOCABULARY.md).
 
 ## First starter set
 

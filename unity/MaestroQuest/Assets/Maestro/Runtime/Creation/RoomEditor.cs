@@ -181,16 +181,21 @@ namespace Maestro.Quest.Creation
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null) {error="Room editor is not ready";return false;}
             if(storage.ReadOnly) {error=storage.UnavailableReason;return false;}
-            if(journal.Snapshot().objects.Length>=RoomDocument.MaximumObjects+2) {error="This room has reached its creation limit";return false;}
+            if(journal.ObjectCount>=RoomDocument.MaximumObjects+2) {error="This room has reached its creation limit";return false;}
             return true;
         }
         public bool CreatePrimitive(RoomObjectKind kind,string name,Vector3 position,float scale,Color color,out string id,out string error) {
             id=null;
             if(!CanCreatePrimitive(out error))return false;
-            if(kind!=RoomObjectKind.Block&&kind!=RoomObjectKind.Ball&&kind!=RoomObjectKind.Cylinder) {error="Choose a ball, block or cylinder";return false;}
-            var item=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=kind,position=position,scale=scale,color=color,
-                physics=kind==RoomObjectKind.Ball?ItemPhysics.Bouncy:ItemPhysics.Solid};
+            if(!PreparePrimitiveObject(kind,name,position,scale,color,out var item,out error))return false;
             return CommitCreatedObject(item,out id,out error);
+        }
+        static bool PreparePrimitiveObject(RoomObjectKind kind,string name,Vector3 position,float scale,Color color,out RoomObjectData item,out string error) {
+            item=null;error=null;
+            if(kind!=RoomObjectKind.Block&&kind!=RoomObjectKind.Ball&&kind!=RoomObjectKind.Cylinder) {error="Choose a ball, block or cylinder";return false;}
+            item=new RoomObjectData {id=Guid.NewGuid().ToString("N"),name=name,kind=kind,position=position,scale=scale,color=color,
+                physics=kind==RoomObjectKind.Ball?ItemPhysics.Bouncy:ItemPhysics.Solid};
+            return true;
         }
         public bool CanCreateRecipe(RoomRecipe recipe,out string error)=>CanCreateRecipe(recipe,null,null,out error);
         public bool CanCreateRecipe(RoomRecipe recipe,CollisionRecipe collision,ObjectPhysicsSettings physics,out string error,DrawingSurface[] surfaces=null,DrawingTip[] drawingTips=null,RoomSnapPoint[] snapPoints=null,RoomContainer[] containers=null,RoomHeightField[] heightFields=null,SculptTip[] sculptTips=null,RoomMaterialStore[] materialStores=null) {

@@ -5,7 +5,7 @@ using Maestro.Quest.Rules;using Maestro.Quest.Creation;using Maestro.Quest.Progr
 namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
  [UnityTest] public IEnumerator ChessKitProgramsCreateCompletePhysicalSetAndSharedSnappingMovesAPawn(){
   var executor=new RoomAgentExecutor(editor);var origin=new Vector3(4,2,4);var before=editor.Snapshot().objects.Select(o=>o.id).ToHashSet();
-  var boardId=(string)TemplateRun(executor,TemplateCall("chessboard",origin))["selected"]["output"]["objectId"];
+  var boardId=CreateTemplateFixture(TemplateCall("chessboard",origin));
   foreach(var side in new[]{"white","black"}){
    var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-chess-"+side+".json")));source["functions"][0]["body"][0]["args"][0]["value"]=JObject.Parse(JsonUtility.ToJson(origin));
    Assert.That(workshop.Execute(new RuleRequest{action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit{kind="save",reference="chess",sequence=new RuleSequence{id="",name="Create "+side,program=source.ToString(Newtonsoft.Json.Formatting.None)}}}},out var error,out var saved),Is.True,error);

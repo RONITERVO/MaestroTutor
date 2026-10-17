@@ -19,19 +19,25 @@ through the existing bounded importer. The action acknowledges saved creation;
 it does not claim asynchronous model loading has finished or unavailable bytes
 have been repaired. Model and external motion bytes are not duplicated.
 
-The physical Duplicate control calls this same native operation and selects the
-new object. Agent/program calls leave selection unchanged. Each copy has one
-saved room Undo edit; temporary-room copies stay in the fork until Keep. Failed
-validation or storage cannot create a partial object. Receipt replay returns the
-historical result, including after Undo, without another copy. A program can use
-the returned objectId in later actions through existing result authority and limits.
+Physical Duplicate and the named creation capability reuse the same native data
+builder. Duplicate retains its synchronous contract and selects the new object;
+agent/program calls leave selection unchanged and wait through the shared pending
+edit operation. Each copy has one saved room Undo edit; temporary-room copies stay
+in the fork until Keep. Validation or preparation failure leaves no copy. After
+native acceptance, stopping cannot retract the object or pending save; a later
+publication failure requires inspection, not automatic replay. Interruption status
+includes the accepted object's exact ID without claiming successful completion.
+Receipt replay returns the historical result, including after Undo, without
+another copy. A program can use the completed objectId in later actions through
+existing result authority and limits. See [shared creation completion](QUEST_CREATION_VOCABULARY.md).
 
 ## Ownership and limits
 
 Copying reserves the source and requires it to be unheld, outside active authoring
 and free of another actor's ownership. It does not stop unrelated actors. Its
-revision must still match when execution starts. The source's live transform is
-sampled then; revision guards authored changes, not every physics frame.
+revision must still match when preparation starts and before native acceptance.
+A waiting request holds no copied candidate. The source's live transform is sampled
+when preparation begins; revision guards authored changes, not every physics frame.
 
 Existing object/model/drawing/frame/recipe aggregate budgets apply to the entire
 candidate room. Translated recordings must remain within the room position bound.

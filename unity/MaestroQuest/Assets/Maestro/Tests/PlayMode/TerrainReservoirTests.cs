@@ -50,7 +50,7 @@ namespace Maestro.Quest.Tests {
   }
   [UnityTest]public IEnumerator TerrainWaterDippingConservesContentsAndCannotScoopThroughTheBed(){
    var(ex,id)=TerrainReservoir();var c=editor.Read(id).containers[0];c.amountMl=700000;ContainerRun(ex,ContainerCall(id,c));
-   string cup=(string)TemplateRun(ex,TemplateCall("cup",TerrainPoint(id,-.5f,.25f)))["selected"]["output"]["objectId"];var target=editor.Find(cup);
+   string cup=CreateTemplateFixture(TemplateCall("cup",TerrainPoint(id,-.5f,.25f)));var target=editor.Find(cup);
    Physics.SyncTransforms();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(cup),Is.GreaterThan(0));Assert.That(Liquid(id)+Liquid(cup),Is.EqualTo(700000).Within(.0001));physics.PausePhysics();
    double moved=editor.Read(cup).containers[0].amountMl;Assert.That(moved,Is.GreaterThan(0));editor.Undo();Assert.That(editor.Read(cup).containers[0].amountMl,Is.Zero);
    target=editor.Find(cup);target.transform.position=TerrainPoint(id,-.5f,.04f);Physics.SyncTransforms();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(cup),Is.Zero,"The receiving cavity penetrates the bed");physics.PausePhysics();

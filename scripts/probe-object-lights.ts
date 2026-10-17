@@ -4,11 +4,11 @@ import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 type Lamp={target:string;revision:number;stateId:string;settings:Record<string,unknown>;effective:{enabled:boolean;intensity:number;color:string;overridden:boolean};active:boolean};
 export async function probeObjectLights(execute:Execute,directory:string){
- const action=async(id:string,args:Record<string,unknown>)=>{const s=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s;};
+ const action=async(id:string,args:Record<string,unknown>)=>{const s=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s;};
  const definition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.create',version:1}}]);
  const example=(definition.catalog.definition as {example:Record<string,unknown>}).example;
  const viewpointReply=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.viewpoint',version:1}}]));assert.equal(viewpointReply.available,true,JSON.stringify(viewpointReply));

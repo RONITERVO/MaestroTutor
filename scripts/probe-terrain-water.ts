@@ -6,11 +6,11 @@ import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {capabilityDefinition} from '../shared/capabilities';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeTerrainWater(execute:Execute,directory:string){
  const read=async(capability:string,args:Record<string,unknown>)=>{const fact=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}]));assert.equal(fact.available,true);return fact.value as Record<string,unknown>;};
- const invoke=async(id:string,args:Record<string,unknown>)=>{const result=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);assert.equal(result.execution?.selected?.phase,'completed',JSON.stringify(result.execution?.selected));return result.execution!.selected!;};
+ const invoke=async(id:string,args:Record<string,unknown>)=>{const result=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));assert.equal(result.execution?.selected?.phase,'completed',JSON.stringify(result.execution?.selected));return result.execution!.selected!;};
  const hash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/snow-patch.json')).digest('hex');
  // Keep this live-water fixture in the stationary viewer's frustum.
  const created=await invoke('object.create',{kind:'template',templateHash:hash,name:'Terrain reservoir probe',x:0,y:1,z:3,scale:1}),target=created.output!.objectId as string;

@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
         (RoomAgentExecutor ex,string from,string to) PouringCups(){
             editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);
-            string a=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3,1.8f,0)))["selected"]["output"]["objectId"],b=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3,1,0)))["selected"]["output"]["objectId"];
+            string a=CreateTemplateFixture(TemplateCall("cup",new Vector3(3,1.8f,0))),b=CreateTemplateFixture(TemplateCall("cup",new Vector3(3,1,0)));
             var c=editor.Read(a).containers[0];c.amountMl=400;ContainerRun(ex,ContainerCall(a,c));var source=editor.Find(a);source.transform.rotation=Quaternion.Euler(0,0,80);var lip=ContainerFlowGeometry.Lip(c,source.transform,Vector3.up,out _);editor.Find(b).transform.position=new Vector3(lip.x,1,lip.z);
             source.GetComponent<RigidRoomItem>().Teleported();editor.Find(b).GetComponent<RigidRoomItem>().Teleported();
             physics.SetSurfaces(true,"Test room");physics.StartPhysics();return(ex,a,b);

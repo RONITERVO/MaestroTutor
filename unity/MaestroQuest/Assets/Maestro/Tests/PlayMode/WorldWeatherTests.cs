@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
     {
         JObject WeatherCall(WeatherSettings settings,double duration=0)=>new(){["id"]="world.weather.set",["version"]=1,["arguments"]=new JObject{["revision"]=editor.WeatherRevision,["seed"]=17,["settings"]=JObject.Parse(JsonUtility.ToJson(settings)),["transitionSeconds"]=duration}};
         string RainCup(){
-            editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);string id=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3,1,0)))["selected"]["output"]["objectId"];
+            editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3,1,0)));
             editor.Find(id).GetComponent<RigidRoomItem>().Teleported();Assert.That(editor.SetWeather(editor.WeatherRevision,1,new(){rainMmPerHour=60},0,out var e),Is.True,e);physics.SetSurfaces(true,"Test room");physics.StartPhysics();return id;
         }
         GameObject RainRoof(Vector3 position,bool scanned){

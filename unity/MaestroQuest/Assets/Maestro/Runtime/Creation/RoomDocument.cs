@@ -225,6 +225,7 @@ namespace Maestro.Quest.Creation
         readonly RoomWorldIdentity world;
         internal RoomWorldIdentity WorldIdentity=>world.Copy();
         public int ObjectRevision(string id) => id != null && revisions.TryGetValue(id,out var value) ? value : 0;
+        internal int ObjectCount=>items.Count;
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
         public bool UsesMotion(string id) => items.Values.Any(x => x.walkMotionId == id);

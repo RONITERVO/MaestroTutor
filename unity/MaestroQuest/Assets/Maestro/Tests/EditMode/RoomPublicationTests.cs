@@ -17,11 +17,14 @@ namespace Maestro.Quest.Tests
     {
         string directory;
         const string ObjectId="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-        sealed class Actions : IRuleActions,IRuleResults
+        sealed class Actions : IRuleActions,IRuleResults,IRuleReadiness,IRuleCompletion
         {
-            readonly HashSet<string> waits=new();
+            readonly HashSet<string> waits=new(),preparing=new();
             public bool CanRun(CapabilityCall call,out string error){error=null;return true;}
-            public bool Start(string id,CapabilityCall call,out float seconds,out string error){seconds=call.Instant?0:1;if(!call.Instant)waits.Add(id);error=null;return true;}
+            // This publication fixture models creation completion without running native geometry.
+            public bool Start(string id,CapabilityCall call,out float seconds,out string error){seconds=call.Definition.Id=="time.wait"?1:0;if(seconds>0)waits.Add(id);else preparing.Add(id);error=null;return true;}
+            public RuleActionState State(string id,out string error){error=null;return preparing.Remove(id)?RuleActionState.Preparing:RuleActionState.Ready;}
+            public bool Complete(string id,out string error){error=null;return true;}
             public void Stop(string id,bool preserve){}
             public JObject TakeResult(string id)=>waits.Remove(id)?new JObject():new JObject {["objectId"]=ObjectId};
         }

@@ -80,7 +80,7 @@ namespace Maestro.Quest.Tests {
    editor.Liquids.Tick(.05f);Assert.That(FlowAmount(to),Is.Zero);physics.PausePhysics();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(FlowAmount(to),Is.GreaterThan(0));physics.PausePhysics();yield return null;
   }
   [UnityTest]public IEnumerator FlowSpatialDistantUnavailableCavityDoesNotBlockLocalTransfer(){
-   var(from,to)=FixedFlowCups();var ex=new RoomAgentExecutor(editor);string far=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(-10,2,-10)))["selected"]["output"]["objectId"];
+   var(from,to)=FixedFlowCups();var ex=new RoomAgentExecutor(editor);string far=CreateTemplateFixture(TemplateCall("cup",new Vector3(-10,2,-10)));
    Assert.That(editor.SetItemPhysics(far,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);editor.Find(far).GetComponent<ContainerFillView>().enabled=false;
    physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(FlowAmount(to),Is.GreaterThan(0));Assert.That(FlowAmount(from)+FlowAmount(to),Is.EqualTo(400).Within(1e-8));physics.PausePhysics();yield return null;
   }

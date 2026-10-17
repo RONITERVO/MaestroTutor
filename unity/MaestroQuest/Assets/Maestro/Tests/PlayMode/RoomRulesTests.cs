@@ -339,9 +339,9 @@ namespace Maestro.Quest.Tests
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="robot",sequence=sequence}}},out var error,out var ids),Is.True,error);
             int count=editor.Snapshot().objects.Length;
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
-            string created=runtime.Scheduler.ObserveRuns().Single().locals.Single(x=>x.name=="robot").value;
+            string created=null;yield return ProgramCreationResult(ids.Single(),"robot",value=>created=value);
             var geometry=editor.Find(created).GetComponent<RecipeObject>();
-            Assert.That(geometry,Is.Not.Null);Assert.That(geometry.IsPlaying,Is.False,"Creation does not invent an automatic playback request");
+            Assert.That(geometry,Is.Not.Null);Assert.That(editor.Read(created).recipe.playing,Is.False,"Saved creation remains idle; the following explicit program action owns playback");Assert.That(geometry.IsPlaying,Is.True,"The chained animation starts after creation completes");
             Assert.That(editor.Read(created).recipe.parts.Length,Is.EqualTo(19));
             runtime.Scheduler.Tick(Time.unscaledTime);Assert.That(geometry.IsPlaying,Is.True,runtime.Scheduler.LastError);
             var arm=geometry.Part("RightUpperArm");var pose=arm.localRotation;
@@ -368,7 +368,7 @@ namespace Maestro.Quest.Tests
             var call=JObject.Parse(new JObject {["id"]=definition.Id,["version"]=1,["arguments"]=((JObject)definition.InputSchema["oneOf"][1]["examples"][0])}.ToString());
             var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;int count=editor.Snapshot().objects.Length;
             var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=run,["call"]=call}}}};
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);
             string id=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
             var before=editor.Read(id).recipe.Copy();Assert.That(executor.Execute(request,out error,out _),Is.True,error);
             Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
@@ -397,7 +397,7 @@ namespace Maestro.Quest.Tests
         }
         RoomAgentRequest ObjectEditRequest(JObject call) {
             string target=(string)call["arguments"]["target"];
-            return new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
+            return new RoomAgentRequest {version=2,conditions=target==null?Array.Empty<RoomObjectCondition>():new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
                 commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call}}}};
         }
         void EditEvidence(string phase,RoomAgentExecutor executor,JObject program=null) {
@@ -405,6 +405,17 @@ namespace Maestro.Quest.Tests
             Directory.CreateDirectory(directory);
             File.WriteAllText(Path.Combine(directory,phase+".json"),new JObject {["program"]=program,["execution"]=executor.Executions.Observe(),
                 ["room"]=JObject.Parse(JsonUtility.ToJson(editor.Snapshot()))}.ToString());
+        }
+        IEnumerator ProgramCreationResult(string sequence,string local,Action<string> received)
+        {
+            float end=Time.realtimeSinceStartup+20;
+            while(true){
+                var run=runtime.Scheduler.ObserveRuns().SingleOrDefault(x=>x.sequenceId==sequence);
+                string value=run?.locals.FirstOrDefault(x=>x.name==local)?.value;
+                if(Guid.TryParseExact(value,"N",out _)){received(value);yield break;}
+                Assert.IsNotNull(run,runtime.Scheduler.LastError);Assert.Less(Time.realtimeSinceStartup,end,"Creation result did not complete");
+                yield return null;
+            }
         }
         IEnumerator AgentPlacementCompleted(RoomAgentExecutor executor)
         {
@@ -429,7 +440,7 @@ namespace Maestro.Quest.Tests
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="ball",sequence=sequence}}},out var error,out var ids),Is.True,error);
             Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.play",editor.Identity(block),("seconds",30),("loop",true)),Time.unscaledTime,out var recording,out error),Is.True,error);
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
-            string created=runtime.Scheduler.ObserveRuns().Single().locals.Single(x=>x.name=="ball").value;
+            string created=null;yield return ProgramCreationResult(ids.Single(),"ball",value=>created=value);
             float end=Time.realtimeSinceStartup+20;
             while(runtime.Scheduler.ObserveRuns().Any(run=>run.sequenceId==ids.Single())){
                 Assert.Less(Time.realtimeSinceStartup,end,"Composed placement program timed out");
@@ -591,7 +602,7 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.Invoke(recording,Time.unscaledTime,out var recordingId,out error),Is.True,error);
             var before=block.transform.localPosition;int count=editor.Snapshot().objects.Length;
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
-            var run=runtime.Scheduler.ObserveRuns().Single();string created=run.locals.Single(x=>x.name=="ball").value;
+            string created=null;yield return ProgramCreationResult(ids.Single(),"ball",value=>created=value);
             Assert.That(Guid.TryParseExact(created,"N",out _),Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
             Assert.That((string)runtime.Scheduler.Invocation(recordingId)["phase"],Is.EqualTo("running"),"Creation cannot cancel an unrelated animation");
             var body=editor.Find(created).GetComponent<Rigidbody>();Assert.That(body.mass,Is.EqualTo(.5f));
@@ -609,7 +620,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);int count=editor.Snapshot().objects.Length;
             string runId=runtime.Scheduler.Receipts.NextId;
             var request=new RoomAgentRequest {version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=runId,["call"]=CreationCall()}}}};
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);
             var selected=(JObject)executor.Executions.Observe()["selected"];Assert.That((string)selected["phase"],Is.EqualTo("completed"));
             string id=(string)selected["output"]["objectId"];Assert.That(editor.Find(id),Is.Not.Null);
             var reopened=new RoomAgentExecutor(editor);Assert.That(reopened.Execute(request,out error,out _),Is.True,error);
@@ -850,7 +861,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);string target=editor.SelectedId;
             string id=runtime.Scheduler.Receipts.NextId;
             var call=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=target,["seconds"]=1,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
-            var request=new RoomAgentRequest {version=2,conditions=new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
+            var request=new RoomAgentRequest {version=2,conditions=target==null?Array.Empty<RoomObjectCondition>():new[]{new RoomObjectCondition {id=target,revision=editor.ObjectRevision(target)}},
                 commands=new[]{new RoomAgentCommand {action="execution",execution=new JObject {["operation"]="start",["runId"]=id,["call"]=call}}}};
             Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
             yield return new WaitForSeconds(.2f);var moved=block.transform.localPosition;
@@ -1272,7 +1283,10 @@ namespace Maestro.Quest.Tests
             Assert.That(tools.Draft.Apply(),Is.True,tools.Draft.Status);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
             var observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);Assert.That(observer.OpenRules(saved.id,out error),Is.True,error);
             if(!string.IsNullOrEmpty(output))File.WriteAllText(Path.Combine(output,"creation-book.json"),RoomAgentWire.Serialize(observer.Observe()));
-            Assert.That(runtime.Trigger(saved.id),Is.True,runtime.Scheduler.LastError);yield return null;
+            Assert.That(runtime.Trigger(saved.id),Is.True,runtime.Scheduler.LastError);
+            float deadline=Time.realtimeSinceStartup+20;
+            while(runtime.Scheduler.ObserveRuns().Any(x=>x.sequenceId==saved.id)){Assert.Less(Time.realtimeSinceStartup,deadline,runtime.Scheduler.LastError);yield return null;}
+            Assert.AreEqual("completed",runtime.Scheduler.Outcomes.Last().phase);
             var created=editor.Snapshot().objects.Single(x=>!before.Contains(x.id));Assert.That(created.recipe.parts.Length,Is.EqualTo(19));Assert.That(editor.Find(created.id).GetComponent<RecipeObject>().IsPlaying,Is.False);
             var persisted=new RoomStorage(directory).Load(out error).objects.Single(x=>x.id==created.id);Assert.That(JsonUtility.ToJson(created.recipe),Is.EqualTo(JsonUtility.ToJson(persisted.recipe)));
             editor.Undo();Assert.That(editor.Find(created.id),Is.Null);workshop.Undo();Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));

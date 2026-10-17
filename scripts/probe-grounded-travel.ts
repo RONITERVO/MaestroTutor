@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {completeProbeAction} from './native-probe-contract';
 import assert from 'node:assert/strict';
 import {nativeProbeObjects} from './native-probe-objects';
 import {createHash} from 'node:crypto';
@@ -9,9 +10,9 @@ import type {RoomAgentState,RoomCommand} from '../src/core-sdk/room/roomAgent';
 export async function probeGroundedTravel(execute:(commands:RoomCommand[])=>Promise<RoomAgentState>,directory:string){
  const objects=nativeProbeObjects(execute);
  const hash=createHash('sha256').update(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/robot.json')).digest('hex');
- const created=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'Walking robot',x:-3,y:0,z:-3,scale:1}}}}]);
+ const created=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'Walking robot',x:-3,y:0,z:-3,scale:1}}}}]));
  const target=created.execution?.selected?.output?.objectId;assert.equal(typeof target,'string');if(typeof target!=='string')throw new Error('Missing walking robot');
- const obstruction=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'Walking obstacle',x:-2,y:0,z:-3,scale:1}}}}]);
+ const obstruction=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:hash,name:'Walking obstacle',x:-2,y:0,z:-3,scale:1}}}}]));
  const obstacle=obstruction.execution?.selected?.output?.objectId;if(typeof obstacle!=='string')throw new Error('Missing walking obstacle');
  const definition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.navigate',version:1}}]);
  const call={id:'object.navigate',version:1,arguments:{target,mode:'walk',destination:{x:-1,y:0,z:-3},speed:.65}};

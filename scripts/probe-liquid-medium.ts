@@ -5,11 +5,11 @@ import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {capabilityDefinition} from '../shared/capabilities';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeLiquidMedium(execute:Execute,directory:string){
  const fact=async(capability:string,args:Record<string,unknown>)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}])).value;
- const invoke=async(id:string,args:Record<string,unknown>)=>{const s=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s.execution!.selected!;};
+ const invoke=async(id:string,args:Record<string,unknown>)=>{const s=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s.execution!.selected!;};
  const create=async(name:string,x:number)=>(await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name,x,y:1,z:2})).output!.objectId as string;
  // Live medium queries need visible native cavities, not an implicit all-home loading group.
  const pool=await create('Medium probe pool',-.5),cup=await create('Medium probe receiver',.5);

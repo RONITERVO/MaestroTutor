@@ -61,14 +61,14 @@ namespace Maestro.Quest.Tests {
   [UnityTest]public IEnumerator FlowWorkAdmissionGrowthCannotEvictPeersAndShrinkKeepsReservation(){
    editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);var initial=new List<string>();
    for(int i=0;i<13;i++){
-    string id=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3+i*.002f,1,0)))["selected"]["output"]["objectId"];initial.Add(id);
+    string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3+i*.002f,1,0)));initial.Add(id);
     Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
    }
    StartIsland();Assert.That(FlowWorkResources.TryAdmit(editor.Liquids,out var error),Is.True,error);var original=FlowGrant();var held=FillFlowWork();
    var peer=held[0];var cost=peer.FlowUnits;var added=new List<string>();
    try{
     for(int i=0;i<3;i++){
-     string id=(string)TemplateRun(ex,TemplateCall("cup",new Vector3(3+(13+i)*.002f,1,0)))["selected"]["output"]["objectId"];added.Add(id);
+     string id=CreateTemplateFixture(TemplateCall("cup",new Vector3(3+(13+i)*.002f,1,0)));added.Add(id);
      Assert.That(editor.SetItemPhysics(id,new(){mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
      bool admitted=FlowWorkResources.TryAdmit(editor.Liquids,out _);
      Assert.That(admitted,Is.EqualTo(i<2),"The third complete-group growth exceeds the remaining allowance");

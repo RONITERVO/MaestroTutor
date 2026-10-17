@@ -27,13 +27,28 @@ forbidden on shapes. The kind selector stays literal; valid scalar parameters
 can be expression-bound. Recipe arrays stay literal and editable. Native domain,
 room capacity, aggregate geometry and storage checks still apply.
 
-All kinds return the exact objectId only after saving. Existing native operations
-still create through RoomEditor, with one room Undo edit per creation. Stop never
-erases completed creations. Duplicate one-off receipt delivery returns the same
-historical result without creating again. Programs retain their native-result
-authority and per-run creation limits. This checkpoint deliberately preserves
-saved-edit semantics; runtime-only edits and grouped commits need their own design
-and verification.
+The current `object.create` action has five kinds: primitive, recipe, copy,
+drawing and template. All use completion duration through the same pending edit
+operation as placement, paint and deletion. The book, agent and programs wait for
+native application and durable saving before receiving the exact new `objectId`.
+In temporary play, completion confirms the live edit and local Undo; only Keep
+makes it durable. Imported-model loading remains a separate bounded operation.
+
+Waiting for earlier edits does not allocate a saved object or native geometry.
+The shared queue rechecks capacity, workspace and any copy-source revision before
+preparation. Once preparation starts, newer authored changes invalidate the
+candidate. Each accepted creation makes one Undo edit. Cancelling before native
+acceptance leaves no creation; after acceptance the object remains and its save
+must drain, even when the caller stops. Interruption status identifies an already
+accepted object without inventing a successful output. Inspect uncertain outcomes
+before retrying. A returned result is detached from the caller and never changes.
+
+Duplicate one-off receipt delivery returns the historical result without creating
+again, including after Undo. Programs retain their native-result authority and
+per-run creation limits. Existing synchronous RoomEditor callers retain their
+completion contracts and reuse the same data builders. These changes do not
+increase world capacity or establish a frame-time guarantee. See the current
+verification checkpoint in [the v1 plan](QUEST_V1_PLAN.md).
 
 ## Shared authoring
 

@@ -7,11 +7,11 @@ import type {HeadlessClient} from '../src/headless/client';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {capabilityDefinition} from '../shared/capabilities';
-import {factReply,placementReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,placementReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 type Contents={revision:number;definition:Record<string,unknown>&{amountMl:number;capacityMl:number;liquid:string;fluid:{densityKgM3:number;linearDrag:number;angularDrag:number}}};
 export async function prepareAgentLiquidMedium(execute:Execute){
- const invoke=async(id:string,args:Record<string,unknown>)=>{const s=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s;};
+ const invoke=async(id:string,args:Record<string,unknown>)=>{const s=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s;};
  const create=async(name:string,x:number)=>{const s=await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name,x,y:1,z:0});const id=s.execution!.selected!.output!.objectId as string;
   const c=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container',version:1,arguments:{target:id}}}])).value as Contents;
   await invoke('object.container.edit',{operation:'configure',target:id,revision:c.revision,definition:{...c.definition,frame:{position:{x:0,y:.2,z:0},rotation:{x:0,y:0,z:0,w:1}},radius:.35,height:.4,capacityMl:10000,amountMl:0}});return id;};

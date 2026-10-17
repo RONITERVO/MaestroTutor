@@ -8,12 +8,12 @@ import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {parseProgram,type ProgramNode} from '../src/core-sdk/room/programs';
 import {runHeadlessRoomTurn} from '../src/headless/roomJourney';
 import {capabilityDefinition} from '../shared/capabilities';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 import {assertSameRoomObjects} from './agent-provider-contract';
 import {readNativeObjects,type NativeObjectReadSet} from './native-probe-read-set';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function prepareAgentLiquidContacts(execute:Execute){
- const s=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...capabilityDefinition('object.create')!.example!,shape:'block',name:'ContactPool',x:3,y:1,z:0}}}}]);assert.equal(s.execution?.selected?.phase,'completed');const pool=s.execution!.selected!.output!.objectId as string;
+ const s=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...capabilityDefinition('object.create')!.example!,shape:'block',name:'ContactPool',x:3,y:1,z:0}}}}]));assert.equal(s.execution?.selected?.phase,'completed');const pool=s.execution!.selected!.output!.objectId as string;
  const c=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container',version:1,arguments:{target:pool}}}])).value as {revision:number;definition:Record<string,unknown>};
  const configured=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.edit',version:1,arguments:{operation:'configure',target:pool,revision:c.revision,definition:{...c.definition,rectangle:{width:1,depth:1},height:.6,capacityMl:10000,amountMl:5000}}}}}]);
  assert.equal(configured.execution?.selected?.phase,'completed');

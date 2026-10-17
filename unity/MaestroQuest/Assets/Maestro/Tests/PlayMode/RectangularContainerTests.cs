@@ -15,8 +15,8 @@ namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
         (RoomAgentExecutor executor,string pool,string bucket) PoolVessels(){
             editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);
-            string pool=(string)TemplateRun(ex,TemplateCall("shallow-pool",new Vector3(4,2,0)))["selected"]["output"]["objectId"];
-            string bucket=(string)TemplateRun(ex,TemplateCall("bucket",new Vector3(4,2.15f,0)))["selected"]["output"]["objectId"];
+            string pool=CreateTemplateFixture(TemplateCall("shallow-pool",new Vector3(4,2,0)));
+            string bucket=CreateTemplateFixture(TemplateCall("bucket",new Vector3(4,2.15f,0)));
             physics.SetSurfaces(true,"Synthetic room ready");return(ex,pool,bucket);
         }
         [UnityTest] public IEnumerator RectangularPoolDipsThroughTheRealSharedRuntimeAndPersistsOneAtomicUndo(){

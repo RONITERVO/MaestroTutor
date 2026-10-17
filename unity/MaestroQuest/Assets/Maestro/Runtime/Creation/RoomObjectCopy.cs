@@ -17,15 +17,20 @@ namespace Maestro.Quest.Creation
         }
         internal bool CopyObject(string source,int revision,string name,Vector3 position,out string id,out string error)
         {
-            id=null;if(!CanCopyObject(source,revision,out error))return false;
-            var data=Pose(Read(source),Find(source).transform);var translation=position-data.position;
+            id=null;if(!PrepareCopyObject(source,revision,name,position,out var data,out error))return false;
+            return CommitCreatedObject(data,out id,out error);
+        }
+        bool PrepareCopyObject(string source,int revision,string name,Vector3 position,out RoomObjectData data,out string error)
+        {
+            data=null;if(!CanCopyObject(source,revision,out error))return false;
+            data=Pose(Read(source),Find(source).transform);var translation=position-data.position;
             data.id=Guid.NewGuid().ToString("N");data.position=position;if(!string.IsNullOrEmpty(name))data.name=name;
             // Recorded paths use room coordinates. Copy the same translation, retaining
             // key times, rotations, scales and loop; never alter the source's frames.
             if(data.motion!=null)foreach(var frame in data.motion.frames)frame.position+=translation;
             // A copy retains editable tracks but cannot silently start another actor.
             if(data.recipe!=null)data.recipe.playing=false;
-            return CommitCreatedObject(data,out id,out error);
+            return true;
         }
     }
 }

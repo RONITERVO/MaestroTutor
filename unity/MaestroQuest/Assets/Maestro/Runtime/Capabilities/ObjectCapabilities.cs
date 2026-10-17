@@ -38,8 +38,8 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.create.primitive";
         public override string Label=>"Create shape";
-        public override string Description=>"Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Stop leaves created objects in the room.";
-        public override string Duration=>"instant";
+        public override string Description=>"Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit."+PersistedEditOperation.CreationPersistence;
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable"};
         public override JObject InputSchema=>Object(new JObject {["shape"]=Choice("ball","block","cylinder"),["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)});
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))});
@@ -50,16 +50,19 @@ namespace Maestro.Quest.Programs
         }
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>context.Editor.CanCreatePrimitive(out error);
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.CreatePrimitive(Enum.Parse<RoomObjectKind>((string)arguments["shape"],true),(string)arguments["name"],ObjectCapabilityData.Position(arguments),(float)arguments["scale"],ObjectCapabilityData.Color(arguments),out var id,out error))return false;
-            operation=new CompletedCapability(new JObject {["objectId"]=id});return true;
+            var editor=context.Editor;var kind=Enum.Parse<RoomObjectKind>((string)arguments["shape"],true);string name=(string)arguments["name"],id=null;
+            var position=ObjectCapabilityData.Position(arguments);float scale=(float)arguments["scale"];var color=ObjectCapabilityData.Color(arguments);
+            return PersistedEditOperation.StartCreation(editor,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreatePrimitive(kind,name,position,scale,color,out id,out pending,out issue),
+                ()=>new JObject {["objectId"]=id},out operation,out error);
         }
     }
     internal sealed class CreateRecipeCapability : CapabilityModule
     {
         public override string Id=>"object.create.recipe";
         public override string Label=>"Create recipe object";
-        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics.";
-        public override string Duration=>"instant";
+        public override string Description=>"Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics."+PersistedEditOperation.CreationPersistence;
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable","recipe.valid"};
         public override JObject InputSchema {get {
             var collision=CollisionCapability.RecipeSchema();((JArray)collision["x-features"]).Add("creationComponents.v1");
@@ -74,8 +77,11 @@ namespace Maestro.Quest.Programs
         }
         public override bool CanRun(CapabilityContext context,JObject arguments,out string error)=>context.Editor.CanCreateRecipe(ObjectCapabilityData.Recipe(arguments),ObjectCapabilityData.Collision(arguments),ObjectCapabilityData.Physics(arguments),out error);
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.CreateRecipe((string)arguments["name"],ObjectCapabilityData.Position(arguments),(float)arguments["scale"],ObjectCapabilityData.Recipe(arguments),ObjectCapabilityData.Collision(arguments),ObjectCapabilityData.Physics(arguments),out var id,out error))return false;
-            operation=new CompletedCapability(new JObject {["objectId"]=id});return true;
+            var editor=context.Editor;string name=(string)arguments["name"],id=null;var position=ObjectCapabilityData.Position(arguments);float scale=(float)arguments["scale"];
+            var recipe=ObjectCapabilityData.Recipe(arguments);var collision=ObjectCapabilityData.Collision(arguments);var physics=ObjectCapabilityData.Physics(arguments);
+            return PersistedEditOperation.StartCreation(editor,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateRecipe(name,position,scale,recipe,collision,physics,out id,out pending,out issue),
+                ()=>new JObject {["objectId"]=id},out operation,out error);
         }
     }
     internal sealed class MoveObjectCapability : NativeTargetCapability

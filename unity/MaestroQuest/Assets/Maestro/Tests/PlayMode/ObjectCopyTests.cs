@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.AddDrawing(new[]{new Vector3(.2f,1,.5f),new Vector3(.3f,1,.5f),new Vector3(.3f,1.1f,.5f)},Color.blue),Is.True);string source=editor.SelectedId;
             var data=editor.Read(source);Assert.That(editor.SaveAnimation(source,new RoomMotion {loop=true,frames=new[]{new MotionFrame {position=data.position},new MotionFrame {time=1,position=data.position+Vector3.up*.2f}}},null,false),Is.True);
             var sourceData=editor.Read(source);var before=CopyFact(source);string encoded=JsonUtility.ToJson(sourceData);var executor=new RoomAgentExecutor(editor);var call=CopyCall(source,sourceData.position+Vector3.right*.4f);var request=ObjectEditRequest(call);int count=editor.Snapshot().objects.Length;
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);var receipt=executor.Executions.Observe().DeepClone();string id=(string)receipt["selected"]["output"]["objectId"];Assert.That(id,Is.Not.EqualTo(source));var copy=editor.Read(id);
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);var receipt=executor.Executions.Observe().DeepClone();string id=(string)receipt["selected"]["output"]["objectId"];Assert.That(id,Is.Not.EqualTo(source));var copy=editor.Read(id);
             Assert.That(copy.points,Is.EqualTo(sourceData.points));Assert.That(copy.color,Is.EqualTo(sourceData.color));Assert.That(copy.radius,Is.EqualTo(sourceData.radius));Assert.That(copy.rotation,Is.EqualTo(sourceData.rotation));Assert.That(copy.motion.loop,Is.True);
             for(int i=0;i<copy.motion.frames.Length;i++)Assert.That(copy.motion.frames[i].position,Is.EqualTo(sourceData.motion.frames[i].position+Vector3.right*.4f));
             Assert.That(JsonUtility.ToJson(editor.Read(source)),Is.EqualTo(encoded));Assert.That(editor.SelectedId,Is.EqualTo(source));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests
         {
             var recipe=RecipeTemplates.BoxRobot(true);Assert.That(editor.CreateRecipe("Robot",new Vector3(1,1,1),.3f,recipe,out var source,out var error),Is.True,error);var before=editor.Read(source);
             var wait=new JObject {["id"]="time.wait",["version"]=1,["arguments"]=new JObject {["seconds"]=20}};Assert.That(runtime.Scheduler.Invoke(wait,Time.unscaledTime,out var waiting,out error),Is.True,error);
-            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(ObjectEditRequest(CopyCall(source,new Vector3(2,1,1))),out error,out _),Is.True,error);string id=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
+            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(ObjectEditRequest(CopyCall(source,new Vector3(2,1,1))),out error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);string id=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
             var copy=editor.Read(id);Assert.That(copy.recipe.playing,Is.False);Assert.That(copy.recipe.parts.Select(x=>x.id),Is.EqualTo(before.recipe.parts.Select(x=>x.id)));Assert.That(copy.recipe.tracks.Length,Is.EqualTo(before.recipe.tracks.Length));
             Assert.That(editor.Find(id).GetComponent<RecipeObject>().IsPlaying,Is.False);Assert.That(editor.Read(source).recipe.playing,Is.True);Assert.That((string)runtime.Scheduler.Invocation(waiting)["phase"],Is.EqualTo("running"));
             copy.recipe.parts[0].size=Vector3.one;Assert.That(editor.Read(source).recipe.parts[0].size,Is.EqualTo(before.recipe.parts[0].size));yield return null;
@@ -47,7 +47,7 @@ namespace Maestro.Quest.Tests
         {
             string source=editor.Identity(block);var before=editor.Read(source);editor.Select(block);editor.Duplicate();string id=editor.SelectedId;Assert.That(id,Is.Not.EqualTo(source));Assert.That(editor.Read(id).motion.frames[0].position,Is.EqualTo(before.motion.frames[0].position+Vector3.right*.18f));Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==id),Is.True);
             editor.Undo();Assert.That(editor.Find(id),Is.Null);Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;
-            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(ObjectEditRequest(CopyCall(source,new Vector3(1,1,1))),out error,out _),Is.True,error);string temporary=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
+            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(ObjectEditRequest(CopyCall(source,new Vector3(1,1,1))),out error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);string temporary=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
             Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==temporary),Is.False);Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Find(temporary),Is.Null);Assert.That(editor.Find(source),Is.Not.Null);
         }
         [UnityTest] public IEnumerator CopyRefusesStaleHeldOwnedAndFailedSaveWithoutChangingTheSource()

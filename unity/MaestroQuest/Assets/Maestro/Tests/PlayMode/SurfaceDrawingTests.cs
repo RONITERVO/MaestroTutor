@@ -56,7 +56,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator ChalkboardTemplateInkFollowsItsRecipePartAndSurvivesRebuild()
         {
-            var ex=new RoomAgentExecutor(editor);var receipt=TemplateRun(ex,TemplateCall("chalkboard",new Vector3(2,1,0)));string target=(string)receipt["selected"]["output"]["objectId"];var item=editor.Find(target);var view=item.GetComponent<DrawingSurfaceView>();Assert.That(view.Surface("Front"),Is.Not.Null);Assert.That(editor.Read(target).surfaces[0].strokes,Is.Empty);
+            var ex=new RoomAgentExecutor(editor);string target=CreateTemplateFixture(TemplateCall("chalkboard",new Vector3(2,1,0)));var item=editor.Find(target);var view=item.GetComponent<DrawingSurfaceView>();Assert.That(view.Surface("Front"),Is.Not.Null);Assert.That(editor.Read(target).surfaces[0].strokes,Is.Empty);
             var add=SurfaceAdd();add["arguments"]["target"]=target;add["arguments"]["revision"]=editor.ObjectRevision(target);var request=ObjectEditRequest(add);Assert.That(ex.Execute(request,out var error,out _),Is.True,error);
             var part=item.GetComponent<RecipeObject>().Part("Board");var patch=view.Surface("Front");Assert.That(patch.parent,Is.EqualTo(part));var before=patch.position;part.localPosition+=Vector3.up*.1f;Assert.That(Vector3.Distance(before,patch.position),Is.GreaterThan(.09f));
             Assert.That(editor.PaintObject(target,Color.blue,out error),Is.True,error);yield return null;Assert.That(view.Surface("Front").parent,Is.EqualTo(item.GetComponent<RecipeObject>().Part("Board")));Assert.That(view.StrokeCount,Is.EqualTo(1));Assert.That(new RoomStorage(directory).Load(out error).objects.Single(o=>o.id==target).surfaces[0].strokes.Length,Is.EqualTo(1),error);

@@ -13,7 +13,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
-    (string id,SculptTipView view) MaterialScoopProp(){var result=TemplateRun(new RoomAgentExecutor(editor),TemplateCall("material-scoop",new Vector3(6,2,4)));string id=(string)result["selected"]["output"]["objectId"];var view=editor.Find(id).GetComponent<SculptTipView>();view.Sample(false,RoomActorRole.Control);return(id,view);}
+    (string id,SculptTipView view) MaterialScoopProp(){string id=CreateTemplateFixture(TemplateCall("material-scoop",new Vector3(6,2,4)));var view=editor.Find(id).GetComponent<SculptTipView>();view.Sample(false,RoomActorRole.Control);return(id,view);}
     void PlaceMaterialScoop(string id,HeightFieldView field,bool deposit=false,float lift=0,float x=0){var item=editor.Find(id);var tip=editor.Read(id).sculptTips[0];item.transform.rotation=field.Surface.rotation*(deposit?Quaternion.Euler(180,0,0):Quaternion.identity);item.transform.position=SculptContact(field,x)+field.Surface.up*lift-item.transform.TransformVector(tip.position);Physics.SyncTransforms();}
     double MaterialAmount(string id)=>editor.Read(id).materialStores[0].amountLitres;
     [UnityTest] public IEnumerator MaterialScoopRealGripTakesOnceShowsContentsAndDepositsWithAtomicUndo(){

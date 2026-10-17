@@ -695,7 +695,7 @@ audibility or provider access. Actual release packaging and device acceptance
 remain separate gates. No source/test pass by itself establishes Store readiness.
 
 
-## Current Android compile checkpoint — 2026-10-17
+## Paint and deletion Android compile checkpoint — 2026-10-17
 
 Shared move/rotate/resize/paint/delete completion passes fresh Unity
 **6000.3.24f1** Android export and guarded Java/IL2CPP compilation. The export
@@ -742,3 +742,40 @@ checkpoints remain in .quest-evidence/authoring-integration-20261017/android/
 and .quest-evidence/android-compile-liquid-20261017/.
 Installed/package versions, physical/acoustic acceptance and Store gates remain
 unchanged.
+
+## Current Android compile checkpoint — 2026-10-17
+
+All five shared object.create variants (primitive, recipe, copy, drawing and
+starter template) pass fresh Unity 6000.3.24f1 Android export and guarded
+Java/IL2CPP compilation. The export reports zero errors/five build warnings.
+The production web build passes. Generated C++ contains BeginCreatePrimitive,
+BeginCreateRecipe, BeginCreateDrawing and BeginCopyObject alongside shared
+admission, persisted completion and accepted-primary validation.
+
+The guarded compile reuses recorded native coverage: 1,437 EditMode / 1,874
+PlayMode passes, with three optional private-asset skips. These combine full
+runs with explicitly recorded fixture corrections and 72 storage/24 native
+lifecycle checks for the subsequent Windows publication fix. The full suites
+were not repeated after that isolated correction. Both final offline Headless
+and original Book journeys pass on the same native inputs. The source guard
+checks all 3,230 native inputs and the owned configured mirror before reuse.
+
+All 41 compilation/merge tasks execute. The browser module has 128 passes/two
+skips and zero lint errors/six warnings, verified cached against 106 unchanged
+inputs. All 5,152 tracked/new inputs and 14 protected files remain unchanged
+before documentation updates.
+
+Readback confirms the development package, exactly one UnityPlayerGameActivity,
+quest3 declaration, no broad storage permission and 16 KiB-compatible ELF LOAD
+segments in all 22 selected ARM64 libraries. Five unselected ARMv7 dependency
+libraries remain in the intermediate; final package filtering is not tested.
+Generated libil2cpp.so differs from prior compilation. Warnings remain recorded
+in the separate build, lint and normalized diagnostic receipts.
+
+Evidence: .quest-evidence/creation-save-20261017/android/. The export is
+Android-compile-20261017-114122-2123331a under the owned build mirror. Prior
+paint/deletion evidence remains in .quest-evidence/component-save-20261017/android/.
+
+This is unsigned development compilation only. No APK/AAB, signing, installation,
+paid-provider request, deployment or Meta action occurred. Installed/package
+versions, physical/acoustic acceptance and Store gates remain unchanged.

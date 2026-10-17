@@ -35,6 +35,38 @@ namespace Maestro.Quest.Tests
             Assert.That(file.PrepareSave(value??new Probe{value=2},file.CaptureForPreparation(),out var prepared,out var error,stageFile:staged),Is.True,error);
             return prepared;
         }
+#if UNITY_EDITOR_WIN
+        [TestCase(true)] [TestCase(false)]
+        public void PreparedReplaceRecoversFromAReleasedReaderOnlyOnTheWorker(bool worker)
+        {
+            string original=File.ReadAllText(primary);using var prepared=Prepare(staged:true);
+            FileStream reader=new FileStream(primary,FileMode.Open,FileAccess.Read,FileShare.Read);
+            int waits=0;bool saved;string error;
+            try {
+                saved=file.PublishPrepared(prepared,out error,wait:worker,waitForRetry:ms=>{
+                    waits++;Assert.That(ms,Is.EqualTo(20));
+                    Assert.That(File.ReadAllText(primary),Is.EqualTo(original));
+                    reader.Dispose();reader=null;
+                });
+            }finally{reader?.Dispose();}
+            Assert.That(saved,Is.EqualTo(worker),error);Assert.That(waits,Is.EqualTo(worker?1:0));
+            Assert.That(file.Load(out _).value,Is.EqualTo(worker?2:1));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(original));
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False,"An accepted candidate cannot replay");
+        }
+        [Test] public void PreparedWorkerWithPersistentReaderStopsAfterBoundedRetries()
+        {
+            string original=File.ReadAllText(primary);using var prepared=Prepare(staged:true);
+            var waits=new System.Collections.Generic.List<int>();
+            using(var reader=new FileStream(primary,FileMode.Open,FileAccess.Read,FileShare.Read)){
+                Assert.That(file.PublishPrepared(prepared,out _,wait:true,waitForRetry:waits.Add),Is.False);
+            }
+            Assert.That(waits,Is.EqualTo(new[]{20,40,80}));
+            Assert.That(File.ReadAllText(primary),Is.EqualTo(original));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(original));
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+        }
+#endif
         [Test] public void PreparationIsPrivateAndPublicationIsOneShot()
         {
             string original=File.ReadAllText(primary),backup=File.ReadAllText(primary+".backup");

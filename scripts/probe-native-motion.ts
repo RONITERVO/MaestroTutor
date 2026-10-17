@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {completeProbeAction} from './native-probe-contract';
 import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -21,7 +22,7 @@ export async function probeNativeMotion(execute:(commands:RoomCommand[])=>Promis
   const ball=await execute([{action:'create',reference:'sample_ball',kind:'ball',name:'Observer physics ball',atPosition:true,position:{x:.2,y:1,z:2.5},scale:.5,color:{r:0,g:.3,b:1,a:1}}]);
   const target=ball.created[0];assert.ok(target);created.push(target);
   await execute([{action:'physicsSettings',target,physics:{mode:'solid',shape:'sphere',mass:.5}}]);
-  const wall=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Observer fixed wall',x:2.2,y:.5,z:2.5,scale:1,recipe:{version:1,parts:[{id:'Wall',parent:null,shape:'box',position:{x:0,y:0,z:0},size:{x:.1,y:1,z:2},rotation:{x:0,y:0,z:0,w:1},color:{r:.5,g:.5,b:.5,a:1}}],tracks:[],duration:1,playing:false,loop:false}}}}}]);
+  const wall=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'recipe',name:'Observer fixed wall',x:2.2,y:.5,z:2.5,scale:1,recipe:{version:1,parts:[{id:'Wall',parent:null,shape:'box',position:{x:0,y:0,z:0},size:{x:.1,y:1,z:2},rotation:{x:0,y:0,z:0,w:1},color:{r:.5,g:.5,b:.5,a:1}}],tracks:[],duration:1,playing:false,loop:false}}}}}]));
   const wallId=wall.execution?.selected?.output?.objectId;assert.equal(typeof wallId,'string');created.push(wallId as string);
   const setup=await readNativeObjects(execute);evidence.setup=setup;
   observer=await startMotionObserver({target,execute,read});evidence.observer={source:observer.source,sequenceId:observer.sequenceId,runId:observer.runId};

@@ -17,8 +17,8 @@ namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
         (RoomAgentExecutor executor,string basin,string bucket) ScoopingVessels(){
             editor.Liquids.enabled=false;var executor=new RoomAgentExecutor(editor);
-            string basin=(string)TemplateRun(executor,TemplateCall("basin",new Vector3(4,2,0)))["selected"]["output"]["objectId"];
-            string bucket=(string)TemplateRun(executor,TemplateCall("bucket",new Vector3(4,2,0)))["selected"]["output"]["objectId"];
+            string basin=CreateTemplateFixture(TemplateCall("basin",new Vector3(4,2,0)));
+            string bucket=CreateTemplateFixture(TemplateCall("bucket",new Vector3(4,2,0)));
             physics.SetSurfaces(true,"Synthetic room ready");physics.StartPhysics();return(executor,basin,bucket);
         }
         double Liquid(string id)=>(double)editor.Liquids.Observe(id)["contents"]["amountMl"];
@@ -55,13 +55,13 @@ namespace Maestro.Quest.Tests {
         }
         [UnityTest] public IEnumerator ScoopingThenPouringUsesTheSameLiquidAndCanFillAnOrdinaryCup(){
             var(executor,basin,bucket)=ScoopingVessels();for(int i=0;i<20;i++)editor.Liquids.Tick(.05f);physics.PausePhysics();double picked=editor.Read(bucket).containers[0].amountMl;Assert.That(picked,Is.GreaterThan(1000));
-            string cup=(string)TemplateRun(executor,TemplateCall("cup",new Vector3(6,1.4f,0)))["selected"]["output"]["objectId"];
+            string cup=CreateTemplateFixture(TemplateCall("cup",new Vector3(6,1.4f,0)));
             var held=editor.Find(bucket);held.transform.SetPositionAndRotation(new Vector3(6,2.4f,0),Quaternion.Euler(0,0,80));held.GetComponent<RigidRoomItem>().Teleported();var lip=ContainerFlowGeometry.Lip(editor.Read(bucket).containers[0],held.transform,Vector3.up,out _);editor.Find(cup).transform.position=new Vector3(lip.x,1.4f,lip.z);editor.Find(cup).GetComponent<RigidRoomItem>().Teleported();
             physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(cup),Is.GreaterThan(0));Assert.That(Liquid(basin)+Liquid(bucket)+Liquid(cup),Is.EqualTo(32000).Within(1e-8));physics.PausePhysics();editor.Undo();Assert.That(editor.Read(bucket).containers[0].amountMl,Is.EqualTo(picked));Assert.That(editor.Read(cup).containers[0].amountMl,Is.Zero);yield return null;
         }
         [UnityTest] public IEnumerator ScoopingMultipleReceiversShareTheDonorBudgetAndStopAtCapacity(){
-            editor.Liquids.enabled=false;var executor=new RoomAgentExecutor(editor);string basin=(string)TemplateRun(executor,TemplateCall("basin",new Vector3(4,2,0)))["selected"]["output"]["objectId"];physics.SetSurfaces(true,"Synthetic room ready");
-            string first=(string)TemplateRun(executor,TemplateCall("cup",new Vector3(4,2,-.16f)))["selected"]["output"]["objectId"],second=(string)TemplateRun(executor,TemplateCall("cup",new Vector3(4,2,.16f)))["selected"]["output"]["objectId"];
+            editor.Liquids.enabled=false;var executor=new RoomAgentExecutor(editor);string basin=CreateTemplateFixture(TemplateCall("basin",new Vector3(4,2,0)));physics.SetSurfaces(true,"Synthetic room ready");
+            string first=CreateTemplateFixture(TemplateCall("cup",new Vector3(4,2,-.16f))),second=CreateTemplateFixture(TemplateCall("cup",new Vector3(4,2,.16f)));
             physics.StartPhysics();for(int i=0;i<18;i++)editor.Liquids.Tick(.1f);physics.PausePhysics();
             Assert.That(Liquid(first),Is.EqualTo(500));Assert.That(Liquid(second),Is.EqualTo(500));Assert.That(Liquid(basin),Is.EqualTo(31000));
             editor.Undo();Assert.That(Liquid(first)+Liquid(second),Is.Zero);Assert.That(Liquid(basin),Is.EqualTo(32000));

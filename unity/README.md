@@ -263,8 +263,12 @@ programs remain visible as unavailable source for repair. See
 [typed animation contract](../docs/QUEST_ANIMATION_VOCABULARY.md).
 
 
-Creation programs use object.create with a Creation kind choice: shape or editable
-recipe. The recipe example includes the animated box robot, initially idle. The
+Creation programs use object.create with a Creation kind choice: shape, editable
+recipe, copy, drawing or starter template. The action returns its exact object ID
+on completion after native application and saving (local until Keep in temporary
+play). Creation, placement, paint and deletion share ordered pending-edit
+admission and cancellation semantics. The recipe example includes the animated
+box robot, initially idle. The
 book and physical draft retain compatible values and result wiring when changing
 kind; Apply does not create an object. Old prototype creation IDs remain preserved
 as unavailable source. See [typed creation](../docs/QUEST_CREATION_VOCABULARY.md).

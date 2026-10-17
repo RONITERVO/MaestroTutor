@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
     {
         (string id,DrawingTipView view,Transform patch) DrawingTipStage()
         {
-            var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());var receipt=TemplateRun(ex,TemplateCall("chalk",new Vector3(2,1,0)));string id=(string)receipt["selected"]["output"]["objectId"];
+            var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());string id=CreateTemplateFixture(TemplateCall("chalk",new Vector3(2,1,0)));
             var view=editor.Find(id).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);return(id,view,block.GetComponent<DrawingSurfaceView>().Surface("Front"));
         }
         void PlaceTip(string id,Transform patch,float x,float z=0)

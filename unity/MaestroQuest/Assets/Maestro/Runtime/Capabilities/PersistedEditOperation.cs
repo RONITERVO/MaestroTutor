@@ -1,5 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+using System;
+using Newtonsoft.Json.Linq;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Rules;
 namespace Maestro.Quest.Programs
@@ -9,6 +11,7 @@ namespace Maestro.Quest.Programs
     internal sealed class PersistedEditOperation:CapabilityOperation
     {
         internal const string Persistence=" Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.";
+        internal const string CreationPersistence=Persistence+" Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.";
         internal const string PlacementPersistence=Persistence+" Only the target body is held during placement preparation; it resumes after application. Placement resets velocity, then normal gravity resumes.";
         internal delegate bool Validate(out string error);
         internal delegate bool Begin(out RoomEditor.PendingPersistedEdit pending,out string error);
@@ -17,19 +20,27 @@ namespace Maestro.Quest.Programs
         readonly int revision;
         readonly Begin begin;
         readonly Validate validate;
+        readonly Func<JObject> output;
+        JObject result;
         RoomEditor.PendingPersistedEdit pending;
         RoomEditor.EditAdmission admission;
         bool stopped;
         string failure;
-        PersistedEditOperation(RoomEditor editor,string target,Begin begin,Validate validate)
+        PersistedEditOperation(RoomEditor editor,string target,Begin begin,Validate validate,Func<JObject> output=null)
         {
-            this.editor=editor;this.target=target;this.begin=begin;
+            this.editor=editor;this.target=target;this.begin=begin;this.output=output;
             this.validate=validate??((out string error)=>editor.CanEditObject(target,false,out error));
             revision=editor.ObjectRevision(target);temporarySession=editor.TemporarySessionId;
         }
         internal static bool Start(RoomEditor editor,string target,Begin begin,out CapabilityOperation operation,out string error,Validate validate=null)
         {
             var value=new PersistedEditOperation(editor,target,begin,validate);
+            operation=null;if(!value.TryBegin(out error))return false;
+            operation=value;return true;
+        }
+        internal static bool StartCreation(RoomEditor editor,Begin begin,Func<JObject> output,out CapabilityOperation operation,out string error,string source=null,Validate validate=null)
+        {
+            var value=new PersistedEditOperation(editor,source,begin,validate??((out string issue)=>editor.CanCreatePrimitive(out issue)),output);
             operation=null;if(!value.TryBegin(out error))return false;
             operation=value;return true;
         }
@@ -41,7 +52,7 @@ namespace Maestro.Quest.Programs
             if(pending!=null)return true;
             if(!editor||!editor.isActiveAndEnabled||editor.TemporarySessionId!=temporarySession)
                 return Fail("The object edit workspace changed while waiting",out error);
-            if(editor.ObjectRevision(target)!=revision)
+            if(target!=null&&editor.ObjectRevision(target)!=revision)
                 return Fail("The target changed while waiting for object edit; inspect it before retrying",out error);
             if(!validate(out error))return Fail(error,out error);
             if(admission==null&&!editor.ReserveEdit(out admission,out error))return Fail(error,out error);
@@ -65,10 +76,20 @@ namespace Maestro.Quest.Programs
         }
         public override bool Complete(out string error)
         {
-            if(pending!=null&&!stopped)return pending.Complete(out error);
+            if(pending!=null&&!stopped){
+                if(!pending.Complete(out error))return false;
+                result??=(JObject)(output?.Invoke()??new JObject()).DeepClone();return true;
+            }
             error=failure??"The object edit has not completed";return false;
         }
+        public override JObject Result=>result==null?new JObject():(JObject)result.DeepClone();
         public override void Stop(bool preservePlacement){stopped=true;admission?.Dispose();pending?.Dispose();}
-        public override string InterruptionStatus=>pending?.InterruptionStatus;
+        public override string InterruptionStatus {get {
+            string status=pending?.InterruptionStatus;if(status==null)return null;
+            // Identify an already accepted creation even when saving was interrupted.
+            // This is recovery context, not a successful result or permission to replay.
+            string created=(string)output?.Invoke()?["objectId"];
+            return string.IsNullOrEmpty(created)?status:"Created object "+created+". "+status;
+        }}
     }
 }

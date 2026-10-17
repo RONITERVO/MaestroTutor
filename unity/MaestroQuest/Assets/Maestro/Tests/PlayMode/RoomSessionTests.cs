@@ -33,7 +33,7 @@ namespace Maestro.Quest.Tests
   JObject Call(string operation,string session=null)=>new() {["id"]="room.session",["version"]=1,["arguments"]=new JObject {["operation"]=operation,["sessionId"]=session??editor.TemporarySessionId}};
   JObject Request(JObject call)=>new() {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call};
   string Start(string operation){var request=Request(Call(operation));Assert.That(executions.Execute(request,out var error),Is.True,error);return (string)request["runId"];}
-  string Create(string name){var args=BehaviourCatalog.Action("object.create").Example;args["name"]=name;var request=Request(new JObject {["id"]="object.create",["version"]=1,["arguments"]=args});Assert.That(executions.Execute(request,out var error),Is.True,error);return (string)runtime.Scheduler.Invocation((string)request["runId"])["output"]["objectId"];}
+  IEnumerator Create(string name,Action<string> created){var args=BehaviourCatalog.Action("object.create").Example;args["name"]=name;var request=Request(new JObject {["id"]="object.create",["version"]=1,["arguments"]=args});Assert.That(executions.Execute(request,out var error),Is.True,error);yield return Finish();var receipt=runtime.Scheduler.Invocation((string)request["runId"]);Assert.AreEqual("completed",(string)receipt["phase"],receipt.ToString());created((string)receipt["output"]["objectId"]);}
   IEnumerator Finish(){float end=Time.realtimeSinceStartup+5;while((editor.TemporarySavePending||runtime.Scheduler.RunningCount>0)&&Time.realtimeSinceStartup<end)yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(editor.TemporarySavePending,Is.False);}
   RoomDocument Saved()=>new RoomStorage(directory).Load(out _);
   void Evidence(string name){var path=Environment.GetEnvironmentVariable("MAESTRO_SESSION_EVIDENCE");if(string.IsNullOrEmpty(path))return;Directory.CreateDirectory(path);var state=observer.Observe();state.execution=executions.Observe();state.visible=true;File.WriteAllText(Path.Combine(path,name+".json"),RoomAgentWire.Serialize(state));}
@@ -82,7 +82,7 @@ namespace Maestro.Quest.Tests
    var blocked=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(blocked);
    var request=Request(Call("begin"));executions.Execute(request,out _);yield return Finish();
    Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));
-   Assert.That(editor.TemporaryRoom,Is.True);var id=Create("Preserve after failure");Evidence("failed-start");
+   Assert.That(editor.TemporaryRoom,Is.True);string id=null;yield return Create("Preserve after failure",value=>id=value);Evidence("failed-start");
    Directory.Delete(blocked);Start("keep");yield return Finish();Assert.That(Saved().objects.Count(x=>x.id==id),Is.EqualTo(1));
    Start("discard");editor.Undo();Assert.That(editor.Find(id),Is.Null);
   }
@@ -108,20 +108,20 @@ namespace Maestro.Quest.Tests
    yield return Finish();string error;
    Assert.That(editor.TemporarySessionId,Is.Not.EqualTo(inactive));var scope=editor.TemporarySessionId;Evidence("begun");
    Assert.That(executions.Execute(begin,out error),Is.True,error);Assert.That(editor.TemporarySessionId,Is.EqualTo(scope),"Duplicate Begin never opens another session");
-   var created=Create("Temporary shared creation");Assert.That(Saved().objects.Any(x=>x.id==created),Is.False);Evidence("created");
+   string created=null;yield return Create("Temporary shared creation",value=>created=value);Assert.That(Saved().objects.Any(x=>x.id==created),Is.False);Evidence("created");
    var keep=Start("keep");yield return Finish();Assert.That((string)runtime.Scheduler.Invocation(keep)["phase"],Is.EqualTo("completed"));
    Assert.That(Saved().objects.Any(x=>x.id==created),Is.True);Evidence("saved");
-   string late=Create("Later unsaved");Evidence("later");Start("discard");Assert.That(editor.TemporaryRoom,Is.False);Assert.That(editor.TemporarySessionId,Is.Not.EqualTo(scope));
+   string late=null;yield return Create("Later unsaved",value=>late=value);Evidence("later");Start("discard");Assert.That(editor.TemporaryRoom,Is.False);Assert.That(editor.TemporarySessionId,Is.Not.EqualTo(scope));
    Assert.That(editor.Find(late),Is.Null);Assert.That(editor.Find(created),Is.Not.Null);Evidence("ended");
    Assert.That(executions.Execute(Request(Call("begin",inactive)),out error),Is.False);Assert.That(error,Does.Contain("session changed"));
    Assert.That(executions.Execute(Request(Call("keep",scope)),out error),Is.False);
    editor.Undo();Assert.That(editor.Find(created),Is.Null);editor.Redo();Assert.That(editor.Find(created),Is.Not.Null);
   }
   [UnityTest] public IEnumerator CancellingKeepDoesNotRetractItsWriteOrPersistLaterEdits(){
-   Start("begin");yield return Finish();string kept=Create("Kept");string run=Start("keep");
+   Start("begin");yield return Finish();string kept=null;yield return Create("Kept",value=>kept=value);string run=Start("keep");
    string before=(string)runtime.Scheduler.Invocation(run)["phase"];Assert.That(runtime.Scheduler.CancelInvocation(run,out _),Is.True);
    if(before!="completed")Assert.That((string)runtime.Scheduler.Invocation(run)["status"],Does.Contain("snapshot"));
-   string late=Create("Later");yield return Finish();
+   string late=null;yield return Create("Later",value=>late=value);yield return Finish();
    Assert.That(Saved().objects.Any(x=>x.id==kept),Is.True);Assert.That(Saved().objects.Any(x=>x.id==late),Is.False);Assert.That(editor.Find(late),Is.Not.Null);
    Evidence("cancelled-save");
   }
@@ -136,7 +136,7 @@ namespace Maestro.Quest.Tests
    runtime.Scheduler.CancelInvocation(other,out _);Start("discard");yield return null;
   }
   [UnityTest] public IEnumerator ActualWriterFailureHasFailedReceiptAndKeepsTemporaryEditsForAnExplicitRetry(){
-   Start("begin");yield return Finish();var id=Create("Retry once");var blocked=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(blocked);
+   Start("begin");yield return Finish();string id=null;yield return Create("Retry once",value=>id=value);var blocked=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(blocked);
    var request=Request(Call("keep"));executions.Execute(request,out _);yield return Finish();
    Assert.That((string)runtime.Scheduler.Invocation((string)request["runId"])["phase"],Is.EqualTo("failed"));Assert.That(editor.Find(id),Is.Not.Null);Evidence("failed-save");
    Directory.Delete(blocked);Start("keep");yield return Finish();Assert.That(Saved().objects.Count(x=>x.id==id),Is.EqualTo(1));
@@ -166,7 +166,7 @@ namespace Maestro.Quest.Tests
     try {camera.targetTexture=render;camera.Render();RenderTexture.active=render;pixels.ReadPixels(new Rect(0,0,1200,1100),0,0);pixels.Apply();File.WriteAllBytes(Path.Combine(evidence,"room-tools.png"),pixels.EncodeToPNG());}
     finally {RenderTexture.active=previous;camera.targetTexture=null;render.Release();UnityEngine.Object.Destroy(render);UnityEngine.Object.Destroy(pixels);UnityEngine.Object.Destroy(cameraRoot);}
    }
-   Create("Physical keep");Click(RoomTool.KeepTemporary);yield return Finish();
+   yield return Create("Physical keep",_=>{});Click(RoomTool.KeepTemporary);yield return Finish();
    Assert.That(editor.TemporarySaveRevision,Is.EqualTo(1));Click(RoomTool.DiscardTemporary);Assert.That(editor.TemporaryRoom,Is.False);
    Assert.That(runtime.Scheduler.ObserveInvocations(null)["outcomes"].Count(x=>(string)x["capability"]=="room.session"),Is.EqualTo(3));
   }
