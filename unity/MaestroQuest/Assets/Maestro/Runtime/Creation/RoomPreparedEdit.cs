@@ -19,11 +19,11 @@ namespace Maestro.Quest.Creation
             readonly Dictionary<string,RoomObjectData> objectIndex;
             readonly int revision,undoCount,redoCount;
             readonly long runtimePlacements;
-            readonly Dictionary<string,int> targetRevisions,environmentRevisions,audioRevisions,appearanceRevisions;
+            readonly Dictionary<string,int> targetRevisions,environmentRevisions,audioRevisions,appearanceRevisions,regionRevisions,structureRevisions,regionMemberRevisions;
             readonly string viewpointState,timeState,operation;
             readonly bool baseline;
             bool ended,accepted;
-            internal PreparedEdit(RoomJournal owner,Change change,RoomDocument document,string operation,bool baseline=false)
+            internal PreparedEdit(RoomJournal owner,Change change,RoomDocument document,string operation,bool baseline=false,IEnumerable<string> regionReceiptIds=null)
             {
                 this.owner=owner;this.change=change;this.document=document.Copy();this.operation=operation;this.baseline=baseline;
                 objectIndex=this.document.objects.ToDictionary(x=>x.id,StringComparer.Ordinal);
@@ -32,15 +32,24 @@ namespace Maestro.Quest.Creation
                 environmentRevisions=change.BeforeEnvironments.Concat(change.AfterEnvironments).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.EnvironmentRevision);
                 audioRevisions=change.BeforeAudio.Concat(change.AfterAudio).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.AudioRevision);
                 appearanceRevisions=change.BeforeAppearances.Concat(change.AfterAppearances).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.AppearanceRevision);
+                // Region deltas omit unchanged definitions. Keep explicitly requested IDs
+                // separately so no-op saves still return their accepted revision.
+                regionRevisions=change.BeforeRegions.Concat(change.AfterRegions).Select(x=>x.id).Concat(regionReceiptIds??Array.Empty<string>()).Distinct().ToDictionary(id=>id,owner.RegionRevision);
+                structureRevisions=change.BeforeStructures.Concat(change.AfterStructures).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.StructureRevision);
+                // Membership revisions are receipts, not pose write guards. Metadata
+                // edits must not reject unrelated runtime placement advances.
+                regionMemberRevisions=change.BeforeRegions.Concat(change.AfterRegions).SelectMany(x=>x.members).Distinct().ToDictionary(id=>id,owner.ObjectRevision);
                 undoCount=owner.undo.Count;redoCount=owner.redo.Count;
                 undoTop=undoCount>0?owner.undo[undoCount-1]:null;redoTop=redoCount>0?owner.redo[redoCount-1]:null;
                 viewpointState=JsonUtility.ToJson(owner.viewpoint);timeState=JsonUtility.ToJson(owner.worldTime);
             }
             internal RoomDocument Snapshot()=>document.Copy();
-            internal int AcceptedObjectRevision(string id)=>accepted&&targetRevisions.TryGetValue(id,out var value)?value:0;
+            internal int AcceptedObjectRevision(string id)=>accepted&&(targetRevisions.TryGetValue(id,out var value)||regionMemberRevisions.TryGetValue(id,out value))?value:0;
             internal int AcceptedEnvironmentRevision(string id)=>accepted&&environmentRevisions.TryGetValue(id,out var value)?value:0;
             internal int AcceptedAudioRevision(string id)=>accepted&&audioRevisions.TryGetValue(id,out var value)?value:0;
             internal int AcceptedAppearanceRevision(string id)=>accepted&&appearanceRevisions.TryGetValue(id,out var value)?value:0;
+            internal int AcceptedRegionRevision(string id)=>accepted&&regionRevisions.TryGetValue(id,out var value)?value:0;
+            internal int AcceptedStructureRevision(string id)=>accepted&&structureRevisions.TryGetValue(id,out var value)?value:0;
             // Native preparation reads detached copies of its targets. Unrelated saved
             // geometry remains owned by the candidate instead of being copied again.
             internal RoomObjectData ReadObject(string id)=>id!=null&&objectIndex.TryGetValue(id,out var value)?value.Copy():null;
@@ -71,6 +80,9 @@ namespace Maestro.Quest.Creation
                 foreach(var id in environmentRevisions.Keys.ToArray())environmentRevisions[id]=owner.EnvironmentRevision(id);
                 foreach(var id in audioRevisions.Keys.ToArray())audioRevisions[id]=owner.AudioRevision(id);
                 foreach(var id in appearanceRevisions.Keys.ToArray())appearanceRevisions[id]=owner.AppearanceRevision(id);
+                foreach(var id in regionRevisions.Keys.ToArray())regionRevisions[id]=owner.RegionRevision(id);
+                foreach(var id in structureRevisions.Keys.ToArray())structureRevisions[id]=owner.StructureRevision(id);
+                foreach(var id in regionMemberRevisions.Keys.ToArray())regionMemberRevisions[id]=owner.ObjectRevision(id);
                 accepted=true;error=null;return true;
             }
             public void Dispose()=>ended=true;

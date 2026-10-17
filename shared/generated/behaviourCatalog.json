@@ -5607,7 +5607,7 @@
           "worldRegions.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "regionMembership"
@@ -5617,7 +5617,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Create or rename one of up to 32 authored areas. Empty id, revision 0 and empty members create. To rename, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.",
+      "description": "Create or rename one of up to 32 authored areas. Empty id, revision 0 and empty members create. To rename, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -5676,7 +5676,7 @@
           "worldRegions.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "regionMembership"
@@ -5686,7 +5686,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.",
+      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "revision": 1
@@ -5787,7 +5787,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "regionMembership"
@@ -5797,7 +5797,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.",
+      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -29325,7 +29325,7 @@
           "layoutEdits.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -29336,7 +29336,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Apply 1–16 explicit placements together: target ID, room-local position in metres, unit-quaternion rotation and uniform scale. Useful for arranging/resetting a castle or board. Read object.placement to capture each live baseline; save chosen values in a reusable program. All members must exist, be released and idle; a missing or conflicting member refuses the entire edit. Saves once with one Undo capturing all targets' actual pre-edit poses; temporary play stays in its fork. Resets member velocities, preserves geometry/settings/animations and leaves other objects running. Completion means placement was applied, not that the structure is stable. Does not create replacements, connect/snap parts, avoid overlaps, start physics or move the book/Maestro. These are room axes, not durable scanned-room anchors. Programs use explicit literal member IDs; one-off calls require the normal current object conditions. Receipt replay cannot apply it twice; Stop does not undo a completed edit.",
+      "description": "Apply 1–16 explicit placements together: target ID, room-local position in metres, unit-quaternion rotation and uniform scale. Useful for arranging/resetting a castle or board. Read object.placement to capture each live baseline; save chosen values in a reusable program. All members must exist, be released and idle; a missing or conflicting member refuses the entire edit. Saves once with one Undo capturing all targets' actual pre-edit poses; temporary play stays in its fork. Resets member velocities, preserves geometry/settings/animations and leaves other objects running. Completion means placement was applied, not that the structure is stable. Does not create replacements, connect/snap parts, avoid overlaps, start physics or move the book/Maestro. These are room axes, not durable scanned-room anchors. Programs use explicit literal member IDs; one-off calls require the normal current object conditions. Receipt replay cannot apply it twice; Stop does not undo a completed edit. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "placements": [
           {
@@ -29500,7 +29500,7 @@
           "groupTransforms.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -29513,7 +29513,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Transform 1–16 idle creations as one arrangement with one save/Undo. The first member's CURRENT live pose is the pivot. position is its desired room-local origin; rotation is its desired absolute unit quaternion; scale multiplies every member's current scale and its distance from the pivot. A factor of 1 preserves size. Supply current revisions and include both ends of all connections. Pause physics, drawings, playback and authoring and release members first. Every final piece must remain within 25 metres and scale 0.1–4; otherwise nothing changes. Does not alter geometry, recorded animations, hinge frames or saved structure baselines. It does not connect pieces, prevent overlaps or snap to the scan. The physical construction handle uses this same projection and action on release. Failed admission/save leaves the complete original arrangement; replay cannot move it twice. Stop cannot undo a completed transform. Temporary edits stay in their room fork.",
+      "description": "Transform 1–16 idle creations as one arrangement with one save/Undo. The first member's CURRENT live pose is the pivot. position is its desired room-local origin; rotation is its desired absolute unit quaternion; scale multiplies every member's current scale and its distance from the pivot. A factor of 1 preserves size. Supply current revisions and include both ends of all connections. Pause physics, drawings, playback and authoring and release members first. Every final piece must remain within 25 metres and scale 0.1–4; otherwise nothing changes. Does not alter geometry, recorded animations, hinge frames or saved structure baselines. It does not connect pieces, prevent overlaps or snap to the scan. The physical construction handle uses this same projection and action on release. Failed admission/save leaves the complete original arrangement; replay cannot move it twice. Stop cannot undo a completed transform. Temporary edits stay in their room fork. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "members": [
           {
@@ -30140,7 +30140,7 @@
           "structures.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -30152,7 +30152,7 @@
         "structure.revision.current",
         "storage.writable"
       ],
-      "description": "Save a persistent named structure of 1–16 independent user-created pieces. Use an empty id and revision 0 to create; otherwise use the exact structure ID and latest revision. source.kind=capture records all named members' current room-local poses together; definition supplies explicit baseline slots and tolerances. Saving changes membership/baselines only and never moves objects. Members must be distinct, released, available and not being authored. A piece can belong to more than one structure; each has its own explicit baseline. Saves once with one Undo, including temporary-room semantics. Slots retain exact object IDs after deletion; reset refuses any missing member. To replace a member, explicitly save its slot with the replacement ID and intended baseline. Names never identify objects. This does not snap/connect parts, recreate deleted objects or attach structures to the room scan. Forget removes only metadata. Saved programs keep exact structure/member IDs and can read structure.state before choosing a reaction.",
+      "description": "Save a persistent named structure of 1–16 independent user-created pieces. Use an empty id and revision 0 to create; otherwise use the exact structure ID and latest revision. source.kind=capture records all named members' current room-local poses together; definition supplies explicit baseline slots and tolerances. Saving changes membership/baselines only and never moves objects. Members must be distinct, released, available and not being authored. A piece can belong to more than one structure; each has its own explicit baseline. Saves once with one Undo, including temporary-room semantics. Slots retain exact object IDs after deletion; reset refuses any missing member. To replace a member, explicitly save its slot with the replacement ID and intended baseline. Names never identify objects. This does not snap/connect parts, recreate deleted objects or attach structures to the room scan. Forget removes only metadata. Saved programs keep exact structure/member IDs and can read structure.state before choosing a reaction. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -30234,7 +30234,7 @@
           "structures.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -30246,7 +30246,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Reset every piece to a saved structure baseline with one save and one live-pose Undo. Supply the exact structure ID/revision and all member IDs as an explicit ownership/authorization guard; their order is unimportant. Any missing, held, authored or conflicting member refuses the entire reset. Reset zeroes member velocities but preserves current geometry, paint, collision and animation definitions; it neither starts physics nor guarantees stability. Definitions remain unchanged. Missing pieces are never recreated or substituted: explicitly replace/remove the slot with structure.save, then retry. Temporary edits stay in the fork; completed receipt replay cannot reset twice.",
+      "description": "Reset every piece to a saved structure baseline with one save and one live-pose Undo. Supply the exact structure ID/revision and all member IDs as an explicit ownership/authorization guard; their order is unimportant. Any missing, held, authored or conflicting member refuses the entire reset. Reset zeroes member velocities but preserves current geometry, paint, collision and animation definitions; it neither starts physics nor guarantees stability. Definitions remain unchanged. Missing pieces are never recreated or substituted: explicitly replace/remove the slot with structure.save, then retry. Temporary edits stay in the fork; completed receipt replay cannot reset twice. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "11111111111111111111111111111111",
         "revision": 1,
@@ -30300,11 +30300,11 @@
           "structures.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [],
-      "description": "Remove only the exact structure's saved membership and baseline after checking its current revision. Objects remain unchanged. One save/Undo; temporary edits stay in the fork. Programs using this structure will report it missing until an explicit definition is restored. No deleted object is recreated.",
+      "description": "Remove only the exact structure's saved membership and baseline after checking its current revision. Objects remain unchanged. One save/Undo; temporary edits stay in the fork. Programs using this structure will report it missing until an explicit definition is restored. No deleted object is recreated. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "11111111111111111111111111111111",
         "revision": 1
@@ -47308,7 +47308,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GroupTransformCapability.cs",
-      "sha256": "de8b0619de756b944c8ba5327d1b8564d5ff15fc1cc75d476f0eebc340207d15"
+      "sha256": "3ed27925ed6d02c2f229ec3e71519f016bae5735d9ba5a0e9fd176e959c152dc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HeightFieldCapability.cs",
@@ -47352,7 +47352,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LayoutCapability.cs",
-      "sha256": "86fa9af6139ead6ad01384faee285cbedb7248b5cc16a6109fe1dd7beb82e443"
+      "sha256": "3b503e8120ecf1f28b68d8016c25cd10f3be130055e2eaf3036d3d2ddcd25afc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/LibraryAnimationCapability.cs",
@@ -47508,7 +47508,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "8684d0462df3b1d1d66882faf8053651dbfbe8c7b129e90e93bc7d5fc30b7f45"
+      "sha256": "d4e2236eb2efd0874386419700a42a952b9440ed14d3c6ff880ade1c8c83bab1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -47580,7 +47580,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureCapabilities.cs",
-      "sha256": "15ce8d9c9d47ba311b128f849ea4d5b193c5cd3d626fd9b630611c159aec26e2"
+      "sha256": "df7eb8d797d4243178abdf2b351b39faaafec4015396341569a33421efb76d0e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureFacts.cs",
@@ -47732,7 +47732,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionManipulator.cs",
-      "sha256": "b62c901cdbcac7c825c139d1063a74b9a66498188e136abeb48e4c9f96fedffc"
+      "sha256": "a7222c7b79e82f2407b55c5c2e9b521653acc83b5da29003e44aad2fa23072a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionSelection.cs",
@@ -47932,7 +47932,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "85f93e8751d7e0b35335ca1e63bc293c4ee850814b030a681fb5cf7c3bef078f"
+      "sha256": "f75ba9ee1885a08aae94c8254fbec9e100a92b0546eccb7d46f2f78edf6770fb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48128,7 +48128,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "e1906877a156a4a1ed759ec40705f9e3951e8fe245b082a6ab50bd49950a391e"
+      "sha256": "e986d6e34bf5e50ddaedae36be6c68cd589143692772d7bbbde0917fb2780bb9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48180,7 +48180,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
-      "sha256": "4ccde60e06dcde985c50d86ceda6fe17564856dedd8334cd30c895c6dadfa36d"
+      "sha256": "664611ead3c2572c4bd36d69d35132e4c5d530b8773179268142e48c198ad88a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGuideCatalog.cs",
@@ -48208,7 +48208,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
-      "sha256": "50c74349563ac66d437d092432fccaa7256c51c1ddd91d9bdd002c935f91783a"
+      "sha256": "f6cb468ddc7fa318dd4cbed60a56e1a363ebb3f2d50f0ea71f195df824e51f08"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLight.cs",
@@ -48372,7 +48372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "60f1ad0f94e127ca82b43b817c9bd3703fa9d5911e3b904a66a1d6dc092ecef7"
+      "sha256": "a5e8e069ed116873e1293967c4694944219515e9a6d804e09ef7c305057d3839"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -48384,7 +48384,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegion.cs",
-      "sha256": "417dc2f152ad56bbf19be2be403df3f0313543412f0e0bf72ee8d42477e4a9a8"
+      "sha256": "7f629e637de61085d90f894b1b6bb70f394a81d1aabb3f4c2a603be0948594ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
@@ -48392,7 +48392,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionEdits.cs",
-      "sha256": "ffb381740916333877b85ffcff11e4197740b5c4bd56b4843ebdbac0c6d7ac1a"
+      "sha256": "4a2a45a873a966d0e72227a38fb4c9187c3dd6a9e64287e4b58004df03d9292e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionRetention.cs",
@@ -48456,11 +48456,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
-      "sha256": "0b040d5081314f74e6afb7bd96bdc7ceaf8d48a120ad6960c4766be797a25a48"
+      "sha256": "d56e0d7867d1ee43f92c53527c0a9d4f612d586ceac81d83cdf7e20d38f72bb8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructureEdits.cs",
-      "sha256": "f434737e52a1462b96fcd93693520edae5e95577c92e2e00b27b5bad44f9ded4"
+      "sha256": "6cf332c2a391c6e1792a13735fe71d3b331ba20f1d28ef859aed0ef9ea77ba05"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",

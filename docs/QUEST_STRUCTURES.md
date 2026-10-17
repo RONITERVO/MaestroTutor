@@ -35,6 +35,22 @@ membership list. No object is chosen by display name and no deletion is silently
 reversed. Saving validates up to sixteen structures, each with 1–16 distinct slot
 keys and member IDs. Baselines use the existing room placement bounds.
 
+## Durable completion
+
+Save, reset and forget complete through the shared persisted edit queue, including
+the original book controls and agent/program calls. A capture request retains the
+member poses observed when it was requested, even if it waits behind another save.
+Saving or forgetting metadata does not stop or rewind moving pieces. Reset holds
+only its selected physics bodies and uses their live poses at admission for Undo.
+
+The exact accepted definition ID and revision remain in a save receipt after later
+human edits. An unchanged save adds no Undo and returns the existing revision.
+Forget retains its existing empty output contract. All three operations recheck
+identity, capacity, membership and authoring eligibility before acceptance.
+Cancellation applies nothing before acceptance; accepted saves drain after Stop.
+Temporary Keep/Discard treats each operation as one journal edit. None of these
+completion receipts proves that a rebuilt structure has physically settled.
+
 ## Observation and programs
 
 `structure.list` pages through metadata. `structure.definition` returns its exact

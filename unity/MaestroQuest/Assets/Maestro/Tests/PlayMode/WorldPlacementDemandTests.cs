@@ -17,9 +17,7 @@ namespace Maestro.Quest.Tests
     {
         string PlacementArea(RoomEditor editor,string target)
         {
-            var cap=new RegionSaveCapability();
-            Assert.That(cap.Start(new CapabilityContext(editor,null),"placement-region",cap.Example,out var op,out var error),Is.True,error);
-            string area=(string)op.Result["id"];
+            string error;string area=RegionFixture.Create(editor);
             Assert.That(editor.BindRegion(target,editor.ObjectRevision(target),area,editor.RegionRevision(area),out error),Is.True,error);
             return area;
         }

@@ -36,6 +36,24 @@ physics, and it does not disturb unrelated objects. Undo restores poses and scal
 not prior velocities or a rewind of the simulation. Completion proves placement,
 not stable stacking, overlap-free placement or a settled physical outcome.
 
+## Save completion and interruptions
+
+`object.layout.apply`, `object.layout.transform` and `structure.reset` use the
+shared bounded edit queue. Book forms, program steps, agent calls and the physical
+construction handle wait for native application and persistence. Inspect the
+accepted receipt while it is preparing; do not submit the same move again. The
+handle shows “Saving pieces…” and prevents another grip until its receipt ends.
+
+Requests capture their placements and exact member revisions before waiting.
+After admission, only those members' physics bodies are held while their save is
+prepared. Their actual pre-edit poses supply Undo; unrelated simulation continues.
+Every member, native instance, authoring owner and structure/connection guard is
+checked again before acceptance. Losing one member refuses the whole layout.
+Cancellation before acceptance restores the held bodies' admitted momentum and
+changes no placement. After acceptance, Stop drains the save and reports the
+interruption; it does not report completion or reapply the move. A successful
+placement still clears member velocities as described above.
+
 ## Capturing and reusing an arrangement
 
 `object.placement {target}` returns the current room-local pose/scale, temporary

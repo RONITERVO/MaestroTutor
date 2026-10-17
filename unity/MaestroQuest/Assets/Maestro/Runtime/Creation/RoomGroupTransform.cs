@@ -29,20 +29,23 @@ namespace Maestro.Quest.Creation
             error=null;return true;
         }
     }
+    public sealed partial class RoomJournal {
+        internal bool ConnectionsCross(System.Collections.Generic.HashSet<string> selected)=>items.Values.Any(o=>(o.connections??Array.Empty<RoomConnection>()).Any(h=>selected.Contains(o.id)!=selected.Contains(h.connected)));
+    }
     public sealed partial class RoomEditor {
-        internal bool GroupSources(TransformMember[] members,out RoomLayout before,out string error){
+        internal bool GroupSources(TransformMember[] members,out RoomLayout before,out string error,object physicsOwner=null){
             before=null;var request=new RoomGroupTransform {members=members};if(!request.Validate(out error))return false;
             if(RuntimeGate.Held||Ownership.Suspended||WriteGate.Frozen||PhysicsWorld&&PhysicsWorld.Running){error="Pause room physics before arranging a construction";return false;}
             if(DrawingMode||SculptMode||DrawingInProgress){error="Put drawing tools away before arranging a construction";return false;}
             var selected=members.Select(m=>m.target).ToHashSet();var poses=new ObjectPlacement[members.Length];
             for(int i=0;i<members.Length;i++){
-                var m=members[i];if(!CanEditObject(m.target,true,out error))return false;
+                var m=members[i];if(!CanChangeObject(m.target,true,true,false,out error,physicsOwner))return false;
                 if(ObjectRevision(m.target)!=m.revision){error="A construction member changed; read its current revision";return false;}
                 var item=Find(m.target);
                 if(!item.isActiveAndEnabled||!item.Grab||!item.Grab.enabled||item.GetComponent<RigidRoomItem>()?.GeometryReady==false||Read(m.target).recipe?.playing==true||GetComponent<AnimationWorkshop>()?.ControlsTarget(m.target)==true){error="Release members and stop their animation authoring/playback first";return false;}
                 poses[i]=Frame.Placement(m.target,item.transform);
             }
-            if(Snapshot().objects.Any(o=>(o.connections??Array.Empty<RoomConnection>()).Any(h=>selected.Contains(o.id)!=selected.Contains(h.connected)))){error="Include both ends of every physical connection before moving a construction";return false;}
+            if(journal.ConnectionsCross(selected)){error="Include both ends of every physical connection before moving a construction";return false;}
             before=new RoomLayout {placements=poses};return before.Validate(out error);
         }
         internal bool PrepareGroupTransform(RoomGroupTransform request,out RoomLayout layout,out string error){

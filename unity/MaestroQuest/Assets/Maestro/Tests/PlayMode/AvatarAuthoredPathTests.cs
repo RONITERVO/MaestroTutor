@@ -26,7 +26,7 @@ namespace Maestro.Quest.Tests {
         string RetireAuthoredPathWall(Vector3 position){
             world.PausePhysics();Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Intermediate authored wall",position,.3f,Color.white,out var id,out var error),Is.True,error);
             var data=editor.Read(id);data.physics=ItemPhysics.Fixed;Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out error),Is.True,error);Physics.SyncTransforms();
-            var region=new RegionSaveCapability();Assert.That(region.Start(new CapabilityContext(editor,authoring),"authored-path-region",region.Example,out var saved,out error),Is.True,error);string area=(string)saved.Result["id"];
+            string area=RegionFixture.Create(editor);
             Assert.That(editor.BindRegion(id,editor.ObjectRevision(id),area,editor.RegionRevision(area),out error),Is.True,error);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
             world.ConfigureCollisionAdmission(editor,()=>null);world.StartPhysics();Assert.That(world.Running,Is.True);return id;

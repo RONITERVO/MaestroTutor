@@ -74,6 +74,7 @@ namespace Maestro.Quest.Creation
     {
         readonly Dictionary<string,RoomRegion> regions=new(StringComparer.Ordinal);
         readonly Dictionary<string,int> regionRevisions=new(StringComparer.Ordinal);
+        internal int RegionCount=>regions.Count;
         public int RegionRevision(string id)=>id!=null&&regionRevisions.TryGetValue(id,out var value)?value:0;
         public RoomRegion ReadRegion(string id)=>id!=null&&regions.TryGetValue(id,out var value)?value.Copy():null;
         public RoomRegion[] RegionSnapshot()=>regions.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();

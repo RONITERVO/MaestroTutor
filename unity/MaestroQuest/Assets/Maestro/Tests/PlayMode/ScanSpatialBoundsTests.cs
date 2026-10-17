@@ -16,9 +16,7 @@ namespace Maestro.Quest.Tests
     {
         string ScanBoundsArea(string target)
         {
-            var capability=new RegionSaveCapability();
-            Assert.That(capability.Start(new CapabilityContext(editor,authoring),"scan-area",capability.Example,out var operation,out var error),Is.True,error);
-            string area=(string)operation.Result["id"];
+            string error;string area=RegionFixture.Create(editor);
             Assert.That(editor.BindRegion(target,editor.ObjectRevision(target),area,editor.RegionRevision(area),out error),Is.True,error);return area;
         }
         IEnumerator ScanBoundsPrepared(string target)

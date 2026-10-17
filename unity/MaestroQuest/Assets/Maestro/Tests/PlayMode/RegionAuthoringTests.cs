@@ -12,20 +12,28 @@ using UnityEngine;
 using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests
 {
+    internal static class RegionFixture {
+        internal static string Create(RoomEditor editor) {
+            var area=new RoomRegion{id=Guid.NewGuid().ToString("N"),name="Café garden",members=Array.Empty<string>()};
+            Assert.That(editor.EditRegion(area,area.id,0,Array.Empty<string>(),out var error),Is.True,error);return area.id;
+        }
+    }
     public sealed partial class RoomRulesTests
     {
         string NewRegion() {
-            var cap=new RegionSaveCapability();Assert.That(cap.Start(new CapabilityContext(editor,animations),"region",cap.Example,out var op,out var error),Is.True,error);return (string)op.Result["id"];
+            return RegionFixture.Create(editor);
         }
         JObject RegionCall(string target,string id)=>new(){["id"]="object.region.assign",["version"]=1,["arguments"]=new JObject{["target"]=target,["revision"]=editor.ObjectRevision(target),["regionId"]=id,["regionRevision"]=editor.RegionRevision(id)}};
         bool AssignRegion(string target,string id,out string error)=>editor.BindRegion(target,editor.ObjectRevision(target),id,editor.RegionRevision(id),out error);
         [UnityTest] public IEnumerator RegionMembershipPreservesMovingNativeObjectsAndSharedReceiptReplaysOnce() {
             Assert.That(RoomControls.Capabilities(editor),Does.Contain(RegionCapability.Feature));string id=NewRegion(),target=editor.Identity(block);var item=editor.Find(target);int instance=item.GetInstanceID();var position=item.transform.position;
-            var body=item.GetComponent<Rigidbody>();body.isKinematic=false;body.useGravity=false;body.linearVelocity=new Vector3(1,2,3);body.angularVelocity=Vector3.one;
+            // Isolate the admitted trajectory from external contacts and damping while
+            // the asynchronous metadata save advances normal physics frames.
+            var body=item.GetComponent<Rigidbody>();body.isKinematic=false;body.useGravity=false;body.detectCollisions=false;body.linearDamping=0;body.angularDamping=0;body.linearVelocity=new Vector3(1,2,3);body.angularVelocity=Vector3.one;
             var executor=new RoomAgentExecutor(editor);var request=TemplateRequest(RegionCall(target,id));request.conditions=new[]{new RoomObjectCondition{id=target,revision=editor.ObjectRevision(target)}};
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);int revision=editor.RegionRevision(id);
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);float started=Time.fixedTime;yield return SpatialSettingsCompletion.Wait(executor.Executions);int revision=editor.RegionRevision(id);
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.RegionRevision(id),Is.EqualTo(revision));
-            Assert.That(editor.Find(target).GetInstanceID(),Is.EqualTo(instance));Assert.That(item.transform.position,Is.EqualTo(position));Assert.That(body.isKinematic,Is.False);Assert.That(body.linearVelocity,Is.EqualTo(new Vector3(1,2,3)));Assert.That(body.angularVelocity,Is.EqualTo(Vector3.one));body.isKinematic=true;
+            Assert.That(editor.Find(target).GetInstanceID(),Is.EqualTo(instance));Assert.That(Vector3.Distance(item.transform.position,position+new Vector3(1,2,3)*(Time.fixedTime-started)),Is.LessThan(.01f),"Area assignment must preserve the live trajectory");Assert.That(body.isKinematic,Is.False);Assert.That(body.linearVelocity,Is.EqualTo(new Vector3(1,2,3)));Assert.That(body.angularVelocity,Is.EqualTo(Vector3.one));body.isKinematic=true;
             var context=new BehaviourCatalog.FactContext(editor:editor);
             Assert.That(RegionFacts.Region().TryRead(context,1,new JObject{["id"]=id},out _),Is.True);
             Assert.That(RegionFacts.Regions().TryRead(context,1,new JObject{["offset"]=0},out _),Is.True);

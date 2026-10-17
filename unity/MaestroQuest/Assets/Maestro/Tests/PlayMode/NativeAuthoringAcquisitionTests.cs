@@ -51,14 +51,14 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.Read(id).containers.Single().amountMl,Is.EqualTo(75));
         }
         [UnityTest] public IEnumerator NativeAuthoringForgettingSavedStructureDoesNotLoadItsDormantMembers(){
-            string id=editor.Identity(block);var executor=new RoomAgentExecutor(editor);string structure=SaveGroup(executor,id),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
+            string id=editor.Identity(block);var executor=new RoomAgentExecutor(editor);string structure=null;yield return SaveGroup(executor,value=>structure=value,id);string area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
             var call=new JObject{["id"]="structure.forget",["version"]=1,["arguments"]=new JObject{["id"]=structure,["revision"]=editor.StructureRevision(structure)}};
             string run=NativeAuthoringStart(executor,call,out _);yield return NativeActionDone(run);Assert.That(editor.ReadStructure(structure),Is.Null);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);
         }
     }
     public sealed partial class AvatarSpatialTests {
         ScannedRoom NativePlacementRoom(out SurfaceSource source,out string target){
-            var scan=PlacementRoom(out source,out target);var capability=new RegionSaveCapability();Assert.That(capability.Start(new CapabilityContext(editor,authoring),"area",capability.Example,out var operation,out var error),Is.True,error);string area=(string)operation.Result["id"];
+            var scan=PlacementRoom(out source,out target);string error;string area=RegionFixture.Create(editor);
             Assert.That(editor.BindRegion(target,editor.ObjectRevision(target),area,editor.RegionRevision(area),out error),Is.True,error);
             // Establish a dormant fixture without an unsampled viewer demanding
             // all geometry. Restore its real camera before testing acquisition.

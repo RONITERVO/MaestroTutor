@@ -214,5 +214,50 @@ namespace Maestro.Quest.Tests
                 Assert.AreNotEqual(accepted,journal.AppearanceRevision(id));Assert.AreEqual(accepted,edit.AcceptedAppearanceRevision(id));
             }
         }
+        [TestCase("create")][TestCase("update")][TestCase("same")][TestCase("remove")]
+        public void AcceptedRegionRevisionBelongsToThisEditAfterLaterMutations(string action)
+        {
+            var journal=new RoomJournal(new RoomDocument{version=RoomDocument.CurrentVersion,objects=Room().Snapshot().objects});
+            string id=Guid.NewGuid().ToString("N");var region=new RoomRegion{id=id,name="Garden"};
+            if(action!="create")Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,regionEdits:new(){Replacements=new[]{region}}));
+            if(action=="update")region.name="Café garden";
+            var delta=action=="remove"?new RegionEdits{Removals=new[]{id}}:new RegionEdits{Replacements=new[]{region}};
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var edit,out var error,regionEdits:delta),error);
+            using(edit){
+                Assert.AreEqual(0,edit.AcceptedRegionRevision(id));Assert.IsTrue(edit.Accept(journal,out error),error);int accepted=journal.RegionRevision(id);
+                Assert.AreEqual(accepted,edit.AcceptedRegionRevision(id));Assert.AreEqual(action=="remove",accepted==0);
+                region.name="Later human edit";Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out error,regionEdits:new(){Replacements=new[]{region}}),error);
+                Assert.AreNotEqual(accepted,journal.RegionRevision(id));Assert.AreEqual(accepted,edit.AcceptedRegionRevision(id));
+            }
+        }
+        [TestCase("create")][TestCase("update")][TestCase("same")][TestCase("remove")]
+        public void AcceptedStructureRevisionBelongsToThisEditAfterLaterMutations(string action)
+        {
+            var journal=Room();var block=Block();Assert.IsTrue(journal.Apply(new[]{block},Array.Empty<string>(),out _));
+            string id=Guid.NewGuid().ToString("N");var structure=new RoomStructure{id=id,name="Castle",slots=new[]{new StructureSlot{slot="first",placement=new ObjectPlacement{target=block.id}}}};
+            if(action!="create")Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,structureEdits:new(){Replacements=new[]{structure}}));
+            if(action=="update")structure.name="Garden castle";
+            var delta=action=="remove"?new StructureEdits{Removals=new[]{id}}:new StructureEdits{Replacements=new[]{structure}};
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var edit,out var error,structureEdits:delta),error);
+            using(edit){
+                Assert.AreEqual(0,edit.AcceptedStructureRevision(id));Assert.IsTrue(edit.Accept(journal,out error),error);int accepted=journal.StructureRevision(id);
+                Assert.AreEqual(accepted,edit.AcceptedStructureRevision(id));Assert.AreEqual(action=="remove",accepted==0);
+                structure.name="Later human edit";Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out error,structureEdits:new(){Replacements=new[]{structure}}),error);
+                Assert.AreNotEqual(accepted,journal.StructureRevision(id));Assert.AreEqual(accepted,edit.AcceptedStructureRevision(id));
+            }
+        }
+        [Test] public void AcceptedMembershipRevisionCapturesPublicationWithoutRewindingMovingMembers()
+        {
+            var block=Block();var journal=new RoomJournal(new RoomDocument{version=RoomDocument.CurrentVersion,objects=Room().Snapshot().objects.Concat(new[]{block}).ToArray()});
+            var region=new RoomRegion{id=Guid.NewGuid().ToString("N"),name="Garden",members=new[]{block.id}};
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var edit,out var error,regionEdits:new(){Replacements=new[]{region}}),error);
+            using(edit){
+                Assert.IsTrue(journal.UpdatePlacement(block.id,Vector3.right*2,Quaternion.identity,runtime:true));
+                Assert.IsTrue(edit.Current(journal,allowRuntimeProgress:true));Assert.IsTrue(edit.Accept(journal,out error,allowRuntimeProgress:true),error);
+                int accepted=journal.ObjectRevision(block.id);Assert.AreEqual(accepted,edit.AcceptedObjectRevision(block.id));Assert.AreEqual(Vector3.right*2,journal.Read(block.id).position);
+                Assert.IsTrue(journal.UpdatePlacement(block.id,Vector3.right*3,Quaternion.identity,runtime:true));Assert.AreNotEqual(accepted,journal.ObjectRevision(block.id));Assert.AreEqual(accepted,edit.AcceptedObjectRevision(block.id));
+                journal.Undo();Assert.AreEqual(Vector3.right*3,journal.Read(block.id).position);Assert.IsNull(journal.ReadRegion(region.id));
+            }
+        }
     }
 }

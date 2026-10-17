@@ -33,7 +33,7 @@ namespace Maestro.Quest.Creation {
     }
     /// <summary>Transient arrangement preview; release executes the same native transform as a program.</summary>
     [DefaultExecutionOrder(200)] public sealed class ConstructionManipulator:MonoBehaviour,IXRSelectFilter {
-        RoomEditor editor;RoomInteraction room;Material material;TextMesh label;string selectionId;string[] ids=Array.Empty<string>();
+        RoomEditor editor;RoomInteraction room;Material material;TextMesh label;string selectionId,pendingMove;string[] ids=Array.Empty<string>();
         RoomLayout before,preview;RoomGroupTransform request;RoomOwnership.Lease owner;bool busy;readonly Vector3 offset=new(0,.24f,0);
         Vector3 lastPosition,lastScale;Quaternion lastRotation;
         ConstructionSnapPreview snapping;GameObject snapMarker;
@@ -43,7 +43,7 @@ namespace Maestro.Quest.Creation {
         public bool Holding=>before!=null;
         public string Error {get;private set;}="";
         public bool canProcess=>isActiveAndEnabled;
-        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>Visible&&!busy&&editor&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen;
+        public bool Process(IXRSelectInteractor interactor,IXRSelectInteractable interactable)=>Visible&&!busy&&pendingMove==null&&editor&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen;
         internal void Initialize(RoomEditor source,RoomInteraction interaction){
             editor=source;room=interaction;var root=new GameObject("Construction move handle");root.transform.SetParent(transform,false);
             material=IllustratedMaterials.Create(IllustratedMaterials.Hex("2B8D88"));
@@ -96,7 +96,17 @@ namespace Maestro.Quest.Creation {
             foreach(var p in result.placements){var item=editor.Find(p.target);item.transform.SetLocalPositionAndRotation(p.position,p.rotation);item.transform.localScale=Vector3.one*p.scale;item.GetComponent<RigidRoomItem>()?.Teleported();}
             lastPosition=Handle.transform.localPosition;lastRotation=Handle.transform.localRotation;lastScale=Handle.transform.localScale;error=null;return true;
         }
-        void LateUpdate(){if(!Visible||busy)return;if(editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen||editor.PhysicsWorld&&editor.PhysicsWorld.Running){Close();return;}if(Holding){if(owner?.Held!=true){Close();return;}Preview(out _);}else Follow();}
+        void ObservePendingMove() {
+            if(pendingMove==null||!editor)return;
+            var receipt=editor.GetComponent<Maestro.Quest.Rules.RoomRules>()?.Scheduler.Invocation(pendingMove);
+            if(receipt==null){pendingMove=null;Report("Construction result is unavailable; inspect the current arrangement before retrying");return;}
+            string phase=(string)receipt["phase"];
+            if(phase is "preparing" or "running"){if(label)label.text="Saving pieces…";return;}
+            pendingMove=null;if(label)label.text="Move pieces\nGrip · two hands resize";
+            if(phase=="completed"){Error="";editor.ReportStatus((string)receipt["status"]??"Construction action completed");}
+            else Report("Construction action "+phase+": "+(string)receipt["status"]);
+        }
+        void LateUpdate(){ObservePendingMove();if(!Visible||busy)return;if(editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen||editor.PhysicsWorld&&editor.PhysicsWorld.Running){Close();return;}if(Holding){if(owner?.Held!=true){Close();return;}Preview(out _);}else Follow();}
         void End(bool commit,bool close){
             if(busy)return;busy=true;string status=null;bool failed=false;
             try{
@@ -107,9 +117,9 @@ namespace Maestro.Quest.Creation {
                 if(before!=null)foreach(var p in before.placements){var item=editor.Find(p.target);if(item&&editor.ObjectRevision(p.target)==request.members.First(m=>m.target==p.target).revision){item.transform.SetLocalPositionAndRotation(p.position,p.rotation);item.transform.localScale=Vector3.one*p.scale;item.GetComponent<RigidRoomItem>()?.Teleported();}}
                 foreach(string id in ids){var item=editor.Find(id);if(item){item.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);item.Grab.enabled=true;}}
                 before=null;preview=null;request=null;snapping=null;if(snapMarker)snapMarker.SetActive(false);owner?.Dispose();owner=null;
-                if(commit&&valid){bool saved=proposedSnap!=null?SnapConstructionCapability.RunManual(editor,proposedSnap,out status):GroupTransformCapability.RunManual(editor,proposed,out status);if(!saved){failed=true;status="Move not saved; all pieces restored. "+status;}else Error="";}
+                if(commit&&valid){bool saved=proposedSnap!=null?SnapConstructionCapability.RunManual(editor,proposedSnap,out status):GroupTransformCapability.RunManual(editor,proposed,out status,out pendingMove);if(!saved){failed=true;status="Move not saved; all pieces restored. "+status;}else Error="";}
                 if(close){Visible=false;if(Handle)Handle.gameObject.SetActive(false);}
-                if(label)label.text="Move pieces\nGrip · two hands resize";
+                if(label)label.text=pendingMove==null?"Move pieces\nGrip · two hands resize":"Saving pieces…";
             }finally{busy=false;}
             if(status!=null){if(failed)Report(status);else editor?.ReportStatus(status);}else if(editor)editor.ReportStatus(close?"Construction preview cancelled; starting placement restored":"Construction placed");
             Follow();

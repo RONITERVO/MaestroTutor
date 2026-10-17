@@ -917,7 +917,7 @@ try{
   const placements=layoutIds.map((target,i)=>({target,position:{x:.3+i*.25,y:1,z:.8},rotation:{x:0,y:0,z:0,w:1},scale:1}));
   const layoutSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Arrange or reset objects',offset:0}}]);
   const layoutDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.apply',version:1}}]);
-  const layoutAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.apply',version:1,arguments:{placements}}}}]);
+  const layoutAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.apply',version:1,arguments:{placements}}}}]));
   if(layoutAfter.execution?.selected?.output?.count!==2)throw new Error('Layout did not complete both members');
   const layoutFacts=[];for(const p of placements){
    const fact=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target:p.target}}}]);
@@ -941,7 +941,7 @@ try{
   const structureArgs={id:'',revision:0,source:{kind:'capture',name:'Native probe castle',positionTolerance:.05,rotationTolerance:15,scaleTolerance:.05,members:structureMembers.map((target,i)=>({slot:'piece_'+i,target}))}};
   const structureSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'structure.save',offset:0}}]);
   const structureDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'structure.save',version:1}}]);
-  const structureAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.save',version:1,arguments:structureArgs}}}]);
+  const structureAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.save',version:1,arguments:structureArgs}}}]));
   const structureId=structureAfter.execution?.selected?.output?.structureId,structureRevision=structureAfter.execution?.selected?.output?.revision;
   if(typeof structureId!=='string'||typeof structureRevision!=='number')throw new Error('Native structure identity was not returned');
   const readStructure=async()=>{
@@ -953,7 +953,7 @@ try{
   const member=await nativeObjects.observation(structureMembers[0]);
   await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:member.id,x:member.position.x+.4,y:member.position.y,z:member.position.z}}}}]));
   const structureDisplaced=await readStructure();if((structureDisplaced.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Live member movement was not observed');
-  const structureReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:structureId,revision:structureRevision,members:structureMembers}}}}]);
+  const structureReset=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:structureId,revision:structureRevision,members:structureMembers}}}}]));
   const structureRestored=await readStructure();if((structureRestored.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Structure reset did not restore its captured baseline');
   const structureUndo=await execute([{action:'undo'}]);if(Math.abs((await nativeObjects.observation(member.id)).position.x-member.position.x-.4)>.00001)throw new Error('Structure Undo lost the displaced pose');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
@@ -1008,7 +1008,7 @@ try{
   if(!slotValue?.target||watcherMembers.length!==6||!watcherMembers.includes(slotValue.target))throw new Error('Watcher member identities unavailable');
   await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:slotValue.target,x:slotValue.position.x+.3,y:slotValue.position.y,z:slotValue.position.z}}}}]));
   const watcherDisturbed=await waitForWatch('waitingForRebuild',1);
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:compositionGroup.id,revision:watchedRevision,members:watcherMembers}}}}]);
+  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:compositionGroup.id,revision:watchedRevision,members:watcherMembers}}}}]));
   const watcherRebuilt=await waitForWatch('waitingForDisturbance',1);
   const watcherStopped=await execute([{action:'rules',rule:{action:'stop',target:watcherId}}]);
   if(watcherStopped.rules?.running.some(r=>r.sequenceId===watcherId))throw new Error('Watcher did not stop');
@@ -1105,7 +1105,7 @@ try{
   const movementArguments={members:movementFacts.map(f=>{const v=f.catalog?.value as {target:string;revision:number};return {target:v.target,revision:v.revision};}),position:{x:movementOrigin.position.x+.2,y:movementOrigin.position.y+.1,z:movementOrigin.position.z+.1},rotation:{x:0,y:Math.SQRT1_2,z:0,w:Math.SQRT1_2},scale:1.2};
   const movementSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Move, turn or resize a construction',offset:0}}]);
   const movementDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.layout.transform',version:1}}]);
-  const movementTransformed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.transform',version:1,arguments:movementArguments}}}]);
+  const movementTransformed=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.transform',version:1,arguments:movementArguments}}}]));
   if(movementTransformed.execution?.selected?.phase!=='completed'||(movementTransformed.execution.selected.output as {count:number}).count!==2)throw new Error('Native group transform did not complete');
   const movementAfterFacts=[];for(const target of leverMembers)movementAfterFacts.push(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.placement',version:1,arguments:{target}}}]));
   for(let i=0;i<2;i++){const before=movementFacts[i].catalog?.value as typeof movementOrigin,after=movementAfterFacts[i].catalog?.value as typeof movementOrigin;if(Math.abs(after.scale-before.scale*1.2)>.0001)throw new Error('Group transform lost a member scale');}

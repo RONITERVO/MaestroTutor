@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out error),Is.True,error);
             Physics.SyncTransforms();RoomWalkingPreparation.Envelopes(avatar.transform.position,avatar.transform.position,.25f*avatar.transform.lossyScale.y,1.7f*avatar.transform.lossyScale.y,out var envelope,out _);
             Assert.That(item.Grab.colliders.Any(c=>envelope.Intersects(c.bounds)),Is.True,"Fixture must intersect initial body preparation while staying below the floor");
-            var region=new RegionSaveCapability();Assert.That(region.Start(new CapabilityContext(editor,authoring),"authored-region",region.Example,out var saved,out error),Is.True,error);string area=(string)saved.Result["id"];
+            string area=RegionFixture.Create(editor);
             Assert.That(editor.BindRegion(id,editor.ObjectRevision(id),area,editor.RegionRevision(area),out error),Is.True,error);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
             // Isolate per-motion admission; production still has the whole-world gate.

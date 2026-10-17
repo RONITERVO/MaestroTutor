@@ -55,7 +55,7 @@ namespace Maestro.Quest.Tests
             foreach (int towerTop in new[] { 3, 6, 9, 12 })
                 Assert.That(editor.Find(ids[towerTop]).transform.localPosition.y, Is.GreaterThan(2.17f), "Tower must stand before any strike");
             var executor = new RoomAgentExecutor(editor);
-            string group = SaveGroup(executor, ids);
+            string group = null; yield return SaveGroup(executor, value => group = value, ids);
             int revision = editor.StructureRevision(group);
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball, "Fort ball", new Vector3(3.77f, 2.14f, 3.64f), .55f, Color.white, out var ballId, out error), Is.True, error);
             yield return new WaitForFixedUpdate();
@@ -66,6 +66,7 @@ namespace Maestro.Quest.Tests
             physics.PausePhysics();
             editor.Find(ballId).transform.localPosition = new Vector3(6, 2, 6);
             Assert.That(executor.Execute(StructureRequest(StructureResetCall(group, revision, ids)), out error, out _), Is.True, error);
+            yield return SpatialSettingsCompletion.Wait(executor.Executions);
             Assert.That(editor.ObserveStructure(editor.ReadStructure(group)).Displaced, Is.Zero);
             physics.StartPhysics();
             for (int i = 0; i < 100; i++) yield return new WaitForFixedUpdate();

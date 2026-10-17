@@ -15,13 +15,19 @@ namespace Maestro.Quest.Programs
         internal static JObject Target()=>Resource(Text("^[a-fA-F0-9]{32}$",32));
         internal static JObject Bool()=>new(){["type"]="boolean"};
         internal static JObject Featured(JObject schema){schema["x-features"]=new JArray(Feature);return schema;}
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         internal override int MaximumCreatedObjects(JObject args)=>0;
         public override IReadOnlyList<string> Channels=>new[]{"regionMembership"};
         public override IReadOnlyList<string> Requirements=>new[]{"workspace.available","region.revision.current","storage.writable"};
         public override BehaviourCatalog.Claim[] Claims(JObject a)=>CapabilityArguments.Resources(a,InputSchema).Select(id=>new BehaviourCatalog.Claim(id,"regionMembership")).ToArray();
-        protected const string Rules=" Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate.";
-        internal static JObject Receipt(RoomEditor e,string id)=>new(){["id"]=id,["revision"]=e.RegionRevision(id),["temporary"]=e.TemporaryRoom};
+        protected const string Rules=" Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate."+PersistedEditOperation.Persistence;
+        protected static bool StartRegion(RoomEditor editor,RoomRegion definition,string id,int revision,string[] members,out CapabilityOperation operation,out string error) {
+            bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,null,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{bool ready=editor.BeginRegion(definition,id,revision,members,out edit,out issue);pending=edit;return ready;},
+                out operation,out error,validate:(out string issue)=>editor.CanEditRegion(definition,id,revision,members,out issue),
+                output:()=>new JObject{["id"]=id,["revision"]=pending.AcceptedRegionRevision(id),["temporary"]=temporary});
+        }
     }
     internal sealed class RegionSaveCapability:RegionCapability
     {
@@ -35,12 +41,11 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext c,JObject a,out string error) {
             error="Use empty id with revision 0 to create, or an existing area ID and current revision";
             if(!c.Editor||string.IsNullOrEmpty((string)a["id"])!=((int)a["revision"]==0))return false;
-            var value=Definition(c.Editor,a);return c.Editor.PrepareRegion(value,value.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out _,out error);
+            var value=Definition(c.Editor,a);return c.Editor.CanEditRegion(value,value.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error);
         }
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
             operation=null;if(!CanRun(c,a,out error))return false;var value=Definition(c.Editor,a);
-            if(!c.Editor.EditRegion(value,value.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,value.id));return true;
+            return StartRegion(c.Editor,value,value.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out operation,out error);
         }
     }
     internal sealed class RegionRemoveCapability:RegionCapability
@@ -51,10 +56,10 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>Featured(Object(new JObject{["id"]=RegionId(),["revision"]=Revision()}));
         public override JObject OutputSchema=>Object(new JObject{["id"]=RegionId(),["revision"]=Revision(true),["temporary"]=Bool()});
         public override JObject Example=>new(){["id"]=new string('a',32),["revision"]=1};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.PrepareRegion(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.CanEditRegion(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.EditRegion(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,(string)a["id"]));return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            return StartRegion(c.Editor,null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out operation,out error);
         }
     }
     internal sealed class RegionAssignCapability:RegionCapability
@@ -65,10 +70,14 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>ResourceChoice(CurrentInputs(Featured(Object(new JObject{["target"]=Target(),["revision"]=Revision(),["regionId"]=RegionId(true),["regionRevision"]=Revision(true)})),"object.region","revision",new JObject{["target"]="target"},"regionId","regionRevision"),"Area","world.regions","regionId","regionRevision","Home area");
         public override JObject OutputSchema=>Object(new JObject{["target"]=Target(),["revision"]=Revision(),["temporary"]=Bool()});
         public override JObject Example=>new(){["target"]=new string('0',32),["revision"]=1,["regionId"]="",["regionRevision"]=0};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.PrepareRegionBinding((string)a["target"],(int)a["revision"],(string)a["regionId"],(int)a["regionRevision"],out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.CanBindRegion((string)a["target"],(int)a["revision"],(string)a["regionId"],(int)a["regionRevision"],out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.BindRegion((string)a["target"],(int)a["revision"],(string)a["regionId"],(int)a["regionRevision"],out error))return false;
-            operation=new CompletedCapability(new JObject{["target"]=a["target"].DeepClone(),["revision"]=c.Editor.ObjectRevision((string)a["target"]),["temporary"]=c.Editor.TemporaryRoom});return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            var editor=c.Editor;string target=(string)a["target"],id=(string)a["regionId"];int revision=(int)a["revision"],sourceRevision=(int)a["regionRevision"];bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,target,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{bool ready=editor.BeginRegionBinding(target,revision,id,sourceRevision,out edit,out issue);pending=edit;return ready;},
+                out operation,out error,validate:(out string issue)=>editor.CanBindRegion(target,revision,id,sourceRevision,out issue),
+                output:()=>{int accepted=pending.AcceptedObjectRevision(target);return new JObject{["target"]=target,["revision"]=accepted>0?accepted:revision,["temporary"]=temporary};});
         }
     }
     internal static class RegionFacts

@@ -12,12 +12,18 @@ namespace Maestro.Quest.Programs
     internal abstract class StructureCapability:CapabilityModule
     {
         internal const string Feature="structures.v1";
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         internal override int MaximumCreatedObjects(JObject args)=>0;
         protected static JObject IdSchema(bool optional=false)=>Text(optional?"^(|[a-f0-9]{32})$":"^[a-f0-9]{32}$",32);
         internal static JObject Member()=>Resource(Text("^[a-fA-F0-9]{32}$",32));
         protected static JObject Featured(JObject schema){schema["x-features"]=new JArray(Feature);return schema;}
-        protected static JObject Receipt(RoomEditor editor,string id)=>new() {["structureId"]=id,["revision"]=editor.StructureRevision(id),["temporary"]=editor.TemporaryRoom};
+        protected static bool StartStructure(RoomEditor editor,RoomStructure definition,string id,int revision,out CapabilityOperation operation,out string error) {
+            var captured=definition?.Copy();bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,null,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{bool ready=editor.BeginStructure(captured,id,revision,out edit,out issue);pending=edit;return ready;},
+                out operation,out error,validate:(out string issue)=>captured==null?editor.CanForgetStructure(id,revision,out issue):editor.CanSaveStructure(captured,revision,out issue),
+                output:captured==null?null:()=>new JObject{["structureId"]=id,["revision"]=pending.AcceptedStructureRevision(id),["temporary"]=temporary});
+        }
         protected static bool Targets(CapabilityContext context,JObject args,JObject schema,out string error){
             error=null;foreach(string id in CapabilityArguments.Resources(args,schema))if(!context.Target(new JObject {["target"]=id},out _,out error))return false;return true;
         }
@@ -29,7 +35,7 @@ namespace Maestro.Quest.Programs
         public override string Label=>"Save a structure";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","structure.revision.current","storage.writable"};
-        public override string Description=>"Save a persistent named structure of 1–16 independent user-created pieces. Use an empty id and revision 0 to create; otherwise use the exact structure ID and latest revision. source.kind=capture records all named members' current room-local poses together; definition supplies explicit baseline slots and tolerances. Saving changes membership/baselines only and never moves objects. Members must be distinct, released, available and not being authored. A piece can belong to more than one structure; each has its own explicit baseline. Saves once with one Undo, including temporary-room semantics. Slots retain exact object IDs after deletion; reset refuses any missing member. To replace a member, explicitly save its slot with the replacement ID and intended baseline. Names never identify objects. This does not snap/connect parts, recreate deleted objects or attach structures to the room scan. Forget removes only metadata. Saved programs keep exact structure/member IDs and can read structure.state before choosing a reaction.";
+        public override string Description=>"Save a persistent named structure of 1–16 independent user-created pieces. Use an empty id and revision 0 to create; otherwise use the exact structure ID and latest revision. source.kind=capture records all named members' current room-local poses together; definition supplies explicit baseline slots and tolerances. Saving changes membership/baselines only and never moves objects. Members must be distinct, released, available and not being authored. A piece can belong to more than one structure; each has its own explicit baseline. Saves once with one Undo, including temporary-room semantics. Slots retain exact object IDs after deletion; reset refuses any missing member. To replace a member, explicitly save its slot with the replacement ID and intended baseline. Names never identify objects. This does not snap/connect parts, recreate deleted objects or attach structures to the room scan. Forget removes only metadata. Saved programs keep exact structure/member IDs and can read structure.state before choosing a reaction."+PersistedEditOperation.Persistence;
         static JObject SourceFields()=>new() {["name"]=Text("^.{0,80}$",80),["positionTolerance"]=Number(.005,1),["rotationTolerance"]=Number(.5,90),["scaleTolerance"]=Number(.005,1)};
         public override JObject InputSchema {get{
             var captureFields=SourceFields();captureFields["kind"]=Choice("capture");captureFields["members"]=List(Object(new JObject {["slot"]=Text("^[a-zA-Z][a-zA-Z0-9_]{0,23}$",24),["target"]=Member()}),1,16);
@@ -60,7 +66,7 @@ namespace Maestro.Quest.Programs
         }
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
             operation=null;if(!CanRun(context,args,out error))return false;var definition=Definition(context,args);
-            if(!context.Editor.SaveStructure(definition,(int)args["revision"],out error))return false;operation=new CompletedCapability(Receipt(context.Editor,definition.id));return true;
+            return StartStructure(context.Editor,definition,definition.id,(int)args["revision"],out operation,out error);
         }
     }
     internal sealed class StructureResetCapability:StructureCapability
@@ -70,25 +76,27 @@ namespace Maestro.Quest.Programs
         public override string Label=>"Reset a structure";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"structure.revision.current","target.exists","target.unheld","authoring.inactive","storage.writable"};
-        public override string Description=>"Reset every piece to a saved structure baseline with one save and one live-pose Undo. Supply the exact structure ID/revision and all member IDs as an explicit ownership/authorization guard; their order is unimportant. Any missing, held, authored or conflicting member refuses the entire reset. Reset zeroes member velocities but preserves current geometry, paint, collision and animation definitions; it neither starts physics nor guarantees stability. Definitions remain unchanged. Missing pieces are never recreated or substituted: explicitly replace/remove the slot with structure.save, then retry. Temporary edits stay in the fork; completed receipt replay cannot reset twice.";
+        public override string Description=>"Reset every piece to a saved structure baseline with one save and one live-pose Undo. Supply the exact structure ID/revision and all member IDs as an explicit ownership/authorization guard; their order is unimportant. Any missing, held, authored or conflicting member refuses the entire reset. Reset zeroes member velocities but preserves current geometry, paint, collision and animation definitions; it neither starts physics nor guarantees stability. Definitions remain unchanged. Missing pieces are never recreated or substituted: explicitly replace/remove the slot with structure.save, then retry. Temporary edits stay in the fork; completed receipt replay cannot reset twice."+PersistedEditOperation.Persistence;
         public override JObject InputSchema=>Featured(Object(new JObject {["id"]=IdSchema(),["revision"]=Revision(),["members"]=List(Member(),1,16)}));
         public override JObject OutputSchema=>Object(new JObject {["count"]=Number(1,16,true),["temporary"]=new JObject {["type"]="boolean"}});
         public override JObject Example=>new() {["id"]=new string('1',32),["revision"]=1,["members"]=new JArray(new string('0',32))};
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>((JArray)args["members"]).Values<string>().Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
         public override bool CanRun(CapabilityContext context,JObject args,out string error)=>Targets(context,args,InputSchema,out error)&&context.Editor.CanResetStructure((string)args["id"],(int)args["revision"],((JArray)args["members"]).Values<string>().ToArray(),out error);
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
-            operation=null;if(!CanRun(context,args,out error)||!context.Editor.ResetStructure((string)args["id"],(int)args["revision"],((JArray)args["members"]).Values<string>().ToArray(),out error))return false;
-            operation=new CompletedCapability(new JObject {["count"]=((JArray)args["members"]).Count,["temporary"]=context.Editor.TemporaryRoom});return true;
+            operation=null;if(!CanRun(context,args,out error))return false;
+            var editor=context.Editor;string id=(string)args["id"];int revision=(int)args["revision"];var members=((JArray)args["members"]).Values<string>().ToArray();
+            var layout=new RoomLayout{placements=editor.ReadStructure(id).slots.Select(x=>x.placement).ToArray()};
+            return LayoutCapability.StartLayout(editor,layout,out operation,out error,owner=>editor.CanResetStructure(id,revision,members,out var issue,owner)?null:issue);
         }
     }
     internal sealed class StructureForgetCapability:StructureCapability
     {
         public override string Id=>"structure.forget";
         public override string Label=>"Forget a structure";
-        public override string Description=>"Remove only the exact structure's saved membership and baseline after checking its current revision. Objects remain unchanged. One save/Undo; temporary edits stay in the fork. Programs using this structure will report it missing until an explicit definition is restored. No deleted object is recreated.";
+        public override string Description=>"Remove only the exact structure's saved membership and baseline after checking its current revision. Objects remain unchanged. One save/Undo; temporary edits stay in the fork. Programs using this structure will report it missing until an explicit definition is restored. No deleted object is recreated."+PersistedEditOperation.Persistence;
         public override JObject InputSchema=>Featured(Object(new JObject {["id"]=IdSchema(),["revision"]=Revision()}));
         public override JObject Example=>new() {["id"]=new string('1',32),["revision"]=1};
         public override bool CanRun(CapabilityContext context,JObject args,out string error)=>context.Editor.CanForgetStructure((string)args["id"],(int)args["revision"],out error);
-        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){operation=null;if(!context.Editor.ForgetStructure((string)args["id"],(int)args["revision"],out error))return false;operation=new CompletedCapability();return true;}
+        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error)=>StartStructure(context.Editor,null,(string)args["id"],(int)args["revision"],out operation,out error);
     }
 }

@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests
             // Simulate motion between physics snapshot ticks, leaving the saved baseline unchanged.
             editor.Find(a).transform.localPosition=new Vector3(3,2,1);editor.Find(b).transform.localPosition=new Vector3(3.2f,2,1);
             var executor=new RoomAgentExecutor(editor);var request=LayoutRequest(layout);
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             Assert.That((int)executor.Executions.Observe()["selected"]["output"]["count"],Is.EqualTo(2));
             var disk=new RoomStorage(directory).Load(out error);foreach(var p in layout.placements) {Assert.That(editor.Read(p.target).position,Is.EqualTo(p.position));Assert.That(disk.objects.Single(d=>d.id==p.target).position,Is.EqualTo(p.position));}
             editor.Undo();Assert.That(editor.Find(a).transform.localPosition,Is.EqualTo(new Vector3(3,2,1)));Assert.That(editor.Find(b).transform.localPosition,Is.EqualTo(new Vector3(3.2f,2,1)));
@@ -41,7 +41,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Find(a).transform.localPosition,Is.EqualTo(new Vector3(3,2,1)));
             var missing=Layout(a,new string('e',32));Assert.That(editor.ApplyLayout(missing,out _),Is.False);Assert.That(editor.Read(a).position,Is.EqualTo(new Vector3(3,2,1)));
             string obstacle=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(obstacle);before=JsonUtility.ToJson(editor.Snapshot());
-            try {Assert.That(executor.Execute(LayoutRequest(layout),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));Assert.That(editor.Find(a).transform.localPosition,Is.EqualTo(new Vector3(3,2,1)));}finally{Directory.Delete(obstacle);}
+            try {Assert.That(executor.Execute(LayoutRequest(layout),out _,out _),Is.True);yield return SpatialSettingsCompletion.Wait(executor.Executions,"failed");Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(before));Assert.That(editor.Find(a).transform.localPosition,Is.EqualTo(new Vector3(3,2,1)));}finally{Directory.Delete(obstacle);}
         }
         [UnityTest] public IEnumerator LivePlacementUsesRoomAxesAndAlreadyMatchingLayoutUpdatesSavedPoseWithoutEmptyUndo() {
             string id=LayoutObject(new Vector3(3,2,1));var layout=Layout(id);root.transform.position=new Vector3(10,0,0);editor.Find(id).transform.localPosition=layout.placements[0].position;
@@ -56,7 +56,7 @@ namespace Maestro.Quest.Tests
             string a=LayoutObject(new Vector3(3,2,1)),b=LayoutObject(new Vector3(3.2f,2,1));
             yield return null;Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
             float end=Time.realtimeSinceStartup+5;while(editor.TemporarySavePending&&Time.realtimeSinceStartup<end)yield return null;Assert.That(editor.TemporarySavePending,Is.False);
-            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(LayoutRequest(Layout(a,b)),out error,out _),Is.True,error);Assert.That((bool)executor.Executions.Observe()["selected"]["output"]["temporary"],Is.True);
+            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(LayoutRequest(Layout(a,b)),out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);Assert.That((bool)executor.Executions.Observe()["selected"]["output"]["temporary"],Is.True);
             Assert.That(new RoomStorage(directory).Load(out _).objects.Single(d=>d.id==a).position.x,Is.EqualTo(3));
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Find(a).transform.localPosition.x,Is.EqualTo(3));Assert.That(editor.Find(b).transform.localPosition.x,Is.EqualTo(3.2f));
         }
@@ -74,7 +74,7 @@ namespace Maestro.Quest.Tests
             yield return new WaitForFixedUpdate();var ballBody=editor.Find(ballId).GetComponent<Rigidbody>();ballBody.linearVelocity=Vector3.forward*3;
             for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();
             Assert.That(ids.Any(id=>Vector3.Distance(editor.Find(id).transform.localPosition,baseline.placements.Single(p=>p.target==id).position)>.1f),Is.True,"A real ball contact must displace at least one brick");
-            Assert.That(executor.Execute(LayoutRequest(baseline),out var error2,out _),Is.True,error2);
+            Assert.That(executor.Execute(LayoutRequest(baseline),out var error2,out _),Is.True,error2);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             foreach(var p in baseline.placements) {var item=editor.Find(p.target);Assert.That(Vector3.Distance(item.transform.localPosition,p.position),Is.LessThan(.001f));Assert.That(item.GetComponent<Rigidbody>().linearVelocity,Is.EqualTo(Vector3.zero));}
             Assert.That(physics.Running,Is.True);for(int i=0;i<100;i++)yield return new WaitForFixedUpdate();Assert.That(editor.Find(ids[4]).transform.localPosition.y,Is.GreaterThan(.12f),"Rebuilt top brick: "+editor.Find(ids[4]).transform.localPosition+"; reset ball: "+editor.Find(ballId).transform.localPosition);
         }

@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {expect,it} from 'vitest';
-import {capabilityDefinition,capabilityResources,validateCapabilityArguments} from '../../../shared/capabilities';
+import {capabilityDefinition,capabilityResources,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
 import {behaviourFact} from '../../../shared/behaviourCatalog';
 import {validateFactArguments,validFactValue} from '../../../shared/behaviourFacts';
 import {applyCurrentInputs,currentInputRequest} from '../../../shared/currentCapabilityInputs';
@@ -40,4 +40,12 @@ it('shares actual native retirement support, phase and failure through the same 
  expect(validFactValue(id,{...value,residentCount:"2"})).toBe(false);
  expect(validFactValue(id,{...value,reasons:[true]})).toBe(false);
  expect(behaviourFact(id)!.description).toContain('transient diagnostic');
+});
+
+it('waits for persisted area changes and preserves exact receipt identities',()=>{
+ for(const id of ['world.region.save','world.region.remove','object.region.assign'])expect(capabilityDefinition(id)?.duration).toBe('completion');
+ expect(validateCapabilityOutput('world.region.save',1,{id:area,revision:14,temporary:false})).toBeNull();
+ expect(validateCapabilityOutput('world.region.remove',1,{id:area,revision:0,temporary:false})).toBeNull();
+ const assigned={target,revision:15,temporary:true};expect(validateCapabilityOutput('object.region.assign',1,assigned)).toBeNull();
+ for(const change of [{target:'book'},{revision:0},{revision:'15'},{temporary:'false'}])expect(validateCapabilityOutput('object.region.assign',1,{...assigned,...change})).not.toBeNull();
 });

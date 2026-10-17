@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Fitted input ground",at+new Vector3(.25f,-reach*.8f-.1f,reach*.8f+.05f),1,Color.white,out var id,out var error),Is.True,error);
             var data=editor.Read(id);data.physics=ItemPhysics.Fixed;data.heightFields=new[]{new RoomHeightField{cells=4,width=.1f,depth=.1f,maxHeight=.5f,heights=Enumerable.Repeat(.1f,25).ToArray()}};
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out error),Is.True,error);
-            var cap=new RegionSaveCapability();Assert.That(cap.Start(new CapabilityContext(editor,editor.GetComponent<AnimationWorkshop>()),"fixture",cap.Example,out var save,out error),Is.True,error);string area=(string)save.Result["id"];
+            string area=RegionFixture.Create(editor);
             Assert.That(editor.BindRegion(id,editor.ObjectRevision(id),area,editor.RegionRevision(area),out error),Is.True,error);
             Assert.That(RoomContactSweep.Item(ball,new Pose(at,ball.transform.rotation),ball.transform.localScale,out var sweep),Is.True);
             Assert.That(editor.SpatialInputTargets(sweep,sweep,true,editor.Identity(ball)),Does.Contain(id),"Fixture must intersect the admitted swept envelope: "+sweep);

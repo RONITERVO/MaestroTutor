@@ -396,7 +396,8 @@ namespace Maestro.Quest.Creation
             };
             bool same=EquivalentRegions(change.BeforeRegions,change.AfterRegions)&&change.AfterWeather==null&&change.AfterWorldTime==null&&change.AfterLighting==null&&Equivalent(change.Before, change.After)&&EquivalentStructures(change.BeforeStructures,change.AfterStructures)&&EquivalentAudio(change.BeforeAudio,change.AfterAudio)&&EquivalentEnvironments(change.BeforeEnvironments,change.AfterEnvironments)&&EquivalentVisibility(change.BeforeVisibility,change.AfterVisibility)&&EquivalentAppearances(change.BeforeAppearances,change.AfterAppearances);
             bool baseline=observedBefore!=null&&!Equivalent(changedIds.Where(items.ContainsKey).Select(id=>items[id]).ToArray(),change.After);
-            prepared=new PreparedEdit(this,change,document,same?"baseline":"edit",baseline);error=null;return true;
+            prepared=new PreparedEdit(this,change,document,same?"baseline":"edit",baseline,
+                (regionEdits?.Replacements.Select(x=>x.id)??Array.Empty<string>()).Concat(regionEdits?.Removals??Array.Empty<string>()));error=null;return true;
         }
 
         public bool Undo()=>Undo(out _);

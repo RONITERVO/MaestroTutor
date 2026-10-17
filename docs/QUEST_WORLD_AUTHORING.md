@@ -697,6 +697,17 @@ needed by an action. This does not increase current world capacity or keep
 distant regions simulated. Membership facts remain separate from runtime
 readiness; see [retiring unused areas](#retiring-unused-areas).
 
+Area save/removal and object membership assignment use the same bounded persisted
+edit queue as layouts, sound and appearance. The book, agent and programs wait for
+completion and inspect the accepted receipt instead of replaying a request.
+Transferring a member updates its source and destination in one edit and one Undo.
+Queued requests retain names, IDs and revisions; membership, capacity and stale
+preconditions are rechecked before acceptance. Area metadata never holds physics
+bodies or rewinds their poses or world time. Receipts retain the accepted area or
+object revision after later changes, including unchanged saves. Cancellation
+before acceptance applies nothing; accepted saves drain after interruption.
+Temporary Keep/Discard preserves the same atomic membership semantics.
+
 ### Inspecting an area's current native dependencies
 
 The shared `world.region.retention` fact accepts an authored area ID, or empty `id` for home creations. It reports saved members, active native objects, retained members, missing connection peers and aggregate retention reasons. A sound retains its emitter while preparing, playing or paused; manual/action channel ownership and enabled connections also carry retention across area boundaries. The report is ephemeral and does not edit the world.

@@ -30,24 +30,39 @@ namespace Maestro.Quest.Creation
             if(!definition.Validate(out error))return false;
             if(StructureRevision(definition.id)!=expectedRevision){error="The structure changed; read its current definition before saving";return false;}
             if(!CanApplyLayout(new RoomLayout {placements=definition.slots.Select(x=>x.placement).ToArray()},out error))return false;
-            var candidate=Snapshot();candidate.structures=new StructureEdits {Replacements=new[]{definition}}.Apply(candidate.structures);
-            return candidate.Validate(out error);
+            error="The room already has the maximum number of structures";
+            if(ReadStructure(definition.id)==null&&journal.StructureCount>=RoomStructure.MaximumStructures)return false;
+            error="A structure identity cannot identify an object";if(HasSavedObject(definition.id))return false;
+            error=null;return true;
+        }
+        bool PrepareStructure(RoomStructure definition,string id,int revision,out StructureEdits edits,out string error) {
+            edits=null;if(definition!=null&&definition.id!=id){error="The structure identity changed";return false;}
+            if(definition!=null? !CanSaveStructure(definition,revision,out error): !CanForgetStructure(id,revision,out error))return false;
+            edits=definition==null?new StructureEdits {Removals=new[]{id}}:new StructureEdits {Replacements=new[]{definition.Copy()}};
+            if(!edits.Validate(out error))return false;
+            var candidate=Snapshot();candidate.structures=edits.Apply(candidate.structures);return candidate.Validate(out error);
+        }
+        internal bool BeginStructure(RoomStructure definition,string id,int revision,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null) {
+            var captured=definition?.Copy();
+            return BeginPreparedEdit(()=>{string issue;return (captured==null?CanForgetStructure(id,revision,out issue):CanSaveStructure(captured,revision,out issue))?null:issue;},
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareStructure(captured,id,revision,out var edits,out issue)&&journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,structureEdits:edits);},
+                captured==null?"Structure definition removed — its objects remain":"Structure saved — its pieces stay independent",out pending,out error,checkpoint);
         }
         public bool SaveStructure(RoomStructure definition,int expectedRevision,out string error)
         {
-            if(!CanSaveStructure(definition,expectedRevision,out error))return false;
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"Structure saved — its pieces stay independent",false,out error,structureEdits:new StructureEdits {Replacements=new[]{definition}});
+            if(!PrepareStructure(definition,definition?.id,expectedRevision,out var edits,out error))return false;
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"Structure saved — its pieces stay independent",false,out error,structureEdits:edits);
         }
         bool CurrentStructure(string id,int revision,out RoomStructure definition,out string error)
         {
             definition=ReadStructure(id);error="The structure is missing or changed; read its current definition";
             return definition!=null&&revision>0&&StructureRevision(id)==revision;
         }
-        public bool CanResetStructure(string id,int revision,string[] members,out string error)
+        public bool CanResetStructure(string id,int revision,string[] members,out string error,object physicsOwner=null)
         {
             if(!CanEditStructures(out error)||!CurrentStructure(id,revision,out var definition,out error))return false;
             if(members==null||members.Length!=definition.slots.Length||members.Distinct().Count()!=members.Length||!members.ToHashSet().SetEquals(definition.slots.Select(x=>x.placement.target))){error="Reset must name exactly the structure's current members";return false;}
-            if(!CanApplyLayout(new RoomLayout {placements=definition.slots.Select(x=>x.placement).ToArray()},out error)){error="Structure reset refused: "+error;return false;}
+            if(!CanApplyLayout(new RoomLayout {placements=definition.slots.Select(x=>x.placement).ToArray()},physicsOwner,out error)){error="Structure reset refused: "+error;return false;}
             return true;
         }
         public bool ResetStructure(string id,int revision,string[] members,out string error)
@@ -58,8 +73,8 @@ namespace Maestro.Quest.Creation
         public bool CanForgetStructure(string id,int revision,out string error)=>CanEditStructures(out error)&&CurrentStructure(id,revision,out _,out error);
         public bool ForgetStructure(string id,int revision,out string error)
         {
-            if(!CanForgetStructure(id,revision,out error))return false;
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"Structure definition removed — its objects remain",false,out error,structureEdits:new StructureEdits {Removals=new[]{id}});
+            if(!PrepareStructure(null,id,revision,out var edits,out error))return false;
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"Structure definition removed — its objects remain",false,out error,structureEdits:edits);
         }
         public StructureState ObserveStructure(RoomStructure definition)
         {

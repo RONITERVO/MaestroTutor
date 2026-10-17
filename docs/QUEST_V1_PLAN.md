@@ -13458,3 +13458,59 @@ suite checkpoint remains 7d518ec9, including its unresolved intermittent Meta
 audio crash and unchanged successful rerun. Production reflections stay disabled.
 Other synchronous authoring/import acceptance, owner-thread snapshot/native work,
 physical/audio/provider/capacity acceptance and Store gates remain. V1 is incomplete.
+## Area, structure and layout save completion — 2026-10-17
+
+Eight area, membership, structure and multi-object layout capabilities now use the
+shared bounded persisted-edit queue. Book controls, agent calls, programs and the
+physical construction handle wait for native application and durable publication.
+Queued inputs retain names, placements, exact revisions and stable identities;
+every member, definition, capacity, authoring owner and connection is checked
+again before acceptance. Area transfers update both memberships atomically.
+Structure capture retains the requested baseline without moving its live pieces.
+
+Only an admitted layout's selected bodies are held during save preparation.
+Unrelated physics continues; metadata edits hold no bodies and preserve advancing
+poses and world time. Cancellation before acceptance restores admitted momentum;
+accepted placement clears member velocities and uses actual pre-edit poses for
+one Undo. Losing a member refuses all placements. Accepted saves drain after Stop
+without reporting success or replaying effects. Temporary Keep/Discard retains
+the same transaction semantics. The handle shows “Saving pieces…” and blocks
+another grip until the exact receipt ends; its rendered feedback was inspected.
+See QUEST_LAYOUT_AUTHORING.md, QUEST_STRUCTURES.md and the authored-area contract
+in QUEST_WORLD_AUTHORING.md.
+
+Focused verification passes 77 EditMode and 133 PlayMode tests, including thirteen
+new asynchronous world-group cases and nine prepared-edit revision cases. All
+3,189 web tests, application/probe TypeScript and catalog checks pass. The first
+compile exposed two remaining fixture callers expecting immediate structure
+creation; those now await the shared receipt. The first EditMode pass found a
+real no-op area receipt bug: unchanged definitions were omitted from the journal
+delta and returned revision zero. Requested receipt IDs are now captured
+separately without adding an authored change or empty Undo.
+
+The first PlayMode pass was 131/133. Two test fixtures needed correction: the
+unrelated body was floating, and a constant-velocity expectation allowed contacts
+and damping. Explicit solid bodies and an isolated free trajectory now exercise
+the intended assertions. No runtime workaround or deadline relaxation was made
+for those fixture failures. Initial compile/test evidence is retained.
+
+The complete offline Headless journey 9062c2c4e22e45c5ae1cd06f4bbdfd6c passes with
+2,249 observations and 2,239 read sets. Areas,
+membership, rename/removal, layouts, capture/reset and group transforms complete
+through exact native receipts. Older layout consumers in the room/gait probe now
+await the same accepted receipt without resubmitting. The complete original Book
+journey 3642a653b5974db1a8ab534d1ff16c46 passes with 3,240 observations
+and 1,009 requests. Its generated area picker saves and assigns the
+exact new ID; the completed form was inspected. Both routes preserve human edits,
+refuse stale requests and avoid replay after reload. Periodic object inventories
+remain empty. Explicit offline fixtures are not provider or headset acceptance.
+
+Evidence is in .quest-evidence/world-groups-save-20261017/. All 3,242 native inputs,
+5,150 source inputs and 14 protected local files were verified
+before this delivery-record update. The four inline/eight discussion review
+comments are unchanged; no comments were posted. No Android build, device,
+paid provider, signing, deployment or Meta action ran. The last complete native
+suite remains at 7d518ec9, including its unresolved intermittent Meta audio crash
+and successful unchanged rerun. Production reflections stay disabled. Other
+synchronous authoring/import acceptance, owner-thread snapshot/native work,
+physical/audio/provider/capacity acceptance and Store gates remain. V1 is incomplete.

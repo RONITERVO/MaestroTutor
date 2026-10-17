@@ -65,6 +65,7 @@ namespace Maestro.Quest.Creation
     {
         readonly Dictionary<string,RoomStructure> structures=new(StringComparer.Ordinal);
         readonly Dictionary<string,int> structureRevisions=new(StringComparer.Ordinal);
+        internal int StructureCount=>structures.Count;
         public int StructureRevision(string id)=>id!=null&&structureRevisions.TryGetValue(id,out var value)?value:0;
         public RoomStructure ReadStructure(string id)=>id!=null&&structures.TryGetValue(id,out var value)?value.Copy():null;
         public RoomStructure[] StructureSnapshot()=>structures.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();

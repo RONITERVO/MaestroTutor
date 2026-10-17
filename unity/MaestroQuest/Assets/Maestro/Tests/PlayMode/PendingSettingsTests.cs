@@ -15,6 +15,13 @@ namespace Maestro.Quest.Tests
 {
     internal static class SpatialSettingsCompletion
     {
+        internal static IEnumerator WaitInvocation(RuleScheduler scheduler,string id,string expected="completed") {
+            float end=Time.realtimeSinceStartup+20;
+            while((string)scheduler.Invocation(id)?["phase"] is "preparing" or "running"){
+                Assert.Less(Time.realtimeSinceStartup,end,"Saved action did not finish");yield return null;
+            }
+            Assert.AreEqual(expected,(string)scheduler.Invocation(id)?["phase"],scheduler.Invocation(id)?.ToString());
+        }
         internal static IEnumerator Wait(RoomExecutions executions,string expected="completed")
         {
             float end=Time.realtimeSinceStartup+20;

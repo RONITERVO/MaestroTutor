@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Maestro.Quest.Creation;
@@ -14,10 +15,10 @@ namespace Maestro.Quest.Programs
         internal const string Feature="layoutEdits.v1";
         public override string Id=>"object.layout.apply";
         public override string Label=>"Arrange or reset objects";
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","storage.writable"};
-        public override string Description=>"Apply 1–16 explicit placements together: target ID, room-local position in metres, unit-quaternion rotation and uniform scale. Useful for arranging/resetting a castle or board. Read object.placement to capture each live baseline; save chosen values in a reusable program. All members must exist, be released and idle; a missing or conflicting member refuses the entire edit. Saves once with one Undo capturing all targets' actual pre-edit poses; temporary play stays in its fork. Resets member velocities, preserves geometry/settings/animations and leaves other objects running. Completion means placement was applied, not that the structure is stable. Does not create replacements, connect/snap parts, avoid overlaps, start physics or move the book/Maestro. These are room axes, not durable scanned-room anchors. Programs use explicit literal member IDs; one-off calls require the normal current object conditions. Receipt replay cannot apply it twice; Stop does not undo a completed edit.";
+        public override string Description=>"Apply 1–16 explicit placements together: target ID, room-local position in metres, unit-quaternion rotation and uniform scale. Useful for arranging/resetting a castle or board. Read object.placement to capture each live baseline; save chosen values in a reusable program. All members must exist, be released and idle; a missing or conflicting member refuses the entire edit. Saves once with one Undo capturing all targets' actual pre-edit poses; temporary play stays in its fork. Resets member velocities, preserves geometry/settings/animations and leaves other objects running. Completion means placement was applied, not that the structure is stable. Does not create replacements, connect/snap parts, avoid overlaps, start physics or move the book/Maestro. These are room axes, not durable scanned-room anchors. Programs use explicit literal member IDs; one-off calls require the normal current object conditions. Receipt replay cannot apply it twice; Stop does not undo a completed edit."+PersistedEditOperation.Persistence;
         internal static JObject PositionSchema()=>Object(new JObject { ["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25)});
         public override JObject InputSchema {get{
             var item=Object(new JObject { ["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32)),["position"]=PositionSchema(),["rotation"]=Vector(true),["scale"]=Number(.1,4)});
@@ -31,9 +32,16 @@ namespace Maestro.Quest.Programs
             foreach(var p in Layout(args).placements)if(!context.Target(new JObject { ["target"]=p.target},out _,out error))return false;
             return context.Editor.CanApplyLayout(Layout(args),out error);
         }
-        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(context,args,out error)||!context.Editor.ApplyLayout(Layout(args),out error))return false;
-            operation=new CompletedCapability(new JObject { ["count"]=((JArray)args["placements"]).Count,["temporary"]=context.Editor.TemporaryRoom});return true;
+        internal static bool StartLayout(RoomEditor editor,RoomLayout layout,out CapabilityOperation operation,out string error,Func<object,string> guard=null) {
+            var captured=layout.Copy();var revisions=captured.placements.ToDictionary(p=>p.target,p=>editor.ObjectRevision(p.target));bool temporary=editor.TemporaryRoom;
+            return PersistedEditOperation.Start(editor,null,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginLayout(captured,revisions,guard,out pending,out issue),
+                out operation,out error,validate:(out string issue)=>editor.CanApplyCapturedLayout(captured,revisions,null,guard,out issue),
+                output:()=>new JObject{["count"]=captured.placements.Length,["temporary"]=temporary});
+        }
+        public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
+            operation=null;if(!CanRun(context,args,out error))return false;
+            return StartLayout(context.Editor,Layout(args),out operation,out error);
         }
         internal static BehaviourCatalog.FactDefinition Placement()=>new("object.placement",ProgramDataType.Read(JObject.Parse("{\"record\":{\"target\":\"text\",\"revision\":\"number\",\"position\":{\"record\":{\"x\":\"number\",\"y\":\"number\",\"z\":\"number\"}},\"rotation\":{\"record\":{\"x\":\"number\",\"y\":\"number\",\"z\":\"number\",\"w\":\"number\"}},\"scale\":\"number\",\"temporary\":\"boolean\"}}")),"Live object placement",
             "Current room-local position, unit rotation and uniform scale of a creation, suitable for an explicit layout baseline. Includes the last authored revision, which does not identify every live physics frame. A read does not save or reserve the object. Unlike object.definition these are live values; unlike object.position these are room-local axes. Unavailable for missing/disabled targets, paused runtime or out-of-bounds poses. Do not treat room axes as durable scan anchors.",Object(new JObject { ["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32))}),new JObject { ["target"]=new string('0',32)},(context,args)=>{

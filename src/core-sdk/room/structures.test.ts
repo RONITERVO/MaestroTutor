@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
-import {capabilityResources,validateCapabilityArguments} from '../../../shared/capabilities';
+import {capabilityDefinition,capabilityResources,validateCapabilityArguments,validateCapabilityOutput} from '../../../shared/capabilities';
 import {programFeatureRequirements} from '../../../shared/programFeatures';
 import {parseProgram,type BehaviourProgram} from './programs';
 const source=()=>JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/program-structure-reset.json','utf8'));
@@ -26,4 +26,15 @@ it('requires explicit member resources for reset while forgetting edits metadata
 it('carries exact high native revisions while rejecting overflow and fractional preconditions',()=>{
  const args=source().functions[0].body[1].arguments;args.revision=2147483647;expect(validateCapabilityArguments('structure.reset',1,args)).toBeNull();
  args.revision++;expect(validateCapabilityArguments('structure.reset',1,args)).not.toBeNull();args.revision=1000001.5;expect(validateCapabilityArguments('structure.reset',1,args)).not.toBeNull();
+});
+
+it('waits for saved structures and every layout member before completing a program step',()=>{
+ for(const id of ['structure.save','structure.reset','structure.forget','object.layout.apply','object.layout.transform'])expect(capabilityDefinition(id)?.duration).toBe('completion');
+ expect(validateCapabilityOutput('structure.save',1,{structureId:'c'.repeat(32),revision:14,temporary:false})).toBeNull();
+ expect(validateCapabilityOutput('structure.save',1,{structureId:'c'.repeat(32),revision:0,temporary:false})).not.toBeNull();
+ expect(capabilityDefinition('structure.forget')!.output).toBeUndefined();
+ for(const id of ['structure.reset','object.layout.apply','object.layout.transform']){
+  const result={count:16,temporary:false};expect(validateCapabilityOutput(id,1,result)).toBeNull();
+  for(const change of [{count:0},{count:17},{count:'16'},{temporary:'false'}])expect(validateCapabilityOutput(id,1,{...result,...change})).not.toBeNull();
+ }
 });

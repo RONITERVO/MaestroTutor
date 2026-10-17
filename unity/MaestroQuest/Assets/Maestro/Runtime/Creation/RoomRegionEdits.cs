@@ -11,14 +11,22 @@ namespace Maestro.Quest.Creation
         internal RoomRegion ReadRegion(string id)=>journal.ReadRegion(id);
         internal int RegionRevision(string id)=>journal.RegionRevision(id);
         internal string RegionFor(string target)=>journal.RegionFor(target);
-        internal bool PrepareRegion(RoomRegion definition,string id,int revision,string[] members,out RegionEdits edits,out string error) {
-            edits=null;if(!CanEditStructures(out error))return false;
+        internal bool CanEditRegion(RoomRegion definition,string id,int revision,string[] members,out string error) {
+            if(!CanEditStructures(out error))return false;
             var current=ReadRegion(id);error="The area changed; read its current revision and complete membership";
             if(RegionRevision(id)!=revision||current==null&&revision!=0||definition==null&&current==null)return false;
             var expected=current?.members??Array.Empty<string>();
             if(members==null||members.Distinct(StringComparer.Ordinal).Count()!=members.Length||!expected.ToHashSet(StringComparer.Ordinal).SetEquals(members))return false;
             if(definition==null&&expected.Length>0){error="Move every creation out of this area before removing it";return false;}
             if(definition!=null&&(definition.id!=id||!definition.Validate(out error)||!expected.ToHashSet(StringComparer.Ordinal).SetEquals(definition.members)))return false;
+            error="The room already has the maximum number of authored areas";
+            if(current==null&&journal.RegionCount>=RoomRegion.MaximumRegions)return false;
+            error="Choose an area identity distinct from the world and home area";
+            if(id==WorldIdentity?.worldId||id==WorldIdentity?.regionId)return false;
+            error=null;return true;
+        }
+        internal bool PrepareRegion(RoomRegion definition,string id,int revision,string[] members,out RegionEdits edits,out string error) {
+            edits=null;if(!CanEditRegion(definition,id,revision,members,out error))return false;
             edits=definition==null?new RegionEdits{Removals=new[]{id}}:new RegionEdits{Replacements=new[]{definition.Copy()}};
             if(!edits.Validate(out error))return false;
             var candidate=Snapshot();candidate.regions=edits.Apply(candidate.regions);return candidate.Validate(out error);
@@ -27,11 +35,16 @@ namespace Maestro.Quest.Creation
             if(!PrepareRegion(definition,id,revision,members,out var edits,out error))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),definition==null?"Area removed":"Area saved",false,out error,regionEdits:edits);
         }
-        internal bool PrepareRegionBinding(string target,int revision,string id,int regionRevision,out RegionEdits edits,out string error) {
-            edits=null;if(!CanEditStructures(out error))return false;
+        internal bool CanBindRegion(string target,int revision,string id,int regionRevision,out string error) {
+            if(!CanEditStructures(out error))return false;
             var data=Read(target);var destination=string.IsNullOrEmpty(id)?null:ReadRegion(id);
             error="Read the creation and selected area revisions before assigning it";
             if(data==null||data.IsBuiltIn||ObjectRevision(target)!=revision||id==null||id.Length==0&&regionRevision!=0||id.Length>0&&(destination==null||RegionRevision(id)!=regionRevision))return false;
+            error=null;return true;
+        }
+        internal bool PrepareRegionBinding(string target,int revision,string id,int regionRevision,out RegionEdits edits,out string error) {
+            edits=null;if(!CanBindRegion(target,revision,id,regionRevision,out error))return false;
+            var destination=string.IsNullOrEmpty(id)?null:ReadRegion(id);
             string old=RegionFor(target);if(old==id){edits=new RegionEdits();error=null;return true;}
             var changed=new System.Collections.Generic.List<RoomRegion>();
             if(old.Length>0){var source=ReadRegion(old);source.members=source.members.Where(x=>x!=target).ToArray();changed.Add(source);}
@@ -43,6 +56,16 @@ namespace Maestro.Quest.Creation
             if(!PrepareRegionBinding(target,revision,id,regionRevision,out var edits,out error))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"Creation area assigned",false,out error,regionEdits:edits);
         }
+        internal bool BeginRegion(RoomRegion definition,string id,int revision,string[] members,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null) {
+            var captured=definition?.Copy();var affected=members==null?null:(string[])members.Clone();
+            return BeginPreparedEdit(()=>CanEditRegion(captured,id,revision,affected,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareRegion(captured,id,revision,affected,out var edits,out issue)&&journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,regionEdits:edits);},
+                captured==null?"Area removed":"Area saved",out pending,out error,checkpoint);
+        }
+        internal bool BeginRegionBinding(string target,int revision,string id,int regionRevision,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)=>
+            BeginPreparedEdit(()=>CanBindRegion(target,revision,id,regionRevision,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareRegionBinding(target,revision,id,regionRevision,out var edits,out issue)&&journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,regionEdits:edits);},
+                "Creation area assigned",out pending,out error,checkpoint);
         internal JObject ObserveRegion(string id) {
             if(!WorldIdentityReady)return null;
             var value=ReadRegion(id);return value==null?null:new JObject{["id"]=id,["revision"]=RegionRevision(id),["name"]=value.name,["memberCount"]=value.members.Length,["temporary"]=TemporaryRoom};
