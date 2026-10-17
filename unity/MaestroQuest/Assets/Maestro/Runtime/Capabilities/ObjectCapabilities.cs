@@ -82,8 +82,8 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.position.set";
         public override string Label=>"Move object";
-        public override string Description=>"Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Saves before completion and adds one Undo edit. This is immediate placement: velocity resets, then normal gravity resumes. Other objects keep running.";
-        public override string Duration=>"instant";
+        public override string Description=>"Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Applies the requested placement at native acceptance."+PersistedEditOperation.Persistence;
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override JObject InputSchema=>Object(new JObject {["target"]=Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32)),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25)});
@@ -96,15 +96,17 @@ namespace Maestro.Quest.Programs
             return context.Editor.CanEditObject((string)arguments["target"],false,out error);
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.MoveObject((string)arguments["target"],ObjectCapabilityData.Position(arguments),out error))return false;operation=new CompletedCapability();return true;
+            string target=(string)arguments["target"];var position=ObjectCapabilityData.Position(arguments);
+            return PersistedEditOperation.Start(context.Editor,target,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>context.Editor.BeginMove(target,position,out pending,out issue),out operation,out error);
         }
     }
     internal sealed class ResizeObjectCapability : NativeTargetCapability
     {
         public override string Id=>"object.scale.set";
         public override string Label=>"Resize object";
-        public override string Description=>"Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5. Saves before completion, one Undo edit. Resizing resets velocity; normal gravity resumes.";
-        public override string Duration=>"instant";
+        public override string Description=>"Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5."+PersistedEditOperation.Persistence;
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override JObject InputSchema=>Object(new JObject {["target"]=Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32)),["scale"]=Number(.1,4)});
@@ -115,7 +117,9 @@ namespace Maestro.Quest.Programs
             return context.Editor.CanEditObject((string)arguments["target"],false,out error);
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.ResizeObject((string)arguments["target"],(float)arguments["scale"],out error))return false;operation=new CompletedCapability();return true;
+            string target=(string)arguments["target"];float scale=(float)arguments["scale"];
+            return PersistedEditOperation.Start(context.Editor,target,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>context.Editor.BeginResize(target,scale,out pending,out issue),out operation,out error);
         }
     }
     internal sealed class PaintObjectCapability : NativeTargetCapability

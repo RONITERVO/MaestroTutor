@@ -114,7 +114,9 @@ namespace Maestro.Quest.Rules
             if (step.action != RuleActionKind.Wait && !IsCreation(step.action)) yield return step.targetId;
             if (!string.IsNullOrEmpty(step.propId)) yield return step.propId;
         }
-        public static bool IsInstant(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop || IsCreation(kind) || IsObjectEdit(kind);
+        // Legacy tray authoring only: absence of a seconds field does not mean
+        // native completion is immediate. The capability owns its execution duration.
+        public static bool HasNoDurationParameter(RuleActionKind kind) => kind == RuleActionKind.PhysicsImpulse || kind == RuleActionKind.PhysicsStop || IsCreation(kind) || IsObjectEdit(kind);
         public static bool IsObjectEdit(RuleActionKind kind)=>kind is RuleActionKind.MoveObject or RuleActionKind.ResizeObject or RuleActionKind.PaintObject or RuleActionKind.DeleteObject;
         public static bool IsCreation(RuleActionKind kind)=>kind==RuleActionKind.CreatePrimitive||kind==RuleActionKind.CreateRecipe;
         public static bool IsSpatial(RuleActionKind kind) => kind == RuleActionKind.LookAtUser || kind == RuleActionKind.FollowUser;
@@ -129,8 +131,8 @@ namespace Maestro.Quest.Rules
                 !Enum.IsDefined(typeof(PropRelease),step.propRelease) || !float.IsFinite(step.propReleaseAt) || step.propReleaseAt < .05f || step.propReleaseAt > 1 ||
                 !float.IsFinite(step.propOffset.sqrMagnitude) || step.propOffset.sqrMagnitude > 1 || !MotionFrame.ValidRotation(step.propRotation) ||
                 !string.IsNullOrEmpty(step.propAvatarHash) && !ModelLibrary.ValidHash(step.propAvatarHash))) return false;
-            if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && !IsInstant(step.action) && step.seconds < .1f) return false;
-            if (IsInstant(step.action) && (step.seconds != 0 || step.loop || !IsCreation(step.action) && !(step.action is RuleActionKind.MoveObject or RuleActionKind.ResizeObject) && !IsId(step.targetId))) return false;
+            if (step.action != RuleActionKind.RecordedAnimation && step.action != RuleActionKind.ThrowRecording && step.action != RuleActionKind.ImportedClip && step.action != RuleActionKind.LibraryMotion && step.action != RuleActionKind.RecipeAnimation && !HasNoDurationParameter(step.action) && step.seconds < .1f) return false;
+            if (HasNoDurationParameter(step.action) && (step.seconds != 0 || step.loop || !IsCreation(step.action) && !(step.action is RuleActionKind.MoveObject or RuleActionKind.ResizeObject) && !IsId(step.targetId))) return false;
             if (step.action == RuleActionKind.CreatePrimitive && !new[]{"block","ball","cylinder"}.Contains(step.shape)) return false;
             if (step.action == RuleActionKind.CreateRecipe && (step.creationRecipe==null || !step.creationRecipe.Validate(out _))) return false;
             if (IsCreation(step.action) && (step.objectName==null || step.objectName.Length>80 || step.objectName.Any(char.IsControl) || !RoomRecipe.Finite(step.creationPosition) || step.creationPosition.sqrMagnitude>625 || !float.IsFinite(step.creationScale) || step.creationScale<.1f || step.creationScale>4 || !RoomRecipe.ValidColor(step.creationColor))) return false;

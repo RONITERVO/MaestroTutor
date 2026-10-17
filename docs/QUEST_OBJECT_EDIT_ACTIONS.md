@@ -1,11 +1,11 @@
 # Shared object-edit actions
 
-The catalog now exposes 19 native actions. Five version-1 actions let the
-original-app agent, book controls and saved programs edit existing objects:
+These five version-1 actions in the shared catalog let the original-app agent,
+book controls and saved programs edit existing objects:
 
 | Action | Arguments | Effect |
 | --- | --- | --- |
-| `object.position.set` | target, x, y, z | Immediate placement in room metres; keeps rotation/scale and resets velocity. |
+| `object.position.set` | target, x, y, z | Placement in room metres after preparation; keeps rotation/scale and resets velocity. |
 | `object.rotation.set` | target, pitch, yaw, roll | Orientation in degrees; keeps current position/scale and resets velocity. |
 | `object.scale.set` | target, scale | Uniform scale; keeps current position/rotation and resets velocity. |
 | `object.color.set` | target, red, green, blue | RGB tint; preserves live position and velocity. |
@@ -26,12 +26,34 @@ Other objects continue running. Existing physics is permitted: tint does not
 teleport a moving ball; explicit placement or resizing resets velocity and lets
 normal gravity resume. These actions do not start room physics.
 
-The native editor builds and validates a room candidate, waits for an earlier
-save and atomically saves the candidate before applying it and reporting success.
-The journal and reconciliation path remain the same as ordinary room tools.
-There is no second scene database or undo stack. Manual painting, erasing,
-surface placement and avatar resizing use these same edit methods after their
-existing human-priority interruption checks.
+Position, orientation and scale share one completion operation. The native editor
+captures and validates a candidate, waits for an earlier save, then prepares its
+private saved bytes and preflights storage on a worker. Only the target body's
+pose is held. World time, viewer movement and unrelated objects keep running.
+An authored edit invalidates a stale candidate instead of being overwritten.
+Concurrent placement actions wait under the scheduler's existing capacity and
+timeout limits before capturing a candidate. Waiting does not hold the body's
+pose or copy another room. Target revision and temporary-session identity are
+checked again before starting; cancellation cannot later apply a waiting edit.
+Storage preparation remains single-owner while independent native loads proceed.
+
+Unity accepts the candidate and reconciles its native objects once, then the
+worker publishes the save. The body resumes immediately after application;
+success waits for confirmed publication. Gravity may therefore move a live object
+past its saved placement before the receipt completes. Stop before acceptance
+preserves its previous pose. Stop after acceptance cannot undo it or cancel the
+pending publication; the directory owner remains until that write drains.
+A publication conflict preserves existing files and blocks further saves until
+inspection. Do not retry a possibly accepted edit under a new identity.
+
+In a temporary room these actions change live placement and local Undo without
+publishing the room. An explicit kept snapshot makes them durable. Their stopped
+status describes that temporary outcome without claiming a pending disk save.
+
+The journal, storage coordinator, native reconciliation and Undo remain shared.
+Synchronous manual editor APIs keep their existing completion contract. Painting
+and deletion retain their synchronous save-before-application path. These are
+different entry-point lifecycles, not separate room databases or histories.
 
 Each changed value/removal is a room Undo edit; Stop and later program failures
 do not roll back completed edits. Delete restores the saved object data on Undo,
@@ -67,7 +89,7 @@ uses a simulated model, so it is not evidence of live-provider acceptance.
 `scripts/probe-object-edits.mjs` verifies the real Chrome authoring interface
 with simulated edit acknowledgements and starts no native action.
 
-PC validation: 1,285 app tests across 155 files; 126 Unity EditMode and 94
+Initial object-edit checkpoint validation: 1,285 app tests across 155 files; 126 Unity EditMode and 94
 PlayMode tests; TypeScript, lint and shared-code guards. Three optional private
 model/collection tests are skipped without external files. Native integration
 checks cover persistence, Undo/Redo, deletion replay, current physics motion,
@@ -76,16 +98,16 @@ failed saves.
 
 ## Remaining release work
 
-These are immediate property edits, not trajectory animation, incremental
-scaling or arbitrary code execution. Recipe replacement, object import, drawing
-creation and other room operations still need broader catalog coverage.
-Legacy batched room commands retain their established path.
+These are explicit property placements, not walking trajectories or incremental
+scale animations. Position, rotation and scale now prepare and publish saved
+bytes in the background through one implementation. Their IDs, versions, schemas,
+limits, target ownership and Undo behavior are unchanged; position and scale now
+advertise completion duration so every client waits for their saved outcome.
 
-Durable writes currently serialize on Unity's main thread. Quest measurements
-and, if necessary, an asynchronous completion lifecycle remain release work,
-especially for large rooms and repeated edits. This checkpoint does not claim
-headset acceptance, real-provider completion or Quest Store readiness.
-
+Snapshot capture, native reconciliation, other synchronous edit paths and small
+receipt writes still need physical frame-time assessment. These desktop checks
+do not establish headset latency, live-provider acceptance or Quest Store readiness.
+The current validation checkpoint is recorded in [the v1 plan](QUEST_V1_PLAN.md).
 
 Rotation was added on 2026-09-28 through the named module path, with no numeric
 tray adapter. The book's capability/function editor generates its fields. Pitch,

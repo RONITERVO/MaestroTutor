@@ -19,15 +19,20 @@ namespace Maestro.Quest.Tests
             while(PrivateNativeCandidates().Length==0&&editor.NativeActivationPending&&Time.realtimeSinceStartup<deadline)yield return null;
             Assert.That(PrivateNativeCandidates().Length,Is.GreaterThan(0));
         }
-        [UnityTest] public IEnumerator NativeConcurrentResidentEditCompletesWhileAnotherAreaIsPreparing()
+        [UnityTest] public IEnumerator NativeConcurrentResidentEditPreparesWhileAnotherAreaLoads()
         {
             var(area,ids)=NativePreparationGroup();Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);
             Assert.That(runtime.Scheduler.Invoke(NativeMove(ids[0]),Time.unscaledTime,out var loading,out error),Is.True,error);
             yield return NativeConcurrentCandidates();
             string resident=editor.Identity(block);int revision=editor.ObjectRevision(resident);
-            Assert.That(runtime.Scheduler.Invoke(NativeMove(resident),Time.unscaledTime,out var instant,out error),Is.True,error);
-            Assert.That((string)runtime.Scheduler.Invocation(instant)["phase"],Is.EqualTo("completed"));
-            Assert.That(editor.ObjectRevision(resident),Is.GreaterThan(revision));Assert.That(editor.NativeActivationPending,Is.True);
+            Assert.That(editor.PendingEditSave,Is.False);
+            Assert.That(runtime.Scheduler.Invoke(NativeMove(resident),Time.unscaledTime,out var edit,out error),Is.True,error);
+            // The resident edit starts without waiting for the other area's assembly.
+            // Disk publication and loading may finish in either order.
+            Assert.That(editor.PendingEditSave||editor.ObjectRevision(resident)>revision,Is.True);
+            Assert.That(editor.NativeActivationPending,Is.True);
+            yield return NativeActionDone(edit);
+            Assert.That(editor.ObjectRevision(resident),Is.GreaterThan(revision));
             yield return NativeActionDone(loading);Assert.That(editor.Read(ids[0]).position,Is.EqualTo(new Vector3(.6f,1.2f,.8f)));
         }
         [UnityTest] public IEnumerator NativeConcurrentDifferentAreasQueueWithoutCancellingEachOthersEdits()

@@ -103,7 +103,7 @@ namespace Maestro.Quest.Tests
             // Compare the serialized contract: a nullable C# string becomes JSON null.
             var actual=JObject.Parse(BehaviourCatalog.Manifest().ToString());
             Assert.That(JToken.DeepEquals(actual,expected),Is.True,"Regenerate the reviewed manifest from native registrations.");
-            Assert.That(BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue).All(x=>x.Duration==(RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(x.Id).Value)?"instant":"timed")),Is.True);
+            Assert.That(BehaviourCatalog.Actions.Where(x=>LegacyCapabilityAdapters.Kind(x.Id).HasValue).All(x=>RuleDocument.HasNoDurationParameter(LegacyCapabilityAdapters.Kind(x.Id).Value)?x.Duration is "instant" or "completion":x.Duration=="timed"),Is.True);
             Assert.That(BehaviourCatalog.Action(RuleActionKind.UpperBodyGesture).Channels,Is.EqualTo(new[] {"upperBody"}));
             Assert.That(BehaviourCatalog.Action("avatar.follow.user").Channels,Is.EqualTo(new[] {"locomotion","gaze"}));
             Assert.That(BehaviourCatalog.Action(RuleActionKind.LibraryMotion).Channels,Is.EqualTo(new[] {"wholeTarget"}));
@@ -277,7 +277,7 @@ namespace Maestro.Quest.Tests
         {
             foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {
                 var capability=BehaviourCatalog.Action(kind);
-                var original=new RuleStep {action=LegacyCapabilityAdapters.Kind(capability.Id).Value,targetId=RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(capability.Id).Value)?Guid.NewGuid().ToString("N"):"maestro",seconds=LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(LegacyCapabilityAdapters.Kind(capability.Id).Value)?0:1,
+                var original=new RuleStep {action=LegacyCapabilityAdapters.Kind(capability.Id).Value,targetId=RuleDocument.HasNoDurationParameter(LegacyCapabilityAdapters.Kind(capability.Id).Value)?Guid.NewGuid().ToString("N"):"maestro",seconds=LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.ThrowRecording||RuleDocument.HasNoDurationParameter(LegacyCapabilityAdapters.Kind(capability.Id).Value)?0:1,
                     gesture=RuleGesture.Greeting,clipModelHash=new string('a',64),clipIndex=2,motionId=Guid.NewGuid().ToString("N")};
                 if(LegacyCapabilityAdapters.Kind(capability.Id).Value==RuleActionKind.CreateRecipe) original.creationRecipe=RecipeTemplates.BoxRobot(true);
                 Assert.That(LegacyCapabilityAdapters.TryCall(original,out var call,out var error),Is.True,error);

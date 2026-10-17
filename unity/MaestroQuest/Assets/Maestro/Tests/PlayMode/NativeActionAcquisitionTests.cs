@@ -68,7 +68,7 @@ namespace Maestro.Quest.Tests
                 Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("failed"));Assert.That((string)scheduler.Invocation(run)["status"],Does.Contain("changed before"));Assert.That(editor.Read(id).position,Is.EqualTo(position));
             }finally{scheduler.StopAll();}
         }
-        [UnityTest] public IEnumerator NativeActionAgentInvocationLoadsBeforeItsInstantEffectAndKeepsOneUndo()
+        [UnityTest] public IEnumerator NativeActionAgentInvocationLoadsBeforeItsSavedEffectAndKeepsOneUndo()
         {
             string id=editor.Identity(block),area=NativeAreaFor(id);var saved=editor.Read(id);int revision=editor.ObjectRevision(id);
             Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);

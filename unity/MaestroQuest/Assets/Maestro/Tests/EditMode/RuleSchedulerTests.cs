@@ -132,7 +132,7 @@ namespace Maestro.Quest.Tests
             public readonly HashSet<string> Active = new();
             public int Stopped;
             public bool CanRun(CapabilityCall step,out string error) { error = null; return true; }
-            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _); Active.Add(id); Started.Add(step.targetId); seconds = RuleDocument.IsInstant(step.action)?0:step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _); Active.Add(id); Started.Add(step.targetId); seconds = RuleDocument.HasNoDurationParameter(step.action)?0:step.seconds == 0 ? 2 : step.seconds; error = null; return true; }
             public void Stop(string id,bool preserve) { if (Active.Remove(id)) Stopped++; }
         }
         sealed class PreparingActions : IRuleActions,IRuleReadiness

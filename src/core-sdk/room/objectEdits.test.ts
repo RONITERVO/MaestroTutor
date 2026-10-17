@@ -18,9 +18,9 @@ const calls=[
  {id:'object.color.set',version:1,arguments:{target,red:1,green:.2,blue:.1}},
  {id:'object.delete',version:1,arguments:{target}}
 ];
-it.each(calls)('declares a scoped instant $id action and rejects hidden duration/code fields',call=>{
+it.each(calls)('declares a scoped $id action and rejects hidden duration/code fields',call=>{
  const definition=capabilityDefinition(call.id)!;
- expect(definition.duration).toBe('instant');expect(definition.channels).toEqual(['wholeTarget']);
+ expect(definition.duration).toBe(['object.position.set','object.scale.set'].includes(call.id)?'completion':'instant');expect(definition.channels).toEqual(['wholeTarget']);
  expect(validateCapabilityArguments(call.id,1,call.arguments)).toBeNull();
  expect(capabilityResources(call.id,call.arguments)).toEqual([target]);
  for(const extra of [{seconds:1},{engineCode:'anything'},{unknown:true}])

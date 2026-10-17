@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
         {
             internal readonly Demand Demand=new();internal int Starts,Checks,Completions,Acquisitions;internal bool FailPreflight,FailStart;internal Func<bool> Admission;
             public bool CanRun(CapabilityCall call,out string error){Checks++;Assert.That(Demand.Ready,Is.True,"Preflight requires acquired native entities");error=FailPreflight?"Target no longer usable":null;return !FailPreflight;}
-            public bool Start(string id,CapabilityCall call,out float seconds,out string error){Starts++;seconds=call.Instant?0:2;error=FailStart?"Effect rejected":null;return !FailStart;}
+            public bool Start(string id,CapabilityCall call,out float seconds,out string error){Starts++;seconds=call.Instant||call.AwaitCompletion?0:2;error=FailStart?"Effect rejected":null;return !FailStart;}
             RuleEntityDemand IRuleEntityAcquisition.Acquire(CapabilityCall call,Func<bool> admission){Acquisitions++;Admission=admission;Assert.That(admission(),Is.True);return Demand;}
             public bool Complete(string id,out string error){Completions++;error=null;return true;}
             public void Stop(string id,bool preserve){}
@@ -45,9 +45,10 @@ namespace Maestro.Quest.Tests
         }
         static JObject Move()=>new(){["id"]="object.position.set",["version"]=1,["arguments"]=new JObject{["target"]=new string('a',32),["x"]=0,["y"]=1,["z"]=0}};
         static JObject Motion()=>new(){["id"]="animation.play",["version"]=1,["arguments"]=new JObject{["target"]=new string('a',32),["source"]=new JObject{["kind"]="recording"},["channel"]="wholeTarget",["seconds"]=2,["loop"]=false}};
-        [Test] public void InstantActionWaitsForEntitiesThenStartsAndCompletesExactlyOnce()
+        [TestCase(false)] [TestCase(true)] public void AcquiredActionsStartAndCompleteExactlyOnce(bool completion)
         {
-            var actions=new Actions();var scheduler=new RuleScheduler(actions);Assert.That(scheduler.Invoke(Move(),0,out var id,out var error),Is.True,error);
+            var call=completion?Move():new JObject {["id"]="object.color.set",["version"]=1,["arguments"]=new JObject {["target"]=new string('a',32),["red"]=1,["green"]=0,["blue"]=0}};
+            var actions=new Actions();var scheduler=new RuleScheduler(actions);Assert.That(scheduler.Invoke(call,0,out var id,out var error),Is.True,error);
             Assert.That(actions.Checks,Is.Zero);Assert.That(actions.Starts,Is.Zero);Assert.That(scheduler.PreparingCount,Is.EqualTo(1));
             Assert.That((string)scheduler.Invocation(id)["status"],Is.EqualTo("Loading required objects"));scheduler.Tick(20);Assert.That(actions.Starts,Is.Zero);
             actions.Demand.Ready=true;scheduler.Tick(21);scheduler.Tick(22);

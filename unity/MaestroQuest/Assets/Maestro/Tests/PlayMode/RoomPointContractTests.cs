@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Linq;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Programs;
@@ -27,13 +28,20 @@ namespace Maestro.Quest.Tests
             Assert.That(actions.TryPosition(id,out var physical),Is.True);FrameNear(physical,editor.Frame.PointToWorld(expected));
             Assert.That(BehaviourCatalog.TryCall("object.position.set",1,new JObject {["target"]="book",["x"]=point.x,["y"]=point.y,["z"]=point.z},out var call,out error),Is.True,error);
             Assert.That(actions.Start("later placement",call,out _,out error),Is.True,error);
+            float end=Time.realtimeSinceStartup+20;
+            while(actions.State("later placement",out error)==RuleActionState.Preparing){
+                Assert.Less(Time.realtimeSinceStartup,end,error);yield return null;
+            }
             Assert.That(actions.Complete("later placement",out error),Is.True,error);FrameNear(editor.Find("book").transform.position,physical);
             root.transform.localScale=new Vector3(1,2,1);
             Assert.That(actions.TryRead("object.position",2,new JObject {["target"]=id},out _),Is.False);
             root.transform.localScale=Vector3.one;yield return null;
         }
-        [TestCase("object.collided","Collided")] [TestCase("object.caught","Caught")]
-        public void RoomPointQueuedContactsStillPlaceAtTheCapturedLocationAfterWorldMovement(string eventId,string callback)
+        [UnityTest] public IEnumerator RoomPointQueuedCollisionStillPlacesAtTheCapturedLocationAfterWorldMovement()=>
+            RoomPointQueuedContactPlacement("object.collided","Collided");
+        [UnityTest] public IEnumerator RoomPointQueuedCatchStillPlacesAtTheCapturedLocationAfterWorldMovement()=>
+            RoomPointQueuedContactPlacement("object.caught","Caught");
+        IEnumerator RoomPointQueuedContactPlacement(string eventId,string callback)
         {
             var roomPoint=new Vector3(2,1.3f,-1);
             root.transform.SetPositionAndRotation(new Vector3(6,0,-3),Quaternion.Euler(0,65,0));
@@ -49,8 +57,8 @@ namespace Maestro.Quest.Tests
             var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="Use queued contact",program=p.ToString()};
             runtime.Scheduler.Configure(new RuleDocument {sequences=new[]{sequence}});float now=Time.unscaledTime;
             Assert.That(runtime.Scheduler.Trigger(sequence.id,now),Is.True,runtime.Scheduler.LastError);
-            // Match the native producer's running world. This synchronous adapter
-            // test must explicitly complete the step instead of bypassing its queue.
+            // Match the native producer's running world and consume the real contact queue.
+            // The deferred placement must keep that captured room point through saving.
             physics.SetSurfaces(true,"Aligned queued-contact fixture");physics.StartPhysics();Assert.That(physics.Running,Is.True);
             // Enter at the real native event adapter; the scheduler has not consumed the point yet.
             typeof(RoomRules).GetMethod(callback,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(runtime,
@@ -60,7 +68,12 @@ namespace Maestro.Quest.Tests
             editor.ProcessDormantContacts();
             runtime.Scheduler.Tick(now+.01f);Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));
             runtime.Scheduler.Tick(now+.25f);runtime.Scheduler.Tick(now+.3f);
-            Assert.That(runtime.Scheduler.RunningCount,Is.Zero,runtime.Scheduler.LastError);
+            float end=Time.realtimeSinceStartup+20;
+            while(runtime.Scheduler.RunningCount>0){
+                Assert.Less(Time.realtimeSinceStartup,end,runtime.Scheduler.LastError);
+                runtime.Scheduler.Tick(Mathf.Max(now+.3f,Time.unscaledTime));yield return null;
+            }
+            Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);
             FrameNear(editor.Find("book").transform.position,editor.Frame.PointToWorld(roomPoint));
         }
         [UnityTest] public IEnumerator RoomPointImpulseUsesRoomAxesInsteadOfNestedParentAxes()

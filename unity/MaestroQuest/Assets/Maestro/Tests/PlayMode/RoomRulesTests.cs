@@ -406,6 +406,14 @@ namespace Maestro.Quest.Tests
             File.WriteAllText(Path.Combine(directory,phase+".json"),new JObject {["program"]=program,["execution"]=executor.Executions.Observe(),
                 ["room"]=JObject.Parse(JsonUtility.ToJson(editor.Snapshot()))}.ToString());
         }
+        IEnumerator AgentPlacementCompleted(RoomAgentExecutor executor)
+        {
+            float end=Time.realtimeSinceStartup+20;
+            while((string)executor.Executions.Observe()["selected"]["phase"] is "preparing" or "running"){
+                Assert.Less(Time.realtimeSinceStartup,end,"Shared placement did not complete");yield return null;
+            }
+            Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"),executor.Executions.Observe().ToString());
+        }
         [UnityTest] public IEnumerator CreatedResultsComposeWithSavedObjectEditsWithoutStoppingUnrelatedMotion()
         {
             var source=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-create.json")));
@@ -419,10 +427,14 @@ namespace Maestro.Quest.Tests
             Add("move","object.position.set",new JObject {["x"]=.2,["y"]=1.7,["z"]=1});
             var sequence=new RuleSequence {id="",name="Make a red ball",program=source.ToString(Newtonsoft.Json.Formatting.None)};
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="ball",sequence=sequence}}},out var error,out var ids),Is.True,error);
-            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
+            Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.play",editor.Identity(block),("seconds",30),("loop",true)),Time.unscaledTime,out var recording,out error),Is.True,error);
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
             string created=runtime.Scheduler.ObserveRuns().Single().locals.Single(x=>x.name=="ball").value;
-            for(int i=0;i<5;i++)runtime.Scheduler.Tick(Time.unscaledTime);
+            float end=Time.realtimeSinceStartup+20;
+            while(runtime.Scheduler.ObserveRuns().Any(run=>run.sequenceId==ids.Single())){
+                Assert.Less(Time.realtimeSinceStartup,end,"Composed placement program timed out");
+                runtime.Scheduler.Tick(Time.unscaledTime);yield return null;
+            }
             Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"),runtime.Scheduler.LastError);
             var item=editor.Find(created);Assert.That(item.transform.localPosition,Is.EqualTo(new Vector3(.2f,1.7f,1)));
             Assert.That(item.transform.localScale.x,Is.EqualTo(1.5f));Assert.That(editor.Read(created).color,Is.EqualTo(new Color(1,.2f,.1f,1)));
@@ -507,7 +519,12 @@ namespace Maestro.Quest.Tests
             int revision=editor.ObjectRevision(id);Assert.That(executor.Execute(paint,out error,out _),Is.True,error);Assert.That(editor.ObjectRevision(id),Is.EqualTo(revision));
             var move=ObjectEditRequest(ObjectEditCall("object.position.set",id,("x",.5),("y",2),("z",1)));
             Assert.That(executor.Execute(move,out error,out _),Is.True,error);
-            Assert.That(item.transform.localPosition,Is.EqualTo(new Vector3(.5f,2,1)));Assert.That(body.linearVelocity,Is.EqualTo(Vector3.zero));
+            yield return AgentPlacementCompleted(executor);
+            Assert.That(item.transform.localPosition.x,Is.EqualTo(.5f));Assert.That(item.transform.localPosition.z,Is.EqualTo(1));
+            Assert.That(item.transform.localPosition.y,Is.LessThanOrEqualTo(2));
+            Assert.That(Mathf.Abs(body.linearVelocity.x)+Mathf.Abs(body.linearVelocity.z),Is.LessThan(.001f));
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==id).position,Is.EqualTo(new Vector3(.5f,2,1)),
+                "Saved placement is exact; resumed gravity may already advance the live body");
             Assert.That(body.angularVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.useGravity,Is.True);
             editor.Undo();Assert.That(item.transform.localPosition,Is.EqualTo(position));Assert.That(editor.Read(id).color,Is.EqualTo(new Color(.2f,.4f,1,1)));
             yield return new WaitForFixedUpdate();Assert.That(body.linearVelocity.y,Is.LessThan(0));
@@ -527,6 +544,7 @@ namespace Maestro.Quest.Tests
             Assert.That(executor.Execute(ObjectEditRequest(ObjectEditCall("object.delete","book")),out error,out _),Is.False);
             Assert.That(executor.Execute(ObjectEditRequest(ObjectEditCall("object.scale.set","book",("scale",4))),out error,out _),Is.False);
             Assert.That(executor.Execute(ObjectEditRequest(ObjectEditCall("object.scale.set","book",("scale",1.2))),out error,out _),Is.True,error);
+            yield return AgentPlacementCompleted(executor);
             Assert.That(editor.Find("book").transform.localScale.x,Is.EqualTo(1.2f));
             before=JsonUtility.ToJson(editor.Read(id));
             Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"room.v999.json"),"preserve newer save");

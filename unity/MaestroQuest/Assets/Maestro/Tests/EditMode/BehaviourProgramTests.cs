@@ -60,7 +60,7 @@ namespace Maestro.Quest.Tests
             if(!string.IsNullOrEmpty(output)) {Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"program.json"),source.ToString());}
         }
 
-        [Test] public void ObjectEditsUseTypedScopedInstantContractsAndProtectBuiltins()
+        [Test] public void ObjectEditsUseTypedScopedCompletionContractsAndProtectBuiltins()
         {
             string target=Guid.NewGuid().ToString("N");
             foreach(var step in new[] {
@@ -70,7 +70,7 @@ namespace Maestro.Quest.Tests
                 new RuleStep {action=RuleActionKind.DeleteObject,targetId=target}
             }) {
                 var definition=BehaviourCatalog.Actions.Single(x=>LegacyCapabilityAdapters.Kind(x.Id)==step.action);
-                Assert.That(definition.Duration,Is.EqualTo("instant"));
+                Assert.That(definition.Duration,Is.EqualTo(step.action is RuleActionKind.MoveObject or RuleActionKind.ResizeObject?"completion":"instant"));
                 Assert.That(definition.Channels,Is.EqualTo(new[]{"wholeTarget"}));
                 var args=CapabilityArguments.FromStep(step);
                 Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,args,out var restored,out var error),Is.True,error);
@@ -144,7 +144,7 @@ namespace Maestro.Quest.Tests
         [Test] public void SchemaResourcesAndDomainConstraintsMatchNativeHandlers()
         {
             foreach(RuleActionKind kind in Enum.GetValues(typeof(RuleActionKind))) {
-                var step=new RuleStep {action=kind,targetId=RuleDocument.IsInstant(kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=kind==RuleActionKind.ThrowRecording||RuleDocument.IsInstant(kind)?0:1};
+                var step=new RuleStep {action=kind,targetId=RuleDocument.HasNoDurationParameter(kind)?Guid.NewGuid().ToString("N"):"maestro",seconds=kind==RuleActionKind.ThrowRecording||RuleDocument.HasNoDurationParameter(kind)?0:1};
                 if(kind==RuleActionKind.CreateRecipe)step.creationRecipe=Maestro.Quest.Creation.RecipeTemplates.BoxRobot(true);
                 void Check() {
                     var schema=CapabilityArguments.Schema(kind);var args=CapabilityArguments.FromStep(step);

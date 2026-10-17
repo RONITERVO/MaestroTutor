@@ -12992,3 +12992,59 @@ All 3,220 native inputs are checked against the source, with the four documented
 Configure-derived differences and 12 generated SDK/material files recorded
 separately. Fourteen unrelated/protected files remain unchanged. These results
 do not establish headset latency or complete physical/provider/release acceptance.
+
+## Shared placement completion — 2026-10-17
+
+Position and scale now reuse rotation's prepared-save lifecycle. One
+PersistedEditOperation maps native progress into the shared scheduler and
+receipts, and one BeginPlacement factory owns validation, target pose holding,
+write admission and pending-edit creation. There is no per-action save pipeline.
+The existing synchronous RoomEditor methods retain their completion contracts.
+The legacy tray helper is named HasNoDurationParameter: omitting a user-facing
+seconds field does not imply an immediate native result. Its validation and
+control behavior remain unchanged; execution duration comes from the catalog.
+
+object.position.set and object.scale.set now advertise completion duration.
+Their IDs, versions, schemas, physical admission and limits remain unchanged.
+The shared description makes acceptance, cancellation, save conflicts and
+temporary rooms explicit. Temporary accepted edits now report local Undo and
+snapshot behavior instead of suggesting a pending disk publication.
+
+The expanded scene run exposed a genuine concurrency regression: simultaneous
+moves of independently loaded objects could be refused by single-save admission.
+The shared operation now waits under existing scheduler capacity/time bounds
+before capturing a candidate. It revalidates target revision and temporary-session
+identity, and cancellation removes the waiting action without creating a delayed
+effect. Loading and simulation remain independent of serialized save preparation.
+Additional native regressions cover cancellation of one waiter while another
+completes, and target/session changes before admission.
+
+This is part of preserving immersion during authoring: unrelated simulation and
+world time continue while saved bytes are prepared and published. The requested
+placement resets motion at acceptance, then gravity resumes. A completed action
+confirms its authored saved placement; it does not promise a dynamic body stayed
+at that coordinate while the save completed. Native reconciliation and snapshot
+capture remain on the Unity owner thread and still require Quest measurement.
+
+Verification and exact input receipts are recorded in
+.quest-evidence/placement-save-20261017/. No device, provider, Android packaging,
+signing, cloud or Meta changes are part of this checkpoint.
+
+Final validation: **1,434 EditMode** tests and **1,786 web room/Quest UI tests
+in 179 files** pass. The affected scene run passes 385 cases; its one remaining
+fixture assumed a disk save would finish before an independently loading area.
+That fixture now asserts that resident placement begins during the area load,
+then confirms both operations complete. Its focused rerun passes, covering all
+**386 affected PlayMode cases**. Only this fixture differs from the larger final
+run; native implementation hashes are identical. Seven added scene tests exercise
+both move and resize, including waiting-action cancellation and stale-target/
+temporary-session refusal. Acquisition contracts cover instant and completion
+actions. The earlier expanded run passed 1,275/1,280 cases and exposed the
+concurrency issue plus outdated test assumptions; its failures are retained,
+not reported as a green run.
+
+All 3,224 final native inputs match the verification mirror except four documented
+Configure-derived changes. Known generated SDK/material files are recorded
+separately. Fourteen protected local files remain unchanged. The current native
+code compiles in the desktop mirror; device latency, real-provider journeys,
+Android packaging and the outstanding v1 release gates remain unverified here.

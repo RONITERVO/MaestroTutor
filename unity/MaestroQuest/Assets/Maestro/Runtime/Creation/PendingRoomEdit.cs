@@ -11,12 +11,18 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         PendingPersistedEdit pendingPersistedEdit;
-        bool PendingEditSave=>pendingPersistedEdit!=null&&!pendingPersistedEdit.Drained;
+        internal bool PendingEditSave=>pendingPersistedEdit!=null&&!pendingPersistedEdit.Drained;
         void CancelPendingEdit()=>pendingPersistedEdit?.Dispose();
 
         // The common capability path (book, agent and programs) owns this operation.
         // Synchronous API callers retain their existing completion contract.
-        internal bool BeginRotation(string id,Quaternion rotation,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)
+        internal bool BeginRotation(string id,Quaternion rotation,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
+            BeginPlacement(id,data=>data.rotation=rotation,"Object rotated",out pending,out error,publicationCheckpoint);
+        internal bool BeginMove(string id,Vector3 position,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
+            BeginPlacement(id,data=>data.position=position,"Object moved",out pending,out error,publicationCheckpoint);
+        internal bool BeginResize(string id,float scale,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
+            BeginPlacement(id,data=>data.scale=scale,"Object resized",out pending,out error,publicationCheckpoint);
+        bool BeginPlacement(string id,Action<RoomObjectData> change,string message,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
@@ -25,11 +31,11 @@ namespace Maestro.Quest.Creation
             var write=WriteGate.TryWrite(out error);if(write==null)return false;
             RoomJournal.PreparedEdit edit=null;IDisposable pose=null;var poseOwner=new object();
             try {
-                var data=Pose(Read(id),Find(id).transform);data.rotation=rotation;
+                var data=Pose(Read(id),Find(id).transform);change(data);
                 if(!journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out error))return false;
                 pose=Find(id).GetComponent<RigidRoomItem>()?.HoldForEdit(poseOwner);
                 pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,pose,
-                    ()=>CanChangeObject(id,false,true,false,out var issue,poseOwner)?null:issue,"Object rotated",true,publicationCheckpoint);
+                    ()=>CanChangeObject(id,false,true,false,out var issue,poseOwner)?null:issue,message,true,publicationCheckpoint);
                 edit=null;write=null;pose=null;return true;
             } finally {pose?.Dispose();edit?.Dispose();write?.Dispose();}
         }
@@ -65,6 +71,7 @@ namespace Maestro.Quest.Creation
             internal bool Accepted=>accepted;
             internal bool Published=>publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
             internal string InterruptionStatus=>accepted?
+                temporary?"The temporary room edit was accepted. Stopping cannot undo it; use Undo or discard the temporary room. Keep a snapshot to save it.":
                 Published?"The room edit was accepted and saved. Stopping cannot retract it; inspect the room before retrying.":
                 "The live room edit was accepted. Saving is still pending or unconfirmed; stopping cannot retract it. Inspect its outcome before retrying.":null;
             string CurrentIssue()
