@@ -114,5 +114,31 @@ namespace Maestro.Quest.Tests
             }
             Assert.That(journal.Read(drawing.id).points[1],Is.EqualTo(Vector3.up*.2f));
         }
+        [Test] public void BackgroundCandidatePreservesNewRuntimeTimeAndViewpointWithoutChangingItsCheckpoint()
+        {
+            var journal=Room();Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,worldTime:new RoomWorldTime{settings=new(){running=true}}));
+            var added=Block();Assert.IsTrue(journal.Prepare(new[]{added},Array.Empty<string>(),out var edit,out _));
+            using(edit){
+                string checkpoint=JsonUtility.ToJson(edit.Snapshot());
+                journal.AdvanceWorldTime(.2);journal.UpdateViewpoint(new RoomViewpoint{active=true,position=Vector3.left},exact:true);
+                double current=journal.WorldSecond;Assert.IsTrue(edit.RuntimeProgressChanged);
+                Assert.IsFalse(edit.Current(journal));Assert.IsTrue(edit.Current(journal,allowRuntimeProgress:true));
+                Assert.AreEqual(checkpoint,JsonUtility.ToJson(edit.Snapshot()));
+                Assert.IsTrue(edit.Accept(journal,out var error,allowRuntimeProgress:true),error);
+                Assert.AreEqual(current,journal.WorldSecond);Assert.AreEqual(Vector3.left,journal.Viewpoint.position);
+                Assert.IsTrue(journal.Undo());Assert.IsNull(journal.Read(added.id));Assert.AreEqual(current,journal.WorldSecond);
+            }
+        }
+        [Test] public void BackgroundToleranceNeverAllowsAuthoredChangesOrClockSeeks()
+        {
+            var journal=Room();var block=Block();journal.Apply(new[]{block},Array.Empty<string>(),out _);
+            Assert.IsTrue(journal.Prepare(new[]{Block()},Array.Empty<string>(),out var first,out _));
+            using(first){journal.UpdatePlacement(block.id,Vector3.up,Quaternion.identity);Assert.IsFalse(first.Accept(journal,out _,allowRuntimeProgress:true));}
+            journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,worldTime:new RoomWorldTime{settings=new(){running=true}});
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var seek,out _,worldTime:new RoomWorldTime{second=10}));
+            using(seek){journal.AdvanceWorldTime(.2);Assert.IsFalse(seek.Accept(journal,out _,allowRuntimeProgress:true));}
+            Assert.IsTrue(journal.Prepare(new[]{Block()},Array.Empty<string>(),out var other,out _));
+            using(other){journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,worldTime:new RoomWorldTime{second=20});Assert.IsFalse(other.Accept(journal,out _,allowRuntimeProgress:true));}
+        }
     }
 }

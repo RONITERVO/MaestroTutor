@@ -62,6 +62,31 @@ namespace Maestro.Quest.Interaction
         public bool Dynamic => profile != ItemPhysics.Fixed;
         public bool Simulating => body && !body.isKinematic;
         public bool AnimationOwned => owners.Count > 0;
+        internal bool OwnedOnlyBy(object owner)=>owner!=null&&owners.Count==1&&owners.Contains(owner);
+        // A pending placement edit holds only its own body, not the world. A
+        // cancelled unchanged hold restores the admitted trajectory; a teleport,
+        // grab, physics transition or competing owner invalidates that trajectory.
+        internal IDisposable HoldForEdit(object owner)
+        {
+            if(owner==null||owners.Count!=0)throw new InvalidOperationException("The object already has a motion owner");
+            var velocity=FlowMotion;SetAnimationOwner(owner,true);
+            return new EditHold(this,owner,MotionRevision,velocity.Linear,velocity.Angular);
+        }
+        sealed class EditHold:IDisposable
+        {
+            RigidRoomItem source;readonly object owner;readonly uint revision;readonly Vector3 linear,angular;
+            internal EditHold(RigidRoomItem source,object owner,uint revision,Vector3 linear,Vector3 angular)
+            {this.source=source;this.owner=owner;this.revision=revision;this.linear=linear;this.angular=angular;}
+            public void Dispose()
+            {
+                var previous=source;source=null;if(!previous)return;
+                bool restore=previous.OwnedOnlyBy(owner)&&previous.MotionRevision==revision;
+                previous.SetAnimationOwner(owner,false);
+                if(!restore||!previous.body||previous.item.Grab.isSelected)return;
+                previous.preparedVelocity=linear;previous.preparedSpin=angular;previous.preparedMomentum=true;
+                previous.Refresh();
+            }
+        }
         public void Initialize(RoomItem target)=>InitializePrepared(target,null);
         internal void InitializePrepared(RoomItem target,Creation.NativePhysicsResources.Lease reservation)
         {

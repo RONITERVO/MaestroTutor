@@ -34,12 +34,17 @@ namespace Maestro.Quest.Creation
             // geometry remains owned by the candidate instead of being copied again.
             internal RoomObjectData ReadObject(string id)=>id!=null&&objectIndex.TryGetValue(id,out var value)?value.Copy():null;
             internal HashSet<string> ChangedObjects=>change.Before.Concat(change.After).Select(x=>x.id).ToHashSet();
-            internal bool Current(RoomJournal expected)=>!ended&&ReferenceEquals(owner,expected)&&owner.clock.Next==revision&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
+            // A background save can checkpoint an earlier runtime clock/viewpoint.
+            // Publication applies only the authored delta, preserving newer runtime
+            // state. Explicit clock edits still require the exact clock position.
+            internal bool RuntimeProgressChanged=>JsonUtility.ToJson(owner.viewpoint)!=viewpointState||JsonUtility.ToJson(owner.worldTime)!=timeState;
+            internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&owner.clock.Next==revision&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&
-                JsonUtility.ToJson(owner.viewpoint)==viewpointState&&JsonUtility.ToJson(owner.worldTime)==timeState;
-            internal bool Accept(RoomJournal expected,out string error)
+                (allowRuntimeProgress||JsonUtility.ToJson(owner.viewpoint)==viewpointState)&&
+                (allowRuntimeProgress&&change.AfterWorldTime==null&&change.BeforeWorldTime==null||JsonUtility.ToJson(owner.worldTime)==timeState);
+            internal bool Accept(RoomJournal expected,out string error,bool allowRuntimeProgress=false)
             {
-                error="The room changed while the edit was being prepared; inspect it before retrying";if(!Current(expected))return false;
+                error="The room changed while the edit was being prepared; inspect it before retrying";if(!Current(expected,allowRuntimeProgress))return false;
                 ended=true;
                 if(operation=="baseline") {if(baseline)owner.Set(change.Before,change.After);}
                 else if(operation=="undo") {owner.undo.RemoveAt(undoCount-1);owner.Publish(change,false);owner.redo.Add(change);}

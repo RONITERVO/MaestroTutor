@@ -455,9 +455,11 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("animation.play",editor.Identity(block),("seconds",2),("loop",false)),Time.unscaledTime,out var recording,out error),Is.True,error);
             var request=ObjectEditRequest(call);
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);var expected=Quaternion.Euler(20,90,-10);
+            for(int wait=0;wait<600&&(string)executor.Executions.Observe()["selected"]["phase"]=="preparing";wait++)yield return null;
             Assert.That(Quaternion.Angle(item.transform.localRotation,expected),Is.LessThan(.01));
-            Assert.That(item.transform.localPosition,Is.EqualTo(position));Assert.That(item.transform.localScale,Is.EqualTo(scale));
-            Assert.That(body.linearVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.angularVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.useGravity,Is.True);
+            Assert.That(item.transform.localPosition.y,Is.LessThanOrEqualTo(position.y));Assert.That(item.transform.localScale,Is.EqualTo(scale));
+            Assert.That(Mathf.Abs(body.linearVelocity.x)+Mathf.Abs(body.linearVelocity.z),Is.LessThan(.001f));Assert.That(body.angularVelocity,Is.EqualTo(Vector3.zero));Assert.That(body.useGravity,Is.True);
+            Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==id).position,Is.EqualTo(position),"The saved edit owns the invocation pose; resumed gravity may advance the native body");
             Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));
             Assert.That((string)runtime.Scheduler.Invocation(recording)["phase"],Is.EqualTo("running"));
             Assert.That(Quaternion.Angle(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==id).rotation,expected),Is.LessThan(.01));
@@ -467,6 +469,7 @@ namespace Maestro.Quest.Tests
             var source=File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-rotation.json"));var sequence=new RuleSequence {id="",name="Rotate module",program=source};
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="rotation",sequence=sequence}}},out error,out var ids),Is.True,error);
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);runtime.Scheduler.Tick(Time.unscaledTime);
+            for(int wait=0;wait<600&&runtime.Scheduler.RunningCount>0;wait++)yield return null;
             Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"));
             Assert.That(Quaternion.Angle(editor.Find("book").transform.localRotation,expected),Is.LessThan(.01));
             yield return new WaitForFixedUpdate();Assert.That(body.linearVelocity.y,Is.LessThan(0));
@@ -1181,6 +1184,7 @@ namespace Maestro.Quest.Tests
             var view=agent.Observe();Assert.That(view.visible,Is.True);Assert.That(view.workspaceView,Is.EqualTo("rules"));Assert.That(view.rules.selected.program,Is.EqualTo(workshop.Selected.program));
             if(!string.IsNullOrEmpty(evidence))File.WriteAllText(Path.Combine(evidence,"book-after-native-edit.json"),RoomAgentWire.Serialize(view));
             yield return Click("Try action");yield return null;
+            for(int wait=0;wait<600&&runtime.Scheduler.RunningCount>0;wait++)yield return null;
             Assert.That(Quaternion.Angle(book.transform.localRotation,Quaternion.Euler(20,105,-10)),Is.LessThan(.02f));
             yield return Click("Undo rules");Assert.That(workshop.Selected.program,Is.EqualTo(saved.program));
             // The type selector is catalog-driven, including actions with no old enum adapter.

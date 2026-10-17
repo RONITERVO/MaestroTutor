@@ -2683,11 +2683,47 @@ the existing unreadable-evidence path. Empty or oversized primary files cannot
 become a prepared baseline. Successful wire readback allows the store to cache
 the published content's validation result without trusting serialization alone.
 
-This is a storage boundary, not a completed asynchronous editor migration.
-Existing book, program and agent edits still use their current completion paths.
-Native integration must retain candidate/resource ownership, check the live
-journal revision and lifecycle, and surface pending/failure/cancellation honestly.
+Rotation is the first native completion operation using this storage boundary.
+Other edits retain their existing completion paths; the editor migration is not
+complete. Native integration must retain candidate/resource ownership, check the
+live journal revision and lifecycle, and surface pending/failure/cancellation honestly.
 The disk fingerprint cannot prove that the in-memory room is still current.
 Bounded baseline reads and final file writes/flush/publication are still synchronous;
 native publication also needs protection against blocking retention readers and
 lifecycle transitions. Saved capacity remains unchanged.
+
+## Pending native rotation
+
+The shared object.rotation.set action now has completion duration. Its book form,
+agent request and program block use the same pending operation and receipt. The
+original synchronous editor API retains its synchronous contract; other editing
+actions have not yet migrated.
+
+A pending rotation owns one private journal candidate and one workspace writer.
+It waits for a previously dispatched autosave without blocking the owner thread,
+then prepares the saved bytes in the background. A second pending edit is refused
+before copying another candidate. Ordinary autosave dispatch waits for this edit;
+the world clock and viewer movement continue. Only the target rigid body is held.
+Cancellation restores its prior motion only if no grab, teleport, physics change
+or other owner invalidated it. Successful placement resets motion as before.
+
+The commit checks the same journal, history, live target and workspace again.
+Authored changes, including changed physics placements, invalidate the candidate.
+Runtime clock progression and personal viewpoint updates can coexist with an
+unrelated authored edit: the older checkpoint is saved, the newer live values are
+preserved, and remain dirty for the next save. An edit that changes world time
+itself still requires its exact clock position; this is not general stale merging.
+
+Native resources are prepared immediately before conditional file publication and
+journal acceptance, on the owner thread without yielding between those steps.
+A completion receipt follows confirmed saving and native application. Stop,
+loss of focus, suspension or workspace disable cancels during preparation;
+its detached worker drains without accessing a destroyed Unity owner. The final
+commit does not yield; once it begins, Stop cannot retract it. Completion callbacks
+cannot recursively publish, clear newer unsaved state, or make the operation replay.
+Observers see the accepted revision before receiving the native change event.
+
+Final file writes, flushes and replacement remain synchronous. This first native
+integration does not establish Quest frame-time acceptance or larger-world
+capacity. Removing that remaining publication wait requires an explicit native
+commit reservation, not moving an unchecked write to another thread.

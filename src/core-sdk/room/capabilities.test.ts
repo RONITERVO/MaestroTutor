@@ -75,7 +75,7 @@ it('declares instant physical effects with bounded scalar arguments that can be 
 it('discovers and validates rotation without adding a numeric action adapter',()=>{
  const id='object.rotation.set',definition=capabilityDefinition(id)!;
  expect(behaviourCatalog.adapters.ruleStep.actionIds).not.toContain(id);
- expect(definition.duration).toBe('instant');expect(definition.channels).toEqual(['wholeTarget']);
+ expect(definition.duration).toBe('completion');expect(definition.channels).toEqual(['wholeTarget']);
  const args={target:'book',pitch:20,yaw:90,roll:-10};expect(validateCapabilityArguments(id,1,args)).toBeNull();
  expect(validateCapabilityArguments(id,1,{...args,yaw:181})).not.toBeNull();
  expect(validateCapabilityArguments(id,1,{...args,yaw:'90'})).not.toBeNull();

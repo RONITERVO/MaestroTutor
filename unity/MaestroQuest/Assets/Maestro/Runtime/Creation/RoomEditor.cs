@@ -237,7 +237,7 @@ namespace Maestro.Quest.Creation
             }
             return true;
         }
-        bool CanChangeObject(string id,bool creationOnly,bool requireNative,bool allowScanLayer,out string error) {
+        bool CanChangeObject(string id,bool creationOnly,bool requireNative,bool allowScanLayer,out string error,object physicsOwner=null) {
             error=null;
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null){error="Room editor is not ready";return false;}
@@ -252,7 +252,7 @@ namespace Maestro.Quest.Creation
             if(ScanDrawingAnchor.Has(data)&&!allowScanLayer){error="Use the scanned layer controls to change its anchor, or edit its Canvas ink";return false;}
             if(creationOnly&&data.IsBuiltIn){error="Choose a user-created object";return false;}
             if(item&&item.Grab.isSelected){error="Release this object before editing it";return false;}
-            if(item&&item.GetComponent<RigidRoomItem>()?.AnimationOwned==true){error="An animation or carried prop owns this object";return false;}
+            if(item&&item.GetComponent<RigidRoomItem>() is RigidRoomItem body&&body.AnimationOwned&&!body.OwnedOnlyBy(physicsOwner)){error="An animation or carried prop owns this object";return false;}
             return true;
         }
         public bool MoveObject(string id,Vector3 position,out string error)=>EditObject(id,false,data=>data.position=position,"Object moved",true,out error);
@@ -612,7 +612,7 @@ namespace Maestro.Quest.Creation
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
             CompleteSave();
-            if (saveDispatch.Frozen || journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
+            if (PendingEditSave || saveDispatch.Frozen || journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
@@ -694,18 +694,18 @@ namespace Maestro.Quest.Creation
         void RefreshOwnership() {
             worldTimeTickReady=false;
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
-            if(Ownership.Suspended){StopAcousticPreparation();InvalidateNativeDisplay();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
+            if(Ownership.Suspended){CancelPendingEdit();StopAcousticPreparation();InvalidateNativeDisplay();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){ReleaseResidentCollisions(false);ResetLightControls();ResetAudioMix();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){CancelPendingEdit();ReleaseResidentCollisions(false);ResetLightControls();ResetAudioMix();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantRecoveries();ReleaseDormantCollisions();ReleaseResidentCollisions();ClearViewCapture();FinishLiquidPour(out _);
-            RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
+            CancelPendingEdit();RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid){rigid.BindPhysicsInputs(null);rigid.ContactStarted-=ContactStarted;} }
         }

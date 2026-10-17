@@ -243,7 +243,7 @@ namespace Maestro.Quest.Tests
             Assert.That(BehaviourProgram.TryParse(BehaviourProgram.FromInvocation(json),out var program,out error),Is.True,error);
             Assert.That(program.SimpleSteps(),Is.Null,"Old tray adapters must not invent or discard unknown fields");
             var machine=new ProgramMachine(program,null);Assert.That(machine.Advance(out var yielded),Is.EqualTo(ProgramYield.Action));
-            Assert.That(yielded.Definition.Id,Is.EqualTo("object.rotation.set"));Assert.That(yielded.Instant,Is.True);
+            Assert.That(yielded.Definition.Id,Is.EqualTo("object.rotation.set"));Assert.That(yielded.Instant,Is.False);Assert.That(yielded.AwaitCompletion,Is.True);
             Assert.That(JToken.DeepEquals(yielded.Arguments,call.Arguments),Is.True);
             Assert.That(BehaviourCatalog.TryCall("object.rotation.set",1,arguments,out _,out _),Is.False);
             arguments["yaw"]=90;arguments["seconds"]=1;Assert.That(BehaviourCatalog.TryCall("object.rotation.set",1,arguments,out _,out _),Is.False);

@@ -12692,3 +12692,50 @@ remove the remaining publication wait without allowing stale edits, premature
 success, leaked reservations or replay after interruption.
 
 Evidence: .quest-evidence/prepared-room-save-20261017/verified.json.
+
+## First native pending-save integration — 2026-10-17
+
+Object rotation now enters the bounded prepared-save path through the shared
+capability module used by the original book form, agent and programs. Its catalog
+duration changes from instant to completion. The operation keeps its journal and
+workspace ownership until preparation drains; it reports pending, failure and
+confirmed completion rather than treating queue admission as success.
+
+Runtime time progression and personal viewpoint movement can coexist with an
+unrelated prepared edit without rewinding those live values. The saved checkpoint
+can be older, so these newer runtime values remain dirty after the edit completes.
+Authored changes and physics placement capture still invalidate stale candidates;
+explicit world-time edits retain their exact-clock requirement.
+
+Only the target body is held while its rotation is prepared. Cancellation restores
+the previous trajectory only if the motion owner and physics revision still match.
+Teleport, grab, changed physics and another owner invalidate it. Disable/focus
+loss/suspension cancels before publication, and detached cleanup never accesses a
+destroyed Unity object. Final native preparation, conditional file publication and
+journal acceptance remain a non-yielding owner-thread commit.
+
+This migrates the shared rotation action, not every edit. Final publication still
+does synchronous filesystem work; no Quest latency or large-world capacity claim
+is made. Other edit operations, a publication reservation and device/provider/
+release acceptance remain outstanding. Current saved limits are unchanged.
+
+Native completion publishes its accepted revision and saved/dirty status before
+notifying observers. A callback that captures newer runtime state keeps that
+state dirty. The non-yielding commit also refuses recursive completion and ignores
+retraction attempts once commit begins; the saved operation remains one-shot.
+
+Final validation passes **1376 EditMode and
+51 selected PlayMode tests**, with zero failures or
+skips, including all eight new pending-edit cases and the shared book/program/
+receipt rotation checks. The earlier broad run passed 1,133/1,135 PlayMode cases:
+two new motion fixtures tried to launch the existing fixed block. Both now use a
+dynamic ball and pass in the final run, which includes the later frame and
+completion-callback guards. The web catalog and book editor pass 62 tests.
+
+All 3,200 final frozen native inputs match the tested mirror except the four
+documented Configure outputs. All 14 preserved local files remain unchanged.
+Only rotation's description/duration and native catalog provenance changed.
+The earlier offline journeys and Android compilation remain pinned to a12cf3db.
+No headset, paid provider, signing, deployment or Meta operation ran.
+
+Evidence: .quest-evidence/native-pending-edit-20261017/verified.json.
