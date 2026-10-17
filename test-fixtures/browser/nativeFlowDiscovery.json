@@ -1,0 +1,112 @@
+{
+  "waiting": {
+    "budget": {
+      "step": 17,
+      "reservations": 2,
+      "executions": 1,
+      "units": 524288,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "captures": 0,
+    "collisionReads": 0,
+    "collisionCandidates": 0,
+    "cavityReads": 0,
+    "cavityCandidates": 0,
+    "probes": 0,
+    "pathSegments": 0,
+    "islandQueries": 0,
+    "islandMembers": 0,
+    "graphEdges": 0,
+    "objects": 7,
+    "nativePending": false
+  },
+  "resumed": {
+    "budget": {
+      "step": 23,
+      "reservations": 2,
+      "executions": 1,
+      "units": 299,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "captures": 1,
+    "collisionReads": 7,
+    "collisionCandidates": 21,
+    "cavityReads": 2,
+    "cavityCandidates": 6,
+    "probes": 3,
+    "pathSegments": 32,
+    "islandQueries": 0,
+    "islandMembers": 0,
+    "graphEdges": 7,
+    "objects": 7,
+    "nativePending": false
+  },
+  "initial": {
+    "budget": {
+      "step": 2,
+      "reservations": 1,
+      "executions": 1,
+      "units": 894,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "captures": 1,
+    "collisionReads": 10,
+    "collisionCandidates": 60,
+    "cavityReads": 4,
+    "cavityCandidates": 24,
+    "probes": 6,
+    "pathSegments": 64,
+    "islandQueries": 0,
+    "islandMembers": 0,
+    "graphEdges": 14,
+    "objects": 10,
+    "nativePending": false
+  },
+  "movedObstacle": {
+    "budget": {
+      "step": 2,
+      "reservations": 1,
+      "executions": 1,
+      "units": 894,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "captures": 1,
+    "collisionReads": 10,
+    "collisionCandidates": 60,
+    "cavityReads": 4,
+    "cavityCandidates": 24,
+    "probes": 6,
+    "pathSegments": 64,
+    "islandQueries": 0,
+    "islandMembers": 0,
+    "graphEdges": 14,
+    "objects": 10,
+    "nativePending": false
+  },
+  "physicsFirst": {
+    "budget": {
+      "step": 15,
+      "reservations": 2,
+      "executions": 1,
+      "units": 180,
+      "unitLimit": 524288,
+      "objectLimit": 66
+    },
+    "captures": 1,
+    "collisionReads": 8,
+    "collisionCandidates": 8,
+    "cavityReads": 1,
+    "cavityCandidates": 1,
+    "probes": 1,
+    "pathSegments": 0,
+    "islandQueries": 1,
+    "islandMembers": 3,
+    "graphEdges": 2,
+    "objects": 8,
+    "nativePending": false
+  }
+}

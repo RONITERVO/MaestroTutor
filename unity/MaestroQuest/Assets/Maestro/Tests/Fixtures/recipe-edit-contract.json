@@ -1,0 +1,253 @@
+[
+  {
+    "name": "set a part",
+    "call": {
+      "id": "object.recipe.edit",
+      "version": 1,
+      "arguments": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 3,
+        "parts": [
+          {
+            "id": "arm",
+            "parent": "root",
+            "shape": "box",
+            "position": {
+              "x": 0,
+              "y": 0.2,
+              "z": 0
+            },
+            "size": {
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.1
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 0.4,
+              "g": 0.5,
+              "b": 0.6,
+              "a": 1
+            }
+          }
+        ],
+        "removeParts": [],
+        "tracks": [],
+        "removeTracks": [],
+        "duration": 2,
+        "loop": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "remove exact track",
+    "call": {
+      "id": "object.recipe.edit",
+      "version": 1,
+      "arguments": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 3,
+        "parts": [],
+        "removeParts": [],
+        "tracks": [],
+        "removeTracks": [
+          "arm"
+        ],
+        "duration": 2,
+        "loop": false
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "invalid quaternion",
+    "call": {
+      "id": "object.recipe.edit",
+      "version": 1,
+      "arguments": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 3,
+        "parts": [
+          {
+            "id": "arm",
+            "parent": "root",
+            "shape": "box",
+            "position": {
+              "x": 0,
+              "y": 0.2,
+              "z": 0
+            },
+            "size": {
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.1
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 2
+            },
+            "color": {
+              "r": 0.4,
+              "g": 0.5,
+              "b": 0.6,
+              "a": 1
+            }
+          }
+        ],
+        "removeParts": [],
+        "tracks": [],
+        "removeTracks": [],
+        "duration": 2,
+        "loop": false
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "invalid revision",
+    "call": {
+      "id": "object.recipe.edit",
+      "version": 1,
+      "arguments": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 0,
+        "parts": [
+          {
+            "id": "arm",
+            "parent": "root",
+            "shape": "box",
+            "position": {
+              "x": 0,
+              "y": 0.2,
+              "z": 0
+            },
+            "size": {
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.1
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 0.4,
+              "g": 0.5,
+              "b": 0.6,
+              "a": 1
+            }
+          }
+        ],
+        "removeParts": [],
+        "tracks": [],
+        "removeTracks": [],
+        "duration": 2,
+        "loop": false
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "duration limit",
+    "call": {
+      "id": "object.recipe.edit",
+      "version": 1,
+      "arguments": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 3,
+        "parts": [
+          {
+            "id": "arm",
+            "parent": "root",
+            "shape": "box",
+            "position": {
+              "x": 0,
+              "y": 0.2,
+              "z": 0
+            },
+            "size": {
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.1
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 0.4,
+              "g": 0.5,
+              "b": 0.6,
+              "a": 1
+            }
+          }
+        ],
+        "removeParts": [],
+        "tracks": [],
+        "removeTracks": [],
+        "duration": 31,
+        "loop": false
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "no hidden autoplay request",
+    "call": {
+      "id": "object.recipe.edit",
+      "version": 1,
+      "arguments": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 3,
+        "parts": [
+          {
+            "id": "arm",
+            "parent": "root",
+            "shape": "box",
+            "position": {
+              "x": 0,
+              "y": 0.2,
+              "z": 0
+            },
+            "size": {
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.1
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "color": {
+              "r": 0.4,
+              "g": 0.5,
+              "b": 0.6,
+              "a": 1
+            }
+          }
+        ],
+        "removeParts": [],
+        "tracks": [],
+        "removeTracks": [],
+        "duration": 2,
+        "loop": false,
+        "playing": true
+      }
+    },
+    "valid": false
+  }
+]

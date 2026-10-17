@@ -3,7 +3,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { TOKEN_CATEGORY, TOKEN_SUBTYPE, buildToken } from '../../core/config/activityTokens';
-import { selectBlocksSilentObserver } from './uiSlice';
+import { selectBlocksSilentObserver, selectActiveFlagTokens, selectIsAgentWorking, selectIsSending, selectIsResponsePending } from './uiSlice';
 
 describe('silent observer activity blocking', () => {
   it('ignores its own local trigger and observer transport phases', () => {
@@ -39,4 +39,14 @@ describe('silent observer activity blocking', () => {
       expect(selectBlocksSilentObserver({ activityTokens: new Set([token]) })).toBe(true);
     }
   });
+});
+
+it('shows agent activity without blocking conversation or the passive speech observer', () => {
+  const token = buildToken(TOKEN_CATEGORY.AGENT, TOKEN_SUBTYPE.TASK);
+  const state = { activityTokens: new Set([token]) };
+  expect(selectIsAgentWorking(state)).toBe(true);
+  expect(selectActiveFlagTokens(state)).toContain(token);
+  expect(selectIsSending(state)).toBe(false);
+  expect(selectIsResponsePending(state)).toBe(false);
+  expect(selectBlocksSilentObserver(state)).toBe(false);
 });

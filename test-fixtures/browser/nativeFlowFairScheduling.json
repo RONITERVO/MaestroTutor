@@ -1,0 +1,76 @@
+{
+  "incumbents": 7,
+  "vesselsPerGroup": 16,
+  "trace": [
+    {
+      "frame": 0,
+      "contents": {
+        "sessionId": "499cd03044194eb78df4fadd9ef07425",
+        "phase": "waiting",
+        "contents": {
+          "amountMl": 400.0,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 0.0,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": "Liquid flow is waiting for work capacity. Ready groups take turns automatically; saved quantities are preserved."
+      },
+      "budget": {
+        "reservations": 1,
+        "units": 0,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 5219,
+        "executions": 0,
+        "executionLimit": 32,
+        "queued": 1,
+        "queueLimit": 64,
+        "units": 0,
+        "unitLimit": 524288
+      }
+    },
+    {
+      "frame": 1,
+      "contents": {
+        "sessionId": "a777bf60fb6f4781848f3349fbe21e94",
+        "phase": "flowing",
+        "contents": {
+          "amountMl": 383.9616933816729,
+          "savedAmountMl": 400.0,
+          "capacityMl": 500.0,
+          "transferredMl": 16.038306618327088,
+          "spilledMl": 0.0
+        },
+        "temporary": false,
+        "error": ""
+      },
+      "budget": {
+        "reservations": 1,
+        "units": 61424,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "schedule": {
+        "step": 5220,
+        "executions": 1,
+        "executionLimit": 32,
+        "queued": 0,
+        "queueLimit": 64,
+        "units": 61424,
+        "unitLimit": 524288
+      }
+    }
+  ]
+}

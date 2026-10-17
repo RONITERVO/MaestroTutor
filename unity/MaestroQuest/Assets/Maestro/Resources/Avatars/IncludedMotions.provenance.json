@@ -1,0 +1,918 @@
+{
+  "version": 1,
+  "packId": "maestro.azure-violet",
+  "revision": 2,
+  "manifestSha256": "479796ebee7036e11fa1ccc038f0b03b0a2487b297d3f97c4af85fcf48f5655d",
+  "avatarSha256": "dcd59fb02d378322b656c2cfbe9851d08229ac3a618e90ad5aa06eac7c88759c",
+  "sourceCollection": "maestro-new-animations",
+  "sourceFileCount": 180,
+  "uniqueMotions": 178,
+  "motionBytes": 65010976,
+  "source": "Meshy exports supplied by the project owner for this avatar",
+  "planConfirmation": "The project owner confirmed a paid Meshy plan on 2026-10-02. No account verification was performed.",
+  "sourceModelProvenance": "IncludedMaestro.provenance.json",
+  "review": "All exports validated through the native extractor. Two representative clips matched source transforms and baked meshes. Full visual, locomotion and Quest acceptance remains pending. Folder observations are not playback or loop settings.",
+  "observations": [
+    {
+      "sourceSha256": "ae09702e9f7c729819d6c8e9b42977da62be394669e00523a51808ff68a45997",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_360_Power_Spin_Jump.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e74dfe558886aae15b72d58a9aca600e51ca23d703c4f261d1d32e07f7a104ba",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_All_Night_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3607078407e39ee31378f183eb44aa81f968ac82bf996def7b6419dec21071b0",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Arm_Circle_Shuffle.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2a1c8d0c4b6351b0cdf94307485a570fe3c4582a5c78d8d1405028306a9313a3",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Backflip_and_Hooks.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "29e4229b5cdbb280bf22982419dd1f27a24fa09d8e56a0889626fceb15730b5b",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Backflip_and_Rise.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "de5af469ec26dc02b6dec81e02207e4545501d8a5997491110aff374f600562c",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Bass_Beats.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "97cb892130bc459eccab97d68571c182115833c1f623368b28cb3323ec930490",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Big_Heart_Gesture.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "34fc020a3fd4fa0550c9e539d1beedc2d7fe1df61937e6d9c7bbf2d675953f82",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Boom_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b801b30e69720683f6c64c5e8fc6294698a5d3b18b7883e0a2e470f21ed8fab4",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Bubble_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "f43e5b32e7350c988145ff72c221ca6e530630b8073a8c67213d8c07d3a49dc6",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cautious_Crouch_Walk_ (2).glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "03ed91b3a3124a207c0009f6a3a3a81e978f46cb2c8f7bb21e66a770c53d46e5",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cautious_Crouch_Walk_.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a2ca7ce34b0dff54cec505b0bf6b4808c1cd6fb5eb6c54170a0b19331d1a5cbd",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cherish_Pop_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d464610e908672892e0bd522572b29580090f8ea728ce1d0a2a15aa4e0894f08",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Crawl_Backward.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3b4ac1ca507286e0b9183d8c8620d110af1d27fbfd3f2147d70a2dd2a1cd99f7",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Crystal_Beads.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "7e40dbf45aea37a9f4f222772f69157b8e25e5813a60dea367790a9c04cf1acf",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Denim_Pop_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b7fd5d5c23e19a25151e986bddf96f7356265b5dc93253eb3ca9b393f69d891d",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Discuss_While_Moving.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d89e7f08c0204927c3a1cccf6d04bcaaa82b380e9a59984ba00a336d650912a5",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Female_Head_Down_Char.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "514d499b2c89d089fc3cf55e5f1810920048028a613386d1fc08b235e332a681",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Gangnam_Groove.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "9a2644bc5afa9ccc91b946f8e7f1010b0ef062ca1b2ebb239b6461912658c456",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Ground_Flip_and_Sweep.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ad48fd4b25a716943294f0906ec3ace437b5d9d50159dc6e8754e6616f9d912b",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Half_Squat_with_Thumb.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "636e9706e793e75290f8040cf0f69990067593954fa3a934314dba5b3868c2f4",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Handstand_Flip.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "8490c033da14ac297de7ed66a892fc156581fc5a6aba969b74d407301f1b6e70",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hip_Hop_Dance_2.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "73c04eb3ff89547ad5bbe2a82ce18230b682505232918df366a3139bee93fb4b",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hip_Hop_Dance_4.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "1d4ce4a52033d567e08bc07dc69005e67239405fa39a83793f0890b388ce4ebf",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Indoor_Swing.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "119538583409e68aa45a9c5f3bc6b5bf75c0e45432cc8b89e2beb4b02e8983c4",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Lean_Forward_Sprint.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ec7fb9234feaad29e4a00869149bea026e3a74d14582f4c60d9905bc9b7e85fe",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Not_Your_Mom.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "0b28d78ba794fe24a61929869767d58b84ace6da51868f405229f5a695538311",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_OMG_Groove.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "39860a54b8e626bdd1b0bb8bf2d3b7164869a7c21ef4e08521e6080df9c61c3b",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Run_to_Walk_Transitio.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "56b95272390dfb4e462c59f6a4f1edd4fb3835b0a3d5b67ef2bb5d503773b90e",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Shake_It_Off_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "c368ed26682d38895ef45303fd6c2a7c07d349b1d7afbb654fbb21f739a1937c",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Squat_Stance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ce98d20c603363f0b5c3ae7ee133b8c4dbc28afe86f7258b603d079d677d3a04",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Stage_Walk.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "c7d2fafa936a1da439626dfd6a3640afa346947f64656f43e104d7375ba12a1f",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Step_Hip_Hop_Dance.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "53d1a2b69984a0a47d195e0d9b6a8c3da82ec5876b201d5e01ad6b0facc6b3b3",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Stumble_Walk.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "93639d926a09da6158ca53e4b37d882cfba7748a3a989f3cfda5d7f8c4b0cc46",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Swim_Forward.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "9a44c9ec6075dae55ff5b30f04d97077bae6b5f451095f84feba92d70b669eae",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Tightrope_Walk.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "7f1d6ba16f68f2a76ef85398b06270c6773ad2114f3fc0a402997c8a912941ba",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Walk_Backward.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4f60ad4d371815188c108bf4f70518ab1d5fccf036eb9ae35a4d2e451bde06cc",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_You_Groove.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "740d20eba45dad10674c58d0eaa75dc37594ccc39add1e6e4f8fe06a42fbb8f7",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_baseball_pitching.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "86fd6dd5d15b97be46a2ca708b6eefa13cbabf2a41203229a8680d1d23c7d06a",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_jazz_danc.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a12c11a96573e1ee4c12b9eadec0b26618ed2fe6372936a21947bccfe6d8f250",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_slide_light.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "45de4827911805662947d80e91e5932df07764066d7f3d5e70037f64f36d2d48",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_slide_right.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "7bce04df2003411b96e00396a27b4e61a1681ae24895ea6f5a8e156487fadc55",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_sliding_rool.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "7a77887a146f65be9c4c6235e65b33774cea5569909dc40327b2efbe8be381ea",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_swimming_to_edge.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "66fdcebb4a9b29d77969c7fff27ae4bc87f2554b6cd64c7ea418456bbc591518",
+      "file": "animationIncludesMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_walking_2.glb",
+      "userObservation": "animationIncludesMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "18357691008b63f9bc208d5d55a1393763c7dc8b06a16e0ae8a2a57854d5c739",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Agree_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4b9c6a3b8e75a225e595315fcf141c44110e998d97a816540a38bd2c8cc84a3d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Angry_Ground_Stomp.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "36f23d19952798f3139be830a2ca094353d3591d364be60ce6c0ec60f302bc90",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Angry_Ground_Stomp_1.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "56c1b30a4eaef303fde33f2dfd788a815269ed11da3d2c64fc978acbd8daa8b3",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Angry_Ground_Stomp_2.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3924caafe3a5ea9af443b4f9b7d5f3f4cd7dc5052ef2011d1833895017feed4f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Angry_Stomp.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a67985698b6c4e040d6a7b57c64e61e60a312fea78437a47c5981ec2acdb2f1e",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Big_Wave_Hello.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "c6f3088afb481b077845c5270d7f50e8b750d16b98af1cc64953fb9f3577e95d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Boxing_Warmup.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "57554d885fe1b304e6f262dfa9db87746da8a41b2ca0161582d277dd8f714710",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Breakdance_1990.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "622f741fcb4a3f0dfe632d4d2284e860db5cca5ee9cfb9c15ee0967e8e04b797",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Burpee_Exercise.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b159553649a1f404a85aff3933781d7007f34e7d289298748db5b6e928b3aed7",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Call_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "023bae64713a494411b68a8652e69b6ac0625ea31a0608867ba9b8416c193b93",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cardio_Dance.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "acf722a417cd895baa3fed3f558973a59ba52b7a8a42b13382f0c93f10186acb",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Casual_Walk.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2bd22d7f2dc288ebbd1a30f63aedec85fb06cf0da070f17b4c8c8fce32ba6ce8",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cautious_Crouch_Walk_ (1).glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e3f235aafc80daa4db860a0229dcdb41d0b6037224caa751fba2373c75ee594d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cautious_Crouch_Walk_.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d89826e71bc93b8ffb2485c965ea869ec40c1ba3277d9d48c1234f229a6c4e14",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Chair_Sit_Idle_F.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ed5d5e599c2e896e72441f5644f06ebcd8c99f50c2477e1f3e52d63a2bf9c10d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Checkout_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d4f7e67bd71a6585d5d3533274aa0f441a48b582d5d6bd5c83d7253208334c39",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cheer_with_Both_Hands (1).glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "797a4ca310996ef48cf754dd62a4ddc125ede866c8cb4f2e41fbd3596b807b97",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cheer_with_Both_Hands (2).glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "6435255b90b4c2e5aa0a3c3e0a74f781c6fc3d735a3385a5353426966e35c282",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Cheer_with_Both_Hands.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e1e3743094a6ba4ebc0dd649e6f0c1c013ee410db4ee634f58fe5f15e70ff6ba",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Collect_Object.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "17fca4d80d8bc3cb06f9c3335ac123b617a5d6980ba53bada6b0c440f2128ce6",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Confident_Strut.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e5b7837fc40e2a8a0030bef0c577f62b4adc1896710179efb429b4f3551f3971",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Confident_Walk.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "6e0bbe9296179be6fe554b4d15ed86fa974c687ee819299857ff41dd00ddf6fc",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Confused_Scratch.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "18f59dc3247e81bba0ac9ff2eb6e17d2a535ea1afc707055d0cb156c09b56b61",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Crawl_Backward_inplac.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "8618a79453fe270b4de89b1c2b81bea695c88f7ee6ec50bd6a0004b754527929",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Depressed_Full_Turn_L.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3d2fd8bd4fa08a62fa2038cfa911af2518ff7bcf27b3bb3da9efe13d5d8effe7",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Dont_You_Dare.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "eec3eb2389efe74fd5c675cb9a526b47a0118fa32862d7274ba08c064238c85a",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Excited_Walk_F.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "c1ed9884fd8aef813cd4537eecb0d999ab7916a1a2bc018a7e043e27d872e929",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Fast_Lightning.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e11ce713d67f213b34a87b4b37509a9dd1cdc41c79e99227e73c5249650f627f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Female_Bend_Over_Pick.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2f9227d0e47d926aeb9bae1e2eabe4db4bc1d0abaeb32e5375eec6f771d72631",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Female_Crouch_Pick_Fr.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "91bfac1898ed0ef56040950774449fb1789615e35acb238007621c451e92bd0b",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Female_Crouch_Pick_Th.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "351b580637534ac527dfd676353609037829728f51e4895429919562ab524db6",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Female_Crouch_Pick_Up.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "12d0d2eeb8ec4d41f2c86cacb49095ca9cb12ce41c35b73330578c174218aa2c",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Finger_Wag_No.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ce1fc2c0e96f9c9dbbdb9a974dda9c69baa64568eb6ce967429023770b48a13f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Flirty_Strut.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2db47b1f4d285cfb8ea04bcc87eaced4878fe53038695bebda78649021a766c8",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Flirty_Strut_inplace.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "eedf9e3aa4112fb0cb6c7a44adb9d5046c8ab6780d42cd2872f8682bfb05d1b2",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Formal_Bow.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "7e02e9fe60d9c202b7604f128f213cf0cf653402adec8530755a5c1f217de349",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Frustrated_Turn_Right.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2d02470a1a65cabb58018a05a5ae09043684df24b3571862577099bfb9f5386f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_FunnyDancing_01.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "48c529b7957212244946f0c120f31f9e528d406aed5afac73c04370278360b1c",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_FunnyDancing_02.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b742bc4936a91a855f477571ede06436223c4d507bd8f94d40a3e2bd05c115e4",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_FunnyDancing_03.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "1aca504507e22041dba9f025ede346421b4a7be9699be8219e1be995292767de",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Gentlemans_Bow.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4d47eb2a7d3b7f94695cab8fefca91f3ca2f884f170721965ec9377f8f97c8df",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hand_on_Hip_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "5d3253734363ebd7cf2c2e4c5632f1076ce08a633479b0fbf9331a0d16c601c5",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Happy_Sway_Standing.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "719e3b7cf72a220dfcfba73219c14fc69eaa1386d2ec0472753bab88f01671fc",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Happy_jump_f.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "04d32187e7c5c750c2b2ae0b84345d99bb1b1aec05ba55c549a4f1775cd80c70",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Headache_Relief.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ec634518dbc74689b4e49c25f4ba621f1c39a31fd4948ec61d1db000fc560284",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hello_Run.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e819a925bb74728e9d125985b181f901b14706c8b909d92a943971abbeb9a106",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hip_Hop_Dance.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a8b7fe4c79a6afa7470deca840b4a01038ca3f48da9288dea07d45c73f2818b8",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hip_Hop_Dance_1.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d6c515c07e3d599f4b8f9eafb7c23929b3051329beb832ad238b47f7cc0326ca",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hip_Hop_Dance_3.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "929b44ccb814b62b885bee8662d052203dd277d1dff419fb5a8e21ba9e40c453",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Hop_with_Arms_Raised.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "23ecbb6da4f007d7fcf2aa9968ec448b66d68e3a95cf73d7a89bedca8dbd1eb8",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_03.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4b6f2b1aac8d12d3d514144818eb7eff3f91171e7c716e0ea4d9e4b5be6bd998",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_11.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "f71198e09755b56c4df16fbd0baa6594d8dc7207257da6a9e64a2dcb41eafd67",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_12.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b41e67cd3a8aa686ef4dc858828f2a817ea0b19290157cb3dd31bc076306e267",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_13_righthandpreparethrow.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d1262a669f3d2433f1d2c4f0c186a96b573cf6d8ecfb389acc9354a7936ad550",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_14_throwrighthand.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d89fff96461a5c62333cfeae0eeca1e39a9a9ce2b6b0c592b9209cab5e50381b",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_15.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "1d452a7aef2d8d655e5ab2a9ef8e0c609fc258f810cbba4f0cf1aede93d3e305",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_3.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d4af5fa3589b3f991d28dfb248980cf023204265a8686664b0dcc65a855c53a2",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_4.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "5d866bb92b3f3df41b5737990b1280da39506928e86ebb87685b9ecc15b0d21d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_6.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "fd788eea42b1ecfbcea1ffbfacf41b83e868687d7b4163523fdc68e859f90b8e",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_7.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "26bb4d7b926e8dabd36d6a2d98eef4c25560bef6e7ad6af27d33017178a60be5",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_9.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e8993fac18c08441c2f2bac1c2272d58db3b4d0d9d76a1e7222614ff44428037",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_Step_Turn_Left.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "bcc96678ff5f7dca04bbb0212fc357b2a623fe89cb946a17a0038faf98a7226b",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_Turn_Left.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "fb3306afced00e5f7ab398f2b94531e7bdac2bc5bec5b029eae14550dd6ccbff",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Idle_Turn_Right.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "1fd3e0ea17158ae9207f477307c4178872a5a706e343a3aca67d53e62586c348",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Joyful_Dance_with_Han.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "56a274c212424f57a610e29b05e9221b3e242142427100e1bb875d800447d36f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Jump_Rope.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3d01b13e8dbe04b902b7673cd208ad41558ed234287e10d881f8d6fe0c51eb7f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Kick_a_Soccer_Ball.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "370408abb6d9c3f19b60b53ae10110bc84a71d8d10a9c33b09cca1ffd636bd9f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Lie_Down_Hands_Spread.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "f0d1fc86eee8affc84ee6995be89f23f33132312d4c32507f88289b6189d0340",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Listening_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "6580c0af8ba7dc414d090010ec6d1eb022625ccc65030c3eb1aa87114e178820",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Long_Breathe_and_Look.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2f7257751060236a24d52bfc797fe730caa8d3a14bb6414b3ab8579fce86ea03",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Look_Around_Dumbfound.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "c606b08b30ccd5a8cf39126da716c485d8c6cdda271fe6d945bccb720e1f8fde",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Look_Back_and_Sit.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ef96dba59dabed125d9f814584b70c4288936e54a2e7a5b61436bb21e24b92ad",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Love_You_Pop_Dance.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a3f67a2a682afdedf20a5ec71ad7c23338f46ddcb55c3e1606920fd18f606932",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Magic_Genie.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4dfacbec43ff81ade90d4b4c40ab1c877210a19b493260abd081ec9f2cb10f91",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Mirror_Viewing.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a5f3d71b43198cac7244ca161499ac7b48a084a3c105eef387d6f59dce771690",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Motivational_Cheer.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "8ad9270dc2aa8f79aff72d829d12fca45b70af217947a84538a994d60b392606",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Personalized_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "8cdcc4f8e1f9785748e0d0731287cc86022db42556b1b72701af5e1e63fe8d5f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Phone_Call_Gesture.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "378b79b9f3d156f412f5a39fffb562e585540406afb40c11ab0fe4d0492cad20",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Phone_Conversation.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "9f8dbd5c6b6fd83f712d8a5f22ff6c333f48b1673dedcfb5a632c61cc536cb89",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Pod_Baby_Groove.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "5690009361c3d10f0bdf7c365567af6990208e9513c8079f4d4944903b739144",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Pop_Dance_LSA2.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d7ebc2830605225c8ab0ee8a6b2637b822d159af4dce9148a4c83787fe24529b",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Quick_Walk.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "cd06ecfb70edbd81913cc7b485c29e664ea5380e93d3588a46b9681b5f2dad20",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Red_Carpet_Walk.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3cf9aa557653056a7380cda5f0a21c68de21139c80bc1b3a1444ee488add7782",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Run_02.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "79c7a8179d2c92c5093c597d1de781c7dc4a7b699cc308ba1dbc83c0be577412",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Run_03.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b0d3a890092c93cdbbbfb657a26d1a24bb995d2217286e2c71cecb022e584b75",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Scheming_Hand_Rub.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "baa1a1fa9666a705f81214ec12b817649008b26df8e54e79ca1c67605f3a4618",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Seated_Fist_Pump.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "6023065ea5e979dab2cdb8f931cab8e93323e3afe0bfd01ec3029d3963df64cf",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Short_Breathe_and_Loo.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "19cd2b1e481e5edd9c959b957b3834f8e29dcbdfce7e3f3804bf50f9da7796ab",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Shrug.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "25cc02c7543d2dad9f60da5d33882db8f38ff04e6bf914b4a1a977cfdfa47d22",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_Cross_Legged.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "64ec49e28d4e6f4d42d5881942a8d36c0de10ee05230645d71a66aba1c5e404b",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_Cross_Legged_on_F.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "0b8fc86fdbaead287511e805a8729ab16bc0488f3019085aa7dd8619a496064c",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_Finger_Wag_No.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4186b56a0cddede795ebba005cd2aa205a007c8468e956437a795212a2b829fa",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_Hands_on_Head_Lea.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "2ba3b24a9332ea570d59c479433a81c81c29cabd7c07e77e05000e92d7763400",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_Thumbs_Up_Right.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "6a23a5668ea2b4bce2007d7d6bef68582a330b228219db0d6012c8bd04d761b3",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_and_Drink.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "307e97b54d145ba44255d3c9497ae679e6a2e88f1c95863534daf7e287cc1af9",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sit_to_Stand_Transiti.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "7a9c5aa96deb9c6e0364a0c2d047efbf2c3f0447ffa2dcdfdfd891c234324328",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sitting_Answering_Que.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d0bbd3bb9d8f8208ccde167a895511d356c1344c9a0f2fd144b6da45c47fe4df",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Skip_Forward.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ba65a4d116fa433c08e1ba8b2fcad480e8e48775a649a4636b849365327641ec",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sleep_Normally.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "55fb147c654a4bf1d960d70e67cbe69951967caa4fd4b15d8341da643de52c48",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Stand_Talking_Angry.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "45a2373d785cd1878f7633212d5156f02536c663c7af6492d7638946faa8dcaa",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Stand_To_Side_Lying.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "e0eedc0134927821e89d3ec74fc9bdef7fb20e61aa47b04d23c7b39c745d9fc7",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Stand_and_Chat.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "730a9ef73c0ca7687d3c2c3a524af6403decbfcdcb95e196346096b1a260262f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Stand_and_Drink.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b7da7f234834bb3085718d5cdc7d6eeb64ddfdcb5b292b0cfad424d8c63b651d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Sumo_High_Pull.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "5e87417ff07439076be449f09034f0177d2d73b80acad7ff82a0093cc1ddbbbf",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Superlove_Pop_Dance.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "4991182cb5a31e8629d9e0165d064b2d8ab680b86fb56d7629954a35f26f2945",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Swim_Idle.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "42977b98c22fdc023f1bb79287c682166abb9707dc797b5ffbf5130a08658110",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Talk_Passionately.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "af317695d828750892832ba36ddf0f5fbfb20348af1cbb3400ad38a56632101c",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Talk_with_Hands_Open.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "fabe814cc08ae4c043764ef860772f02b8afb9b08c3faef72b57df942480fad7",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Talk_with_Left_Hand_R.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "a2ef0875da503fa2ea76b68bfb289241bbf583eca1b0b64985d13aed2e7cdcb6",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Talk_with_Left_Hand_o.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "df9207f121450e6c29d93b47efede731407cae5b2b8dfcc53a3b2444658776ae",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Talk_with_Right_Hand_.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "932aef0f4532fe41e3cfea55a83e5958a7715ccf673c2beb7fd720b2bd02c98a",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Texting_Walk.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "bf220f710a1470346ca86838c3afcc9ea78e9ebca67ce999de3dd98aced20472",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Thoughtful_Walk.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d3cae3f1a58930c192b5cb47e6f5e6898e76c0ddc0db51d841b92baa873b79f4",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Tightrope_Walk_inplac.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3c8b5e63db07d502993285a9e06eca089fa4c14199d9b269658846a6f3550042",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Victory_Cheer.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "5cd2e45a6173c31186323bf6406c150c9f602a4aee8b4abdcf684cd113b2aa54",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Walk_Backward_inplace.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "88730c05c6323316f9a74eaeb06e1c8ee027d9bc89c35262f993889288cf4211",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Walk_Slowly_and_Look_.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "9bec92eddb1ff4ef19a429c9a5ee96c5ca45946554c53301f20e8881d1164ecc",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Walking_Woman.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d97fb94173aa81d17ab84e84d7d00baa6f4ca823abbc56443bbd51b150dd1347",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Walking_with_Phone.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "b4b403da05d69d8cfbfc26c4252c0ec4773208b7645bc56bb121a6fc61c6319d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_Wave_One_Hand.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "d669725556c4645995bea1cb0a6e0f96e377f7f4f3cd1f5079d162ec5f18286b",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_air_squat.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "800912b6a609a1ab0e475c2b7ca5311be857655d8a2a97dee3b9165ce45fc878",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_bicep_curl.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "bbb8efb10301b865ae8296fa9bbaeace1d6d249b72ae4f8e2d7e0c24d3b99722",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_bicycle_crunch.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "65c671e5865a6f392a723ca43fafc008a81e7a27822fa2761a9f9c0e5baa6a6a",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_circle_crunch.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "06142a4159c18f4b8fdd432091403c523f3a2387195014b118584e1b2b917344",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_golf_drive.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "00c942068dabc427b0af7b130cbe312f8505e918396602709044e4fe4197a4e0",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_idle_to_push_up.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "3ee13c04d87f558666d81eac2191a924880f74e0165189d81f9b22c05479617f",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_jump_push_up.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "fbe383eaa03659580525222d187d4f478e859a2801f8f66ef86b8e81d5a2081c",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_jumping_jacks.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "48a9fcc178298c8053fb57004ed7979b1bcc601aee4b54ca2154798f95661d48",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_kettlebell_swing.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "ff2b756fc39ba674c9c57861d34e1821db310b890cec5610fa207b83118dd0dc",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_open_door.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "6673deba4a450afa74933d71610c17519eeb7afcf04e521b83f076ce9e757d1e",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_open_door_1.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "15d3ce1aa76621ea03d96a275802e210edd6f414ee8cf7453e42f2b48c82299d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_push_up.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "f111cce80c3f8fc819c21e501b0e8d624b7a53feb4c470c0674a0dcfdcf02216",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_push_up_to_idle.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "9d705eb1cc3522d5f0689254f671b09cd26295d989b78bb5f2c76b1648731e0d",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_situps.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "750efac10a3851f6e2e29bbcb4836889eef049b480aa9c62559ff36dfe572802",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_walking_2_inplace.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    },
+    {
+      "sourceSha256": "cfcd77a51f320018668d934c650533a0fe33f1c22fd9e91388857ac07018c380",
+      "file": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor/Meshy_AI_Azure_Violet_Doll_ymca_dance.glb",
+      "userObservation": "slideInPlaceorNoEasyToNoticeMovementRelativeToFloor"
+    }
+  ],
+  "activityDefaultsReview": "Five exact clips sampled at nine phases on the included model in Unity. Quiet standing for idle/thinking, Listening_Gesture for listening, two open-hand gestures for speaking. These are editable first-room defaults. Continuous Quest comfort and timing acceptance remains pending."
+}

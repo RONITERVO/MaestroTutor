@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import type { CameraImageOrigin } from '../../../../shared/imageOrigin';
 import type { ChatMessage, ReplySuggestion, GroundingChunk, MaestroActivityStage, AppSettings, RecordedUtterance } from '../../../core/types';
 import type { TranslationFunction } from '../../../app/hooks/useTranslations';
 import type { HistoryMediaOverride } from './attachmentUploads';
@@ -26,7 +27,7 @@ export interface UseTutorConversationConfig {
   captureSnapshot: (options?: boolean | {
     isForReengagement?: boolean;
     requireReadyFrame?: boolean;
-  }) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string } | null>;
+  }) => Promise<{ base64: string; mimeType: string; storageOptimizedBase64: string; storageOptimizedMimeType: string; imageOrigin?: CameraImageOrigin } | null>;
 
   // Speech
   speakMessage: (message: ChatMessage) => void;
@@ -80,7 +81,7 @@ export interface UseTutorConversationReturn {
     passedImageBase64?: string,
     passedImageMimeType?: string,
     messageType?: 'user' | 'conversational-reengagement' | 'image-reengagement',
-    options?: { triggeredByStt?: boolean }
+    options?: { triggeredByStt?: boolean; imageOrigin?: CameraImageOrigin }
   ) => Promise<boolean>;
   handleSendMessageInternalRef: MutableValue<any>;
 

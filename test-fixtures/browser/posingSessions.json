@@ -1,0 +1,307 @@
+{
+  "before": {
+    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "phase": "idle",
+    "version": 0,
+    "revision": 2,
+    "holding": false,
+    "temporary": false,
+    "joints": [],
+    "error": ""
+  },
+  "start": {
+    "selected": {
+      "id": "2f684e2967e24d1691320a2900a8a289",
+      "capability": "animation.pose",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+        "phase": "posing",
+        "version": 1,
+        "revision": 2,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.pose",
+        "version": 1,
+        "arguments": {
+          "operation": "start",
+          "target": "maestro",
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "revision": 2
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "2f684e2967e24d1691320a2900a8a289",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "phase": "posing",
+          "version": 1,
+          "revision": 2,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "96efa030b5984dd0b572cd452f5ec426",
+    "storageError": null,
+    "recovery": null
+  },
+  "active": {
+    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "phase": "posing",
+    "version": 1,
+    "revision": 2,
+    "holding": false,
+    "temporary": false,
+    "joints": [
+      "Hips",
+      "Spine",
+      "Chest",
+      "Neck",
+      "Head",
+      "LeftUpperArm",
+      "LeftLowerArm",
+      "LeftHand",
+      "RightUpperArm",
+      "RightLowerArm",
+      "RightHand",
+      "LeftUpperLeg",
+      "LeftLowerLeg",
+      "LeftFoot",
+      "RightUpperLeg",
+      "RightLowerLeg",
+      "RightFoot"
+    ],
+    "error": ""
+  },
+  "rotate": {
+    "selected": {
+      "id": "96efa030b5984dd0b572cd452f5ec426",
+      "capability": "animation.pose",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+        "phase": "posing",
+        "version": 2,
+        "revision": 2,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.pose",
+        "version": 1,
+        "arguments": {
+          "operation": "rotate",
+          "target": "maestro",
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "version": 1,
+          "joints": [
+            {
+              "joint": "Head",
+              "rotation": {
+                "x": 0.9659258,
+                "y": 0.0,
+                "z": 0.0,
+                "w": 0.258819073
+              }
+            }
+          ]
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "2f684e2967e24d1691320a2900a8a289",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "phase": "posing",
+          "version": 1,
+          "revision": 2,
+          "temporary": false
+        }
+      },
+      {
+        "id": "96efa030b5984dd0b572cd452f5ec426",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "phase": "posing",
+          "version": 2,
+          "revision": 2,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "d8e397b980974561939d8546306d8154",
+    "storageError": null,
+    "recovery": null
+  },
+  "edited": {
+    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "phase": "posing",
+    "version": 2,
+    "revision": 2,
+    "holding": false,
+    "temporary": false,
+    "joints": [
+      "Hips",
+      "Spine",
+      "Chest",
+      "Neck",
+      "Head",
+      "LeftUpperArm",
+      "LeftLowerArm",
+      "LeftHand",
+      "RightUpperArm",
+      "RightLowerArm",
+      "RightHand",
+      "LeftUpperLeg",
+      "LeftLowerLeg",
+      "LeftFoot",
+      "RightUpperLeg",
+      "RightLowerLeg",
+      "RightFoot"
+    ],
+    "error": ""
+  },
+  "jointQuery": {
+    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "version": 2,
+    "joint": "Head"
+  },
+  "joint": {
+    "x": 0.6087614,
+    "y": 0.0,
+    "z": 0.0,
+    "w": 0.7933534
+  },
+  "finish": {
+    "selected": {
+      "id": "d8e397b980974561939d8546306d8154",
+      "capability": "animation.pose",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+        "phase": "saved",
+        "version": 3,
+        "revision": 6,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.pose",
+        "version": 1,
+        "arguments": {
+          "operation": "finish",
+          "target": "maestro",
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "version": 2
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "2f684e2967e24d1691320a2900a8a289",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "phase": "posing",
+          "version": 1,
+          "revision": 2,
+          "temporary": false
+        }
+      },
+      {
+        "id": "96efa030b5984dd0b572cd452f5ec426",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "phase": "posing",
+          "version": 2,
+          "revision": 2,
+          "temporary": false
+        }
+      },
+      {
+        "id": "d8e397b980974561939d8546306d8154",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "phase": "saved",
+          "version": 3,
+          "revision": 6,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "9f2d76b1a7744478ae1ca96e7a43aa48",
+    "storageError": null,
+    "recovery": null
+  },
+  "idle": {
+    "sessionId": "9922b5843469460fbf16374fba327b93",
+    "phase": "idle",
+    "version": 0,
+    "revision": 6,
+    "holding": false,
+    "temporary": false,
+    "joints": [],
+    "error": ""
+  }
+}

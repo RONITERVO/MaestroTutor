@@ -1,0 +1,29 @@
+{
+  "worldId": "3bc1d10d0cea48699929323ca0f4a665",
+  "regionId": "b3fa3984c3fb464baeee47e820827249",
+  "found": false,
+  "availability": "unavailable",
+  "dependencyCount": 1,
+  "dependencies": [
+    {
+      "target": "526513737e3943a2bad7ee27502cf49e",
+      "state": "unavailable",
+      "boundsKnown": true
+    }
+  ],
+  "position": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+  },
+  "normal": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.0
+  },
+  "limits": {
+    "slopeDegrees": 25.0,
+    "stepMetres": 0.1
+  },
+  "reason": "Ground is unavailable; inspect dependencies before choosing this location"
+}

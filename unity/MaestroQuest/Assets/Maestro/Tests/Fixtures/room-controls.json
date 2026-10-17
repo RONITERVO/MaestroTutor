@@ -1,0 +1,314 @@
+{
+  "cases": [
+    {
+      "name": "mode fixed",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"fixed\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mode solid",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"solid\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mode bouncy",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 0.05",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.05,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 20",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":20,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 0",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "mass 20.01",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":20.01,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "physics target book",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"book\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "physics target maestro",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"maestro\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "physics target bad-target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"bad-target\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "missing mass",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"solid\",\"shape\":\"box\"}}]}"
+    },
+    {
+      "name": "extra nested argument",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\",\"code\":\"ignored?\"}}]}"
+    },
+    {
+      "name": "extra command argument",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"},\"position\":{\"x\":0,\"y\":0,\"z\":0}}]}"
+    },
+    {
+      "name": "numeric string",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":\"1\",\"shape\":\"sphere\"}}]}"
+    },
+    {
+      "name": "unknown shape",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"mesh\"}}]}"
+    },
+    {
+      "name": "movement defaults",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "movement low bounds",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":0.8,\"speed\":0.2}}]}"
+    },
+    {
+      "name": "movement high bounds",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":2.5,\"speed\":1.2}}]}"
+    },
+    {
+      "name": "movement wrong target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"book\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "movement too fast",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":2}}]}"
+    },
+    {
+      "name": "missing movement",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "missing distance",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"speed\":0.65}}]}"
+    },
+    {
+      "name": "avatar look",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"look\"}]}"
+    },
+    {
+      "name": "avatar follow",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"follow\"}]}"
+    },
+    {
+      "name": "avatar stop",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"stop\"}]}"
+    },
+    {
+      "name": "avatar walk",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"maestro\",\"operation\":\"walk\"}]}"
+    },
+    {
+      "name": "physics start",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"start\"}]}"
+    },
+    {
+      "name": "physics pause",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"pause\"}]}"
+    },
+    {
+      "name": "physics scan",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"scan\"}]}"
+    },
+    {
+      "name": "runtime mixed edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"physicsRun\",\"operation\":\"start\"},{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "saved settings batch",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"physicsSettings\",\"target\":\"object\",\"physics\":{\"mode\":\"bouncy\",\"mass\":0.5,\"shape\":\"sphere\"}},{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.65}}]}"
+    },
+    {
+      "name": "runtime wrong target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarMotion\",\"target\":\"book\",\"operation\":\"follow\"}]}"
+    },
+    {
+      "name": "choose saved walking motion",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}"
+    },
+    {
+      "name": "restore included walking animation",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"\"}]}"
+    },
+    {
+      "name": "walk assignment and speed share one saved edit",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},{\"action\":\"avatarSettings\",\"target\":\"maestro\",\"movement\":{\"distance\":1.3,\"speed\":0.8}}]}"
+    },
+    {
+      "name": "missing walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "null walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":null}]}"
+    },
+    {
+      "name": "arbitrary walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"walk\"}]}"
+    },
+    {
+      "name": "noncanonical walk identity",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}]}"
+    },
+    {
+      "name": "wrong walking target",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"book\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}"
+    },
+    {
+      "name": "walk assignment with unknown operation",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarWalk\",\"target\":\"maestro\",\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"operation\":\"follow\"}]}"
+    },
+    {
+      "name": "assign activity profile",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "activity undo",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"undo\"}}]}"
+    },
+    {
+      "name": "activity redo",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"redo\"}}]}"
+    },
+    {
+      "name": "activity clear",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"clear\",\"role\":0}]}}]}"
+    },
+    {
+      "name": "activity remove",
+      "valid": true,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"remove\",\"role\":0,\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}]}}]}"
+    },
+    {
+      "name": "reject activity missing revision",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity zero revision",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":0,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity wrong model",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bad\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity unknown operation",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"eval\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity empty edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[]}}]}"
+    },
+    {
+      "name": "reject activity excess edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}},{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity fractional role",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":0.5,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity extra role",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":4,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity missing speed",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity fractional weight",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":1.5,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity text loop",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":\"true\"}}]}}]}"
+    },
+    {
+      "name": "reject activity upper id",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject activity unknown choice field",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true,\"code\":\"x\"}}]}}]}"
+    },
+    {
+      "name": "reject activity unknown field",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]},\"target\":\"maestro\"}]}"
+    },
+    {
+      "name": "reject activity undo with edits",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"undo\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}}]}"
+    },
+    {
+      "name": "reject mixed activity batch",
+      "valid": false,
+      "json": "{\"commands\":[{\"action\":\"avatarActivities\",\"activities\":{\"modelHash\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"revision\":2,\"operation\":\"edit\",\"edits\":[{\"operation\":\"assign\",\"role\":3,\"choice\":{\"motionId\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"weight\":2,\"speed\":0.75,\"cooldown\":10,\"loop\":true}}]}},{\"action\":\"undo\"}]}"
+    }
+  ]
+}

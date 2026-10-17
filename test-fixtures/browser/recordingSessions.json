@@ -1,0 +1,162 @@
+{
+  "before": {
+    "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+    "target": "",
+    "phase": "idle",
+    "frames": 0,
+    "duration": 0.0,
+    "revision": 0,
+    "temporary": false,
+    "error": ""
+  },
+  "start": {
+    "selected": {
+      "id": "35bd88e89449472186510e7f055ed3ed",
+      "capability": "animation.record",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+        "target": "maestro",
+        "phase": "recording",
+        "frames": 1,
+        "duration": 0.0,
+        "revision": 2,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.record",
+        "version": 1,
+        "arguments": {
+          "operation": "start",
+          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "target": "maestro",
+          "revision": 2
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "35bd88e89449472186510e7f055ed3ed",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "target": "maestro",
+          "phase": "recording",
+          "frames": 1,
+          "duration": 0.0,
+          "revision": 2,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "d7ebdd98cc9a4348aec4a0cc2223d2a5",
+    "storageError": null,
+    "recovery": null
+  },
+  "active": {
+    "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+    "target": "maestro",
+    "phase": "recording",
+    "frames": 3,
+    "duration": 0.200666428,
+    "revision": 2,
+    "temporary": false,
+    "error": ""
+  },
+  "finish": {
+    "selected": {
+      "id": "d7ebdd98cc9a4348aec4a0cc2223d2a5",
+      "capability": "animation.record",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+        "target": "maestro",
+        "phase": "saved",
+        "frames": 4,
+        "duration": 0.260721684,
+        "revision": 6,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.record",
+        "version": 1,
+        "arguments": {
+          "operation": "finish",
+          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "target": "maestro"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "35bd88e89449472186510e7f055ed3ed",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "target": "maestro",
+          "phase": "recording",
+          "frames": 1,
+          "duration": 0.0,
+          "revision": 2,
+          "temporary": false
+        }
+      },
+      {
+        "id": "d7ebdd98cc9a4348aec4a0cc2223d2a5",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "target": "maestro",
+          "phase": "saved",
+          "frames": 4,
+          "duration": 0.260721684,
+          "revision": 6,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "c7e4f2d59d314c538c419504e4a34cce",
+    "storageError": null,
+    "recovery": null
+  },
+  "idle": {
+    "sessionId": "10c73220bc4e4b1c91f2cea5ed025caa",
+    "target": "",
+    "phase": "idle",
+    "frames": 0,
+    "duration": 0.0,
+    "revision": 0,
+    "temporary": false,
+    "error": ""
+  }
+}

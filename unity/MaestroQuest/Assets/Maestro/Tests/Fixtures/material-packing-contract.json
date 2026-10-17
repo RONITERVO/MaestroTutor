@@ -1,0 +1,243 @@
+[
+  {
+    "name": "valid measured pack",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0.5,
+      "name": "Snowball",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0.15
+    },
+    "valid": true
+  },
+  {
+    "name": "pack rejects amountLitres 20.01",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 20.01,
+      "name": "Snowball",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0.15
+    },
+    "valid": false
+  },
+  {
+    "name": "pack rejects amountLitres 0",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0,
+      "name": "Snowball",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0.15
+    },
+    "valid": false
+  },
+  {
+    "name": "pack rejects mass 0",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0.5,
+      "name": "Snowball",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0
+    },
+    "valid": false
+  },
+  {
+    "name": "pack rejects name ",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0.5,
+      "name": "",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0.15
+    },
+    "valid": false
+  },
+  {
+    "name": "pack rejects extra 1",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "revision": 2,
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0.5,
+      "name": "Snowball",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0.15,
+      "extra": 1
+    },
+    "valid": false
+  },
+  {
+    "name": "pack requires exact source revision",
+    "id": "object.material.pack",
+    "arguments": {
+      "source": {
+        "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "centre": {
+          "x": 0,
+          "z": 0
+        },
+        "radius": 0.3
+      },
+      "amountLitres": 0.5,
+      "name": "Snowball",
+      "position": {
+        "x": 0,
+        "y": 1,
+        "z": 1
+      },
+      "mass": 0.15
+    },
+    "valid": false
+  },
+  {
+    "name": "valid material store",
+    "id": "object.material.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 2,
+      "definition": {
+        "capacityLitres": 0.5,
+        "amountLitres": 0.25,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "contents cannot exceed capacity",
+    "id": "object.material.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 2,
+      "definition": {
+        "capacityLitres": 0.5,
+        "amountLitres": 0.6,
+        "material": "Snow",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "material has no control suffix",
+    "id": "object.material.edit",
+    "arguments": {
+      "operation": "configure",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 2,
+      "definition": {
+        "capacityLitres": 0.5,
+        "amountLitres": 0.25,
+        "material": "Snow\n",
+        "color": {
+          "r": 0.94,
+          "g": 0.97,
+          "b": 1,
+          "a": 1
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "remove material store",
+    "id": "object.material.edit",
+    "arguments": {
+      "operation": "remove",
+      "target": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "revision": 2
+    },
+    "valid": true
+  }
+]

@@ -183,3 +183,14 @@ or the gated browser access adapter is a policy bypass and should block release.
 - Stuck in `connecting` means authorization occurred and transport setup began.
   Inspect the managed gateway/session response or BYOK provider error using normal
   redacted traffic logs.
+
+
+## Quest room tool rollout (pre-release)
+
+The gateway has an optional closed room-tool protocol, documented in
+[QUEST_LIVE_ROOM_ACTIONS.md](QUEST_LIVE_ROOM_ACTIONS.md). Its issuer switch
+`MANAGED_LIVE_ROOM_TOOLS_ENABLED` defaults to false. Enabling it requires the
+matching client/native cancellation path and verified provider continuation
+accounting; ordinary Live and legacy tokens retain their existing restrictions.
+A spoken room action still needs an auditable Live open reason and explicit current
+user intent. A tool declaration does not itself grant permission to change a room.

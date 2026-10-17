@@ -1,0 +1,11 @@
+.quest-audience-spread { position: fixed; inset: 0; display: grid; grid-template-columns: 1fr 1fr; background: var(--page-bg-color, #fff0d2); color: var(--text-primary-color, #342d2b); font-size: clamp(16px, 1.6vw, 24px); line-height: 1.5; }
+.quest-audience-page { min-width: 0; overflow-y: auto; padding: clamp(16px, 3vw, 48px); display: flex; flex-direction: column; gap: 1em; overflow-wrap: anywhere; }
+.quest-audience-page h1 { font-size: 1.6em; font-weight: 600; margin: 0; }
+.quest-audience-page h2 { font-size: 1.15em; font-weight: 600; margin: 0; }
+.quest-audience-page p { margin: 0; }
+.quest-audience-page button { min-height: 48px; border: 1px solid currentColor; padding: .7em; border-radius: .5em; text-align: left; background: var(--page-bg-color, #fff0d2); }
+.quest-audience-page button:disabled { opacity: .45; }
+.quest-audience-page a { text-decoration: underline; text-underline-offset: .15em; }
+.quest-audience-page :is(button, a, input):focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+.quest-audience-confirm { display: flex; align-items: flex-start; gap: .6em; }
+.quest-audience-confirm input { flex-shrink: 0; width: 24px; height: 24px; margin-top: .2em; }

@@ -1,0 +1,1475 @@
+{
+  "trace": [
+    {
+      "step": 5323,
+      "rooms": [
+        {
+          "worldId": "2d2a7acf058a4511b9e272b798bd78ce",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 28,
+          "pourCandidates": 56,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "b673a8218cd5468fbe64cdc1c8174976",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "88e67188806346bfad90d552371eb7c5",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "677010d6a3de4281bec5cd6dd661ae72",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "63debdc9df814167b111a3a0c25bde7e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "e794295480f948c4a11c10814ecf5978",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "9e1db2189ec041da8b0d87684b61cf4f",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8f70aa74ab3f4573a7a02e74db389e40",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "f7a72d026dfd49d099109c36e442f692",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 383.9616933816729,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 53260,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 5323,
+        "reservations": 9,
+        "executions": 9,
+        "units": 77670,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      }
+    },
+    {
+      "step": 5324,
+      "rooms": [
+        {
+          "worldId": "2d2a7acf058a4511b9e272b798bd78ce",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 16.038306618327088,
+                "spilledMl": 15.68280410214909
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 16.038306618327088,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 46,
+          "pourCandidates": 74,
+          "scoopCandidates": 10,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "b673a8218cd5468fbe64cdc1c8174976",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "88e67188806346bfad90d552371eb7c5",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "677010d6a3de4281bec5cd6dd661ae72",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "63debdc9df814167b111a3a0c25bde7e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "e794295480f948c4a11c10814ecf5978",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "9e1db2189ec041da8b0d87684b61cf4f",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8f70aa74ab3f4573a7a02e74db389e40",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "f7a72d026dfd49d099109c36e442f692",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 368.2788892795238,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.721110720476176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.721110720476176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 53428,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 5324,
+        "reservations": 9,
+        "executions": 9,
+        "units": 77670,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      },
+      "topology": "merged"
+    },
+    {
+      "step": 5325,
+      "rooms": [
+        {
+          "worldId": "2d2a7acf058a4511b9e272b798bd78ce",
+          "vessels": 16,
+          "nativeVessels": 4,
+          "dormantVessels": 12,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 31.36551681925509,
+                "spilledMl": 15.68280410214909
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 31.36551681925509,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            },
+            {
+              "sessionId": "7852d5e786f7469b83438ca41935a4fb",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 2,
+          "executedMembers": 4,
+          "pourSegments": 28,
+          "pourCandidates": 56,
+          "scoopCandidates": 8,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "b673a8218cd5468fbe64cdc1c8174976",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c7ea7046c88d442383d817f493e1c5ad",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "88e67188806346bfad90d552371eb7c5",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "eb939df1d3e74c88a523fd18fb359e4d",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "677010d6a3de4281bec5cd6dd661ae72",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "32213683741f44e5a37a914cd8f7f883",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "63debdc9df814167b111a3a0c25bde7e",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "f4b4914d98284baf9b8039f2a4fe4aee",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "e794295480f948c4a11c10814ecf5978",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "c9141986e9b84b779c2ed7ef4cb4a6de",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "9e1db2189ec041da8b0d87684b61cf4f",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "08e1a7393fee4de4b3e57ece31aec6fc",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "8f70aa74ab3f4573a7a02e74db389e40",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "bb145e5027b24acfa7e2f73a8848611b",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        },
+        {
+          "worldId": "f7a72d026dfd49d099109c36e442f692",
+          "vessels": 16,
+          "nativeVessels": 2,
+          "dormantVessels": 14,
+          "pending": false,
+          "ready": true,
+          "sources": [
+            {
+              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 352.9516790785958,
+                "savedAmountMl": 400.0,
+                "capacityMl": 500.0,
+                "transferredMl": 47.048320921404176,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "receivers": [
+            {
+              "sessionId": "2a8414b8bf634dbe8c990a96a8348776",
+              "phase": "flowing",
+              "contents": {
+                "amountMl": 47.048320921404176,
+                "savedAmountMl": 0.0,
+                "capacityMl": 500.0,
+                "transferredMl": 0.0,
+                "spilledMl": 0.0
+              },
+              "temporary": false,
+              "error": ""
+            }
+          ],
+          "executedGroups": 1,
+          "executedMembers": 2,
+          "pourSegments": 14,
+          "pourCandidates": 28,
+          "scoopCandidates": 4,
+          "discoveryCaptures": 1,
+          "collisionReads": 18,
+          "cavityReads": 16
+        }
+      ],
+      "flowBudget": {
+        "reservations": 9,
+        "units": 53260,
+        "reservationLimit": 64,
+        "unitLimit": 524288,
+        "streamSegments": 32,
+        "queryHits": 64,
+        "scoopSamples": 5,
+        "rainSamples": 5
+      },
+      "discoveryBudget": {
+        "step": 5325,
+        "reservations": 9,
+        "executions": 9,
+        "units": 77670,
+        "unitLimit": 524288,
+        "objectLimit": 66
+      },
+      "nativeBudget": {
+        "instances": 20,
+        "preparing": 0,
+        "ready": 20,
+        "retiring": 0,
+        "instanceLimit": 32,
+        "streamPointLimit": 33
+      },
+      "topology": "split"
+    }
+  ],
+  "rooms": 9,
+  "savedContainers": 144,
+  "nativeContainers": 20,
+  "dormantContainers": 124,
+  "hostUnits": 552816,
+  "flowUnitLimit": 524288,
+  "groupUnits": 53260,
+  "resourceBudgets": {
+    "objects": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "instanceLimit": 128
+    },
+    "physics": {
+      "bodies": 20,
+      "joints": 0,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "bodyLimit": 128,
+      "jointLimit": 32
+    },
+    "recipes": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "parts": 40,
+      "customVertices": 10000,
+      "instanceLimit": 128,
+      "partLimit": 512,
+      "customVertexLimit": 524288
+    },
+    "collision": {
+      "entries": 20,
+      "colliders": 420,
+      "meshColliders": 420,
+      "sourceTriangles": 5680,
+      "entryLimit": 256,
+      "colliderLimit": 2048,
+      "triangleLimit": 1048576
+    },
+    "liquids": {
+      "instances": 20,
+      "preparing": 0,
+      "ready": 20,
+      "retiring": 0,
+      "instanceLimit": 32,
+      "streamPointLimit": 33
+    }
+  },
+  "discoveryUnits": 77670,
+  "discoveryUnitLimit": 524288,
+  "conservationAndUndo": true
+}

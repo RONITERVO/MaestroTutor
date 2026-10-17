@@ -1,0 +1,26 @@
+{
+  "loading": {
+    "reservationId": "42eacf4e687748ad8de723d09dca4e8a",
+    "worldId": "1f7295cdc94540d1ae76416404246f8e",
+    "regionId": "4eb96a070542439eb60e4790fd66a347",
+    "target": "cccccccccccccccccccccccccccccccc",
+    "role": "object",
+    "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+    "state": "loading",
+    "vertices": 3,
+    "textureMiPixels": 0.0,
+    "morphMillionVertices": 0.0
+  },
+  "ready": {
+    "reservationId": "42eacf4e687748ad8de723d09dca4e8a",
+    "worldId": "1f7295cdc94540d1ae76416404246f8e",
+    "regionId": "4eb96a070542439eb60e4790fd66a347",
+    "target": "cccccccccccccccccccccccccccccccc",
+    "role": "object",
+    "modelHash": "c0073bf66211b8d020eed2a70a06c83c5e8b19f0d13b3f6439f7ec244001709c",
+    "state": "ready",
+    "vertices": 3,
+    "textureMiPixels": 0.0,
+    "morphMillionVertices": 0.0
+  }
+}

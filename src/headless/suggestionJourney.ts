@@ -1,6 +1,7 @@
 // Copyright 2025 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 
+import { summarizeRoomTask } from '../core-sdk/room/roomTaskProjection';
 import type { ChatMessage } from '../core/types';
 import { getVisibleAssistantMessageText } from '../core-sdk/chat/assistantMessageContext';
 import {
@@ -63,6 +64,8 @@ export const runHeadlessSuggestionAftersteps = async (client: HeadlessClient, in
   const toolRequest = normalizeSuggestionCreatorToolRequest(
     input.syntheticDecision ? input.syntheticDecision.toolRequest : suggestionResult.toolRequest,
     fallbackText,
+    { allowAgent: !input.syntheticDecision && client.roomAgent?.verification(selected.id, selected.llmRawResponse || '').agentRequest !== undefined,
+      agentTargets: client.roomAgent?.verification(selected.id, selected.llmRawResponse || '').agentTargets },
   );
 
   const plan = planSuggestionAftersteps({ mode: 'headless', contextText: fallbackText, artifact, toolRequest });
@@ -82,6 +85,7 @@ export const runHeadlessSuggestionAftersteps = async (client: HeadlessClient, in
   if (toolRequest) {
     const upload = input.uploadGeneratedMedia ?? true;
     toolResult = await executeSuggestionToolRequest<unknown>(toolRequest, {
+      agent: async request => summarizeRoomTask(await client.roomAgent!.start(selected.id, request.task)),
       image: request => runHeadlessImageGeneration(client, {
         contextText: selected.llmRawResponse || request.prompt || fallbackText,
         languagePairId: pair.id,

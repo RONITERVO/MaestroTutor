@@ -1,0 +1,230 @@
+{
+  "format": "maestro-creation-template",
+  "version": 1,
+  "id": "brick",
+  "name": "Building brick",
+  "description": "Editable stacking brick with Top and Bottom snap points. Place loosely or explicitly join compatible points.",
+  "tags": [
+    "building",
+    "stacking"
+  ],
+  "author": "Roni Tervo / Maestro",
+  "license": "Apache-2.0",
+  "definition": {
+    "version": 1,
+    "recipe": {
+      "version": 1,
+      "parts": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "size": {
+            "x": 0.12,
+            "y": 0.06,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.5,
+            "g": 0.25,
+            "b": 0.7,
+            "a": 1
+          }
+        },
+        {
+          "id": "Stud0",
+          "shape": "cylinder",
+          "position": {
+            "x": -0.03,
+            "y": 0.036,
+            "z": -0.03
+          },
+          "size": {
+            "x": 0.036,
+            "y": 0.012,
+            "z": 0.036
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.5,
+            "g": 0.25,
+            "b": 0.7,
+            "a": 1
+          }
+        },
+        {
+          "id": "Stud1",
+          "shape": "cylinder",
+          "position": {
+            "x": -0.03,
+            "y": 0.036,
+            "z": 0.03
+          },
+          "size": {
+            "x": 0.036,
+            "y": 0.012,
+            "z": 0.036
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.5,
+            "g": 0.25,
+            "b": 0.7,
+            "a": 1
+          }
+        },
+        {
+          "id": "Stud2",
+          "shape": "cylinder",
+          "position": {
+            "x": 0.03,
+            "y": 0.036,
+            "z": -0.03
+          },
+          "size": {
+            "x": 0.036,
+            "y": 0.012,
+            "z": 0.036
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.5,
+            "g": 0.25,
+            "b": 0.7,
+            "a": 1
+          }
+        },
+        {
+          "id": "Stud3",
+          "shape": "cylinder",
+          "position": {
+            "x": 0.03,
+            "y": 0.036,
+            "z": 0.03
+          },
+          "size": {
+            "x": 0.036,
+            "y": 0.012,
+            "z": 0.036
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          },
+          "parent": null,
+          "color": {
+            "r": 0.5,
+            "g": 0.25,
+            "b": 0.7,
+            "a": 1
+          }
+        }
+      ],
+      "tracks": [],
+      "duration": 2,
+      "playing": false,
+      "loop": true
+    },
+    "collision": {
+      "version": 1,
+      "shapes": [
+        {
+          "id": "Body",
+          "shape": "box",
+          "position": {
+            "x": 0,
+            "y": 0.006,
+            "z": 0
+          },
+          "size": {
+            "x": 0.12,
+            "y": 0.072,
+            "z": 0.12
+          },
+          "rotation": {
+            "x": 0.0,
+            "y": 0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        }
+      ]
+    },
+    "physics": {
+      "mode": "solid",
+      "shape": "automatic",
+      "mass": 0.15
+    },
+    "snapPoints": [
+      {
+        "version": 1,
+        "id": "Top",
+        "name": "Top",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": 0.042,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      },
+      {
+        "version": 1,
+        "id": "Bottom",
+        "name": "Bottom",
+        "family": "Brick",
+        "frame": {
+          "position": {
+            "x": 0,
+            "y": -0.03,
+            "z": 0
+          },
+          "rotation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          }
+        }
+      }
+    ]
+  }
+}

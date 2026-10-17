@@ -1,0 +1,34 @@
+{
+  "revision": 20,
+  "bindingPage": 0,
+  "bindingCount": 0,
+  "queued": 0,
+  "eventQueue": 0,
+  "eventsDropped": 0,
+  "canUndo": true,
+  "canRedo": false,
+  "readOnly": false,
+  "status": "Behaviour edit applied. Undo restores this batch.",
+  "selectedError": "",
+  "sequences": [
+    {
+      "id": "b23b617956194b00b604852d02592d36",
+      "name": "Action 1",
+      "error": "",
+      "steps": 1,
+      "repeat": false,
+      "program": true
+    }
+  ],
+  "selected": {
+    "id": "b23b617956194b00b604852d02592d36",
+    "name": "Action 1",
+    "interruption": 0,
+    "repeat": false,
+    "program": "{\"version\":2,\"entry\":\"main\",\"resources\":[\"maestro\",\"ceee9cdb480846d08acfc6acfe6170ee\"],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[],\"body\":[{\"id\":\"wave\",\"op\":\"invoke\",\"capability\":\"animation.play\",\"version\":1,\"arguments\":{\"target\":\"maestro\",\"seconds\":2.0,\"source\":{\"gesture\":\"pointing\",\"kind\":\"gesture\"},\"prop\":{\"objectId\":\"ceee9cdb480846d08acfc6acfe6170ee\",\"avatarHash\":\"\",\"hand\":\"right\",\"release\":\"return\",\"releaseAt\":1.0,\"offset\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"rotation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":1.0}},\"channel\":\"wholeTarget\"},\"bindings\":{}}]}]}"
+  },
+  "bindings": [],
+  "buttons": [],
+  "running": [],
+  "outcomes": []
+}

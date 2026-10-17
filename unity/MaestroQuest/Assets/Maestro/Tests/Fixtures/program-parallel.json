@@ -1,0 +1,161 @@
+{
+  "version": 3,
+  "parallelVersion": 1,
+  "entry": "main",
+  "resources": [
+    "book",
+    "maestro"
+  ],
+  "state": [
+    {
+      "name": "count",
+      "initial": 7
+    }
+  ],
+  "events": [],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "first",
+          "initial": 0
+        },
+        {
+          "name": "second",
+          "initial": 0
+        }
+      ],
+      "body": [
+        {
+          "id": "together",
+          "op": "parallel",
+          "branches": [
+            {
+              "function": "move",
+              "args": [
+                {
+                  "value": "book"
+                },
+                {
+                  "value": 0.4
+                },
+                {
+                  "value": 1
+                }
+              ],
+              "result": "first"
+            },
+            {
+              "function": "move",
+              "args": [
+                {
+                  "value": "maestro"
+                },
+                {
+                  "value": 0.8
+                },
+                {
+                  "value": 2
+                }
+              ],
+              "result": "second"
+            }
+          ]
+        },
+        {
+          "id": "sum",
+          "op": "setState",
+          "variable": "count",
+          "value": {
+            "op": "add",
+            "args": [
+              {
+                "var": "first"
+              },
+              {
+                "var": "second"
+              }
+            ]
+          }
+        },
+        {
+          "id": "inspect",
+          "op": "sleep",
+          "seconds": {
+            "value": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "move",
+      "returns": "number",
+      "parameters": [
+        {
+          "name": "target",
+          "type": "text"
+        },
+        {
+          "name": "seconds",
+          "type": "number"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        }
+      ],
+      "locals": [],
+      "body": [
+        {
+          "id": "motion",
+          "op": "invoke",
+          "capability": "animation.play",
+          "version": 1,
+          "arguments": {
+            "target": "book",
+            "seconds": 1,
+            "loop": false,
+            "source": {
+              "kind": "recording"
+            },
+            "channel": "wholeTarget"
+          },
+          "bindings": {
+            "target": {
+              "var": "target"
+            },
+            "seconds": {
+              "var": "seconds"
+            }
+          }
+        },
+        {
+          "id": "privateState",
+          "op": "setState",
+          "variable": "count",
+          "value": {
+            "op": "add",
+            "args": [
+              {
+                "state": "count"
+              },
+              {
+                "var": "amount"
+              }
+            ]
+          }
+        },
+        {
+          "id": "answer",
+          "op": "return",
+          "value": {
+            "state": "count"
+          }
+        }
+      ]
+    }
+  ]
+}

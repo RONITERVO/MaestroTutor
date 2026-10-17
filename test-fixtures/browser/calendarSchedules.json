@@ -1,0 +1,1882 @@
+{
+  "program": {
+    "version": 3,
+    "entry": "main",
+    "resources": [],
+    "state": [
+      {
+        "name": "created",
+        "initial": 0
+      },
+      {
+        "name": "missed",
+        "initial": 0
+      }
+    ],
+    "events": [],
+    "functions": [
+      {
+        "name": "main",
+        "returns": "void",
+        "parameters": [],
+        "locals": [
+          {
+            "name": "received",
+            "initial": false
+          },
+          {
+            "name": "status",
+            "initial": ""
+          },
+          {
+            "name": "late",
+            "initial": false
+          },
+          {
+            "name": "scheduled",
+            "initial": ""
+          },
+          {
+            "name": "hour",
+            "initial": 18
+          }
+        ],
+        "body": [
+          {
+            "id": "calendarLoop",
+            "op": "forever",
+            "body": [
+              {
+                "id": "weekly",
+                "op": "awaitEvent",
+                "event": "clock.scheduled",
+                "source": "",
+                "timeout": {
+                  "value": 0
+                },
+                "received": "received",
+                "value": "status",
+                "version": 1,
+                "arguments": {
+                  "kind": "weekly",
+                  "missed": "report",
+                  "graceSeconds": 60,
+                  "hour": 18,
+                  "minute": 0,
+                  "weekdays": [
+                    "mon",
+                    "tue",
+                    "wed",
+                    "thu",
+                    "fri"
+                  ],
+                  "zone": "utc",
+                  "ambiguous": "earlier"
+                },
+                "bindings": {
+                  "hour": {
+                    "var": "hour"
+                  }
+                },
+                "fields": {
+                  "late": "late",
+                  "scheduledUtc": "scheduled"
+                }
+              },
+              {
+                "id": "whenDue",
+                "op": "if",
+                "test": {
+                  "op": "and",
+                  "args": [
+                    {
+                      "var": "received"
+                    },
+                    {
+                      "op": "not",
+                      "args": [
+                        {
+                          "var": "late"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "then": [
+                  {
+                    "id": "createBall",
+                    "op": "invoke",
+                    "capability": "object.create",
+                    "version": 1,
+                    "arguments": {
+                      "shape": "ball",
+                      "name": "Ball",
+                      "x": 0.3,
+                      "y": 1.3,
+                      "z": 0.65,
+                      "scale": 1,
+                      "red": 0.2,
+                      "green": 0.6,
+                      "blue": 0.9,
+                      "kind": "primitive"
+                    },
+                    "bindings": {}
+                  },
+                  {
+                    "id": "countCreated",
+                    "op": "setState",
+                    "variable": "created",
+                    "value": {
+                      "op": "add",
+                      "args": [
+                        {
+                          "state": "created"
+                        },
+                        {
+                          "value": 1
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "else": [
+                  {
+                    "id": "countMissed",
+                    "op": "setState",
+                    "variable": "missed",
+                    "value": {
+                      "op": "add",
+                      "args": [
+                        {
+                          "state": "missed"
+                        },
+                        {
+                          "value": 1
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "saved": {
+    "version": 1,
+    "revision": 1,
+    "sceneRevision": 1,
+    "ack": 0,
+    "session": "b56df41c06a646f29ab67fbde74af207",
+    "status": "Room actions ready",
+    "selectedId": "",
+    "ok": true,
+    "canUndo": false,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 2,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Behaviour edit applied. Undo restores this batch.",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "de0fa412d82b41029979252375255504",
+          "name": "Weekday practice ball",
+          "error": "",
+          "steps": 6,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "de0fa412d82b41029979252375255504",
+        "name": "Weekday practice ball",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[{\"name\":\"created\",\"initial\":0},{\"name\":\"missed\",\"initial\":0}],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"received\",\"initial\":false},{\"name\":\"status\",\"initial\":\"\"},{\"name\":\"late\",\"initial\":false},{\"name\":\"scheduled\",\"initial\":\"\"},{\"name\":\"hour\",\"initial\":18}],\"body\":[{\"id\":\"calendarLoop\",\"op\":\"forever\",\"body\":[{\"id\":\"weekly\",\"op\":\"awaitEvent\",\"event\":\"clock.scheduled\",\"source\":\"\",\"timeout\":{\"value\":0},\"received\":\"received\",\"value\":\"status\",\"version\":1,\"arguments\":{\"kind\":\"weekly\",\"missed\":\"report\",\"graceSeconds\":60,\"hour\":18,\"minute\":0,\"weekdays\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"zone\":\"utc\",\"ambiguous\":\"earlier\"},\"bindings\":{\"hour\":{\"var\":\"hour\"}},\"fields\":{\"late\":\"late\",\"scheduledUtc\":\"scheduled\"}},{\"id\":\"whenDue\",\"op\":\"if\",\"test\":{\"op\":\"and\",\"args\":[{\"var\":\"received\"},{\"op\":\"not\",\"args\":[{\"var\":\"late\"}]}]},\"then\":[{\"id\":\"createBall\",\"op\":\"invoke\",\"capability\":\"object.create\",\"version\":1,\"arguments\":{\"shape\":\"ball\",\"name\":\"Ball\",\"x\":0.3,\"y\":1.3,\"z\":0.65,\"scale\":1,\"red\":0.2,\"green\":0.6,\"blue\":0.9,\"kind\":\"primitive\"},\"bindings\":{}},{\"id\":\"countCreated\",\"op\":\"setState\",\"variable\":\"created\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"created\"},{\"value\":1}]}}],\"else\":[{\"id\":\"countMissed\",\"op\":\"setState\",\"variable\":\"missed\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"missed\"},{\"value\":1}]}}]}]}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": null,
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "c16d9270515149728993f1e5c19046f1",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1a8a0c409e9f4e83914d3828604aba49",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "966caa549610448687b97593b78c9cd4",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c3814b8309b64038844d0c007113a922",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5224488b6427455bab128854ca30fa51",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "savedClock": {
+    "utc": "2026-10-02T17:59:50.0000000Z",
+    "local": "2026-10-02T17:59:50.0000000+00:00",
+    "zone": "UTC",
+    "offsetMinutes": 0.0,
+    "weekday": "fri"
+  },
+  "waiting": {
+    "version": 1,
+    "revision": 2,
+    "sceneRevision": 1,
+    "ack": 0,
+    "session": "b56df41c06a646f29ab67fbde74af207",
+    "status": "Room actions ready",
+    "selectedId": "",
+    "ok": true,
+    "canUndo": false,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 2,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "de0fa412d82b41029979252375255504",
+          "name": "Weekday practice ball",
+          "error": "",
+          "steps": 6,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "de0fa412d82b41029979252375255504",
+        "name": "Weekday practice ball",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[{\"name\":\"created\",\"initial\":0},{\"name\":\"missed\",\"initial\":0}],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"received\",\"initial\":false},{\"name\":\"status\",\"initial\":\"\"},{\"name\":\"late\",\"initial\":false},{\"name\":\"scheduled\",\"initial\":\"\"},{\"name\":\"hour\",\"initial\":18}],\"body\":[{\"id\":\"calendarLoop\",\"op\":\"forever\",\"body\":[{\"id\":\"weekly\",\"op\":\"awaitEvent\",\"event\":\"clock.scheduled\",\"source\":\"\",\"timeout\":{\"value\":0},\"received\":\"received\",\"value\":\"status\",\"version\":1,\"arguments\":{\"kind\":\"weekly\",\"missed\":\"report\",\"graceSeconds\":60,\"hour\":18,\"minute\":0,\"weekdays\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"zone\":\"utc\",\"ambiguous\":\"earlier\"},\"bindings\":{\"hour\":{\"var\":\"hour\"}},\"fields\":{\"late\":\"late\",\"scheduledUtc\":\"scheduled\"}},{\"id\":\"whenDue\",\"op\":\"if\",\"test\":{\"op\":\"and\",\"args\":[{\"var\":\"received\"},{\"op\":\"not\",\"args\":[{\"var\":\"late\"}]}]},\"then\":[{\"id\":\"createBall\",\"op\":\"invoke\",\"capability\":\"object.create\",\"version\":1,\"arguments\":{\"shape\":\"ball\",\"name\":\"Ball\",\"x\":0.3,\"y\":1.3,\"z\":0.65,\"scale\":1,\"red\":0.2,\"green\":0.6,\"blue\":0.9,\"kind\":\"primitive\"},\"bindings\":{}},{\"id\":\"countCreated\",\"op\":\"setState\",\"variable\":\"created\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"created\"},{\"value\":1}]}}],\"else\":[{\"id\":\"countMissed\",\"op\":\"setState\",\"variable\":\"missed\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"missed\"},{\"value\":1}]}}]}]}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [
+        {
+          "parentRunId": "",
+          "id": "e881a4ce604c4adc874ac04bcf907990",
+          "sequenceId": "de0fa412d82b41029979252375255504",
+          "preparing": false,
+          "waiting": true,
+          "waitEvent": "clock.scheduled",
+          "waitSeconds": 0.0,
+          "state": [
+            {
+              "name": "created",
+              "type": "number",
+              "value": "0"
+            },
+            {
+              "name": "missed",
+              "type": "number",
+              "value": "0"
+            }
+          ],
+          "nodeId": "weekly",
+          "functionName": "main",
+          "status": "Waiting for clock.scheduled",
+          "locals": [
+            {
+              "name": "received",
+              "type": "boolean",
+              "value": "False"
+            },
+            {
+              "name": "status",
+              "type": "text",
+              "value": ""
+            },
+            {
+              "name": "late",
+              "type": "boolean",
+              "value": "False"
+            },
+            {
+              "name": "scheduled",
+              "type": "text",
+              "value": ""
+            },
+            {
+              "name": "hour",
+              "type": "number",
+              "value": "18"
+            }
+          ]
+        }
+      ],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": null,
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "c16d9270515149728993f1e5c19046f1",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1a8a0c409e9f4e83914d3828604aba49",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "966caa549610448687b97593b78c9cd4",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c3814b8309b64038844d0c007113a922",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5224488b6427455bab128854ca30fa51",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "waitingClock": {
+    "utc": "2026-10-02T17:59:50.0000000Z",
+    "local": "2026-10-02T17:59:50.0000000+00:00",
+    "zone": "UTC",
+    "offsetMinutes": 0.0,
+    "weekday": "fri"
+  },
+  "fired": {
+    "version": 1,
+    "revision": 3,
+    "sceneRevision": 2,
+    "ack": 0,
+    "session": "b56df41c06a646f29ab67fbde74af207",
+    "status": "Room actions ready",
+    "selectedId": "",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 2,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "de0fa412d82b41029979252375255504",
+          "name": "Weekday practice ball",
+          "error": "",
+          "steps": 6,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "de0fa412d82b41029979252375255504",
+        "name": "Weekday practice ball",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[{\"name\":\"created\",\"initial\":0},{\"name\":\"missed\",\"initial\":0}],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"received\",\"initial\":false},{\"name\":\"status\",\"initial\":\"\"},{\"name\":\"late\",\"initial\":false},{\"name\":\"scheduled\",\"initial\":\"\"},{\"name\":\"hour\",\"initial\":18}],\"body\":[{\"id\":\"calendarLoop\",\"op\":\"forever\",\"body\":[{\"id\":\"weekly\",\"op\":\"awaitEvent\",\"event\":\"clock.scheduled\",\"source\":\"\",\"timeout\":{\"value\":0},\"received\":\"received\",\"value\":\"status\",\"version\":1,\"arguments\":{\"kind\":\"weekly\",\"missed\":\"report\",\"graceSeconds\":60,\"hour\":18,\"minute\":0,\"weekdays\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"zone\":\"utc\",\"ambiguous\":\"earlier\"},\"bindings\":{\"hour\":{\"var\":\"hour\"}},\"fields\":{\"late\":\"late\",\"scheduledUtc\":\"scheduled\"}},{\"id\":\"whenDue\",\"op\":\"if\",\"test\":{\"op\":\"and\",\"args\":[{\"var\":\"received\"},{\"op\":\"not\",\"args\":[{\"var\":\"late\"}]}]},\"then\":[{\"id\":\"createBall\",\"op\":\"invoke\",\"capability\":\"object.create\",\"version\":1,\"arguments\":{\"shape\":\"ball\",\"name\":\"Ball\",\"x\":0.3,\"y\":1.3,\"z\":0.65,\"scale\":1,\"red\":0.2,\"green\":0.6,\"blue\":0.9,\"kind\":\"primitive\"},\"bindings\":{}},{\"id\":\"countCreated\",\"op\":\"setState\",\"variable\":\"created\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"created\"},{\"value\":1}]}}],\"else\":[{\"id\":\"countMissed\",\"op\":\"setState\",\"variable\":\"missed\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"missed\"},{\"value\":1}]}}]}]}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [
+        {
+          "parentRunId": "",
+          "id": "e881a4ce604c4adc874ac04bcf907990",
+          "sequenceId": "de0fa412d82b41029979252375255504",
+          "preparing": false,
+          "waiting": true,
+          "waitEvent": "clock.scheduled",
+          "waitSeconds": 0.0,
+          "state": [
+            {
+              "name": "created",
+              "type": "number",
+              "value": "1"
+            },
+            {
+              "name": "missed",
+              "type": "number",
+              "value": "0"
+            }
+          ],
+          "nodeId": "weekly",
+          "functionName": "main",
+          "status": "Waiting for clock.scheduled",
+          "locals": [
+            {
+              "name": "received",
+              "type": "boolean",
+              "value": "False"
+            },
+            {
+              "name": "status",
+              "type": "text",
+              "value": "due"
+            },
+            {
+              "name": "late",
+              "type": "boolean",
+              "value": "False"
+            },
+            {
+              "name": "scheduled",
+              "type": "text",
+              "value": "2026-10-02T18:00:00Z"
+            },
+            {
+              "name": "hour",
+              "type": "number",
+              "value": "18"
+            }
+          ]
+        }
+      ],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": null,
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "c16d9270515149728993f1e5c19046f1",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1a8a0c409e9f4e83914d3828604aba49",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "966caa549610448687b97593b78c9cd4",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c3814b8309b64038844d0c007113a922",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "de026c18e9594ecab2bbde1b76f2733a",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.20000000298023224,
+          "g": 0.60000002384185791,
+          "b": 0.89999997615814209,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "bouncy",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5224488b6427455bab128854ca30fa51",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "firedClock": {
+    "utc": "2026-10-02T18:00:00.0000000Z",
+    "local": "2026-10-02T18:00:00.0000000+00:00",
+    "zone": "UTC",
+    "offsetMinutes": 0.0,
+    "weekday": "fri"
+  },
+  "missed": {
+    "version": 1,
+    "revision": 4,
+    "sceneRevision": 2,
+    "ack": 0,
+    "session": "b56df41c06a646f29ab67fbde74af207",
+    "status": "Room actions ready",
+    "selectedId": "",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 2,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "de0fa412d82b41029979252375255504",
+          "name": "Weekday practice ball",
+          "error": "",
+          "steps": 6,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "de0fa412d82b41029979252375255504",
+        "name": "Weekday practice ball",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[{\"name\":\"created\",\"initial\":0},{\"name\":\"missed\",\"initial\":0}],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"received\",\"initial\":false},{\"name\":\"status\",\"initial\":\"\"},{\"name\":\"late\",\"initial\":false},{\"name\":\"scheduled\",\"initial\":\"\"},{\"name\":\"hour\",\"initial\":18}],\"body\":[{\"id\":\"calendarLoop\",\"op\":\"forever\",\"body\":[{\"id\":\"weekly\",\"op\":\"awaitEvent\",\"event\":\"clock.scheduled\",\"source\":\"\",\"timeout\":{\"value\":0},\"received\":\"received\",\"value\":\"status\",\"version\":1,\"arguments\":{\"kind\":\"weekly\",\"missed\":\"report\",\"graceSeconds\":60,\"hour\":18,\"minute\":0,\"weekdays\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"zone\":\"utc\",\"ambiguous\":\"earlier\"},\"bindings\":{\"hour\":{\"var\":\"hour\"}},\"fields\":{\"late\":\"late\",\"scheduledUtc\":\"scheduled\"}},{\"id\":\"whenDue\",\"op\":\"if\",\"test\":{\"op\":\"and\",\"args\":[{\"var\":\"received\"},{\"op\":\"not\",\"args\":[{\"var\":\"late\"}]}]},\"then\":[{\"id\":\"createBall\",\"op\":\"invoke\",\"capability\":\"object.create\",\"version\":1,\"arguments\":{\"shape\":\"ball\",\"name\":\"Ball\",\"x\":0.3,\"y\":1.3,\"z\":0.65,\"scale\":1,\"red\":0.2,\"green\":0.6,\"blue\":0.9,\"kind\":\"primitive\"},\"bindings\":{}},{\"id\":\"countCreated\",\"op\":\"setState\",\"variable\":\"created\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"created\"},{\"value\":1}]}}],\"else\":[{\"id\":\"countMissed\",\"op\":\"setState\",\"variable\":\"missed\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"missed\"},{\"value\":1}]}}]}]}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [
+        {
+          "parentRunId": "",
+          "id": "e881a4ce604c4adc874ac04bcf907990",
+          "sequenceId": "de0fa412d82b41029979252375255504",
+          "preparing": false,
+          "waiting": true,
+          "waitEvent": "clock.scheduled",
+          "waitSeconds": 0.0,
+          "state": [
+            {
+              "name": "created",
+              "type": "number",
+              "value": "1"
+            },
+            {
+              "name": "missed",
+              "type": "number",
+              "value": "1"
+            }
+          ],
+          "nodeId": "weekly",
+          "functionName": "main",
+          "status": "Waiting for clock.scheduled",
+          "locals": [
+            {
+              "name": "received",
+              "type": "boolean",
+              "value": "False"
+            },
+            {
+              "name": "status",
+              "type": "text",
+              "value": "late"
+            },
+            {
+              "name": "late",
+              "type": "boolean",
+              "value": "True"
+            },
+            {
+              "name": "scheduled",
+              "type": "text",
+              "value": "2026-10-05T18:00:00Z"
+            },
+            {
+              "name": "hour",
+              "type": "number",
+              "value": "18"
+            }
+          ]
+        }
+      ],
+      "outcomes": []
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": null,
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "c16d9270515149728993f1e5c19046f1",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1a8a0c409e9f4e83914d3828604aba49",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "966caa549610448687b97593b78c9cd4",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c3814b8309b64038844d0c007113a922",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "de026c18e9594ecab2bbde1b76f2733a",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.20000000298023224,
+          "g": 0.60000002384185791,
+          "b": 0.89999997615814209,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "bouncy",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5224488b6427455bab128854ca30fa51",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "missedClock": {
+    "utc": "2026-10-30T18:00:00.0000000Z",
+    "local": "2026-10-30T18:00:00.0000000+00:00",
+    "zone": "UTC",
+    "offsetMinutes": 0.0,
+    "weekday": "fri"
+  },
+  "stopped": {
+    "version": 1,
+    "revision": 5,
+    "sceneRevision": 2,
+    "ack": 0,
+    "session": "b56df41c06a646f29ab67fbde74af207",
+    "status": "Room actions ready",
+    "selectedId": "",
+    "ok": true,
+    "canUndo": true,
+    "canRedo": false,
+    "physicsRunning": false,
+    "visible": true,
+    "inspection": null,
+    "workspaceView": "rules",
+    "rules": {
+      "revision": 2,
+      "bindingPage": 0,
+      "bindingCount": 0,
+      "queued": 0,
+      "eventQueue": 0,
+      "eventsDropped": 0,
+      "canUndo": true,
+      "canRedo": false,
+      "readOnly": false,
+      "status": "Action triggered",
+      "selectedError": "",
+      "sequences": [
+        {
+          "id": "de0fa412d82b41029979252375255504",
+          "name": "Weekday practice ball",
+          "error": "",
+          "steps": 6,
+          "repeat": false,
+          "program": true
+        }
+      ],
+      "selected": {
+        "id": "de0fa412d82b41029979252375255504",
+        "name": "Weekday practice ball",
+        "interruption": 0,
+        "repeat": false,
+        "program": "{\"version\":3,\"entry\":\"main\",\"resources\":[],\"state\":[{\"name\":\"created\",\"initial\":0},{\"name\":\"missed\",\"initial\":0}],\"events\":[],\"functions\":[{\"name\":\"main\",\"returns\":\"void\",\"parameters\":[],\"locals\":[{\"name\":\"received\",\"initial\":false},{\"name\":\"status\",\"initial\":\"\"},{\"name\":\"late\",\"initial\":false},{\"name\":\"scheduled\",\"initial\":\"\"},{\"name\":\"hour\",\"initial\":18}],\"body\":[{\"id\":\"calendarLoop\",\"op\":\"forever\",\"body\":[{\"id\":\"weekly\",\"op\":\"awaitEvent\",\"event\":\"clock.scheduled\",\"source\":\"\",\"timeout\":{\"value\":0},\"received\":\"received\",\"value\":\"status\",\"version\":1,\"arguments\":{\"kind\":\"weekly\",\"missed\":\"report\",\"graceSeconds\":60,\"hour\":18,\"minute\":0,\"weekdays\":[\"mon\",\"tue\",\"wed\",\"thu\",\"fri\"],\"zone\":\"utc\",\"ambiguous\":\"earlier\"},\"bindings\":{\"hour\":{\"var\":\"hour\"}},\"fields\":{\"late\":\"late\",\"scheduledUtc\":\"scheduled\"}},{\"id\":\"whenDue\",\"op\":\"if\",\"test\":{\"op\":\"and\",\"args\":[{\"var\":\"received\"},{\"op\":\"not\",\"args\":[{\"var\":\"late\"}]}]},\"then\":[{\"id\":\"createBall\",\"op\":\"invoke\",\"capability\":\"object.create\",\"version\":1,\"arguments\":{\"shape\":\"ball\",\"name\":\"Ball\",\"x\":0.3,\"y\":1.3,\"z\":0.65,\"scale\":1,\"red\":0.2,\"green\":0.6,\"blue\":0.9,\"kind\":\"primitive\"},\"bindings\":{}},{\"id\":\"countCreated\",\"op\":\"setState\",\"variable\":\"created\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"created\"},{\"value\":1}]}}],\"else\":[{\"id\":\"countMissed\",\"op\":\"setState\",\"variable\":\"missed\",\"value\":{\"op\":\"add\",\"args\":[{\"state\":\"missed\"},{\"value\":1}]}}]}]}]}]}"
+      },
+      "bindings": [],
+      "buttons": [],
+      "running": [],
+      "outcomes": [
+        {
+          "id": "e881a4ce604c4adc874ac04bcf907990",
+          "sequenceId": "de0fa412d82b41029979252375255504",
+          "phase": "cancelled",
+          "nodeId": "weekly",
+          "status": "Behaviour stopped"
+        }
+      ]
+    },
+    "motions": null,
+    "capabilities": [
+      "physicsSettings.v1",
+      "avatarSettings.v1",
+      "motions.v1",
+      "avatarActivities.v1",
+      "catalog.v1",
+      "catalogVocabulary.v1",
+      "roomOwnership.v1",
+      "behaviourPrograms.v3",
+      "eventPrograms.v1",
+      "eventFields.v1",
+      "eventSubscriptions.v1",
+      "factQueries.v1",
+      "conditionWaits.v1",
+      "parallelPrograms.v1",
+      "structuredValues.v1",
+      "programModules.v1",
+      "moduleLibrary.v1",
+      "moduleLibraryFiles.v1",
+      "execution.v1",
+      "executionReceipts.v1",
+      "actionResults.v1",
+      "recipeCreation.v1",
+      "objectEdits.v1",
+      "objectCopy.v1",
+      "drawingEdits.v1",
+      "recipeEdits.v1",
+      "recipePartPlayback.v1",
+      "objectAttachments.v1",
+      "calendarSchedules.v1",
+      "animationAuthoring.v1",
+      "animationRecording.v1",
+      "animationPosing.v1",
+      "avatarModels.v1",
+      "modelImport.v1",
+      "motionBatchImport.v1",
+      "unavailablePrograms.v1",
+      "actionRecovery.v1",
+      "temporaryRoom.v1",
+      "spatialSettings.v1",
+      "physicsSimulation.v1"
+    ],
+    "physics": null,
+    "temporaryRoom": {
+      "active": false,
+      "pending": false,
+      "id": "c16d9270515149728993f1e5c19046f1",
+      "saveId": "",
+      "phase": "idle",
+      "error": "",
+      "savedRevision": 0
+    },
+    "ownership": {
+      "suspended": false,
+      "error": "",
+      "owners": []
+    },
+    "avatar": null,
+    "walk": null,
+    "activityProfile": {
+      "modelHash": "",
+      "status": "Uses included animations where no state motion is assigned",
+      "revision": 1,
+      "canAssign": false,
+      "readOnly": false,
+      "canUndo": false,
+      "canRedo": false,
+      "roles": [
+        {
+          "role": 0,
+          "choices": []
+        },
+        {
+          "role": 1,
+          "choices": []
+        },
+        {
+          "role": 2,
+          "choices": []
+        },
+        {
+          "role": 3,
+          "choices": []
+        }
+      ]
+    },
+    "objects": [
+      {
+        "id": "1a8a0c409e9f4e83914d3828604aba49",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 4,
+        "position": {
+          "x": 0.68999999761581421,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.76470589637756348,
+          "g": 0.60000002384185791,
+          "b": 0.31372550129890442,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "966caa549610448687b97593b78c9cd4",
+        "name": "Block",
+        "kind": "Block",
+        "objectRevision": 3,
+        "position": {
+          "x": 0.51999998092651367,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.45098039507865906,
+          "g": 0.32549020648002625,
+          "b": 0.30588236451148987,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "book",
+        "name": "Book",
+        "kind": "Book",
+        "objectRevision": 1,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "c3814b8309b64038844d0c007113a922",
+        "name": "Cylinder",
+        "kind": "Cylinder",
+        "objectRevision": 5,
+        "position": {
+          "x": 0.86000001430511475,
+          "y": 1.4500000476837158,
+          "z": 0.800000011920929
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.16862745583057404,
+          "g": 0.55294120311737061,
+          "b": 0.53333336114883423,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "de026c18e9594ecab2bbde1b76f2733a",
+        "name": "Ball",
+        "kind": "Ball",
+        "objectRevision": 6,
+        "position": {
+          "x": 0.30000001192092896,
+          "y": 1.2999999523162842,
+          "z": 0.64999997615814209
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 0.20000000298023224,
+          "g": 0.60000002384185791,
+          "b": 0.89999997615814209,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "bouncy",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
+      },
+      {
+        "id": "maestro",
+        "name": "Maestro",
+        "kind": "Maestro",
+        "objectRevision": 2,
+        "position": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "scale": 1.0,
+        "color": {
+          "r": 1.0,
+          "g": 1.0,
+          "b": 1.0,
+          "a": 1.0
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": {
+          "distance": 1.3,
+          "speed": 0.65
+        }
+      }
+    ],
+    "created": [],
+    "catalog": null,
+    "execution": {
+      "selected": null,
+      "running": [],
+      "outcomes": [],
+      "nextRunId": "5224488b6427455bab128854ca30fa51",
+      "storageError": null,
+      "recovery": null
+    }
+  },
+  "stoppedClock": {
+    "utc": "2026-10-30T18:00:00.0000000Z",
+    "local": "2026-10-30T18:00:00.0000000+00:00",
+    "zone": "UTC",
+    "offsetMinutes": 0.0,
+    "weekday": "fri"
+  }
+}

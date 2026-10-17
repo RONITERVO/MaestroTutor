@@ -1,0 +1,102 @@
+{
+  "version": 3,
+  "entry": "main",
+  "resources": [
+    "maestro"
+  ],
+  "functions": [
+    {
+      "name": "main",
+      "returns": "void",
+      "parameters": [],
+      "locals": [
+        {
+          "name": "current_1",
+          "type": {
+            "record": {
+              "revision": "number",
+              "distance": "number",
+              "speed": "number",
+              "temporary": "boolean",
+              "live": {
+                "record": {
+                  "active": "boolean",
+                  "mode": "text",
+                  "status": "text",
+                  "canLook": "boolean",
+                  "lookReason": "text",
+                  "canFollow": "boolean",
+                  "followReason": "text"
+                }
+              }
+            }
+          },
+          "initial": {
+            "revision": 0,
+            "distance": 0,
+            "speed": 0,
+            "temporary": false,
+            "live": {
+              "active": false,
+              "mode": "",
+              "status": "",
+              "canLook": false,
+              "lookReason": "",
+              "canFollow": false,
+              "followReason": ""
+            }
+          }
+        }
+      ],
+      "body": [
+        {
+          "id": "read_current_1",
+          "op": "set",
+          "variable": "current_1",
+          "value": {
+            "fact": "avatar.movement.settings"
+          }
+        },
+        {
+          "id": "action_1",
+          "op": "invoke",
+          "capability": "avatar.movement.configure",
+          "version": 1,
+          "arguments": {
+            "target": "maestro",
+            "revision": 1,
+            "distance": 1.3,
+            "speed": 0.9
+          },
+          "bindings": {
+            "revision": {
+              "op": "field",
+              "args": [
+                {
+                  "var": "current_1"
+                },
+                {
+                  "value": "revision"
+                }
+              ]
+            },
+            "distance": {
+              "op": "field",
+              "args": [
+                {
+                  "var": "current_1"
+                },
+                {
+                  "value": "distance"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "dataVersion": 1,
+  "state": [],
+  "events": []
+}

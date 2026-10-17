@@ -17,7 +17,7 @@ import { PcmCaptureRouter } from '../../../core-sdk/media/pcmInput';
 import {
   RealtimePcmPacketizer
 } from '../../../core-sdk/media/realtimePcmPacketizer';
-import { type CaptureWorkletMessage } from '../utils/captureWorkletMessaging';
+import type { PcmCapture } from '../../../core-sdk/media/pcmCapture';
 import {
   type LocalSpeechTriggerResult
 } from '../utils/localSpeechTrigger';
@@ -48,33 +48,33 @@ const toTransferableArrayBuffer = (pcm: Int16Array): ArrayBuffer => {
 /** Packet pacing, semantic gate and continuous turn boundaries. Capture handoff
  * remains explicit so the session controller can fence it after asynchronous work. */
 export function createLiveInputCapture(state: Pick<LiveSessionData,
-  'sessionRef' | 'inputPacketizerRef' | 'pcmCaptureRouterRef'
+  'liveInputContextRef' | 'sessionRef' | 'inputPacketizerRef' | 'pcmCaptureRouterRef'
   | 'currentSessionIdRef' | 'currentInputTranscriptionRef' | 'localSpeechPendingRef'
   | 'concealedSpeechProgressRef' | 'concealedSpeechSamplesRef' | 'turnTimingRef'
   | 'currentUserAudioChunksRef' | 'currentUserAudioTotalLengthRef' | 'inputAudioTelemetryRef'
   | 'speechGateRef' | 'speechTurnBoundaryRef' | 'semanticSpeechCaptureRef'
   | 'observerWhisperRef' | 'observerWhisperBusyRef' | 'lastWhisperRequestAtRef'
   | 'loadingFallbackOnsetAtRef' | 'whisperFailureWarnedRef' | 'speechGateEpochRef'
-  | 'playbackUntilRef' | 'playbackActiveRef' | 'awaitingModelTurnRef'
-  | 'inputClosedByServerRef' | 'boundaryClosePromiseRef'
+  | 'playbackUntilRef' | 'playbackPendingRef' | 'playbackActiveRef' | 'awaitingModelTurnRef'
+  | 'inputClosedByServerRef' | 'boundaryClosePromiseRef' | 'speechOutputRef'
 >, ports: LiveInputCapturePorts, session: {
   sessionId: number; speechGateEpoch: number; speechGateEnabled: boolean; observerActivity: boolean;
-  localSpeechTrigger: LocalSpeechTriggerResult | null; workletNode: AudioWorkletNode | null;
-  inputSource: MediaStreamAudioSourceNode | null;
+  localSpeechTrigger: LocalSpeechTriggerResult | null; directCapture: PcmCapture | null;
 }) {
   const {
-    sessionRef, inputPacketizerRef, pcmCaptureRouterRef,
+    liveInputContextRef, sessionRef, inputPacketizerRef, pcmCaptureRouterRef,
     currentSessionIdRef, currentInputTranscriptionRef, localSpeechPendingRef,
     concealedSpeechProgressRef, concealedSpeechSamplesRef, turnTimingRef,
     currentUserAudioChunksRef, currentUserAudioTotalLengthRef, inputAudioTelemetryRef,
     speechGateRef, speechTurnBoundaryRef, semanticSpeechCaptureRef,
     observerWhisperRef, observerWhisperBusyRef, lastWhisperRequestAtRef,
     loadingFallbackOnsetAtRef, whisperFailureWarnedRef, speechGateEpochRef,
-    playbackUntilRef, playbackActiveRef, awaitingModelTurnRef,
-    inputClosedByServerRef, boundaryClosePromiseRef,
+    playbackUntilRef, playbackPendingRef, playbackActiveRef, awaitingModelTurnRef,
+    inputClosedByServerRef, boundaryClosePromiseRef, speechOutputRef,
   } = state;
   const { ensureInputCodecWorker, setVadActivity, setLocalSpeechTriggerPhase, emitTurnTranscriptUpdate } = ports;
-  const { sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, workletNode, inputSource } = session;
+  const { sessionId, speechGateEpoch, speechGateEnabled, observerActivity, localSpeechTrigger, directCapture } = session;
+  let externalPlaybackActive = false, externalPlaybackSettleUntil = 0;
   const isDetectorUnavailable = (now: number) => {
     const detector = observerWhisperRef.current;
     return !detector || detector.status === 'failed' || detector.status === 'disposed'
@@ -99,6 +99,7 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     activeSession.sendRealtimeInput({
       audio: { data: base64, mimeType: `audio/pcm;rate=${INPUT_SAMPLE_RATE}` },
     });
+    liveInputContextRef.current?.recordAudio(base64);
     turnTimingRef.current?.markOnce('input.first-audio-sent');
     turnTimingRef.current?.markLatest('input.last-audio-sent');
     if (retained) {
@@ -134,7 +135,9 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
       !boundary
       || !activeSession
       || awaitingModelTurnRef.current
+      || playbackPendingRef.current
       || now < playbackUntilRef.current
+      || speechOutputRef.current?.isMicrophoneSuppressed?.()
       || !boundary.openFromConfirmedSpeech(now)
     ) return false;
 
@@ -290,6 +293,23 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     const boundary = speechTurnBoundaryRef.current;
     const speechCapture = semanticSpeechCaptureRef.current;
     if (!gate || !boundary) {
+      // Full user-started Live normally delegates echo cancellation to the
+      // browser. Unity's output can be outside that reference, so use the
+      // selected renderer's actual drain gate on the capture clock instead.
+      if (speechOutputRef.current?.microphonePolicy === 'suppress-during-playback') {
+        const now = Date.now();
+        const speaking = playbackPendingRef.current || now < playbackUntilRef.current
+          || speechOutputRef.current?.isMicrophoneSuppressed?.() === true;
+        if (speaking) externalPlaybackActive = true;
+        else if (externalPlaybackActive) {
+          externalPlaybackActive = false;
+          externalPlaybackSettleUntil = now + DEFAULT_SPEECH_GATE.playbackSettleMs;
+        }
+        if (speaking || now < externalPlaybackSettleUntil) {
+          inputAudioTelemetryRef.current.gatedPackets += 1;
+          return;
+        }
+      }
       currentUserAudioChunksRef.current.push(pcm);
       currentUserAudioTotalLengthRef.current += pcm.length;
       inputPacketizerRef.current?.push(pcm);
@@ -300,7 +320,8 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
     const now = Date.now();
     // Evaluate echo suppression on the capture clock. Old paced packets
     // must never be classified using the speaker state of a later moment.
-    const speaking = now < playbackUntilRef.current;
+    const speaking = playbackPendingRef.current || now < playbackUntilRef.current
+      || speechOutputRef.current?.isMicrophoneSuppressed?.() === true;
     if (speaking !== playbackActiveRef.current) {
       playbackActiveRef.current = speaking;
       gate.notePlayback(speaking, now);
@@ -410,25 +431,19 @@ export function createLiveInputCapture(state: Pick<LiveSessionData,
   };
   const transferCapture = (trigger: LocalSpeechTriggerResult) => {
     const handoff = trigger.capture.transferTo((pcm) => {
+      if (currentSessionIdRef.current !== sessionId) return;
       void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
     });
     inputAudioTelemetryRef.current.connectionHandoffPackets = handoff.bufferedPackets;
     inputAudioTelemetryRef.current.connectionHandoffSamples = handoff.bufferedSamples;
     setLocalSpeechTriggerPhase(null);
   };
-  const attachCaptureNode = () => {
-    if (!workletNode || !inputSource) return;
+  const startCapture = () => {
     // User-started sessions do not have a pre-connect capture to transfer.
-    workletNode.port.onmessage = (event: MessageEvent<CaptureWorkletMessage>) => {
-      // CRITICAL: Check session is still valid before processing audio
+    directCapture?.start(pcm => {
       if (currentSessionIdRef.current !== sessionId) return;
-
-      const pcm = event.data;
-      if (!(pcm instanceof Int16Array) || !pcm.length) return;
-
       void pcmCaptureRouterRef.current?.push(pcm, INPUT_SAMPLE_RATE, 'device');
-    };
-    inputSource.connect(workletNode);
+    });
   };
-  return { replayConfirmedCapture, transferCapture, attachCaptureNode };
+  return { replayConfirmedCapture, transferCapture, startCapture };
 }

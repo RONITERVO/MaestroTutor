@@ -102,7 +102,6 @@ describe('local speech trigger', () => {
     const result = await resultPromise;
     const context = FakeAudioContext.instances[0];
 
-    expect(result.microphoneStream).toBe(stream);
     expect(result.transcript).toBe('hello from the microphone');
     expect(result.pcm.length).toBe(28 * 1_600);
     expect(detector.transcribe).toHaveBeenCalledOnce();
@@ -227,7 +226,8 @@ describe('local speech trigger', () => {
     finishInitialize?.();
 
     expect(track.stop).toHaveBeenCalledOnce();
-    expect(FakeAudioContext.instances).toHaveLength(0);
+    expect(FakeAudioContext.instances).toHaveLength(1);
+    expect(FakeAudioContext.instances[0].close).toHaveBeenCalledOnce();
   });
 
   it('resumes suspended capture and tears it down when aborted', async () => {
@@ -284,4 +284,43 @@ describe('local speech trigger', () => {
     expect(track.stop).toHaveBeenCalledOnce();
     expect(FakeAudioContext.instances[0].close).toHaveBeenCalledOnce();
   });
+  it('keeps an injected capture through Whisper, handoff and flush without a browser graph', async () => {
+    let now = 1_000, input!: (pcm: Int16Array) => void;
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
+    const capture = { sampleRate: 16000 as const, start: vi.fn(sink => { input = sink; }),
+      close: vi.fn(async () => {}), flush: vi.fn(async () => { input(new Int16Array([7])); }) };
+    const openCapture = vi.fn(async () => capture);
+    const pending = waitForLocalSpeechTrigger({ openCapture,
+      detector: { initialize: async () => {}, transcribe: async () => 'hello' } as any });
+    await vi.waitFor(() => expect(capture.start).toHaveBeenCalledOnce());
+    for (let i = 0; i < 12; i++) {
+      now += 100; input(new Int16Array(1600).fill(8000));
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    const result = await pending;
+    input(new Int16Array([4, 5]));
+    const received: number[] = [];
+    expect(result.capture.transferTo(pcm => received.push(...pcm))).toEqual({ bufferedPackets: 1, bufferedSamples: 2 });
+    await result.capture.flush();
+    expect(received).toEqual([4, 5, 7]);
+    expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
+    expect(FakeAudioContext.instances).toHaveLength(0); expect(openCapture).toHaveBeenCalledOnce();
+    await result.capture.close(); input(new Int16Array([9]));
+    expect(received).toEqual([4, 5, 7]); expect(capture.close).toHaveBeenCalledOnce();
+  });
+
+  it('closes an injected owner arriving after trigger cancellation before starting it', async () => {
+    let ready!: (owner: any) => void;
+    const owner = { sampleRate: 16000 as const, start: vi.fn(), flush: vi.fn(), close: vi.fn(async () => {}) };
+    const abort = new AbortController();
+    const pending = waitForLocalSpeechTrigger({ signal: abort.signal,
+      openCapture: () => new Promise(resolve => { ready = resolve; }),
+      detector: { initialize: vi.fn(), transcribe: vi.fn() } as any });
+    const rejected = expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+    abort.abort(); await rejected; ready(owner);
+    await vi.waitFor(() => expect(owner.close).toHaveBeenCalledOnce());
+    expect(owner.start).not.toHaveBeenCalled();
+    expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
+  });
+
 });

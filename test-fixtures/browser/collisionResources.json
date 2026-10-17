@@ -1,0 +1,52 @@
+{
+  "boundary": "Actual desktop Unity compound geometry and shared catalog observations; source counts, not memory, admission, provider or headset evidence.",
+  "budget": {
+    "entries": 1,
+    "preparing": 0,
+    "ready": 1,
+    "retiring": 0,
+    "colliders": 11,
+    "meshColliders": 9,
+    "sourceTriangles": 124,
+    "activeColliders": 11
+  },
+  "ready": {
+    "leaseId": "e29733bfc077426faaf132d18dd5b523",
+    "worldId": "1dc0772f608d48e291c0a0944cee61e9",
+    "regionId": "f49fb15ef8e7416aa7223d6382ad62aa",
+    "target": "probe",
+    "role": "collision",
+    "kind": "compound",
+    "phase": "ready",
+    "colliders": 11,
+    "meshColliders": 9,
+    "sourceTriangles": 124,
+    "activeColliders": 0
+  },
+  "active": {
+    "leaseId": "e29733bfc077426faaf132d18dd5b523",
+    "worldId": "1dc0772f608d48e291c0a0944cee61e9",
+    "regionId": "f49fb15ef8e7416aa7223d6382ad62aa",
+    "target": "probe",
+    "role": "collision",
+    "kind": "compound",
+    "phase": "ready",
+    "colliders": 11,
+    "meshColliders": 9,
+    "sourceTriangles": 124,
+    "activeColliders": 11
+  },
+  "retiring": {
+    "leaseId": "e29733bfc077426faaf132d18dd5b523",
+    "worldId": "1dc0772f608d48e291c0a0944cee61e9",
+    "regionId": "f49fb15ef8e7416aa7223d6382ad62aa",
+    "target": "probe",
+    "role": "collision",
+    "kind": "compound",
+    "phase": "retiring",
+    "colliders": 11,
+    "meshColliders": 9,
+    "sourceTriangles": 124,
+    "activeColliders": 0
+  }
+}

@@ -1,0 +1,99 @@
+name: Native echo evaluation
+
+on:
+  pull_request:
+    paths:
+      - 'unity/Tools/EchoProcessing/**'
+      - '.github/workflows/native-echo-evaluation.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'unity/Tools/EchoProcessing/**'
+      - '.github/workflows/native-echo-evaluation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-echo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generated-audio:
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [stock, stationary32, measured32]
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Prepare pinned evaluation dependencies
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:GITHUB_WORKSPACE '.quest-evidence/echo-native'
+          New-Item -ItemType Directory -Path "$root/cache" -Force | Out-Null
+          python -m pip install --target "$root/tools" --no-deps --only-binary=:all: meson==1.9.1 ninja==1.13.0
+          if($LASTEXITCODE -ne 0){throw 'Build tools failed to install'}
+          $downloads=@{
+            'apm.tar.gz'='https://gstreamer.freedesktop.org/src/mirror/webrtc-audio-processing/webrtc-audio-processing-2.1.tar.gz'
+            'abseil.tar.gz'='https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz'
+            'overlay.zip'='https://github.com/mesonbuild/wrapdb/releases/download/abseil-cpp_20240722.0-3/abseil-cpp_20240722.0-3_patch.zip'
+          }
+          foreach($file in $downloads.Keys){
+            Write-Output ("Downloading pinned input: "+$file)
+            Invoke-WebRequest -Uri $downloads[$file] -OutFile "$root/cache/$file" -TimeoutSec 90 -MaximumRetryCount 2
+          }
+          # Build.py verifies all three archive hashes before extraction.
+      - name: Compile and test the isolated native processor
+        shell: pwsh
+        run: |
+          $root=Join-Path $env:GITHUB_WORKSPACE '.quest-evidence/echo-native'
+          python unity/Tools/EchoProcessing/Build.py `
+            --apm "$root/cache/apm.tar.gz" --abseil "$root/cache/abseil.tar.gz" `
+            --overlay "$root/cache/overlay.zip" --meson-root "$root/tools" `
+            --ninja "$root/tools/bin/ninja.exe" `
+            --platform windows --profile '${{ matrix.profile }}' --output "$root/ci"
+          if($LASTEXITCODE -ne 0){throw 'Native evaluation failed'}
+          $result=Get-Content "$root/ci/result.json" -Raw | ConvertFrom-Json
+          "Profile **$($result.profile)**: 27 scripted capture, 22 playback, 31 clock/duplex, 20 nonterminal drain and 28 composed capture-session scenarios passed, including 120,000 concurrent source frames. No microphone or speaker is opened. Seventy-two zero-context termination diagnostics were recorded separately; they are not quality acceptance. Eight core generated-audio cases passed. Three clock-aligned broadband cases: **$($result.alignmentQuality.status)**; three cold-tone cases: **$($result.alignmentTonal.status)**; three tones-after-broadband cases: **$($result.alignmentWarmTonal.status)**; three tonal path-change cases: **$($result.alignmentWarmTonalPathChange.status)**. Twenty-seven overlapping voiced-signal cases (including 72 onset windows): **$($result.alignmentOverlappingSpeech.status)**. Noise-heavy double-talk: **$($result.noiseStress.status)**; five onset cases: **$($result.qualityDiagnostics.onsets.status)**; two changing-path cases: **$($result.qualityDiagnostics.'path-changes'.status)**; 24 delay/reflection variants: **$($result.qualityDiagnostics.'delay-variants'.status)**. Open failing quality cases: **$($result.openQualityFailures)**. All profiles remain outside the app. measured32 retains sustained-tone and overlapping-signal limitations and requires physically validated timing; these scripted/generated inputs do not prove app integration, physical audio quality or Quest release acceptance." >> $env:GITHUB_STEP_SUMMARY
+          if($result.openQualityFailures -gt 0){Write-Output "::warning::Profile $($result.profile) has $($result.openQualityFailures) open audio-quality failures; bounded CI success is not quality acceptance."}
+      - name: Preserve native results and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-echo-evaluation-${{ matrix.profile }}
+          if-no-files-found: ignore
+          path: |
+            .quest-evidence/echo-native/ci/result.json
+            .quest-evidence/echo-native/ci/*.log
+
+  platform-effects:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Verify platform-effect ownership without devices
+        run: |
+          python -B unity/Tools/EchoProcessing/BuildEffects.py \
+            --jdk "$JAVA_HOME" --output .quest-evidence/echo-effects/ci
+      - name: Preserve platform-effect ownership evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-capture-effects
+          if-no-files-found: error
+          path: |
+            .quest-evidence/echo-effects/ci/result.json
+            .quest-evidence/echo-effects/ci/*.log

@@ -1,0 +1,16 @@
+// Copyright 2026 Roni Tervo
+// SPDX-License-Identifier: Apache-2.0
+using System;using System.IO;using System.Linq;using Maestro.Quest.Creation;using Maestro.Quest.Programs;using Newtonsoft.Json.Linq;using NUnit.Framework;using UnityEngine;
+namespace Maestro.Quest.Tests {public sealed class PhysicalSculptTests {
+ [Test] public void PhysicalSculptTipPrototypeAndRoomCopiesRemainIndependentAndVersioned(){
+  var item=new RoomObjectData{id=new string('a',32),kind=RoomObjectKind.Block,sculptTips=new[]{new SculptTip()}};var room=new RoomDocument{version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro},item}};Assert.That(room.Validate(out var error),Is.True,error);var copy=room.Copy();copy.objects[2].sculptTips[0].height=.2f;Assert.That(item.sculptTips[0].height,Is.EqualTo(.03f));var encoded=CreationPrototypeSchema.Encode(CreationPrototype.Capture(item));Assert.That(CapabilityArguments.Validate(encoded,CreationPrototypeSchema.Schema(),out error),Is.True,error);var restored=CreationPrototype.Read(encoded);Assert.That(restored.Validate(out error),Is.True,error);var instance=restored.Instantiate("Sculpt tip",Vector3.one,Quaternion.identity,1);instance.sculptTips[0].radius=.5f;Assert.That(restored.sculptTips[0].radius,Is.EqualTo(.08f));room.version=15;Assert.That(room.Validate(out _),Is.False);
+  string dir=Path.Combine(Path.GetTempPath(),"MaestroSculpt-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);try{room.version=RoomDocument.CurrentVersion;Assert.That(new RoomStorage(dir).Save(room,out error),Is.True,error);Assert.That(new RoomStorage(dir).Load(out _).objects[2].sculptTips[0].height,Is.EqualTo(.03f));item.sculptTips[0].version=3;string wire=JsonUtility.ToJson(room);File.WriteAllText(Path.Combine(dir,RoomStorage.FileName),wire);var storage=new RoomStorage(dir);Assert.That(storage.Load(out _),Is.Null);Assert.That(storage.ReadOnly,Is.True);Assert.That(File.ReadAllText(Path.Combine(dir,RoomStorage.FileName)),Is.EqualTo(wire));}finally{Directory.Delete(dir,true);}
+ }
+ [Test] public void PhysicalSculptTipRejectsUnboundedMissingPartAndCompetingInk(){
+  var item=new RoomObjectData{id=new string('a',32),kind=RoomObjectKind.Block,sculptTips=new[]{new SculptTip()}};foreach(var tip in new[]{new SculptTip{part="missing"},new SculptTip{radius=float.NaN},new SculptTip{height=.6f},new SculptTip{rotation=new Quaternion()},new SculptTip{position=Vector3.one*10},new SculptTip{mode="melt"}})Assert.That(tip.Validate(item,out _),Is.False);item.drawingTips=new[]{new DrawingTip()};Assert.That(SculptTip.ValidateCollection(item,out _),Is.False);item.drawingTips[0].enabled=false;Assert.That(SculptTip.ValidateCollection(item,out var error),Is.True,error);
+ }
+ [Test] public void PhysicalSculptHeightContactMatchesBothTrianglesInsteadOfBilinearApproximation(){
+  var field=new RoomHeightField{cells=4,width=1,depth=1,heights=new float[25]};field.heights[0]=.01f;field.heights[1]=.09f;field.heights[5]=.05f;field.heights[6]=.21f;
+  Assert.That(field.HeightAt(new Vector2(-.4375f,-.4375f)),Is.EqualTo(.04f).Within(.000001));Assert.That(field.HeightAt(new Vector2(-.3125f,-.3125f)),Is.EqualTo(.14f).Within(.000001));Assert.That(field.HeightAt(new Vector2(.5f,.5f)),Is.EqualTo(field.heights[24]));
+ }
+}}

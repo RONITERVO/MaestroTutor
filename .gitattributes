@@ -1,0 +1,10 @@
+# The included package identity hashes these exact UTF-8 manifest bytes.
+unity/MaestroQuest/Assets/Maestro/Resources/Avatars/IncludedMotions.json text eol=lf
+# Native motion containers are binary GLB payloads with an internal extension.
+unity/MaestroQuest/Assets/StreamingAssets/MaestroContent/Motions/*.motion binary
+
+# Creation choices pin the exact UTF-8 template bytes.
+unity/MaestroQuest/Assets/Maestro/Resources/Creation/Templates/*.json text eol=lf
+
+# Android executes the diagnostic wrapper directly.
+unity/Tools/StorageProbe/wrap.sh text eol=lf
