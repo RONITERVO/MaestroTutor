@@ -20,7 +20,8 @@ namespace Maestro.Quest.Tests
         string BlockPoseSave()
         {
             Assert.That(editor.TryFlush(out var error),Is.True,error);
-            string path=Path.Combine(directory,RoomStorage.FileName);if(File.Exists(path))File.Delete(path);Directory.CreateDirectory(path);return path;
+            // Block publication while preserving the accepted primary; deleting it is an external-change conflict, not a transient save failure.
+            string path=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(path);return path;
         }
         JointPose[] EditHead(float degrees)
         {

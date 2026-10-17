@@ -5,7 +5,7 @@ import {nativeProbeObjects} from './native-probe-objects';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeWorldRegions(execute:Execute,directory:string){
  const objects=nativeProbeObjects(execute);
@@ -14,12 +14,8 @@ export async function probeWorldRegions(execute:Execute,directory:string){
   assert.equal(reply.available,true,JSON.stringify(reply));return reply.value as Record<string,unknown>;
  };
  const invoke=async(id:string,args:Record<string,unknown>)=>{
-  let state=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);
-  const runId=state.execution!.selected!.id,deadline=Date.now()+15000;
-  while(['preparing','running'].includes(state.execution!.selected!.phase)&&Date.now()<deadline){
-   await new Promise(r=>setTimeout(r,100));state=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);
-  }
-  assert.equal(state.execution!.selected!.phase,'completed',JSON.stringify(state.execution!.selected));return state.execution!.selected!;
+  const state=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));
+  return state.execution!.selected!;
  };
  await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.regions',version:1,arguments:{offset:0}}}]);
  const target=(await objects.ids()).find(id=>/^[a-f0-9]{32}$/.test(id));assert.ok(target,'Expected a saved creation');

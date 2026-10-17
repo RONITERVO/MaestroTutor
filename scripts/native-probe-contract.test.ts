@@ -1,7 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
-import {describe,it,expect,expectTypeOf} from 'vitest';
-import {checkedProbeReply,factReply,placementReply,assertSamePlacement} from './native-probe-contract';
+import {afterEach,describe,it,expect,expectTypeOf,vi} from 'vitest';
+import {checkedProbeReply,factReply,placementReply,assertSamePlacement,completeProbeAction} from './native-probe-contract';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
 import type {CatalogView} from '../shared/roomCatalog';
 import {behaviourFact} from '../shared/behaviourCatalog';
@@ -78,5 +78,59 @@ describe('native complete-placement evidence',()=>{
   for(const change of [{target:other},{scale:NaN},{position:{x:Infinity,y:0,z:0}},{rotation:{x:0,y:0,z:0,w:2}}]){
    const s=placement();factReply(s).value={...placementReply(s),...change};expect(()=>placementReply(s)).toThrow();
   }
+ });
+});
+
+
+describe('native action completion evidence',()=>{
+ afterEach(()=>vi.useRealTimers());
+ const action=(phase:'preparing'|'running'|'completed'|'cancelled'|'failed'|'interrupted'):RoomAgentState=>({
+  ...state(),execution:{selected:{id:'c'.repeat(32),capability:'object.position.set',version:1,resources:[target],phase,status:phase,
+   call:{id:'object.position.set',version:1,arguments:{target,x:1,y:2,z:3}}},running:[],outcomes:[]}
+ });
+ it('accepts an already completed receipt without dispatching anything',async()=>{
+  const execute=vi.fn(),original=action('completed');
+  expect(await completeProbeAction(execute,original)).toBe(original);expect(execute).not.toHaveBeenCalled();
+ });
+ it('observes preparing and running without restarting or cancelling the action',async()=>{
+  vi.useFakeTimers();const done=action('completed');
+  const execute=vi.fn().mockResolvedValueOnce(action('running')).mockResolvedValueOnce(done);
+  const result=completeProbeAction(execute,action('preparing'));
+  await vi.runAllTimersAsync();expect(await result).toBe(done);
+  expect(execute.mock.calls).toEqual(Array.from({length:2},()=>[[{action:'execution',execution:{operation:'inspect',runId:'c'.repeat(32)}}]]));
+ });
+ it.each(['failed','cancelled','interrupted'] as const)('reports %s without retrying it',async phase=>{
+  const execute=vi.fn();await expect(completeProbeAction(execute,action(phase))).rejects.toThrow(phase);
+  expect(execute).not.toHaveBeenCalled();
+ });
+ it.each(['id','capability','version','call','session','missing'] as const)('rejects a completed reply with a different %s',async field=>{
+  vi.useFakeTimers();const wrong=action('completed'),receipt=wrong.execution!.selected!;
+  if(field==='id')receipt.id='d'.repeat(32);
+  if(field==='capability')receipt.capability='object.scale.set';
+  if(field==='version')receipt.version=2;
+  if(field==='call')receipt.call.arguments.x=4;
+  if(field==='session')wrong.session='2'.repeat(32);
+  if(field==='missing')wrong.execution!.selected=null;
+  const execute=vi.fn().mockResolvedValue(wrong);
+  const result=expect(completeProbeAction(execute,action('preparing'))).rejects.toThrow(/different action or session/);
+  await vi.runAllTimersAsync();await result;expect(execute).toHaveBeenCalledTimes(1);
+ });
+ it('bounds observation without replaying or cancelling an uncertain action',async()=>{
+  vi.useFakeTimers();const execute=vi.fn().mockResolvedValue(action('preparing'));
+  const result=expect(completeProbeAction(execute,action('preparing'),250)).rejects.toThrow(/inspect its outcome before retrying/);
+  await vi.runAllTimersAsync();await result;
+  expect(execute).toHaveBeenCalledTimes(3);
+  for(const [commands] of execute.mock.calls)expect(commands).toEqual([{action:'execution',execution:{operation:'inspect',runId:'c'.repeat(32)}}]);
+ });
+ it('propagates a transport failure without resubmitting the action',async()=>{
+  vi.useFakeTimers();const execute=vi.fn().mockRejectedValue(new Error('Connection lost'));
+  const result=expect(completeProbeAction(execute,action('preparing'))).rejects.toThrow('Connection lost');
+  await vi.runAllTimersAsync();await result;expect(execute).toHaveBeenCalledTimes(1);
+ });
+ it('rejects missing receipts and failed exchanges',async()=>{
+  const execute=vi.fn();
+  await expect(completeProbeAction(execute,state())).rejects.toThrow(/action receipt/);
+  await expect(completeProbeAction(execute,{...action('completed'),ok:false,status:'Workspace unavailable'})).rejects.toThrow('Workspace unavailable');
+  expect(execute).not.toHaveBeenCalled();
  });
 });

@@ -32,6 +32,28 @@ export function checkedProbeReply<const C extends readonly RoomCommand[]>(comman
  return state as NativeProbeState<C>;
 }
 
+/** Observe one already-started action. Never submit it again or silently cancel
+ * an uncertain effect: delayed saving and native preparation use the same receipt. */
+export async function completeProbeAction(execute:(commands:RoomCommand[])=>Promise<RoomAgentState>,initial:RoomAgentState,timeoutMs=35000):Promise<RoomAgentState>{
+ const first=initial.execution?.selected;
+ if(!first?.id)throw new Error('Expected a native action receipt');
+ if(!Number.isFinite(timeoutMs)||timeoutMs<=0)throw new Error('Expected a bounded positive action timeout');
+ const {id,capability,version}=first,session=initial.session,call=structuredClone(first.call);
+ const deadline=Date.now()+timeoutMs;let state=initial;
+ for(;;){
+  if(!state.ok)throw new Error('Native action exchange failed: '+state.status);
+  const receipt=state.execution?.selected;
+  if(state.session!==session||!receipt||receipt.id!==id||receipt.capability!==capability||receipt.version!==version||!isDeepStrictEqual(receipt.call,call))
+   throw new Error('Native action inspection replied to a different action or session');
+  if(receipt.phase==='completed')return state;
+  if(receipt.phase!=='preparing'&&receipt.phase!=='running')throw new Error('Native action '+id+' '+receipt.phase+': '+receipt.status);
+  const remaining=deadline-Date.now();
+  if(remaining<=0)throw new Error('Native action '+id+' did not complete in time; inspect its outcome before retrying');
+  await new Promise(resolve=>setTimeout(resolve,Math.min(100,remaining)));
+  state=await execute([{action:'execution',execution:{operation:'inspect',runId:id}}]);
+ }
+}
+
 export function factReply(state:RoomAgentState){
  const view=state.catalog;
  if(view?.operation!=='inspect'||view.category!=='facts')throw new Error('Expected a native fact inspection');

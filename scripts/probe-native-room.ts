@@ -60,7 +60,7 @@ import {HeadlessRoomAgent,runHeadlessRoomTurn} from '../src/headless/roomJourney
 import {selectHeadlessLanguage,runHeadlessChatTurn} from '../src/headless/chatJourney';
 import {runHeadlessSuggestionAftersteps} from '../src/headless/suggestionJourney';
 import {parseProgram} from '../src/core-sdk/room/programs';
-import {checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,checkedProbeReply,factReply,assertSamePlacement,type NativeProbeState} from './native-probe-contract';
 const directory=process.argv[2];if(!directory)throw new Error('Supply the explicitly started native probe directory.');
 const prompt=process.env.MAESTRO_ROOM_PROBE_PROMPT;
 const providerScenario=process.env.MAESTRO_ROOM_PROBE_SCENARIO;
@@ -951,7 +951,7 @@ try{
   };
   const structureInitial=await readStructure();if((structureInitial.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Captured structure should match its live pieces');
   const member=await nativeObjects.observation(structureMembers[0]);
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:member.id,x:member.position.x+.4,y:member.position.y,z:member.position.z}}}}]);
+  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:member.id,x:member.position.x+.4,y:member.position.y,z:member.position.z}}}}]));
   const structureDisplaced=await readStructure();if((structureDisplaced.catalog?.value as {displaced?:number})?.displaced!==1)throw new Error('Live member movement was not observed');
   const structureReset=await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:structureId,revision:structureRevision,members:structureMembers}}}}]);
   const structureRestored=await readStructure();if((structureRestored.catalog?.value as {displaced?:number})?.displaced!==0)throw new Error('Structure reset did not restore its captured baseline');
@@ -1006,7 +1006,7 @@ try{
   const slotValue=slot.catalog?.value as {target:string;position:{x:number;y:number;z:number}};
   const watcherMembers=(await nativeObjects.ids()).filter(id=>!compositionBeforeIds.includes(id));
   if(!slotValue?.target||watcherMembers.length!==6||!watcherMembers.includes(slotValue.target))throw new Error('Watcher member identities unavailable');
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:slotValue.target,x:slotValue.position.x+.3,y:slotValue.position.y,z:slotValue.position.z}}}}]);
+  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.position.set',version:1,arguments:{target:slotValue.target,x:slotValue.position.x+.3,y:slotValue.position.y,z:slotValue.position.z}}}}]));
   const watcherDisturbed=await waitForWatch('waitingForRebuild',1);
   await execute([{action:'execution',execution:{operation:'start',call:{id:'structure.reset',version:1,arguments:{id:compositionGroup.id,revision:watchedRevision,members:watcherMembers}}}}]);
   const watcherRebuilt=await waitForWatch('waitingForDisturbance',1);

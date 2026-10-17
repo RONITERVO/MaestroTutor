@@ -16,15 +16,11 @@ Consumed allowances now survive request removal and demand changes within one
 opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
 Independent quantity groups now have separate execution requests; the current
 implementation and verification status are recorded at the end of this document.
-Unsigned Android compilation now covers **a12cf3db**, including the idle-liquid
-residency fix and these group changes;
-see [the current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
+Full offline Headless and original Book journeys, full native suites and unsigned
+Android compilation now cover shared placement completion, ordered admission and
+accepted saved-room identity. See [the integration refresh](#shared-authoring-integration-refresh--2026-10-17)
+and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
-The most recent full offline Headless and Book journeys cover the idle-liquid
-residency correction; see [that integration checkpoint](#idle-liquid-container-residency-2026-10-17).
-The later native edit lookup change has focused desktop verification; see
-[edited-object reads](#native-edit-target-reads--2026-10-17). Android compilation and
-full offline journeys have not been repeated for that later change.
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -13084,3 +13080,36 @@ known generated SDK/material files are recorded separately. Fourteen protected
 local files remain unchanged. No device/provider test, Android packaging,
 signing, deployment or Meta change is included. Release and physical-performance
 acceptance remain open.
+
+## Shared authoring integration refresh — 2026-10-17
+
+The full desktop journeys now cover the native runtime through **f5d944cf**,
+including background saved placement and ordered admission. Headless completed
+**2,192 observations / 2,183 explicit read sets**; the
+original Book completed **3,209 observations / 1,011 requests**.
+The Book preserves human edits, refuses stale agent painting, reloads without
+replay, and retires/reacquires an idle area through ordinary controls. Both
+providers are explicitly scripted; periodic object lists remain empty.
+
+Integration exposed two obsolete test assumptions. Placement probes expected an
+immediate completion; they now observe the same action and session until saving
+completes, without replaying or cancelling uncertain work. Transient-save fixtures
+deleted the accepted primary, which correctly triggers external-change recovery.
+Five fixture files now obstruct publication at .pending while preserving that
+primary. Failure, retention, revision, retry and Undo assertions remain intact.
+All 13 initially failing cases pass in the corrected full run. The initial partial
+native run and failed Headless attempt remain recorded. Runtime code is unchanged
+by this integration correction.
+
+Verification: **1,434 EditMode / 1,854 PlayMode passes**, with three explicitly
+optional private-asset skips; **3,184 web tests in 351 files**; application and
+probe TypeScript checks; exact native catalog comparison. The 32 focused probe
+contract tests are included in the full web count. Both Unity editors and clients
+exit successfully. All **3,224 native inputs**, **5,142 tracked inputs** and
+**14 protected local files** are checked before documentation changes.
+
+Unsigned Android compilation also passes on these inputs; details and cache
+boundaries are in the release-build record. Evidence is retained in
+.quest-evidence/authoring-integration-20261017/. Desktop screenshots were inspected,
+but this is not physical Quest, acoustic, real-provider or Store acceptance.
+Device/provider holds and the remaining v1 requirements stay unchanged.

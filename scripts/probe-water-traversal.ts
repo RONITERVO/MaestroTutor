@@ -5,7 +5,7 @@ import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {capabilityDefinition} from '../shared/capabilities';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function readWaterActorPose(execute:Execute,target:string){
  const saved=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target}}}]));
@@ -32,7 +32,7 @@ export async function probeWaterTraversal(execute:Execute,directory:string){
 
 async function probeShallowEgress(execute:Execute){
  const read=async(capability:string,args:Record<string,unknown>)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}])).value as Record<string,unknown>;
- const invoke=async(id:string,args:Record<string,unknown>)=>{const result=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);assert.equal(result.execution?.selected?.phase,'completed',JSON.stringify(result.execution?.selected));return result.execution!.selected!;};
+ const invoke=async(id:string,args:Record<string,unknown>)=>{const result=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));return result.execution!.selected!;};
  const create=async(name:string,x:number,y:number)=>(await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name,x,y,z:2,scale:1})).output!.objectId as string;
  // Query the same relative geometry in front of the stationary native viewer.
  const pool=await create('Egress probe pool',0,1);

@@ -1766,3 +1766,25 @@ preserved-file checks are recorded in
 explicitly scripted offline providers and desktop browser rendering; physical
 Quest input, texture quality, scans, real-provider planning and Android compilation
 of the new fix require their own acceptance.
+
+## Durable action completion and recovery fixtures (2026-10-17)
+
+Full offline runs **ddde0f8c14a0403cb5eda60330a8cb6c** (Headless) and
+**9e796fc6ceb34b8c909bcc51804c6a56** (Book) pass against the current native runtime.
+The Book records 3,209 observations and 1,011 requests,
+including preserved human edits, stale-agent refusal, reload without replay and
+idle-area retirement/reacquisition.
+
+Placement probes use completeProbeAction to inspect an already-started receipt.
+It checks the action ID, capability/version, arguments and room session on every
+reply; preparing/running can continue, while failure, cancellation, interruption,
+identity changes and transport errors remain failures. Its default observation
+window is 35 seconds. Timeout never restarts or silently cancels an uncertain
+effect. Book controls already wait for their exact visible completion receipt.
+
+The initial Headless failure and 13 transient-save fixture failures are preserved
+in .quest-evidence/authoring-integration-20261017/. Publication obstructions now
+preserve the accepted primary; external-primary conflicts keep their separate
+tests. The corrected full suites pass. Only five native test files changed after
+the journeys; all runtime, asset and package inputs are identical. These are
+scripted-provider desktop checks, with no new physical or real-provider acceptance.
