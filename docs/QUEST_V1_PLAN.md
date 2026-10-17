@@ -12953,3 +12953,42 @@ externally changed data. Harden that shared path before extending completion
 editing. Legitimate newer edits from the same editor and confirmed temporary
 room/memory snapshot publications must advance its known baseline explicitly;
 a blanket read-only latch for every stale candidate would reject valid user work.
+
+## Accepted saved-room identity — 2026-10-17
+
+The ordinary-save gap identified above is now addressed in the same storage
+implementation. RoomStorage opts into retained primary identity, separately from
+decode caching. Load establishes the accepted disk baseline. Existing rooms
+require Load before first Save; a missing primary may be initialized. Saves
+check before preparation and again before replacement. Confirmed ordinary and
+prepared writes advance from their exact private bytes. Own newer snapshots
+therefore remain valid while obsolete preparations fail without a blanket lock.
+
+TemporaryMemorySave receives the same RoomStorage, checks the initial paired
+capture against its accepted room as well as memory, and advances the identity
+after confirmed paired publication or recovery. It does not bless freshly read
+outside state. Ordinary staging uses CreateNew, preserves pre-existing pending
+files, and cleans only complete matching bytes created by that attempt.
+Observed outside changes require recovery; transient IO failures keep the
+existing dirty-state retry contract. No save-format migration is introduced.
+
+This continues the shared-world direction: actor-specific real-room collision,
+authored terrain, visibility and navigation stay in their existing shared
+policies. Long-term authoring requires durable state alongside responsive
+interaction; persistence checks do not introduce per-tool save implementations.
+Source/tests and verification receipts are in
+.quest-evidence/accepted-primary-20261017/. Physical latency acceptance,
+other completion-action migrations and the previously recorded release gates
+remain open.
+
+Verification passed **1,433 EditMode**, **293 relevant PlayMode** and **243 shared
+catalog/capability web tests** (four files), with no failures or skips in those
+final runs. Sixteen added regressions cover primary changes, first-load ownership,
+cancelled preparations, own newer writes, temporary pairs, staging preservation,
+autosave and unavailable primary startup. Final PlayMode source differs from the
+green full EditMode run only in three PlayMode fixture files; native implementation
+is identical. The final mirror compiled and tested those fixture corrections.
+All 3,220 native inputs are checked against the source, with the four documented
+Configure-derived differences and 12 generated SDK/material files recorded
+separately. Fourteen unrelated/protected files remain unchanged. These results
+do not establish headset latency or complete physical/provider/release acceptance.

@@ -2846,3 +2846,24 @@ This currently covers the shared object.rotation.set completion action.
 Synchronous editing APIs retain their save-before-return contract. Broadening
 the same operation to other edits and physical headset latency validation remain
 open; a green storage test is not evidence of headset frame time.
+
+Ordinary room saving now retains the exact primary accepted by the live store.
+An existing room must be loaded before its first write; only an absent primary
+can be initialized directly. A successful ordinary save, prepared publication or
+paired room/memory save advances that identity from its exact private bytes.
+A newer edit from the same session remains saveable. An obsolete preparation
+cannot replace it and does not make otherwise valid newer work read-only.
+
+An observed independent primary change instead preserves the saved files and
+the live unsaved edit, and blocks replacement until reopening or recovery.
+Initial temporary-room capture checks both the accepted room and remembered
+values, so a fresh disk capture cannot silently adopt an outside change as its
+discard baseline. Existing unfinished ordinary pending files are preserved.
+Temporary IO obstructions remain retryable; a failed candidate is removed only
+when this writer created it and its complete bytes still match.
+
+These guards use the existing room/memory coordinator and publication paths.
+They do not merge independent edits or freeze the whole scene. Their comparison
+is against file contents, including same-size/same-timestamp replacements.
+The coordinator serializes participating writers; it cannot make arbitrary
+external filesystem edits transactional.

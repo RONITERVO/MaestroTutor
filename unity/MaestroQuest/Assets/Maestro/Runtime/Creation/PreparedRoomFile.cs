@@ -69,6 +69,7 @@ namespace Maestro.Quest.Creation
             bool exists=File.Exists(primary);var bytes=ReadBytes(primary);
             if(exists!=(bytes!=null)||!exists&&File.Exists(primary))
                 throw new IOException("The saved "+label+" could not be captured within its size limit.");
+            if(!CheckAcceptedIdentity(bytes==null?null:Fingerprint(bytes),out var error))throw new IOException(error);
             return new PrimaryCapture(this,bytes,exists);
         }
 
@@ -119,6 +120,7 @@ namespace Maestro.Quest.Creation
             if(!Monitor.TryEnter(retainedGate)){error="Room file inspection is busy; the edit was not accepted.";return false;}
             try {
                 if(ReadOnly||HasNewerFiles(directory,stem,version)){error="Saved "+label+" is unavailable; its files are preserved.";return false;}
+                if(!CheckAcceptedPrimary(out error))return false;
                 if(!MatchesPreparation(baseline,existed)){error="The saved "+label+" changed during preparation; inspect it before retrying.";return false;}
                 if(Maestro.Quest.Persistence.WorkspaceFileInventory.Kind(primary+".pending")!="absent"){error="An unfinished room save remains; preserve it before editing.";return false;}
                 if(content.Stage!=null&&!content.Stage.Ready){error="Prepared room bytes changed; preserve the staging file.";return false;}
@@ -142,14 +144,16 @@ namespace Maestro.Quest.Creation
                 try {
                     if(ReadOnly||HasNewerFiles(directory,stem,version)){ReadOnly=true;error="Saved "+label+" is unavailable for editing; its files are preserved.";return false;}
                     error="The saved "+label+" changed during preparation; inspect it before retrying.";
-                    if(!MatchesPreparation(baseline,existed))return false;
+                    if(!CheckAcceptedPrimary(out error))return false;
+                    if(!MatchesPreparation(baseline,existed)){error="The saved "+label+" changed during preparation; inspect it before retrying.";return false;}
                     Directory.CreateDirectory(directory);
                     // Do not claim another writer's unfinished staging file.
                     if(content.Stage!=null){content.Stage.MoveTo(pending);staged=true;}
                     else using(var stream=new FileStream(pending,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                         staged=true;stream.Write(bytes,0,bytes.Length);stream.Flush(true);
                     }
-                    if(!MatchesPreparation(baseline,existed))return false;
+                    if(!CheckAcceptedPrimary(out error))return false;
+                    if(!MatchesPreparation(baseline,existed)){error="The saved "+label+" changed during preparation; inspect it before retrying.";return false;}
                     if(existed) {
                         File.Copy(primary,validPrimary?primary+".backup":primary+".unreadable",true);
                         // Prepared interactive saves make one attempt. Keep Windows
@@ -160,6 +164,7 @@ namespace Maestro.Quest.Creation
                     // The worker proved these exact bytes, including the staged
                     // content check above. Reuse its hash instead of hashing the
                     // same private payload again on the interaction thread.
+                    AcceptPrimaryIdentity(content.Hash);
                     primaryInspectionHash=content.Hash;primaryInspectionValid=true;primaryInspectionNewer=false;
                     error=null;return true;
                 }

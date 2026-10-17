@@ -32,10 +32,10 @@ namespace Maestro.Quest.Creation
         byte[] primaryInspectionHash;
         bool primaryInspectionValid,primaryInspectionNewer;
         public bool ReadOnly { get; private set; }
-        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null,int minimumVersion = 1,bool cachePrimaryInspection = false)
+        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null,int minimumVersion = 1,bool cachePrimaryInspection = false,bool trackAcceptedPrimary = false)
         {
             if(minimumVersion<1 || minimumVersion>version)throw new ArgumentOutOfRangeException(nameof(minimumVersion));
-            this.cachePrimaryInspection=cachePrimaryInspection;
+            this.cachePrimaryInspection=cachePrimaryInspection;this.trackAcceptedPrimary=trackAcceptedPrimary;
             this.minimumVersion=minimumVersion;this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
             this.newerDocument=newerDocument;this.validWire=validWire;
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
@@ -64,7 +64,8 @@ namespace Maestro.Quest.Creation
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { return true; }
         }
-        public T Load(out string message)
+        public T Load(out string message)=>trackAcceptedPrimary?LoadAccepted(out message):LoadExclusive(out message);
+        T LoadExclusive(out string message)
         {
             message = null;
             if (HasNewerFiles(directory,stem,version))
@@ -175,7 +176,12 @@ namespace Maestro.Quest.Creation
             // Library usage scans read primary, backup and staging files on a worker.
             // Serialize publication with those reads: Windows cannot rename a file
             // while the same store's retention reader still holds it open.
-            lock(retainedGate)return SaveExclusive(value,out error);
+            lock(retainedGate) {
+                try {if(!CheckAcceptedPrimary(out error))return false;return SaveExclusive(value,out error);}
+                catch(Exception e) when(e is IOException||e is UnauthorizedAccessException||e is NotSupportedException) {
+                    error="The saved "+label+" could not be inspected. Its files are preserved; check storage and retry.";return false;
+                }
+            }
         }
         bool SaveExclusive(T value,out string error)
         {
@@ -185,22 +191,25 @@ namespace Maestro.Quest.Creation
             if (value == null || !validate(value)) { error = "Invalid "+label+" data"; return false; }
             var candidate = copy(value); upgrade(candidate);
             if (!validate(candidate)) { error = "Invalid "+label+" data"; return false; }
-            string pending = primary+".pending", phase="stage";
+            string pending = primary+".pending", phase="stage";bool staged=false;byte[] bytes=null;
             try
             {
-                byte[] bytes = new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(candidate));
+                bytes = new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(candidate));
                 if (bytes.Length > maximum) { error = "The "+label+" collection is too large to save"; return false; }
                 Directory.CreateDirectory(directory);
-                using (var stream = new FileStream(pending,FileMode.Create,FileAccess.Write,FileShare.None)) { stream.Write(bytes,0,bytes.Length); stream.Flush(true); }
+                if(File.Exists(pending)){error="An unfinished "+label+" save remains; preserve it before editing.";return false;}
+                using (var stream = new FileStream(pending,FileMode.CreateNew,FileAccess.Write,FileShare.None)) { staged=true;stream.Write(bytes,0,bytes.Length); stream.Flush(true); }
+                if(!CheckAcceptedPrimary(out error))return false;
                 if (File.Exists(primary))
                 {
                     phase="backup";bool validPrimary=InspectPrimary(out bool nowNewer);
                     if(nowNewer){ReadOnly=true;return false;}
+                    if(!CheckAcceptedPrimary(out error))return false;
                     File.Copy(primary,validPrimary ? primary+".backup" : primary+".unreadable",true);
                     phase="publish";Maestro.Quest.Persistence.FilePublication.Replace(pending,primary,null);
                 }
                 else {phase="publish";File.Move(pending,primary);}
-                error = null; return true;
+                if(trackAcceptedPrimary)AcceptPrimaryIdentity(Fingerprint(bytes));error = null; return true;
             }
             catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is NotSupportedException) {
                 // Diagnostic codes identify sharing/permission/disk failures without
@@ -208,7 +217,12 @@ namespace Maestro.Quest.Creation
                 Debug.LogWarning($"Maestro {label} save failed during {phase} ({e.GetType().Name}, 0x{e.HResult:X8})");
                 error = "Could not save "+label+"; the previous save is retained. Check available storage and try again."; return false;
             }
-            finally { try { if (File.Exists(pending)) File.Delete(pending); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+            finally {
+                // CreateNew proves initial ownership. Only remove our complete
+                // bytes; partial writes or a substituted stage remain evidence.
+                try {if(staged&&bytes!=null&&ReadBytes(pending) is byte[] saved&&saved.SequenceEqual(bytes))File.Delete(pending);}
+                catch(IOException){}catch(UnauthorizedAccessException){}
+            }
         }
     }
 }

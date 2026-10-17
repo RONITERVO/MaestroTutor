@@ -47671,6 +47671,10 @@
       "sha256": "1da114b702eb45cf23e66f2b6b86fe8849e499ad150f79a1915bca2331687a81"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AcceptedRoomPrimary.cs",
+      "sha256": "2c1d56c2f096cb6fd56fd7bab66d148a1bebaec7d368a247fc78c30f1d7a9499"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
       "sha256": "be4c61d453fc35dc54f2e93d43679d00cb676bee01aefb0c4974a62494cbf0f0"
     },
@@ -47944,7 +47948,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomFile.cs",
-      "sha256": "a11501c48f62bebe6ffce7ec59ca9dda8effe6fc4e678e0d2a341b84059966fa"
+      "sha256": "6fa32690f402f6d9d9efaa28905382f84b21d91287ee02a2aadee49a21c6708d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
@@ -48132,7 +48136,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "1eb1413df98b39caf3d9dea58ee3a409bd04fe32d622c76592c16f6c67f8d46d"
+      "sha256": "16b89c957c2a6b06a823730270cc34d6e8b209d8fe8bfc106d02575d447923e4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
@@ -48436,7 +48440,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "9e038523b87ca1f39ece1f8b6a363800a7721189a25a767003325c94c84990ac"
+      "sha256": "0745498e9c20c0f095419d55ad5dffa20be61464c3bf37bc879efb0df56d9e45"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -48572,7 +48576,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TemporaryMemorySave.cs",
-      "sha256": "e416a2eec9fa2ce2819edb7c1550cb525ef45933619fa7b3081e6602fdefcbce"
+      "sha256": "10a07c2f57067c1d066ae649d76dbd08ac80a9a1ea75860893812d1c3d0a4fe7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidGeometry.cs",
@@ -48580,7 +48584,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
-      "sha256": "79b4577a9733b782f4d5c16b08ac76a35b17f59a196d510abc650b1287ae8199"
+      "sha256": "b85f3e4e9049b41761e685af756732c5139aa133d097c8b5f9346abb5dcda266"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VirtualRoomCapture.cs",

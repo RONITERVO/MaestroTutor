@@ -119,11 +119,12 @@ namespace Maestro.Quest.Tests
             using var next=await storage.PrepareSaveAsync(Changed("next"));
         }
         [Test] public async Task TwoStoresCannotBothPublishFromTheSameCapturedBaseline(){
-            var other=new RoomStorage(directory);
+            var other=new RoomStorage(directory);Assert.That(other.Load(out _),Is.Not.Null);
             using var first=await storage.PrepareSaveAsync(Changed("first"));using var second=await other.PrepareSaveAsync(Changed("second"));
             var one=storage.StartPreparedPublication(first);var two=other.StartPreparedPublication(second);
             var results=await Task.WhenAll(one.Completion,two.Completion);
-            Assert.AreEqual(1,results.Count(x=>x.Saved));Assert.That(storage.Load(out _).objects[0].name,Is.EqualTo("first").Or.EqualTo("second"));Assert.IsEmpty(Stages());
+            Assert.AreEqual(1,results.Count(x=>x.Saved));Assert.That(new RoomStorage(directory).Load(out _).objects[0].name,Is.EqualTo("first").Or.EqualTo("second"));Assert.IsEmpty(Stages());
+            var loser=results[0].Saved?other:storage;Assert.That(loser.Save(Changed("stale retry"),out _),Is.False);Assert.That(loser.ReadOnly,Is.True);
         }
         static async Task AwaitAcceptance(RoomStorage.PreparedPublication job)
         {

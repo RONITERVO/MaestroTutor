@@ -30,7 +30,7 @@ namespace Maestro.Quest.Tests
             directory=Path.Combine(Path.GetTempPath(),"MqHold-"+Guid.NewGuid().ToString("N"));epoch=Path.Combine(directory,"action-epochs",Guid.NewGuid().ToString("N"));
             objectId=Guid.NewGuid().ToString("N");sequenceId=Guid.NewGuid().ToString("N");
             var document=new RoomDocument {version=2,objects=new[]{new RoomObjectData {id="book",kind=RoomObjectKind.Book,position=new Vector3(0,1,1)},new RoomObjectData {id="maestro",kind=RoomObjectKind.Maestro,position=new Vector3(1,0,1)},new RoomObjectData {id=objectId,kind=RoomObjectKind.Assembly,position=new Vector3(2,1,1),recipe=RecipeTemplates.BoxRobot(true)}}};
-            document.objects[2].recipe.playing=true;Assert.That(new RoomStorage(directory).Save(document,out var error),Is.True,error);
+            document.objects[2].recipe.playing=true;var writer=new RoomStorage(directory);writer.Load(out _);Assert.That(writer.Save(document,out var error),Is.True,error);
             var sequence=new RuleSequence {id=sequenceId,name="Wave robot",program=BehaviourProgram.FromSteps(new RuleStep {action=RuleActionKind.RecipeAnimation,targetId=objectId,seconds=10,loop=true})};
             var rules=new RuleDocument {sequences=new[]{sequence},bindings=new[]{new RuleBinding {id=Guid.NewGuid().ToString("N"),sequenceId=sequenceId,trigger=RuleEventKind.Speaking,cooldown=.25f},new RuleBinding {id=Guid.NewGuid().ToString("N"),sequenceId=sequenceId,sourceId=objectId,trigger=RuleEventKind.ItemTapped,cooldown=.25f}}};
             Assert.That(new RuleStorage(directory).Save(rules,out error),Is.True,error);

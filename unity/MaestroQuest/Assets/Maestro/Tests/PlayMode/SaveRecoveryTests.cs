@@ -140,6 +140,16 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
             Assert.That(editor.TryFlush(out error),Is.True,error);AssertSaved("Starting accepted edit",1);yield return null;
         }
+        [UnityTest] public IEnumerator ExternalRoomChangeIsPreservedWhenDirtyAutosaveRuns(){
+            Rename("Unsaved live edit");
+            var outside=new RoomStorage(directory);var changed=outside.Load(out _);changed.objects.Single(x=>x.id==id).name="External saved edit";
+            Assert.That(outside.Save(changed,out var error),Is.True,error);
+            var primary=File.ReadAllBytes(RoomPath);var backup=File.ReadAllBytes(RoomPath+".backup");
+            Due(editor);Tick(editor);yield return FinishWorkers();Tick(editor);
+            Assert.That(editor.HasUnsavedChanges,Is.True);Assert.That(editor.TryFlush(out error),Is.False);
+            Assert.That(File.ReadAllBytes(RoomPath),Is.EqualTo(primary));Assert.That(File.ReadAllBytes(RoomPath+".backup"),Is.EqualTo(backup));
+            Assert.That(editor.Read(id).name,Is.EqualTo("Unsaved live edit"));
+        }
         [UnityTearDown] public IEnumerator TearDown()
         {
             Unblock();if(root)UnityEngine.Object.Destroy(root);yield return null;

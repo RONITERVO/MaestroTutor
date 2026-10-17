@@ -10,15 +10,16 @@ namespace Maestro.Quest.Creation
     internal sealed class TemporaryMemorySave:IDisposable
     {
         readonly ProgramMemoryStore store;
+        readonly RoomStorage rooms;
         readonly ProgramMemoryDocument expected,captured;
         readonly RoomDocument room;
         readonly RoomSnapshotTransaction.Snapshot previous;
         readonly IDisposable pin,write;
         internal RoomSnapshotTransaction.Snapshot Pair {get;private set;}
         internal bool Uncertain {get;private set;}
-        internal TemporaryMemorySave(ProgramMemoryStore store,RoomSnapshotTransaction.Snapshot previous,RoomDocument room,WorkspaceWriteGate writes)
+        internal TemporaryMemorySave(ProgramMemoryStore store,RoomSnapshotTransaction.Snapshot previous,RoomDocument room,WorkspaceWriteGate writes,RoomStorage rooms)
         {
-            this.store=store;this.previous=previous;this.room=room;
+            this.store=store;this.previous=previous;this.room=room;this.rooms=rooms??throw new ArgumentNullException(nameof(rooms));
             expected=store.SavedSnapshot();captured=store.CaptureTemporary();
             write=writes.Write();try{pin=store.RetainSnapshot(captured);}catch{write.Dispose();throw;}
         }
@@ -28,15 +29,16 @@ namespace Maestro.Quest.Creation
             try {
                 candidate=RoomSnapshotTransaction.FromDocuments(room,captured);
                 before=previous??RoomSnapshotTransaction.Capture(store.DirectoryPath,out _,wait:true);
+                if(!rooms.CheckPairedPrimary(before.Room,out var issue)){Uncertain=true;throw new IOException(issue);}
                 var saved=before.Memory is byte[] bytes?ProgramMemoryDocument.Decode(bytes):ProgramMemoryDocument.Empty();
                 if(saved.Identity!=expected.Identity){Uncertain=true;throw new IOException("Saved memory changed outside this temporary session; reopen it before keeping a snapshot.");}
                 attempted=true;
-                RoomSnapshotTransaction.Publish(store.DirectoryPath,before,candidate,fault,wait:true);Pair=candidate;return null;
+                RoomSnapshotTransaction.Publish(store.DirectoryPath,before,candidate,fault,wait:true);rooms.AcceptPairedPrimary(before.Room,candidate.Room);Pair=candidate;return null;
             }catch(Exception error){
                 if(attempted){
                     try {
                         var recovered=RoomSnapshotTransaction.Capture(store.DirectoryPath,out _,wait:true);
-                        if(recovered.Identity==candidate.Identity){Pair=candidate;return null;}
+                        if(recovered.Identity==candidate.Identity){rooms.AcceptPairedPrimary(before.Room,candidate.Room);Pair=candidate;return null;}
                         if(recovered.Identity!=before.Identity)Uncertain=true;
                     }catch{
                         // A pre-existing ordinary pending file may reject publication before
@@ -45,7 +47,7 @@ namespace Maestro.Quest.Creation
                     }
                 }
                 if(before==null){
-                    try{var bytes=RoomSnapshotTransaction.InspectSnapshot(store.DirectoryPath).Memory;Uncertain=(bytes==null?ProgramMemoryDocument.Empty():ProgramMemoryDocument.Decode(bytes)).Identity!=expected.Identity;}catch{Uncertain=true;}
+                    try{var snapshot=RoomSnapshotTransaction.InspectSnapshot(store.DirectoryPath);var bytes=snapshot.Memory;Uncertain=!rooms.CheckPairedPrimary(snapshot.Room,out _)||(bytes==null?ProgramMemoryDocument.Empty():ProgramMemoryDocument.Decode(bytes)).Identity!=expected.Identity;}catch{Uncertain=true;}
                 }
                 return "Room and remembered values were not confirmed together. Temporary edits remain available. "+error.Message;
             }

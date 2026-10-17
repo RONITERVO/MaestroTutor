@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests
             Assert.That(WorkspaceRecoveryHold.TryAcquire(editor,host.Current.Rules,host.Current.Controls,out var hold,out var error),Is.True,error);
             try {
                 var capture=hold.Capture(Path.Combine(directory,"recovery-evidence"));yield return null;Assert.That(capture.IsCompleted,Is.False);
-                Assert.That(new RoomStorage(data).Save(older,out error),Is.True,error);save.SetResult(null);while(!capture.IsCompleted)yield return null;var result=capture.GetAwaiter().GetResult();
+                var writer=(RoomStorage)typeof(RoomEditor).GetField("storage",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(editor);Assert.That(writer.Save(older,out error),Is.True,error);save.SetResult(null);while(!capture.IsCompleted)yield return null;var result=capture.GetAwaiter().GetResult();
                 Assert.That(RecoveryText(result.Path,"raw/"+RoomStorage.FileName),Does.Contain("Older save finished"));Assert.That(RecoveryText(result.Path,"accepted.json"),Does.Contain("Newer accepted edit"));
             }finally{save.TrySetResult(null);CloseRecovery(hold);}
             Assert.That(editor.CanUndo,Is.True);Assert.That(editor.TryFlush(out error),Is.True,error);Assert.That(File.ReadAllText(Path.Combine(data,RoomStorage.FileName)),Does.Contain("Newer accepted edit"));

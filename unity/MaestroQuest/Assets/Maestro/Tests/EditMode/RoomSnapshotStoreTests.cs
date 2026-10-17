@@ -58,7 +58,7 @@ namespace Maestro.Quest.Tests
             var writing=memory.Write(memory.Snapshot().Revision,Program,Values(2));Task<bool> saving=null;Task<ProgramMemoryDocument> reading=null;
             try {
                 Assert.That(reached.Wait(TimeSpan.FromSeconds(10)),Is.True);
-                saving=Task.Run(()=>new RoomStorage(directory).Save(Room(3),out _));reading=Task.Run(()=>ProgramMemoryStore.ReadSaved(directory));
+                saving=Task.Run(()=>{var writer=new RoomStorage(directory);writer.Load(out _);return writer.Save(Room(3),out _);});reading=Task.Run(()=>ProgramMemoryStore.ReadSaved(directory));
                 Assert.That(saving.Wait(100),Is.False);Assert.That(reading.Wait(100),Is.False);
             }finally{release.Set();writing.GetAwaiter().GetResult();saving?.GetAwaiter().GetResult();reading?.GetAwaiter().GetResult();}
             Assert.That(writing.Result.Error,Is.Null);Assert.That(saving.Result,Is.True);Assert.That(Count(reading.Result),Is.EqualTo(2));Assert.That(memory.Error,Is.Null);

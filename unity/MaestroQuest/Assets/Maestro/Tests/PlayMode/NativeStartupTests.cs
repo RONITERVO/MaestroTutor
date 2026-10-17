@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests
         IEnumerator ReloadForStartup(RoomDocument saved=null,RoomRuntimeGate gate=null,bool suspend=false,bool observe=true)
         {
             Assert.That(editor.TryFlush(out var error),Is.True,error);
-            if(saved!=null)Assert.That(new RoomStorage(directory).Save(saved,out error),Is.True,error);
+            if(saved!=null){var writer=new RoomStorage(directory);Assert.That(writer.Load(out _),Is.Not.Null);Assert.That(writer.Save(saved,out error),Is.True,error);}
             UnityEngine.Object.Destroy(root);yield return null;
             root=new GameObject("Reloaded startup");root.AddComponent<XRInteractionManager>();room=root.AddComponent<RoomInteraction>();
             var book=Included("book");var avatar=Included("maestro");physics=root.AddComponent<RoomPhysicsWorld>();

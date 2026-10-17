@@ -43,11 +43,18 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest]public IEnumerator FailedWorldIdentityCheckpointKeepsStorageAndObservationUnavailable()
         {
-            string data=Path.Combine(directory,"room"),blocked=Path.Combine(data,RoomStorage.FileName);Directory.CreateDirectory(blocked);
+            string data=Path.Combine(directory,"room"),blocked=Path.Combine(data,RoomStorage.FileName+".pending");Directory.CreateDirectory(blocked);
             string sentinel=Path.Combine(blocked,"preserve.txt");File.WriteAllText(sentinel,"Preserve failed-save evidence");
             Open();yield return ReadyHost();var editor=host.Current.Editor;Assert.That(editor.WorldIdentityReady,Is.False);Assert.That(editor.CanSaveRoom,Is.False);
             Assert.That(BehaviourCatalog.TryRead("world.identity",1,null,new BehaviourCatalog.FactContext(editor:editor),out _),Is.False);
             Assert.That(File.ReadAllText(sentinel),Is.EqualTo("Preserve failed-save evidence"));Assert.That(editor.Status,Does.Contain("identity"));
+        }
+        [UnityTest]public IEnumerator UnusablePrimaryKeepsWorldIdentityAndObservationUnavailable(){
+            string data=Path.Combine(directory,"room"),blocked=Path.Combine(data,RoomStorage.FileName);Directory.CreateDirectory(blocked);
+            string sentinel=Path.Combine(blocked,"preserve.txt");File.WriteAllText(sentinel,"Preserve inspection evidence");
+            Open();yield return ReadyHost();var editor=host.Current.Editor;Assert.That(editor.WorldIdentityReady,Is.False);Assert.That(editor.CanSaveRoom,Is.False);
+            Assert.That(BehaviourCatalog.TryRead("world.identity",1,null,new BehaviourCatalog.FactContext(editor:editor),out _),Is.False);
+            Assert.That(File.ReadAllText(sentinel),Is.EqualTo("Preserve inspection evidence"));Assert.That(editor.Status,Does.Contain("inspected"));
         }
         [UnityTest]public IEnumerator TemporaryWorldEditsAndViewpointKeepOneAuthoredIdentity()
         {

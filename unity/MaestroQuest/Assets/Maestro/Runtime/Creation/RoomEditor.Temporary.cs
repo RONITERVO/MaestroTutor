@@ -101,7 +101,7 @@ namespace Maestro.Quest.Creation
             savingSnapshot=snapshot;TemporarySaveError=null;TemporarySaveId=Guid.NewGuid().ToString("N");
             LastTemporarySave=new TemporarySaveReceipt(TemporarySaveId,TemporarySessionId,baseline);
             var target=storage; // The worker owns detached data, never scene/journal objects.
-            try{savingMemory=TemporaryMemory is ProgramMemoryStore memory?new TemporaryMemorySave(memory,savedPair,snapshot,WriteGate):null;}
+            try{savingMemory=TemporaryMemory is ProgramMemoryStore memory?new TemporaryMemorySave(memory,savedPair,snapshot,WriteGate,target):null;}
             catch(Exception e){savingMemory=null;temporarySave=Task.FromResult("Snapshot capture could not begin. "+e.Message);return;}
             var memorySave=savingMemory;
             temporarySave=Task.Run(async()=>{
