@@ -30,9 +30,9 @@ namespace Maestro.Quest.Tests
             Assert.That(file.Save(new Probe(),out error),Is.True,error);
         }
         [TearDown] public void TearDown(){observe=null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
-        VersionedRoomFile<Probe>.PreparedSave Prepare(Probe value=null)
+        VersionedRoomFile<Probe>.PreparedSave Prepare(Probe value=null,bool staged=false)
         {
-            Assert.That(file.PrepareSave(value??new Probe{value=2},file.CaptureForPreparation(),out var prepared,out var error),Is.True,error);
+            Assert.That(file.PrepareSave(value??new Probe{value=2},file.CaptureForPreparation(),out var prepared,out var error,stageFile:staged),Is.True,error);
             return prepared;
         }
         [Test] public void PreparationIsPrivateAndPublicationIsOneShot()
@@ -166,6 +166,133 @@ namespace Maestro.Quest.Tests
             Assert.That(file.PublishPrepared(prepared,out _),Is.False);
             Assert.That(file.Load(out _).value,Is.EqualTo(3));
         }
+        string[] Stages()=>Directory.GetFiles(directory,"*.prepare.*");
+        [Test] public void WorkerStagingIsPrivatePinnedAndPublishedOnlyOnce()
+        {
+            string before=File.ReadAllText(primary),backup=File.ReadAllText(primary+".backup");
+            using var prepared=Prepare(staged:true);
+            Assert.That(Stages().Length,Is.EqualTo(1));
+            string stage=Stages()[0];StringAssert.Contains("\"value\":2",File.ReadAllText(stage));
+            Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(backup));
+            Assert.That(file.Load(out _).value,Is.EqualTo(1),"Loading never adopts private prepared bytes");
+            Assert.Throws<IOException>(()=>{using var writer=new FileStream(stage,FileMode.Open,FileAccess.Write,FileShare.ReadWrite);});
+            Assert.That(file.PublishPrepared(prepared,out var error),Is.True,error);
+            Assert.That(Stages(),Is.Empty);Assert.That(File.Exists(primary+".pending"),Is.False);
+            Assert.That(file.Load(out _).value,Is.EqualTo(2));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(before));
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+        }
+        [Test] public void DisposingStagedPreparationDeletesOnlyItsPrivateFile()
+        {
+            string before=File.ReadAllText(primary);
+            string foreign=primary+".prepare.foreign";File.WriteAllText(foreign,"preserve");
+            var prepared=Prepare(staged:true);Assert.That(Stages().Length,Is.EqualTo(2));
+            prepared.Dispose();prepared.Dispose();
+            Assert.That(Stages(),Is.EqualTo(new[]{foreign}));
+            Assert.That(File.ReadAllText(foreign),Is.EqualTo("preserve"));
+            Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+        }
+        [TestCase(false)] [TestCase(true)]
+        public void StagedPublicationPreservesAnInterveningWriterAndItsBackup(bool newer)
+        {
+            using var prepared=Prepare(staged:true);
+            string future=Path.Combine(directory,"probe.v2.json");
+            if(newer)File.WriteAllText(future,"future");
+            else Assert.That(file.Save(new Probe{value=3},out _),Is.True);
+            string before=File.ReadAllText(primary),backup=File.ReadAllText(primary+".backup");
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+            Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(backup));
+            Assert.That(Stages(),Is.Empty);
+            if(newer)Assert.That(File.ReadAllText(future),Is.EqualTo("future"));
+        }
+        [TestCase(false)] [TestCase(true)]
+        public void StagedPublicationNeverClaimsAnUnfinishedWriter(bool directoryPending)
+        {
+            using var prepared=Prepare(staged:true);
+            string before=File.ReadAllText(primary),backup=File.ReadAllText(primary+".backup"),pending=primary+".pending";
+            if(directoryPending)Directory.CreateDirectory(pending);else File.WriteAllText(pending,"foreign");
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+            Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(backup));
+            if(directoryPending)Assert.That(Directory.Exists(pending),Is.True);else Assert.That(File.ReadAllText(pending),Is.EqualTo("foreign"));
+            Assert.That(Stages(),Is.Empty);
+        }
+        [Test] public void StagedDamagedBaselineIsRetainedAndNotPromotedToBackup()
+        {
+            var backup=File.ReadAllText(primary+".backup");File.WriteAllText(primary,"{damaged");
+            using var prepared=Prepare(staged:true);
+            Assert.That(file.PublishPrepared(prepared,out var error),Is.True,error);
+            Assert.That(File.ReadAllText(primary+".unreadable"),Is.EqualTo("{damaged"));
+            Assert.That(File.ReadAllText(primary+".backup"),Is.EqualTo(backup));
+            Assert.That(file.Load(out _).value,Is.EqualTo(2));Assert.That(Stages(),Is.Empty);
+        }
+        [Test] public void AnOrphanPrivateStageIsNeverRecoveredAsARoom()
+        {
+            var orphan=primary+".prepare.orphan";File.WriteAllText(orphan,File.ReadAllText(primary).Replace("\"value\":1","\"value\":7"));
+            Assert.That(Store().Load(out _).value,Is.EqualTo(1));
+            File.Delete(primary);File.Delete(primary+".backup");
+            Assert.That(Store().Load(out _),Is.Null);
+            Assert.That(File.Exists(orphan),Is.True);
+            using var prepared=Prepare(staged:true);
+            Assert.That(file.PublishPrepared(prepared,out var error),Is.True,error);
+            Assert.That(file.Load(out _).value,Is.EqualTo(2));
+            Assert.That(Stages(),Is.EqualTo(new[]{orphan}));
+        }
+        [Test] public void StagedPreparationCannotBeConsumedByADifferentStore()
+        {
+            using var prepared=Prepare(staged:true);
+            Assert.That(Store().PublishPrepared(prepared,out _),Is.False);
+            Assert.That(Stages().Length,Is.EqualTo(1));
+            Assert.That(file.PublishPrepared(prepared,out var error),Is.True,error);
+            Assert.That(Stages(),Is.Empty);
+        }
+        [Test] public void AReplacedPrivateStageIsPreservedAfterFailedClaim()
+        {
+            string pending=primary+".pending";Directory.CreateDirectory(pending);
+            var bytes=System.Text.Encoding.UTF8.GetBytes("original");
+            using var stage=PreparedFileStage.Create(primary,bytes,default);
+            string path=Stages()[0];
+            Assert.Throws<IOException>(()=>stage.MoveTo(pending));
+            var stamp=File.GetLastWriteTimeUtc(path);
+            File.WriteAllText(path,"replaced");File.SetLastWriteTimeUtc(path,stamp);
+            stage.Dispose();
+            Assert.That(File.ReadAllText(path),Is.EqualTo("replaced"));
+            Assert.That(Directory.Exists(pending),Is.True);
+        }
+        [Test] public async Task BusyRetentionReaderDoesNotBlockStagedPublication()
+        {
+            using var prepared=Prepare(staged:true);
+            string before=File.ReadAllText(primary);
+            var entered=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var release=new ManualResetEventSlim();
+            observe=x=>{entered.TrySetResult(true);if(!release.Wait(5000))throw new TimeoutException("Retention reader was not released");};
+            var reader=Task.Run(()=>file.Retains(x=>new[]{x.name},"one",out _,force:true));
+            try {
+                Assert.That(await Task.WhenAny(entered.Task,Task.Delay(5000)),Is.SameAs(entered.Task));
+                Assert.That(file.PublishPrepared(prepared,out var error),Is.False);
+                StringAssert.Contains("busy",error);
+                Assert.That(reader.IsCompleted,Is.False,"Publication returned while the reader still owns its lock");
+                Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+                Assert.That(Stages(),Is.Empty);
+            } finally {release.Set();await reader;observe=null;}
+        }
+#if UNITY_EDITOR_WIN
+        [Test] public void StagedPublicationDoesNotRetryAWindowsReaderOrReplayAfterItLeaves()
+        {
+            using var prepared=Prepare(staged:true);
+            string before=File.ReadAllText(primary);
+            using(var reader=new FileStream(primary,FileMode.Open,FileAccess.Read,FileShare.Read)){
+                Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+                Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+            }
+            Assert.That(file.PublishPrepared(prepared,out _),Is.False);
+            Assert.That(File.ReadAllText(primary),Is.EqualTo(before));
+            Assert.That(Stages(),Is.Empty);Assert.That(File.Exists(primary+".pending"),Is.False);
+        }
+#endif
         static RoomDocument Room()=>new RoomJournal(new RoomDocument {version=1,objects=new[]{
             new RoomObjectData{id="book",kind=RoomObjectKind.Book},
             new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro}
@@ -177,9 +304,10 @@ namespace Maestro.Quest.Tests
             room.objects[0].name="prepared";
             var task=storage.PrepareSaveAsync(room);room.objects[0].name="later";
             using var prepared=await task;
+            Assert.That(Stages().Length,Is.EqualTo(1),"PrepareSaveAsync returns only after writing the private stage");
             Assert.That(storage.Load(out _).objects[0].name,Is.Not.EqualTo("prepared"));
             Assert.That(storage.PublishPrepared(prepared,out error),Is.True,error);
-            Assert.That(storage.Load(out _).objects[0].name,Is.EqualTo("prepared"));
+            Assert.That(storage.Load(out _).objects[0].name,Is.EqualTo("prepared"));Assert.That(Stages(),Is.Empty);
         }
         [Test] public async Task CancelledRoomPreparationDoesNotPublish()
         {
@@ -223,6 +351,22 @@ namespace Maestro.Quest.Tests
                 Assert.That(preparation.IsCompleted,Is.True,"Busy capture must not queue a blocking worker or block the caller.");
                 try {using var unexpected=await preparation;Assert.Fail("Busy snapshot was captured.");}
                 catch(IOException) {}
+            } finally {release.Set();await writer;}
+            using var after=await storage.PrepareSaveAsync(room);
+            Assert.That(storage.PublishPrepared(after,out error),Is.True,error);
+        }
+        [Test] public async Task BusyDiskCoordinatorRefusesStagedPublicationAndReleasesAdmission()
+        {
+            var storage=new RoomStorage(directory);var room=Room();Assert.That(storage.Save(room,out var error),Is.True,error);
+            using var prepared=await storage.PrepareSaveAsync(room);
+            var entered=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var release=new ManualResetEventSlim();
+            var writer=Task.Run(()=>{using var held=RoomSnapshotTransaction.Enter(directory);entered.SetResult(true);if(!release.Wait(5000))throw new TimeoutException("Writer was not released.");});
+            try {
+                Assert.That(await Task.WhenAny(entered.Task,Task.Delay(5000)),Is.SameAs(entered.Task));
+                Assert.That(storage.PublishPrepared(prepared,out _),Is.False);
+                Assert.That(writer.IsCompleted,Is.False,"Owner-thread publication must not wait for the coordinator");
+                Assert.That(Stages(),Is.Empty);
             } finally {release.Set();await writer;}
             using var after=await storage.PrepareSaveAsync(room);
             Assert.That(storage.PublishPrepared(after,out error),Is.True,error);

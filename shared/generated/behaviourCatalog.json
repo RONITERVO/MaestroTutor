@@ -47726,7 +47726,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "593880df916bd7e70389d33191300b5686fe0042b094f30fc1366bcffeedaa24"
+      "sha256": "6439f2fcffa5d9c3be6184a816293601aeab6478649bcb3da8781e985f28a3be"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -47750,7 +47750,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomFile.cs",
-      "sha256": "5334cf62df7d2aedb5a748ae289ff8d55f32992747b92cabfc1908d1b24679c0"
+      "sha256": "a3b0e4792f965c7256f6cfd4f7fae3b3d1f9003a0a075ce1785f31b362e483cb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
@@ -47762,7 +47762,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomSave.cs",
-      "sha256": "fcf69c1938dae6ed07ad1a9de72a9c7a7136e23bcd33587bc55d557ea9eb8e16"
+      "sha256": "9186aa829a20dc649905b79256f5fdd66e714def6302d61095ae898409b6dc90"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomWindows.cs",
@@ -48939,6 +48939,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/FilePublication.cs",
       "sha256": "c7ba989735724e3fb3bffef8434d6ea7eddafb75087f0705a29cf3923380014b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/PreparedFileStage.cs",
+      "sha256": "26cf471e5699b1f2bc6c9ac65fc7a25b09d99d4f5a98315c5b47ff11720b4eae"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",

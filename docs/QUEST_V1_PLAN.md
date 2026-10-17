@@ -12739,3 +12739,59 @@ The earlier offline journeys and Android compilation remain pinned to a12cf3db.
 No headset, paid provider, signing, deployment or Meta operation ran.
 
 Evidence: .quest-evidence/native-pending-edit-20261017/verified.json.
+
+
+## Owned worker staging for pending room edits — 2026-10-17
+
+RoomStorage's prepared-save worker now writes and durably flushes its private
+candidate before returning readiness. A live handle pins the stage against ordinary
+writers. The final conditional commit verifies its exact bytes and saved baseline,
+claims .pending without overwriting a foreign writer, and preserves the old valid
+primary as backup or the damaged primary as unreadable evidence. Prepared stages
+are not accepted room documents and are never adopted on restart.
+
+Publication refuses busy room/memory coordination or retained-file inspection
+without waiting on the owner thread. The interactive staged path makes one final
+replace attempt, without Windows retry sleeps. Its worker-computed candidate hash
+is reused for the inspection cache after successful publication; this removes a
+redundant owner-thread hash without replacing content checks with file metadata.
+The shared rotation completion action remains the sole native edit integration.
+Other synchronous APIs retain their existing contract.
+
+Thirteen new regression cases cover private pinned staging, stale/newer primaries,
+foreign files/directories, wrong-store ownership, cancellation/disposal, damaged
+baseline evidence, abandoned and substituted stages, busy retention/coordinator
+ownership, and a real Windows reader preventing replacement. Final checks pass
+**1,389 EditMode**, **51 selected PlayMode** and **23 web capability tests**.
+The native selection includes the existing pending-operation lifecycle, program,
+physical-book, receipt and save-recovery checks. All **3,202 native inputs** match
+the final mirror apart from documented Configure-derived settings; all **14**
+preserved local files remain unchanged. Capability contracts and bundled guides
+are unchanged; generated native provenance is refreshed.
+
+The same synthetic desktop probe, with seven measured iterations after warmup,
+records **4.988 ms dispatch**,
+**267.319 ms worker wait** and
+**51.051 ms publication** for 63 drawings
+(1,439,584 encoded bytes), versus **266.030 ms** for a
+synchronous changing save. Worker allocation events are not measured. The first
+staging version still spent 56.914 ms in publication; reusing its worker-computed
+cache hash removes redundant work, but remaining content checks and IO are still
+too substantial to claim a frame-safe Quest commit. The probe blocks only its
+diagnostic harness while measuring worker wait; production polls completion.
+These are storage diagnostics, not current headset performance or capacity proof.
+
+Remaining work includes bounded primary/stage reads and hashes, backup copying,
+final replacement, native reconciliation and cleanup IO on the owner thread.
+Crash/partial-write stages remain preserved evidence; bounded orphan retention
+and recovery are still required before broad migration. Do not silently adopt or
+delete them. A genuinely asynchronous publication boundary must define native
+reservation/retirement and exact acceptance semantics before splitting the current
+non-yielding commit. The other edit families still need explicit completion
+operations and resource ownership. Saved limits remain unchanged.
+
+Evidence: .quest-evidence/staged-room-save-20261017/ contains exact input hashes,
+native reports, web output, the failed initial test-literal compilation, initial
+and final diagnostic measurements, source-provenance verification and the next
+implementation boundary. No device, provider, Android compilation, signing,
+deployment or Store acceptance is claimed by this checkpoint.

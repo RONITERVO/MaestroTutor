@@ -29,24 +29,32 @@ namespace Maestro.Quest.Creation
             }
         }
 
-        // A preparation owns only private bytes. Dispose and every publication
-        // attempt consume it; no failed/ambiguous disk effect is silently retried.
+        // A preparation owns private bytes and optionally a worker-written stage.
+        // Dispose and every publication attempt consume it; no failed/ambiguous
+        // disk effect is silently retried.
+        internal sealed class PreparedContent:IDisposable
+        {
+            internal readonly byte[] Bytes,Hash;
+            internal readonly Maestro.Quest.Persistence.PreparedFileStage Stage;
+            internal PreparedContent(byte[] bytes,Maestro.Quest.Persistence.PreparedFileStage stage){Bytes=bytes;Hash=Fingerprint(bytes);Stage=stage;}
+            public void Dispose()=>Stage?.Dispose();
+        }
         internal sealed class PreparedSave:IDisposable
         {
             readonly VersionedRoomFile<T> owner;
             readonly byte[] baseline;
             readonly bool exists,validPrimary;
-            byte[] bytes;
-            internal PreparedSave(VersionedRoomFile<T> owner,byte[] bytes,byte[] baseline,bool exists,bool validPrimary)
-            {this.owner=owner;this.bytes=bytes;this.baseline=baseline;this.exists=exists;this.validPrimary=validPrimary;}
-            internal bool Take(VersionedRoomFile<T> expected,out byte[] contents,out byte[] fingerprint,out bool present,out bool valid)
+            PreparedContent content;
+            internal PreparedSave(VersionedRoomFile<T> owner,byte[] bytes,byte[] baseline,bool exists,bool validPrimary,Maestro.Quest.Persistence.PreparedFileStage stage)
+            {this.owner=owner;content=new PreparedContent(bytes,stage);this.baseline=baseline;this.exists=exists;this.validPrimary=validPrimary;}
+            internal bool Take(VersionedRoomFile<T> expected,out PreparedContent contents,out byte[] fingerprint,out bool present,out bool valid)
             {
                 contents=null;fingerprint=null;present=false;valid=false;
                 if(!ReferenceEquals(owner,expected))return false;
-                contents=Interlocked.Exchange(ref bytes,null);if(contents==null)return false;
+                contents=Interlocked.Exchange(ref content,null);if(contents==null)return false;
                 fingerprint=baseline;present=exists;valid=validPrimary;return true;
             }
-            public void Dispose()=>Interlocked.Exchange(ref bytes,null);
+            public void Dispose()=>Interlocked.Exchange(ref content,null)?.Dispose();
         }
 
         internal PrimaryCapture CaptureForPreparation()
@@ -61,7 +69,7 @@ namespace Maestro.Quest.Creation
             return new PrimaryCapture(this,bytes,exists);
         }
 
-        internal bool PrepareSave(T value,PrimaryCapture captured,out PreparedSave prepared,out string error)
+        internal bool PrepareSave(T value,PrimaryCapture captured,out PreparedSave prepared,out string error,bool stageFile=false,CancellationToken cancellation=default)
         {
             prepared=null;error="The saved "+label+" preparation is unavailable.";
             if(!cachePrimaryInspection||captured==null||!captured.Read(this,out var before,out bool existed))return false;
@@ -82,7 +90,9 @@ namespace Maestro.Quest.Creation
                 // Prove the actual wire bytes on the worker, including normalization
                 // and strict field/version checks, before publication can cache them.
                 if(!Decode(bytes,version,out _,out _)){error="The prepared "+label+" could not be read back.";return false;}
-                prepared=new PreparedSave(this,bytes,existed?Fingerprint(before):null,existed,validPrimary);
+                cancellation.ThrowIfCancellationRequested();
+                var stage=stageFile?Maestro.Quest.Persistence.PreparedFileStage.Create(primary,bytes,cancellation):null;
+                prepared=new PreparedSave(this,bytes,existed?Fingerprint(before):null,existed,validPrimary,stage);
                 error=null;return true;
             }
             catch(Exception failure) when(failure is ArgumentException||failure is JsonException||failure is OverflowException) {
@@ -102,8 +112,12 @@ namespace Maestro.Quest.Creation
         internal bool PublishPrepared(PreparedSave prepared,out string error)
         {
             error="The "+label+" save preparation was already used or belongs to another store.";
-            if(prepared==null||!prepared.Take(this,out var bytes,out var baseline,out bool existed,out bool validPrimary))return false;
-            lock(retainedGate) {
+            if(prepared==null||!prepared.Take(this,out var content,out var baseline,out bool existed,out bool validPrimary))return false;
+            using(content) {
+                // Retention can decode large retained documents on another thread.
+                // Refuse a busy publication; never block the interaction thread.
+                if(!Monitor.TryEnter(retainedGate)){error="Room file inspection is busy; the edit was not published.";return false;}
+                var bytes=content.Bytes;
                 string pending=primary+".pending";bool staged=false;
                 try {
                     if(ReadOnly||HasNewerFiles(directory,stem,version)){ReadOnly=true;error="Saved "+label+" is unavailable for editing; its files are preserved.";return false;}
@@ -111,21 +125,31 @@ namespace Maestro.Quest.Creation
                     if(!MatchesPreparation(baseline,existed))return false;
                     Directory.CreateDirectory(directory);
                     // Do not claim another writer's unfinished staging file.
-                    using(var stream=new FileStream(pending,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
+                    if(content.Stage!=null){content.Stage.MoveTo(pending);staged=true;}
+                    else using(var stream=new FileStream(pending,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                         staged=true;stream.Write(bytes,0,bytes.Length);stream.Flush(true);
                     }
                     if(!MatchesPreparation(baseline,existed))return false;
                     if(existed) {
                         File.Copy(primary,validPrimary?primary+".backup":primary+".unreadable",true);
-                        Maestro.Quest.Persistence.FilePublication.Replace(pending,primary,null);
+                        // Prepared interactive saves make one attempt. Keep Windows
+                        // retry sleeps out of this non-yielding owner-thread commit.
+                        if(content.Stage!=null)File.Replace(pending,primary,null);
+                        else Maestro.Quest.Persistence.FilePublication.Replace(pending,primary,null);
                     } else File.Move(pending,primary);
-                    primaryInspectionHash=Fingerprint(bytes);primaryInspectionValid=true;primaryInspectionNewer=false;
+                    // The worker proved these exact bytes, including the staged
+                    // content check above. Reuse its hash instead of hashing the
+                    // same private payload again on the interaction thread.
+                    primaryInspectionHash=content.Hash;primaryInspectionValid=true;primaryInspectionNewer=false;
                     error=null;return true;
                 }
                 catch(Exception failure) when(failure is IOException||failure is UnauthorizedAccessException||failure is NotSupportedException) {
                     error="Could not publish the prepared "+label+"; inspect the saved files before retrying.";return false;
                 }
-                finally {if(staged)try{if(File.Exists(pending))File.Delete(pending);}catch(IOException){}catch(UnauthorizedAccessException){}}
+                finally {
+                    try{if(staged)try{if(File.Exists(pending))File.Delete(pending);}catch(IOException){}catch(UnauthorizedAccessException){}}
+                    finally{Monitor.Exit(retainedGate);}
+                }
             }
         }
     }

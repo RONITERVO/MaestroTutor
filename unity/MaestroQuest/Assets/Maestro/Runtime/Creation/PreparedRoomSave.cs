@@ -53,7 +53,7 @@ namespace Maestro.Quest.Creation
                 var owned=room.Copy();
                 var prepared=await Task.Run(()=>{
                     cancellation.ThrowIfCancellationRequested();
-                    if(!file.PrepareSave(owned,captured,out var value,out var error))
+                    if(!file.PrepareSave(owned,captured,out var value,out var error,stageFile:true,cancellation:cancellation))
                         throw new InvalidOperationException(error);
                     if(cancellation.IsCancellationRequested){value.Dispose();cancellation.ThrowIfCancellationRequested();}
                     return new PreparedSave(this,value,reservation);
@@ -64,14 +64,15 @@ namespace Maestro.Quest.Creation
 
         // The native caller must revalidate its candidate revision/lifecycle before
         // calling. Disk compare-and-publish protects only the captured saved baseline.
-        // Publication still performs synchronous IO; this is not an async editor API.
+        // Encoding, writing and durable flush already ran on the worker. Baseline
+        // checks, backup copy and one rename/replace remain synchronous.
         internal bool PublishPrepared(PreparedSave prepared,out string error)
         {
             error="This room save preparation was already used or belongs to another store.";
             if(prepared==null||!prepared.Take(this,out var candidate))return false;
             try {
                 error=coordinationError;if(error!=null)return false;
-                using var owner=RoomSnapshotTransaction.Enter(directory);return file.PublishPrepared(candidate,out error);
+                using var owner=RoomSnapshotTransaction.Enter(directory,wait:false);return file.PublishPrepared(candidate,out error);
             }
             catch(Exception failure) {
                 error="Prepared room publication was not confirmed; preserve the saved room/memory files. "+failure.Message;return false;

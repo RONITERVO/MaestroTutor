@@ -34,7 +34,7 @@ namespace Maestro.Quest.Creation
             } finally {pose?.Dispose();edit?.Dispose();write?.Dispose();}
         }
 
-        // Only detached document preparation runs off-thread. Native preparation,
+        // Detached document encoding, staging and durable flush run off-thread. Native preparation,
         // conditional publication and journal acceptance form one non-yielding
         // owner-thread commit. Final filesystem publication remains synchronous.
         internal sealed class PendingPersistedEdit:IDisposable

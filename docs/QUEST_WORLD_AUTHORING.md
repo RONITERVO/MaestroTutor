@@ -2727,3 +2727,35 @@ Final file writes, flushes and replacement remain synchronous. This first native
 integration does not establish Quest frame-time acceptance or larger-world
 capacity. Removing that remaining publication wait requires an explicit native
 commit reservation, not moving an unchecked write to another thread.
+
+
+## Worker staging for pending room edits
+
+RoomStorage preparation now writes and durably flushes a private
+room.vN.json.prepare.<random-id> file on its worker. Only the owned candidate can
+claim that file for publication. Preparation does not change the primary, backup,
+journal or native scene. This replaces the synchronous staging/flush portion
+described above; it does not make the final commit fully asynchronous.
+
+The returned candidate pins its staging bytes against ordinary writers. The
+commit verifies their content, the captured primary and the journal/lifecycle
+again before claiming the usual .pending path without overwriting another
+writer's unfinished file. The native path still holds only its target body, not
+the whole simulation. Its shared completion receipt follows actual save and
+application, as before.
+
+Publication refuses a busy room/memory coordinator or retention reader instead
+of waiting on the interaction thread. A staged interactive replacement makes
+one filesystem attempt, without the Windows retry sleeps used by older
+synchronous save paths. A failed or cancelled candidate cannot be replayed.
+Cancellation, stale revisions and completed publication release admission and
+remove only the exact owned staging bytes. Substituted files and failed partial
+writes remain evidence. An orphan .prepare file is never loaded or adopted as a
+room, including when no primary exists. There is no automatic orphan sweep.
+
+Baseline reads/hashes, staging identity checks, backup copying, final
+rename/replacement, native reconciliation and some cleanup IO remain synchronous.
+Do not interpret background staging as a Quest frame-time guarantee, a durable
+write-ahead native transaction, or support for larger saved worlds. Other edit
+families still need explicit migration to completion operations with their own
+native resource lifetimes.
