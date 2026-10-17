@@ -2,7 +2,7 @@
 
 `object.field.transfer` moves geometric volume between two existing height fields.
 User-authored programs, the generated book form and Maestro's agent invoke the same
-native operation. It is an instantaneous saved edit, with no new toy-specific runtime.
+native operation. It is a completion action through the shared ordered save queue.
 
 ## Quantity and geometry
 
@@ -37,12 +37,20 @@ active or retained sculpt captures still protect their field. Both revisions are
 rechecked before execution. Missing fields, incompatible material, full/empty
 footprints and a brush missing every grid vertex refuse without saving.
 
-One room transaction publishes both height arrays, visual meshes and colliders.
-One Undo restores both; Redo restores the accepted result. A failed save changes
-neither endpoint. Temporary-room edits stay in that fork. Existing room storage,
-copy/prototype and archive support preserves the resulting ordinary height fields;
-there are no new persisted fields or format bumps. Receipt replay does not repeat
-the transfer. Stop cannot retract an already completed edit; Undo can.
+The request captures both endpoints and its amount before waiting. A changed
+source or destination invalidates the waiting request. One accepted room
+transaction applies both height arrays, visual meshes and colliders; its action
+result waits for background storage completion. Preparation and cancellation
+before acceptance change neither endpoint. After acceptance Stop cannot retract
+the shapes or abandon their save. An accepted save failure preserves live shapes
+and the earlier saved files, blocks later saves and requires workspace recovery;
+retrying blindly could transfer twice.
+
+One Undo restores both; Redo restores the accepted result. Temporary-room edits
+stay in that fork until Keep. Existing room storage, copy/prototype and archive
+support preserves the resulting ordinary height fields; there are no new
+persisted fields or format bumps. Receipt replay does not repeat the transfer.
+The result retains measured accepted volumes even after later edits or Undo.
 
 Existing `object.field` and revision-bound `object.field.samples` facts expose the
 result. Programs may branch on the typed action receipt and combine transfer with

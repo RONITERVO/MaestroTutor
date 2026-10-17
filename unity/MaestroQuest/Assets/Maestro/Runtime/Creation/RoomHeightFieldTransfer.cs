@@ -15,6 +15,19 @@ namespace Maestro.Quest.Creation {
                 second.heightFields?.FirstOrDefault(),HeightFieldTransferCapability.Centre(destination),(float)destination["radius"],(double)args["amountLitres"],out result,out error))return false;
             data=new[]{first,second};return ComponentCandidate(data,out error);
         }
+        internal bool CanTransferField(JObject args,out string error)=>
+            ComponentSource((string)args["source"]["target"],(int)args["source"]["revision"],out _,out error)&&
+            ComponentSource((string)args["destination"]["target"],(int)args["destination"]["revision"],out _,out error);
+        internal bool BeginFieldTransfer(JObject args,out HeightFieldTransfer.Result result,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
+        {
+            var captured=(JObject)args.DeepClone();HeightFieldTransfer.Result moved=default;
+            bool started=BeginPreparedEdit(()=>CanTransferField(captured,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{
+                    edit=null;return PrepareFieldTransfer(captured,out var data,out moved,out issue)&&
+                        journal.Prepare(data,Array.Empty<string>(),out edit,out issue,observedBefore:ComponentBefore(data));
+                },"Surface volume transferred — one Undo restores both shapes",out pending,out error,checkpoint);
+            result=started?moved:default;return started;
+        }
         internal bool TransferField(JObject args,out HeightFieldTransfer.Result result,out string error){
             if(!PrepareFieldTransfer(args,out var data,out result,out error))return false;
             if(CommitPersisted(data,Array.Empty<string>(),"Surface volume transferred — one Undo restores both shapes",false,out error,ComponentBefore(data)))return true;

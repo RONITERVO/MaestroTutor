@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
   var(ex,a,b)=TransferSurfaces();var beforeA=editor.Read(a).heightFields[0];var beforeB=editor.Read(b).heightFields[0];double total=beforeA.VolumeLitres+beforeB.VolumeLitres;
   // Different display scales/rotations do not silently redefine local litre units.
   var acceptedPose=editor.Read(b);editor.Find(b).transform.localScale=new Vector3(2,1,.5f);editor.Find(b).transform.localRotation=Quaternion.Euler(0,35,0);
-  var request=ContainerRequest(SurfaceTransfer(a,b));Assert.That(ex.Execute(request,out var error,out _),Is.True,error);var receipt=ex.Executions.Observe();var output=(JObject)receipt["selected"]["output"];
+  var request=ContainerRequest(SurfaceTransfer(a,b));Assert.That(ex.Execute(request,out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(ex.Executions);var receipt=ex.Executions.Observe();var output=(JObject)receipt["selected"]["output"];
   var afterA=editor.Read(a).heightFields[0];var afterB=editor.Read(b).heightFields[0];double rounding=(double)output["roundingLitres"];
   Assert.That(editor.Read(b).scale,Is.EqualTo(acceptedPose.scale),"A content edit cannot flatten an unrepresentable display scale into a saved pose");
   Assert.That(editor.Find(b).transform.localScale,Is.EqualTo(new Vector3(2,1,.5f)),"The content edit must leave the visual transform alone");
@@ -30,16 +30,16 @@ namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
   editor.Undo();Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(beforeA.heights));Assert.That(editor.Read(b).heightFields[0].heights,Is.EqualTo(beforeB.heights));editor.Redo();Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(afterA.heights));Assert.That(editor.Read(b).heightFields[0].heights,Is.EqualTo(afterB.heights));yield return null;
  }
  [UnityTest] public IEnumerator FieldTransferRefusesStaleTargetsHumanOwnershipAndSaveFailureWithoutPartialEffects(){
-  var(ex,a,b)=TransferSurfaces();var stale=SurfaceTransfer(a,b);ContainerRun(ex,FieldCall(b));var beforeA=editor.Read(a).heightFields[0].heights;var beforeB=editor.Read(b).heightFields[0].heights;
+  var(ex,a,b)=TransferSurfaces();var stale=SurfaceTransfer(a,b);yield return ContainerAction(ex,FieldCall(b));var beforeA=editor.Read(a).heightFields[0].heights;var beforeB=editor.Read(b).heightFields[0].heights;
   Assert.That(ex.Execute(ContainerRequest(stale),out _,out _),Is.False);
   Assert.That(editor.Ownership.TryAcquire("human","Your edit",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(b,"wholeTarget")},null,out var lease,out var error),Is.True,error);
   try{Assert.That(ex.Execute(ContainerRequest(SurfaceTransfer(a,b)),out _,out _),Is.False);}finally{lease.Dispose();}
-  string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);try{Assert.That(ex.Execute(ContainerRequest(SurfaceTransfer(a,b)),out error,out _),Is.False);}finally{Directory.Delete(pending);}
+  string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);try{Assert.That(ex.Execute(ContainerRequest(SurfaceTransfer(a,b)),out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(ex.Executions,"failed");}finally{Directory.Delete(pending);}
   yield return null;Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(beforeA));Assert.That(editor.Read(b).heightFields[0].heights,Is.EqualTo(beforeB));
  }
  [UnityTest] public IEnumerator FieldTransferTemporaryDiscardAndMissingOrChangedMaterialRemainAtomic(){
   var(ex,a,b)=TransferSurfaces();var beforeA=editor.Read(a).heightFields[0].heights;var beforeB=editor.Read(b).heightFields[0].heights;
-  Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;ContainerRun(ex,SurfaceTransfer(a,b));Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(beforeA));Assert.That(editor.Read(b).heightFields[0].heights,Is.EqualTo(beforeB));
+  Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;yield return ContainerAction(ex,SurfaceTransfer(a,b));Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(beforeA));Assert.That(editor.Read(b).heightFields[0].heights,Is.EqualTo(beforeB));
   var changed=editor.Read(b).heightFields[0].Copy();changed.material="Sand";Assert.That(editor.EditHeightField(b,editor.ObjectRevision(b),changed,out error),Is.True,error);Assert.That(ex.Execute(ContainerRequest(SurfaceTransfer(a,b)),out _,out _),Is.False);Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(beforeA));
   Assert.That(editor.EditHeightField(b,editor.ObjectRevision(b),null,out error),Is.True,error);Assert.That(ex.Execute(ContainerRequest(SurfaceTransfer(a,b)),out _,out _),Is.False);Assert.That(editor.Read(a).heightFields[0].heights,Is.EqualTo(beforeA));yield return null;
  }

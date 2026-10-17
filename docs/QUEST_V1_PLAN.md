@@ -22,6 +22,8 @@ identity. See [shared creation completion](#shared-creation-completion--2026-10-
 and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 Later desktop checks cover saved physics, movement, gait and water preferences;
 see [shared settings completion](#shared-settings-completion--2026-10-17).
+Shared container and terrain actions now also await native application and durable
+saving through the ordered edit queue; see [terrain completion](#shared-terrain-authoring-and-transfer-completion--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -13803,3 +13805,48 @@ checkpoint 7d518ec9 and unresolved intermittent Meta audio SDK crash remain sepa
 production reflections stay disabled. Other synchronous authoring/import/lifecycle
 paths, owner-thread preparation costs, physical performance/capacity, audio/provider
 acceptance and Store readiness remain open. V1 is incomplete.
+
+
+## Shared terrain authoring and transfer completion — 2026-10-17
+
+Shared height-field configuration/reset/removal, sculpting and measured surface
+volume transfers now use the existing ordered pending-edit queue. Book forms,
+agent requests and programs await the same native application and durable save.
+Definitions, paths and both transfer endpoints are captured before waiting;
+changed participants invalidate a waiting request. Before acceptance, cancellation
+leaves the accepted mesh and collision untouched. After acceptance, Stop cannot
+retract the shape or abandon its save. An accepted storage failure preserves live
+shapes and earlier files, blocks saving and requires explicit recovery.
+
+Geometry still uses the full-component transaction: shape/collision update together,
+and terrain-backed water capacity is revalidated without creating or losing water.
+Sculpt results retain the changed-vertex count; transfers retain measured source
+loss, destination gain and rounding once. One Undo restores the affected shapes.
+Physical sculpt/packing gesture resolution and legacy synchronous APIs keep their
+existing paths. Owner-thread snapshot and native mesh/collision costs, physical
+latency, streamed capacity and the broader release gates remain open.
+
+Verification passes **88 EditMode and 183 distinct PlayMode cases**, including
+five new pending-terrain regressions, plus **3,190 web tests**, app/probe
+TypeScript and catalog checks. The initial PlayMode run passed 182/183: an old
+removal test accessed a collider after its awaited removal had destroyed it.
+The corrected lifetime assertion and eight related cases pass; production runtime
+and deadlines were unchanged. The three actions change only catalog duration and
+description; schemas, facts, events, limits, adapters and saved formats stay the same.
+
+Complete offline Headless 6ed710f18c9d48b98e8a09349124613d passes with
+2,266 observations/2,257 read sets. It awaits actual native sculpt and
+1-litre transfer receipts, checks both geometric balances and ordinary Undo, and
+verifies sculpting a reservoir preserves its 200,000 ml. Original Book
+12860c3ddcb54f88b7e7e6ff6f72b14b passes with 3,434 observations/1,075 requests.
+The added visible-controls scenario selects a filled terrain reservoir, loads its
+revision, sculpts a path and awaits completion; native reads verify the lowered
+surface, unchanged 50,000 ml, increased capacity and ordinary Undo. Existing
+human-edit, stale-request, sparse-view and reload-without-replay checks remain.
+
+Evidence: .quest-evidence/terrain-completion-20261017/. All 3,266 native inputs,
+5,184 source inputs and 14 protected local files are checked. No Android
+build, device, paid provider, signing, deployment or Meta action ran. The earlier
+full-native-suite checkpoint and unresolved Meta audio SDK crash remain separate;
+production reflections stay disabled. This is affected desktop/offline evidence,
+not headset, provider, acoustic or Store acceptance. Full v1 remains incomplete.

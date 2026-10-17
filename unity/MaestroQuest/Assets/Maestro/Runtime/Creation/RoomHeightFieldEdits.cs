@@ -30,6 +30,27 @@ namespace Maestro.Quest.Creation {
             data=null;if(!ComponentSource(target,revision,out data,out error))return false;
             data.heightFields=field==null?Array.Empty<RoomHeightField>():new[]{field.Copy()};return ComponentCandidate(new[]{data},out error);
         }
+        internal bool CanEditHeightField(string target,int revision,out string error)=>ComponentSource(target,revision,out _,out error);
+        internal bool BeginHeightField(string target,int revision,RoomHeightField field,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
+        {
+            var captured=field?.Copy();
+            return BeginPreparedEdit(()=>CanEditHeightField(target,revision,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{
+                    edit=null;return PrepareHeightField(target,revision,captured,out var data,out issue)&&
+                        journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out issue,observedBefore:ComponentBefore(new[]{data}));
+                },captured==null?"Height surface removed":"Height surface saved",out pending,out error,checkpoint);
+        }
+        internal bool BeginSculptHeightField(string target,int revision,string mode,Vector2[] path,float radius,float height,
+            out int changed,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
+        {
+            var captured=path?.ToArray();int count=0;
+            bool started=BeginPreparedEdit(()=>CanEditHeightField(target,revision,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{
+                    edit=null;return PrepareSculpt(target,revision,mode,captured,radius,height,out var data,out count,out issue)&&
+                        journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out issue,observedBefore:ComponentBefore(new[]{data}));
+                },"Surface sculpted — one Undo restores its shape",out pending,out error,checkpoint);
+            changed=started?count:0;return started;
+        }
         internal bool EditHeightField(string target,int revision,RoomHeightField field,out string error){
             if(!PrepareHeightField(target,revision,field,out var data,out error))return false;
             return CommitPersisted(new[]{data},Array.Empty<string>(),field==null?"Height surface removed":"Height surface saved",false,out error,ComponentBefore(new[]{data}));

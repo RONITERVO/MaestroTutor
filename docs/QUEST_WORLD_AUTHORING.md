@@ -339,6 +339,25 @@ raises, lowers or levels a swept local X/Z path. Book catalog forms, programs an
 the agent share both actions, exact revision guards and paged source observations.
 A repeated/crossing path affects each vertex once, with smooth radial falloff.
 
+Shared configuration/reset/removal, sculpt and measured field-transfer actions
+now use the existing ordered pending-edit queue. Inputs are captured before
+waiting; stale targets require a fresh request. Preparation leaves the accepted
+height field and collision untouched. Native acceptance applies the shape and
+collision together, and the action completes only after its background save
+confirms durability. Sculpt/transfer outputs describe that accepted edit once.
+Cancellation before acceptance changes nothing; after acceptance Stop cannot
+retract the shape or abandon saving. A failed accepted save keeps the live shape
+unconfirmed and blocks further saving until workspace recovery. Do not blindly
+replay it. Temporary-room results remain local until Keep.
+
+The existing full-component transaction also revalidates terrain-backed liquid
+capacity: a changed bed preserves the water amount or refuses overflow. Height
+fields still require fixed owners. Physical sculpt/packing gestures and legacy
+synchronous editor APIs retain their existing resolution paths; this increment
+does not make every authoring path asynchronous. Snapshot capture and native
+mesh/collision reconciliation still run on the owner thread, and physical Quest
+latency remains unverified.
+
 One owner can have one field; at most four fields per room, with 4/8/16 cells per
 side. The largest has 289 authored heights, 549 rendered vertices and 642 collision
 triangles, including skirts/backing. One mesh and one additional nonconvex collider

@@ -385,7 +385,7 @@ try{
  await page.getByLabel('Action inputs amountMl',{exact:true}).fill('25');
  const measuredTransfer=await runNamedAction('object.container.transfer');assert.equal(measuredTransfer.output!.transferredMl,25);
  await page.getByRole('heading',{name:'Transfer a measured amount of liquid',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-measured-transfer.png')});
- type BookContainer={definition:{amountMl:number;fluid:{densityKgM3:number;linearDrag:number}}};
+ type BookContainer={definition:{amountMl:number;capacityMl:number;fluid:{densityKgM3:number;linearDrag:number}}};
  const transferredFrom=await readResourceFact('object.container','Liquid container and contents',{target:ball.id}) as unknown as BookContainer;
  const transferredTo=await readResourceFact('object.container','Liquid container and contents',{target:transferCupId}) as unknown as BookContainer;
  assert.equal(transferredFrom.definition.amountMl,75);assert.equal(transferredTo.definition.amountMl,25);
@@ -417,6 +417,26 @@ try{
  const terrainCapacity=Number(await page.getByLabel('Action inputs definition capacityMl',{exact:true}).inputValue());assert.ok(terrainCapacity>50000);
  await page.getByRole('heading',{name:'Configure or fill a liquid container',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-terrain-water.png')});
  await writeFile(join(directory,'book-native-terrain-water.json'),JSON.stringify({boundary:'Original book generated controls create a terrain owner and configure its reservoir; native readback derives capacity and keeps the requested amount. No hidden fixture mutation, provider or headset acceptance.',terrainCreated,terrainConfigured,capacityMl:terrainCapacity},null,2));
+ // Sculpt through the same visible controls, preserving the reservoir's water.
+ await openNamedAction('Sculpt a surface path','object.field.sculpt');
+ await chooseObject('Action inputs target',terrainTarget);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs mode',{exact:true}).selectOption('lower');
+ await page.getByLabel('Action inputs radius',{exact:true}).fill('.14');
+ await page.getByLabel('Action inputs height',{exact:true}).fill('.04');
+ const terrainSculpted=await runNamedAction('object.field.sculpt');assert.ok(Number(terrainSculpted.output!.changedVertices)>0);
+ await page.getByRole('heading',{name:'Sculpt a surface path',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-terrain-sculpt.png')});
+ const sculptedField=await readResourceFact('object.field','Sculptable surface',{target:terrainTarget});
+ assert.ok(Math.abs(Number(sculptedField.minimum)-.04)<.000001);
+ const sculptedWater=await readResourceFact('object.container','Liquid container and contents',{target:terrainTarget}) as unknown as BookContainer;
+ assert.equal(sculptedWater.definition.amountMl,50000);assert.ok(Number(sculptedWater.definition.capacityMl)>terrainCapacity);
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ const sculptRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,sculptRevision);
+ const restoredField=await readResourceFact('object.field','Sculptable surface',{target:terrainTarget});assert.ok(Math.abs(Number(restoredField.minimum)-.08)<.000001);
+ const restoredWater=await readResourceFact('object.container','Liquid container and contents',{target:terrainTarget}) as unknown as BookContainer;
+ assert.equal(restoredWater.definition.amountMl,50000);assert.equal(restoredWater.definition.capacityMl,terrainCapacity);
+ await writeFile(join(directory,'book-native-terrain-sculpt.json'),JSON.stringify({boundary:'Visible original-book terrain selection, current revision, sculpt inputs and confirmed result; native shape/quantity reads and ordinary Undo. No provider or headset acceptance.',terrainSculpted,sculptedField,sculptedWater,restoredField,restoredWater},null,2));
  // Cleanup uses the user's normal Undo path, leaving later scenarios unchanged.
  await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
  const terrainRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);

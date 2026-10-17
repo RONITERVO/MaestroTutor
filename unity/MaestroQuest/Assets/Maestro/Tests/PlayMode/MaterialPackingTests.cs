@@ -15,7 +15,7 @@ namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
   Assert.That(editor.CopyObject(id,editor.ObjectRevision(id),"Snowball copy",new Vector3(6,2,4),out var copy,out error),Is.True,error);Assert.That(editor.Read(copy).materialStores[0].amountLitres,Is.EqualTo(amount));yield return null;
  }
  [UnityTest] public IEnumerator MaterialPackingRefusalsNeverConsumeSnowOrCreatePartialObjects(){
-  var ex=new RoomAgentExecutor(editor);string source=Snow(ex);var stale=PackCall(source);ContainerRun(ex,FieldCall(source));var before=editor.Read(source).heightFields[0].heights;int count=editor.Snapshot().objects.Length;
+  var ex=new RoomAgentExecutor(editor);string source=Snow(ex);var stale=PackCall(source);yield return ContainerAction(ex,FieldCall(source));var before=editor.Read(source).heightFields[0].heights;int count=editor.Snapshot().objects.Length;
   Assert.That(ex.Execute(ContainerRequest(stale),out _,out _),Is.False);var view=editor.Find(source).GetComponent<HeightFieldView>();Assert.That(editor.Sculpting.Configure("lower",.12f,.03f,out var error),Is.True,error);editor.Sculpting.Begin(0,SculptRay(view));Assert.That(editor.Sculpting.Active,Is.True);Assert.That(ex.Execute(ContainerRequest(PackCall(source)),out _,out _),Is.False);editor.Sculpting.Cancel(0);editor.Sculpting.ResolveManual(true);
   string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);try{Assert.That(ex.Execute(ContainerRequest(PackCall(source)),out _,out _),Is.False);}finally{Directory.Delete(pending);}Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Read(source).heightFields[0].heights,Is.EqualTo(before));yield return null;
  }

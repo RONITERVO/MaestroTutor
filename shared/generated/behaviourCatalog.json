@@ -22097,7 +22097,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -22109,7 +22109,7 @@
         "storage.writable",
         "target.physics.fixed"
       ],
-      "description": "Configure one saved height surface on a fixed created object, or remove it. Configure replaces all heights with fillHeight: it is an explicit reset, not a conserving simulation. Frame is root-local; +Y is height and X/Z span width/depth. Choose 4, 8 or 16 cells per side, up to four fields per room. The mesh and its nonconvex collision use the same saved heights; the owner must remain fixed while the field exists. Existing object collision remains separate and can intersect the surface if authored that way. Snow, sand and similar appearance use an editable colour/material label, not different simulators. Fields support shared sculpting, exact paged heights, copy/prototypes, Undo and temporary rooms. There is no gravity flow, melting, fluid pressure, mass, bare-hand sculpting or material transfer in this capability. Moving/scaling the owner moves/scales the surface. Authored local volume is geometric, not conserved physical quantity.",
+      "description": "Configure one saved height surface on a fixed created object, or remove it. Configure replaces all heights with fillHeight: it is an explicit reset, not a conserving simulation. Frame is root-local; +Y is height and X/Z span width/depth. Choose 4, 8 or 16 cells per side, up to four fields per room. The mesh and its nonconvex collision use the same saved heights; the owner must remain fixed while the field exists. Existing object collision remains separate and can intersect the surface if authored that way. Snow, sand and similar appearance use an editable colour/material label, not different simulators. Fields support shared sculpting, exact paged heights, copy/prototypes, Undo and temporary rooms. There is no gravity flow, melting, fluid pressure, mass, bare-hand sculpting or material transfer in this capability. Moving/scaling the owner moves/scales the surface. Authored local volume is geometric, not conserved physical quantity. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -22233,7 +22233,7 @@
           "heightFields.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -22245,7 +22245,7 @@
         "storage.writable",
         "target.physics.fixed"
       ],
-      "description": "Raise, lower or level a configured surface along one swept local X/Z path. radius is in local metres; height is the maximum raise/lower amount or the target level. Smooth falloff reaches zero at the brush rim. Every grid vertex is affected at most once by the union of the path, so duplicate points or self-crossings do not multiply strength. Values clamp to 0..maxHeight. All path points must be inside the configured rectangle. A sub-grid brush can miss every vertex and is refused without saving. One action is one saved edit and one Undo, with the same rebuilt mesh/collision. Authoring can add/remove geometric volume; it is not conserved snow transfer. Current revision and exclusive object ownership are required. No playback, physics start or delayed repetition is implied.",
+      "description": "Raise, lower or level a configured surface along one swept local X/Z path. radius is in local metres; height is the maximum raise/lower amount or the target level. Smooth falloff reaches zero at the brush rim. Every grid vertex is affected at most once by the union of the path, so duplicate points or self-crossings do not multiply strength. Values clamp to 0..maxHeight. All path points must be inside the configured rectangle. A sub-grid brush can miss every vertex and is refused without saving. One action is one saved edit and one Undo, with the same rebuilt mesh/collision. Authoring can add/remove geometric volume; it is not conserved snow transfer. Current revision and exclusive object ownership are required. No playback, physics start or delayed repetition is implied. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -22429,7 +22429,7 @@
         ],
         "format": "heightFieldTransfer"
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -22441,7 +22441,7 @@
         "storage.writable",
         "targets.physics.fixed"
       ],
-      "description": "Move up to amountLitres between two distinct fixed height surfaces with identical material labels and colours. Each endpoint selects a local X/Z disk; smooth radial falloff bounds removal by available height and addition by headroom. Triangulated footprint support extends to adjacent grid vertices. Result reports actual removedLitres, addedLitres and signed roundingLitres. These are unscaled local geometric litres, like object.field.volumeLitres; resizing objects changes displayed geometry, not this measure. Both current revisions and exclusive ownership are required. One atomic saved edit and one Undo updates both meshes and collisions, or neither on failure. Maximum rounding difference is max(0.000001 litre, removedLitres * 0.000001); transfers below representable resolution refuse. Empty/full or missed footprints refuse. This instantaneous authoring operation does not check distance, move a shovel, start physics, simulate grains or convert to containers/snowballs. Programs can combine it with existing movement and event conditions. Stop does not retract completed edits; Undo does. No automatic replay.",
+      "description": "Move up to amountLitres between two distinct fixed height surfaces with identical material labels and colours. Each endpoint selects a local X/Z disk; smooth radial falloff bounds removal by available height and addition by headroom. Triangulated footprint support extends to adjacent grid vertices. Result reports actual removedLitres, addedLitres and signed roundingLitres. These are unscaled local geometric litres, like object.field.volumeLitres; resizing objects changes displayed geometry, not this measure. Both current revisions and exclusive ownership are required. One atomic accepted edit and one Undo updates both meshes and collisions. A refusal before acceptance changes neither; an accepted storage failure preserves the live edit for recovery. Maximum rounding difference is max(0.000001 litre, removedLitres * 0.000001); transfers below representable resolution refuse. Empty/full or missed footprints refuse. This authoring operation does not check distance, move a shovel, start physics, simulate grains or convert to containers/snowballs. Programs can combine it with existing movement and event conditions. Stop does not retract completed edits; Undo does. No automatic replay. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "source": {
           "target": "00000000000000000000000000000000",
@@ -47338,11 +47338,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HeightFieldCapability.cs",
-      "sha256": "c52dc8c66882e88b372b5f6556e9d046e63b3ac7c638945a266fb425ffb7fd14"
+      "sha256": "5894241c9a456cfd04852cc06a0b542959e8ec7011998d6f0e44ea5b4c7b8cc2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HeightFieldTransferCapability.cs",
-      "sha256": "f34bb8d6ff3859f4a96a6b831164fd995fed828463013e7c6e3b6b5b5803c624"
+      "sha256": "b4535b191051350401c230165d9afbecb51243fce64491f4ce42788105dccf87"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/HoldObjectCapability.cs",
@@ -48230,11 +48230,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldEdits.cs",
-      "sha256": "545b42d232dfaf5f798f71d4b1dd79918e2f4724c59579f0e5163ba61d6a4d96"
+      "sha256": "c3e876daf08c88bac7b494bd575a57e0cc1f2c4b6367c9117bc6cd73afdf12c6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
-      "sha256": "6a9090732e98c3e808d0d1479e9abd1a48b3e78b941c762070fda04ae6502dee"
+      "sha256": "407df1e7c306552a9c633d83ecb56a40955dd01d98dff8135efcfb9cc3d1a316"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayerPresentation.cs",

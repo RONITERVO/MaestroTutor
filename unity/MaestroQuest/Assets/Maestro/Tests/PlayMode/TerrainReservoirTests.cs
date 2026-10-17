@@ -28,7 +28,7 @@ namespace Maestro.Quest.Tests {
    var(ex,id)=TerrainReservoir(true);var before=editor.Read(id);var water=before.containers[0];Assert.That(water.version,Is.EqualTo(3));Assert.That(water.capacityMl,Is.EqualTo(600000).Within(.1));Assert.That(water.frame.position,Is.EqualTo(before.heightFields[0].frame.position));Assert.That(water.rectangle.width,Is.EqualTo(2));
    var wet=editor.Liquids.ObserveMedium(TerrainPoint(id,-.75f,.15f),"maestro");Assert.That((bool)wet["found"],Is.True,wet.ToString());Assert.That((double)wet["depthMetres"],Is.EqualTo(.05).Within(.0001));
    Assert.That((bool)editor.Liquids.ObserveMedium(TerrainPoint(id,.75f,.15f),"maestro")["found"],Is.False,"The hill is not water");
-   var call=FieldCall(id,"lower",.1f);ContainerRun(ex,call);var after=editor.Read(id);Assert.That(after.containers[0].amountMl,Is.EqualTo(water.amountMl));Assert.That(after.containers[0].capacityMl,Is.GreaterThan(water.capacityMl));Assert.That(editor.Find(id).GetComponent<HeightFieldView>().Accepted.heights,Is.EqualTo(after.heightFields[0].heights));
+   var call=FieldCall(id,"lower",.1f);yield return ContainerAction(ex,call);var after=editor.Read(id);Assert.That(after.containers[0].amountMl,Is.EqualTo(water.amountMl));Assert.That(after.containers[0].capacityMl,Is.GreaterThan(water.capacityMl));Assert.That(editor.Find(id).GetComponent<HeightFieldView>().Accepted.heights,Is.EqualTo(after.heightFields[0].heights));
    var loaded=new RoomStorage(directory).Load(out var error);Assert.That(loaded,Is.Not.Null,error);Assert.That(loaded.objects.Single(o=>o.id==id).containers[0].amountMl,Is.EqualTo(water.amountMl));
    editor.Undo();Assert.That(editor.Read(id).heightFields[0].heights,Is.EqualTo(before.heightFields[0].heights));Assert.That(editor.Read(id).containers[0].capacityMl,Is.EqualTo(water.capacityMl));editor.Redo();Assert.That(editor.Read(id).containers[0].capacityMl,Is.EqualTo(after.containers[0].capacityMl));
    var prototype=CreationPrototype.Capture(editor.Read(id));Assert.That(prototype.version,Is.EqualTo(6));Assert.That(prototype.Validate(out error),Is.True,error);
@@ -43,7 +43,7 @@ namespace Maestro.Quest.Tests {
    Assert.That(ex.Execute(ContainerRequest(FieldCall(id,"raise",.1f)),out var error,out _),Is.False);StringAssert.Contains("overflow",error);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));
    Assert.That(editor.EditHeightField(id,editor.ObjectRevision(id),null,out _),Is.False);Assert.That(editor.SetItemPhysics(id,new(){mode="solid",shape="box",mass=1}),Is.False);
    string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
-   try{Assert.That(ex.Execute(ContainerRequest(FieldCall(id,"lower",.05f)),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));}finally{Directory.Delete(pending);}
+   try{Assert.That(ex.Execute(ContainerRequest(FieldCall(id,"lower",.05f)),out _,out _),Is.True);yield return SpatialSettingsCompletion.Wait(ex.Executions,"failed");Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));}finally{Directory.Delete(pending);}
    var forged=editor.Snapshot();forged.objects.Single(o=>o.id==id).containers[0].capacityMl+=1;Assert.That(forged.Validate(out _),Is.False,"Saved metadata cannot claim a different bed capacity");
    forged=editor.Snapshot();forged.version=36;Assert.That(forged.Validate(out _),Is.False,"Old readers must not flatten a terrain cavity");
    yield return null;

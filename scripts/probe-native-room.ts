@@ -539,7 +539,7 @@ try{
   const fieldBefore=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field',version:1,arguments:{target:fieldId}}}]);
   const fieldRevision=(fieldBefore.catalog?.value as {revision:number}).revision;
   const fieldCall={id:'object.field.sculpt',version:1,arguments:{target:fieldId,revision:fieldRevision,mode:'lower',radius:.14,height:.04,path:[{x:-.3,z:0},{x:.3,z:0}]}};
-  const fieldAfter=await execute([{action:'execution',execution:{operation:'start',call:fieldCall}}]);
+  const fieldAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:fieldCall}}]));
   const fieldRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.field.samples',version:1,arguments:{target:fieldId,revision:await nativeObjects.revision(fieldId),offset:144}}}]);
   if(Math.abs((fieldRead.catalog?.value as {heights:number[]}).heights[0]-.04)>.000001)throw new Error('Accepted height differs from sculpted source');
   const fieldUndo=await execute([{action:'undo'}]);
@@ -554,7 +554,7 @@ try{
   const transferDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.field.transfer',version:1}}]);
   const transferEndpoint=(target:string,state:RoomAgentState)=>({target,revision:(factReply(state).value as {revision:number}).revision,centre:{x:0,z:0},radius:.3});
   const transferCall={id:'object.field.transfer',version:1,arguments:{source:transferEndpoint(fieldId,transferBeforeSource),destination:transferEndpoint(receivingId,transferBeforeDestination),amountLitres:1}};
-  const transferAfter=await execute([{action:'execution',execution:{operation:'start',call:transferCall}}]);
+  const transferAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:transferCall}}]));
   const transferReadSource=await transferFieldRead(fieldId),transferReadDestination=await transferFieldRead(receivingId);
   const localVolume=(state:RoomAgentState)=>(factReply(state).value as {volumeLitres:number}).volumeLitres;
   const transferOutput=transferAfter.execution?.selected?.output as {removedLitres:number;addedLitres:number;roundingLitres:number};

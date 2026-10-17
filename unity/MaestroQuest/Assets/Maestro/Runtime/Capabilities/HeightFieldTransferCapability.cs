@@ -10,10 +10,10 @@ namespace Maestro.Quest.Programs {
         internal const string Feature="heightFieldTransfer.v1";
         public override string Id=>"object.field.transfer";
         public override string Label=>"Transfer surface volume";
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"targets.created","targets.unheld","source.revision.current","storage.writable","targets.physics.fixed"};
-        public override string Description=>"Move up to amountLitres between two distinct fixed height surfaces with identical material labels and colours. Each endpoint selects a local X/Z disk; smooth radial falloff bounds removal by available height and addition by headroom. Triangulated footprint support extends to adjacent grid vertices. Result reports actual removedLitres, addedLitres and signed roundingLitres. These are unscaled local geometric litres, like object.field.volumeLitres; resizing objects changes displayed geometry, not this measure. Both current revisions and exclusive ownership are required. One atomic saved edit and one Undo updates both meshes and collisions, or neither on failure. Maximum rounding difference is max(0.000001 litre, removedLitres * 0.000001); transfers below representable resolution refuse. Empty/full or missed footprints refuse. This instantaneous authoring operation does not check distance, move a shovel, start physics, simulate grains or convert to containers/snowballs. Programs can combine it with existing movement and event conditions. Stop does not retract completed edits; Undo does. No automatic replay.";
+        public override string Description=>"Move up to amountLitres between two distinct fixed height surfaces with identical material labels and colours. Each endpoint selects a local X/Z disk; smooth radial falloff bounds removal by available height and addition by headroom. Triangulated footprint support extends to adjacent grid vertices. Result reports actual removedLitres, addedLitres and signed roundingLitres. These are unscaled local geometric litres, like object.field.volumeLitres; resizing objects changes displayed geometry, not this measure. Both current revisions and exclusive ownership are required. One atomic accepted edit and one Undo updates both meshes and collisions. A refusal before acceptance changes neither; an accepted storage failure preserves the live edit for recovery. Maximum rounding difference is max(0.000001 litre, removedLitres * 0.000001); transfers below representable resolution refuse. Empty/full or missed footprints refuse. This authoring operation does not check distance, move a shovel, start physics, simulate grains or convert to containers/snowballs. Programs can combine it with existing movement and event conditions. Stop does not retract completed edits; Undo does. No automatic replay."+PersistedEditOperation.Persistence;
         static JObject Member()=>CurrentInputs(Object(new JObject{["target"]=DrawingData.Target(),["revision"]=Revision(),["centre"]=Object(new JObject{["x"]=Number(-2,2),["z"]=Number(-2,2)}),["radius"]=Number(.005,2)}),"object.field","revision",new JObject{["target"]="target"});
         public override JObject InputSchema {get{var s=Object(new JObject{["source"]=Member(),["destination"]=Member(),["amountLitres"]=Number(.001,8000)});s["x-features"]=new JArray(HeightFieldCapability.Feature,Feature);s["format"]="heightFieldTransfer";return s;}}
         public override JObject OutputSchema=>Object(new JObject{["removedLitres"]=Number(0,8000),["addedLitres"]=Number(0,8000),["roundingLitres"]=Number(-.008,.008)});
@@ -24,8 +24,11 @@ namespace Maestro.Quest.Programs {
         public override bool Validate(JObject a,out string error){error="Choose different source and destination objects";if((string)a["source"]["target"]==(string)a["destination"]["target"])return false;error=null;return true;}
         public override bool CanRun(CapabilityContext c,JObject a,out string error)=>c.Editor.PrepareFieldTransfer(a,out _,out _,out error);
         public override bool Start(CapabilityContext c,string run,JObject a,out CapabilityOperation operation,out string error){
-            operation=null;if(!c.Editor.TransferField(a,out var moved,out error))return false;
-            operation=new CompletedCapability(new JObject{["removedLitres"]=moved.RemovedLitres,["addedLitres"]=moved.AddedLitres,["roundingLitres"]=moved.RoundingLitres});return true;
+            var captured=(JObject)a.DeepClone();HeightFieldTransfer.Result moved=default;
+            return PersistedEditOperation.Start(c.Editor,(string)captured["source"]["target"],
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>c.Editor.BeginFieldTransfer(captured,out moved,out edit,out issue),
+                out operation,out error,validate:(out string issue)=>c.Editor.CanTransferField(captured,out issue),
+                output:()=>new JObject{["removedLitres"]=moved.RemovedLitres,["addedLitres"]=moved.AddedLitres,["roundingLitres"]=moved.RoundingLitres});
         }
     }
 }
