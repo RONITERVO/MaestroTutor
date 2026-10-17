@@ -16,6 +16,7 @@ namespace Maestro.Quest.Creation
             readonly RoomJournal owner;
             readonly Change change,undoTop,redoTop;
             readonly RoomDocument document;
+            readonly Dictionary<string,RoomObjectData> objectIndex;
             readonly int revision,undoCount,redoCount;
             readonly string viewpointState,timeState,operation;
             readonly bool baseline;
@@ -23,11 +24,15 @@ namespace Maestro.Quest.Creation
             internal PreparedEdit(RoomJournal owner,Change change,RoomDocument document,string operation,bool baseline=false)
             {
                 this.owner=owner;this.change=change;this.document=document.Copy();this.operation=operation;this.baseline=baseline;
+                objectIndex=this.document.objects.ToDictionary(x=>x.id,StringComparer.Ordinal);
                 revision=owner.clock.Next;undoCount=owner.undo.Count;redoCount=owner.redo.Count;
                 undoTop=undoCount>0?owner.undo[undoCount-1]:null;redoTop=redoCount>0?owner.redo[redoCount-1]:null;
                 viewpointState=JsonUtility.ToJson(owner.viewpoint);timeState=JsonUtility.ToJson(owner.worldTime);
             }
             internal RoomDocument Snapshot()=>document.Copy();
+            // Native preparation reads detached copies of its targets. Unrelated saved
+            // geometry remains owned by the candidate instead of being copied again.
+            internal RoomObjectData ReadObject(string id)=>id!=null&&objectIndex.TryGetValue(id,out var value)?value.Copy():null;
             internal HashSet<string> ChangedObjects=>change.Before.Concat(change.After).Select(x=>x.id).ToHashSet();
             internal bool Current(RoomJournal expected)=>!ended&&ReferenceEquals(owner,expected)&&owner.clock.Next==revision&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&

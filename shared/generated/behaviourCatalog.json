@@ -47918,7 +47918,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "24d78c71d03db7ead1154992c4bd87cb5560fe8f58bcef398c67c291195e29d3"
+      "sha256": "5f3b94547f7729dc8bb6ef54a9aa83864326080c256368d6faaad18947bb1bc0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
@@ -48146,7 +48146,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "6f30363dfb828a8121d971d03bb6845f77c40122bd21c18d4a2a031ca7596009"
+      "sha256": "0bf949fe4cd26bcfec522a83537129e0bb3e0ddcb417a6e50f8d7d74574eea61"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

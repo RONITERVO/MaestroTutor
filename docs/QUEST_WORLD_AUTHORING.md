@@ -2621,3 +2621,20 @@ Group and member reads include membershipRevision. Compare it with step,
 reservationId and firstMember and restart enumeration when it differs: a merge
 within the same step can retain both the reservation and first member. Readiness
 and quantities remain momentary observations, not an atomic snapshot across calls.
+
+
+## Native edit target reads
+
+Native preparation reads detached copies of the edited resident objects from the
+owned candidate. Removed and dormant targets are skipped before copying their
+geometry. Imported-model handoff reads only its exact target. The candidate's
+private identity index preserves its accepted values across later source edits;
+callers cannot mutate the candidate, journal or Undo/Redo entries through a read.
+Native preparation retains stable identity order and the same admission, failure,
+cancellation and ownership checks.
+
+This reduces redundant reads during native preparation, not the cost of the
+entire transaction. Candidate creation still owns a complete room copy and an
+identity index; validation, saving, reconciliation and history still have
+room-wide work. Saved capacity is unchanged. Those remaining costs need explicit
+bounds and evidence before larger worlds can be admitted.

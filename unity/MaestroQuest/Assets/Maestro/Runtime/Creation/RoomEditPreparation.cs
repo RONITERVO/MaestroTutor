@@ -33,8 +33,7 @@ namespace Maestro.Quest.Creation
         internal void EnlistModel(PreparedImportedModel model,RoomJournal.PreparedEdit edit)
         {
             if(ended)throw new InvalidOperationException("Room edit preparation has ended");
-            RoomObjectData data=null;foreach(var item in edit.Snapshot().objects)if(item.id==model.Target){data=item;break;}
-            EnlistModel(model,data);
+            EnlistModel(model,edit.ReadObject(model.Target));
         }
         internal void EnlistModel(PreparedImportedModel model,RoomObjectData data)
         {
@@ -120,11 +119,11 @@ namespace Maestro.Quest.Creation
         {
             var prepared=new RoomEditPreparation();error=null;
             try {
-                var changed=edit.ChangedObjects;
-                foreach(var data in edit.Snapshot().objects) {
-                    // Only this edit's objects can materialize. An unrelated lost view
-                    // stays unavailable; cleanup must not retry broken peer geometry.
-                    if(editor.NativeEntityDormant(data.id)||!changed.Contains(data.id))continue;
+                foreach(var id in edit.ChangedObjects.OrderBy(x=>x,StringComparer.Ordinal)) {
+                    // Only this edit's resident targets need copies or geometry.
+                    // Removed/dormant objects and unrelated lost views stay unavailable.
+                    if(editor.NativeEntityDormant(id))continue;
+                    var data=edit.ReadObject(id);if(data==null)continue;
                     bool missing=!editor.Find(data.id)&&!data.IsBuiltIn;
                     var before=missing?null:editor.Read(data.id);
                     foreach(var step in prepared.PrepareGeometry(editor,data,before)){}

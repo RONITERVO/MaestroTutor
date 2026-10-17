@@ -73,5 +73,46 @@ namespace Maestro.Quest.Tests
             Assert.IsFalse(journal.Prepare(new RoomObjectData[]{null},Array.Empty<string>(),out var missing,out _));Assert.IsNull(missing);
             Assert.IsFalse(journal.Prepare(Array.Empty<RoomObjectData>(),new[]{"book"},out var invalid,out _));Assert.IsNull(invalid);Assert.AreEqual(before,State(journal));Assert.IsFalse(journal.CanUndo);
         }
+        [Test] public void TargetedReadsKeepDeepCopiesAndFollowEditUndoRedoCandidates()
+        {
+            var journal=Room();
+            var drawing=new RoomObjectData{id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.Drawing,points=new[]{Vector3.zero,Vector3.right*.1f}};
+            var removed=Block();var added=Block();
+            Assert.That(journal.Apply(new[]{drawing,removed},Array.Empty<string>(),out var error),Is.True,error);
+            drawing.points[1]=Vector3.up*.2f;
+            Assert.That(journal.Prepare(new[]{drawing,added},new[]{removed.id},out var edit,out error),Is.True,error);
+            using(edit) {
+                var read=edit.ReadObject(drawing.id);
+                Assert.That(read.points[1],Is.EqualTo(Vector3.up*.2f));
+                read.points[1]=Vector3.one*20;
+                drawing.points[1]=Vector3.one*10;
+                Assert.That(edit.ReadObject(drawing.id).points[1],Is.EqualTo(Vector3.up*.2f));
+                Assert.That(edit.Snapshot().objects.Single(x=>x.id==read.id).points[1],Is.EqualTo(Vector3.up*.2f));
+                Assert.That(journal.Read(read.id).points[1],Is.EqualTo(Vector3.right*.1f));
+                Assert.That(edit.ReadObject(removed.id),Is.Null);
+                Assert.That(edit.ReadObject(added.id).id,Is.EqualTo(added.id));
+                Assert.That(edit.ReadObject("book").kind,Is.EqualTo(RoomObjectKind.Book));
+                Assert.That(edit.ReadObject(null),Is.Null);
+                Assert.That(edit.ReadObject(Guid.NewGuid().ToString("N")),Is.Null);
+                Assert.That(edit.Accept(journal,out error),Is.True,error);
+            }
+            Assert.That(journal.PrepareHistory(true,out var undo,out error),Is.True,error);
+            using(undo) {
+                Assert.That(undo.ReadObject(drawing.id).points[1],Is.EqualTo(Vector3.right*.1f));
+                Assert.That(undo.ReadObject(removed.id).id,Is.EqualTo(removed.id));
+                Assert.That(undo.ReadObject(added.id),Is.Null);
+                undo.ReadObject(drawing.id).points[1]=Vector3.one*5;
+                Assert.That(undo.Accept(journal,out error),Is.True,error);
+            }
+            Assert.That(journal.Read(drawing.id).points[1],Is.EqualTo(Vector3.right*.1f));
+            Assert.That(journal.PrepareHistory(false,out var redo,out error),Is.True,error);
+            using(redo) {
+                Assert.That(redo.ReadObject(drawing.id).points[1],Is.EqualTo(Vector3.up*.2f));
+                Assert.That(redo.ReadObject(removed.id),Is.Null);
+                Assert.That(redo.ReadObject(added.id).id,Is.EqualTo(added.id));
+                Assert.That(redo.Accept(journal,out error),Is.True,error);
+            }
+            Assert.That(journal.Read(drawing.id).points[1],Is.EqualTo(Vector3.up*.2f));
+        }
     }
 }

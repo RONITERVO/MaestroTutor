@@ -20,8 +20,11 @@ Unsigned Android compilation now covers **a12cf3db**, including the idle-liquid
 residency fix and these group changes;
 see [the current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
-The current full offline Headless and Book journeys pass after an idle-liquid
-residency correction; see [the current integration checkpoint](#idle-liquid-container-residency-2026-10-17).
+The most recent full offline Headless and Book journeys cover the idle-liquid
+residency correction; see [that integration checkpoint](#idle-liquid-container-residency-2026-10-17).
+The later native edit lookup change has focused desktop verification; see
+[edited-object reads](#native-edit-target-reads--2026-10-17). Android compilation and
+full offline journeys have not been repeated for that later change.
 
 Current desktop source supports saved per-object real-room participation and
 swept world movement at any backdrop opacity. See the [current movement contract
@@ -12533,3 +12536,39 @@ installation, deployment or Meta operation occurred. V1 remains incomplete.
 Evidence: .quest-evidence/current-room-journeys-20261017/completed.json.
 
 Android follow-through evidence: .quest-evidence/android-compile-liquid-20261017/verified.json.
+
+
+## Native edit target reads — 2026-10-17
+
+A single-object native edit previously deep-copied all saved objects while finding
+its geometry candidates. Native preparation now queries the owned candidate by
+exact edited identity, after checking dormant membership. Deleted objects have no
+candidate; imported-model handoff reads its single target. Identity order,
+resource admission, candidate isolation and publication rules remain unchanged.
+Both the original book and agent continue through the existing shared editor.
+
+The regression performs the same book edit with two saved built-ins and then
+with 63 additional unchanged drawings (32,256 points). Before the fix, native
+preparation recorded **73 versus 451 managed allocation events**; afterwards it
+records **52 versus 52**. The unchanged assertion failed against the previous
+runtime and passed against the fix. The recorder validates its own positive
+control. These are synchronous Unity Editor allocation-event counts, not byte
+counts, frame-time or Quest measurements, and exclude candidate construction.
+
+Verification passed **11 EditMode and 60 PlayMode tests**, with zero failures or
+skips. Coverage includes detached nested values across edit/Undo/Redo, native
+geometry and resource pressure, save failure/cancellation, prepared model import,
+agent completion with concurrent edits, dormant edits and area restoration.
+All **3,188 native inputs** match the tested mirror; the **14 preserved local
+files** remain unchanged. Native catalog definitions are identical; only the two
+runtime source fingerprints changed, and catalog provenance passes.
+
+This is a bounded reduction of duplicate work. The prepared candidate still
+contains a full owned room copy and identity index. Whole-room validation,
+serialization, reconciliation and retained-history costs remain capacity gates.
+Saved limits were not increased. The preceding full suite, offline journeys and
+Android compile remain recorded at their earlier source checkpoints; they were
+not rerun for this focused change. No headset, real-provider, signing, deployment
+or Meta operation ran. V1 remains incomplete.
+
+Evidence: .quest-evidence/sparse-edit-preparation-20261017/.
