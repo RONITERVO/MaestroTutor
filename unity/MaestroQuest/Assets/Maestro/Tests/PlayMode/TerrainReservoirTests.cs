@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests {
    Assert.That(editor.EditHeightField(id,editor.ObjectRevision(id),bed,out var e),Is.True,e);
    // The existing generic action derives capacity/footprint/frame, ignoring the
    // editable ordinary-cavity defaults. The amount is deliberately not derived.
-   ContainerRun(ex,ContainerCall(id,new RoomContainer{version=3,rectangle=new(){width=.1f,depth=.1f},height=.5f,capacityMl=1,amountMl=slope?100000:200000}));
+   ContainerFixture(ex,ContainerCall(id,new RoomContainer{version=3,rectangle=new(){width=.1f,depth=.1f},height=.5f,capacityMl=1,amountMl=slope?100000:200000}));
    physics.SetSurfaces(true,"Synthetic aligned terrain room");return(ex,id);
   }
   Vector3 TerrainPoint(string id,float x,float y,float z=0){var item=editor.Find(id);var bed=editor.Read(id).heightFields[0];return item.transform.TransformPoint(bed.frame.position+bed.frame.rotation*new Vector3(x,y,z));}
@@ -39,7 +39,7 @@ namespace Maestro.Quest.Tests {
    yield return null;
   }
   [UnityTest]public IEnumerator TerrainWaterRejectsOverflowMissingBedAndFailedPublicationAtomically(){
-   var(ex,id)=TerrainReservoir();var c=editor.Read(id).containers[0];c.amountMl=c.capacityMl;ContainerRun(ex,ContainerCall(id,c));var before=JsonUtility.ToJson(editor.Read(id));
+   var(ex,id)=TerrainReservoir();var c=editor.Read(id).containers[0];c.amountMl=c.capacityMl;yield return ContainerAction(ex,ContainerCall(id,c));var before=JsonUtility.ToJson(editor.Read(id));
    Assert.That(ex.Execute(ContainerRequest(FieldCall(id,"raise",.1f)),out var error,out _),Is.False);StringAssert.Contains("overflow",error);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));
    Assert.That(editor.EditHeightField(id,editor.ObjectRevision(id),null,out _),Is.False);Assert.That(editor.SetItemPhysics(id,new(){mode="solid",shape="box",mass=1}),Is.False);
    string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
@@ -49,7 +49,7 @@ namespace Maestro.Quest.Tests {
    yield return null;
   }
   [UnityTest]public IEnumerator TerrainWaterDippingConservesContentsAndCannotScoopThroughTheBed(){
-   var(ex,id)=TerrainReservoir();var c=editor.Read(id).containers[0];c.amountMl=700000;ContainerRun(ex,ContainerCall(id,c));
+   var(ex,id)=TerrainReservoir();var c=editor.Read(id).containers[0];c.amountMl=700000;yield return ContainerAction(ex,ContainerCall(id,c));
    string cup=CreateTemplateFixture(TemplateCall("cup",TerrainPoint(id,-.5f,.25f)));var target=editor.Find(cup);
    Physics.SyncTransforms();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(cup),Is.GreaterThan(0));Assert.That(Liquid(id)+Liquid(cup),Is.EqualTo(700000).Within(.0001));physics.PausePhysics();
    double moved=editor.Read(cup).containers[0].amountMl;Assert.That(moved,Is.GreaterThan(0));editor.Undo();Assert.That(editor.Read(cup).containers[0].amountMl,Is.Zero);

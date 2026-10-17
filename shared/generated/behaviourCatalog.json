@@ -21654,7 +21654,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -21665,7 +21665,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration. With terrainFloor=true, the same fixed object must have one accepted height surface. Its frame, rectangle and capacity are derived from that surface; those input fields are ignored for this mode. height is the opening and must reach every terrain vertex. Capacity is the local geometric volume below the opening; amountMl remains authoritative. Terrain edits reshape the water while preserving amount and refuse overflow: transfer or explicitly remove enough water first. This is one bounded equalized reservoir, not connected rivers or separate-basin flow. Sculpting does not create water; no water volume exists inside the bed. Missing bed geometry refuses interaction. Set terrainFloor=false to deliberately return to an ordinary cavity. Use object.field and object.field.samples to inspect the bed.",
+      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration. With terrainFloor=true, the same fixed object must have one accepted height surface. Its frame, rectangle and capacity are derived from that surface; those input fields are ignored for this mode. height is the opening and must reach every terrain vertex. Capacity is the local geometric volume below the opening; amountMl remains authoritative. Terrain edits reshape the water while preserving amount and refuse overflow: transfer or explicitly remove enough water first. This is one bounded equalized reservoir, not connected rivers or separate-basin flow. Sculpting does not create water; no water volume exists inside the bed. Missing bed geometry refuses interaction. Set terrainFloor=false to deliberately return to an ordinary cavity. Use object.field and object.field.samples to inspect the bed. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -21801,7 +21801,7 @@
         ],
         "format": "containerTransfer"
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -21812,7 +21812,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Move up to amountMl between two distinct configured containers in one atomic saved edit and one Undo. The result reports actual transferredMl, capped by source contents and destination space. Empty/full or incompatible liquid identity/colour fails without changing either object; an empty destination adopts source identity/colour. Both current object.container revisions are required and both objects are exclusively owned during execution. This is a logical transfer, with no implicit movement, proximity check, pouring animation or fluid simulation. Use it as a building block for user-authored games; native physical pouring uses the same quantity arithmetic and atomic publication. Stop cannot retract an already completed saved transfer; Undo can. It never repeats after reload on its own.",
+      "description": "Move up to amountMl between two distinct configured containers in one atomic saved edit and one Undo. The result reports actual transferredMl, capped by source contents and destination space. Empty/full or incompatible liquid identity/colour fails without changing either object; an empty destination adopts source identity/colour. Both current object.container revisions are required and both objects are exclusively owned during execution. This is a logical transfer, with no implicit movement, proximity check, pouring animation or fluid simulation. Use it as a building block for user-authored games; native physical pouring uses the same quantity arithmetic and atomic publication. It preserves current physical poses, velocities and animated parts. Completion reports the actual measured transfer only after native application and saving. It never repeats after reload on its own. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "source": {
           "target": "00000000000000000000000000000000",
@@ -47246,7 +47246,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "c90e7b66d4f7b7213e85de3b5873d1fbeeaee5e3d367d9a19f0a4cc0d7607921"
+      "sha256": "75670a985eea2cb4675f779ce56f57f5ec53af7cb8d56569b2d5f399bca355bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
@@ -48142,7 +48142,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
-      "sha256": "407efc901f4de5659bfad778206b75f20357ae000fbb6be32eb9d172007e8d96"
+      "sha256": "643b8386a79a6e8d4a95d24ec8e6fd5937130dba15624607479efbfdd80201d7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",

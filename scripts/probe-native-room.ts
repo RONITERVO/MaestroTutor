@@ -660,13 +660,13 @@ try{
   const liquidRead=async(target:string)=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container',version:1,arguments:{target}}}]);
   const emptySource=await liquidRead(liquidFrom);const sourceValue=emptySource.catalog?.value as {configured:boolean;revision:number;definition:Record<string,unknown>};
   if(!sourceValue.configured||sourceValue.definition.amountMl!==0||sourceValue.definition.capacityMl!==500)throw new Error('Included cup did not expand its empty liquid store');
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.edit',version:1,arguments:{operation:'configure',target:liquidFrom,revision:sourceValue.revision,definition:{...sourceValue.definition,amountMl:250}}}}}]);
+  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.edit',version:1,arguments:{operation:'configure',target:liquidFrom,revision:sourceValue.revision,definition:{...sourceValue.definition,amountMl:250}}}}}]));
   const containerBefore=structuredClone(lease.state());
   const containerSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Transfer a measured amount of liquid',offset:0}}]);
   const containerDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'object.container.transfer',version:1}}]);
   const containerSource=await liquidRead(liquidFrom),containerDestination=await liquidRead(liquidTo);
   const containerArguments={source:{target:liquidFrom,revision:(containerSource.catalog?.value as {revision:number}).revision},destination:{target:liquidTo,revision:(containerDestination.catalog?.value as {revision:number}).revision},amountMl:125};
-  const containerAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.transfer',version:1,arguments:containerArguments}}}]);
+  const containerAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.transfer',version:1,arguments:containerArguments}}}]));
   if(containerAfter.execution?.selected?.output?.transferredMl!==125)throw new Error('Measured transfer receipt did not report its conserved amount');
   const containerFromAfter=await liquidRead(liquidFrom),containerToAfter=await liquidRead(liquidTo);
   for(const state of [containerFromAfter,containerToAfter])if((state.catalog?.value as {definition:{amountMl:number}}).definition.amountMl!==125)throw new Error('Measured transfer quantities differ from the real room');
@@ -722,7 +722,7 @@ try{
   const poolValue=rectangleCurrent.catalog?.value as {revision:number;configured:boolean;definition:Record<string,unknown>&{rectangle:{width:number;depth:number};amountMl:number}};
   if(!poolValue.configured||Math.abs(poolValue.definition.rectangle.width-1.18)>.0001||poolValue.definition.amountMl!==224209.44)throw new Error('Pool did not expose its actual rectangular saved cavity');
   const rectangleCall={id:'object.container.edit',version:1,arguments:{operation:'configure',target:poolId,revision:poolValue.revision,definition:{...poolValue.definition,rectangle:{width:1.16,depth:.78}}}};
-  const rectangleAfter=await execute([{action:'execution',execution:{operation:'start',call:rectangleCall}}]);
+  const rectangleAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:rectangleCall}}]));
   const rectangleRead=await liquidRead(poolId);const changedPool=(rectangleRead.catalog?.value as typeof poolValue).definition;
   if(Math.abs(changedPool.rectangle.width-1.16)>.0001||changedPool.amountMl!==poolValue.definition.amountMl)throw new Error('Shared rectangular edit changed contents or did not publish width');
   const rectangleUndo=await execute([{action:'undo'}]),rectangleRestored=await liquidRead(poolId);

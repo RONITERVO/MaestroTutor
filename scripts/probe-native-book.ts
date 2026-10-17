@@ -372,6 +372,31 @@ try{
  assert.equal(await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).inputValue(),'850');
  await page.getByLabel('Action inputs definition fluid densityKgM3',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-medium.png')});
  await writeFile(join(directory,'book-native-medium.json'),JSON.stringify({boundary:'Actual original-book fluid authoring, native receipt and current-value reload; no physical buoyancy or provider proof.',medium},null,2));
+ // The same measured transfer is authored through visible nested object inputs.
+ await openNamedAction('Create object','object.create');
+ await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});
+ await page.getByLabel('Action inputs templateHash',{exact:true}).selectOption({label:'Cup'});
+ await page.getByLabel('Action inputs name',{exact:true}).fill('Book transfer cup');
+ for(const [key,value] of Object.entries({x:4,y:2,z:3,scale:1}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+ const transferCup=await runNamedAction('object.create'),transferCupId=transferCup.output!.objectId as string;
+ await openNamedAction('Transfer a measured amount of liquid','object.container.transfer');
+ await chooseObject('Action inputs source target',ball.id);await chooseObject('Action inputs destination target',transferCupId);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByLabel('Action inputs amountMl',{exact:true}).fill('25');
+ const measuredTransfer=await runNamedAction('object.container.transfer');assert.equal(measuredTransfer.output!.transferredMl,25);
+ await page.getByRole('heading',{name:'Transfer a measured amount of liquid',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-measured-transfer.png')});
+ type BookContainer={definition:{amountMl:number;fluid:{densityKgM3:number;linearDrag:number}}};
+ const transferredFrom=await readResourceFact('object.container','Liquid container and contents',{target:ball.id}) as unknown as BookContainer;
+ const transferredTo=await readResourceFact('object.container','Liquid container and contents',{target:transferCupId}) as unknown as BookContainer;
+ assert.equal(transferredFrom.definition.amountMl,75);assert.equal(transferredTo.definition.amountMl,25);
+ assert.equal(transferredTo.definition.fluid.densityKgM3,850);assert.equal(transferredTo.definition.fluid.linearDrag,3);
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();
+ const transferRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,transferRevision);
+ const transferRestored=await readResourceFact('object.container','Liquid container and contents',{target:ball.id}) as unknown as BookContainer;assert.equal(transferRestored.definition.amountMl,100);
+ await writeFile(join(directory,'book-native-measured-transfer.json'),JSON.stringify({boundary:'Visible original-book source/destination choices, current revisions, measured input, confirmed native receipt, paired amounts and adopted properties, then ordinary Undo. No provider or headset acceptance.',transferCup,measuredTransfer,transferredFrom,transferredTo,transferRestored},null,2));
+ await page.getByRole('button',{name:'Back to workshop',exact:true}).click();await undoRemoved(transferCupId);
+ await page.getByRole('button',{name:'Action catalog',exact:true}).click();
  // A user authors the same terrain reservoir through the original book forms.
  await openNamedAction('Create object','object.create');
  await page.getByLabel('Creation kind',{exact:true}).selectOption({label:'Create starter object'});

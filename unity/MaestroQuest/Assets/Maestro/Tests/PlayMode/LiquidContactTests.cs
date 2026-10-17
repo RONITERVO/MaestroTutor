@@ -77,7 +77,7 @@ namespace Maestro.Quest.Tests {public sealed partial class RoomRulesTests {
 
  [UnityTest]public IEnumerator LiquidContactUnavailableNestedVesselCannotBorrowOuterWaterReadiness(){
   var(outer,_)=MediumFixture(.1f);physics.PausePhysics();Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Nested water",new Vector3(4,1.3f,0),1,Color.white,out var inner,out var error),Is.True,error);
-  ContainerRun(new RoomAgentExecutor(editor),ContainerCall(inner,new RoomContainer{radius=.2f,height=.3f,capacityMl=1000,amountMl=800}));Assert.That(editor.SetItemPhysics(inner,new ObjectPhysicsSettings{mode="fixed",shape="box",mass=1}),Is.True);physics.StartPhysics();var point=new Vector3(4,1.4f,0);ContactPoint(point);
+  yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(inner,new RoomContainer{radius=.2f,height=.3f,capacityMl=1000,amountMl=800}));Assert.That(editor.SetItemPhysics(inner,new ObjectPhysicsSettings{mode="fixed",shape="box",mass=1}),Is.True);physics.StartPhysics();var point=new Vector3(4,1.4f,0);ContactPoint(point);
   Assert.That((string)editor.Liquids.ObserveContact("input:left")["bodyId"],Is.EqualTo(inner));editor.Find(inner).GetComponent<RigidRoomItem>().SetGeometryReady(false);ContactPoint(point);var medium=editor.Liquids.ObserveMedium(point,"");Assert.That((string)medium["bodyId"],Is.EqualTo(inner));Assert.That((bool)medium["active"],Is.False);Assert.That((bool)editor.Liquids.ObserveContact("input:left")["known"],Is.False);Assert.That(editor.Find(outer).GetComponent<RigidRoomItem>().GeometryReady,Is.True);yield return null;
  }
 }}

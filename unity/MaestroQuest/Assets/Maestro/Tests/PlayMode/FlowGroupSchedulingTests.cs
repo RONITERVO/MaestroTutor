@@ -69,7 +69,7 @@ namespace Maestro.Quest.Tests {
   [UnityTest]public IEnumerator FlowGroupSchedulingSeparateMovingContainersTakeIndependentCompleteTurns(){
    editor.Liquids.enabled=false;var ex=new RoomAgentExecutor(editor);
    var ids=new[]{PhysicsInputBall(new Vector3(-8,3,-8)),PhysicsInputBall(new Vector3(8,3,-8))};
-   foreach(var id in ids)ContainerRun(ex,ContainerCall(id,new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
+   foreach(var id in ids)yield return ContainerAction(ex,ContainerCall(id,new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
    StartIsland();yield return IslandActive(ids);var bodies=ids.Select(id=>editor.Find(id).GetComponent<RigidRoomItem>()).ToArray();
    FlowWorkResources.Release(editor.Liquids);foreach(var body in bodies)PhysicsWorkResources.Release(body);FlowWorkResources.Advance(.05f);
    var pressure=SimulationWorkSchedule.Register(()=>true,0,0);pressure.FlowUnits=FlowWorkResources.MaximumUnits-FlowWorkResources.Demand(1);

@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests {
         JObject MediumAt(Vector3 point)=>editor.Liquids.ObserveMedium(point,"");
         string MissingMedium(Vector3 position,float amount=800){
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Unavailable water",position,1,Color.white,out var id,out var error),Is.True,error);
-            ContainerRun(new RoomAgentExecutor(editor),ContainerCall(id,new RoomContainer{radius=.2f,height=.3f,capacityMl=1000,amountMl=amount}));
+            ContainerFixture(new RoomAgentExecutor(editor),ContainerCall(id,new RoomContainer{radius=.2f,height=.3f,capacityMl=1000,amountMl=amount}));
             editor.Find(id).gameObject.SetActive(false);return id;
         }
         [UnityTest]public IEnumerator MediumAvailabilityDormantCavityCannotBecomeDryAndReadsArePassive(){
@@ -42,7 +42,7 @@ namespace Maestro.Quest.Tests {
             value=MediumAt(new(4,1.4f,0));Assert.That((string)value["availability"],Is.EqualTo("ready"));Assert.That((bool)value["found"],Is.True);Assert.That((bool)value["active"],Is.False);Assert.That(physics.Running,Is.False);Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(400000));
         }
         [UnityTest]public IEnumerator MediumAvailabilityUsesCavityFrameAndRetainedPoseRatherThanArtwork(){
-            var(pool,_)=MediumFixture(.1f);physics.PausePhysics();var c=editor.Read(pool).containers[0];c.frame.position=new(3,.2f,0);c.rectangle.width=2;ContainerRun(new RoomAgentExecutor(editor),ContainerCall(pool,c));
+            var(pool,_)=MediumFixture(.1f);physics.PausePhysics();var c=editor.Read(pool).containers[0];c.frame.position=new(3,.2f,0);c.rectangle.width=2;yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(pool,c));
             string area=NativeAreaFor(pool);editor.Find(pool).transform.position=new(8,1,0);editor.Find(pool).transform.rotation=Quaternion.Euler(0,90,0);
             Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
             Assert.That((string)MediumAt(new(8,1.4f,-3))["availability"],Is.EqualTo("unavailable"));Assert.That((string)MediumAt(new(7,1.4f,0))["availability"],Is.EqualTo("ready"),"The obsolete saved placement is not the retained idle pose");
@@ -73,7 +73,7 @@ namespace Maestro.Quest.Tests {
             Assert.That((bool)editor.Liquids.ObserveContact("input:left")["known"],Is.False,"The previous outer-water contact cannot prove a newly missing inner cavity safe");yield return null;
         }
         [UnityTest]public IEnumerator MediumAvailabilityDoesNotMistakeUnsavedRainForAnEmptyInactiveVessel(){
-            var(pool,prop)=MediumFixture(.1f);physics.PausePhysics();var c=editor.Read(pool).containers[0];c.amountMl=0;ContainerRun(new RoomAgentExecutor(editor),ContainerCall(pool,c));
+            var(pool,prop)=MediumFixture(.1f);physics.PausePhysics();var c=editor.Read(pool).containers[0];c.amountMl=0;yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(pool,c));
             Assert.That(editor.SetWeather(editor.WeatherRevision,1,new(){rainMmPerHour=120},0,out var error),Is.True,error);physics.StartPhysics();editor.Liquids.Tick(.1f);
             Assert.That(editor.Read(pool).containers[0].amountMl,Is.Zero);editor.Find(pool).gameObject.SetActive(false);
             var value=MediumAt(new(4,1.2001f,0));Assert.That((string)value["availability"],Is.EqualTo("unavailable"));Assert.That((int)value["dependencyCount"],Is.EqualTo(1));Assert.That(editor.Read(pool).containers[0].amountMl,Is.Zero);

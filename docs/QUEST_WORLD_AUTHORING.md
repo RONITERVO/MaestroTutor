@@ -3059,6 +3059,26 @@ changes during delivery or a new episode stop the rest of that notification batc
 Temporary forks accept locally without overwriting the ordinary room. Reload
 does not replay notifications.
 
-This is bounded asynchronous automatic flow persistence, not a blanket latency
-claim. Explicit measured transfers, other synchronous authoring paths, lifecycle
-flushes, owner-thread snapshot cost and Quest performance remain separate work.
+Container configuration/removal and explicit measured transfers now use the same
+ordered pending-edit queue as other shared saved actions. Their catalog duration
+is completion. The generated Book forms, user programs and agent requests receive
+success only after native application and confirmed saving (or local acceptance
+in a temporary room). Waiting captures intent and checks both transfer revisions;
+a changed source or destination requires a fresh request. Configuration definitions
+and requested amounts are detached from later caller changes.
+
+A transfer prepares one paired content-only edit. Its output reports the capped
+transferredMl once; no output is promised during preparation. Cancelling before
+acceptance leaves both containers unchanged. After acceptance, Stop cannot retract
+the quantities or abandon the save. A failed accepted save preserves live contents,
+blocks later writes and requires workspace recovery; retrying blindly can transfer
+twice. Undo restores both balances without restoring old poses or velocities.
+Configuration/removal keeps full component validation, admission and native updates.
+Automatic amount events remain separate from a requested transfer's action receipt;
+world.liquidPersistence describes the automatic checkpoint queue, while the shared
+execution receipt exposes a requested action's preparation and completion.
+
+This does not establish a blanket latency guarantee. Legacy synchronous editor
+entry points keep save-before-return semantics. Other authoring/import paths,
+lifecycle flushes, owner-thread snapshot/reconciliation costs and Quest physical
+performance remain separate work.

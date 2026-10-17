@@ -14,7 +14,7 @@ namespace Maestro.Quest.Tests {
             editor.Liquids.enabled=false;
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Medium vessel",new Vector3(4,1,0),1,Color.white,out var pool,out var e),Is.True,e);
             var c=new RoomContainer{version=2,rectangle=new(){width=1,depth=1},frame=new(){position=new Vector3(0,.2f,0)},height=.6f,capacityMl=600000,amountMl=400000};
-            ContainerRun(new RoomAgentExecutor(editor),ContainerCall(pool,c));
+            ContainerFixture(new RoomAgentExecutor(editor),ContainerCall(pool,c));
             Assert.That(editor.SetItemPhysics(pool,new ObjectPhysicsSettings{mode="fixed",shape="box",mass=1}),Is.True,editor.Status);
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Floating prop",new Vector3(4,1.4f,0),.5f,Color.white,out var prop,out e),Is.True,e);
             Assert.That(editor.SetItemPhysics(prop,new ObjectPhysicsSettings{mode="solid",shape="box",mass=mass}),Is.True,editor.Status);
@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests {
         }
         [UnityTest]public IEnumerator MediumFluidEditsShareNativeReceiptsUndoAndTransferCompatibility(){
             var(pool,prop)=MediumFixture(.05f);physics.PausePhysics();var ex=new RoomAgentExecutor(editor);var c=editor.Read(pool).containers[0];c.fluid.densityKgM3=800;c.fluid.linearDrag=4;
-            ContainerRun(ex,ContainerCall(pool,c));Assert.That((double)editor.Liquids.ObserveMedium(new Vector3(4,1.4f,0),prop)["densityKgM3"],Is.EqualTo(800));editor.Undo();Assert.That((double)editor.Liquids.ObserveMedium(new Vector3(4,1.4f,0),prop)["densityKgM3"],Is.EqualTo(1000));editor.Redo();Assert.That(editor.Read(pool).containers[0].fluid.linearDrag,Is.EqualTo(4));yield return null;
+            yield return ContainerAction(ex,ContainerCall(pool,c));Assert.That((double)editor.Liquids.ObserveMedium(new Vector3(4,1.4f,0),prop)["densityKgM3"],Is.EqualTo(800));editor.Undo();Assert.That((double)editor.Liquids.ObserveMedium(new Vector3(4,1.4f,0),prop)["densityKgM3"],Is.EqualTo(1000));editor.Redo();Assert.That(editor.Read(pool).containers[0].fluid.linearDrag,Is.EqualTo(4));yield return null;
         }
     }
 }

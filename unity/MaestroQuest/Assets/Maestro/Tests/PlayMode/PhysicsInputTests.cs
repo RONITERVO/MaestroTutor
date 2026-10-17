@@ -40,7 +40,7 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator PhysicsInputsOffsetMissingCavityPreventsGravityAndPartialBuoyancy(){
             var(pool,prop)=MediumFixture(.05f);physics.PausePhysics();
             var container=editor.Read(pool).containers[0];container.frame.position=new(-8,.2f,0);
-            ContainerRun(new RoomAgentExecutor(editor),ContainerCall(pool,container));
+            yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(pool,container));
             editor.Find(pool).transform.position+=Vector3.right*8;editor.Find(pool).GetComponent<RigidRoomItem>().Teleported();Physics.SyncTransforms();
             physics.StartPhysics();var item=editor.Find(prop);var rigid=item.GetComponent<RigidRoomItem>();var body=item.GetComponent<Rigidbody>();
             Assert.That(body.isKinematic,Is.False);editor.Find(pool).gameObject.SetActive(false);var before=body.position;

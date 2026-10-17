@@ -29,7 +29,7 @@ namespace Maestro.Quest.Tests {
             editor.Undo();Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(total));Assert.That(editor.Read(bucket).containers[0].amountMl,Is.Zero);editor.Redo();Assert.That(editor.Read(bucket).containers[0].amountMl,Is.EqualTo(picked));Assert.That(published,Is.EqualTo(1));
             // Same catalog fact/configuration path used by the advanced book and agent.
             Assert.That(BehaviourCatalog.TryRead("object.container",1,new JObject{["target"]=pool},new BehaviourCatalog.FactContext(editor:editor),out var before),Is.True);
-            var configured=editor.Read(pool).containers[0].Copy();configured.rectangle.width=1.16f;var call=ContainerCall(pool,configured);var reply=ContainerRun(ex,call);
+            var configured=editor.Read(pool).containers[0].Copy();configured.rectangle.width=1.16f;var call=ContainerCall(pool,configured);yield return ContainerAction(ex,call);var reply=ex.Executions.Observe();
             Assert.That(BehaviourCatalog.TryRead("object.container",1,new JObject{["target"]=pool},new BehaviourCatalog.FactContext(editor:editor),out var after),Is.True);
             string output=Environment.GetEnvironmentVariable("MAESTRO_GROUP_EVIDENCE");if(!string.IsNullOrEmpty(output)){
                 Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"rectangular-container-authoring.json"),new JObject{["target"]=pool,["before"]=JToken.FromObject(before.Value),["call"]=call,["reply"]=reply,["after"]=JToken.FromObject(after.Value)}.ToString());
@@ -52,7 +52,7 @@ namespace Maestro.Quest.Tests {
             // Put both vessels away from each other before beginning a temporary edit.
             held.transform.position=new Vector3(6,2,0);held.transform.rotation=Quaternion.identity;
             var baseline=editor.Read(pool).containers[0].amountMl;Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;
-            var changed=editor.Read(pool).containers[0].Copy();changed.rectangle.width=1;changed.amountMl=12;ContainerRun(ex,ContainerCall(pool,changed));
+            var changed=editor.Read(pool).containers[0].Copy();changed.rectangle.width=1;changed.amountMl=12;yield return ContainerAction(ex,ContainerCall(pool,changed));
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(baseline));Assert.That(editor.Read(pool).containers[0].rectangle.width,Is.EqualTo(1.18f));
         }
         [UnityTest] public IEnumerator RectangularFillIsHorizontalBoundedAndVisibleInTheActualPool(){

@@ -18,9 +18,9 @@ namespace Maestro.Quest.Tests {
         }
         [UnityTest]public IEnumerator NavigationDemandAcquiresOffsetWaterInWorldCoordinatesAndLeavesDistantWaterDormant(){
             var(pool,_)=MediumFixture(.1f);physics.PausePhysics();var c=editor.Read(pool).containers[0];c.frame.position=new(3,.2f,0);
-            ContainerRun(new RoomAgentExecutor(editor),ContainerCall(pool,c));string area=NativeAreaFor(pool);
+            yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(pool,c));string area=NativeAreaFor(pool);
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Distant water",new Vector3(-10,1,0),1,Color.white,out var far,out var error),Is.True,error);
-            ContainerRun(new RoomAgentExecutor(editor),ContainerCall(far,new RoomContainer{radius=.2f,height=.3f,capacityMl=1000,amountMl=800}));
+            yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(far,new RoomContainer{radius=.2f,height=.3f,capacityMl=1000,amountMl=800}));
             Assert.That(editor.RetireNativeArea(NativeAreaFor(far),out error),Is.True,error);Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
             root.transform.SetPositionAndRotation(new(3,2,5),Quaternion.Euler(0,30,0));root.transform.localScale=Vector3.one*1.5f;
             var body=new Bounds(root.transform.TransformPoint(new Vector3(7,1.4f,0)),Vector3.one*.3f);var support=body;

@@ -13754,3 +13754,52 @@ crash remain separate; production reflections stay disabled. No Android build,
 device, paid provider, signing, deployment or Meta action ran. Explicit measured
 transfers, other synchronous authoring/lifecycle paths, snapshot cost, physical
 latency and acoustic/provider/Store acceptance remain open. V1 is incomplete.
+
+## Shared container authoring and transfer completion — 2026-10-17
+
+Container configuration/removal and measured transfers now use the existing ordered
+pending-edit queue. Their native catalog duration is completion, shared by original
+Book forms, agent requests and programs. Success confirms native application and
+storage; transfer output reports the actual capped amount once. No input/output
+schema, fact/event vocabulary, saved format or provider ownership changed.
+
+Definitions and requested amounts are captured. A changed source or destination
+invalidates a waiting/prepared transfer. Cancellation before acceptance leaves both
+vessels unchanged. After acceptance, Stop cannot retract the quantities or abandon
+the save. Failed publication preserves accepted live state and requires recovery;
+it must not trigger blind replay. Transfers use the existing content-only journal
+scope and keep current poses, velocities and animated parts. Configuration/removal
+keeps full component validation and reconciliation. Legacy synchronous editor APIs
+remain available for existing callers and deterministic fixture construction.
+
+Verification passes **142 distinct EditMode and 249 distinct
+PlayMode cases**, including five new delayed-save cases, plus **3,190 web tests**,
+application/probe TypeScript and catalog validation. The initial 249-case PlayMode
+run passed 248. One new test incorrectly expected the same action ID to accept a
+changed payload; its first correction changed the restored JSON numeric token
+from double to integer. The final test restores the exact original token, verifies
+changed-call refusal and durable idempotency, and all five new cases pass. A worker
+barrier also makes the accepted-failure fixture deterministic. Runtime code and
+deadlines were not relaxed during these fixture corrections. Original results stay
+in .quest-evidence/container-completion-20261017/.
+
+Complete offline Headless journey 3fc1db184d20437bb860b73a7969459c passes with
+2,270 observations and 2,263 read sets. It awaits the actual shared
+configuration/transfer receipts, including 125 ml and 100,000 ml conserved transfers.
+Complete original Book journey 7889629c885243ec80fa6ffb4dd2fe34 passes with
+3,350 observations and 1,045 requests. Its new visible-controls scenario
+selects source/destination, loads both revisions, transfers 25 ml, verifies the
+native receipt, both balances and adopted density/drag, then uses ordinary Undo.
+Existing shared editing and world checks remain; human edits survive, stale requests
+are refused, reload does not replay effects and periodic inventories remain empty.
+The provider-only liquid-contact setup helper now awaits the same completion adapter;
+that correction is type-checked but was not run against a paid provider.
+
+All 3,264 native inputs, 5,182 source inputs and 14 protected local files
+are verified. No Android build, device, paid provider, signing, deployment or Meta
+operation ran. This is desktop/offline acceptance for the affected paths, not a new
+full-native-suite, headset, acoustic or provider pass. The earlier complete-suite
+checkpoint 7d518ec9 and unresolved intermittent Meta audio SDK crash remain separate;
+production reflections stay disabled. Other synchronous authoring/import/lifecycle
+paths, owner-thread preparation costs, physical performance/capacity, audio/provider
+acceptance and Store readiness remain open. V1 is incomplete.

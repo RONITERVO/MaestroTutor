@@ -65,7 +65,7 @@ namespace Maestro.Quest.Tests
  editor.Liquids.Tick(.1f);Assert.IsFalse(editor.Liquids.Active);physics.PausePhysics();
  }
  [UnityTest]public IEnumerator WeatherRainDifferentLiquidsNeverMix(){
- string id=RainCup();physics.PausePhysics();var c=editor.Read(id).containers[0];c.amountMl=20;c.liquid="Juice";ContainerRun(new RoomAgentExecutor(editor),ContainerCall(id,c));
+ string id=RainCup();physics.PausePhysics();var c=editor.Read(id).containers[0];c.amountMl=20;c.liquid="Juice";yield return ContainerAction(new RoomAgentExecutor(editor),ContainerCall(id,c));
  physics.StartPhysics();editor.Liquids.Tick(.1f);Assert.AreEqual(20,(double)editor.Liquids.Observe(id)["contents"]["amountMl"]);Assert.That((string)editor.Liquids.ObserveRain(id)["reason"],Does.Contain("mix"));physics.PausePhysics();yield return LiquidSaved();
  }
  [UnityTest]public IEnumerator WeatherRainCoverDetectsStartingInsideAndQuerySaturation(){

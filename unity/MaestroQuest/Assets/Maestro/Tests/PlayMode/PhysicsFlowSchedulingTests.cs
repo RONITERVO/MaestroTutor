@@ -37,7 +37,7 @@ namespace Maestro.Quest.Tests {
   [UnityTest]public IEnumerator PhysicsFlowSchedulingAdmitsEachCompleteMovingQuantityGroup(){
    root.AddComponent<RuntimeDiagnostics>();editor.Liquids.enabled=false;
    var ids=PhysicsIslandChain();string separate=PhysicsInputBall(new Vector3(-8,3,-8));var all=ids.Append(separate).ToArray();var ex=new RoomAgentExecutor(editor);
-   foreach(var id in new[]{ids[0],separate})ContainerRun(ex,ContainerCall(id,new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
+   foreach(var id in new[]{ids[0],separate})yield return ContainerAction(ex,ContainerCall(id,new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
    StartIsland();yield return IslandActive(all);
    var bodies=all.Select(id=>editor.Find(id).GetComponent<RigidRoomItem>()).ToArray();
    foreach(var body in bodies){body.GetComponent<Rigidbody>().linearVelocity=Vector3.right*3;PhysicsWorkResources.Release(body);}

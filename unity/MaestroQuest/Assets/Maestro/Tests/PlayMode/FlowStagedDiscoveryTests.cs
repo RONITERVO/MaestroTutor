@@ -14,7 +14,7 @@ namespace Maestro.Quest.Tests {
  public sealed partial class RoomRulesTests {
   [UnityTest]public IEnumerator FlowStagedDiscoveryWaitKeepsMovingPhysicsQueuedAndRetainsMomentum() {
    editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);
-   ContainerRun(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
+   yield return ContainerAction(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
    StartIsland();yield return IslandActive(ids);
    FlowWorkResources.Release(editor.Liquids);FlowWorkResources.Advance(.05f);
    var pressure=SimulationWorkSchedule.Register(()=>true,0,0);pressure.DiscoveryUnits=FlowDiscoveryWork.MaximumUnits;

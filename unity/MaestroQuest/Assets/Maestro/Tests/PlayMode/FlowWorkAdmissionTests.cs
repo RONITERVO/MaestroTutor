@@ -82,7 +82,7 @@ namespace Maestro.Quest.Tests {
    }finally{ReleaseFlowWork(held);}physics.PausePhysics();yield return LiquidSaved();yield return null;
   }
   [UnityTest]public IEnumerator FlowWorkAdmissionCouplesMovingContainerGroupButLeavesUnrelatedDryBodyActive(){
-   editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);ContainerRun(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
+   editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
    string dry=PhysicsInputBall(new Vector3(-8,2,-8));StartIsland();yield return IslandActive(ids);FlowWorkResources.Release(editor.Liquids);var held=FillFlowWork();
    try{foreach(var id in ids){var body=editor.Find(id).GetComponent<Rigidbody>();body.linearVelocity=Vector3.right*3;editor.Find(id).GetComponent<RigidRoomItem>().Refresh();}
     var before=editor.Find(ids[0]).transform.position;

@@ -15,7 +15,7 @@ type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeSta
 export async function prepareAgentLiquidContacts(execute:Execute){
  const s=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{...capabilityDefinition('object.create')!.example!,shape:'block',name:'ContactPool',x:3,y:1,z:0}}}}]));assert.equal(s.execution?.selected?.phase,'completed');const pool=s.execution!.selected!.output!.objectId as string;
  const c=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container',version:1,arguments:{target:pool}}}])).value as {revision:number;definition:Record<string,unknown>};
- const configured=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.edit',version:1,arguments:{operation:'configure',target:pool,revision:c.revision,definition:{...c.definition,rectangle:{width:1,depth:1},height:.6,capacityMl:10000,amountMl:5000}}}}}]);
+ const configured=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.container.edit',version:1,arguments:{operation:'configure',target:pool,revision:c.revision,definition:{...c.definition,rectangle:{width:1,depth:1},height:.6,capacityMl:10000,amountMl:5000}}}}}]));
  assert.equal(configured.execution?.selected?.phase,'completed');
  return {pool,baselineObjects:await readNativeObjects(execute),baseline:await execute([{action:'rules',rule:{action:'inspect'}}]),mediumBaseline:await contactEnvironment(execute,pool)};
 }
