@@ -30358,7 +30358,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Outside temporary play, prepares its save in the background and saves before completion with one Undo edit. Newer authored changes cancel the pending edit; runtime clock and viewer movement continue. Only the target body is held during preparation; cancellation restores its unchanged trajectory. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Rotation resets velocity, then normal gravity resumes. Other objects keep running."
+      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Before native acceptance, newer authored changes or cancellation preserve the original pose. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Rotation resets velocity, then normal gravity resumes. Other objects keep running."
     },
     {
       "id": "object.scale.set",
@@ -47536,7 +47536,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RotateObjectCapability.cs",
-      "sha256": "0b2e1b8a7d4238b0673ff7be9a509ac963dd0968adbd4d3ebea4e4083ed3e34f"
+      "sha256": "d7183b4bea559d7caffcc8cd8af26552d569fa1d65967ab6ca8161781a14007c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RuntimeDiagnosticFacts.cs",
@@ -47920,7 +47920,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "6439f2fcffa5d9c3be6184a816293601aeab6478649bcb3da8781e985f28a3be"
+      "sha256": "9ea7c0717968e5d26d72d20fdf376c160fd03002973b871cc0f6f23e11a64d11"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -47944,7 +47944,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomFile.cs",
-      "sha256": "a3b0e4792f965c7256f6cfd4f7fae3b3d1f9003a0a075ce1785f31b362e483cb"
+      "sha256": "a11501c48f62bebe6ffce7ec59ca9dda8effe6fc4e678e0d2a341b84059966fa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
@@ -47956,11 +47956,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomPublication.cs",
-      "sha256": "a207bf6834d7c7e05bee20cd886037622dd5cbdf349733c106077bcffcb6ee20"
+      "sha256": "bea76e2546192ae333ebf419c4ae99936c4baa42d6281d1a664fd353a8b9836d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomSave.cs",
-      "sha256": "5ae7675cffad2fdf3a49f0f45909f0dbd30152332cbaeb7efc35c5293143cb5c"
+      "sha256": "40bce35e23eb192eda4f15ce7b06b44fb1a8fccd5e84d66e3a6d9d1c4361ebc3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomWindows.cs",
@@ -48132,11 +48132,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "1d04de72f3614df6273aca5f2d7a640c57257c92e99f091411ca878c7e3b8fe1"
+      "sha256": "1eb1413df98b39caf3d9dea58ee3a409bd04fe32d622c76592c16f6c67f8d46d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "6c329948628dcd1323dfccc1b29f0487e13099b08b13986c5d42969796d62fbc"
+      "sha256": "81ecc21a0379f426092065d266d3a921e1c8b22a72799936574a4e410a9adfec"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48436,7 +48436,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "0caa2631601c999705b0e92cf000de0106b28886488760a7545ef46e622821ef"
+      "sha256": "9e038523b87ca1f39ece1f8b6a363800a7721189a25a767003325c94c84990ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -49144,7 +49144,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/PreparedFileStage.cs",
-      "sha256": "5e8cf631d51cd9377987ccdcb5710c26dcba7ec485d6fcbc3962557149851ebc"
+      "sha256": "572dfa2df235cb0a3ff474e258f695b0821362f1db4d7ff2ed7e66fe89772290"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/PreparedStageInventory.cs",

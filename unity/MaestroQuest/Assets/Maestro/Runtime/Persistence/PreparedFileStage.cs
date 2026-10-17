@@ -54,6 +54,7 @@ namespace Maestro.Quest.Persistence
             if(input.Position!=length)return false;
             return System.Linq.Enumerable.SequenceEqual(actual,fingerprint);
         }
+        internal bool Ready=>!moved&&handle!=null&&Matches();
         internal void MoveTo(string pending)
         {
             if(moved||handle==null||!Matches())throw new IOException("Prepared room bytes changed; preserve the staging file.");

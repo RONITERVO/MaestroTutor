@@ -108,7 +108,7 @@ namespace Maestro.Quest.Tests
             var args=DiscardArguments(review.Result,service.Entry((string)review.Result["inspectionId"],0));
             Assert.IsTrue(service.Start("discard","cleanup",args,out var remove,out error),error);yield return MaintenanceFinished(remove);Assert.IsNull(remove.Error);
             Assert.IsTrue(editor.BeginRotation(id,Quaternion.Euler(0,70,0),out var pending,out error),error);
-            using(pending){yield return Prepared(pending);Assert.IsTrue(pending.Complete(out error),error);}
+            using(pending){yield return Completed(pending);}
             yield return Drained(pending);Assert.Less(Quaternion.Angle(Quaternion.Euler(0,70,0),editor.Read(id).rotation),.01);
             Assert.AreEqual(3,Directory.GetFiles(directory,RoomStorage.FileName+".prepare.*").Length);
         }

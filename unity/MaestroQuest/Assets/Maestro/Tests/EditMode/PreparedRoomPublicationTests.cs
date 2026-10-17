@@ -125,6 +125,72 @@ namespace Maestro.Quest.Tests
             var results=await Task.WhenAll(one.Completion,two.Completion);
             Assert.AreEqual(1,results.Count(x=>x.Saved));Assert.That(storage.Load(out _).objects[0].name,Is.EqualTo("first").Or.EqualTo("second"));Assert.IsEmpty(Stages());
         }
+        static async Task AwaitAcceptance(RoomStorage.PreparedPublication job)
+        {
+            var timeout=Task.Delay(5000);
+            while(!job.AwaitingAcceptance){
+                Assert.IsFalse(job.Completion.IsCompleted,job.Completion.IsCompleted?job.Completion.Result.Error:null);
+                Assert.IsFalse(timeout.IsCompleted,"Preflight did not become ready");
+                await Task.Delay(1);
+            }
+        }
+        [Test] public async Task AwaitingNativeAcceptanceHoldsNoDiskCoordinatorAndCancellationPreservesBothFiles(){
+            string before=File.ReadAllText(primary),backup=File.ReadAllText(primary+".backup");
+            using var prepared=await storage.PrepareSaveAsync(Changed());
+            var job=storage.StartPreparedPublication(prepared,awaitAcceptance:true);
+            try {
+                await AwaitAcceptance(job);
+                using(var held=RoomSnapshotTransaction.Inspect(directory,wait:false)){Assert.AreEqual(before,File.ReadAllText(primary));}
+                Assert.AreEqual("before",storage.Load(out _).objects[0].name);
+                Assert.IsFalse(job.Started);Assert.IsTrue(job.CancelBeforeStart());
+                Assert.IsFalse(job.Authorize());
+            }finally{job.CancelBeforeStart();await job.Completion;}
+            Assert.IsFalse((await job.Completion).Saved);Assert.AreEqual(before,File.ReadAllText(primary));
+            Assert.AreEqual(backup,File.ReadAllText(primary+".backup"));Assert.IsEmpty(Stages());
+        }
+        [Test] public async Task AcceptedPublicationCannotBeCancelledOrAuthorizedTwice(){
+            using var prepared=await storage.PrepareSaveAsync(Changed());using var barrier=new Barrier("publishing");
+            var job=storage.StartPreparedPublication(prepared,barrier.Check,awaitAcceptance:true);
+            try {
+                await AwaitAcceptance(job);Assert.IsTrue(job.Authorize());Assert.IsFalse(job.Authorize());
+                await barrier.Wait();Assert.IsFalse(job.CancelBeforeStart());Assert.IsFalse(job.Completion.IsCompleted);
+            }finally{job.CancelBeforeStart();barrier.Release();await job.Completion;}
+            Assert.IsTrue((await job.Completion).Saved);Assert.AreEqual("after",storage.Load(out _).objects[0].name);
+        }
+        [Test] public async Task PreflightRejectsAnAlreadyChangedSavedBaselineWithoutNativeAuthorization(){
+            using var prepared=await storage.PrepareSaveAsync(Changed());using var barrier=new Barrier();
+            var job=storage.StartPreparedPublication(prepared,barrier.Check,awaitAcceptance:true);
+            try {
+                await barrier.Wait();Assert.IsTrue(storage.Save(Changed("newer"),out var error),error);
+            }finally{barrier.Release();await job.Completion;}
+            Assert.IsFalse(job.AwaitingAcceptance);Assert.IsFalse(job.Authorize());
+            Assert.IsFalse((await job.Completion).MayHavePublished);Assert.AreEqual("newer",storage.Load(out _).objects[0].name);
+        }
+        [Test] public async Task PublicationRechecksDiskAfterAdvisoryPreflight(){
+            using var prepared=await storage.PrepareSaveAsync(Changed());
+            var job=storage.StartPreparedPublication(prepared,awaitAcceptance:true);string before=null,backup=null;
+            try {
+                await AwaitAcceptance(job);Assert.IsTrue(storage.Save(Changed("newer"),out var error),error);
+                before=File.ReadAllText(primary);backup=File.ReadAllText(primary+".backup");
+                Assert.IsTrue(job.Authorize());
+            }finally{job.CancelBeforeStart();await job.Completion;}
+            Assert.IsFalse((await job.Completion).Saved);Assert.AreEqual(before,File.ReadAllText(primary));
+            Assert.AreEqual(backup,File.ReadAllText(primary+".backup"));Assert.IsEmpty(Stages());
+        }
+        [Test] public async Task AcceptedWorkerWaitsForPureCoordinatorContentionWithoutBlockingAuthorization(){
+            using var prepared=await storage.PrepareSaveAsync(Changed());
+            var job=storage.StartPreparedPublication(prepared,awaitAcceptance:true);
+            var entered=new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var release=new ManualResetEventSlim();Task writer=null;
+            try {
+                await AwaitAcceptance(job);
+                writer=Task.Run(()=>{using var held=RoomSnapshotTransaction.Enter(directory);entered.SetResult(true);if(!release.Wait(10000))throw new TimeoutException();});
+                Assert.AreSame(entered.Task,await Task.WhenAny(entered.Task,Task.Delay(5000)));
+                Assert.IsTrue(job.Authorize());Assert.IsTrue(job.Started);Assert.IsFalse(job.CancelBeforeStart());
+                await Task.Delay(20);Assert.IsFalse(job.Completion.IsCompleted);
+            }finally{job.CancelBeforeStart();release.Set();if(writer!=null)await writer;await job.Completion;}
+            Assert.IsTrue((await job.Completion).Saved);Assert.IsEmpty(Stages());
+        }
 #if UNITY_EDITOR_WIN
         [Test] public async Task WindowsReaderFailureIsUnconfirmedAndCannotReplayAfterItCloses(){
             string before=File.ReadAllText(primary);using var prepared=await storage.PrepareSaveAsync(Changed());

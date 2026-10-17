@@ -62,11 +62,25 @@ namespace Maestro.Quest.Creation
             } finally {if(!transferred)reservation.Dispose();}
         }
 
-        bool PublishPreparedCandidate(VersionedRoomFile<RoomDocument>.PreparedSave candidate,out string error)
+        bool CheckPreparedCandidate(VersionedRoomFile<RoomDocument>.PreparedSave candidate,out string error)
         {
             error=coordinationError;if(error!=null)return false;
-            using var owner=RoomSnapshotTransaction.Enter(directory,wait:false);
-            return file.PublishPrepared(candidate,out error);
+            using var owner=RoomSnapshotTransaction.Enter(directory,wait:true,initialize:false);
+            return file.CheckPrepared(candidate,out error);
+        }
+
+        // Called on the detached save continuation before its future becomes
+        // observable. Later autosaves/flushes must never overwrite uncertain data.
+        internal string PreserveUnconfirmedEdit(string detail)
+        {
+            return coordinationError="The live room edit was accepted, but its save was not confirmed. Saved files are preserved and further saves are blocked. Inspect or recover the workspace before retrying. "+detail;
+        }
+
+        bool PublishPreparedCandidate(VersionedRoomFile<RoomDocument>.PreparedSave candidate,out string error,bool wait=false)
+        {
+            error=coordinationError;if(error!=null)return false;
+            using var owner=RoomSnapshotTransaction.Enter(directory,wait:wait);
+            return file.PublishPrepared(candidate,out error,wait);
         }
 
         // The native caller must revalidate its candidate revision/lifecycle before

@@ -2818,11 +2818,31 @@ backup preservation, exact stage ownership and one-attempt replacement as the
 synchronous API. Its future finishes after cleanup releases admission. It does
 not capture Unity objects or require an owner-thread continuation.
 
-This is a storage prerequisite, not the native edit integration. The shared
-rotation action still uses its existing non-yielding final commit. Before using
-the worker there, the caller must reserve the exact journal and native resources,
-retain workspace lifetime through completion, and define acceptance after
-cancellation or a saved-but-unconfirmed result. A directory writer lease alone
-does not preserve Unity objects: workspace retirement currently destroys them
-before waiting for detached writers to drain. Merely awaiting this storage API
-inside the old native commit would leave that lifecycle race unresolved.
+The shared rotation action now uses an explicit native acceptance boundary.
+Its worker first checks the stage and saved baseline, then releases every disk
+lock before waiting for authorization. Unity checks the exact journal/history,
+workspace, target and prepared native resources, accepts the edit once and starts
+the existing conditional publisher. Final publication repeats its baseline check;
+the earlier preflight is advisory, not a promise that the disk cannot change.
+
+The visible rotation can appear while its save is pending. Completion confirms
+both native application and saving. Before acceptance, Stop or a stale authored
+revision preserves the original pose and releases only this operation's work.
+After acceptance, Stop cannot undo the edit or cancel its save; inspect the
+outcome before trying again. Native resources are reconciled on Unity's thread.
+Only immutable data and the directory write lease outlive workspace disable or
+retirement. Unrelated physics, the world clock and viewer movement stay active.
+
+The publication future is installed in the existing save pipeline before native
+callbacks run. A callback can flush newer state without waiting for Unity to
+authorize itself. Runtime state captured after the prepared snapshot remains
+dirty; a later save must not erase it. A final publication failure after native
+acceptance leaves the live edit inspectable, preserves saved files and latches
+storage read-only before later saves can run. Autosave and ordinary flush cannot
+silently replace a conflicting saved baseline. Use explicit workspace inspection
+or recovery; neither agent nor user should blindly replay the action.
+
+This currently covers the shared object.rotation.set completion action.
+Synchronous editing APIs retain their save-before-return contract. Broadening
+the same operation to other edits and physical headset latency validation remain
+open; a green storage test is not evidence of headset frame time.

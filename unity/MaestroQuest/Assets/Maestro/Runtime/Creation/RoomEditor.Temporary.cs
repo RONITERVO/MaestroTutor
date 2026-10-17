@@ -52,6 +52,7 @@ namespace Maestro.Quest.Creation
         {
             error=null;
             if(journal==null) {error="Room editor is not ready";return false;}
+            if(PendingEditSave){error="Wait for the pending room edit and its save to finish before changing temporary rooms.";return false;}
             if(changingMemory&&TemporaryStorageUncertain){error="The paired room/memory save needs recovery. Keep this workspace open or recover it before discarding.";return false;}
             var memory=TemporaryMemory;
             if(changingMemory&&memory!=null){

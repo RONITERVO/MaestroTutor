@@ -180,7 +180,7 @@ namespace Maestro.Quest.Creation
             if(!Frame.Valid){error="The room coordinate frame is unavailable";return false;}
             if(WriteGate.Frozen){error=Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason;return false;}
             if(journal==null) {error="Room editor is not ready";return false;}
-            if(storage.ReadOnly) {error="This room was saved by a newer app and is read-only";return false;}
+            if(storage.ReadOnly) {error=storage.UnavailableReason;return false;}
             if(journal.Snapshot().objects.Length>=RoomDocument.MaximumObjects+2) {error="This room has reached its creation limit";return false;}
             return true;
         }
@@ -243,7 +243,7 @@ namespace Maestro.Quest.Creation
             if(journal==null){error="Room editor is not ready";return false;}
             if(Liquids?.Owns(id)==true){error="Finish pouring or pause room physics before editing this container";return false;}
             if(GetComponent<SpatialSculpting>()?.OwnsMaterial(id)==true){error="Finish or discard the material gesture before editing its carrier";return false;}
-            if(storage.ReadOnly){error="This room was saved by a newer app and is read-only";return false;}
+            if(storage.ReadOnly){error=storage.UnavailableReason;return false;}
             if(!HasSavedObject(id)){error="This object is not in the saved room; inspect the room first";return false;}
             var data=Read(id);var item=Find(id);
             // Cleanup uses canonical identity even when a view is unavailable.
@@ -612,7 +612,7 @@ namespace Maestro.Quest.Creation
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
             CompleteSave();
-            if (PendingEditSave || saveDispatch.Frozen || journal == null || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
+            if (PendingEditSave || saveDispatch.Frozen || journal == null || storage.ReadOnly || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
@@ -673,7 +673,7 @@ namespace Maestro.Quest.Creation
             if (journal == null || storage == null) { error="Room storage is not ready."; return false; }
             if (TemporaryRoom) { error="Keep or discard the temporary room before saving the ordinary workspace."; return false; }
             GetComponent<WorkspaceViewpoint>()?.Capture();CapturePhysicsPlacements(); CompleteSave(wait:true);
-            if(storage.ReadOnly){error="Room storage is unavailable; original files are preserved.";return false;}
+            if(storage.ReadOnly){error=storage.UnavailableReason;return false;}
             if (!dirty) return true;
             int revision=Revision;
             error=SaveSnapshot(journal.Snapshot());

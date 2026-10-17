@@ -12898,3 +12898,58 @@ hashes, native reports, web output, unchanged review-body comparisons, diagnosti
 measurements and next integration constraints. No device, paid-provider, Android
 compilation, signing, deployment or Store acceptance is claimed. The V1 goal
 remains active.
+
+
+## Native rotation with background publication — 2026-10-17
+
+The shared object.rotation.set action now includes final disk publication in its
+background operation. The worker preflights the saved baseline and exact private
+stage, releases its coordinator, and waits for owner-thread acceptance. Unity
+revalidates the authored journal/history, lifecycle and target, prepares native
+resources, accepts once and authorizes the same conditional publisher before
+native callbacks. No disk coordinator waits for Unity, and no saved completion
+receipt is issued until both native application and publication are confirmed.
+
+This deliberately has an explicit accepted-but-saving phase. Native acceptance
+precedes final IO, so Stop afterwards cannot retract either the visible edit or
+the detached save. The publisher rechecks the baseline: an external change after
+preflight can refuse saving. That outcome leaves the accepted live edit available
+for inspection and makes storage read-only before the future completes, preventing
+autosave, flush or a later ordinary edit from overwriting uncertain saved data.
+Pre-acceptance failures/cancellation leave both the native pose and accepted files
+unchanged. This is an inspect/recover outcome, never an automatic replay.
+
+The operation participates in the existing saveTask ordering. A native Changed
+callback may synchronously flush newer accepted state because authorization is
+already signaled. New clock/viewpoint captures remain dirty. Only the target's
+physics is held during preparation; it resumes after application, while unrelated
+physics and world time continue. The directory write lease survives Stop/disable
+until worker cleanup drains, without retaining Unity objects for final IO.
+
+Eleven new regression cases cover unlocked preflight, explicit authorization,
+cancellation before acceptance, changed saved baselines, pure-writer contention,
+ongoing unrelated physics/world time, Stop/disable after acceptance, synchronous
+callback flushes, post-acceptance conflict preservation and cleanup with no later
+observer poll. The focused run passed 1,419 EditMode and 62 selected PlayMode
+tests; all 1,442 web room tests in 143 files passed. The expanded program,
+temporary-room and workspace run then passed 1,273 PlayMode tests with zero
+failures or skips. That wider run precedes only the final creation-error wording
+correction. The final source then passed 68 targeted EditMode and 70 selected
+PlayMode tests, plus 263 catalog/capability web tests. All 3,216 native inputs
+match the tested mirror except the four inspected Configure-derived settings.
+All 14 protected files are unchanged. Source hashes, the diagnostic-only delta,
+native reports and exact catalog comparisons are retained.
+
+Verification evidence is recorded in .quest-evidence/native-publication-20261017/.
+The synchronous APIs, other completion-action migrations, full native/device
+acceptance and release gates remain outstanding. No device, paid-provider,
+signing, deployment or Meta operation is included in this checkpoint.
+
+Follow-up correctness gate: ordinary RoomStorage.Save still lacks a retained
+accepted-primary baseline across independent external changes. The new
+post-acceptance failure latch protects this publication path, but does not prove
+that a later ordinary autosave after a pre-acceptance cancellation cannot replace
+externally changed data. Harden that shared path before extending completion
+editing. Legitimate newer edits from the same editor and confirmed temporary
+room/memory snapshot publications must advance its known baseline explicitly;
+a blanket read-only latch for every stale candidate would reject valid user work.

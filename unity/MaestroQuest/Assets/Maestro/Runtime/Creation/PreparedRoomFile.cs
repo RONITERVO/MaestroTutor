@@ -54,6 +54,9 @@ namespace Maestro.Quest.Creation
                 contents=Interlocked.Exchange(ref content,null);if(contents==null)return false;
                 fingerprint=baseline;present=exists;valid=validPrimary;return true;
             }
+            // Only the worker that owns this candidate calls Inspect before Take.
+            internal bool Inspect(VersionedRoomFile<T> expected,out PreparedContent contents,out byte[] fingerprint,out bool present)
+            {contents=content;fingerprint=baseline;present=exists;return ReferenceEquals(owner,expected)&&contents!=null;}
             public void Dispose()=>Interlocked.Exchange(ref content,null)?.Dispose();
         }
 
@@ -107,16 +110,33 @@ namespace Maestro.Quest.Creation
             var bytes=ReadBytes(primary);return bytes!=null&&Fingerprint(bytes).SequenceEqual(fingerprint);
         }
 
-        // Call under the room/memory coordinator, on the journal owner after checking
-        // its revision/lifecycle. Disk identity cannot prove in-memory edit ownership.
-        internal bool PublishPrepared(PreparedSave prepared,out string error)
+        // Advisory preflight only. Release all disk locks before awaiting native
+        // acceptance; PublishPrepared repeats the baseline check after authorization.
+        internal bool CheckPrepared(PreparedSave prepared,out string error)
+        {
+            error="The "+label+" preparation is unavailable.";
+            if(prepared==null||!prepared.Inspect(this,out var content,out var baseline,out bool existed))return false;
+            if(!Monitor.TryEnter(retainedGate)){error="Room file inspection is busy; the edit was not accepted.";return false;}
+            try {
+                if(ReadOnly||HasNewerFiles(directory,stem,version)){error="Saved "+label+" is unavailable; its files are preserved.";return false;}
+                if(!MatchesPreparation(baseline,existed)){error="The saved "+label+" changed during preparation; inspect it before retrying.";return false;}
+                if(Maestro.Quest.Persistence.WorkspaceFileInventory.Kind(primary+".pending")!="absent"){error="An unfinished room save remains; preserve it before editing.";return false;}
+                if(content.Stage!=null&&!content.Stage.Ready){error="Prepared room bytes changed; preserve the staging file.";return false;}
+                error=null;return true;
+            }finally{Monitor.Exit(retainedGate);}
+        }
+
+        // Call under the room/memory coordinator after native authorization.
+        // Disk identity cannot prove in-memory edit ownership.
+        internal bool PublishPrepared(PreparedSave prepared,out string error,bool wait=false)
         {
             error="The "+label+" save preparation was already used or belongs to another store.";
             if(prepared==null||!prepared.Take(this,out var content,out var baseline,out bool existed,out bool validPrimary))return false;
             using(content) {
                 // Retention can decode large retained documents on another thread.
                 // Refuse a busy publication; never block the interaction thread.
-                if(!Monitor.TryEnter(retainedGate)){error="Room file inspection is busy; the edit was not published.";return false;}
+                if(wait)Monitor.Enter(retainedGate);
+                else if(!Monitor.TryEnter(retainedGate)){error="Room file inspection is busy; the edit was not published.";return false;}
                 var bytes=content.Bytes;
                 string pending=primary+".pending";bool staged=false;
                 try {
