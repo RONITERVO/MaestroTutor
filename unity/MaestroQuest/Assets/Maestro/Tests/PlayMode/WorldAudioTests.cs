@@ -17,13 +17,12 @@ namespace Maestro.Quest.Tests
     {
         string WorldSound(float seconds=.25f)
         {
-            var module=new AudioSourceCapability();var args=module.Example;args["definition"]["tone"]["seconds"]=seconds;
-            Assert.IsTrue(module.Start(new CapabilityContext(editor,animations),"sound-definition",args,out var op,out var error),error);return (string)op.Result["id"];
+            string id=Guid.NewGuid().ToString("N");
+            Assert.IsTrue(editor.EditAudio(id,0,new RoomAudioDefinition{id=id,name="Robot greeting",seconds=seconds},out var error),error);return id;
         }
         void WorldEmitter(string target,string source,string key="sound",bool spatial=false,float gain=0)
         {
-            var module=new AudioEmitterCapability();var args=module.Example;args["target"]=target;args["revision"]=editor.ObjectRevision(target);args["emitter"]=key;
-            args["definition"]=AudioSchema.Encode(new RoomAudioEmitter {source=source,spatial=spatial,gain=gain});Assert.IsTrue(module.Start(new CapabilityContext(editor,animations),"sound-emitter",args,out _,out var error),error);
+            Assert.IsTrue(editor.EditAudioEmitter(target,editor.ObjectRevision(target),key,new RoomAudioEmitter{id=key,source=source,spatial=spatial,gain=gain},out var error),error);
         }
         [UnityTest] public IEnumerator WorldAudioDefinitionsUseSharedFactsUndoAndTemporaryDiscard()
         {

@@ -3704,14 +3704,14 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Source kind tone is a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. Source kind clip references an exact privately imported WAV assetHash and inspected seconds from audio.import. Missing or changed bytes fail playback explicitly; no file is fetched by this action. Source kind stream saves a direct public HTTPS MP3 endpoint without credentials, query strings or fragments. Read audio.source.stream for its details. It requires room format 40 and source version 2; saving does not connect. Only audio.start with loop=false opens its connection, without cookies, authorization or redirects. To repeat a saved sound, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore.",
+      "description": "Save or remove a reusable room sound definition with one Undo. For a new sound use id='' and revision=0; the receipt returns its generated stable ID. For an existing sound use its exact ID and latest audio.source.definition revision. Source kind tone is a bounded 24 kHz mono sine, triangle or seeded noise recipe with linear frequency sweep and attack/release envelopes (their sum must fit seconds). No API call, microphone or network connection is opened. Editing a source affects future plays; an active play keeps its captured source revision. Removal fails while any saved emitter references the sound. Source kind clip references an exact privately imported WAV assetHash and inspected seconds from audio.import. Missing or changed bytes fail playback explicitly; no file is fetched by this action. Source kind stream saves a direct public HTTPS MP3 endpoint without credentials, query strings or fragments. Read audio.source.stream for its details. It requires room format 40 and source version 2; saving does not connect. Only audio.start with loop=false opens its connection, without cookies, authorization or redirects. To repeat a saved sound, use audio.start with loop=true; this edit action never starts playback. Definitions survive saving, temporary rooms and workspace exports; playback never auto-starts on restore. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "save",
         "id": "",
@@ -3996,7 +3996,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -4007,7 +4007,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure or remove a saved sound emitter on an object, including the book or Maestro. Use the exact source ID from audio.source.edit/list. Empty part and joint attach to the object root; choose either an existing recipe part or one Maestro joint. Joint offsets use canonical avatar axes and root scale through model changes. Up to four emitters per object and 32 in a room. minDistance/maxDistance control logarithmic attenuation; gain is 0–1, spatial=false is nonspatial. The semantic role is saved for future mixing policy; it does not acquire conversation/microphone privileges. Editing never starts playback. An active play ends if its emitter changes or disappears; movement/grabbing does not change its definition. Copies share the source ID and remain silent. Use the current object revision from object.audioEmitter before editing.",
+      "description": "Configure or remove a saved sound emitter on an object, including the book or Maestro. Use the exact source ID from audio.source.edit/list. Empty part and joint attach to the object root; choose either an existing recipe part or one Maestro joint. Joint offsets use canonical avatar axes and root scale through model changes. Up to four emitters per object and 32 in a room. minDistance/maxDistance control logarithmic attenuation; gain is 0–1, spatial=false is nonspatial. The semantic role is saved for future mixing policy; it does not acquire conversation/microphone privileges. Editing never starts playback. An active play ends if its emitter changes or disappears; movement/grabbing does not change its definition. Copies share the source ID and remain silent. Use the current object revision from object.audioEmitter before editing. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "maestro",
@@ -47136,7 +47136,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
-      "sha256": "469bbe2f369e3e2ab074efbc1805df6ac57bdddc185dc101f6f887aad3a4379a"
+      "sha256": "b273da81f22d55f142e9735c0f61274611ca7e25ed12b524263c285098300f36"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioFacts.cs",
@@ -47932,7 +47932,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "0004fde2a6db471fff3591db03c86e3e813751de4136b9e3e582b7e42e61b4a6"
+      "sha256": "3f7836ce97d81ecd2783371fa1e24eb25ac3351918175fb016a4783117c29e52"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48064,11 +48064,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioDefinition.cs",
-      "sha256": "1f6e798517514b63adfb6bfce18f7621ead3e5c9e251c5414ffe62034c657089"
+      "sha256": "025bb2b70442afb9be21f788110cf054ecb4554eab36bd5fd84fbd3ac25eda3a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioEdits.cs",
-      "sha256": "ca895fbd6540bcd97c0d68b1a45bf30212d76df436534a3c248f60812eab976e"
+      "sha256": "7c5f4b25821cf7e88491983f12b25370f55b9f34372aa3e52197decd5a18cf43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAudioMix.cs",
@@ -48372,7 +48372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "7effa073ef18fe0298fd570e3b39e3dcef65ef3a3342800cdf241fca9103071a"
+      "sha256": "262a77ea7b6eafc10c4e810fc3314728900b5b315772679f2472039dd1ba54f1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

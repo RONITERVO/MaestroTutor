@@ -62,7 +62,7 @@ namespace Maestro.Quest.Creation
             foreach(var obj in objects) {
                 var emitters=obj.audioEmitters??Array.Empty<RoomAudioEmitter>();count+=emitters.Length;
                 error="Keep at most four sound emitters per object and 32 in the room";
-                if(emitters.Length>4||count>32)return false;
+                if(emitters.Length>RoomAudioEmitter.MaximumPerObject||count>RoomAudioEmitter.MaximumPerRoom)return false;
                 var keys=new HashSet<string>(StringComparer.Ordinal);
                 foreach(var e in emitters){error="Sound emitter IDs must be distinct on their object";if(e==null||!keys.Add(e.id)||!e.Validate(obj,ids,out error))return false;}
             }
@@ -71,6 +71,7 @@ namespace Maestro.Quest.Creation
     }
     [Serializable] public sealed class RoomAudioEmitter
     {
+        internal const int MaximumPerObject=4,MaximumPerRoom=32;
         public int version=1;
         public string id="sound",source,part="",joint="",role="effects";
         public Vector3 position;
@@ -114,6 +115,18 @@ namespace Maestro.Quest.Creation
     {
         readonly Dictionary<string,RoomAudioDefinition> audioSources=new(StringComparer.Ordinal);
         readonly Dictionary<string,int> audioRevisions=new(StringComparer.Ordinal);
+        internal int AudioCount=>audioSources.Count;
+        internal bool AudioReferenced(string id)=>items.Values.Any(x=>x.audioEmitters?.Any(e=>e.source==id)==true);
+        internal bool CanEditAudioEmitter(string target,string key,RoomAudioEmitter emitter,out string error)
+        {
+            error="The object no longer exists";if(!items.TryGetValue(target,out var owner))return false;
+            var current=owner.audioEmitters??Array.Empty<RoomAudioEmitter>();bool exists=current.Any(e=>e.id==key);
+            error="This sound emitter no longer exists";if(emitter==null){if(exists)error=null;return exists;}
+            error="The emitter identity must match its edited key";if(emitter.id!=key)return false;
+            error="Keep at most four sound emitters per object and 32 in the room";
+            if(!exists&&(current.Length>=RoomAudioEmitter.MaximumPerObject||items.Values.Sum(x=>x.audioEmitters?.Length??0)>=RoomAudioEmitter.MaximumPerRoom))return false;
+            return emitter.Validate(owner,audioSources.Keys.ToHashSet(StringComparer.Ordinal),out error);
+        }
         public int AudioRevision(string id)=>id!=null&&audioRevisions.TryGetValue(id,out var value)?value:0;
         public RoomAudioDefinition ReadAudio(string id)=>id!=null&&audioSources.TryGetValue(id,out var value)?value.Copy():null;
         internal RoomAudioEmitter ReadAudioEmitter(string target,string key)=>items.TryGetValue(target,out var item)?item.audioEmitters?.FirstOrDefault(e=>e.id==key)?.Copy():null;

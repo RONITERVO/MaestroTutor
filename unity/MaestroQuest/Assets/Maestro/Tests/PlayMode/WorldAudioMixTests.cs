@@ -28,9 +28,7 @@ namespace Maestro.Quest.Tests
         }
         void MixEmitter(string target,string source,string role,float gain=.8f)
         {
-            var module=new AudioEmitterCapability();var args=module.Example;args["target"]=target;args["revision"]=editor.ObjectRevision(target);args["emitter"]="sound";
-            args["definition"]=AudioSchema.Encode(new RoomAudioEmitter{source=source,role=role,spatial=false,gain=gain});
-            Assert.IsTrue(module.Start(new CapabilityContext(editor,animations),"mix-emitter",args,out _,out var error),error);
+            Assert.IsTrue(editor.EditAudioEmitter(target,editor.ObjectRevision(target),"sound",new RoomAudioEmitter{source=source,role=role,spatial=false,gain=gain},out var error),error);
         }
         [Test] public void WorldAudioMixReadsAreDetachedPassiveAndControlsAreGuarded()
         {

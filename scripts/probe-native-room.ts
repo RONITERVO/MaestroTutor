@@ -1231,9 +1231,9 @@ try{
   }
  }
  if(!prompt&&!probeOwner.identityOnly){
-  const sound=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'save',id:'',revision:0,definition:{name:'Robot greeting',kind:'tone',tone:{wave:'sine',frequency:440,endFrequency:660,seconds:.3,attack:.01,release:.04,seed:1}}}}}}]);
+  const sound=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'save',id:'',revision:0,definition:{name:'Robot greeting',kind:'tone',tone:{wave:'sine',frequency:440,endFrequency:660,seconds:.3,attack:.01,release:.04,seed:1}}}}}}]));
   const soundId=sound.execution?.selected?.output?.id;if(typeof soundId!=='string')throw new Error('Sound creation did not return its stable identity');
-  const emitter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'configure',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound',definition:{source:soundId,part:'',joint:'',position:{x:0,y:0,z:0},role:'effects',spatial:false,gain:0,distance:{minimum:.5,maximum:15}}}}}}]);
+  const emitter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'configure',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound',definition:{source:soundId,part:'',joint:'',position:{x:0,y:0,z:0},role:'effects',spatial:false,gain:0,distance:{minimum:.5,maximum:15}}}}}}]));
   const configured=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.audioEmitter',version:1,arguments:{target:'book',emitter:'probeSound'}}}]);
   if((configured.catalog?.value as {definition:{source:string}}).definition.source!==soundId)throw new Error('Sound attachment did not preserve its source identity');
   let played=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.play',version:1,arguments:{target:'book',emitter:'probeSound'}}}}]);
@@ -1301,9 +1301,9 @@ try{
   if(staleAudioOwner.catalog?.available!==false)throw new Error('Released sound ownership remained available');
   await execute([{action:'rules',rule:{action:'stop',target:soundWatchId}}]);
   await execute([{action:'rules',rule:{action:'edit',revision:lease.state().rules!.revision,edits:[{kind:'delete',target:soundWatchId}]}}]);
-  const removed=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound'}}}}]);
+  const removed=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.audioEmitter.edit',version:1,arguments:{operation:'remove',target:'book',revision:await nativeObjects.revision('book'),emitter:'probeSound'}}}}]));
   const sourceRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'audio.source.definition',version:2,arguments:{id:soundId}}}]);
-  const cleaned=await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]);
+  const cleaned=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'audio.source.edit',version:1,arguments:{operation:'remove',id:soundId,revision:(sourceRead.catalog?.value as {revision:number}).revision}}}}]));
   await writeFile(join(directory,'world-audio.json'),JSON.stringify({boundary:'Shared headless client and real native source/edit/play, independent loop/control/discovery receipts and program event delivery; silent gain, no provider or headset audio proof.',sound,emitter,configured,played,started,soundReservation,soundOwnership,releasedAudio,staleAudioOwner,activeSounds,beforePause,soundWatch,soundWatchSaved,soundPaused,soundMixBefore,soundMixed,soundMixAfter,pausedAfterMix,soundMixReset,soundObserved,soundResumed,soundGain,soundContinued,soundStopped,soundTerminal,removed,cleaned},null,2));
   let liveSoundFixture:{endpoint:string}|null=null;
   try{liveSoundFixture=JSON.parse(await readFile(join(directory,'live-sound-fixture.json'),'utf8'));}catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}

@@ -16,6 +16,29 @@ development and are not installed by `MaestroRoom`. Direct native obstruction
 remains active without a reflection map. These audio changes have not been
 accepted on the headset.
 
+## Saved authoring completion
+
+`audio.source.edit` and `object.audioEmitter.edit` use the same bounded FIFO
+save queue as object creation, placement and environment profiles. Book controls,
+agents and programs wait for the existing action receipt to complete; they must
+not resubmit an edit merely because it is still preparing. Completion confirms
+native application and durable publication outside temporary play. A temporary
+room retains local Undo and becomes durable through Keep.
+
+Queued requests capture their inputs without copying a waiting room candidate.
+Source/object revisions, source references, capacity and target availability are
+checked again before application. A target that becomes inactive or enters
+animation authoring refuses the edit. Success returns the source revision
+accepted by that action, even if a later human edit has already changed it.
+Identical values add no Undo. A removed source returns revision zero.
+
+Before acceptance, cancellation leaves the edit unapplied and a staged emitter
+change leaves its sound playing. After acceptance, stopping cannot retract the
+edit or its pending save; inspect its status before retrying. Source edits only
+affect future plays. An accepted emitter change ends that emitter's active sound;
+other voices retain their captured sources and continue. Saving or attaching a
+tone, imported clip or live endpoint never starts playback or opens a connection.
+
 ## Current executable slice
 
 - `audio.source.edit` saves/removes a named source, with a generated stable ID,

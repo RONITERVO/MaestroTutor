@@ -184,5 +184,20 @@ namespace Maestro.Quest.Tests
                 Assert.AreNotEqual(accepted,journal.EnvironmentRevision(id));Assert.AreEqual(accepted,edit.AcceptedEnvironmentRevision(id));
             }
         }
+        [TestCase("create")][TestCase("update")][TestCase("same")][TestCase("remove")]
+        public void AcceptedAudioRevisionBelongsToThisEditAfterLaterMutations(string action)
+        {
+            var journal=Room();string id=Guid.NewGuid().ToString("N");var profile=new RoomAudioDefinition{id=id,name="Reusable sound"};
+            if(action!="create")Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,audioEdits:new(){Replacements=new[]{profile}}));
+            if(action=="update")profile.frequency=880;
+            var delta=action=="remove"?new AudioDefinitionEdits{Removals=new[]{id}}:new AudioDefinitionEdits{Replacements=new[]{profile}};
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var edit,out var error,audioEdits:delta),error);
+            using(edit){
+                Assert.AreEqual(0,edit.AcceptedAudioRevision(id));Assert.IsTrue(edit.Accept(journal,out error),error);int accepted=journal.AudioRevision(id);
+                Assert.AreEqual(accepted,edit.AcceptedAudioRevision(id));Assert.AreEqual(action=="remove",accepted==0);
+                profile.name="Later human edit";Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out error,audioEdits:new(){Replacements=new[]{profile}}),error);
+                Assert.AreNotEqual(accepted,journal.AudioRevision(id));Assert.AreEqual(accepted,edit.AcceptedAudioRevision(id));
+            }
+        }
     }
 }

@@ -17,8 +17,8 @@ using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
         string LiveSound(){
-            var module=new AudioSourceCapability();var args=module.Example;args["definition"]=new JObject{["name"]="Radio",["kind"]="stream",["stream"]=new JObject{["endpoint"]="https://radio.example.invalid/live.mp3"}};
-            Assert.IsTrue(module.Start(new CapabilityContext(editor,animations),"radio-definition",args,out var op,out var error),error);return (string)op.Result["id"];
+            string id=Guid.NewGuid().ToString("N");
+            Assert.IsTrue(editor.EditAudio(id,0,new RoomAudioDefinition{id=id,version=2,name="Radio",kind="stream",endpoint="https://radio.example.invalid/live.mp3"},out var error),error);return id;
         }
         static IEnumerator LiveUntil(Func<bool> predicate,float seconds=5){double end=Time.realtimeSinceStartupAsDouble+seconds;while(!predicate()&&Time.realtimeSinceStartupAsDouble<end)yield return null;Assert.IsTrue(predicate(),"Live audio did not reach its expected state");}
         [UnityTest] public IEnumerator WorldAudioLiveIndependentInstancesPauseCurrentFeedAndEndHonestly(){

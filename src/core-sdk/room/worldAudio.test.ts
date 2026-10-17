@@ -18,6 +18,13 @@ it('shares sound definitions and playback with both book authoring and agent pro
  expect(currentInputRequest(emitter.input,emitter.example!)).toMatchObject({capability:'object.audioEmitter',arguments:{target:'maestro',emitter:'beep'}});
 });
 
+it('waits for confirmed persisted audio authoring while leaving playback controls immediate',()=>{
+ for(const id of ['audio.source.edit','object.audioEmitter.edit'])expect(capabilityDefinition(id)?.duration).toBe('completion');
+ for(const id of ['audio.control','audio.mix.control'])expect(capabilityDefinition(id)?.duration).toBe('instant');
+ expect(validateCapabilityOutput('audio.source.edit',1,{id:'a'.repeat(32),revision:14,temporary:false})).toBeNull();
+ expect(capabilityDefinition('object.audioEmitter.edit')?.output).toBeUndefined();
+});
+
 it('keeps continuous playback lifetime and exact instance controls explicit',()=>{
  const start=capabilityDefinition('audio.start')!,control=capabilityDefinition('audio.control')!;
  expect(capabilityResources('audio.start',start.example!)).toEqual(['maestro']);

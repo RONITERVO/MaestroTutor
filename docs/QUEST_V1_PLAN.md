@@ -13358,3 +13358,54 @@ build, physical Quest, paid provider, signing, cloud or Meta operation ran.
 Snapshot capture/native reconciliation and other synchronous authoring still
 need performance work. Physical interaction, audio quality, real-provider,
 capacity and Store acceptance remain open; V1 is not complete.
+
+## Audio authoring save completion — 2026-10-17
+
+Reusable sound definitions and object sound emitters now share the existing
+bounded save queue with creation, placement, settings and environment profiles.
+The original book forms, agent calls and programs wait for native application
+and durable publication outside temporary play. They inspect the accepted action
+instead of replaying it. Waiting requests capture inputs without copying a room;
+current revisions, references, capacity, active targets and authoring ownership
+are checked again before acceptance. Source receipts retain their exact accepted
+revision after later human edits.
+
+Preparing or cancelling an emitter edit leaves its sound running. Accepted
+emitter changes end only that emitter's voice; source edits affect future plays
+while current voices retain their captured definition. Saving tones, clips or
+live endpoints and attaching them never starts playback or opens a connection.
+Unchanged edits add no Undo. Cancellation before acceptance applies nothing;
+accepted saves drain after interruption and identify their resource. Temporary
+Keep/Discard and direct editor fixtures use the same validation rules.
+See [the shared audio authoring contract](../unity/AUDIO.md#saved-authoring-completion).
+
+Focused native checks pass 36 EditMode and 45 PlayMode cases, including nine
+asynchronous audio authoring tests and four exact accepted-source revision cases.
+The first native pass was also successful (36/44); the final pass adds a check
+for a target becoming hidden or entering authoring before acceptance.
+All 3,186 web tests, application/probe TypeScript and generated-catalog checks
+pass. One new web assertion initially tried to validate an emitter output record;
+this action deliberately has no output schema. The corrected assertion preserves
+that contract, while completion is still mandatory. That failure is retained.
+
+The complete Headless journey passes with 2,236 observations and
+2,228 read sets. Source creation, attachment, playback, emitter removal
+and source removal complete through native receipts, including revision zero
+for the removed source. Its integration driver now awaits the four authoring
+receipts with the common helper. The complete original Book journey passes with
+3,220 observations and 1,006 requests. The generated sound
+picker uses the newly saved source's exact ID, and both authoring actions complete.
+Its screenshot was inspected. Human edits survive, stale requests are refused
+and reload does not replay effects. Both journeys retain empty periodic object
+inventories and explicit offline fixtures; they are not provider/headset proof.
+
+Evidence is in .quest-evidence/audio-authoring-save-20261017/. All 3,238 native
+inputs, 5,156 source inputs and 14 protected local files were verified before
+this delivery-record update. The PR's four inline/eight discussion comments are
+unchanged; no comments were posted. No Android build, device, paid provider,
+signing, deployment or Meta action ran. Complete native suites were not repeated:
+their last full checkpoint remains 7d518ec9 with the unresolved Meta audio crash
+and its unchanged successful rerun. Production reflections remain disabled.
+Other synchronous authoring/import acceptance, owner-thread snapshot/native work,
+physical/audio/provider/capacity acceptance and Store gates remain open.
+V1 is not complete.
