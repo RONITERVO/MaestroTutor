@@ -25,6 +25,7 @@ namespace Maestro.Quest.Creation
     public sealed partial class RoomEditor
     {
         void ReconcileEdit(RoomJournal.PreparedEdit edit,RoomEditPreparation preparation,bool applyPose,bool history=false) {
+            InvalidateLiquidReports(edit);
             if(edit.VisualOnly){ReconcileVisibility(preparation);return;}
             if(edit.LiquidContentsOnly) {
                 // Preserve root/part animation, velocity, contacts, connection state

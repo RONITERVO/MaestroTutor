@@ -70,9 +70,9 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator PendingTemporalWeatherSealsRainBeforeAdmissionAndReleasesFlowOnCancel(){
             string id=RainCup();editor.Liquids.Tick(.1f);double amount=(double)editor.Liquids.ObserveRain(id)["collectedMl"];Assert.Greater(amount,0);int events=0;
-            editor.ContainerRainCollected+=(target,value)=>{events++;editor.Liquids.Tick(.1f);Assert.IsFalse(editor.Liquids.Active,"A publication callback must not reopen flow across the weather boundary");};
+            editor.ContainerRainCollected+=(target,value)=>{events++;if(events==1){editor.Liquids.Tick(.1f);Assert.IsFalse(editor.Liquids.Active,"A publication callback must not reopen flow across the weather boundary");}};
             Assert.IsTrue(editor.BeginWeather(editor.WeatherRevision,2,new(){rainMmPerHour=0},0,out var pending,out var error),error);
-            Assert.AreEqual(1,events);Assert.AreEqual(amount,editor.Read(id).containers[0].amountMl,.000001);Assert.IsFalse(editor.Liquids.FlowWorkEligible);Assert.IsFalse(editor.Liquids.Active);
+            yield return LiquidSaved();Assert.AreEqual(1,events);Assert.AreEqual(amount,editor.Read(id).containers[0].amountMl,.000001);Assert.IsFalse(editor.Liquids.FlowWorkEligible);Assert.IsFalse(editor.Liquids.Active);
             pending.Dispose();yield return Drained(pending);Assert.IsTrue(editor.Liquids.FlowWorkEligible);Assert.AreEqual(60,editor.Weather.settings.rainMmPerHour);
             editor.Liquids.Tick(.1f);Assert.Greater((double)editor.Liquids.Observe(id)["contents"]["amountMl"],amount);physics.PausePhysics();
         }

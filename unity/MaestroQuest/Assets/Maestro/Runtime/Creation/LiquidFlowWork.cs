@@ -23,7 +23,7 @@ namespace Maestro.Quest.Creation
         internal RoomResourceOwner FlowWorkOwner=>new(editor.WorldIdentity,null,"liquid");
         internal bool FlowTarget(string id)=>vessels.ContainsKey(id);
         string FlowWorkIssue(string id)=>FlowWorkEligible&&!FlowWorkResources.Ready(this,id,out var issue)?issue:null;
-        string FlowPhase(string id)=>blocked?"failed":(FlowInputIssue(id)??FlowWorkIssue(id))!=null?"waiting":Owns(id)?"flowing":"idle";
+        string FlowPhase(string id)=>blocked?"failed":(!Active&&!editor.LiquidCheckpointCapacity)||(FlowInputIssue(id)??FlowWorkIssue(id))!=null?"waiting":Owns(id)?"flowing":"idle";
         void InvalidateRain(string reason){foreach(var v in vessels.Values){v.Exposure=0;v.RainReady=false;v.RainReason=reason;}}
         void WaitForFlowWork(string reason,bool discovery=false){
             // Only the active flow tick closes accepted work. Admission checks in

@@ -47,35 +47,40 @@ namespace Maestro.Quest.Tests
             editor.Liquids.Tick(.1f);var observation=editor.Liquids.ObserveRain(id);double expected=60*c.FootprintArea*.1*1000/3600;
             Assert.That((double)observation["collectedMl"],Is.EqualTo(expected).Within(.000001),observation.ToString());Assert.That((double)observation["exposure"],Is.EqualTo(1));Assert.That(editor.Read(id).containers[0].amountMl,Is.Zero);
             Assert.That(WorldWeatherCapability.Rain().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=id},out _),Is.True);
-            physics.PausePhysics();Assert.That(events,Is.EqualTo(1));Assert.That(intake,Is.EqualTo(expected).Within(.000001));Assert.That(editor.Read(id).containers[0].amountMl,Is.EqualTo(intake));editor.Undo();Assert.That(editor.Read(id).containers[0].amountMl,Is.Zero);editor.Redo();Assert.That(editor.Read(id).containers[0].amountMl,Is.EqualTo(intake));yield return null;
+            physics.PausePhysics();yield return LiquidSaved();Assert.That(events,Is.EqualTo(1));Assert.That(intake,Is.EqualTo(expected).Within(.000001));Assert.That(editor.Read(id).containers[0].amountMl,Is.EqualTo(intake));editor.Undo();Assert.That(editor.Read(id).containers[0].amountMl,Is.Zero);editor.Redo();Assert.That(editor.Read(id).containers[0].amountMl,Is.EqualTo(intake));yield return null;
         }
         [UnityTest]public IEnumerator WeatherRainRejectsCoveredAndUnknownOpeningsAndUsesEntityRealRoomParticipation(){
             string id=RainCup();var item=editor.Find(id);var point=item.transform.position+Vector3.up*.3f;var cover=new WeatherCover();var roof=RainRoof(new Vector3(3,2,0),true);
             editor.Liquids.Tick(.1f);Assert.That((double)editor.Liquids.Observe(id)["contents"]["amountMl"],Is.Zero);Assert.That(cover.Exposure(editor,point,Vector3.down*6,item),Is.EqualTo(RainExposure.Covered));
-            physics.PausePhysics();string profile=NewEnvironment();Assert.That(AssignEnvironment(id,profile,out var e),Is.True,e);
+            physics.PausePhysics();yield return LiquidSaved();string profile=NewEnvironment();Assert.That(AssignEnvironment(id,profile,out var e),Is.True,e);
             Assert.That(cover.Exposure(editor,point,Vector3.down*6,item),Is.EqualTo(RainExposure.Open));Assert.That(cover.Exposure(editor,point,Vector3.down*6,editor.Find("maestro")),Is.EqualTo(RainExposure.Covered));
             roof.layer=RoomPhysicsLayers.Item;var roofItem=roof.AddComponent<RoomItem>();roofItem.Configure(new[]{roof.GetComponent<Collider>()});Physics.SyncTransforms();Assert.That(cover.Exposure(editor,point,Vector3.down*6,item),Is.EqualTo(RainExposure.Covered));
             UnityEngine.Object.DestroyImmediate(roof);physics.SetSurfaces(false,"Unavailable");Assert.That(cover.Exposure(editor,point,Vector3.down*6,item),Is.EqualTo(RainExposure.Open));Assert.That(cover.Exposure(editor,point,Vector3.down*6,editor.Find("maestro")),Is.EqualTo(RainExposure.Unknown));yield return null;
         }
-        [UnityTest]public IEnumerator WeatherRainBlockedSaveRollsBackAndDifferentLiquidsNeverMix(){
-            string id=RainCup();editor.Liquids.Tick(.1f);Assert.That((double)editor.Liquids.Observe(id)["contents"]["amountMl"],Is.GreaterThan(0));string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);int events=0;editor.ContainerRainCollected+=(_,_)=>events++;
-            try{Assert.That(editor.Liquids.Finish(out _),Is.False);}finally{Directory.Delete(pending);}
-            Assert.That((double)editor.Liquids.Observe(id)["contents"]["amountMl"],Is.Zero);Assert.That(events,Is.Zero);editor.Liquids.Tick(.1f);Assert.That(editor.Liquids.Active,Is.False);
-            physics.PausePhysics();var c=editor.Read(id).containers[0];c.amountMl=20;c.liquid="Juice";ContainerRun(new RoomAgentExecutor(editor),ContainerCall(id,c));physics.StartPhysics();editor.Liquids.Tick(.1f);Assert.That((double)editor.Liquids.Observe(id)["contents"]["amountMl"],Is.EqualTo(20));Assert.That((string)editor.Liquids.ObserveRain(id)["reason"],Does.Contain("mix"));physics.PausePhysics();yield return null;
-        }
-        [UnityTest]public IEnumerator WeatherRainCoverDetectsStartingInsideAndQuerySaturation(){
+        [UnityTest]public IEnumerator WeatherRainBlockedSavePreservesAcceptedIntake(){
+ string id=RainCup();editor.Liquids.Tick(.1f);double accepted=(double)editor.Liquids.Observe(id)["contents"]["amountMl"];Assert.Greater(accepted,0);
+ string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);int events=0;editor.ContainerRainCollected+=(_,_)=>events++;
+ try{Assert.IsTrue(editor.Liquids.Finish(out var error),error);yield return LiquidSaved();}finally{Directory.Delete(pending);}
+ Assert.AreEqual(accepted,(double)editor.Liquids.Observe(id)["contents"]["amountMl"]);Assert.AreEqual(0,events);Assert.IsFalse(editor.CanSaveRoom);
+ editor.Liquids.Tick(.1f);Assert.IsFalse(editor.Liquids.Active);physics.PausePhysics();
+ }
+ [UnityTest]public IEnumerator WeatherRainDifferentLiquidsNeverMix(){
+ string id=RainCup();physics.PausePhysics();var c=editor.Read(id).containers[0];c.amountMl=20;c.liquid="Juice";ContainerRun(new RoomAgentExecutor(editor),ContainerCall(id,c));
+ physics.StartPhysics();editor.Liquids.Tick(.1f);Assert.AreEqual(20,(double)editor.Liquids.Observe(id)["contents"]["amountMl"]);Assert.That((string)editor.Liquids.ObserveRain(id)["reason"],Does.Contain("mix"));physics.PausePhysics();yield return LiquidSaved();
+ }
+ [UnityTest]public IEnumerator WeatherRainCoverDetectsStartingInsideAndQuerySaturation(){
             physics.SetSurfaces(true,"Test room");var cover=new WeatherCover();var point=new Vector3(4,1,0);var roof=RainRoof(point,true);
             Assert.That(cover.Exposure(editor,point,Vector3.down*6),Is.EqualTo(RainExposure.Covered));UnityEngine.Object.DestroyImmediate(roof);
             for(int i=0;i<64;i++)RainRoof(point+Vector3.up*(1+i*.2f),true);
             Assert.That(cover.Exposure(editor,point,Vector3.down*6),Is.EqualTo(RainExposure.Unknown));yield return null;
         }
         [UnityTest]public IEnumerator WeatherRainSavedEventResumesAnOrdinaryUserProgram(){
-            string id=RainCup();physics.PausePhysics();var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-container-pour.json")));
+            string id=RainCup();physics.PausePhysics();yield return LiquidSaved();var program=JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/program-container-pour.json")));
             var wait=program["functions"][0]["body"][0];wait["event"]="object.container.rainCollected";wait["fields"]=new JObject{["collectedMl"]="ml"};
             var sequence=workshop.Selected;sequence.program=program.ToString();sequence.repeat=false;
             Assert.That(new RoomAgentExecutor(editor).Execute(new RoomAgentRequest{version=2,commands=new[]{new RoomAgentCommand{action="rules",rule=new Maestro.Quest.Rules.RuleRequest{action="edit",revision=workshop.Revision,edits=new[]{new Maestro.Quest.Rules.RuleEdit{kind="save",sequence=sequence}}}}}},out var e,out _),Is.True,e);
             Assert.That(runtime.Trigger(sequence.id),Is.True);for(int i=0;i<40&&!runtime.Scheduler.IsListening("object.container.rainCollected",id);i++)yield return null;Assert.That(runtime.Scheduler.IsListening("object.container.rainCollected",id),Is.True);
-            physics.StartPhysics();editor.Liquids.Tick(.1f);physics.PausePhysics();double intake=editor.Read(id).containers[0].amountMl;
+            physics.StartPhysics();editor.Liquids.Tick(.1f);physics.PausePhysics();yield return LiquidSaved();double intake=editor.Read(id).containers[0].amountMl;
             for(int i=0;i<40&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="hold");i++)yield return null;
             var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.nodeId,Is.EqualTo("hold"));Assert.That(double.Parse(run.state.Single(v=>v.name=="amount").value,System.Globalization.CultureInfo.InvariantCulture),Is.EqualTo(intake).Within(.000001));
         }

@@ -24,7 +24,7 @@ namespace Maestro.Quest.Tests {
             editor.ContainerScooped+=(id,amount,donors,liquid)=>{Assert.That(id,Is.EqualTo(bucket));Assert.That(amount,Is.GreaterThan(0));published++;};
             physics.StartPhysics();editor.Liquids.Tick(.05f);double picked=Liquid(bucket);
             Assert.That(picked,Is.GreaterThan(0));Assert.That(Liquid(pool)+picked,Is.EqualTo(total).Within(1e-8));Assert.That(editor.Read(bucket).containers[0].amountMl,Is.Zero);Assert.That(published,Is.Zero);
-            physics.PausePhysics();Assert.That(published,Is.EqualTo(1));Assert.That(editor.Read(bucket).containers[0].amountMl,Is.EqualTo(picked));
+            physics.PausePhysics();yield return LiquidSaved();Assert.That(published,Is.EqualTo(1));Assert.That(editor.Read(bucket).containers[0].amountMl,Is.EqualTo(picked));
             var loaded=new RoomStorage(directory).Load(out var error);Assert.That(loaded,Is.Not.Null,error);var saved=loaded.objects.Single(x=>x.id==pool).containers[0];Assert.That(saved.version,Is.EqualTo(2));Assert.That(saved.rectangle.width,Is.EqualTo(1.18f));Assert.That(saved.amountMl+picked,Is.EqualTo(total).Within(1e-8));
             editor.Undo();Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(total));Assert.That(editor.Read(bucket).containers[0].amountMl,Is.Zero);editor.Redo();Assert.That(editor.Read(bucket).containers[0].amountMl,Is.EqualTo(picked));Assert.That(published,Is.EqualTo(1));
             // Same catalog fact/configuration path used by the advanced book and agent.
@@ -36,18 +36,18 @@ namespace Maestro.Quest.Tests {
             }
             Assert.That(editor.Read(pool).containers[0].rectangle.width,Is.EqualTo(1.16f));editor.Undo();Assert.That(editor.Read(pool).containers[0].rectangle.width,Is.EqualTo(1.18f));yield return null;
         }
-        [UnityTest] public IEnumerator RectangularPoolRejectsBlockedImmersionAndRollsBackFailedPublication(){
+        [UnityTest] public IEnumerator RectangularPoolRejectsBlockedImmersionAndPreservesAcceptedFailedSave(){
             var(_,pool,bucket)=PoolVessels();double total=editor.Read(pool).containers[0].amountMl;
-            editor.Find(bucket).transform.position+=Vector3.right*.56f;Physics.SyncTransforms();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(bucket),Is.Zero,"Bucket cavity crosses the wall");physics.PausePhysics();
+            editor.Find(bucket).transform.position+=Vector3.right*.56f;Physics.SyncTransforms();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(bucket),Is.Zero,"Bucket cavity crosses the wall");physics.PausePhysics();yield return LiquidSaved();
             editor.Find(bucket).transform.position=new Vector3(4,2.15f,0);Physics.SyncTransforms();physics.StartPhysics();editor.Liquids.Tick(.05f);Assert.That(Liquid(bucket),Is.GreaterThan(0));
             string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
-            try{Assert.That(editor.Liquids.Finish(out _),Is.False);}finally{Directory.Delete(pending);}
-            Assert.That(Liquid(bucket),Is.Zero);Assert.That(Liquid(pool),Is.EqualTo(total));Assert.That(editor.Read(pool).containers[0].rectangle.depth,Is.EqualTo(.78f));Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);yield return null;
+            double accepted=Liquid(bucket);try{Assert.IsTrue(editor.Liquids.Finish(out var error),error);yield return LiquidSaved();}finally{Directory.Delete(pending);}
+            Assert.That(Liquid(bucket),Is.EqualTo(accepted));Assert.That(Liquid(pool),Is.EqualTo(total-accepted));Assert.IsFalse(editor.CanSaveRoom);Assert.That(editor.Read(pool).containers[0].rectangle.depth,Is.EqualTo(.78f));Assert.That(editor.WriteGate.CanFreeze(out _),Is.True);yield return null;
         }
         [UnityTest] public IEnumerator RectangularPoolCanReceiveAPourAndRestoresQuantitiesInTemporaryPlay(){
             var(ex,pool,bucket)=PoolVessels();double total=editor.Read(pool).containers[0].amountMl;
-            physics.StartPhysics();for(int i=0;i<20;i++)editor.Liquids.Tick(.05f);physics.PausePhysics();double picked=editor.Read(bucket).containers[0].amountMl;Assert.That(picked,Is.GreaterThan(1000));
-            var held=editor.Find(bucket);held.transform.SetPositionAndRotation(new Vector3(4,2.8f,0),Quaternion.Euler(0,0,80));Physics.SyncTransforms();physics.StartPhysics();for(int i=0;i<30;i++)editor.Liquids.Tick(.05f);physics.PausePhysics();
+            physics.StartPhysics();for(int i=0;i<20;i++)editor.Liquids.Tick(.05f);physics.PausePhysics();yield return LiquidSaved();double picked=editor.Read(bucket).containers[0].amountMl;Assert.That(picked,Is.GreaterThan(1000));
+            var held=editor.Find(bucket);held.transform.SetPositionAndRotation(new Vector3(4,2.8f,0),Quaternion.Euler(0,0,80));Physics.SyncTransforms();physics.StartPhysics();for(int i=0;i<30;i++)editor.Liquids.Tick(.05f);physics.PausePhysics();yield return LiquidSaved();
             Assert.That(editor.Read(pool).containers[0].amountMl,Is.GreaterThan(total-picked));Assert.That(editor.Read(pool).containers[0].amountMl+editor.Read(bucket).containers[0].amountMl,Is.EqualTo(total).Within(.001));
             // Put both vessels away from each other before beginning a temporary edit.
             held.transform.position=new Vector3(6,2,0);held.transform.rotation=Quaternion.identity;

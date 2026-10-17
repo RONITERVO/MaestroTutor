@@ -429,6 +429,10 @@ try{
  const contactState=await page.evaluate(()=>{const c=window.nativeBookEvidence!().state!.catalog;if(c?.operation!=='inspect'||c.category!=='facts')throw new Error('Contact fact missing');return c.value as {known:boolean;immersed:boolean};});assert.equal(contactState.known,false);assert.equal(contactState.immersed,false);
  await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-liquid-contact.png')});
  await writeFile(join(directory,'book-native-liquid-contact.json'),JSON.stringify({boundary:'Original book fact form through native transport. Untracked desktop input stays unknown. No contact, provider or headset claim.',contactState},null,2));
+ const liquidPersistence=await readResourceFact('world.liquidPersistence','Liquid save status');
+ assert.equal(liquidPersistence.phase,'idle');assert.equal(liquidPersistence.pending,0);assert.equal(liquidPersistence.capacity,2);
+ await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-liquid-persistence.png')});
+ await writeFile(join(directory,'book-native-liquid-persistence.json'),JSON.stringify({boundary:'Original book generated fact controls read the shared native durability state. No provider or headset claim.',liquidPersistence},null,2));
  // Shared area authoring uses the same generated controls as every other catalog action.
  await openNamedAction('Save world area','world.region.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Café garden');

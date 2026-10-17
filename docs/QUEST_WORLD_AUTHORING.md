@@ -3031,9 +3031,34 @@ capability. Agent calls, generated book forms, manual Undo and simulation publis
 through the same canonical journal. Other component scopes should be introduced
 only with their own field ownership, conflict and native-continuity tests.
 
-Flow publication is still synchronous and save-before-success. Failed publication
-reverts the episode and reports no success; accepted flow events are delivered
-after its writer is released. Asynchronous flow persistence remains follow-up
-work requiring bounded pending snapshots, conservation across new episodes,
-ordered durable events, lifecycle draining and honest unconfirmed-save recovery.
-This field separation is a prerequisite, not a latency or Quest performance claim.
+Automatic pouring, scooping and rain now accept their paired quantities into the
+journal before asynchronous saving. At most two immutable snapshots wait in
+acceptance order behind ordinary saves. Snapshot capture stays on the owner
+thread; disk preparation and publication run on workers. A full queue pauses new
+intake without accruing skipped time or freezing vessel poses. Preparing another
+authored edit closes the current episode and holds new intake until that edit
+has accepted or drained, so the two paths cannot compete for storage preparation.
+
+The shared world.liquidPersistence fact distinguishes idle, saving and
+unconfirmed, with bounded pending/capacity counts and a recovery explanation.
+object.container.live.contents.savedAmountMl is the journal-accepted balance,
+not a durable-storage receipt. A failed save preserves accepted live quantities,
+blocks further saves and stops new intake; restarting physics cannot resolve it.
+Previously saved files remain preserved for explicit workspace recovery. Do not
+replay a transfer because its save failed. An episode that never reached journal
+acceptance can still be cancelled back to its accepted balances.
+
+Success notifications are delivered in acceptance order only after their save
+succeeds, at a safe boundary with no unfinished live flow. Each save releases its
+own workspace writer before notification; a later queued save may still own one.
+The editor owns the queue across removal of the pouring component. An intervening
+authored change/Undo to any participant, replacement of a native participant,
+or changed workspace discards the obsolete notification. Moving the whole world
+while saving does not revoke a valid amount event. Listener mutations, frame
+changes during delivery or a new episode stop the rest of that notification batch.
+Temporary forks accept locally without overwriting the ordinary room. Reload
+does not replay notifications.
+
+This is bounded asynchronous automatic flow persistence, not a blanket latency
+claim. Explicit measured transfers, other synchronous authoring paths, lifecycle
+flushes, owner-thread snapshot cost and Quest performance remain separate work.

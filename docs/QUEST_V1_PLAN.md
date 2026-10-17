@@ -13696,3 +13696,61 @@ including its unresolved intermittent Meta audio crash and unchanged successful
 rerun; production reflections stay disabled. Physical/acoustic/provider/capacity
 acceptance, asynchronous authoring/import work and Store gates remain open.
 V1 is incomplete. See the liquid-content contract in QUEST_WORLD_AUTHORING.md.
+
+## Bounded asynchronous liquid checkpoints — 2026-10-17
+
+Automatic pour, scoop and rain episodes now accept their paired liquid quantities
+into the canonical journal immediately and save immutable snapshots asynchronously
+in order behind earlier room saves. At most two checkpoints can be pending.
+A full queue pauses additional intake without accumulating missed time or pinning
+bodies. Preparing an authored edit seals existing flow and holds new intake until
+the edit accepts or drains. Clock/weather and liquid saving share the accepted
+checkpoint worker and unconfirmed-save handling.
+
+The shared world.liquidPersistence fact exposes idle, saving and unconfirmed,
+pending/capacity counts and an error through the same catalog used by the user,
+agent and programs. The existing savedAmountMl live field means accepted journal
+balance, not disk durability. Failed storage retains accepted quantities, preserves
+saved files and blocks further saves until explicit workspace recovery. A later
+queued save cannot overwrite a failed ancestor. Restarting physics is not recovery.
+
+The editor owns queued completion across removal of the pouring component.
+Successful amount events wait for durable storage and a safe episode boundary.
+Each checkpoint releases its writer before notification; later accepted checkpoints
+may still own writers. Undo or authored participant changes invalidate obsolete
+notifications. Moving the virtual world during saving preserves a valid quantity
+event. Listener mutations or a new episode stop the rest of a delivery batch.
+Temporary forks remain local and reload never replays notifications.
+
+Final code passes **127 EditMode and 210 PlayMode cases**, plus
+**3,190 web tests**, application/probe TypeScript and catalog validation.
+Five deliberate delayed-worker cases verify bounded admission, body motion,
+relocated world frames, exact ordered event quantities, Undo, component shutdown,
+queued failure and coexistence with an authored edit. Initial fixtures exposed
+13 assertions tied to synchronous completion/rollback or floating-point subtraction.
+The corrected subset passed 25 cases. After improving relocation continuity,
+the complete affected native suites were rerun on final source and passed.
+No runtime failure criterion or deadline was relaxed.
+
+After the behavior suites and journeys, two capability files received description-only
+corrections for asynchronous counter/reset, queued-writer and failed-save semantics.
+Native catalog export and 17 catalog tests verify this final wording; behavior and
+schemas are unchanged. Source verification reverses the exact text replacements
+(and normalizes line endings) against the journey inputs.
+
+The complete offline Headless journey 3b2a64eb94684ba99ee43f603e6f0ff5 passes with
+2,266 observations and 2,255 read sets. Original Book journey
+22cdbb498d7b4142a3e48cd38cbe0db0 passes with 3,257 observations
+and 1,013 requests. Both inspect the new shared durability fact over
+actual native transport; Book uses visible generated controls. Existing editing,
+physics, audio, materials, world time/weather and stale-request checks remain.
+Human edits survive, periodic inventories remain empty and reload does not replay.
+These fixtures are not new provider or headset acceptance.
+
+Evidence: .quest-evidence/liquid-async-20261017/. All 3,262 native inputs,
+5,180 source inputs and 14 protected local files are checked.
+The earlier full-suite 7d518ec9 checkpoint and unresolved intermittent Meta audio
+crash remain separate; production reflections stay disabled. No Android build,
+device, paid provider, signing, deployment or Meta action ran. Explicit measured
+transfers, other synchronous authoring/lifecycle paths, snapshot cost, physical
+latency and acoustic/provider/Store acceptance remain open. V1 is incomplete.

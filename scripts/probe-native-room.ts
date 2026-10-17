@@ -677,6 +677,10 @@ try{
   const containerLive=await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.container.live',version:1,arguments:{target:liquidFrom}}});
   const liveValue=containerLive.catalog?.value as {phase:string;contents:{amountMl:number;savedAmountMl:number}};
   if(!containerLive.catalog?.available||liveValue.phase!=='idle'||liveValue.contents.amountMl!==125||liveValue.contents.savedAmountMl!==125)throw new Error('Native live liquid fact disagrees with accepted contents while physics is paused');
+  const liquidPersistence=await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'world.liquidPersistence',version:1,arguments:{}}});
+  const persistence=liquidPersistence.catalog?.value as {phase:string;pending:number;capacity:number;temporary:boolean;error:string};
+  if(!liquidPersistence.catalog?.available||persistence.phase!=='idle'||persistence.pending!==0||persistence.capacity!==2||persistence.temporary)throw new Error('Shared liquid durability fact is unavailable or inconsistent');
+  await writeFile(join(directory,'liquid-persistence.json'),JSON.stringify({boundary:'Actual native shared fact through headless transport. Idle durability discovery; stalled-worker and failure semantics are covered by PlayMode.',persistence},null,2));
   await pouringQuery({action:'catalog',catalog:{operation:'search',category:'events',query:'A physical pour was saved',offset:0}});
   const pouredEvent=await pouringQuery({action:'catalog',catalog:{operation:'inspect',category:'events',capability:'object.container.poured',version:1}});
   if(pouredEvent.catalog?.operation!=='inspect'||!pouredEvent.catalog.definition)throw new Error('Native poured event is not discoverable');

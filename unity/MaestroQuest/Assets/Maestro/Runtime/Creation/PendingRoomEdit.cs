@@ -51,6 +51,7 @@ namespace Maestro.Quest.Creation
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
+            if(!FinishLiquidPour(out error))return false;
             if(!CanEditObject(id,false,out error))return false;
             if(!Frame.Read(Find(id).transform,out _,out _,out _)){error="The object needs a valid uniform room frame before placement";return false;}
             var write=WriteGate.TryWrite(out error);if(write==null)return false;
@@ -88,6 +89,7 @@ namespace Maestro.Quest.Creation
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
+            if(!FinishLiquidPour(out error))return false;
             error=validate();if(error!=null)return false;
             var write=WriteGate.TryWrite(out error);if(write==null)return false;
             RoomJournal.PreparedEdit edit=null;
@@ -222,7 +224,7 @@ namespace Maestro.Quest.Creation
                         // Install the future and authorize before any Changed callback:
                         // a synchronous flush may wait on it, never on this Unity thread.
                         saving=editor.saveTask=edit.HasTemporalCheckpoint?
-                            SaveAcceptedTemporal(storage,edit.AcceptedTemporalSnapshot(),checkpoint):ObserveAcceptedSave(storage,publication.Completion);
+                            RoomCheckpointSave.Start(storage,edit.AcceptedTemporalSnapshot(),checkpoint):RoomCheckpointSave.Observe(storage,publication.Completion);
                         if(!edit.HasTemporalCheckpoint&&!publication.Authorize()){
                             publication.CancelBeforeStart();
                             throw new InvalidOperationException("Prepared publication lost acceptance ownership");
@@ -243,23 +245,6 @@ namespace Maestro.Quest.Creation
                     }else error="The room edit could not complete; no prepared change was accepted.";
                     return Fail(error);
                 } finally {committing=false;}
-            }
-            static async Task<string> SaveAcceptedTemporal(RoomStorage storage,RoomDocument snapshot,Action<string> checkpoint)
-            {
-                // Native acceptance is irreversible by Stop. Its save owns its own
-                // lifetime, including preparation; outer cancellation cannot cut it off.
-                try {
-                    using var prepared=await storage.PrepareSaveAsync(snapshot).ConfigureAwait(false);
-                    var publication=storage.StartPreparedPublication(prepared,checkpoint);
-                    return await ObserveAcceptedSave(storage,publication.Completion).ConfigureAwait(false);
-                }catch(Exception){return storage.PreserveUnconfirmedEdit("Temporal checkpoint preparation did not complete.");}
-            }
-            static async Task<string> ObserveAcceptedSave(RoomStorage storage,Task<RoomStorage.PublicationResult> task)
-            {
-                try {
-                    var result=await task.ConfigureAwait(false);
-                    return result.Saved?null:storage.PreserveUnconfirmedEdit(result.Error);
-                }catch(Exception){return storage.PreserveUnconfirmedEdit("Publication worker did not confirm its outcome.");}
             }
             internal bool Complete(out string error)
             {

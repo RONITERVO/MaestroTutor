@@ -28,7 +28,7 @@ namespace Maestro.Quest.Tests {
    var ids=new[]{a,b,c,d};double rain=ids.Sum(id=>(double)editor.Liquids.ObserveRain(id)["collectedMl"]);
    Assert.That(ids.Sum(id=>FlowAmount(id)+FlowAmount(id,"spilledMl")),Is.EqualTo(800+rain).Within(1e-8));
    Assert.That(editor.Read(b).containers[0].amountMl,Is.Zero);double accepted=FlowAmount(b);
-   physics.PausePhysics();Assert.That(events,Is.EqualTo(2));Assert.That(editor.Read(b).containers[0].amountMl,Is.EqualTo(accepted));
+   physics.PausePhysics();yield return LiquidSaved();Assert.That(events,Is.EqualTo(2));Assert.That(editor.Read(b).containers[0].amountMl,Is.EqualTo(accepted));
    editor.Undo();Assert.That(FlowAmount(a),Is.EqualTo(400));Assert.That(FlowAmount(c),Is.EqualTo(400));Assert.That(FlowAmount(b)+FlowAmount(d),Is.Zero);
    editor.Redo();Assert.That(FlowAmount(b),Is.EqualTo(accepted));yield return null;
   }

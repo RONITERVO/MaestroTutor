@@ -616,7 +616,7 @@ namespace Maestro.Quest.Creation
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
-            CompleteSave();
+            CompleteSave();PollLiquidCheckpoints();
             if (PendingEditSave || saveDispatch.Frozen || journal == null || storage.ReadOnly || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));

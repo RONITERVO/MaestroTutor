@@ -35,10 +35,10 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator LiquidContentAutomaticFlowPublicationKeepsLiveMomentumAndLaterUndoPose() {
             var(from,to)=FixedFlowCups();physics.StartPhysics();editor.Liquids.Tick(.05f);double accepted=FlowAmount(to);Assert.Greater(accepted,0);
             var item=editor.Find(to);var body=item.GetComponent<Rigidbody>();MovingLiquidBody(body);var pose=item.transform.position+Vector3.right*.2f;item.transform.position=pose;
-            int events=0;editor.ContainerPoured+=(_,_,_,_,_)=>{events++;Assert.AreEqual(pose,item.transform.position);AssertLiquidMomentum(body);};
-            Assert.IsTrue(editor.Liquids.Finish(out var error),error);Assert.AreEqual(1,events);Assert.AreEqual(accepted,editor.Read(to).containers[0].amountMl);AssertLiquidMomentum(body);
+            int events=0;editor.ContainerPoured+=(_,_,_,_,_)=>{events++;};
+            Assert.IsTrue(editor.Liquids.Finish(out var error),error);Assert.AreEqual(accepted,editor.Read(to).containers[0].amountMl);AssertLiquidMomentum(body);
             pose+=Vector3.forward;item.transform.position=pose;editor.RememberPlacement(to);editor.Undo();Assert.AreEqual(pose,item.transform.position);Assert.AreEqual(0,FlowAmount(to));AssertLiquidMomentum(body);
-            editor.Redo();Assert.AreEqual(pose,item.transform.position);Assert.AreEqual(accepted,FlowAmount(to));AssertLiquidMomentum(body);yield return null;
+            editor.Redo();Assert.AreEqual(pose,item.transform.position);Assert.AreEqual(accepted,FlowAmount(to));AssertLiquidMomentum(body);yield return LiquidSaved();Assert.AreEqual(0,events,"Undo invalidates the delayed episode notification");
         }
         [UnityTest] public IEnumerator LiquidContentPublicationAndHistoryPreserveAnimatingVesselPart() {
             string target=RecipeTarget();Assert.IsTrue(editor.EditContainer(target,editor.ObjectRevision(target),new(){amountMl=200},out var error),error);
