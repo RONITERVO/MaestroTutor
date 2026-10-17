@@ -141,6 +141,8 @@ namespace Maestro.Quest.Creation
     {
         readonly Dictionary<string,RoomAppearance> appearances=new(StringComparer.Ordinal);
         readonly Dictionary<string,int> appearanceRevisions=new(StringComparer.Ordinal);
+        internal int AppearanceCount=>appearances.Count;
+        internal string[] AppearanceMembers(string id)=>items.Values.Where(x=>x.appearanceBindings.Any(b=>b.appearanceId==id)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
         public int AppearanceRevision(string id)=>id!=null&&appearanceRevisions.TryGetValue(id,out var value)?value:0;
         public RoomAppearance ReadAppearance(string id)=>id!=null&&appearances.TryGetValue(id,out var value)?value.Copy():null;
         public RoomAppearance[] AppearanceSnapshot()=>appearances.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();

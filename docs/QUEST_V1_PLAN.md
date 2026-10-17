@@ -13409,3 +13409,52 @@ and its unchanged successful rerun. Production reflections remain disabled.
 Other synchronous authoring/import acceptance, owner-thread snapshot/native work,
 physical/audio/provider/capacity acceptance and Store gates remain open.
 V1 is not complete.
+
+## Appearance authoring save completion — 2026-10-17
+
+Reusable appearance save/removal and object appearance assignment, independent
+copy and unbinding now use the same persisted edit queue as sound, placement and
+collision profiles. Native definitions, generated catalog, original book forms,
+agent calls and programs agree that these actions complete after persistence.
+The independent source and its binding are one atomic journal edit and one Undo.
+A queued copy captures its intended style, local tint and stable identity.
+Waiting checks avoid whole-room snapshots; membership, revisions, native surface
+availability, ownership and capacity are revalidated before acceptance.
+
+Cancellation before acceptance publishes neither the source nor its binding.
+After acceptance, stopping drains the pending save without reporting success.
+Receipts retain exact accepted source and object revisions after later edits.
+No-op changes add no Undo; temporary Keep/Discard treats the resource and binding
+as one edit. Shared opacity changes preserve unrelated placement and world time.
+Appearance remains independent of collision participation, acoustics, terrain,
+physical material contents and real-world blend. See the existing authoring
+contract in QUEST_WORLD_AUTHORING.md, Reusable illustrated appearances.
+
+Focused native checks pass 58 EditMode and 49 PlayMode cases, including nine
+asynchronous appearance cases and four accepted-revision cases. The initial
+PlayMode run passed 48 and failed one new test: its second human edit reused a
+name and was correctly treated as unchanged. Distinct names now exercise actual
+later edits; no runtime workaround or deadline relaxation was needed. Initial
+evidence is retained. All 3,187 web tests, application/probe TypeScript and catalog
+checks pass. The refreshed native binding receipt also passes web contracts.
+
+The full offline Headless journey 4a172904d72a4f30b96d3d4e86d8c76f passes with
+2,253 observations and 2,242 read sets. Creation, binding,
+shared editing and removal await native completion; local paint leaves the
+shared source unchanged and Undo restores the original binding. The full original
+Book journey 3bc3721a235a45e4918d4b6567b235da passes with 3,239
+observations and 1,006 requests. Its appearance form saves the requested
+opacity and returns the exact new definition. The completed form was inspected.
+Both journeys keep empty periodic object inventories; human edits survive,
+stale requests are refused and reload does not replay effects. These offline
+fixtures do not establish provider or headset acceptance.
+
+Evidence is in .quest-evidence/appearance-save-20261017/. All 3,240 native inputs,
+5,148 source inputs and 14 protected local files were checked
+before this delivery-record update. The four inline/eight discussion review
+comments are unchanged; no comments were posted. No Android build, device,
+paid-provider, signing, deployment or Meta action ran. The latest complete native
+suite checkpoint remains 7d518ec9, including its unresolved intermittent Meta
+audio crash and unchanged successful rerun. Production reflections stay disabled.
+Other synchronous authoring/import acceptance, owner-thread snapshot/native work,
+physical/audio/provider/capacity acceptance and Store gates remain. V1 is incomplete.

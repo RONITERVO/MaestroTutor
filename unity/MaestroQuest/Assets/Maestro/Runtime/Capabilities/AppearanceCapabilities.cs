@@ -28,13 +28,20 @@ namespace Maestro.Quest.Programs
         }
         internal static JObject BindingSchema(){var schema=Object(new JObject{["version"]=Number(1,1,true),["appearanceId"]=IdSchema(),["kind"]=Choice("root","part","material"),
             ["partId"]=Text("^[a-zA-Z0-9_]{0,32}$",32),["modelHash"]=Text("^(|[a-f0-9]{64})$",64),["materialIndex"]=Number(-1,1023,true),["tint"]=Text("^(|#[a-fA-F0-9]{6})$",7)});schema["format"]="appearanceBinding";return schema;}
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         internal override int MaximumCreatedObjects(JObject args)=>0;
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","appearance.revision.current","storage.writable"};
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>CapabilityArguments.Resources(args,InputSchema).Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
-        protected const string Rules=" Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance.";
-        internal static JObject Receipt(RoomEditor editor,string id)=>new(){["id"]=id,["revision"]=editor.AppearanceRevision(id),["temporary"]=editor.TemporaryRoom};
+        protected const string Rules=" Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance."+PersistedEditOperation.Persistence;
+        protected static bool StartAppearance(RoomEditor editor,RoomAppearance definition,string id,int revision,string[] members,out CapabilityOperation operation,out string error)
+        {
+            bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,null,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{bool ready=editor.BeginAppearance(definition,id,revision,members,out edit,out issue);pending=edit;return ready;},
+                out operation,out error,validate:(out string issue)=>editor.CanEditAppearance(definition,id,revision,members,out issue),
+                output:()=>new JObject{["id"]=id,["revision"]=pending.AcceptedAppearanceRevision(id),["temporary"]=temporary});
+        }
     }
     internal sealed class AppearanceSaveCapability:AppearanceCapability
     {
@@ -49,12 +56,11 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext c,JObject a,out string error) {
             error="Use empty id and revision 0 to create, or an existing appearance ID and exact revision";
             if(string.IsNullOrEmpty((string)a["id"])!=((int)a["revision"]==0)||!c.Editor)return false;
-            var p=Definition(a);return c.Editor.PrepareAppearance(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out _,out error);
+            var p=Definition(a);return c.Editor.CanEditAppearance(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error);
         }
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
             operation=null;if(!CanRun(c,a,out error))return false;var p=Definition(a);
-            if(!c.Editor.EditAppearance(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,p.id));return true;
+            return StartAppearance(c.Editor,p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out operation,out error);
         }
     }
     internal sealed class AppearanceRemoveCapability:AppearanceCapability
@@ -65,10 +71,10 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>Featured(Object(new JObject{["id"]=IdSchema(),["revision"]=Revision()}));
         public override JObject OutputSchema=>Object(new JObject{["id"]=IdSchema(),["revision"]=Revision(true),["temporary"]=Bool()});
         public override JObject Example=>new(){["id"]=new string('0',32),["revision"]=1};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.PrepareAppearance(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.CanEditAppearance(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.EditAppearance(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,(string)a["id"]));return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            return StartAppearance(c.Editor,null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out operation,out error);
         }
     }
     internal sealed class AppearanceBindCapability:AppearanceCapability
@@ -81,12 +87,18 @@ namespace Maestro.Quest.Programs
         public override JObject OutputSchema=>Object(new JObject{["target"]=TargetSchema(),["revision"]=Revision(),["appearanceId"]=IdSchema(),["appearanceRevision"]=Revision(),["temporary"]=Bool()});
         public override JObject Example=>new(){["operation"]="assign",["target"]="maestro",["revision"]=1,["appearanceRevision"]=1,["binding"]=JObject.Parse(JsonUtility.ToJson(new AppearanceBinding{appearanceId=new string('0',32)}))};
         static AppearanceBinding Binding(JObject a)=>JsonUtility.FromJson<AppearanceBinding>(a["binding"].ToString());
-        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.PrepareAppearanceBinding((string)a["target"],(int)a["revision"],Binding(a),(int)a["appearanceRevision"],(string)a["operation"]=="remove",(string)a["operation"]=="copy",out _,out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error){error="Room editor unavailable";return c.Editor&&c.Editor.CanBindAppearance((string)a["target"],(int)a["revision"],Binding(a),(int)a["appearanceRevision"],(string)a["operation"]=="remove",(string)a["operation"]=="copy",out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error))return false;var binding=Binding(a);string target=(string)a["target"];
-            if(!c.Editor.BindAppearance(target,(int)a["revision"],binding,(int)a["appearanceRevision"],(string)a["operation"]=="remove",(string)a["operation"]=="copy",out error))return false;
-            string id=(string)a["operation"]=="remove"?binding.appearanceId:c.Editor.Read(target).appearanceBindings.Single(b=>b.Key==binding.Key).appearanceId;
-            operation=new CompletedCapability(new JObject{["target"]=target,["revision"]=c.Editor.ObjectRevision(target),["appearanceId"]=id,["appearanceRevision"]=c.Editor.AppearanceRevision(id),["temporary"]=c.Editor.TemporaryRoom});return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            var editor=c.Editor;var binding=Binding(a);string target=(string)a["target"];int revision=(int)a["revision"],sourceRevision=(int)a["appearanceRevision"];
+            bool remove=(string)a["operation"]=="remove",independent=(string)a["operation"]=="copy",temporary=editor.TemporaryRoom;
+            string copyId=independent?Guid.NewGuid().ToString("N"):null,id=copyId??binding.appearanceId;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,target,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                    bool ready=editor.BeginAppearanceBinding(target,revision,binding,sourceRevision,remove,independent,out edit,out issue,copyId:copyId);pending=edit;return ready;
+                },out operation,out error,validate:(out string issue)=>editor.CanBindAppearance(target,revision,binding,sourceRevision,remove,independent,out issue,copyId),
+                output:()=>new JObject{["target"]=target,["revision"]=pending.AcceptedObjectRevision(target),["appearanceId"]=id,
+                    ["appearanceRevision"]=independent?pending.AcceptedAppearanceRevision(id):sourceRevision,["temporary"]=temporary});
         }
     }
     internal static class AppearanceFacts

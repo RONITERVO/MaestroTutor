@@ -131,6 +131,7 @@ namespace Maestro.Quest.Creation
             internal int AcceptedObjectRevision(string id)=>accepted?edit.AcceptedObjectRevision(id):0;
             internal int AcceptedEnvironmentRevision(string id)=>accepted?edit.AcceptedEnvironmentRevision(id):0;
             internal int AcceptedAudioRevision(string id)=>accepted?edit.AcceptedAudioRevision(id):0;
+            internal int AcceptedAppearanceRevision(string id)=>accepted?edit.AcceptedAppearanceRevision(id):0;
             internal bool Published=>publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
             internal string InterruptionStatus=>accepted?
                 temporary?"The temporary room edit was accepted. Stopping cannot undo it; use Undo or discard the temporary room. Keep a snapshot to save it.":

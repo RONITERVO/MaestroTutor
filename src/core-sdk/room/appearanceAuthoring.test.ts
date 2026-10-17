@@ -21,6 +21,14 @@ it('accepts actual native appearance receipts and bounded observations through t
  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','appearances.v1']})).not.toThrow();
  expect(capabilityResources(call.id,call.arguments)).toEqual([call.arguments.target]);
 });
+it('waits for saved appearance completion with exact independent-copy identities',()=>{
+ for(const id of ['appearance.save','appearance.remove','object.appearance.bind'])expect(capabilityDefinition(id)?.duration).toBe('completion');
+ expect(validateCapabilityOutput('appearance.save',1,{id:'a'.repeat(32),revision:14,temporary:false})).toBeNull();
+ expect(validateCapabilityOutput('appearance.remove',1,{id:'a'.repeat(32),revision:0,temporary:false})).toBeNull();
+ const copied={target:'maestro',revision:15,appearanceId:'b'.repeat(32),appearanceRevision:16,temporary:false};
+ expect(validateCapabilityOutput('object.appearance.bind',1,copied)).toBeNull();
+ for(const change of [{appearanceId:''},{appearanceRevision:-1},{revision:'15'},{temporary:'false'}])expect(validateCapabilityOutput('object.appearance.bind',1,{...copied,...change})).not.toBeNull();
+});
 it('rejects conflicting opacity/inheritance and unstable imported-slot addresses before dispatch',()=>{
  const save=capabilityDefinition('appearance.save')!.example as {style:Record<string,unknown>};
  expect(validateCapabilityArguments('appearance.save',1,save)).toBeNull();

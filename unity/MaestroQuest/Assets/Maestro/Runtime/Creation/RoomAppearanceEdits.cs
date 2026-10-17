@@ -43,14 +43,14 @@ namespace Maestro.Quest.Creation
         public RoomAppearance[] Appearances()=>journal.AppearanceSnapshot();
         public int AppearanceRevision(string id)=>journal.AppearanceRevision(id);
         public RoomAppearance ReadAppearance(string id)=>journal.ReadAppearance(id);
-        internal string[] AppearanceMembers(string id)=>Snapshot().objects.Where(x=>x.appearanceBindings.Any(b=>b.appearanceId==id)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        internal string[] AppearanceMembers(string id)=>journal.AppearanceMembers(id);
         bool CanChangeAppearance(string target,out string error) {
             if(!CanEditStructures(out error)||!CanEditObject(target,false,out error))return false;
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object before editing its appearance";return false;}
             return new CapabilityContext(this,GetComponent<AnimationWorkshop>()).Target(new JObject{["target"]=target},out _,out error);
         }
-        internal bool PrepareAppearance(RoomAppearance definition,string id,int revision,string[] members,out AppearanceEdits edits,out string error) {
-            edits=null;if(!CanEditStructures(out error))return false;
+        internal bool CanEditAppearance(RoomAppearance definition,string id,int revision,string[] members,out string error) {
+            if(!CanEditStructures(out error))return false;
             var current=ReadAppearance(id);
             error="The appearance changed; read its current revision and complete member list";
             if(AppearanceRevision(id)!=revision||current==null&&revision!=0||definition==null&&current==null)return false;
@@ -60,6 +60,12 @@ namespace Maestro.Quest.Creation
             if(members==null||members.Length!=members.Distinct().Count()||!expected.ToHashSet().SetEquals(members))return false;
             if(definition==null&&members.Length>0){error="Unbind this appearance before removing it";return false;}
             foreach(string member in members)if(!CanChangeAppearance(member,out error))return false;
+            error="The room already has the maximum number of appearance definitions";
+            if(current==null&&journal.AppearanceCount>=RoomAppearance.MaximumDefinitions)return false;
+            error=null;return true;
+        }
+        internal bool PrepareAppearance(RoomAppearance definition,string id,int revision,string[] members,out AppearanceEdits edits,out string error) {
+            edits=null;if(!CanEditAppearance(definition,id,revision,members,out error))return false;
             edits=definition==null?new AppearanceEdits{Removals=new[]{id}}:new AppearanceEdits{Replacements=new[]{definition.Copy()}};
             if(!edits.Validate(out error))return false;
             var candidate=Snapshot();candidate.appearances=edits.Apply(candidate.appearances);return candidate.Validate(out error);
@@ -93,25 +99,41 @@ namespace Maestro.Quest.Creation
             }
             return "no supported surface";
         }
-        internal bool PrepareAppearanceBinding(string target,int revision,AppearanceBinding binding,int appearanceRevision,bool remove,bool independent,out RoomObjectData data,out AppearanceEdits edits,out string error) {
-            data=null;edits=null;
+        internal bool CanBindAppearance(string target,int revision,AppearanceBinding binding,int appearanceRevision,bool remove,bool independent,out string error,string copyId=null) {
             error="Read the exact object and appearance revisions before editing a binding";
             var definition=binding==null?null:ReadAppearance(binding.appearanceId);
             if(ObjectRevision(target)!=revision||binding==null||definition==null||AppearanceRevision(binding.appearanceId)!=appearanceRevision||remove&&independent)return false;
             if(!CanChangeAppearance(target,out error))return false;
-            data=Pose(Read(target),Find(target).transform);
+            var data=Read(target);
             if(!binding.Validate(data)){error="Choose a valid stable root, recipe part or exact imported material address";return false;}
             var previous=data.appearanceBindings.FirstOrDefault(x=>x.Key==binding.Key);
             if(remove) {
                 if(previous==null||previous.appearanceId!=binding.appearanceId){error="That binding changed; inspect the current object appearance";return false;}
+            } else {
+                string state=AppearanceBindingState(target,binding);if(state!="active"){error="Cannot bind appearance: "+state;return false;}
+                error="An object supports at most 33 appearance bindings";
+                if(previous==null&&data.appearanceBindings.Length>=33)return false;
+                if(independent) {
+                    error="The room already has the maximum number of appearance definitions";
+                    if(journal.AppearanceCount>=RoomAppearance.MaximumDefinitions)return false;
+                    error="The independent appearance identity changed; inspect it before retrying";
+                    if(copyId!=null&&(!RoomWorldIdentity.Id(copyId)||ReadAppearance(copyId)!=null))return false;
+                }
+            }
+            error=null;return true;
+        }
+        internal bool PrepareAppearanceBinding(string target,int revision,AppearanceBinding binding,int appearanceRevision,bool remove,bool independent,out RoomObjectData data,out AppearanceEdits edits,out string error,string copyId=null) {
+            data=null;edits=null;if(!CanBindAppearance(target,revision,binding,appearanceRevision,remove,independent,out error,copyId))return false;
+            var definition=ReadAppearance(binding.appearanceId);
+            data=Pose(Read(target),Find(target).transform);var previous=data.appearanceBindings.FirstOrDefault(x=>x.Key==binding.Key);
+            if(remove) {
                 if(binding.kind=="root") {ColorUtility.TryParseHtmlString(previous.Effective(definition).tint,out data.color);}
                 if(binding.kind=="part") {var part=data.recipe.parts.FirstOrDefault(p=>p.id==binding.partId);if(part!=null)ColorUtility.TryParseHtmlString(previous.Effective(definition).tint,out part.color);}
                 data.appearanceBindings=data.appearanceBindings.Where(x=>x.Key!=binding.Key).ToArray();
             } else {
-                string state=AppearanceBindingState(target,binding);if(state!="active"){error="Cannot bind appearance: "+state;return false;}
                 binding=binding.Copy();
                 if(independent) {
-                    definition=definition.Copy();definition.id=Guid.NewGuid().ToString("N");definition.name=(definition.name.Length>73?definition.name.Substring(0,73):definition.name)+" (copy)";
+                    definition=definition.Copy();definition.id=copyId??Guid.NewGuid().ToString("N");definition.name=(definition.name.Length>73?definition.name.Substring(0,73):definition.name)+" (copy)";
                     definition.style=binding.Effective(definition);binding.tint="";binding.appearanceId=definition.id;edits=new AppearanceEdits{Replacements=new[]{definition}};
                 }
                 data.appearanceBindings=data.appearanceBindings.Where(x=>x.Key!=binding.Key).Append(binding).ToArray();
@@ -125,6 +147,28 @@ namespace Maestro.Quest.Creation
         internal bool BindAppearance(string target,int revision,AppearanceBinding binding,int appearanceRevision,bool remove,bool independent,out string error) {
             if(!PrepareAppearanceBinding(target,revision,binding,appearanceRevision,remove,independent,out var data,out var edits,out error))return false;
             return CommitPersisted(new[]{data},Array.Empty<string>(),remove?"Appearance unbound":independent?"Independent appearance bound":"Appearance bound",false,out error,appearanceEdits:edits);
+        }
+        internal bool BeginAppearance(RoomAppearance definition,string id,int revision,string[] members,
+            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
+        {
+            var captured=definition?.Copy();var affected=members==null?null:(string[])members.Clone();
+            return BeginPreparedEdit(()=>CanEditAppearance(captured,id,revision,affected,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{
+                    edit=null;
+                    return PrepareAppearance(captured,id,revision,affected,out var edits,out issue)&&
+                        journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,appearanceEdits:edits);
+                },captured==null?"Appearance removed":"Appearance saved",out pending,out error,checkpoint);
+        }
+        internal bool BeginAppearanceBinding(string target,int revision,AppearanceBinding binding,int appearanceRevision,bool remove,bool independent,
+            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null,string copyId=null)
+        {
+            var captured=binding?.Copy();string created=independent?(copyId??Guid.NewGuid().ToString("N")):null;
+            return BeginPreparedEdit(()=>CanBindAppearance(target,revision,captured,appearanceRevision,remove,independent,out var issue,created)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{
+                    edit=null;
+                    return PrepareAppearanceBinding(target,revision,captured,appearanceRevision,remove,independent,out var data,out var edits,out issue,created)&&
+                        journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out issue,appearanceEdits:edits);
+                },remove?"Appearance unbound":independent?"Independent appearance bound":"Appearance bound",out pending,out error,checkpoint);
         }
         internal JObject ObserveAppearanceTargets(string target,int offset) {
             var data=Read(target);var item=Find(target);if(data==null||!item||offset<0||offset>1057)return null;

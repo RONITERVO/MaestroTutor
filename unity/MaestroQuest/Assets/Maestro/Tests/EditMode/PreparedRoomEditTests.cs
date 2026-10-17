@@ -199,5 +199,20 @@ namespace Maestro.Quest.Tests
                 Assert.AreNotEqual(accepted,journal.AudioRevision(id));Assert.AreEqual(accepted,edit.AcceptedAudioRevision(id));
             }
         }
+        [TestCase("create")][TestCase("update")][TestCase("same")][TestCase("remove")]
+        public void AcceptedAppearanceRevisionBelongsToThisEditAfterLaterMutations(string action)
+        {
+            var journal=Room();string id=Guid.NewGuid().ToString("N");var profile=new RoomAppearance{id=id,name="Reusable appearance"};
+            if(action!="create")Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,appearanceEdits:new(){Replacements=new[]{profile}}));
+            if(action=="update"){profile.style.opacity=.4f;profile.style.renderMode="blend";}
+            var delta=action=="remove"?new AppearanceEdits{Removals=new[]{id}}:new AppearanceEdits{Replacements=new[]{profile}};
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var edit,out var error,appearanceEdits:delta),error);
+            using(edit){
+                Assert.AreEqual(0,edit.AcceptedAppearanceRevision(id));Assert.IsTrue(edit.Accept(journal,out error),error);int accepted=journal.AppearanceRevision(id);
+                Assert.AreEqual(accepted,edit.AcceptedAppearanceRevision(id));Assert.AreEqual(action=="remove",accepted==0);
+                profile.name="Later human edit";Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out error,appearanceEdits:new(){Replacements=new[]{profile}}),error);
+                Assert.AreNotEqual(accepted,journal.AppearanceRevision(id));Assert.AreEqual(accepted,edit.AcceptedAppearanceRevision(id));
+            }
+        }
     }
 }

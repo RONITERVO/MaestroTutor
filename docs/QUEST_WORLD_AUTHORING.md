@@ -533,6 +533,17 @@ The shared catalog provides these saved authoring operations:
   exact binding. A part or imported material slot overrides the root binding.
 - appearance.remove deletes only an unused definition.
 
+These operations finish only after the shared edit queue confirms persistence.
+An independent copy and its object binding are one atomic edit and one Undo.
+While waiting, edits recheck the source revision, complete membership, native
+surface availability and capacity. Cancellation before acceptance publishes
+neither a copied resource nor a binding. After acceptance, stopping drains the
+accepted save and reports it as pending; it does not report a successful receipt.
+Receipts retain the revisions accepted by that edit even if a later human edit
+changes the same appearance. Shared opacity changes preserve unrelated runtime
+placement and the advancing world clock. Temporary Keep/Discard uses the same
+resource-and-binding transaction.
+
 Use appearance.library, appearance.definition, appearance.members,
 object.appearances and object.appearance.targets to inspect current values and
 stable addresses. Member/binding pages keep observations within the same bounded

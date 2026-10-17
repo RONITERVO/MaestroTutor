@@ -16,12 +16,11 @@ namespace Maestro.Quest.Tests
     public sealed partial class RoomRulesTests
     {
         string NewAppearance() {
-            var capability=new AppearanceSaveCapability();Assert.That(capability.Start(new CapabilityContext(editor,animations),"appearance",capability.Example,out var operation,out var error),Is.True,error);
-            return (string)operation.Result["id"];
+            var definition=new RoomAppearance{id=Guid.NewGuid().ToString("N"),name="Warm glass",style=new AppearanceStyle{tint="#DDBBAA",renderMode="blend",opacity=.4f}};
+            Assert.That(editor.EditAppearance(definition,definition.id,0,Array.Empty<string>(),out var error),Is.True,error);return definition.id;
         }
-        bool AssignAppearance(string target,string id,out string error,string operation="assign",string tint="")=>new AppearanceBindCapability().Start(new CapabilityContext(editor,animations),"binding",
-            new JObject{["operation"]=operation,["target"]=target,["revision"]=editor.ObjectRevision(target),["appearanceRevision"]=editor.AppearanceRevision(id),
-                ["binding"]=JObject.Parse(JsonUtility.ToJson(new AppearanceBinding{appearanceId=id,tint=tint}))},out _,out error);
+        bool AssignAppearance(string target,string id,out string error,string operation="assign",string tint="")=>
+            editor.BindAppearance(target,editor.ObjectRevision(target),new AppearanceBinding{appearanceId=id,tint=tint},editor.AppearanceRevision(id),operation=="remove",operation=="copy",out error);
         string AppearanceBlock()=>editor.Snapshot().objects.Single(x=>x.kind==RoomObjectKind.Block).id;
         Material AppearanceBlockMaterial()=>block.GetComponentsInChildren<Renderer>().First(r=>!r.GetComponent<PencilMarks>()).sharedMaterial;
         [UnityTest]public IEnumerator AppearanceAuthoringSavesRendersAndRestoresWithUndo() {
@@ -110,7 +109,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;var call=new JObject{["id"]=cap.Id,["version"]=1,["arguments"]=args};
             var request=new RoomAgentRequest{version=2,conditions=members.Select(x=>new RoomObjectCondition{id=x,revision=editor.ObjectRevision(x)}).ToArray(),commands=new[]{new RoomAgentCommand{action="execution",execution=new JObject{["operation"]="start",["runId"]=run,["call"]=call}}}};
             request.conditions[0].revision--;Assert.That(executor.Execute(request,out _,out _),Is.False);
-            request.conditions[0].revision++;Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return null;
+            request.conditions[0].revision++;Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());
             Assert.That(((JArray)receipt["resources"]).Count,Is.EqualTo(19));Assert.That(editor.ReadAppearance(id).style.opacity,Is.EqualTo(.6f));
         }
@@ -123,7 +122,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;
             var call=new JObject{["id"]=cap.Id,["version"]=1,["arguments"]=args};
             var request=new RoomAgentRequest{version=2,conditions=new[]{new RoomObjectCondition{id=target,revision=before}},commands=new[]{new RoomAgentCommand{action="execution",execution=new JObject{["operation"]="start",["runId"]=run,["call"]=call}}}};
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return null;
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());int after=editor.ObjectRevision(target);
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.ObjectRevision(target),Is.EqualTo(after));
             string output=Environment.GetEnvironmentVariable("MAESTRO_APPEARANCE_EVIDENCE");
