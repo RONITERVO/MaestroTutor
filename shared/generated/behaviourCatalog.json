@@ -22598,6 +22598,9 @@
               "fields": {
                 "revision": [
                   "revision"
+                ],
+                "definition": [
+                  "definition"
                 ]
               },
               "guards": [
@@ -22659,7 +22662,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -22670,7 +22673,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure or remove one measured material store on a created object. Up to 16 stores per room. Capacity and contents are logical local litres, independent of visual size and rigid-body mass. Configuration is an explicit authoring edit and can add or discard material. It does not change the object's geometry, colour, collider, mass or motion, and supplies no fluid/granular solver. A packed ball uses the same component. Copy/prototypes explicitly duplicate contents; Undo, temporary rooms and archives retain them. No bare-hand scoop, automatic pour, compaction density, melting or mixing is inferred. Use the current object.material revision and exclusive ownership.",
+      "description": "Configure or remove one measured material store on a created object. Up to 16 stores per room. Capacity and contents are logical local litres, independent of visual size and rigid-body mass. Configuration is an explicit authoring edit and can add or discard material. It does not change the object's geometry, colour, collider, mass or motion, and supplies no fluid/granular solver. A packed ball uses the same component. Copy/prototypes explicitly duplicate contents; Undo, temporary rooms and archives retain them. No bare-hand scoop, automatic pour, compaction density, melting or mixing is inferred. Use the current object.material revision and exclusive ownership. Root placement is preserved through acceptance and Undo/Redo. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -22965,7 +22968,7 @@
           "actionResults.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -22977,7 +22980,7 @@
         "storage.writable",
         "material.compatible"
       ],
-      "description": "Transfer measured material between two distinct objects, each explicitly choosing its height field or material store. Field endpoints use a local X/Z disk with smooth radial falloff; store endpoints use their saved local-litre balance. Supports surface-to-store, store-to-surface, store-to-store and the existing surface-to-surface kernel. Both material labels and opaque colours must match, even for empty receivers; configure them explicitly before transferring. Requested amount is capped by available volume and receiver capacity/headroom. Fields retain their fixed-physics requirement; carried stores can be on rigid objects, but both owners must be unheld for this authoring action. Current revisions, ownership and writable storage are required. One save and Undo updates both endpoints; failed saves, missing components and numeric refusal change neither. Returns actual removedLitres, addedLitres and signed roundingLitres; maximum difference is max(0.000001 litre, removedLitres * 0.000001). Local litres do not rescale with world geometry or infer rigid mass. Store transfers do not resize geometry, spill or mix materials. No liquid-container balance, proximity, shovel gesture, hand pose, grain simulation or automatic physics is inferred. Stop cannot retract a completed edit and receipt replay never repeats it.",
+      "description": "Transfer measured material between two distinct objects, each explicitly choosing its height field or material store. Field endpoints use a local X/Z disk with smooth radial falloff; store endpoints use their saved local-litre balance. Supports surface-to-store, store-to-surface, store-to-store and the existing surface-to-surface kernel. Both material labels and opaque colours must match, even for empty receivers; configure them explicitly before transferring. Requested amount is capped by available volume and receiver capacity/headroom. Fields retain their fixed-physics requirement; carried stores can be on rigid objects, but both owners must be unheld for this authoring action. Current revisions, ownership and writable storage are required. One save and Undo updates both endpoints; missing components, numeric refusal and cancellation before acceptance change neither. An accepted save failure preserves the live balances for recovery. Returns actual removedLitres, addedLitres and signed roundingLitres; maximum difference is max(0.000001 litre, removedLitres * 0.000001). Local litres do not rescale with world geometry or infer rigid mass. Store transfers do not resize geometry, spill or mix materials. No liquid-container balance, proximity, shovel gesture, hand pose, grain simulation or automatic physics is inferred. Root placement is preserved through acceptance and Undo/Redo. Stop cannot retract a completed edit and receipt replay never repeats it. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "source": {
           "kind": "field",
@@ -23150,7 +23153,7 @@
           "actionResults.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -23162,7 +23165,7 @@
         "storage.writable",
         "room.capacity"
       ],
-      "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; failed saves or capacity limits leave neither partial removal nor partial object. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball.",
+      "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; refusal before acceptance leaves neither partial removal nor a partial object. An accepted save failure preserves both live changes and requires recovery. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
       "example": {
         "source": {
           "target": "00000000000000000000000000000000",
@@ -47406,11 +47409,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialStoreCapability.cs",
-      "sha256": "5d67f62ae5bbc973abbe189131464d84ccce15a94a1bc1972f706196510fa0c3"
+      "sha256": "25003bcc4c655d34dfd4fad6f092fc838778f173b6a61dae2230e10304687563"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MaterialTransferCapability.cs",
-      "sha256": "9824800382705828294960a9a615fef0eecd0265ac063d3a785a3dfe8a69b38e"
+      "sha256": "bbd0167b59860638926864b1152af71f3d366049a0f7c94b37b81ee34084c9d6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/MediumContactFacts.cs",
@@ -48278,7 +48281,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialEdits.cs",
-      "sha256": "45bc28c6167e37f3a216ab927088b710af161c7f0f95e5d176d1a833e574207f"
+      "sha256": "9500f48acf46bfcd0af5bcf594b694875e21e55274cc0fffb42c80af27c19a01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialScoop.cs",
@@ -48290,7 +48293,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialTransfer.cs",
-      "sha256": "5fc1c35959f4acce129bf80bae55944b56449ec4d8f3a913dac345ebe7ce6b06"
+      "sha256": "fdaffb6a668d66bc7c4a8c868cb8e51b2e0b56d56a692b4068f059f3c0b9c4d6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMediumAvailability.cs",
@@ -48494,7 +48497,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "0745498e9c20c0f095419d55ad5dffa20be61464c3bf37bc879efb0df56d9e45"
+      "sha256": "c1f609174b08fbbf16babafea6048db3ce655bc5d27123e62ed024d5619ceaf2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -48510,7 +48513,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomTerrainReservoir.cs",
-      "sha256": "ccecbfa8847f26da363e4e14eb4c20f8efe68bdb961facf360415884f5090543"
+      "sha256": "9306d155cbe2fdfd866cadcb4a078bec617f65f855aa0b83e96af9cc7cb74721"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolRecovery.cs",

@@ -13906,3 +13906,48 @@ Meta audio SDK crash remain separate; production reflections stay disabled.
 Legacy synchronous material authoring/packing APIs, other synchronous editing
 and lifecycle paths, owner-thread geometry/snapshot costs, physical latency,
 capacity and the broader release gates remain open. Full v1 is incomplete.
+
+
+## Shared material authoring completion — 2026-10-18
+
+Shared material-store configuration/removal, packing and carried/surface transfer
+now use the same ordered completion operation as the other world edits. Inputs
+are captured before waiting and both participant revisions are checked again on
+admission. Packing returns its exact object ID and measured quantity only after
+saving completes; transfer results are immutable. No public IDs, formats, units,
+capacity limits or separate material runtime were added.
+
+Before acceptance, cancellation or preparation failure leaves both sides intact.
+After acceptance, Stop lets persistence drain. Publication failure keeps the live
+changes unconfirmed and the prior files intact, blocks further saving and requires
+workspace recovery. Replaying an accepted request cannot repeat its quantity or
+create another ball. One Undo restores both sides. Store/transfer acceptance and
+history preserve current root placement; packing keeps a full creation transaction.
+
+Verification passes **117 EditMode and 42 PlayMode cases**,
+including nine pending-material regressions, plus **3,191 web tests**,
+application/probe TypeScript and catalog checks. Coverage includes queued argument
+capture, stale source/destination refusal, cancellation, delayed saving, accepted
+publication failure, exact identity, immutable results, Undo, gravity and continued
+carrier motion. The initial motion fixture forced a body dynamic while room physics
+was paused; the corrected test uses normal running physics and checks velocity/spin
+through acceptance and Undo. Runtime physics rules and deadlines were not weakened. The first visible book run also exposed packing leaving terrain-reservoir capacity inconsistent with the changed bed. Packing now uses the canonical reservoir normalization before acceptance, preserving water while deriving capacity from the updated surface; the added native regression covers saving, return transfer, Undo and Redo. A second Book run caught material configuration loading only its revision, leaving contents at a zero default. The shared current-value mapping now loads the full definition; a web regression checks preserved contents, material and colour during capacity editing. The third Book run reproduced a one-ULP change in derived reservoir capacity after Unity JSON readback. Storage normalization recognizes only the exact codec representation and restores canonical bed capacity; no broad tolerance, water amount or geometry change is permitted. Five EditMode cases cover roundtrip and corruption rejection, and the exact-footprint PlayMode case covers partial return and durable saving.
+The older instantaneous web fixture was rejected and replaced with actual native
+journey captures, including the completed store-configuration receipt.
+
+Complete offline Headless fbf84bd616a849e58df0e8553be90178 passes with
+2,271 observations/2,265 read sets. Original Book
+ce81023af69c4b31af90e542ea068581 passes with 3,669 observations/1,157 requests.
+The added visible-controls scenario packs a ball from a filled terrain reservoir,
+configures its store, returns some material and undoes all three edits. Exact
+geometric/carried quantities and the existing 50,000 ml water amount remain checked.
+Existing shared world-editing, stale-edit refusal, preserved human edits, empty
+periodic inventories and reload-without-replay assertions remain intact.
+
+Evidence: .quest-evidence/material-completion-20261018/. All 3,274 native
+inputs, 5,196 source inputs and 14 protected files are checked.
+No Android build, device, paid provider, signing, deployment or Meta action ran.
+The complete-native-suite checkpoint 7d518ec9 and unresolved intermittent Meta audio
+SDK crash remain separate; production reflections stay disabled. Legacy synchronous
+APIs, remaining authoring/lifecycle paths, owner-thread snapshot/geometry costs,
+physical latency and the broader release gates remain open. Full v1 is incomplete.

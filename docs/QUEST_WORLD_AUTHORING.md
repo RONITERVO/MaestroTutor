@@ -353,8 +353,11 @@ replay it. Temporary-room results remain local until Keep.
 The existing full-component transaction also revalidates terrain-backed liquid
 capacity: a changed bed preserves the water amount or refuses overflow. Height
 fields still require fixed owners. Physical sculpt/scoop/packing gestures now use
-this pending-save boundary too (see below). Legacy synchronous editor APIs and
-other authoring families still need migration; not every edit is asynchronous. Snapshot capture and native
+this pending-save boundary too (see below). Shared material-store configuration,
+packing and transfer also use it: measured results and created IDs are published
+only on completion, and store/transfer history preserves current root placement.
+See [material packing](QUEST_MATERIAL_PACKING.md). Legacy synchronous editor APIs
+and other authoring families still need migration; not every edit is asynchronous. Snapshot capture and native
 mesh/collision reconciliation still run on the owner thread, and physical Quest
 latency remains unverified.
 

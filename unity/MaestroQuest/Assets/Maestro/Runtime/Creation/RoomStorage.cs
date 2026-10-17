@@ -60,6 +60,7 @@ namespace Maestro.Quest.Creation
             foreach (var item in room.objects)
             {
                 if (item == null) continue;
+                RoomTerrainReservoir.NormalizeSerializedCapacity(item);
                 if(room.version<39)item.lights??=Array.Empty<RoomLight>();
                 if(room.version<35&&(item.modelGeometry==null||item.modelGeometry.Absent))item.modelGeometry=new();
                 if(room.version<34)item.windows??=Array.Empty<RoomWindow>();

@@ -22,9 +22,40 @@ Physics must already be enabled to make it fall; packing does not enable physics
 
 The source and ball publish in one room transaction. One Undo restores the source
 and removes the ball; Redo restores the same ball identity. Failed validation,
-ownership, capacity or saving leaves both sides unchanged. Durable receipt replay
-cannot create a second ball. Stop cannot retract a completed edit; Undo can.
+ownership, capacity or preparation leaves both sides unchanged. Native acceptance
+changes both together; completion waits for the background save. An accepted save
+failure keeps both live changes unconfirmed and blocks further saving until
+workspace recovery. Durable receipt replay cannot create a second ball. Stop
+cannot retract an accepted edit or abandon its save; Undo can reverse it once
+saving completes.
 The operation consumes one program creation allowance.
+For a field that also holds water, packing derives reservoir capacity from the
+changed bed before validation. Its saved water amount stays unchanged; acceptance,
+saving and Undo keep surface geometry and reservoir metadata consistent.
+On stored-room, snapshot and archive readback, derived capacity is restored only
+when the saved value exactly matches Unity JSON's own round-trip representation
+of canonical bed capacity. This handles a one-ULP parse difference without an
+epsilon comparison. Water, heights, frame and footprint are not repaired; other
+inconsistent metadata and overflow still fail validation.
+
+## Ordered completion for shared material actions
+
+`object.material.edit`, `object.material.pack` and `object.material.transfer`
+use the existing pending-edit queue and persistence worker. The same catalog
+marks them as completion actions for the book, agent and saved programs. Inputs
+are copied before waiting; source/destination revisions are checked again on
+admission. Preparation reserves native resources without changing live balances.
+Only a completed save exposes immutable measured outputs and the exact created
+object ID. Stop before acceptance discards preparation; Stop after acceptance
+lets the save drain. Temporary edits complete locally until Keep.
+
+Material-store edits and transfers preserve each owner's current root position,
+rotation and scale through acceptance and Undo/Redo. Packing retains a full
+creation transaction so Undo removes its exact ball and restores the fixed field.
+No new storage fields, public action IDs, units or runtime are introduced. Legacy
+synchronous editor APIs remain for callers that still use them; this completion
+contract applies to the shared actions. Snapshot capture and native reconciliation
+still run on Unity's owner thread, so this is not a headset latency claim.
 
 ## Reusable component
 
@@ -33,6 +64,10 @@ object. `object.material` exposes its revision, configured flag and definition:
 capacity, contents, material label and colour. Up to 16 stores per room, each
 0.001–8000 local litres capacity with contents between zero and capacity. Missing
 stores return inert editable defaults, never inferred material.
+The shared current-value annotation loads the complete saved definition when
+configuring an existing store. Changing capacity after that read preserves its
+contents, material and colour unless the author explicitly edits those fields.
+Removal loads only the revision guard.
 
 Quantity is a saved logical measure, separate from geometry, world scale and
 rigid-body mass. Resizing or painting a ball does not rewrite its contents. Editing
@@ -85,8 +120,10 @@ receiver capacity or field headroom. Store-to-field fitting removes the volume
 actually representable by the accepted heights. The result reports measured
 `removedLitres`, `addedLitres` and signed `roundingLitres`; permitted difference is
 max(0.000001 litre, removedLitres × 0.000001). There is no second hidden balance.
-Missing/incompatible components, unrepresentable changes or failed saves preserve
-both inputs. Revisions and exclusive ownership protect both objects.
+Missing/incompatible components, unrepresentable changes or preparation failure
+preserve both inputs. Revisions and exclusive ownership protect both objects.
+After native acceptance, a save failure retains both live balances unconfirmed
+and requires workspace recovery; it must not be retried as a fresh transfer.
 
 One save and one Undo changes both sides; receipt replay cannot repeat a transfer.
 Temporary edits remain in their fork. Existing room v17 and archive support already

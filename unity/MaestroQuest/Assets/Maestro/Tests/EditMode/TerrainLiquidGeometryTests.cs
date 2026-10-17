@@ -11,6 +11,31 @@ namespace Maestro.Quest.Tests {
             var field=new RoomHeightField{cells=4,width=2,depth=1,maxHeight=.5f,heights=new float[25]};
             for(int z=0;z<=4;z++)for(int x=0;x<=4;x++)field.heights[z*5+x]=height(x*.5f-1,z*.25f-.5f);return field;
         }
+        static RoomObjectData PackedTerrain(){
+            var bed=new RoomHeightField{cells=16,width=1,depth=1,maxHeight=.25f,heights=new float[289]};Array.Fill(bed.heights,.08f);
+            Assert.IsTrue(HeightFieldTransfer.Extract(bed,Vector2.zero,.2f,.5,out var amount,out var error),error);
+            var store=new RoomMaterialStore{capacityLitres=1,amountLitres=amount,material=bed.material,color=bed.color};
+            Assert.IsTrue(MaterialTransfer.Apply(MaterialTransfer.Endpoint.Stored(store),MaterialTransfer.Endpoint.Surface(bed,Vector2.zero,.2f),.1,out _,out error),error);
+            var owner=new RoomObjectData{kind=RoomObjectKind.Block,physics=Maestro.Quest.Interaction.ItemPhysics.Fixed,heightFields=new[]{bed},containers=new[]{new RoomContainer{version=3,height=.3f,amountMl=50000}}};
+            Assert.IsTrue(RoomTerrainReservoir.Normalize(owner,out error),error);return owner;
+        }
+        [Test]public void TerrainCapacityReadbackRestoresOnlyTheExactCodecRepresentation(){
+            var owner=PackedTerrain();var decoded=JsonUtility.FromJson<RoomObjectData>(JsonUtility.ToJson(owner));
+            RoomTerrainReservoir.NormalizeSerializedCapacity(decoded);
+            Assert.AreEqual(owner.containers[0].capacityMl,decoded.containers[0].capacityMl);Assert.AreEqual(50000,decoded.containers[0].amountMl);
+            Assert.AreEqual(owner.heightFields[0].heights,decoded.heightFields[0].heights);
+            Assert.IsTrue(RoomTerrainReservoir.Validate(decoded,decoded.containers[0],out var error),error);
+        }
+        [TestCase("capacity")][TestCase("frame")][TestCase("footprint")][TestCase("water")]
+        public void TerrainCapacityReadbackDoesNotRepairInconsistentSavedData(string corruption){
+            var decoded=JsonUtility.FromJson<RoomObjectData>(JsonUtility.ToJson(PackedTerrain()));var container=decoded.containers[0];
+            if(corruption=="capacity")container.capacityMl+=.000001;
+            if(corruption=="frame")container.frame.position+=Vector3.up*.1f;
+            if(corruption=="footprint")container.rectangle.width+=.1f;
+            if(corruption=="water")container.amountMl=container.capacityMl+1;
+            double amount=container.amountMl;RoomTerrainReservoir.NormalizeSerializedCapacity(decoded);Assert.AreEqual(amount,container.amountMl);
+            Assert.IsFalse(container.Validate(out _)&&RoomTerrainReservoir.Validate(decoded,container,out _));
+        }
         [Test]public void FlatTerrainPreservesExactCapacityLevelAndContainment(){
             var field=Field((_,__)=>.1f);var water=new TerrainLiquidGeometry(field,.5f);
             Assert.That(water.Volume,Is.EqualTo(.8).Within(1e-7));Assert.That(water.VolumeBelow(Vector3.up,.2),Is.EqualTo(.2).Within(1e-7));

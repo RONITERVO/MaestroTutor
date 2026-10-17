@@ -19,12 +19,14 @@ describe('shared carried and surface material transfer',()=>{
 
 it('accepts native transfer and return receipts with measured balances and atomic Undo',()=>{
  const native=JSON.parse(readFileSync('test-fixtures/browser/materialTransferAuthoring.json','utf8')) as Record<string,unknown>&{
-  call:CapabilityInvocation;returnCall:CapabilityInvocation;after:RoomAgentState;returned:RoomAgentState;
+  call:CapabilityInvocation;returnCall:CapabilityInvocation;after:RoomAgentState;returned:RoomAgentState;configured:RoomAgentState;
   sourceBefore:RoomAgentState;storeBefore:RoomAgentState;sourceTaken:RoomAgentState;storeTaken:RoomAgentState;
   sourceReturned:RoomAgentState;storeReturned:RoomAgentState;restoredSource:RoomAgentState;restoredStore:RoomAgentState;
  };
  const states=Object.values(native).filter((value):value is RoomAgentState=>Boolean(value&&typeof value==='object'&&'session' in value));
- expect(states).toHaveLength(15);for(const state of states)expect(new RoomAgentClient().receive(state),state.status).toBe(true);
+ expect(states).toHaveLength(16);for(const state of states)expect(new RoomAgentClient().receive(state),state.status).toBe(true);
+ expect(native.configured.execution?.selected?.capability).toBe('object.material.edit');
+ expect(native.configured.execution?.selected?.phase).toBe('completed');
  const fact=(state:RoomAgentState)=>{
   if(state.catalog?.operation!=='inspect'||!('value' in state.catalog))throw new Error('Expected captured native fact');
   return state.catalog.value as {volumeLitres:number;definition:{amountLitres:number}};

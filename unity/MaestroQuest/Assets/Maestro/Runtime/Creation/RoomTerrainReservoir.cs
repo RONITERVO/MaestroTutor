@@ -25,6 +25,18 @@ namespace Maestro.Quest.Creation {
             if(container.amountMl>capacity){error="This terrain edit would overflow its water; transfer or explicitly remove enough liquid first";return false;}
             container.frame=bed.frame.Copy();container.rectangle=new(){width=bed.width,depth=bed.depth};container.capacityMl=capacity;return true;
         }
+        [Serializable] sealed class CapacityWire { public double capacityMl; }
+        // This is redundant geometry metadata. JsonUtility can parse its own
+        // double encoding one ULP away from the original. Recognize only that
+        // exact wire result, then restore the capacity derived from the bed.
+        // Water, heights, frame and footprint are never repaired or inferred.
+        internal static void NormalizeSerializedCapacity(RoomObjectData owner){
+            var container=owner?.containers?.Length==1?owner.containers[0]:null;
+            if(container==null||container.version!=3||!Derive(owner,container,out _,out var capacity,out _)
+                ||container.capacityMl==capacity)return;
+            var wire=JsonUtility.FromJson<CapacityWire>(JsonUtility.ToJson(new CapacityWire{capacityMl=capacity}));
+            if(wire!=null&&container.capacityMl==wire.capacityMl)container.capacityMl=capacity;
+        }
         internal static bool Validate(RoomObjectData owner,RoomContainer container,out string error){
             if(!Derive(owner,container,out var bed,out var capacity,out error))return false;
             error="Terrain reservoir geometry and capacity must match its canonical sculptable surface";

@@ -126,3 +126,16 @@ it('loads clock configuration without turning a moving time observation into an 
  expect(currentInputIdentity(configure,loaded,'room')).toBe(currentInputIdentity(configure,{...loaded,settings:{...copied,rate:120}},'room'));
  expect(()=>applyCurrentInputs(configure,input,{...snapshot,value:{...value,settings:{...settings,frames:Array.from({length:9},()=>settings.frames[0])}}} as CatalogView)).toThrow();
 });
+
+it('loads an existing material store before editing capacity without discarding its contents',()=>{
+ const schema=capabilityDefinition('object.material.edit')!.input,target='a'.repeat(32);
+ const definition={capacityLitres:2,amountLitres:1.25,material:'Sand',color:{r:.2,g:.4,b:.6,a:1}};
+ const input={operation:'configure',target,revision:1,definition:{capacityLitres:1,amountLitres:0,material:'Snow',color:{r:1,g:1,b:1,a:1}}};
+ const snapshot:CatalogView={operation:'inspect',category:'facts',capability:'object.material',version:1,definition:behaviourFact('object.material')!,arguments:{target},available:true,status:'Available',value:{revision:9,configured:true,definition}};
+ const loaded=applyCurrentInputs(schema,input,snapshot);expect(loaded).toEqual({...input,revision:9,definition});
+ const revised={...loaded,definition:{...loaded.definition as typeof definition,capacityLitres:3}};
+ expect(revised.definition).toEqual({...definition,capacityLitres:3});expect(input.definition.amountLitres).toBe(0);expect(definition.capacityLitres).toBe(2);
+ expect(currentInputIdentity(schema,revised,'room')).toBe(currentInputIdentity(schema,loaded,'room'));
+ expect(currentInputFields(schema,input).map(({path,guard})=>({path,guard}))).toEqual([{path:'revision',guard:true},{path:'definition',guard:false}]);
+ expect(applyCurrentInputs(schema,{operation:'remove',target,revision:1},snapshot)).toEqual({operation:'remove',target,revision:9});
+});
