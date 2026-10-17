@@ -62,6 +62,13 @@ namespace Maestro.Quest.Creation
             } finally {if(!transferred)reservation.Dispose();}
         }
 
+        bool PublishPreparedCandidate(VersionedRoomFile<RoomDocument>.PreparedSave candidate,out string error)
+        {
+            error=coordinationError;if(error!=null)return false;
+            using var owner=RoomSnapshotTransaction.Enter(directory,wait:false);
+            return file.PublishPrepared(candidate,out error);
+        }
+
         // The native caller must revalidate its candidate revision/lifecycle before
         // calling. Disk compare-and-publish protects only the captured saved baseline.
         // Encoding, writing and durable flush already ran on the worker. Baseline
@@ -71,8 +78,7 @@ namespace Maestro.Quest.Creation
             error="This room save preparation was already used or belongs to another store.";
             if(prepared==null||!prepared.Take(this,out var candidate))return false;
             try {
-                error=coordinationError;if(error!=null)return false;
-                using var owner=RoomSnapshotTransaction.Enter(directory,wait:false);return file.PublishPrepared(candidate,out error);
+                return PublishPreparedCandidate(candidate,out error);
             }
             catch(Exception failure) {
                 error="Prepared room publication was not confirmed; preserve the saved room/memory files. "+failure.Message;return false;

@@ -2796,3 +2796,33 @@ promise rollback after a filesystem effect: inspect again before another request
 A restart never automatically retries disposal or adopts a preparation as a save.
 Unsafe, oversized or unreadable entries remain ineligible; this is not a general
 file manager or a substitute for the existing room recovery workflow.
+
+## Background publication boundary
+
+RoomStorage.StartPreparedPublication now provides a pure storage worker for an
+already prepared candidate. The caller transfers that candidate once; disposing
+the old wrapper, replaying it, or presenting it to a different store cannot steal
+or duplicate the worker's effect. The existing preparation slot stays occupied
+through publication and cleanup, so queuing does not bypass admission limits.
+
+The returned operation exposes Completion, Started and CancelBeforeStart.
+Cancellation wins only before the worker crosses the publication boundary.
+After that boundary the worker finishes one conditional publication attempt;
+cancellation cannot retract a possible durable write. Completion reports Saved
+and MayHavePublished separately. A failed/unconfirmed attempt after the boundary
+must be inspected, not retried automatically. In particular, an observation
+failure after writing must not claim that saved data was unchanged.
+
+The worker uses the same saved-baseline comparison, room/memory coordinator,
+backup preservation, exact stage ownership and one-attempt replacement as the
+synchronous API. Its future finishes after cleanup releases admission. It does
+not capture Unity objects or require an owner-thread continuation.
+
+This is a storage prerequisite, not the native edit integration. The shared
+rotation action still uses its existing non-yielding final commit. Before using
+the worker there, the caller must reserve the exact journal and native resources,
+retain workspace lifetime through completion, and define acceptance after
+cancellation or a saved-but-unconfirmed result. A directory writer lease alone
+does not preserve Unity objects: workspace retirement currently destroys them
+before waiting for detached writers to drain. Merely awaiting this storage API
+inside the old native commit would leave that lifecycle race unresolved.

@@ -12846,3 +12846,55 @@ native reports/receipts, web tests and exact contract comparisons. No device,
 paid-provider, Android compilation, signing, deployment or Store acceptance is
 claimed by this checkpoint. V1 and the broader completion-operation migration
 remain active work.
+
+## Owned background publication boundary — 2026-10-17
+
+RoomStorage now has a worker publication operation for an already prepared save.
+Dispatch transfers the candidate exactly once without normal-path file IO on the
+caller. The existing single-preparation admission slot remains held through the
+worker and cleanup. Disposing the old wrapper, a duplicate request or a different
+store cannot steal the transferred candidate. The synchronous publication API
+retains its existing contract and shares the same conditional publication core.
+
+The operation has an atomic cancellation boundary. A queued request can be
+cancelled; once the worker crosses that boundary it finishes one attempt.
+Completion separates confirmed saving from an unconfirmed possible write.
+Failure after publication may have changed saved data and never authorizes replay.
+This also covers faults in observing a completed effect. Cleanup occurs on the
+worker, and admission is released before its future completes.
+
+Eleven new regression cases verify the actual worker thread and absence of its
+caller synchronization context, ownership across caller disposal, bounded
+admission, cancellation before/after the boundary, wrong-store and duplicate
+attempts, intervening accepted saves, coordinator contention, two competing
+stores, Windows readers, and injected failures before/after durable effects.
+Final checks pass **1,414 EditMode**, **56 selected PlayMode** and **263 web
+catalog/capability tests in four files**, with zero failures or skips.
+All **3,216 native inputs** match the verified mirror; the temporary diagnostic
+source was removed. All **14 protected files** are unchanged. Catalog contracts
+and ten bundled guides are unchanged; native provenance is refreshed.
+
+The matching synthetic desktop probe uses seven measured iterations after
+warmup. For 63 drawings / 1,439,585 encoded bytes, synchronous prepared publication
+takes **44.2052 ms** median. Worker publication dispatch takes **0.0149 ms**
+(maximum **0.0212 ms**), followed by **44.6473 ms** worker wait
+(maximum **46.8259 ms**). Worker allocation events are not measured. The probe
+blocks only its diagnostic harness while measuring wait; the API returns a future.
+These measurements establish the storage dispatch boundary, not headset frame
+time or live native integration.
+
+The shared rotation action still performs its existing non-yielding native commit.
+Integration must reserve the exact journal and native resources independently of
+an observation/receipt, retain workspace lifetime, and define acceptance after
+cancellation or unconfirmed saving. Current WorkspaceContent retirement destroys
+native objects before waiting for detached writers; its directory writer lease
+is not a native resource reservation. An unchecked await in the current commit
+would therefore be incorrect. Do not relax authored-revision checks to accommodate
+unrelated physics without a dependency/merge contract, or turn a pending write
+into synchronous success. Existing synchronous editing APIs remain unchanged.
+
+Evidence: .quest-evidence/prepared-publication-20261017/ contains final source
+hashes, native reports, web output, unchanged review-body comparisons, diagnostic
+measurements and next integration constraints. No device, paid-provider, Android
+compilation, signing, deployment or Store acceptance is claimed. The V1 goal
+remains active.

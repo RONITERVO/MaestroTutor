@@ -47955,8 +47955,12 @@
       "sha256": "aaae18f21bc8b3a963098054cac5f43ff581ed6c879c92649aba80e1301b08c5"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomPublication.cs",
+      "sha256": "a207bf6834d7c7e05bee20cd886037622dd5cbdf349733c106077bcffcb6ee20"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomSave.cs",
-      "sha256": "9186aa829a20dc649905b79256f5fdd66e714def6302d61095ae898409b6dc90"
+      "sha256": "5ae7675cffad2fdf3a49f0f45909f0dbd30152332cbaeb7efc35c5293143cb5c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomWindows.cs",
