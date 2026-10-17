@@ -12629,3 +12629,66 @@ incomplete.
 
 Evidence: .quest-evidence/room-transaction-cost-20261017/verified.json and
 measurement-comparison.json in the same directory.
+
+## Prepared-save storage boundary and verification gap — 2026-10-17
+
+RoomStorage now has a bounded background preparation API. It reserves one
+preparation before copying caller state, captures the saved baseline before the
+asynchronous boundary, and refuses busy coordinator ownership without waiting.
+The worker validates and encodes private data and proves the resulting wire bytes
+through the strict read path. Hash-cache inspection holds only short cache locks
+during this background work; normal synchronous Save ordering remains unchanged.
+
+A prepared candidate is private, belongs to its exact store, and supports one
+publication attempt. Publication rechecks the captured primary contents and newer
+formats, preserves damaged bounded originals as unreadable evidence, and refuses
+an existing pending file. A stale candidate cannot overwrite an intervening save.
+Disposal, cancellation and failure release preparation admission; foreign stores
+cannot consume another store's candidate. Empty or oversized primaries cannot be
+captured. This is a per-store count bound, not a whole-process memory guarantee.
+
+The storage API is not yet connected to native edit completion. Existing book,
+program and agent calls still follow their synchronous editor paths. Native
+integration must retain the journal candidate, native resources and asset leases,
+recheck current revision/lifecycle, and report pending/failure/commit accurately.
+Storage fingerprints do not establish in-memory ownership. Final file staging,
+flush, backup/publication and potential retention-lock waits remain synchronous.
+
+The desktop probe records seven measurements after warm-up using the same
+63-drawing/32,256-point room. Current synchronous changing-save median is
+**245.713 ms**. Prepared dispatch is **4.052 ms**, remaining worker wait
+**184.527 ms**, and publication **47.367 ms**. Dispatch/publication record **3,157 /
+1,322 current-thread allocation events**; worker allocations are not measured.
+Two-built-in medians are **13.300 ms** for ordinary changing save and
+**2.113 / 0.796 / 12.471 ms** for dispatch/wait/publication. The diagnostic blocks
+only to measure its isolated worker phase; production UI must await/yield.
+These are synthetic Editor stage costs, not a user-visible speedup, frame-time
+acceptance or justification for larger saved limits. Publication is still too
+costly to treat as an invisible frame operation.
+
+Verification initially found malformed generated .meta files: Unity ignored the
+new files while 16 older tests passed. That run is not accepted as new-code
+coverage. Metadata was corrected, and the log gate now rejects Unity's ignored
+asset/invalid GUID diagnostic even when the editor exits zero. The new gate
+regression fails against the old gate and passes after the fix. The corrected
+focused run passed 37 tests, including its then-current 21 new cases.
+
+Final verification passed **1,374 EditMode and 114 selected PlayMode tests** with
+zero failures or skips, explicitly including all **22 final preparation tests**.
+Coverage includes caller snapshot isolation, concurrent-save refusal, a busy disk
+coordinator, preparation without a long-held publication lock, one-shot ownership,
+cancellation, size/format protection and admission release. Native catalog
+definitions are unchanged; two source records were added and two refreshed.
+
+All **3,196 frozen native inputs** match the tested mirror except the same four
+Configure outputs documented above (Oculus newlines, Meta AR occlusion, Vulkan and
+PendingCollision). All **14 preserved local files** remain unchanged. The temporary
+probe was removed. The full offline journeys and Android compile remain at their
+earlier a12cf3db checkpoint. No headset, paid provider, signing, deployment or Meta
+operation ran; V1 remains incomplete.
+
+Next: integrate prepared saving with the shared native operation lifecycle and
+remove the remaining publication wait without allowing stale edits, premature
+success, leaked reservations or replay after interruption.
+
+Evidence: .quest-evidence/prepared-room-save-20261017/verified.json.

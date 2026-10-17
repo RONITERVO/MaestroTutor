@@ -17,7 +17,9 @@ try {
     Assert-Rejected 'Unity script diagnostics found at lines 2.*'
     [IO.File]::WriteAllText($logPath, "Passed: 931`r`n  Script error (AnotherComponent): Invalid callback signature.`r`nExiting batchmode successfully")
     Assert-Rejected 'Unity script diagnostics found at lines 2.*'
+    [IO.File]::WriteAllLines($logPath, @('Loading project', 'The .meta file Assets/Maestro/New.cs.meta does not have a valid GUID and its corresponding Asset file will be ignored. If this file is not malformed, please add a GUID', 'Exiting batchmode successfully'))
+    Assert-Rejected 'Unity ignored-asset metadata diagnostics found at lines 2.*'
     [IO.File]::WriteAllText($logPath, "An expected test exercises the phrase Script error in data.`nTests passed`nExiting batchmode successfully")
     & $gate -LogPath $logPath
 } finally { if (Test-Path -LiteralPath $logPath) { Remove-Item -LiteralPath $logPath } }
-Write-Output 'Unity log gate: missing/empty logs and engine script diagnostics rejected; ordinary data accepted.'
+Write-Output 'Unity log gate: missing/empty logs, engine script diagnostics and ignored-asset metadata rejected; ordinary data accepted.'

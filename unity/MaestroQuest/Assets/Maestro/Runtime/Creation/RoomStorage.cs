@@ -5,7 +5,7 @@ using System.Linq;
 using Maestro.Quest.Persistence;
 namespace Maestro.Quest.Creation
 {
-    public sealed class RoomStorage
+    public sealed partial class RoomStorage
     {
         public static readonly string FileName="room.v"+RoomDocument.CurrentVersion.ToString(System.Globalization.CultureInfo.InvariantCulture)+".json";
         readonly VersionedRoomFile<RoomDocument> file;

@@ -14,7 +14,7 @@ namespace Maestro.Quest.Creation
 {
     // Older originals remain available. Once a newer file exists, corruption
     // never silently rolls the user back to an earlier room or rule collection.
-    internal sealed class VersionedRoomFile<T> where T : class
+    internal sealed partial class VersionedRoomFile<T> where T : class
     {
         readonly string directory,primary,stem,label;
         readonly int version,minimumVersion;
@@ -122,15 +122,27 @@ namespace Maestro.Quest.Creation
             newer=false;
             try {
                 var bytes=ReadBytes(primary);if(bytes==null)return false;
-                using var algorithm=SHA256.Create();var fingerprint=algorithm.ComputeHash(bytes);
+                return InspectBytes(bytes,out newer);
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException || e is JsonException || e is OverflowException) { return false; }
+        }
+        static byte[] Fingerprint(byte[] bytes)
+        {using var algorithm=SHA256.Create();return algorithm.ComputeHash(bytes);}
+        bool InspectBytes(byte[] bytes,out bool newer)
+        {
+            var fingerprint=Fingerprint(bytes);
+            lock(retainedGate) {
                 if(primaryInspectionHash!=null&&primaryInspectionHash.SequenceEqual(fingerprint)) {
                     newer=primaryInspectionNewer;return primaryInspectionValid;
                 }
-                bool valid=Decode(bytes,version,out _,out newer);
-                primaryInspectionHash=fingerprint;primaryInspectionValid=valid;primaryInspectionNewer=newer;
-                return valid;
             }
-            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException || e is JsonException || e is OverflowException) { return false; }
+            // Prepared saves decode outside the lock. A normal synchronous Save
+            // already owns retainedGate; its existing publication ordering is unchanged.
+            bool valid=Decode(bytes,version,out _,out newer);
+            lock(retainedGate) {
+                primaryInspectionHash=fingerprint;primaryInspectionValid=valid;primaryInspectionNewer=newer;
+            }
+            return valid;
         }
         public bool Retains(Func<T,IEnumerable<string>> identities,string id,out bool uncertain,bool force=false,Func<T,bool> unknownReferences=null)
         {

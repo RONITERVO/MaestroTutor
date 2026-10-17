@@ -2660,3 +2660,34 @@ persistent edits asynchronous or expand saved limits. Larger-world admission sti
 needs bounded save preparation and publication with revision/lifecycle ownership.
 Human and agent operations must keep the same pending, failure and completion
 contract; a successful receipt must not precede durable publication.
+
+## Prepared-save storage boundary
+
+RoomStorage has a bounded preparation API for the asynchronous editor work. It
+captures the exact saved baseline without waiting for a busy room/memory
+coordinator, then owns a detached copy of the caller's document. Pure validation,
+encoding and strict readback of the resulting wire bytes run on a worker after the
+coordinator has been released. Expensive inspection can reuse only an exact
+content-hash result and does not hold the publication lock while decoding.
+
+One preparation is admitted per RoomStorage before its snapshot is copied.
+That reservation lasts through background work, the returned candidate and
+publication or disposal; failed and cancelled preparation releases it. The native
+command queue must wait before copying another candidate. This per-store bound is
+not a global memory or Quest performance guarantee.
+
+Prepared publication is one attempt against the captured baseline. A different
+primary, a newer-format file, a foreign preparation or an existing pending file
+cannot be overwritten through that attempt. Invalid bounded primary contents keep
+the existing unreadable-evidence path. Empty or oversized primary files cannot
+become a prepared baseline. Successful wire readback allows the store to cache
+the published content's validation result without trusting serialization alone.
+
+This is a storage boundary, not a completed asynchronous editor migration.
+Existing book, program and agent edits still use their current completion paths.
+Native integration must retain candidate/resource ownership, check the live
+journal revision and lifecycle, and surface pending/failure/cancellation honestly.
+The disk fingerprint cannot prove that the in-memory room is still current.
+Bounded baseline reads and final file writes/flush/publication are still synchronous;
+native publication also needs protection against blocking retention readers and
+lifecycle transitions. Saved capacity remains unchanged.
