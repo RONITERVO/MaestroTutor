@@ -697,34 +697,47 @@ remain separate gates. No source/test pass by itself establishes Store readiness
 
 ## Current Android compile checkpoint — 2026-10-17
 
-Source **eeeefd5d** (complete quantity-group scheduling) passed a fresh Android
-export using Unity **6000.3.24f1**, followed by the guarded Java/IL2CPP compilation
-and manifest, native-library and asset merges described above. The export reports
-zero errors and five build warnings. The production web build also passed.
+Source **a12cf3db** (including the idle-liquid residency fix) passed a fresh Android
+export using Unity **6000.3.24f1**, followed by guarded Java/IL2CPP compilation and
+native-library/asset merges. The export reports zero errors and five build
+warnings. The production web build also passed.
+
+The generated C++ contains the new ContainerFillView.IsInactiveOwnedStream
+implementation and its call from visual-bounds capture. The merged libil2cpp.so
+differs from the earlier complete-group compile; generated source hashes remain
+unchanged through native compilation.
 
 The immediately preceding full native suite already covered exactly these
-**3,184 native inputs**: **1,345 EditMode and 1,820 PlayMode passes**, with three
+**3,186 native inputs**: **1,345 EditMode and 1,822 PlayMode passes**, with three
 optional private-asset skips. A local wrapper required development compile-only
-mode, verified those input hashes and the owned mirror, then reused those results
-instead of rerunning the suite. It retained normal mirror synchronization and the
-production export/Gradle/ELF checks. The production build helper was not changed.
-The older full offline Headless/Book journeys at **9f38abca** were not rerun.
+mode, verified those hashes and the owned mirror, then reused those results.
+It retained normal mirror synchronization and production export/Gradle/ELF checks;
+the production build helper was unchanged. The full offline Headless and original
+Book journeys also already pass on these inputs, as recorded in
+[the integration checkpoint](QUEST_V1_PLAN.md#idle-liquid-container-residency-2026-10-17).
+They were not rerun during compilation.
 
-The Android browser Gradle invocation succeeded, reusing unchanged test and lint
-outputs as `UP-TO-DATE`: **128 passes, two skips, zero failures**, and **zero lint
-errors / six warnings**. These are validated cached results, not a fresh test
-execution. The new Unity export and its 41 Gradle compilation/merge tasks did
-execute. All **5,101 frozen tracked inputs** and the **14 preserved local files**
-remained byte-for-byte unchanged throughout this verification.
+The Android browser Gradle invocation succeeded, reusing its test and lint outputs
+as UP-TO-DATE: **128 passes, two skips, zero failures**, and **zero lint errors /
+six warnings**. All **106 tracked browser inputs** match the previous compile and
+the lint report is byte-identical. These are validated cached results, not fresh
+test execution. The new Unity export and **41 Gradle compilation/merge tasks** did
+execute. All **5,103 frozen tracked inputs** and **14 preserved local files**
+remained byte-for-byte unchanged throughout verification.
 
 Readback confirms:
 
-- `com.maestro.quest.development`, one `UnityPlayerGameActivity`, Quest 3 only.
-- All **22 selected ARM64 libraries**, including `libil2cpp.so` and `libunity.so`,
+- com.maestro.quest.development, one UnityPlayerGameActivity, the quest3 declaration,
+  and no broad storage permission.
+- All **22 selected ARM64 libraries**, including libil2cpp.so and libunity.so,
   have the required architecture and 16 KiB-compatible ELF LOAD segments.
 - Five unselected ARMv7 dependency libraries remain in the merged intermediate,
   recorded separately. No final APK ABI-filtering result is claimed.
 - No APK/AAB, signing, installation, provider, deployment or Meta action.
+
+Normalized warning signatures match the previous compile: 13 in the Unity export
+log and five in the Gradle compile log. These diagnostic-signature counts are
+separate from the Unity BuildReport's five build warnings. No suppression was added.
 
 Warnings were inspected without suppressing them. The Meta GameActivity warning
 does not match the final merged manifest, which contains the required single
@@ -746,9 +759,11 @@ finish/abort paths close it; failed sessions discard the sink. JavaScript remain
 required by the first-party book app and subject to existing origin/bridge checks.
 Four remaining lint warnings concern redundant API-level checks in vendored code.
 
-Local evidence: `.quest-evidence/android-compile-current/` contains frozen hashes,
-the reuse guard and wrapper provenance, current logs, native-library/manifest
-receipts, browser XML reports, warning review and final audit. The project is
-`Android-compile-20261016-215517-9dec5d4f` under the owned verification mirror.
-Installed/package versions, physical/acoustic acceptance and Store gates are
-unchanged.
+Local evidence: .quest-evidence/android-compile-liquid-20261017/ contains frozen
+hashes, the exact-source reuse guard and wrapper provenance, fresh logs, generated
+C++ references, native-library/manifest receipts, browser XML hashes, warning
+comparison and final audit. The project is
+Android-compile-20261016-235039-b4e015a6 under the owned verification mirror.
+The previous complete-group compile remains recorded in
+.quest-evidence/android-compile-current/. Installed/package versions,
+physical/acoustic acceptance and Store gates are unchanged.

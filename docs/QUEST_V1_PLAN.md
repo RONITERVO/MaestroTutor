@@ -16,7 +16,8 @@ Consumed allowances now survive request removal and demand changes within one
 opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
 Independent quantity groups now have separate execution requests; the current
 implementation and verification status are recorded at the end of this document.
-Unsigned Android compilation now covers **eeeefd5d**, including these group changes;
+Unsigned Android compilation now covers **a12cf3db**, including the idle-liquid
+residency fix and these group changes;
 see [the current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
 The current full offline Headless and Book journeys pass after an idle-liquid
@@ -12518,8 +12519,17 @@ All **5,103 frozen inputs**, **3,186 native mirror inputs** and **14 preserved
 local files** matched after verification. Current Book screenshots were reviewed
 for layout; expert help verbosity and headset readability remain separate
 usability work. This is desktop Unity/original-web integration with scripted
-providers. Android compilation remains at eeeefd5d and needs refreshing for this
-fix. Device, real-provider, acoustic and Store acceptance remain open; no signing,
+providers. A subsequent fresh Android export and Java/IL2CPP compile covers
+a12cf3db, including this fix: its generated C++ implementation/call and changed
+player library are verified. All 22 selected ARM64 libraries pass 16 KiB ELF
+checks; all 41 compilation/merge tasks executed. Browser test/lint outputs remain
+validated cache reuse (128 passes, two skips, zero errors/six warnings), with
+all 106 tracked browser inputs unchanged. The merged manifest has one
+GameActivity and the quest3 declaration. No APK/AAB was produced. See
+[the refreshed Android evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
+Device, real-provider, acoustic and Store acceptance remain open; no signing,
 installation, deployment or Meta operation occurred. V1 remains incomplete.
 
 Evidence: .quest-evidence/current-room-journeys-20261017/completed.json.
+
+Android follow-through evidence: .quest-evidence/android-compile-liquid-20261017/verified.json.
