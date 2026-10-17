@@ -230,7 +230,7 @@ namespace Maestro.Quest.Creation
                     }
                     editor.MarkDirty();
                     if(!temporary){editor.dirty=runtimeChanged;editor.lastSaveError=null;}
-                    if(edit.VisualOnly)editor.ReconcileVisibility(native);else editor.Reconcile(edit.ChangedObjects,applyPose,preparation:native);
+                    editor.ReconcileEdit(edit,native,applyPose);
                     nativeApplied=true;
                     // The target can resume immediately after application; storage
                     // only owns detached data. End/Stop can dispose this lease again.

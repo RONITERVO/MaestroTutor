@@ -42,12 +42,12 @@ namespace Maestro.Quest.Creation
         internal bool BeginVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
             var captured=definition?.Copy();var affected=members?.ToArray();
             return BeginPreparedEdit(()=>CanEditVisibility(captured,id,revision,affected,out var issue)?null:issue,
-                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareVisibility(captured,id,revision,affected,out var edits,out issue)&&journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,visibilityEdits:edits,visualOnly:true);},
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareVisibility(captured,id,revision,affected,out var edits,out issue)&&journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,visibilityEdits:edits,scope:RoomEditScope.Visual);},
                 captured==null?"Visual layer removed":"Visual layer saved",out pending,out error,publicationCheckpoint);
         }
         internal bool EditVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out string error) {
             if(!PrepareVisibility(definition,id,revision,members,out var edits,out error))return false;
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),definition==null?"Visual layer removed":"Visual layer saved",false,out error,visibilityEdits:edits,visualOnly:true);
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),definition==null?"Visual layer removed":"Visual layer saved",false,out error,visibilityEdits:edits,scope:RoomEditScope.Visual);
         }
         internal bool CanBindVisibility(string target,int revision,string id,int layerRevision,out string error,bool checkTargetRevision=true) {
             var definition=string.IsNullOrEmpty(id)?null:ReadVisibility(id);
@@ -61,7 +61,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool BeginVisibilityBinding(string target,int revision,string id,int layerRevision,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
             return BeginPreparedEdit(()=>CanBindVisibility(target,revision,id,layerRevision,out var issue)?null:issue,
-                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareVisibilityBinding(target,revision,id,layerRevision,out var data,out issue)&&journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out issue,visualOnly:true);},
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareVisibilityBinding(target,revision,id,layerRevision,out var data,out issue)&&journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out issue,scope:RoomEditScope.Visual);},
                 "Visual layer assigned",out pending,out error,publicationCheckpoint,
                 // The prepared journal separately proves that *only* runtime
                 // placement progressed. Authored changes still invalidate it.
@@ -69,7 +69,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool BindVisibility(string target,int revision,string id,int layerRevision,out string error) {
             if(!PrepareVisibilityBinding(target,revision,id,layerRevision,out var data,out error))return false;
-            return CommitPersisted(new[]{data},Array.Empty<string>(),"Visual layer assigned",false,out error,visualOnly:true);
+            return CommitPersisted(new[]{data},Array.Empty<string>(),"Visual layer assigned",false,out error,scope:RoomEditScope.Visual);
         }
         void SynchronizeVisibility(RoomDocument document) {
             SynchronizeLights(document);

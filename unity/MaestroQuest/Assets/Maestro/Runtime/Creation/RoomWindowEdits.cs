@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool EditWindow(string target,int revision,JObject args,out string error) {
             if(!PrepareWindowEdit(target,revision,args,out var data,out error))return false;
-            return CommitPersisted(new[]{data},Array.Empty<string>(),"Passthrough window saved",false,out error,visualOnly:true);
+            return CommitPersisted(new[]{data},Array.Empty<string>(),"Passthrough window saved",false,out error,scope:RoomEditScope.Visual);
         }
         internal JObject ObserveWindows(string target) {
             var data=Read(target);if(data==null)return null;var item=Find(target);var view=item?item.GetComponent<RoomWindowView>():null;view?.Refresh();

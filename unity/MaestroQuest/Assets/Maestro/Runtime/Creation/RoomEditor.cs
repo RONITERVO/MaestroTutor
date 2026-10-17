@@ -279,9 +279,9 @@ namespace Maestro.Quest.Creation
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
-        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,PreparedImportedModel modelPreparation=null,RegionEdits regionEdits=null,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false) {
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomEditScope scope=RoomEditScope.Full,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,PreparedImportedModel modelPreparation=null,RegionEdits regionEdits=null,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
-            if(!journal.Prepare(replacements,removals,out var edit,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather,regionEdits,visualOnly,timeEdit,weatherTransition))return false;
+            if(!journal.Prepare(replacements,removals,out var edit,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather,regionEdits,scope,timeEdit,weatherTransition))return false;
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null)return false;
                 if(modelPreparation!=null)native.EnlistModel(modelPreparation,edit);
@@ -291,7 +291,7 @@ namespace Maestro.Quest.Creation
                     if(!storage.Save(edit.Snapshot(),out error))return false;
                 }
                 if(!edit.Accept(journal,out error))return false;
-                if(visualOnly)ReconcileVisibility(native);else Reconcile(edit.ChangedObjects,applyPose,preparation:native);
+                ReconcileEdit(edit,native,applyPose);
                 MarkDirty();SetStatus(message);if(!TemporaryRoom){dirty=false;lastSaveError=null;}return true;
             }
         }
@@ -346,12 +346,12 @@ namespace Maestro.Quest.Creation
         void ApplyHistory(bool reverse)
         {
             if(!FinishLiquidPour(out var error)){SetStatus(error);return;}using var write=WriteGate.TryWrite(out error);if(write==null){SetStatus(error);return;}
-            if(!journal.HistoryVisualOnly(reverse))Editing?.Invoke();if(Busy())return;
+            if(!journal.HistoryPreservesPlacement(reverse))Editing?.Invoke();if(Busy())return;
             if(!journal.PrepareHistory(reverse,out var edit,out error)){SetStatus(error);return;}
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return;}
                 if(!edit.Accept(journal,out error)){SetStatus(error);return;}
-                if(edit.VisualOnly)ReconcileVisibility(native);else Reconcile(poseChanges:edit.ChangedObjects,preparation:native);MarkDirty();SetStatus(reverse?"Undone":"Redone");
+                ReconcileEdit(edit,native,true,history:true);MarkDirty();SetStatus(reverse?"Undone":"Redone");
             }
         }
         internal bool DrawingInProgress=>(GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke))||SculptingInProgress;
@@ -398,16 +398,16 @@ namespace Maestro.Quest.Creation
             return true;
         }
 
-        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,bool visualOnly=false,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null)
+        bool Commit(RoomObjectData[] replacements, string[] removals, string success, bool placement = false, bool? applyPose = null, RoomLayout observedBefore = null, StructureEdits structureEdits = null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomEditScope scope=RoomEditScope.Full,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null)
         {
             using var write=WriteGate.TryWrite(out var blocked);if(write==null){SetStatus(blocked);return false;}
             if (!placement) Editing?.Invoke();
             if (journal == null || (!placement && Busy())) return false;
-            if(!journal.Prepare(replacements,removals,out var edit,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather,visualOnly:visualOnly)){SetStatus(error);return false;}
+            if(!journal.Prepare(replacements,removals,out var edit,out var error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather,scope:scope)){SetStatus(error);return false;}
             using(edit) {
                 using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return false;}
                 if(!edit.Accept(journal,out error)){SetStatus(error);return false;}
-                if(visualOnly)ReconcileVisibility(native);else Reconcile(edit.ChangedObjects,applyPose??!placement,preparation:native);MarkDirty();SetStatus(success);return true;
+                ReconcileEdit(edit,native,applyPose??!placement);MarkDirty();SetStatus(success);return true;
             }
         }
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)

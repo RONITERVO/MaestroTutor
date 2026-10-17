@@ -13635,3 +13635,64 @@ successful unchanged rerun; production reflections remain disabled.
 Other synchronous authoring/import paths, owner-thread costs, physical/acoustic/
 provider/capacity acceptance and Store gates remain open. V1 is incomplete.
 See the temporal acceptance contract in QUEST_WORLD_AUTHORING.md.
+
+## Liquid content history and native continuity — 2026-10-17
+
+Liquid flow publication and explicit measured container transfers now own only
+contents: amount, liquid identity, display colour and fluid properties. Their
+journal scope validates that no capacity, cavity geometry, physical settings,
+creation/removal or unrelated metadata is hidden in the edit. A single internal
+scope enum replaces the previous visual-only flag; full, visual and liquid-content
+changes each select matching field merge and native reconciliation behavior.
+No public capability or saved-format migration is introduced.
+
+Acceptance and Undo/Redo keep current canonical placement. Live native updates
+reuse fill views without reconfiguring rigid bodies, restoring old transforms,
+resetting part animation or sending the global editing/cancellation signal.
+Dormant vessels remain dormant; normal residency restores their saved contents
+later. Authored conflicts still invalidate preparation, and explicit measured
+transfers retain their existing exclusive ownership requirements. Container
+configuration/removal remains a full component edit. These rules apply through
+the shared simulation, manual and agent paths.
+
+This is a prerequisite to asynchronous flow saving, not its completion. Episode
+publication still saves synchronously before success, reverts on failure, and
+releases its writer before accepted flow events. Moving it to workers still needs
+bounded pending snapshots, conservation while further episodes run, ordered durable
+events, lifecycle draining and unconfirmed-save recovery. Owner-thread snapshot
+costs and physical timing acceptance remain open.
+
+Verification passes **110 EditMode and 228 distinct PlayMode tests**,
+including eight new journal and four new native continuity cases. The first native
+run passed 159 PlayMode cases and failed one new fixture: area assignment was newer
+than the liquid transfer, so Undo correctly reversed that assignment first.
+Moving fixture setup before the transfer produced 91 passing targeted/additional
+flow and medium cases. Runtime code and deadlines were not relaxed; original
+results and the one-file fixture correction are retained. Exact paired quantities,
+fluid identity, current poses/velocities, active recipe parts, dormant views,
+failed publication, rain and independent-flow/medium readiness are covered.
+All **3,189 web tests**, application/probe TypeScript and catalog checks pass.
+Catalog changes contain source fingerprints only.
+
+The complete offline Headless journey 8a1013b1166142de9dc6dfb43dadc0c6 passes with
+2,270 observations and 2,261 read sets. Its real native
+transport performs a 100,000 ml transfer, preserves density/drag and verifies
+medium-depth Undo/Redo. The complete original Book journey 64e12514f4eb4047a3001b4d96d4bb6f
+passes with 3,211 observations and 1,009 requests,
+including generated container/terrain controls and the existing shared editing
+coverage. Human edits survive, stale requests are refused and reload does not
+replay effects. Periodic object inventories remain empty. These are offline
+scripted fixtures, not new provider or headset acceptance. A desktop pour capture
+shows the bounded stream entering the receiving cup; it does not establish
+headset liquid fidelity, immersion or performance.
+
+Evidence is in .quest-evidence/liquid-contents-20261017/. All 3,256 native inputs,
+5,178 source inputs and 14 protected local files are verified;
+the fixture correction and documentation-only updates are recorded separately.
+Four inline/eight discussion review comments were unchanged before this increment;
+none was posted. No Android build, device, paid provider, signing, deployment or
+Meta operation ran. The latest complete native-suite checkpoint remains 7d518ec9,
+including its unresolved intermittent Meta audio crash and unchanged successful
+rerun; production reflections stay disabled. Physical/acoustic/provider/capacity
+acceptance, asynchronous authoring/import work and Store gates remain open.
+V1 is incomplete. See the liquid-content contract in QUEST_WORLD_AUTHORING.md.

@@ -46,7 +46,9 @@ namespace Maestro.Quest.Creation
                 viewpointState=JsonUtility.ToJson(owner.viewpoint);timeState=JsonUtility.ToJson(owner.worldTime);
             }
             internal RoomDocument Snapshot()=>document.Copy();
-            internal bool VisualOnly=>change.VisualOnly;
+            internal bool VisualOnly=>change.Scope==RoomEditScope.Visual;
+            internal bool LiquidContentsOnly=>change.Scope==RoomEditScope.LiquidContents;
+            internal bool PreservesPlacement=>change.Scope!=RoomEditScope.Full;
             internal bool HasTemporalCheckpoint=>change.TimeEdit!=WorldTimeEdit.Exact||change.WeatherTransition;
             // Capture once immediately after native acceptance, before observers run.
             // Later clock/placement progress remains dirty for its normal checkpoint.
@@ -71,12 +73,12 @@ namespace Maestro.Quest.Creation
             // state. Explicit temporal edits resolve their own delta at acceptance.
             internal bool RuntimeProgressChanged=>owner.runtimePlacementAdvances!=runtimePlacements||JsonUtility.ToJson(owner.viewpoint)!=viewpointState||JsonUtility.ToJson(owner.worldTime)!=timeState;
             // Only explicitly recorded runtime placements may advance the global
-            // clock. Authored edits and another fork remain stale. Visual deltas
+            // clock. Authored edits and another fork remain stale. Scoped field deltas
             // can preserve newer target placement; physical edits require an unchanged target.
             // Apply only this delta; newer unrelated poses remain dirty for a later save.
             bool RevisionCurrent(bool allowRuntimeProgress)=>owner.clock.Next==revision||allowRuntimeProgress&&
                 (long)owner.clock.Next-revision==owner.runtimePlacementAdvances-runtimePlacements&&
-                (change.VisualOnly||targetRevisions.All(x=>owner.ObjectRevision(x.Key)==x.Value));
+                (PreservesPlacement||targetRevisions.All(x=>owner.ObjectRevision(x.Key)==x.Value));
             internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&RevisionCurrent(allowRuntimeProgress)&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&
                 (allowRuntimeProgress||JsonUtility.ToJson(owner.viewpoint)==viewpointState)&&
@@ -123,7 +125,7 @@ namespace Maestro.Quest.Creation
         {
             var d=Snapshot();
             var after=forward?c.After:c.Before;
-            d.objects=Swap(d.objects,forward?c.Before:c.After,c.VisualOnly?PreserveVisualPlacement(after):after,x=>x.id).OrderBy(x=>x.id,StringComparer.Ordinal).ToArray();
+            d.objects=Swap(d.objects,forward?c.Before:c.After,c.Scope!=RoomEditScope.Full?MergeFields(after,c.Scope):after,x=>x.id).OrderBy(x=>x.id,StringComparer.Ordinal).ToArray();
             d.regions=Swap(d.regions,forward?c.BeforeRegions:c.AfterRegions,forward?c.AfterRegions:c.BeforeRegions,x=>x.id);
             d.structures=Swap(d.structures,forward?c.BeforeStructures:c.AfterStructures,forward?c.AfterStructures:c.BeforeStructures,x=>x.id);
             d.audioSources=Swap(d.audioSources,forward?c.BeforeAudio:c.AfterAudio,forward?c.AfterAudio:c.BeforeAudio,x=>x.id);
@@ -132,11 +134,10 @@ namespace Maestro.Quest.Creation
             d.visibilityLayers=Swap(d.visibilityLayers,forward?c.BeforeVisibility:c.AfterVisibility,forward?c.AfterVisibility:c.BeforeVisibility,x=>x.id);
             d.lighting=(forward?c.AfterLighting:c.BeforeLighting)??d.lighting;d.worldTime=ResolveTime(forward?c.AfterWorldTime:c.BeforeWorldTime,c.TimeEdit)??d.worldTime;d.weather=ResolveWeather(forward?c.AfterWeather:c.BeforeWeather,c.WeatherTransition)??d.weather;return d;
         }
-        // Presentation history carries render settings, never a former live pose.
-        // This is used for both publication and Undo/Redo previews.
-        RoomObjectData[] PreserveVisualPlacement(RoomObjectData[] values)=>values.Select(value=>{
-            var copy=value.Copy();if(items.TryGetValue(copy.id,out var current)){copy.position=current.position;copy.rotation=current.rotation;copy.scale=current.scale;}return copy;
-        }).ToArray();
+        // Field history owns only its declared component values. Current placement
+        // and all other components survive publication and Undo/Redo previews.
+        RoomObjectData[] MergeFields(RoomObjectData[] values,RoomEditScope scope)=>values.Select(value=>
+            items.TryGetValue(value.id,out var current)?RoomEditFields.Apply(current,value,scope):value.Copy()).ToArray();
         RoomWorldTime ResolveTime(RoomWorldTime requested,WorldTimeEdit mode) {
             if(requested==null)return null;
             if(mode==WorldTimeEdit.Exact)return requested.Copy();
@@ -158,7 +159,7 @@ namespace Maestro.Quest.Creation
         void Publish(Change c,bool forward)
         {
             var after=forward?c.After:c.Before;
-            Set(forward?c.Before:c.After,c.VisualOnly?PreserveVisualPlacement(after):after);
+            Set(forward?c.Before:c.After,c.Scope!=RoomEditScope.Full?MergeFields(after,c.Scope):after);
             SetRegions(forward?c.BeforeRegions:c.AfterRegions,forward?c.AfterRegions:c.BeforeRegions);
             SetStructures(forward?c.BeforeStructures:c.AfterStructures,forward?c.AfterStructures:c.BeforeStructures);
             SetAudio(forward?c.BeforeAudio:c.AfterAudio,forward?c.AfterAudio:c.BeforeAudio);

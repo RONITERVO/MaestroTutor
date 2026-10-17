@@ -19,7 +19,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool EditLight(string target,int revision,JObject args,out string error){
             if(!PrepareLightEdit(target,revision,args,out var data,out error))return false;
-            return CommitPersisted(new[]{data},Array.Empty<string>(),"Object light saved",false,out error,visualOnly:true);
+            return CommitPersisted(new[]{data},Array.Empty<string>(),"Object light saved",false,out error,scope:RoomEditScope.Visual);
         }
         internal JObject ObserveLights(string target){
             var data=Read(target);if(data==null)return null;var item=Find(target);var view=item?item.GetComponent<RoomLightView>():null;

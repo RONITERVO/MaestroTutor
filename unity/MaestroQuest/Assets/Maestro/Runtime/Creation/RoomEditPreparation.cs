@@ -118,6 +118,9 @@ namespace Maestro.Quest.Creation
         internal static RoomEditPreparation TryCreate(RoomEditor editor,RoomJournal.PreparedEdit edit,out string error)
         {
             var prepared=new RoomEditPreparation();error=null;
+            // Content balances reuse existing views; dormant/missing entities remain
+            // dormant/missing. Quantity history never allocates geometry or bodies.
+            if(edit.LiquidContentsOnly)return prepared;
             try {
                 foreach(var id in edit.ChangedObjects.OrderBy(x=>x,StringComparer.Ordinal)) {
                     // Only this edit's resident targets need copies or geometry.

@@ -214,7 +214,7 @@ namespace Maestro.Quest.Creation
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
     public sealed partial class RoomJournal
     {
-        internal sealed class Change { public bool VisualOnly,WeatherTransition; public WorldTimeEdit TimeEdit; public RoomRegion[] BeforeRegions,AfterRegions; public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; public RoomWeather BeforeWeather,AfterWeather; }
+        internal sealed class Change { public RoomEditScope Scope; public bool WeatherTransition; public WorldTimeEdit TimeEdit; public RoomRegion[] BeforeRegions,AfterRegions; public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; public RoomWeather BeforeWeather,AfterWeather; }
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
         readonly Dictionary<string,int> revisions = new();
@@ -229,7 +229,7 @@ namespace Maestro.Quest.Creation
         internal int ObjectCount=>items.Count;
         public bool CanUndo => undo.Count > 0;
         public bool CanRedo => redo.Count > 0;
-        internal bool HistoryVisualOnly(bool reverse) {var history=reverse?undo:redo;return history.Count>0&&history[history.Count-1].VisualOnly;}
+        internal bool HistoryPreservesPlacement(bool reverse) {var history=reverse?undo:redo;return history.Count>0&&history[history.Count-1].Scope!=RoomEditScope.Full;}
         public bool UsesMotion(string id) => items.Values.Any(x => x.walkMotionId == id);
         public string[] HistoricalMotionIds => undo.Concat(redo).SelectMany(x => x.Before.Concat(x.After)).Select(x => x.walkMotionId).Where(x => x != null).Distinct().ToArray();
         public RoomJournal(RoomDocument document)
@@ -338,27 +338,27 @@ namespace Maestro.Quest.Creation
             if(!Prepare(replacements,removals,out var prepared,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather,regionEdits))return false;
             using(prepared)return prepared.Accept(this,out error);
         }
-        internal bool Prepare(RoomObjectData[] replacements, string[] removals, out PreparedEdit prepared,out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,RegionEdits regionEdits=null,bool visualOnly=false,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false)
+        internal bool Prepare(RoomObjectData[] replacements, string[] removals, out PreparedEdit prepared,out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,RegionEdits regionEdits=null,RoomEditScope scope=RoomEditScope.Full,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false)
         {
             prepared=null;error="Choose valid unique object replacements and removals";
             if(replacements==null||removals==null||replacements.Any(x=>x==null||string.IsNullOrEmpty(x.id))||removals.Any(string.IsNullOrEmpty)||replacements.Select(x=>x.id).Distinct().Count()!=replacements.Length)return false;
             if(timeEdit!=WorldTimeEdit.Exact||weatherTransition) {
                 error="Temporal edits must contain only clock settings, a clock position or a weather transition";
-                if(!visualOnly||replacements.Length!=0||removals.Length!=0||observedBefore!=null||structureEdits!=null||audioEdits!=null||environmentEdits!=null||appearanceEdits!=null||regionEdits!=null||visibilityEdits!=null||lighting!=null||
+                if(scope!=RoomEditScope.Visual||replacements.Length!=0||removals.Length!=0||observedBefore!=null||structureEdits!=null||audioEdits!=null||environmentEdits!=null||appearanceEdits!=null||regionEdits!=null||visibilityEdits!=null||lighting!=null||
                     (timeEdit!=WorldTimeEdit.Exact?(worldTime==null||weather!=null||weatherTransition):(weather==null||worldTime!=null)))return false;
                 if(timeEdit is not (WorldTimeEdit.Exact or WorldTimeEdit.Settings or WorldTimeEdit.Position))return false;
             }
-            if(visualOnly) {
-                error="Visual edits cannot create, remove or change physical object content";
+            if(scope is not (RoomEditScope.Full or RoomEditScope.Visual or RoomEditScope.LiquidContents))return false;
+            if(scope!=RoomEditScope.Full) {
+                error="Scoped edits cannot create, remove or change unrelated object content";
                 if(removals.Length>0||observedBefore!=null||structureEdits!=null||audioEdits!=null||environmentEdits!=null||appearanceEdits!=null||regionEdits!=null)return false;
+                if(scope==RoomEditScope.LiquidContents&&(visibilityEdits!=null||lighting!=null||worldTime!=null||weather!=null))return false;
                 replacements=replacements.Select(x=>x.Copy()).ToArray();
                 foreach(var value in replacements) {
-                    if(!items.TryGetValue(value.id,out var current))return false;
-                    // A presentation edit never checkpoints placement. Only these
-                    // render settings may differ; physics, geometry and sound remain owned elsewhere.
+                    if(!items.TryGetValue(value.id,out var current)||!RoomEditFields.CanApply(current,value,scope))return false;
+                    // A field edit has no placement intent, even if its caller observed a live pose.
                     value.position=current.position;value.rotation=current.rotation;value.scale=current.scale;
-                    var allowed=current.Copy();allowed.visibilityLayer=value.visibilityLayer;allowed.lights=value.lights;allowed.windows=value.windows;
-                    if(!Equivalent(new[]{allowed},new[]{value}))return false;
+                    if(!Equivalent(new[]{RoomEditFields.Apply(current,value,scope)},new[]{value}))return false;
                 }
             }
             if(structureEdits!=null&&!structureEdits.Validate(out error))return false;
@@ -393,7 +393,7 @@ namespace Maestro.Quest.Creation
             var before=changedIds.Where(items.ContainsKey).Select(id=>items[id].Copy()).ToArray();
             if(observedBefore!=null&&!EditBaseline(replacements,removals,observedBefore,out before,out error))return false;
             var change = new Change {
-                VisualOnly=visualOnly,TimeEdit=timeEdit,WeatherTransition=weatherTransition,
+                Scope=scope,TimeEdit=timeEdit,WeatherTransition=weatherTransition,
                 BeforeRegions=regionIds.Where(regions.ContainsKey).Select(id=>regions[id].Copy()).ToArray(),
                 AfterRegions=regionValues.Where(x=>regionIds.Contains(x.id)).Select(x=>x.Copy()).ToArray(),
                 BeforeWeather=weather!=null&&(weatherTransition||!this.weather.Same(weather))?Weather:null,

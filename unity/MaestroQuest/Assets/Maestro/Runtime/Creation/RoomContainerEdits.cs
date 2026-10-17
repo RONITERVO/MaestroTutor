@@ -22,7 +22,7 @@ namespace Maestro.Quest.Creation {
         }
         internal bool TransferContainer(string source,int sourceRevision,string destination,int destinationRevision,double requested,out double moved,out string error){
             if(!PrepareContainerTransfer(source,sourceRevision,destination,destinationRevision,requested,out var data,out moved,out error))return false;
-            if(CommitPersisted(data,Array.Empty<string>(),"Liquid transferred — one Undo restores both containers",false,out error,ComponentBefore(data)))return true;
+            if(CommitPersisted(data,Array.Empty<string>(),"Liquid transferred — one Undo restores both containers",false,out error,scope:RoomEditScope.LiquidContents))return true;
             moved=0;return false;
         }
     }

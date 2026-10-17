@@ -58,7 +58,7 @@ namespace Maestro.Quest.Creation
             if(!value.Valid){error="Choose valid weather settings and transition duration";return false;}
             using var boundary=Liquids?Liquids.HoldWeatherBoundary():null;
             if(!FinishLiquidPour(out error)||!CanSetWeather(revision,seconds,out error))return false;
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World weather saved",false,out error,visualOnly:true,weather:value,weatherTransition:true);
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World weather saved",false,out error,scope:RoomEditScope.Visual,weather:value,weatherTransition:true);
         }
         internal bool BeginWeather(int revision,int seed,WeatherSettings settings,double seconds,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
             pending=null;
@@ -73,7 +73,7 @@ namespace Maestro.Quest.Creation
                 if(!FinishLiquidPour(out error))return false;
                 bool ok=BeginPreparedEdit(()=>CanSetWeather(revision,seconds,out var issue)?null:issue,
                     (out RoomJournal.PreparedEdit edit,out string issue)=>journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,
-                        weather:captured,weatherTransition:true,visualOnly:true),
+                        weather:captured,weatherTransition:true,scope:RoomEditScope.Visual),
                     "World weather saved",out pending,out error,publicationCheckpoint,acceptanceLease:boundary);
                 if(ok)boundary=null;return ok;
             }finally{boundary?.Dispose();}

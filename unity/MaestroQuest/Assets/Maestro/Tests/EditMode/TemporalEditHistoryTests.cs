@@ -9,8 +9,8 @@ namespace Maestro.Quest.Tests
     public sealed class TemporalEditHistoryTests
     {
         static RoomJournal Journal(){var d=new RoomDocument{version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro}}};d.worldTime.settings.running=true;return new(d);}
-        static RoomJournal.PreparedEdit Clock(RoomJournal j,RoomWorldTime value,WorldTimeEdit mode){Assert.IsTrue(j.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var p,out var e,worldTime:value,visualOnly:true,timeEdit:mode),e);return p;}
-        static RoomJournal.PreparedEdit Weather(RoomJournal j,RoomWeather value){Assert.IsTrue(j.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var p,out var e,weather:value,visualOnly:true,weatherTransition:true),e);return p;}
+        static RoomJournal.PreparedEdit Clock(RoomJournal j,RoomWorldTime value,WorldTimeEdit mode){Assert.IsTrue(j.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var p,out var e,worldTime:value,scope:RoomEditScope.Visual,timeEdit:mode),e);return p;}
+        static RoomJournal.PreparedEdit Weather(RoomJournal j,RoomWeather value){Assert.IsTrue(j.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var p,out var e,weather:value,scope:RoomEditScope.Visual,weatherTransition:true),e);return p;}
         [Test] public void ConfigurationAcceptsAtCurrentPositionAndHistoryNeverRewindsIt(){
             var j=Journal();var value=j.WorldTime;value.settings.rate=20;using var p=Clock(j,value,WorldTimeEdit.Settings);
             j.AdvanceWorldTime(.5);Assert.IsTrue(p.Accept(j,out var e,true),e);Assert.AreEqual(43200.5,j.WorldSecond);Assert.AreEqual(20,j.WorldTime.settings.rate);
@@ -46,8 +46,8 @@ namespace Maestro.Quest.Tests
             using(var p=Clock(j,value,WorldTimeEdit.Settings)){j.AdvanceWorldTime(1);Assert.IsFalse(p.Accept(j,out _,true));}
         }
         [Test] public void TemporalModeCannotHideObjectOrMixedTemporalChanges(){
-            var j=Journal();Assert.IsFalse(j.Prepare(new[]{j.Read("maestro")},Array.Empty<string>(),out _,out _,worldTime:j.WorldTime,timeEdit:WorldTimeEdit.Settings,visualOnly:true));
-            Assert.IsFalse(j.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,out _,worldTime:j.WorldTime,weather:j.Weather,timeEdit:WorldTimeEdit.Position,visualOnly:true));
+            var j=Journal();Assert.IsFalse(j.Prepare(new[]{j.Read("maestro")},Array.Empty<string>(),out _,out _,worldTime:j.WorldTime,timeEdit:WorldTimeEdit.Settings,scope:RoomEditScope.Visual));
+            Assert.IsFalse(j.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,out _,worldTime:j.WorldTime,weather:j.Weather,timeEdit:WorldTimeEdit.Position,scope:RoomEditScope.Visual));
         }
         [Test] public void AcceptedSnapshotIsDetachedAndMatchesTheActualTemporalBoundary(){
             var j=Journal();var v=j.WorldTime;v.settings.rate=5;using var p=Clock(j,v,WorldTimeEdit.Settings);j.AdvanceWorldTime(.5);Assert.IsTrue(p.Accept(j,out _,true));var accepted=p.AcceptedTemporalSnapshot();

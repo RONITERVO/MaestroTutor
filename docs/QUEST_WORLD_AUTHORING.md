@@ -2997,3 +2997,43 @@ This design avoids waiting for worker IO while freezing world time, but it is no
 a measured Quest latency or larger-world capacity claim. Those acceptance gates,
 remaining synchronous authoring/import paths and complete release checks remain
 open.
+
+## Liquid content history and live continuity
+
+Automatic pouring, scooping and rain publication, and explicit measured container
+transfers, use a liquid-content transaction scope. It owns amount, liquid identity,
+display colour and fluid properties only. Capacity, cavity geometry, physical
+settings, connections, animations, placement and other world metadata cannot be
+included in this scope. Configuring/removing a container remains a full component
+edit with its existing admission and ownership requirements.
+
+Content acceptance and Undo/Redo merge those fields into the current objects.
+They preserve current canonical placement and do not apply a former pose to live
+views. Observed transforms supplied during a transfer are not placement intent;
+normal placement checkpoints remain responsible for saving movement. Undo restores
+both balances and their previous identities together, including an empty receiver's
+identity before adoption. Runtime placement advances can be merged; authored
+changes invalidate a prepared edit. No-op content edits do not consume Undo/Redo.
+
+Native reconciliation updates existing fill views and the liquid subsystem only.
+It does not reconfigure rigid bodies, reset their velocities or contacts, restart
+recipe parts, rebuild geometry or connections, or send the global editing/cancellation
+signal. Dormant or missing objects retain their canonical content without being
+rematerialized by Undo. Normal residency admission restores their views later.
+This preserves independent motion while the system records the result of play.
+Explicit transfers retain their existing whole-target execution claims; this
+change does not bypass human ownership or other admission checks.
+
+The journal uses one mutually exclusive internal edit scope (full, visual or
+liquid contents), with scope validation and matching native reconciliation.
+It is not a saved-format migration, a separate user/agent system or a new public
+capability. Agent calls, generated book forms, manual Undo and simulation publish
+through the same canonical journal. Other component scopes should be introduced
+only with their own field ownership, conflict and native-continuity tests.
+
+Flow publication is still synchronous and save-before-success. Failed publication
+reverts the episode and reports no success; accepted flow events are delivered
+after its writer is released. Asynchronous flow persistence remains follow-up
+work requiring bounded pending snapshots, conservation across new episodes,
+ordered durable events, lifecycle draining and honest unconfirmed-save recovery.
+This field separation is a prerequisite, not a latency or Quest performance claim.
