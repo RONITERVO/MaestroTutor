@@ -13048,3 +13048,39 @@ Configure-derived changes. Known generated SDK/material files are recorded
 separately. Fourteen protected local files remain unchanged. The current native
 code compiles in the desktop mirror; device latency, real-provider journeys,
 Android packaging and the outstanding v1 release gates remain unverified here.
+
+
+## Ordered shared placement admission — 2026-10-17
+A native regression reproduced a save-admission fairness defect: after the
+previous save drained, a later placement could begin before an older waiter
+received its next poll. Repeated program steps could therefore keep overtaking
+another ready action.
+
+Move, rotate and resize now share a room-owned queue for save admission.
+Arrival order is measured when an action has acquired its native resources and
+requests this admission; unrelated loading remains independent. Waiting holds
+no room copy, body or write lease. The queue is bounded by the existing scheduler
+concurrency limit, and the existing completion deadline still applies.
+Cancellation, target invalidation and preparation refusal release the place.
+Workspace disable, focus/pause suspension and destruction clear admissions;
+an interrupted request cannot revive when the editor returns. Accepted writes
+retain their existing drain-and-report lifecycle.
+
+This adds no persistent schema, migration, new database or special agent-only
+execution path. Manual synchronous edits retain their existing contract and
+can invalidate queued work. It does not serialize all world simulation or
+promise that a physical body stays at its saved pose.
+
+Validation: **1,434 EditMode**, **389 affected PlayMode**, and **1,786 web room/Quest UI tests in 179 files** pass.
+The focused scene run passes all 11 selected cases. Three new scene regressions
+cover reversed polling/late arrival with durable outcomes, cancelled/stale/
+rejected heads, capacity recovery and disable/re-enable. The original failure
+is retained separately as reproduction evidence.
+
+Exact inputs, mirror differences and results are recorded in
+.quest-evidence/placement-order-20261017/. All 3,224 native inputs match the final
+verification mirror except the four established Configure-derived changes;
+known generated SDK/material files are recorded separately. Fourteen protected
+local files remain unchanged. No device/provider test, Android packaging,
+signing, deployment or Meta change is included. Release and physical-performance
+acceptance remain open.

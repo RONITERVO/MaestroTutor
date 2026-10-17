@@ -29219,7 +29219,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Applies the requested placement at native acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent placement actions wait for the previous save without copying a candidate; target changes while waiting require a new request. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Placement resets velocity, then normal gravity resumes. Other objects keep running."
+      "description": "Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Applies the requested placement at native acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent placement actions enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Placement resets velocity, then normal gravity resumes. Other objects keep running."
     },
     {
       "id": "object.layout.apply",
@@ -30358,7 +30358,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent placement actions wait for the previous save without copying a candidate; target changes while waiting require a new request. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Placement resets velocity, then normal gravity resumes. Other objects keep running."
+      "description": "Set orientation in room axes using pitch, yaw and roll in degrees, each -180 to 180 (Unity Euler rotation). Keeps current position and scale. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent placement actions enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Placement resets velocity, then normal gravity resumes. Other objects keep running."
     },
     {
       "id": "object.scale.set",
@@ -30396,7 +30396,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent placement actions wait for the previous save without copying a candidate; target changes while waiting require a new request. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Placement resets velocity, then normal gravity resumes. Other objects keep running."
+      "description": "Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent placement actions enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. Only the target body is held during preparation; it resumes after application. In a temporary room, changes live placement and local Undo; a kept snapshot makes it durable. Placement resets velocity, then normal gravity resumes. Other objects keep running."
     },
     {
       "id": "object.color.set",
@@ -47444,7 +47444,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "a1e2edd6eb1b1f72db11b93a3b73d57d18649c5c3c0244aebbc54b6774aea0ec"
+      "sha256": "9a7070c8dbfe5720d79a67a088e504f9e1713e61d1c1d036a2ed57670dacb1c7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -47928,7 +47928,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "99c16043a83832962b6ad39c1d7ef4aa846e21b3595fcf66220fad7ccab6bd64"
+      "sha256": "78efa12296a2a1442a14c437b0f101919f2101a7cd5378108763b3ae0bdab30c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",

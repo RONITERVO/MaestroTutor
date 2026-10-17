@@ -173,6 +173,105 @@ namespace Maestro.Quest.Tests
                 }
             }
         }
+        [UnityTest] public IEnumerator PendingPlacementAdmissionDoesNotLetLaterRequestsOvertakeAnUnpolledWaiter()
+        {
+            string id=editor.Identity(block);
+            string other=editor.Snapshot().objects.First(x=>!x.IsBuiltIn&&x.id!=id).id;
+            var begun=new System.Collections.Generic.List<string>();
+            CapabilityOperation first=null,later=null;
+            Assert.IsTrue(editor.BeginRotation("book",Quaternion.Euler(0,45,0),out var blocker,out var error),error);
+            try {
+                yield return Prepared(blocker);
+                Assert.IsTrue(PersistedEditOperation.Start(editor,id,
+                    (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                        begun.Add("first");return editor.BeginMove(id,PendingPlacementPosition,out edit,out issue);
+                    },out first,out error),error);
+                blocker.Dispose();yield return Drained(blocker);
+                // A later request arrives before the older waiter is polled again.
+                // Its Start and repeated polls must not acquire the now-free save slot.
+                Assert.IsTrue(PersistedEditOperation.Start(editor,other,
+                    (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                        begun.Add("later");return editor.BeginResize(other,1.4f,out edit,out issue);
+                    },out later,out error),error);
+                for(int i=0;i<3;i++)Assert.AreEqual(RuleActionState.Preparing,later.State(out error),error);
+                Assert.IsEmpty(begun,"A newer placement overtook an older waiting request");
+                yield return PlacementOperationDone(first);
+                CollectionAssert.AreEqual(new[]{"first"},begun);
+                yield return PlacementOperationDone(later);
+                CollectionAssert.AreEqual(new[]{"first","later"},begun);
+                var saved=new RoomStorage(directory).Load(out _);
+                Assert.AreEqual(PendingPlacementPosition,saved.objects.Single(x=>x.id==id).position);
+                Assert.AreEqual(1.4f,saved.objects.Single(x=>x.id==other).scale);
+            } finally {first?.Stop(false);later?.Stop(false);blocker.Dispose();}
+        }
+        [UnityTest] public IEnumerator PendingPlacementAdmissionReleasesCancelledStaleAndRejectedHeads()
+        {
+            string id=editor.Identity(block);
+            string other=editor.Snapshot().objects.First(x=>!x.IsBuiltIn&&x.id!=id).id;
+            foreach(string reason in new[]{"cancel","stale","invalid"}){
+                CapabilityOperation first=null,next=null;
+                Assert.IsTrue(editor.BeginRotation("book",Quaternion.Euler(0,45,0),out var blocker,out var error),error);
+                try {
+                    yield return Prepared(blocker);
+                    Assert.IsTrue(PersistedEditOperation.Start(editor,id,
+                        (out RoomEditor.PendingPersistedEdit edit,out string issue)=>editor.BeginResize(id,reason=="invalid"?float.NaN:1.2f,out edit,out issue),
+                        out first,out error),error);
+                    Assert.IsTrue(PersistedEditOperation.Start(editor,other,
+                        (out RoomEditor.PendingPersistedEdit edit,out string issue)=>editor.BeginResize(other,1.4f,out edit,out issue),
+                        out next,out error),error);
+                    if(reason=="cancel"){first.Stop(false);first.Stop(false);}
+                    if(reason=="stale")Assert.IsTrue(editor.PaintObject(id,Color.red,out error),error);
+                    blocker.Dispose();yield return Drained(blocker);
+                    Assert.AreEqual(RuleActionState.Failed,first.State(out error),reason);
+                    Assert.IsNotEmpty(error);Assert.IsFalse(first.Complete(out _));
+                    yield return PlacementOperationDone(next);
+                    Assert.AreEqual(1.4f,new RoomStorage(directory).Load(out _).objects.Single(x=>x.id==other).scale);
+                } finally {first?.Stop(false);next?.Stop(false);blocker.Dispose();}
+            }
+        }
+        [UnityTest] public IEnumerator PendingPlacementAdmissionIsBoundedAndCannotResumeAfterWorkspaceDisable()
+        {
+            string id=editor.Identity(block);
+            var waiting=new System.Collections.Generic.List<CapabilityOperation>();
+            CapabilityOperation fresh=null;int starts=0;
+            PersistedEditOperation.Begin begin=(out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                starts++;return editor.BeginMove(id,PendingPlacementPosition,out edit,out issue);
+            };
+            Assert.IsTrue(editor.BeginRotation("book",Quaternion.Euler(0,45,0),out var blocker,out var error),error);
+            try {
+                yield return Prepared(blocker);
+                for(int i=0;i<RuleScheduler.MaximumConcurrent;i++){
+                    Assert.IsTrue(PersistedEditOperation.Start(editor,id,begin,out var operation,out error),error);
+                    waiting.Add(operation);
+                }
+                Assert.IsFalse(PersistedEditOperation.Start(editor,id,begin,out var rejected,out error));
+                Assert.IsNull(rejected);StringAssert.Contains("Too many waiting placements",error);
+                waiting[0].Stop(false);
+                Assert.IsTrue(PersistedEditOperation.Start(editor,id,begin,out var replacement,out error),error);
+                waiting.Add(replacement);
+                editor.enabled=false;editor.enabled=true;
+                yield return Drained(blocker);
+                foreach(var operation in waiting){
+                    Assert.AreEqual(RuleActionState.Failed,operation.State(out error));
+                    Assert.IsFalse(operation.Complete(out _));
+                }
+                Assert.AreEqual(0,starts,"Interrupted waiters must never begin after the editor returns");
+                Assert.IsTrue(PersistedEditOperation.Start(editor,id,begin,out fresh,out error),error);
+                yield return PlacementOperationDone(fresh);Assert.AreEqual(1,starts);
+            } finally {
+                foreach(var operation in waiting)operation.Stop(false);
+                fresh?.Stop(false);blocker.Dispose();editor.enabled=true;
+            }
+        }
+        static IEnumerator PlacementOperationDone(CapabilityOperation operation)
+        {
+            float end=Time.realtimeSinceStartup+20;string error;
+            while(operation.State(out error)==RuleActionState.Preparing){
+                Assert.Less(Time.realtimeSinceStartup,end,error);yield return null;
+            }
+            Assert.AreEqual(RuleActionState.Ready,operation.State(out error),error);
+            Assert.IsTrue(operation.Complete(out error),error);
+        }
         [UnityTest] public IEnumerator PendingPlacementRejectsInvalidBoundsAndFrameWithoutLeavingOwnership()
         {
             string id=editor.Identity(block);var before=editor.Read(id);

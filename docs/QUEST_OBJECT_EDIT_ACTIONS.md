@@ -26,15 +26,21 @@ Other objects continue running. Existing physics is permitted: tint does not
 teleport a moving ball; explicit placement or resizing resets velocity and lets
 normal gravity resume. These actions do not start room physics.
 
-Position, orientation and scale share one completion operation. The native editor
-captures and validates a candidate, waits for an earlier save, then prepares its
-private saved bytes and preflights storage on a worker. Only the target body's
+Position, orientation and scale share one completion operation. After admission,
+the native editor captures and validates a candidate, then prepares its private
+saved bytes and preflights storage on a worker. Only the target body's
 pose is held. World time, viewer movement and unrelated objects keep running.
 An authored edit invalidates a stale candidate instead of being overwritten.
-Concurrent placement actions wait under the scheduler's existing capacity and
-timeout limits before capturing a candidate. Waiting does not hold the body's
-pose or copy another room. Target revision and temporary-session identity are
-checked again before starting; cancellation cannot later apply a waiting edit.
+Concurrent placement actions enter preparation in arrival order after earlier
+saves drain. A new request or a program's next step cannot overtake an older
+waiter just because it is polled first. The room bounds pending admissions by
+the scheduler's concurrency limit; the scheduler's completion deadline still
+applies. Waiting does not hold the body's pose or copy another room. Target
+revision and temporary-session identity are checked again before starting.
+Cancellation, refusal and workspace interruption release the waiting place;
+interrupted requests cannot resume after the editor becomes available again.
+This ordering covers shared placement actions. Synchronous manual edits can
+still invalidate them and are not silently queued or replayed.
 Storage preparation remains single-owner while independent native loads proceed.
 
 Unity accepts the candidate and reconciles its native objects once, then the

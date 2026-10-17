@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Maestro.Quest.Persistence;
@@ -12,7 +13,30 @@ namespace Maestro.Quest.Creation
     {
         PendingPersistedEdit pendingPersistedEdit;
         internal bool PendingEditSave=>pendingPersistedEdit!=null&&!pendingPersistedEdit.Drained;
-        void CancelPendingEdit()=>pendingPersistedEdit?.Dispose();
+        // Owner-thread admission belongs to this room, so all capability callers
+        // share arrival order. A waiter holds no snapshot, body or write lease.
+        readonly LinkedList<PlacementAdmission> placementAdmissions=new();
+        internal bool ReservePlacement(out PlacementAdmission admission,out string error)
+        {
+            admission=null;
+            if(placementAdmissions.Count>=Rules.RuleScheduler.MaximumConcurrent){
+                error="Too many waiting placements; wait for one to finish or cancel it";return false;
+            }
+            admission=new PlacementAdmission(placementAdmissions);error=null;return true;
+        }
+        internal sealed class PlacementAdmission:IDisposable
+        {
+            readonly LinkedListNode<PlacementAdmission> node;
+            internal PlacementAdmission(LinkedList<PlacementAdmission> queue)=>node=queue.AddLast(this);
+            internal bool Valid=>node.List!=null;
+            internal bool First=>Valid&&ReferenceEquals(node.List.First,node);
+            public void Dispose(){node.List?.Remove(node);}
+        }
+        void CancelPendingEdit()
+        {
+            placementAdmissions.Clear();
+            pendingPersistedEdit?.Dispose();
+        }
 
         // The common capability path (book, agent and programs) owns this operation.
         // Synchronous API callers retain their existing completion contract.
