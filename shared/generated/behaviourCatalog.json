@@ -48222,7 +48222,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "503b2b3c75f5c9aaab9468d39de4b20de38ce0851363ef221c13c5945d295e79"
+      "sha256": "5a30591c9895e54f8f10013f03f2856fbbbf0a1becf917a73eac46619c7a3fd9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -48366,7 +48366,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
-      "sha256": "3483d164a42b61c234a5d570c927839c2cbccb91e4e266aaf50c45e4e114b9db"
+      "sha256": "d87d75b781512af740db797c3aafe05351185fe4fbf91280ac4927a0f9daf78a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VirtualRoomCapture.cs",

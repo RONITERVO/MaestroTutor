@@ -2638,3 +2638,25 @@ entire transaction. Candidate creation still owns a complete room copy and an
 identity index; validation, saving, reconciliation and history still have
 room-wide work. Saved capacity is unchanged. Those remaining costs need explicit
 bounds and evidence before larger worlds can be admitted.
+
+## Room save inspection
+
+Room storage can reuse the validation result for the exact primary-file contents.
+Each save inspection still reads the bounded file and hashes its bytes; file size
+and modification time alone never authorize reuse. The cache holds one fingerprint
+and its validation outcome, not a mutable room. Changed contents go through the same
+strict UTF-8, duplicate-field, version, wire-format and document validation path.
+A primary identified as newer during either save inspection blocks publication;
+invalid contents retain the existing unreadable-file recovery behavior.
+
+This is an explicit RoomStorage opt-in. Generic stores keep revalidating by default:
+a validator that consults changing assets, catalogs or other runtime state cannot
+reuse an outcome based only on file contents. New store opt-ins must establish that
+all inspection decisions depend only on the bytes and fixed schema.
+
+Durable editing still includes complete candidate validation, serialization and
+file publication. The optimization removes repeated parsing; it does not make
+persistent edits asynchronous or expand saved limits. Larger-world admission still
+needs bounded save preparation and publication with revision/lifecycle ownership.
+Human and agent operations must keep the same pending, failure and completion
+contract; a successful receipt must not precede durable publication.

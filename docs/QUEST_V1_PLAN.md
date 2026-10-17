@@ -12572,3 +12572,60 @@ not rerun for this focused change. No headset, real-provider, signing, deploymen
 or Meta operation ran. V1 remains incomplete.
 
 Evidence: .quest-evidence/sparse-edit-preparation-20261017/.
+
+## Room save inspection and publication guard — 2026-10-17
+
+A measured room-save bottleneck remained after sparse native preparation.
+VersionedRoomFile previously decoded the existing primary twice per save.
+RoomStorage now explicitly opts into a one-entry validation-outcome cache keyed
+by SHA-256 of a fresh bounded read. It does not trust timestamps or length, retain
+a mutable document, bypass candidate validation or assume newly serialized bytes
+have passed the read path. Other stores remain uncached by default because their
+validators can depend on changing catalog state.
+
+The second inspection also honors a newer-format result. Previously a newer
+primary appearing during candidate validation could be copied as unreadable and
+overwritten. The regression failed against the old implementation and passes now:
+publication stops, primary and backup survive, and only the pending candidate is
+removed. Other tests cover same-metadata replacements, duplicate fields, repeated
+invalid contents, replacement during preparation and contextual generic validators.
+
+The synthetic Unity Editor diagnostic uses two built-ins versus 63 additional
+drawings (32,256 points; approximately 1.44 MB serialized), seven measured
+iterations after warm-up and a positive-controlled current-thread allocation-event
+recorder. For the larger room, changing-save medians moved from **447.953 to
+246.407 ms** and **2,021,655 to 1,013,837 allocation events**. An unchanged save
+moved from **476.474 to 62.993 ms** and **2,021,653 to 6,003 events**. Small changing
+saves measured **12.263 to 13.385 ms**, so this is not a universal latency win.
+These are desktop synchronous stage costs, not allocation bytes, Quest frame
+times or permission to increase capacity. The temporary diagnostic was removed
+from the owned mirror after execution.
+
+Final verification passed **1,352 EditMode and 114 selected PlayMode tests**, with
+zero failures or skips. The initial full sweep passed 1,350 and failed only the
+catalog-path requirement because the local harness omitted
+MAESTRO_BEHAVIOUR_CATALOG; the complete corrected sweep includes the final sixth
+new regression. No assertion was relaxed. PlayMode coverage includes editor
+publication, recovery, temporary rooms/memory and accepted-edit lifecycle.
+Catalog definitions remain identical; the two runtime fingerprints were refreshed,
+and web catalog provenance passes.
+
+The **3,190 native inputs** are recorded. The tested mirror matches source except
+four documented Configure outputs: Oculus config newline normalization, enabled
+Meta AR occlusion, Android Vulkan selection and the PendingCollision layer.
+Runtime and final test sources match exactly; all **14 preserved local files**
+remain unchanged. The earlier full PlayMode/offline journeys and Android compile
+remain at their recorded a12cf3db checkpoint; this change has no new Android or
+physical acceptance claim.
+
+Explicit persistent editing still waits for validation, serialization and durable
+publication on the interaction thread. The next capacity gate is owned asynchronous
+save preparation/publication with candidate revision, lifecycle and resource
+ownership preserved. No successful human or agent result may precede the durable
+commit, and stale work must not overwrite intervening edits. Candidate copies,
+reconciliation and history also retain room-wide costs. Saved limits are unchanged.
+No headset, paid provider, signing, deployment or Meta operation ran. V1 remains
+incomplete.
+
+Evidence: .quest-evidence/room-transaction-cost-20261017/verified.json and
+measurement-comparison.json in the same directory.
