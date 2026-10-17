@@ -68,6 +68,8 @@ namespace Maestro.Quest.Creation
     {
         readonly Dictionary<string,RoomVisibilityLayer> visibilityLayers=new(StringComparer.Ordinal);
         readonly Dictionary<string,int> visibilityRevisions=new(StringComparer.Ordinal);
+        internal int VisibilityCount=>visibilityLayers.Count;
+        internal string[] VisibilityMembers(string id)=>items.Values.Where(x=>x.visibilityLayer==id).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
         public int VisibilityRevision(string id)=>id!=null&&visibilityRevisions.TryGetValue(id,out var value)?value:0;
         public RoomVisibilityLayer ReadVisibility(string id)=>id!=null&&visibilityLayers.TryGetValue(id,out var value)?value.Copy():null;
         public RoomVisibilityLayer[] VisibilitySnapshot()=>visibilityLayers.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();

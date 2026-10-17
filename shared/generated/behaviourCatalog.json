@@ -5454,7 +5454,7 @@
           "worldLighting.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
@@ -5462,7 +5462,7 @@
         "workspace.available",
         "storage.writable"
       ],
-      "description": "While the world.time lighting cycle is disabled, save ambient and directional sun lighting for the active world region. Read world.lighting and pass its exact revision. Colours are sRGB hex; intensities are multipliers 0–2. Azimuth is degrees around authored +Y (0 faces +Z, +90 faces +X); elevation is -90–90 above the authored horizon. enabled=false restores the original illustrated lighting while retaining these settings. This affects illustrated virtual surfaces including imported models; it does not relight passthrough, cast shadows, create local lights or simulate time/weather. Browser pages and tool labels remain readable. Movement, animation, sound, physics and view opacity continue independently. One Undo and temporary Keep/Discard apply; failed saving changes nothing. Readback confirms accepted settings, not physical headset appearance.",
+      "description": "While the world.time lighting cycle is disabled, save ambient and directional sun lighting for the active world region. Read world.lighting and pass its exact revision. Colours are sRGB hex; intensities are multipliers 0–2. Azimuth is degrees around authored +Y (0 faces +Z, +90 faces +X); elevation is -90–90 above the authored horizon. enabled=false restores the original illustrated lighting while retaining these settings. This affects illustrated virtual surfaces including imported models; it does not relight passthrough, cast shadows, create local lights or simulate time/weather. Browser pages and tool labels remain readable. Movement, animation, sound, physics and view opacity continue independently. One Undo and temporary Keep/Discard apply. Readback confirms accepted settings, not physical headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "revision": 1,
         "settings": {
@@ -31037,7 +31037,7 @@
           "visibilityLayers.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "visibility"
@@ -31049,7 +31049,7 @@
         "visibility.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to 66). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.",
+      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to 66). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -31110,7 +31110,7 @@
           "visibilityLayers.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "visibility"
@@ -31122,7 +31122,7 @@
         "visibility.revision.current",
         "storage.writable"
       ],
-      "description": "Remove an unused visual layer using its exact ID/revision. Refuses while any object refers to it; explicitly unbind those first. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.",
+      "description": "Remove an unused visual layer using its exact ID/revision. Refuses while any object refers to it; explicitly unbind those first. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "00000000000000000000000000000000",
         "revision": 1
@@ -31223,7 +31223,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "visibility"
@@ -31235,7 +31235,7 @@
         "visibility.revision.current",
         "storage.writable"
       ],
-      "description": "Assign a saved visual layer to Maestro, the book frame or a creation. Read object.visibility for the current object revision and visibility.layer for the selected layer revision. Empty layerId with layerRevision 0 restores full visibility and inherited depth. Assignment affects that object and its visual children, excluding independent room objects and book browser pages. It leaves simulation and physical participation unchanged. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.",
+      "description": "Assign a saved visual layer to Maestro, the book frame or a creation. Read object.visibility for the current object revision and visibility.layer for the selected layer revision. Empty layerId with layerRevision 0 restores full visibility and inherited depth. Assignment affects that object and its visual children, excluding independent room objects and book browser pages. It leaves simulation and physical participation unchanged. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -47596,7 +47596,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
-      "sha256": "523d67c63c9d7a596d243fb583779dd30e9893752dcdae6186b36158302bca61"
+      "sha256": "452bf8cc8e55f0bc412e9ddb48db5cc60f75beacbc89708b25b28224680576d0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
@@ -47656,7 +47656,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldLightingCapability.cs",
-      "sha256": "41aeb7dc0858e45ffa9fc3143313ed60593a3a78f084270605b3a72231011153"
+      "sha256": "491a026d36c2194b184aed0fbd097ba06abd4e97e224766fc85d805259f20ee2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldPresentationCapability.cs",
@@ -47932,7 +47932,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "f75ba9ee1885a08aae94c8254fbec9e100a92b0546eccb7d46f2f78edf6770fb"
+      "sha256": "4622f4693ead6e835e93d69aff892f53a77312911f37aab8b9fc169477ec87f8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48128,7 +48128,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "e986d6e34bf5e50ddaedae36be6c68cd589143692772d7bbbde0917fb2780bb9"
+      "sha256": "f6e5a066391a2a63ed9f296560cda1693ce41fb4c85b45e6f8aa29e22a86415d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48152,7 +48152,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "7b96179f667276f454a2ad78ebfca942b6745bd8db6edee7b7e46f00ff414259"
+      "sha256": "8386567d3debfc8f24ad738a09416ad4a00ab468fa83a33f5686dde44aceb483"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48232,7 +48232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLighting.cs",
-      "sha256": "c511cda80fc248d6dc42c6be8f9603c704b7d372347097e3b6e39d590a955630"
+      "sha256": "cf4d2caf288105839133c3017bfdb8ef2f1e1b1dc1eaed72f6db1e912184b034"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -48372,7 +48372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "a5e8e069ed116873e1293967c4694944219515e9a6d804e09ef7c305057d3839"
+      "sha256": "9f974805708c45de3ae732e53a9fc83e553adf03104abf944668a37540d10f2d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -48496,11 +48496,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityEdits.cs",
-      "sha256": "f911d227d4c1970b7bd46969a5147f16b8e63fb99acee5ab6b7292d6934ddfca"
+      "sha256": "01dda56d7f55653e1f01e1898d8855f0497e92b395ff45849ca9e5cb40bce7fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
-      "sha256": "174db5a556b3d3235e284818339d2ec4b2f2b4a51d0608ab333261d43a77e57c"
+      "sha256": "01188bd311aa873c040aec8f20f67d595af519e5b1a7957e8d6aeca1756115c7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversal.cs",

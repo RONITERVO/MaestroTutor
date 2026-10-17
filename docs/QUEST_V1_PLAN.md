@@ -13514,3 +13514,59 @@ suite remains at 7d518ec9, including its unresolved intermittent Meta audio cras
 and successful unchanged rerun. Production reflections stay disabled. Other
 synchronous authoring/import acceptance, owner-thread snapshot/native work,
 physical/audio/provider/capacity acceptance and Store gates remain. V1 is incomplete.
+
+## Visual save completion and live history — 2026-10-17
+
+Saved visibility-layer creation/edit/removal, object visual binding and world
+lighting now use the shared bounded persisted-edit queue. The book, agent and
+programs wait for native application and durable saving through the original
+receipt. Queued requests retain their inputs; definitions, complete memberships,
+capacity, revisions and authoring ownership are checked before acceptance.
+
+The journal now distinguishes visual history from placement history. Visual
+object edits are restricted to bindings, local lights and passthrough windows;
+they cannot create/remove objects or alter physical content. Publication and
+Undo/Redo preserve current saved placement. Rendering-only reconciliation keeps
+body momentum, animated parts and audio running, and visual Undo no longer
+broadcasts global motion cancellation. Synchronous light/window edits share
+this history fix without claiming async coverage.
+
+A prepared visibility assignment tolerates proven runtime placement advances of
+its own target; authored movement/content/history/workspace changes still refuse
+it. Admission waiters still require exact target revisions. No visual edit holds
+a body. Shared layers and lighting preserve advancing world time and unrelated
+objects; newer runtime state remains dirty for its next checkpoint. Immutable
+receipts retain accepted settings and revisions after later human edits,
+including no-op lighting and binding saves. Cancellation, accepted-save draining,
+conflict recovery and temporary Keep/Discard follow the shared persistence path.
+
+Focused verification passes 73 EditMode and 69 PlayMode tests, including four new
+visual-journal regressions and eight pending visual tests. Existing lighting,
+window, clock/weather and persisted-settings coverage also passes. All 3,189 web
+tests, application/probe TypeScript and catalog checks pass. These first runs had
+no failures. The change addresses the inspected old-pose history and general
+reconciliation paths; no native behavior or test deadline was relaxed.
+
+The complete offline Headless journey f0ace41a8859499d8a24733c5adc17f0 passes with
+2,261 observations and 2,250 read sets. The complete original Book
+journey f2f91422e3534ea8b3aafa044a33590f passes with 3,254 observations and
+1,006 requests. Both complete visual-layer/binding and lighting actions
+through exact accepted native receipts. Human edits survive, stale requests are
+refused and reload does not replay effects. Periodic object inventories remain
+empty. Offline fixtures are not provider or physical headset acceptance.
+
+Evidence is in .quest-evidence/visual-save-20261017/. All 3,246 native inputs,
+5,154 source inputs and 14 protected local files were verified, with
+documentation-only changes recorded separately. Four inline/eight discussion
+review comments are unchanged; no comments were posted. No Android build,
+device, paid provider, signing, deployment or Meta action ran. The latest complete
+native-suite checkpoint remains 7d518ec9, including the unresolved intermittent
+Meta audio crash and successful unchanged rerun. Production reflections stay
+disabled.
+
+Next temporal work must distinguish configuration from an explicit seek, preserve
+meaningful pre-seek history, start weather transitions at acceptance and coordinate
+rain/liquid episode boundaries. Exact-clock checks are not relaxed by this visual
+change. Other synchronous authoring/import paths, owner-thread snapshot/native
+cost, physical/audio/provider/capacity acceptance and Store gates remain open.
+V1 is incomplete. See the visual completion contract in QUEST_WORLD_AUTHORING.md.

@@ -83,7 +83,7 @@ namespace Maestro.Quest.Creation
         // Resource definitions and object deltas share admission, publication and
         // native completion. Build one candidate only after its queue turn arrives.
         bool BeginPreparedEdit(Func<string> validate,PrepareJournalEdit prepare,string message,
-            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null)
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
@@ -94,7 +94,7 @@ namespace Maestro.Quest.Creation
                 if(!prepare(out edit,out error))return false;
                 // Creation/component changes do not hold existing physical poses.
                 // Deletion needs only saved identity, including unavailable models.
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,null,validate,message,false,publicationCheckpoint);
+                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,null,validatePending??validate,message,false,publicationCheckpoint);
                 edit=null;write=null;return true;
             } finally {edit?.Dispose();write?.Dispose();}
         }
@@ -128,6 +128,8 @@ namespace Maestro.Quest.Creation
             }
             internal bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
             internal bool Accepted=>accepted;
+            internal int AcceptedLightingRevision=>accepted?edit.AcceptedLightingRevision:0;
+            internal int AcceptedVisibilityRevision(string id)=>accepted?edit.AcceptedVisibilityRevision(id):0;
             internal int AcceptedObjectRevision(string id)=>accepted?edit.AcceptedObjectRevision(id):0;
             internal int AcceptedEnvironmentRevision(string id)=>accepted?edit.AcceptedEnvironmentRevision(id):0;
             internal int AcceptedAudioRevision(string id)=>accepted?edit.AcceptedAudioRevision(id):0;
@@ -218,7 +220,7 @@ namespace Maestro.Quest.Creation
                     }
                     editor.MarkDirty();
                     if(!temporary){editor.dirty=runtimeChanged;editor.lastSaveError=null;}
-                    editor.Reconcile(edit.ChangedObjects,applyPose,preparation:native);
+                    if(edit.VisualOnly)editor.ReconcileVisibility(native);else editor.Reconcile(edit.ChangedObjects,applyPose,preparation:native);
                     nativeApplied=true;
                     // The target can resume immediately after application; storage
                     // only owns detached data. End/Stop can dispose this lease again.

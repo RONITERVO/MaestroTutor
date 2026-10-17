@@ -15,13 +15,19 @@ namespace Maestro.Quest.Programs
         internal static JObject TargetSchema()=>Resource(Text("^(book|maestro|[a-fA-F0-9]{32})$",32));
         internal static JObject Bool()=>new(){["type"]="boolean"};
         internal static JObject Featured(JObject schema){schema["x-features"]=new JArray(Feature);return schema;}
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         internal override int MaximumCreatedObjects(JObject args)=>0;
         public override IReadOnlyList<string> Channels=>new[]{"visibility"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","visibility.revision.current","storage.writable"};
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>CapabilityArguments.Resources(args,InputSchema).Select(id=>new BehaviourCatalog.Claim(id,"visibility")).ToArray();
-        protected const string Rules=" Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance.";
-        internal static JObject Receipt(RoomEditor editor,string id)=>new(){["id"]=id,["revision"]=editor.VisibilityRevision(id),["temporary"]=editor.TemporaryRoom};
+        protected const string Rules=" Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance."+PersistedEditOperation.Persistence;
+        protected static bool StartLayer(RoomEditor editor,RoomVisibilityLayer value,string id,int revision,string[] members,out CapabilityOperation operation,out string error) {
+            bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,null,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{bool ok=editor.BeginVisibility(value,id,revision,members,out edit,out issue);pending=edit;return ok;},
+                out operation,out error,validate:(out string issue)=>editor.CanEditVisibility(value,id,revision,members,out issue),
+                output:()=>new JObject{["id"]=id,["revision"]=pending.AcceptedVisibilityRevision(id),["temporary"]=temporary});
+        }
     }
     internal sealed class VisibilityLayerSaveCapability:VisibilityLayerCapability
     {
@@ -36,12 +42,11 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext c,JObject a,out string error) {
             error="Use empty id with revision 0 to create, or an existing profile ID and current revision";
             if(string.IsNullOrEmpty((string)a["id"])!=((int)a["revision"]==0)||!c.Editor)return false;
-            var p=Definition(a);return c.Editor.PrepareVisibility(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out _,out error);
+            var p=Definition(a);return c.Editor.CanEditVisibility(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error);
         }
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
             operation=null;if(!CanRun(c,a,out error))return false;var p=Definition(a);
-            if(!c.Editor.EditVisibility(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,p.id));return true;
+            return StartLayer(c.Editor,p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out operation,out error);
         }
     }
     internal sealed class VisibilityLayerRemoveCapability:VisibilityLayerCapability
@@ -52,10 +57,10 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>Featured(Object(new JObject{["id"]=LayerId(),["revision"]=Revision()}));
         public override JObject OutputSchema=>Object(new JObject{["id"]=LayerId(),["revision"]=Revision(true),["temporary"]=Bool()});
         public override JObject Example=>new(){["id"]=new string('0',32),["revision"]=1};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.PrepareVisibility(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.CanEditVisibility(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.EditVisibility(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,(string)a["id"]));return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            return StartLayer(c.Editor,null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out operation,out error);
         }
     }
     internal sealed class VisibilityAssignCapability:VisibilityLayerCapability
@@ -67,10 +72,15 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>ResourceChoice(CurrentInputs(Featured(Object(new JObject{["target"]=TargetSchema(),["revision"]=Revision(),["layerId"]=LayerId(true),["layerRevision"]=Revision(true)})),"object.visibility","revision",new JObject{["target"]="target"},"layerId","layerRevision"),"Visual layer","visibility.layers","layerId","layerRevision","Normal visibility");
         public override JObject OutputSchema=>Object(new JObject{["target"]=TargetSchema(),["revision"]=Revision(),["temporary"]=Bool()});
         public override JObject Example=>new(){["target"]="maestro",["revision"]=1,["layerId"]="",["layerRevision"]=0};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.PrepareVisibilityBinding((string)a["target"],(int)a["revision"],(string)a["layerId"],(int)a["layerRevision"],out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.CanBindVisibility((string)a["target"],(int)a["revision"],(string)a["layerId"],(int)a["layerRevision"],out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.BindVisibility((string)a["target"],(int)a["revision"],(string)a["layerId"],(int)a["layerRevision"],out error))return false;
-            operation=new CompletedCapability(new JObject{["target"]=a["target"].DeepClone(),["revision"]=c.Editor.ObjectRevision((string)a["target"]),["temporary"]=c.Editor.TemporaryRoom});return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            string target=(string)a["target"],id=(string)a["layerId"];int revision=(int)a["revision"],layerRevision=(int)a["layerRevision"];bool temporary=c.Editor.TemporaryRoom;
+            RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(c.Editor,target,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{bool ok=c.Editor.BeginVisibilityBinding(target,revision,id,layerRevision,out edit,out issue);pending=edit;return ok;},
+                out operation,out error,validate:(out string issue)=>c.Editor.CanBindVisibility(target,revision,id,layerRevision,out issue),
+                output:()=>new JObject{["target"]=target,["revision"]=pending.AcceptedObjectRevision(target),["temporary"]=temporary});
         }
     }
     internal static class VisibilityLayerFacts

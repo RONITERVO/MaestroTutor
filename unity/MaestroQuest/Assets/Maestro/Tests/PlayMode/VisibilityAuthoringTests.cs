@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
     public sealed partial class RoomRulesTests
     {
         string NewVisualLayer() {
-            var cap=new VisibilityLayerSaveCapability();Assert.That(cap.Start(new CapabilityContext(editor,animations),"layer",cap.Example,out var op,out var error),Is.True,error);return (string)op.Result["id"];
+            var value=new RoomVisibilityLayer{id=Guid.NewGuid().ToString("N"),name="Distant landscape",opacity=.5f,realDepth=false};Assert.That(editor.EditVisibility(value,value.id,0,Array.Empty<string>(),out var error),Is.True,error);return value.id;
         }
         bool AssignVisualLayer(string target,string id,out string error)=>editor.BindVisibility(target,editor.ObjectRevision(target),id,editor.VisibilityRevision(id),out error);
         JObject LayerCall(string target,string id)=>new(){["id"]="object.visibility.assign",["version"]=1,["arguments"]=new JObject{["target"]=target,["revision"]=editor.ObjectRevision(target),["layerId"]=id,["layerRevision"]=editor.VisibilityRevision(id)}};
@@ -45,13 +45,15 @@ namespace Maestro.Quest.Tests
             Assert.That(runtime.Scheduler.Invoke(PartCall(target,"RightUpperArm",10),Time.unscaledTime,out var animation,out var error),Is.True,error);
             yield return new WaitForSeconds(.1f);var recipe=editor.Find(target).GetComponent<RecipeObject>();var before=recipe.Part("RightUpperArm").localRotation;
             var call=LayerCall(target,id);Assert.That(runtime.Scheduler.Invoke(call,Time.unscaledTime,out var assigned,out error),Is.True,error);
-            Assert.That((string)runtime.Scheduler.Invocation(assigned)["phase"],Is.EqualTo("completed"));Assert.That((string)runtime.Scheduler.Invocation(animation)["phase"],Is.EqualTo("running"));
             Assert.That(Quaternion.Angle(before,recipe.Part("RightUpperArm").localRotation),Is.LessThan(.001f));
+            yield return SpatialSettingsCompletion.WaitInvocation(runtime.Scheduler,assigned);
+            Assert.That((string)runtime.Scheduler.Invocation(assigned)["phase"],Is.EqualTo("completed"));Assert.That((string)runtime.Scheduler.Invocation(animation)["phase"],Is.EqualTo("running"));
             yield return new WaitForSeconds(.2f);Assert.That(Quaternion.Angle(before,recipe.Part("RightUpperArm").localRotation),Is.GreaterThan(1));
             var cap=new VisibilityLayerSaveCapability();var args=cap.Example;args["id"]=id;args["revision"]=editor.VisibilityRevision(id);args["members"]=new JArray(target);args["opacity"]=.2;
             var executor=new RoomAgentExecutor(editor);var request=TemplateRequest(new JObject{["id"]=cap.Id,["version"]=1,["arguments"]=args});request.conditions=new[]{new RoomObjectCondition{id=target,revision=editor.ObjectRevision(target)}};
-            Assert.That(executor.Execute(request,out error,out _),Is.True,error);int revision=editor.VisibilityRevision(id);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);int revision=editor.VisibilityRevision(id);
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.VisibilityRevision(id),Is.EqualTo(revision));Assert.That((string)runtime.Scheduler.Invocation(animation)["phase"],Is.EqualTo("running"));
+            editor.Undo();editor.Redo();Assert.That((string)runtime.Scheduler.Invocation(animation)["phase"],Is.EqualTo("running"),"Visual history must not broadcast a motion cancellation");
             Assert.That(voice.Closed,Is.False,voice.Error);Assert.That(voice.Output,Is.SameAs(originalVoice));audio.Close(voice);runtime.Scheduler.CancelInvocation(animation,out _);
         }
         [UnityTest] public IEnumerator VisualLayersRejectStalePartialAndFailedPersistenceWithoutPartialMutation() {

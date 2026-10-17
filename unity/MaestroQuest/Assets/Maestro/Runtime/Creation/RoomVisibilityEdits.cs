@@ -14,15 +14,15 @@ namespace Maestro.Quest.Creation
         public RoomVisibilityLayer[] VisibilityLayers()=>journal.VisibilitySnapshot();
         public int VisibilityRevision(string id)=>journal.VisibilityRevision(id);
         public RoomVisibilityLayer ReadVisibility(string id)=>journal.ReadVisibility(id);
-        internal string[] VisibilityMembers(string id)=>Snapshot().objects.Where(x=>x.visibilityLayer==id).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        internal string[] VisibilityMembers(string id)=>journal.VisibilityMembers(id);
         bool CanChangeVisibility(string target,out string error) {
             if(!CanEditStructures(out error))return false;
             var item=Find(target);error="Choose a current, released object outside an authoring gesture";
             if(!item||Read(target)==null||item.Grab&&item.Grab.isSelected||GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true)return false;
             error=null;return true;
         }
-        internal bool PrepareVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out VisibilityLayerEdits edits,out string error) {
-            edits=null;if(!CanEditStructures(out error))return false;
+        internal bool CanEditVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out string error) {
+            if(!CanEditStructures(out error))return false;
             var current=ReadVisibility(id);error="The visual layer changed; read its current revision and complete member list";
             if(VisibilityRevision(id)!=revision||current==null&&revision!=0||definition==null&&current==null)return false;
             if(definition!=null&&(definition.id!=id||!definition.Validate(out error)))return false;
@@ -31,21 +31,41 @@ namespace Maestro.Quest.Creation
             if(members==null||members.Length!=members.Distinct().Count()||!expected.ToHashSet().SetEquals(members))return false;
             if(definition==null&&members.Length>0){error="Unbind this visual layer before removing it";return false;}
             foreach(string member in members)if(!CanChangeVisibility(member,out error))return false;
+            if(current==null&&definition!=null&&journal.VisibilityCount>=RoomVisibilityLayer.MaximumLayers){error="A room supports at most 16 visual layers";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out VisibilityLayerEdits edits,out string error) {
+            edits=null;if(!CanEditVisibility(definition,id,revision,members,out error))return false;
             edits=definition==null?new VisibilityLayerEdits{Removals=new[]{id}}:new VisibilityLayerEdits{Replacements=new[]{definition.Copy()}};
-            if(!edits.Validate(out error))return false;
-            var candidate=Snapshot();candidate.visibilityLayers=edits.Apply(candidate.visibilityLayers);return candidate.Validate(out error);
+            return edits.Validate(out error);
+        }
+        internal bool BeginVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
+            var captured=definition?.Copy();var affected=members?.ToArray();
+            return BeginPreparedEdit(()=>CanEditVisibility(captured,id,revision,affected,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareVisibility(captured,id,revision,affected,out var edits,out issue)&&journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,visibilityEdits:edits,visualOnly:true);},
+                captured==null?"Visual layer removed":"Visual layer saved",out pending,out error,publicationCheckpoint);
         }
         internal bool EditVisibility(RoomVisibilityLayer definition,string id,int revision,string[] members,out string error) {
             if(!PrepareVisibility(definition,id,revision,members,out var edits,out error))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),definition==null?"Visual layer removed":"Visual layer saved",false,out error,visibilityEdits:edits,visualOnly:true);
         }
-        internal bool PrepareVisibilityBinding(string target,int revision,string id,int layerRevision,out RoomObjectData data,out string error) {
-            data=null;var definition=string.IsNullOrEmpty(id)?null:ReadVisibility(id);
+        internal bool CanBindVisibility(string target,int revision,string id,int layerRevision,out string error,bool checkTargetRevision=true) {
+            var definition=string.IsNullOrEmpty(id)?null:ReadVisibility(id);
             error="Read the current object and selected visual layer revisions before assigning it";
-            if(ObjectRevision(target)!=revision||id==null||id.Length==0&&layerRevision!=0||id.Length>0&&(definition==null||VisibilityRevision(id)!=layerRevision))return false;
-            if(!CanChangeVisibility(target,out error))return false;
-            data=Pose(Read(target),Find(target).transform);data.visibilityLayer=id;
-            var candidate=Snapshot();var replacement=data;candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();return candidate.Validate(out error);
+            if(checkTargetRevision&&ObjectRevision(target)!=revision||id==null||id.Length==0&&layerRevision!=0||id.Length>0&&(definition==null||VisibilityRevision(id)!=layerRevision))return false;
+            return CanChangeVisibility(target,out error);
+        }
+        internal bool PrepareVisibilityBinding(string target,int revision,string id,int layerRevision,out RoomObjectData data,out string error) {
+            data=null;if(!CanBindVisibility(target,revision,id,layerRevision,out error))return false;
+            data=Read(target);data.visibilityLayer=id;return true;
+        }
+        internal bool BeginVisibilityBinding(string target,int revision,string id,int layerRevision,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
+            return BeginPreparedEdit(()=>CanBindVisibility(target,revision,id,layerRevision,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{edit=null;return PrepareVisibilityBinding(target,revision,id,layerRevision,out var data,out issue)&&journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out issue,visualOnly:true);},
+                "Visual layer assigned",out pending,out error,publicationCheckpoint,
+                // The prepared journal separately proves that *only* runtime
+                // placement progressed. Authored changes still invalidate it.
+                ()=>CanBindVisibility(target,revision,id,layerRevision,out var issue,checkTargetRevision:false)?null:issue);
         }
         internal bool BindVisibility(string target,int revision,string id,int layerRevision,out string error) {
             if(!PrepareVisibilityBinding(target,revision,id,layerRevision,out var data,out error))return false;

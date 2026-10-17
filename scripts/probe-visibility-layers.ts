@@ -4,15 +4,13 @@ import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeVisibilityLayers(execute:Execute,directory:string){
  const fact=async(capability:string,args:Record<string,unknown>)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}])).value as Record<string,unknown>;
  const invoke=async(id:string,args:Record<string,unknown>)=>{
-  let state=await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]);
-  const run=state.execution!.selected!.id,deadline=Date.now()+10000;
-  while(state.execution!.selected!.phase!=='completed'&&Date.now()<deadline){assert.notEqual(state.execution!.selected!.phase,'failed');await new Promise(r=>setTimeout(r,50));state=await execute([{action:'execution',execution:{operation:'inspect',runId:run}}]);}
-  assert.equal(state.execution!.selected!.phase,'completed');return state.execution!.selected!;
+  const state=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));
+  return state.execution!.selected!;
  };
  const physical=await fact('object.environment',{target:'maestro'});
  const saved=await invoke('visibility.layer.save',{id:'',revision:0,name:'Faded Maestro',opacity:.35,realDepth:false,members:[]});

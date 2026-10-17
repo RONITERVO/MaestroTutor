@@ -50,6 +50,12 @@ namespace Maestro.Quest.Creation
             if(!CanSetLighting(revision,value,out error))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World lighting saved",false,out error,visualOnly:true,lighting:value);
         }
+        internal bool BeginLighting(int revision,RoomLighting value,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
+            var captured=value?.Copy();
+            return BeginPreparedEdit(()=>CanSetLighting(revision,captured,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,lighting:captured,visualOnly:true),
+                "World lighting saved",out pending,out error,publicationCheckpoint);
+        }
         internal JObject ObserveLighting()=>journal==null?null:new JObject{["revision"]=LightingRevision,["worldId"]=WorldIdentity.worldId,["regionId"]=WorldIdentity.regionId,["settings"]=JObject.Parse(JsonUtility.ToJson(Lighting)),["temporary"]=TemporaryRoom};
     }
 }

@@ -19,7 +19,8 @@ namespace Maestro.Quest.Creation
             readonly Dictionary<string,RoomObjectData> objectIndex;
             readonly int revision,undoCount,redoCount;
             readonly long runtimePlacements;
-            readonly Dictionary<string,int> targetRevisions,environmentRevisions,audioRevisions,appearanceRevisions,regionRevisions,structureRevisions,regionMemberRevisions;
+            readonly Dictionary<string,int> targetRevisions,environmentRevisions,audioRevisions,appearanceRevisions,regionRevisions,structureRevisions,regionMemberRevisions,visibilityRevisions;
+            int acceptedLightingRevision;
             readonly string viewpointState,timeState,operation;
             readonly bool baseline;
             bool ended,accepted;
@@ -39,11 +40,15 @@ namespace Maestro.Quest.Creation
                 // Membership revisions are receipts, not pose write guards. Metadata
                 // edits must not reject unrelated runtime placement advances.
                 regionMemberRevisions=change.BeforeRegions.Concat(change.AfterRegions).SelectMany(x=>x.members).Distinct().ToDictionary(id=>id,owner.ObjectRevision);
+                visibilityRevisions=change.BeforeVisibility.Concat(change.AfterVisibility).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.VisibilityRevision);
                 undoCount=owner.undo.Count;redoCount=owner.redo.Count;
                 undoTop=undoCount>0?owner.undo[undoCount-1]:null;redoTop=redoCount>0?owner.redo[redoCount-1]:null;
                 viewpointState=JsonUtility.ToJson(owner.viewpoint);timeState=JsonUtility.ToJson(owner.worldTime);
             }
             internal RoomDocument Snapshot()=>document.Copy();
+            internal bool VisualOnly=>change.VisualOnly;
+            internal int AcceptedLightingRevision=>accepted?acceptedLightingRevision:0;
+            internal int AcceptedVisibilityRevision(string id)=>accepted&&visibilityRevisions.TryGetValue(id,out var value)?value:0;
             internal int AcceptedObjectRevision(string id)=>accepted&&(targetRevisions.TryGetValue(id,out var value)||regionMemberRevisions.TryGetValue(id,out value))?value:0;
             internal int AcceptedEnvironmentRevision(string id)=>accepted&&environmentRevisions.TryGetValue(id,out var value)?value:0;
             internal int AcceptedAudioRevision(string id)=>accepted&&audioRevisions.TryGetValue(id,out var value)?value:0;
@@ -63,7 +68,7 @@ namespace Maestro.Quest.Creation
             // Apply only this delta; newer unrelated poses remain dirty for a later save.
             bool RevisionCurrent(bool allowRuntimeProgress)=>owner.clock.Next==revision||allowRuntimeProgress&&
                 (long)owner.clock.Next-revision==owner.runtimePlacementAdvances-runtimePlacements&&
-                targetRevisions.All(x=>owner.ObjectRevision(x.Key)==x.Value);
+                (change.VisualOnly||targetRevisions.All(x=>owner.ObjectRevision(x.Key)==x.Value));
             internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&RevisionCurrent(allowRuntimeProgress)&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&
                 (allowRuntimeProgress||JsonUtility.ToJson(owner.viewpoint)==viewpointState)&&
@@ -83,6 +88,8 @@ namespace Maestro.Quest.Creation
                 foreach(var id in regionRevisions.Keys.ToArray())regionRevisions[id]=owner.RegionRevision(id);
                 foreach(var id in structureRevisions.Keys.ToArray())structureRevisions[id]=owner.StructureRevision(id);
                 foreach(var id in regionMemberRevisions.Keys.ToArray())regionMemberRevisions[id]=owner.ObjectRevision(id);
+                foreach(var id in visibilityRevisions.Keys.ToArray())visibilityRevisions[id]=owner.VisibilityRevision(id);
+                acceptedLightingRevision=owner.LightingRevision;
                 accepted=true;error=null;return true;
             }
             public void Dispose()=>ended=true;
@@ -100,7 +107,8 @@ namespace Maestro.Quest.Creation
         RoomDocument HistoryCandidate(Change c,bool forward)
         {
             var d=Snapshot();
-            d.objects=Swap(d.objects,forward?c.Before:c.After,forward?c.After:c.Before,x=>x.id).OrderBy(x=>x.id,StringComparer.Ordinal).ToArray();
+            var after=forward?c.After:c.Before;
+            d.objects=Swap(d.objects,forward?c.Before:c.After,c.VisualOnly?PreserveVisualPlacement(after):after,x=>x.id).OrderBy(x=>x.id,StringComparer.Ordinal).ToArray();
             d.regions=Swap(d.regions,forward?c.BeforeRegions:c.AfterRegions,forward?c.AfterRegions:c.BeforeRegions,x=>x.id);
             d.structures=Swap(d.structures,forward?c.BeforeStructures:c.AfterStructures,forward?c.AfterStructures:c.BeforeStructures,x=>x.id);
             d.audioSources=Swap(d.audioSources,forward?c.BeforeAudio:c.AfterAudio,forward?c.AfterAudio:c.BeforeAudio,x=>x.id);
@@ -109,9 +117,15 @@ namespace Maestro.Quest.Creation
             d.visibilityLayers=Swap(d.visibilityLayers,forward?c.BeforeVisibility:c.AfterVisibility,forward?c.AfterVisibility:c.BeforeVisibility,x=>x.id);
             d.lighting=(forward?c.AfterLighting:c.BeforeLighting)??d.lighting;d.worldTime=(forward?c.AfterWorldTime:c.BeforeWorldTime)??d.worldTime;d.weather=(forward?c.AfterWeather:c.BeforeWeather)??d.weather;return d;
         }
+        // Presentation history carries render settings, never a former live pose.
+        // This is used for both publication and Undo/Redo previews.
+        RoomObjectData[] PreserveVisualPlacement(RoomObjectData[] values)=>values.Select(value=>{
+            var copy=value.Copy();if(items.TryGetValue(copy.id,out var current)){copy.position=current.position;copy.rotation=current.rotation;copy.scale=current.scale;}return copy;
+        }).ToArray();
         void Publish(Change c,bool forward)
         {
-            Set(forward?c.Before:c.After,forward?c.After:c.Before);
+            var after=forward?c.After:c.Before;
+            Set(forward?c.Before:c.After,c.VisualOnly?PreserveVisualPlacement(after):after);
             SetRegions(forward?c.BeforeRegions:c.AfterRegions,forward?c.AfterRegions:c.BeforeRegions);
             SetStructures(forward?c.BeforeStructures:c.AfterStructures,forward?c.AfterStructures:c.BeforeStructures);
             SetAudio(forward?c.BeforeAudio:c.AfterAudio,forward?c.AfterAudio:c.BeforeAudio);

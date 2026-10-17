@@ -2864,10 +2864,11 @@ storage read-only before later saves can run. Autosave and ordinary flush cannot
 silently replace a conflicting saved baseline. Use explicit workspace inspection
 or recovery; neither agent nor user should blindly replay the action.
 
-This currently covers the shared object.rotation.set completion action.
-Synchronous editing APIs retain their save-before-return contract. Broadening
-the same operation to other edits and physical headset latency validation remain
-open; a green storage test is not evidence of headset frame time.
+Shared capabilities that advertise completion use the bounded persisted-edit
+queue; later checkpoints below extend the original rotation path. Synchronous
+editing APIs retain their save-before-return contract. Remaining synchronous
+authoring/import paths and physical headset latency validation are still open;
+a green storage test is not evidence of headset frame time.
 
 Ordinary room saving now retains the exact primary accepted by the live store.
 An existing room must be loaded before its first write; only an absent primary
@@ -2889,3 +2890,50 @@ They do not merge independent edits or freeze the whole scene. Their comparison
 is against file contents, including same-size/same-timestamp replacements.
 The coordinator serializes participating writers; it cannot make arbitrary
 external filesystem edits transactional.
+
+## Visual edit completion and live history
+
+`visibility.layer.save`, `visibility.layer.remove`, `object.visibility.assign`
+and `world.lighting.set` use the same queued completion path as other persisted
+edits. The book, agent and programs wait for the original receipt; none needs a
+separate save tool or a second invocation. Names and settings are captured at
+request time. Cheap admission checks do not copy the whole room while waiting.
+Layer edits require the complete current member list and recheck capacity,
+revisions and released authoring ownership before acceptance.
+
+Visual history is explicitly distinguished from placement history. A visual
+object delta may change its visibility binding, local lights or passthrough
+windows; it cannot create/remove an object or change its physical content. It
+never checkpoints a supplied pose. Publication and Undo/Redo preserve the
+current saved placement, and native reconciliation updates rendering without
+resetting bodies, animated parts, audio, terrain or collision policy. Visual
+Undo does not broadcast the global motion-cancellation signal. Existing manual
+held-object/drawing checks still apply. Local-light/window saving remains
+synchronous; it uses this history distinction without claiming async coverage.
+
+After preparation begins, a visibility assignment can coexist with recorded
+runtime movement of its own target. The journal proves that every intervening
+revision advance came from runtime placement, then applies the visual delta
+while retaining the newer pose. Authored placement, content edits, history changes
+and workspace replacement still invalidate the preparation. This does not merge
+arbitrary edits. While waiting for admission, exact target revisions are still
+required; a changed waiting target needs a new request. No body is held for a
+visual edit. Shared layer changes and lighting also preserve unrelated motion,
+clock progression and viewer movement. Newer runtime state stays dirty for the
+next checkpoint instead of being discarded by the older prepared save.
+
+Receipts freeze the accepted definition or object revision, including unchanged
+saves. World-lighting receipts retain the requested settings and accepted
+revision even if a human edits the lighting before the caller observes
+completion. Cancellation before acceptance changes nothing. After acceptance,
+Stop drains the save and cannot retract it; a final save failure leaves the live
+edit inspectable and follows the shared conflict/recovery path. Temporary
+Keep/Discard and one Undo use the same journal.
+
+Clock and weather are separate pending work. A configuration change must not
+rewind advancing time; a seek must retain its explicit destination and meaningful
+pre-seek history. Weather transitions must define their start at acceptance and
+coordinate rain/liquid collection boundaries. Their current synchronous paths
+are not claimed as asynchronous, and the visual runtime-progress allowance does
+not relax exact-clock checks for explicit time edits. Physical headset frame
+time and appearance remain separate acceptance requirements.

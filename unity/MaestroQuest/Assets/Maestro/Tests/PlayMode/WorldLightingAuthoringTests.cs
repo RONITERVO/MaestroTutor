@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests
             Assert.That(RoomControls.Capabilities(editor),Does.Contain(WorldLightingCapability.Feature));
             string target=RecipeTarget();Assert.That(runtime.Scheduler.Invoke(PartCall(target,"RightUpperArm",10),Time.unscaledTime,out var animation,out var e),Is.True,e);yield return null;
             var light=new RoomLighting{enabled=true,ambientColor="#224466",sunIntensity=.4f};var request=TemplateRequest(LightingCall(light));request.conditions=Array.Empty<RoomObjectCondition>();var executor=new RoomAgentExecutor(editor);
-            Assert.That(executor.Execute(request,out e,out _),Is.True,e);int revision=editor.LightingRevision;
+            Assert.That(executor.Execute(request,out e,out _),Is.True,e);yield return SpatialSettingsCompletion.Wait(executor.Executions);int revision=editor.LightingRevision;
             Assert.That(executor.Execute(request,out e,out _),Is.True,e);Assert.That(editor.LightingRevision,Is.EqualTo(revision));Assert.That((string)runtime.Scheduler.Invocation(animation)["phase"],Is.EqualTo("running"));
             Assert.That(new RoomStorage(directory).Load(out e).lighting.Same(light),Is.True,e);Assert.That(WorldLightingCapability.Fact().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,null,out _),Is.True);
             Assert.That(editor.SetLighting(revision-1,light,out _),Is.False);runtime.Scheduler.CancelInvocation(animation,out _);editor.Undo();Assert.That(editor.Lighting.enabled,Is.False);editor.Redo();Assert.That(editor.Lighting.Same(light),Is.True);
