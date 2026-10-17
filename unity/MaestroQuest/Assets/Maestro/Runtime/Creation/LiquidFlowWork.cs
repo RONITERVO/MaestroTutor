@@ -18,7 +18,7 @@ namespace Maestro.Quest.Creation
         internal FlowExecutionWork LastFlowExecution=>flowExecutionWork;
         // Like contact sampling, an explicit internal tick can step a disabled
         // automatic loop in desktop tests. An inactive workspace cannot step.
-        internal bool FlowWorkEligible=>gameObject.activeInHierarchy&&!contactsPaused&&contactsFocused&&editor&&editor.isActiveAndEnabled&&world&&world.Running&&!blocked&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen&&editor.CanSaveRoom&&editor.Frame.Valid&&vessels.Count>0&&float.IsFinite(Physics.gravity.sqrMagnitude)&&Physics.gravity.sqrMagnitude>=.01f;
+        internal bool FlowWorkEligible=>weatherHolds==0&&gameObject.activeInHierarchy&&!contactsPaused&&contactsFocused&&editor&&editor.isActiveAndEnabled&&world&&world.Running&&!blocked&&!editor.RuntimeGate.Held&&!editor.Ownership.Suspended&&!editor.WriteGate.Frozen&&editor.CanSaveRoom&&editor.Frame.Valid&&vessels.Count>0&&float.IsFinite(Physics.gravity.sqrMagnitude)&&Physics.gravity.sqrMagnitude>=.01f;
         internal int FlowWorkVessels=>vessels.Count;
         internal RoomResourceOwner FlowWorkOwner=>new(editor.WorldIdentity,null,"liquid");
         internal bool FlowTarget(string id)=>vessels.ContainsKey(id);

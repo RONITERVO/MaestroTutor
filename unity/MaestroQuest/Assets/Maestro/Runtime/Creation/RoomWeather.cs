@@ -22,6 +22,7 @@ namespace Maestro.Quest.Creation
         public RoomWeather Copy()=>new(){version=version,seed=seed,startDay=startDay,startSecond=startSecond,transitionSeconds=transitionSeconds,from=from?.Copy(),settings=settings?.Copy()};
         public bool Valid=>version==1&&seed>=1&&seed<=1000000&&RoomWorldTime.PositionValid(startDay,startSecond)&&double.IsFinite(transitionSeconds)&&transitionSeconds>=0&&transitionSeconds<=86400&&from?.Valid==true&&settings?.Valid==true;
         internal float Progress(double time)=>transitionSeconds==0?1:(float)Math.Clamp((time-(startDay*86400d+startSecond))/transitionSeconds,0,1);
+        internal bool SameTarget(RoomWeather other)=>other!=null&&version==other.version&&seed==other.seed&&transitionSeconds==other.transitionSeconds&&JsonUtility.ToJson(settings)==JsonUtility.ToJson(other.settings);
         internal bool Same(RoomWeather other)=>other!=null&&JsonUtility.ToJson(this)==JsonUtility.ToJson(other);
         internal static bool ValidWire(JObject room){
             if(room["version"]?.Type!=JTokenType.Integer)return false;
@@ -55,8 +56,27 @@ namespace Maestro.Quest.Creation
             if(!CanSetWeather(revision,seconds,out error))return false;
             var time=WorldTime;var value=new RoomWeather{seed=seed,from=CurrentWeather.Settings(),settings=settings?.Copy(),startDay=time.day,startSecond=time.second,transitionSeconds=seconds};
             if(!value.Valid){error="Choose valid weather settings and transition duration";return false;}
-            if(!FinishLiquidPour(out error))return false;
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World weather saved",false,out error,visualOnly:true,weather:value);
+            using var boundary=Liquids?Liquids.HoldWeatherBoundary():null;
+            if(!FinishLiquidPour(out error)||!CanSetWeather(revision,seconds,out error))return false;
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World weather saved",false,out error,visualOnly:true,weather:value,weatherTransition:true);
+        }
+        internal bool BeginWeather(int revision,int seed,WeatherSettings settings,double seconds,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
+            pending=null;
+            if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
+            if(!CanSetWeather(revision,seconds,out error))return false;
+            var time=WorldTime;var captured=new RoomWeather{seed=seed,settings=settings?.Copy(),startDay=time.day,startSecond=time.second,transitionSeconds=seconds};
+            if(!captured.Valid){error="Choose valid weather settings and transition duration";return false;}
+            IDisposable boundary=Liquids?Liquids.HoldWeatherBoundary():null;
+            try {
+                // Seal water collected under the previous weather before admitting
+                // the transition. Callbacks cannot open another flow in this gap.
+                if(!FinishLiquidPour(out error))return false;
+                bool ok=BeginPreparedEdit(()=>CanSetWeather(revision,seconds,out var issue)?null:issue,
+                    (out RoomJournal.PreparedEdit edit,out string issue)=>journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,
+                        weather:captured,weatherTransition:true,visualOnly:true),
+                    "World weather saved",out pending,out error,publicationCheckpoint,acceptanceLease:boundary);
+                if(ok)boundary=null;return ok;
+            }finally{boundary?.Dispose();}
         }
         internal JObject ObserveWeather(){
             if(journal==null)return null;var w=Weather;

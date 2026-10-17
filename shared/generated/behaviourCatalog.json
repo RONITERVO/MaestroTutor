@@ -5946,7 +5946,7 @@
           "worldTime.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
@@ -5954,7 +5954,7 @@
         "workspace.available",
         "storage.writable"
       ],
-      "description": "Configure the region's authored environment clock and optional daily lighting keyframes while retaining its current day/second. Read world.time and its exact edit revision. rate is authored seconds per active real second (0–3600). running=false pauses time; rate=0 freezes it too. A lighting cycle needs 2–8 strictly time-ordered frames, at seconds 0–86400 exclusive. It loops at midnight, interpolating light energy and the shortest sun-azimuth arc. Disabling the cycle retains its frames and restores world.lighting's manual preset. Static lighting edits refuse while the cycle owns lighting. Focus loss, app suspension, workspace write/runtime holds and invalid world frames freeze advancement; the first resumed tick and gaps over one second are skipped. Saved running intent resumes from the saved position, without offline catch-up. Clock progress checkpoints through room persistence at most every five active seconds; explicit saves and lifecycle flush include current position. A crash may lose progress since the last successful checkpoint. Ordinary editing, looking away and viewer opacity do not stop it. Weather transitions sample this same clock; rain collection and physics use active real seconds. This does not scale physics/animation, change the device calendar or cast shadows. Exact save/Undo/temporary semantics apply.",
+      "description": "Configure the region's authored environment clock and optional daily lighting keyframes while retaining its current day/second. Read world.time and its exact edit revision. rate is authored seconds per active real second (0–3600). running=false pauses time; rate=0 freezes it too. A lighting cycle needs 2–8 strictly time-ordered frames, at seconds 0–86400 exclusive. It loops at midnight, interpolating light energy and the shortest sun-azimuth arc. Disabling the cycle retains its frames and restores world.lighting's manual preset. Static lighting edits refuse while the cycle owns lighting. Focus loss, app suspension, workspace write/runtime holds and invalid world frames freeze advancement; the first resumed tick and gaps over one second are skipped. Saved running intent resumes from the saved position, without offline catch-up. Clock progress checkpoints through room persistence at most every five active seconds; explicit saves and lifecycle flush include current position. A crash may lose progress since the last successful checkpoint. Ordinary editing, looking away and viewer opacity do not stop it. Weather transitions sample this same clock; rain collection and physics use active real seconds. This does not scale physics/animation, change the device calendar or cast shadows. Undo/Redo of configuration restores only settings and preserves current day/second. Uses the shared ordered edit queue. When admitted, samples the current clock/weather, applies natively and captures that exact checkpoint; background saving then begins. Completion waits for saving and returns the immutable acceptance-time observation, not the later moving state. No-op settings do not create Undo or restart a fade. Cancellation before acceptance leaves the requested change unapplied; after acceptance Stop cannot retract it or its save. Failed saving leaves the live edit unconfirmed, preserves saved files and blocks further saves until recovery. In temporary play, completion is live-only until Keep. Other world activity continues, with later runtime progress saved separately.",
       "example": {
         "revision": 1,
         "settings": {
@@ -6136,7 +6136,7 @@
           "worldTime.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
@@ -6144,7 +6144,7 @@
         "workspace.available",
         "storage.writable"
       ],
-      "description": "Explicitly seek the authored day and second of day without changing clock settings. Day is 0–999999; second is 0 inclusive to 86400 exclusive. Read world.time for the exact edit revision. Lighting samples the resulting time immediately. This is not a physical calendar, a physics simulation seek, or replay of past events. One Undo restores the prior world time; runtime progress creates no Undo entries.",
+      "description": "Explicitly seek the authored day and second of day without changing clock settings. Day is 0–999999; second is 0 inclusive to 86400 exclusive. Read world.time for the exact edit revision. Lighting samples the resulting time immediately. This is not a physical calendar, a physics simulation seek, or replay of past events. One Undo restores the position immediately before acceptance while preserving current settings; runtime progress creates no Undo entries. Uses the shared ordered edit queue. When admitted, samples the current clock/weather, applies natively and captures that exact checkpoint; background saving then begins. Completion waits for saving and returns the immutable acceptance-time observation, not the later moving state. No-op settings do not create Undo or restart a fade. Cancellation before acceptance leaves the requested change unapplied; after acceptance Stop cannot retract it or its save. Failed saving leaves the live edit unconfirmed, preserves saved files and blocks further saves until recovery. In temporary play, completion is live-only until Keep. Other world activity continues, with later runtime progress saved separately.",
       "example": {
         "revision": 1,
         "day": 0,
@@ -6373,7 +6373,7 @@
           "worldWeather.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
@@ -6381,7 +6381,7 @@
         "workspace.available",
         "storage.writable"
       ],
-      "description": "Save region rain (0–120 mm/hour), authored X/Z wind (-15–15 metres/second), cloud cover (0–1), exponential fog density (0–0.25 per metre), fog sRGB colour and rain visual seed (1–1000000). Read world.weather for its exact revision. transitionSeconds=0 changes immediately; positive duration up to 86400 uses the running authored world clock, interpolating from current sampled weather. Seeking the clock resamples weather without replaying water input. Cloud cover attenuates authored sun/ambient lighting, fog affects virtual surfaces, and wind inclines bounded rain streaks. Browser pages and controls stay readable; passthrough is unchanged. Exposed compatible open containers collect Water through the existing physical liquid system while physics runs, using active real seconds irrespective of clock speed. Cover respects the receiving object's real-room collision profile; unavailable scan or saturated query is unknown, never clear. Existing different liquids do not mix. world.weather.exposure and object.container.rain report geometry/collection. No automatic ground puddles, wind forces, snow, weather audio or volumetric cloud geometry yet. One Undo restores weather; already saved collected water has its own liquid-flow Undo.",
+      "description": "Save region rain (0–120 mm/hour), authored X/Z wind (-15–15 metres/second), cloud cover (0–1), exponential fog density (0–0.25 per metre), fog sRGB colour and rain visual seed (1–1000000). Read world.weather for its exact revision. transitionSeconds=0 changes immediately; positive duration up to 86400 uses the running authored world clock, interpolating from current sampled weather. Seeking the clock resamples weather without replaying water input. Cloud cover attenuates authored sun/ambient lighting, fog affects virtual surfaces, and wind inclines bounded rain streaks. Browser pages and controls stay readable; passthrough is unchanged. Exposed compatible open containers collect Water through the existing physical liquid system while physics runs, using active real seconds irrespective of clock speed. Cover respects the receiving object's real-room collision profile; unavailable scan or saturated query is unknown, never clear. Existing different liquids do not mix. world.weather.exposure and object.container.rain report geometry/collection. No automatic ground puddles, wind forces, snow, weather audio or volumetric cloud geometry yet. Undo/Redo restores the prior/next target, seed and duration by beginning a transition from the currently sampled weather; zero duration is immediate. Reapplying the same target, seed and duration preserves its existing fade. A short flow-only admission hold seals any existing liquid episode before the new weather starts; other clock/actor activity continues. Already saved collected water has its own liquid-flow Undo. Uses the shared ordered edit queue. When admitted, samples the current clock/weather, applies natively and captures that exact checkpoint; background saving then begins. Completion waits for saving and returns the immutable acceptance-time observation, not the later moving state. No-op settings do not create Undo or restart a fade. Cancellation before acceptance leaves the requested change unapplied; after acceptance Stop cannot retract it or its save. Failed saving leaves the live edit unconfirmed, preserves saved files and blocks further saves until recovery. In temporary play, completion is live-only until Keep. Other world activity continues, with later runtime progress saved separately.",
       "example": {
         "revision": 1,
         "seed": 1,
@@ -47444,7 +47444,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "997e7a78715530383312aeb509dfc6671ee3871e2645a8d7e038e5e33d955e63"
+      "sha256": "f046c757749632bab307d82bf7417ffd37c2e6902b9b2a8d11a2f12b675359e7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -47664,7 +47664,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldTimeCapability.cs",
-      "sha256": "ce5041fef58e36bb29f6f0d4d3fc18289633bda0b691619d61c686eb11b65341"
+      "sha256": "15bf5e813a9b97ac4b774a5097b5a381f914f5c67bceda4ac40569e6cc21021d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
@@ -47672,7 +47672,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
-      "sha256": "1da114b702eb45cf23e66f2b6b86fe8849e499ad150f79a1915bca2331687a81"
+      "sha256": "26462769dffc4ee3671ddde188c813633d1a7452cc5d4a85d141e1ccf2970bcf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AcceptedRoomPrimary.cs",
@@ -47876,7 +47876,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowWork.cs",
-      "sha256": "be65d947e13f609c84ad7c2e834c4986d9ed7fea0d63a46fc03c1f4e8a3e3faa"
+      "sha256": "6b209f7f6813f1dc30746e166a81501e0dfe748e2222b39ee24bbae02ddf4ba8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidGroupWork.cs",
@@ -47892,7 +47892,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "b1e99e1b1d47e5b022acda45dce815e60492f63630de10cca8f70e31142eff8e"
+      "sha256": "6d3e59d4a95c95704ddac076e3e1511e38813d732c601f015e6971f2cf1d0101"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -47932,7 +47932,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "4622f4693ead6e835e93d69aff892f53a77312911f37aab8b9fc169477ec87f8"
+      "sha256": "06393bb6ef015526298f7392da2e4e09964bf1889c0c9700c60c1dd32265b607"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48128,7 +48128,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "f6e5a066391a2a63ed9f296560cda1693ce41fb4c85b45e6f8aa29e22a86415d"
+      "sha256": "d48b5716606af3833426bbefdcb1c1edcad758c00fef65eafd0ba11fca7e70b5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48152,7 +48152,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "8386567d3debfc8f24ad738a09416ad4a00ab468fa83a33f5686dde44aceb483"
+      "sha256": "de7ea3415c0eef896f3ea0036de2e7f79cd7a263ecd48bf911abf76a23b79317"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48372,7 +48372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "9f974805708c45de3ae732e53a9fc83e553adf03104abf944668a37540d10f2d"
+      "sha256": "487230d514fe6ede4ff675cae34ffdf8a24eecb9ef0f82df9151eb72d1e2ee36"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -48512,7 +48512,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",
-      "sha256": "32bf03ceeb0e2590b7158a4ec22b5d7676b171a5a98bb39c0b331cf7c19c9889"
+      "sha256": "296a000b499d3e846dcf5353276f3cb1b82e06f5aabfae37bcf8c3b71f20efd3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWindow.cs",
@@ -48536,7 +48536,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldTime.cs",
-      "sha256": "b3f6968ffe09cc3e59c6c64414fd065ad51851ebba86f139e1b2e2b44f642fe2"
+      "sha256": "c8fe1d3bffda3843ec290deb3d4a6757e1e2e909e7bcf5b7191b73a58e55e471"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ScanDrawingAnchor.cs",

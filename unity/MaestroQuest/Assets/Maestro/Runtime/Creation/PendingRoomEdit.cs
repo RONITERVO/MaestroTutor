@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using Maestro.Quest.Persistence;
 using Maestro.Quest.Interaction;
 using UnityEngine;
@@ -83,7 +84,7 @@ namespace Maestro.Quest.Creation
         // Resource definitions and object deltas share admission, publication and
         // native completion. Build one candidate only after its queue turn arrives.
         bool BeginPreparedEdit(Func<string> validate,PrepareJournalEdit prepare,string message,
-            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null)
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null,IDisposable acceptanceLease=null)
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
@@ -94,7 +95,7 @@ namespace Maestro.Quest.Creation
                 if(!prepare(out edit,out error))return false;
                 // Creation/component changes do not hold existing physical poses.
                 // Deletion needs only saved identity, including unavailable models.
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,null,validatePending??validate,message,false,publicationCheckpoint);
+                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint);
                 edit=null;write=null;return true;
             } finally {edit?.Dispose();write?.Dispose();}
         }
@@ -121,6 +122,7 @@ namespace Maestro.Quest.Creation
             RoomStorage.PreparedPublication publication;
             bool ended,success,accepted,nativeApplied,committing,released;
             string failure;
+            JObject acceptedWorldTime,acceptedWeather;
             internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint)
             {
                 this.editor=editor;journal=editor.journal;storage=editor.storage;this.edit=edit;this.write=write;
@@ -136,7 +138,10 @@ namespace Maestro.Quest.Creation
             internal int AcceptedAppearanceRevision(string id)=>accepted?edit.AcceptedAppearanceRevision(id):0;
             internal int AcceptedRegionRevision(string id)=>accepted?edit.AcceptedRegionRevision(id):0;
             internal int AcceptedStructureRevision(string id)=>accepted?edit.AcceptedStructureRevision(id):0;
-            internal bool Published=>publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
+            internal JObject AcceptedWorldTimeObservation=>(JObject)acceptedWorldTime?.DeepClone();
+            internal JObject AcceptedWeatherObservation=>(JObject)acceptedWeather?.DeepClone();
+            internal bool Published=>edit.HasTemporalCheckpoint?saving?.IsCompletedSuccessfully==true&&saving.Result==null:
+                publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
             internal string InterruptionStatus=>accepted?
                 temporary?"The temporary room edit was accepted. Stopping cannot undo it; use Undo or discard the temporary room. Keep a snapshot to save it.":
                 Published?"The room edit was accepted and saved. Stopping cannot retract it; inspect the room before retrying.":
@@ -163,6 +168,9 @@ namespace Maestro.Quest.Creation
                 // A save-status observer can stop or change the operation.
                 if(ended){error=failure;return success;}
                 error=CurrentIssue();if(error!=null)return Fail(error);
+                // Clock position and fade origin are sampled when accepted, not
+                // backdated to a detached worker's earlier snapshot. No IO is awaited here.
+                if(edit.HasTemporalCheckpoint){ready=true;return true;}
                 if(preparation==null)preparation=storage.PrepareSaveAsync(edit.Snapshot(),cancellation.Token);
                 if(!preparation.IsCompleted)return true;
                 if(preparation.IsCanceled||preparation.IsFaulted){
@@ -209,11 +217,13 @@ namespace Maestro.Quest.Creation
                     bool runtimeChanged=edit.RuntimeProgressChanged;
                     if(!edit.Accept(journal,out error,allowRuntimeProgress:true))return Fail(error);
                     accepted=true;
+                    if(edit.HasTemporalCheckpoint){acceptedWorldTime=editor.ObserveWorldTime();acceptedWeather=editor.ObserveWeather();}
                     if(!temporary){
                         // Install the future and authorize before any Changed callback:
                         // a synchronous flush may wait on it, never on this Unity thread.
-                        saving=editor.saveTask=ObserveAcceptedSave(storage,publication.Completion);
-                        if(!publication.Authorize()){
+                        saving=editor.saveTask=edit.HasTemporalCheckpoint?
+                            SaveAcceptedTemporal(storage,edit.AcceptedTemporalSnapshot(),checkpoint):ObserveAcceptedSave(storage,publication.Completion);
+                        if(!edit.HasTemporalCheckpoint&&!publication.Authorize()){
                             publication.CancelBeforeStart();
                             throw new InvalidOperationException("Prepared publication lost acceptance ownership");
                         }
@@ -233,6 +243,16 @@ namespace Maestro.Quest.Creation
                     }else error="The room edit could not complete; no prepared change was accepted.";
                     return Fail(error);
                 } finally {committing=false;}
+            }
+            static async Task<string> SaveAcceptedTemporal(RoomStorage storage,RoomDocument snapshot,Action<string> checkpoint)
+            {
+                // Native acceptance is irreversible by Stop. Its save owns its own
+                // lifetime, including preparation; outer cancellation cannot cut it off.
+                try {
+                    using var prepared=await storage.PrepareSaveAsync(snapshot).ConfigureAwait(false);
+                    var publication=storage.StartPreparedPublication(prepared,checkpoint);
+                    return await ObserveAcceptedSave(storage,publication.Completion).ConfigureAwait(false);
+                }catch(Exception){return storage.PreserveUnconfirmedEdit("Temporal checkpoint preparation did not complete.");}
             }
             static async Task<string> ObserveAcceptedSave(RoomStorage storage,Task<RoomStorage.PublicationResult> task)
             {

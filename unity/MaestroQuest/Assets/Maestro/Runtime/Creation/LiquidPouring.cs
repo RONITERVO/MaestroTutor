@@ -22,6 +22,13 @@ namespace Maestro.Quest.Creation {
         readonly Dictionary<string,RoomContainer> original=new(),contents=new();
         readonly Collider[] immersionHits=new Collider[64];readonly RaycastHit[] hits=new RaycastHit[64];readonly Vector3[] path=new Vector3[Segments+1];
         RoomEditor editor;RoomPhysicsWorld world;IDisposable write;bool publishing,blocked;float quiet,elapsed;string session=Guid.NewGuid().ToString("N"),error="";
+        int weatherHolds;
+        internal IDisposable HoldWeatherBoundary(){weatherHolds++;return new WeatherBoundary(this);}
+        sealed class WeatherBoundary:IDisposable {
+            LiquidPouring owner;
+            internal WeatherBoundary(LiquidPouring owner)=>this.owner=owner;
+            public void Dispose(){if(owner)owner.weatherHolds--;owner=null;}
+        }
         internal bool Active=>write!=null;
         internal bool Owns(string target)=>Active&&contents.ContainsKey(target);
         internal string Error=>error;

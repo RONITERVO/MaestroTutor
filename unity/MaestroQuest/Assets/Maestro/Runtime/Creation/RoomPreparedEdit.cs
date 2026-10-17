@@ -47,6 +47,13 @@ namespace Maestro.Quest.Creation
             }
             internal RoomDocument Snapshot()=>document.Copy();
             internal bool VisualOnly=>change.VisualOnly;
+            internal bool HasTemporalCheckpoint=>change.TimeEdit!=WorldTimeEdit.Exact||change.WeatherTransition;
+            // Capture once immediately after native acceptance, before observers run.
+            // Later clock/placement progress remains dirty for its normal checkpoint.
+            internal RoomDocument AcceptedTemporalSnapshot() {
+                if(!accepted||!HasTemporalCheckpoint)throw new InvalidOperationException("Temporal edit has not been accepted");
+                var value=document.Copy();value.worldTime=owner.WorldTime;value.weather=owner.Weather;return value;
+            }
             internal int AcceptedLightingRevision=>accepted?acceptedLightingRevision:0;
             internal int AcceptedVisibilityRevision(string id)=>accepted&&visibilityRevisions.TryGetValue(id,out var value)?value:0;
             internal int AcceptedObjectRevision(string id)=>accepted&&(targetRevisions.TryGetValue(id,out var value)||regionMemberRevisions.TryGetValue(id,out value))?value:0;
@@ -61,10 +68,11 @@ namespace Maestro.Quest.Creation
             internal HashSet<string> ChangedObjects=>change.Before.Concat(change.After).Select(x=>x.id).ToHashSet();
             // A background save can checkpoint an earlier runtime clock/viewpoint.
             // Publication applies only the authored delta, preserving newer runtime
-            // state. Explicit clock edits still require the exact clock position.
+            // state. Explicit temporal edits resolve their own delta at acceptance.
             internal bool RuntimeProgressChanged=>owner.runtimePlacementAdvances!=runtimePlacements||JsonUtility.ToJson(owner.viewpoint)!=viewpointState||JsonUtility.ToJson(owner.worldTime)!=timeState;
             // Only explicitly recorded runtime placements may advance the global
-            // clock. Authored edits, another fork and any changed target remain stale.
+            // clock. Authored edits and another fork remain stale. Visual deltas
+            // can preserve newer target placement; physical edits require an unchanged target.
             // Apply only this delta; newer unrelated poses remain dirty for a later save.
             bool RevisionCurrent(bool allowRuntimeProgress)=>owner.clock.Next==revision||allowRuntimeProgress&&
                 (long)owner.clock.Next-revision==owner.runtimePlacementAdvances-runtimePlacements&&
@@ -72,7 +80,7 @@ namespace Maestro.Quest.Creation
             internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&RevisionCurrent(allowRuntimeProgress)&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&
                 (allowRuntimeProgress||JsonUtility.ToJson(owner.viewpoint)==viewpointState)&&
-                (allowRuntimeProgress&&change.AfterWorldTime==null&&change.BeforeWorldTime==null||JsonUtility.ToJson(owner.worldTime)==timeState);
+                (allowRuntimeProgress&&(change.TimeEdit!=WorldTimeEdit.Exact||change.AfterWorldTime==null&&change.BeforeWorldTime==null)||JsonUtility.ToJson(owner.worldTime)==timeState);
             internal bool Accept(RoomJournal expected,out string error,bool allowRuntimeProgress=false)
             {
                 error="The room changed while the edit was being prepared; inspect it before retrying";if(!Current(expected,allowRuntimeProgress))return false;
@@ -80,7 +88,14 @@ namespace Maestro.Quest.Creation
                 if(operation=="baseline") {if(baseline)owner.Set(change.Before,change.After);}
                 else if(operation=="undo") {owner.undo.RemoveAt(undoCount-1);owner.Publish(change,false);owner.redo.Add(change);}
                 else if(operation=="redo") {owner.redo.RemoveAt(redoCount-1);owner.Publish(change,true);owner.undo.Add(change);}
-                else {owner.Publish(change,true);owner.undo.Add(change);if(owner.undo.Count>32)owner.undo.RemoveAt(0);owner.redo.Clear();}
+                else {
+                    // An initially equal seek still carries intent: time may have ticked
+                    // before admission. Refresh only a new edit, never history entries.
+                    if(change.TimeEdit!=WorldTimeEdit.Exact)change.BeforeWorldTime=owner.WorldTime;
+                    if(change.WeatherTransition)change.BeforeWeather=owner.Weather;
+                    bool noOp=HasTemporalCheckpoint&&owner.TemporalNoOp(change);
+                    if(!noOp){owner.Publish(change,true);owner.undo.Add(change);if(owner.undo.Count>32)owner.undo.RemoveAt(0);owner.redo.Clear();}
+                }
                 foreach(var id in targetRevisions.Keys.ToArray())targetRevisions[id]=owner.ObjectRevision(id);
                 foreach(var id in environmentRevisions.Keys.ToArray())environmentRevisions[id]=owner.EnvironmentRevision(id);
                 foreach(var id in audioRevisions.Keys.ToArray())audioRevisions[id]=owner.AudioRevision(id);
@@ -115,13 +130,31 @@ namespace Maestro.Quest.Creation
             d.environmentProfiles=Swap(d.environmentProfiles,forward?c.BeforeEnvironments:c.AfterEnvironments,forward?c.AfterEnvironments:c.BeforeEnvironments,x=>x.id);
             d.appearances=Swap(d.appearances,forward?c.BeforeAppearances:c.AfterAppearances,forward?c.AfterAppearances:c.BeforeAppearances,x=>x.id);
             d.visibilityLayers=Swap(d.visibilityLayers,forward?c.BeforeVisibility:c.AfterVisibility,forward?c.AfterVisibility:c.BeforeVisibility,x=>x.id);
-            d.lighting=(forward?c.AfterLighting:c.BeforeLighting)??d.lighting;d.worldTime=(forward?c.AfterWorldTime:c.BeforeWorldTime)??d.worldTime;d.weather=(forward?c.AfterWeather:c.BeforeWeather)??d.weather;return d;
+            d.lighting=(forward?c.AfterLighting:c.BeforeLighting)??d.lighting;d.worldTime=ResolveTime(forward?c.AfterWorldTime:c.BeforeWorldTime,c.TimeEdit)??d.worldTime;d.weather=ResolveWeather(forward?c.AfterWeather:c.BeforeWeather,c.WeatherTransition)??d.weather;return d;
         }
         // Presentation history carries render settings, never a former live pose.
         // This is used for both publication and Undo/Redo previews.
         RoomObjectData[] PreserveVisualPlacement(RoomObjectData[] values)=>values.Select(value=>{
             var copy=value.Copy();if(items.TryGetValue(copy.id,out var current)){copy.position=current.position;copy.rotation=current.rotation;copy.scale=current.scale;}return copy;
         }).ToArray();
+        RoomWorldTime ResolveTime(RoomWorldTime requested,WorldTimeEdit mode) {
+            if(requested==null)return null;
+            if(mode==WorldTimeEdit.Exact)return requested.Copy();
+            var value=WorldTime;
+            if(mode==WorldTimeEdit.Settings)value.settings=requested.settings?.Copy();
+            else {value.day=requested.day;value.second=requested.second;}
+            return value;
+        }
+        RoomWeather ResolveWeather(RoomWeather requested,bool transition) {
+            if(requested==null)return null;
+            if(!transition)return requested.Copy();
+            if(weather.SameTarget(requested))return Weather; // Never restart an unchanged fade.
+            var value=requested.Copy();value.from=new Art.WeatherProjection(weather).Sample(WorldSeconds).Settings();
+            value.startDay=worldTime.day;value.startSecond=worldTime.second;return value;
+        }
+        bool TemporalNoOp(Change c)=>c.WeatherTransition?weather.SameTarget(c.AfterWeather):
+            c.TimeEdit==WorldTimeEdit.Settings?worldTime.settings.Same(c.AfterWorldTime.settings):
+            worldTime.day==c.AfterWorldTime.day&&worldTime.second==c.AfterWorldTime.second;
         void Publish(Change c,bool forward)
         {
             var after=forward?c.After:c.Before;
@@ -132,7 +165,7 @@ namespace Maestro.Quest.Creation
             SetEnvironments(forward?c.BeforeEnvironments:c.AfterEnvironments,forward?c.AfterEnvironments:c.BeforeEnvironments);
             SetAppearances(forward?c.BeforeAppearances:c.AfterAppearances,forward?c.AfterAppearances:c.BeforeAppearances);
             SetVisibility(forward?c.BeforeVisibility:c.AfterVisibility,forward?c.AfterVisibility:c.BeforeVisibility);
-            SetLighting(forward?c.AfterLighting:c.BeforeLighting);SetWorldTime(forward?c.AfterWorldTime:c.BeforeWorldTime);SetWeather(forward?c.AfterWeather:c.BeforeWeather);
+            SetLighting(forward?c.AfterLighting:c.BeforeLighting);SetWorldTime(ResolveTime(forward?c.AfterWorldTime:c.BeforeWorldTime,c.TimeEdit));SetWeather(ResolveWeather(forward?c.AfterWeather:c.BeforeWeather,c.WeatherTransition));
         }
     }
 }

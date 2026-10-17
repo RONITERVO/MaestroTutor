@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation
 {
+    internal enum WorldTimeEdit { Exact, Settings, Position }
     [Serializable] public sealed class WorldLightKeyframe
     {
         public double second;
@@ -21,6 +22,7 @@ namespace Maestro.Quest.Creation
         public double rate=1;
         public WorldLightKeyframe[] frames=Array.Empty<WorldLightKeyframe>();
         public WorldTimeSettings Copy()=>new(){running=running,cycleEnabled=cycleEnabled,rate=rate,frames=frames?.Select(x=>x?.Copy()).ToArray()};
+        internal bool Same(WorldTimeSettings other)=>other!=null&&JsonUtility.ToJson(this)==JsonUtility.ToJson(other);
         public bool Valid=>double.IsFinite(rate)&&rate>=0&&rate<=3600&&frames!=null&&frames.Length<=8&&(!cycleEnabled||frames.Length>=2)&&frames.All(x=>x!=null&&x.Valid)&&frames.Zip(frames.Skip(1),(a,b)=>a.second<b.second).All(x=>x);
     }
     /// <summary>One authored region clock. No wall-clock/offline catch-up and no physics time scaling.</summary>
@@ -77,13 +79,21 @@ namespace Maestro.Quest.Creation
             if(!CanChangeWorldTime(revision,out error))return false;
             if(settings==null||!settings.Valid){error="Choose valid clock settings and up to eight ordered lighting keyframes";return false;}
             var value=WorldTime;value.settings=settings.Copy();
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World time settings saved",false,out error,visualOnly:true,worldTime:value);
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World time settings saved",false,out error,visualOnly:true,worldTime:value,timeEdit:WorldTimeEdit.Settings);
         }
         internal bool SeekWorldTime(int revision,int day,double second,out string error){
             if(!CanChangeWorldTime(revision,out error))return false;
             if(!RoomWorldTime.PositionValid(day,second)){error="Choose a day 0–999999 and a second within that day";return false;}
             var value=WorldTime;value.day=day;value.second=second;
-            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World time moved",false,out error,visualOnly:true,worldTime:value);
+            return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),"World time moved",false,out error,visualOnly:true,worldTime:value,timeEdit:WorldTimeEdit.Position);
+        }
+        internal bool BeginWorldTime(int revision,WorldTimeSettings settings,int day,double second,bool seek,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null) {
+            var captured=WorldTime;
+            if(seek){captured.day=day;captured.second=second;}else captured.settings=settings?.Copy();
+            return BeginPreparedEdit(()=>CanChangeWorldTime(revision,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,
+                    worldTime:captured,visualOnly:true,timeEdit:seek?WorldTimeEdit.Position:WorldTimeEdit.Settings),
+                seek?"World time moved":"World time settings saved",out pending,out error,publicationCheckpoint);
         }
         internal bool WorldTimeActive=>journal!=null&&isActiveAndEnabled&&!Ownership.Suspended&&!RuntimeGate.Held&&!WriteGate.Frozen&&!saveDispatch.Frozen&&CanSaveRoom&&Frame.Valid;
         internal void TickWorldTime(double delta){

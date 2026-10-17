@@ -29,10 +29,10 @@ namespace Maestro.Quest.Tests
             var settings=new WeatherSettings{rainMmPerHour=60,cloudCover=1,fogDensity=.1f};
             Assert.That(editor.SetWeather(editor.WeatherRevision,1,settings,10,out var e),Is.False);StringAssert.Contains("clock",e);
             Assert.That(editor.ConfigureWorldTime(editor.WorldTimeRevision,new(){running=true,rate=1},out e),Is.True,e);
-            var request=TemplateRequest(WeatherCall(settings,10));request.conditions=Array.Empty<RoomObjectCondition>();var ex=new RoomAgentExecutor(editor);Assert.That(ex.Execute(request,out e,out _),Is.True,e);int revision=editor.WeatherRevision;
-            Assert.That(ex.Execute(request,out e,out _),Is.True,e);Assert.That(editor.WeatherRevision,Is.EqualTo(revision));Assert.That(editor.CurrentWeather.Rain,Is.Zero);
-            Assert.That(editor.SeekWorldTime(editor.WorldTimeRevision,0,43205,out e),Is.True,e);Assert.That(editor.CurrentWeather.Rain,Is.EqualTo(30));Assert.That(WorldWeatherCapability.Fact().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,null,out _),Is.True);
-            editor.GetComponent<WorldLightingView>().Refresh();Assert.That(Shader.GetGlobalFloat("_MaestroFogDensity"),Is.EqualTo(.05f).Within(.00001));editor.Undo();Assert.That(editor.CurrentWeather.Rain,Is.Zero);editor.Redo();Assert.That(editor.CurrentWeather.Rain,Is.EqualTo(30));yield return null;
+            var request=TemplateRequest(WeatherCall(settings,10));request.conditions=Array.Empty<RoomObjectCondition>();var ex=new RoomAgentExecutor(editor);Assert.That(ex.Execute(request,out e,out _),Is.True,e);yield return SpatialSettingsCompletion.Wait(ex.Executions);int revision=editor.WeatherRevision;
+            Assert.That(ex.Execute(request,out e,out _),Is.True,e);Assert.That(editor.WeatherRevision,Is.EqualTo(revision));Assert.That((double)ex.Executions.Observe()["selected"]["output"]["current"]["rainMmPerHour"],Is.Zero);float prior=editor.CurrentWeather.Rain;
+            Assert.That(editor.SeekWorldTime(editor.WorldTimeRevision,0,editor.Weather.startSecond+5,out e),Is.True,e);Assert.That(editor.CurrentWeather.Rain,Is.EqualTo(30));Assert.That(WorldWeatherCapability.Fact().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,null,out _),Is.True);
+            editor.GetComponent<WorldLightingView>().Refresh();Assert.That(Shader.GetGlobalFloat("_MaestroFogDensity"),Is.EqualTo(.05f).Within(.00001));editor.Undo();Assert.That(editor.CurrentWeather.Rain,Is.EqualTo(prior).Within(.0001));editor.Redo();Assert.That(editor.CurrentWeather.Rain,Is.EqualTo(30));yield return null;
         }
         [UnityTest]public IEnumerator WeatherFailedSaveAndTemporaryDiscardPreserveAcceptedWeather(){
             Assert.That(editor.TryFlush(out var e),Is.True,e);int revision=editor.WeatherRevision;

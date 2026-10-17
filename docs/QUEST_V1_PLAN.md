@@ -13570,3 +13570,68 @@ rain/liquid episode boundaries. Exact-clock checks are not relaxed by this visua
 change. Other synchronous authoring/import paths, owner-thread snapshot/native
 cost, physical/audio/provider/capacity acceptance and Store gates remain open.
 V1 is incomplete. See the visual completion contract in QUEST_WORLD_AUTHORING.md.
+
+## Clock and weather completion — 2026-10-17
+
+Clock configuration, explicit seeks and weather changes now use the common
+bounded persisted-edit queue and completion receipt in the book, agent and
+programs. A temporal change waits for prior saving, then resolves its delta at
+native acceptance and captures that exact clock/weather checkpoint. Background
+preparation and conditional publication use the existing accepted-primary guards.
+The save future is installed before callbacks; completion waits for native and
+durable success. Later runtime movement/time remains dirty for its next save.
+
+Configuration Undo/Redo restores settings while preserving current day/second.
+Seeks preserve settings and remember the actual pre-acceptance position, even if
+the requested destination initially matched the clock. Weather starts from the
+current sample at acceptance. Weather Undo/Redo starts a transition toward the
+previous/next target using its duration and seed. Reapplying unchanged settings
+creates no temporal history or revision churn and does not restart a fade.
+Whole-document snapshot restoration retains exact snapshot semantics; these
+metadata-only intents cannot conceal object/resource changes.
+
+Weather admission seals the existing liquid episode under a short flow-only
+lease. Its callbacks cannot reopen flow across the transition; cancellation,
+acceptance or failure releases the lease. Collected quantities keep separate
+liquid Undo and events. Clock, animation and independent physics continue.
+Existing liquid-episode publication remains synchronous; dependent vessel
+readiness and owner-thread snapshot/native costs remain explicit follow-up work.
+
+Receipts retain immutable acceptance-time observations despite later ticking or
+human edits. Before acceptance, cancellation leaves the requested change unapplied.
+After acceptance, Stop cannot cancel any part of its save. Failed saving preserves
+disk and leaves the live change unconfirmed, blocks saving and requires recovery;
+no success or automatic replay is reported. Temporary Keep/Discard uses the same
+history, while synchronous editor entry points retain save-before-return behavior.
+
+Focused verification passes 81 EditMode and 77 PlayMode cases, including eight
+new temporal-history and eight pending temporal tests. The first EditMode run
+passed 73 existing cases but the eight new fixtures omitted the room version.
+After correcting that, one conflict fixture tried an invalid built-in scale;
+using a valid authored colour change produced the final 81 passes. No runtime
+behavior or deadline was relaxed. All 77 PlayMode cases and 3,189 web tests passed
+on their first runs. Application/probe TypeScript and generated catalog parity
+pass. Delayed publication confirms independent falling objects and advancing time;
+accepted Stop drains saving; file obstruction preserves disk; rain admission
+preserves quantities and releases its lease on cancellation.
+
+The complete offline Headless journey 60215ea1f9ab417c9cc12cd02c29e5f9 passes with
+2,263 observations and 2,253 read sets. The complete original
+Book journey 62fd28f617dd48768eff1595dc5c7ec4 passes with 3,212
+observations and 1,010 requests. Headless records eight clock/weather
+completion receipts; Book records four through the original generated forms.
+Both retain existing creation/physics/audio/appearance/area/visual coverage,
+human-edit preservation, stale refusal and reload without replay. Periodic object
+inventories remain empty. Offline fixtures are not provider or device acceptance.
+
+Evidence is in .quest-evidence/temporal-save-20261017/. All 3,250 native inputs,
+5,172 source inputs and 14 protected local files are pinned and verified,
+with documentation-only changes recorded separately. Four inline/eight discussion
+review comments are unchanged; none was posted. No Android build, device, paid
+provider, signing, deployment or Meta action ran. The latest full native-suite
+checkpoint remains 7d518ec9 with its unresolved intermittent Meta audio crash and
+successful unchanged rerun; production reflections remain disabled.
+
+Other synchronous authoring/import paths, owner-thread costs, physical/acoustic/
+provider/capacity acceptance and Store gates remain open. V1 is incomplete.
+See the temporal acceptance contract in QUEST_WORLD_AUTHORING.md.

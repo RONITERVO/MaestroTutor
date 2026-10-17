@@ -2733,8 +2733,9 @@ The commit checks the same journal, history, live target and workspace again.
 Authored changes, including changed physics placements, invalidate the candidate.
 Runtime clock progression and personal viewpoint updates can coexist with an
 unrelated authored edit: the older checkpoint is saved, the newer live values are
-preserved, and remain dirty for the next save. An edit that changes world time
-itself still requires its exact clock position; this is not general stale merging.
+preserved, and remain dirty for the next save. Whole-clock snapshot replacement
+still requires the exact clock position. The later temporal checkpoint contract
+below distinguishes explicit configuration/seek intent; this is not general stale merging.
 
 Native resources are prepared immediately before conditional file publication and
 journal acceptance, on the owner thread without yielding between those steps.
@@ -2930,10 +2931,69 @@ Stop drains the save and cannot retract it; a final save failure leaves the live
 edit inspectable and follows the shared conflict/recovery path. Temporary
 Keep/Discard and one Undo use the same journal.
 
-Clock and weather are separate pending work. A configuration change must not
-rewind advancing time; a seek must retain its explicit destination and meaningful
-pre-seek history. Weather transitions must define their start at acceptance and
-coordinate rain/liquid collection boundaries. Their current synchronous paths
-are not claimed as asynchronous, and the visual runtime-progress allowance does
-not relax exact-clock checks for explicit time edits. Physical headset frame
-time and appearance remain separate acceptance requirements.
+Clock and weather use their own temporal delta semantics within this same
+queue, described below. Whole-document restores still retain exact snapshot
+semantics. Physical headset frame time and appearance remain separate acceptance
+requirements.
+
+## Clock and weather acceptance checkpoints
+
+`world.time.configure`, `world.time.seek` and `world.weather.set` are completion
+capabilities in the same bounded persisted-edit queue. The original book forms,
+agent requests and program blocks use that catalog and await the original action
+receipt. Requested settings/destinations are captured before waiting; no waiter
+copies the whole room. Exact authored revisions, history and workspace identity
+are checked again at admission. Ordinary ticking and recorded runtime placements
+can continue, but another authored edit invalidates a prepared request.
+
+Temporal changes have an explicit native acceptance boundary. Once previous
+saving has drained, the owner thread resolves the requested delta against the
+current clock/weather, applies it and captures that exact state. Background
+preparation and conditional publication then save this detached checkpoint through
+the existing accepted-primary and room/memory guards. The save future is installed
+before change callbacks, so a callback flush can wait without deadlocking on the
+owner thread. Completion waits for confirmed saving and native application.
+The receipt is an immutable acceptance-time observation, not a claim that the
+clock still shows that position when the caller reads it. Later runtime progress
+remains dirty for the next checkpoint.
+
+Clock configuration history contains settings intent: rate, running state and
+daily lighting frames. Acceptance and Undo/Redo keep the current day/second.
+A deliberate seek contains position intent. It preserves current settings and
+records the actual position immediately before acceptance as its Undo destination.
+Even a destination equal to the time at preparation remains a seek request until
+acceptance, since time may advance while waiting. An unchanged configuration or
+seek at acceptance creates no temporal Undo, preserves Redo and keeps the edit
+revision. Whole-document snapshot restoration still restores exact saved time;
+these metadata-only modes cannot be mixed with object/resource changes.
+
+Weather starts at the current authored day/second and interpolates from the
+weather sampled at acceptance. Undo/Redo restores the previous/next target, seed
+and duration by starting a new transition from the currently sampled weather.
+Zero duration remains immediate. Reapplying the same target, seed and duration
+keeps the current fade and creates no weather Undo or revision churn. It never
+backdates a new fade to the time a save worker happened to start. Seeking still
+resamples an existing weather transition without replaying physical water input.
+
+Weather admission briefly holds liquid flow while sealing the existing episode
+and preparing acceptance. Event callbacks cannot reopen a flow across that
+boundary. The lease releases at acceptance, cancellation or preparation failure;
+clock, animation and independent objects keep running. Collected water retains
+its own accepted quantity and Undo/event receipts. The existing liquid-episode
+publication is still synchronous: this increment does not claim that every
+water/authoring operation is free of owner-thread disk work, nor that dependent
+vessels can ignore their shared flow readiness.
+
+Before acceptance, cancellation leaves the requested temporal change unapplied.
+After acceptance, Stop ends observation but cannot retract the live change or
+cancel any part of its save. A final save failure preserves saved files and the
+live, unconfirmed change, blocks further saving and requires inspection/recovery;
+it is not a successful action receipt and must not be blindly replayed. Temporary
+play uses the same live/history semantics, with durability only after Keep.
+Legacy synchronous editor entry points retain save-before-return behavior.
+
+The accepted snapshot copy and native preparation still run on the owner thread.
+This design avoids waiting for worker IO while freezing world time, but it is not
+a measured Quest latency or larger-world capacity claim. Those acceptance gates,
+remaining synchronous authoring/import paths and complete release checks remain
+open.
