@@ -57,6 +57,11 @@ namespace Maestro.Quest.Tests
             string id=MakeLayer(out _);InkAdd(id);var saved=editor.Read(id).Copy();source.Entries=Array.Empty<ScannedSurface>();yield return null;
             Assert.That(editor.Find(id).gameObject.activeSelf,Is.False);Assert.That(editor.NativeEntityDormant(id),Is.False);
             Assert.That(modeActions.Execute(SettingsRequest("object.delete",new JObject{["target"]=id}),out var error),Is.True,error);
+            float deadline=Time.realtimeSinceStartup+20;
+            while((string)modeActions.Observe()["selected"]["phase"] is "preparing" or "running"){
+                Assert.Less(Time.realtimeSinceStartup,deadline);yield return null;
+            }
+            Assert.That((string)modeActions.Observe()["selected"]["phase"],Is.EqualTo("completed"),modeActions.Observe().ToString());
             Assert.That(editor.Read(id),Is.Null);editor.Undo();Assert.That(editor.Read(id).scanAnchors[0].roomId,Is.EqualTo(saved.scanAnchors[0].roomId));
             Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));yield return null;
             Assert.That(editor.Find(id).gameObject.activeSelf,Is.False,"Undo retains the exact missing anchor rather than inventing visibility");

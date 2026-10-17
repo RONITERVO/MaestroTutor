@@ -245,7 +245,7 @@ namespace Maestro.Quest.Tests
                     waiting.Add(operation);
                 }
                 Assert.IsFalse(PersistedEditOperation.Start(editor,id,begin,out var rejected,out error));
-                Assert.IsNull(rejected);StringAssert.Contains("Too many waiting placements",error);
+                Assert.IsNull(rejected);StringAssert.Contains("Too many waiting object edits",error);
                 waiting[0].Stop(false);
                 Assert.IsTrue(PersistedEditOperation.Start(editor,id,begin,out var replacement,out error),error);
                 waiting.Add(replacement);

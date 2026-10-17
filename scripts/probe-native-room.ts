@@ -520,7 +520,7 @@ try{
   const appearanceInitial=await appearanceRead();
   const appearanceBound=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.appearance.bind',version:1,arguments:{operation:'assign',target:fieldId,revision:await nativeObjects.revision(fieldId),appearanceRevision:(appearanceInitial.catalog!.value as {revision:number}).revision,binding:{version:1,appearanceId,kind:'root',partId:'',modelHash:'',materialIndex:-1,tint:''}}}}}]);
   const appearanceBeforePaint=await appearanceBindings();
-  const appearancePainted=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.color.set',version:1,arguments:{target:fieldId,red:0,green:0,blue:1}}}}]);
+  const appearancePainted=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.color.set',version:1,arguments:{target:fieldId,red:0,green:0,blue:1}}}}]));
   const appearanceAfterPaint=await appearanceBindings(),appearanceUnchanged=await appearanceRead();
   if((appearanceAfterPaint.catalog!.value as {bindings:{tint:string}[]}).bindings[0].tint!=='#0000FF'||(await nativeObjects.observation(fieldId)).color.b!==1)throw new Error('Object paint did not update the canonical local appearance');
   if(JSON.stringify(appearanceInitial.catalog!.value)!==JSON.stringify(appearanceUnchanged.catalog!.value))throw new Error('Object painting changed a shared appearance');

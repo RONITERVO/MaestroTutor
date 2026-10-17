@@ -15,26 +15,26 @@ namespace Maestro.Quest.Creation
         internal bool PendingEditSave=>pendingPersistedEdit!=null&&!pendingPersistedEdit.Drained;
         // Owner-thread admission belongs to this room, so all capability callers
         // share arrival order. A waiter holds no snapshot, body or write lease.
-        readonly LinkedList<PlacementAdmission> placementAdmissions=new();
-        internal bool ReservePlacement(out PlacementAdmission admission,out string error)
+        readonly LinkedList<EditAdmission> editAdmissions=new();
+        internal bool ReserveEdit(out EditAdmission admission,out string error)
         {
             admission=null;
-            if(placementAdmissions.Count>=Rules.RuleScheduler.MaximumConcurrent){
-                error="Too many waiting placements; wait for one to finish or cancel it";return false;
+            if(editAdmissions.Count>=Rules.RuleScheduler.MaximumConcurrent){
+                error="Too many waiting object edits; wait for one to finish or cancel it";return false;
             }
-            admission=new PlacementAdmission(placementAdmissions);error=null;return true;
+            admission=new EditAdmission(editAdmissions);error=null;return true;
         }
-        internal sealed class PlacementAdmission:IDisposable
+        internal sealed class EditAdmission:IDisposable
         {
-            readonly LinkedListNode<PlacementAdmission> node;
-            internal PlacementAdmission(LinkedList<PlacementAdmission> queue)=>node=queue.AddLast(this);
+            readonly LinkedListNode<EditAdmission> node;
+            internal EditAdmission(LinkedList<EditAdmission> queue)=>node=queue.AddLast(this);
             internal bool Valid=>node.List!=null;
             internal bool First=>Valid&&ReferenceEquals(node.List.First,node);
             public void Dispose(){node.List?.Remove(node);}
         }
         void CancelPendingEdit()
         {
-            placementAdmissions.Clear();
+            editAdmissions.Clear();
             pendingPersistedEdit?.Dispose();
         }
 
@@ -62,6 +62,31 @@ namespace Maestro.Quest.Creation
                     ()=>CanChangeObject(id,false,true,false,out var issue,poseOwner)?null:issue,message,true,publicationCheckpoint);
                 edit=null;write=null;pose=null;return true;
             } finally {pose?.Dispose();edit?.Dispose();write?.Dispose();}
+        }
+
+        delegate bool PrepareContent(out RoomObjectData[] replacements,out string error);
+        internal bool BeginPaint(string id,Color color,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
+            BeginContentEdit(()=>CanEditObject(id,true,out var issue)?null:issue,
+                (out RoomObjectData[] values,out string issue)=>{var data=Pose(Read(id),Find(id).transform);values=new[]{data};return PaintAppearance(data,color,out issue);},
+                Array.Empty<string>(),"Object painted",out pending,out error,publicationCheckpoint);
+        internal bool BeginDelete(string id,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
+            BeginContentEdit(()=>CanDeleteObject(id,out var issue)?null:issue,
+                (out RoomObjectData[] values,out string issue)=>{values=Array.Empty<RoomObjectData>();issue=null;return true;},new[]{id},"Object deleted — Undo restores it",out pending,out error,publicationCheckpoint);
+        bool BeginContentEdit(Func<string> validate,PrepareContent prepare,string[] removals,string message,
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
+        {
+            pending=null;
+            if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
+            error=validate();if(error!=null)return false;
+            var write=WriteGate.TryWrite(out error);if(write==null)return false;
+            RoomJournal.PreparedEdit edit=null;
+            try {
+                if(!prepare(out var replacements,out error)||!journal.Prepare(replacements,removals,out edit,out error))return false;
+                // Component changes do not acquire or reset physical pose. Deletion
+                // needs only the saved identity, including unavailable native objects.
+                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,null,validate,message,false,publicationCheckpoint);
+                edit=null;write=null;return true;
+            } finally {edit?.Dispose();write?.Dispose();}
         }
 
         // Preparation and final disk publication are detached workers. The owner
@@ -100,7 +125,7 @@ namespace Maestro.Quest.Creation
                 "The live room edit was accepted. Saving is still pending or unconfirmed; stopping cannot retract it. Inspect its outcome before retrying.":null;
             string CurrentIssue()
             {
-                if(!editor||!editor.isActiveAndEnabled||!editor.Frame.Valid||editor.Ownership.Suspended||editor.WriteGate.Frozen||
+                if(!editor||!editor.isActiveAndEnabled||(applyPose&&!editor.Frame.Valid)||editor.Ownership.Suspended||editor.WriteGate.Frozen||
                     editor.saveDispatch.Frozen||!ReferenceEquals(editor.journal,journal)||editor.TemporaryRoom!=temporary)
                     return "The room edit ended because its workspace is no longer available";
                 if(!edit.Current(journal,allowRuntimeProgress:true))return "The room changed while the edit was being prepared; inspect it before retrying";

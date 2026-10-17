@@ -70,7 +70,7 @@ namespace Maestro.Quest.Tests
                 new RuleStep {action=RuleActionKind.DeleteObject,targetId=target}
             }) {
                 var definition=BehaviourCatalog.Actions.Single(x=>LegacyCapabilityAdapters.Kind(x.Id)==step.action);
-                Assert.That(definition.Duration,Is.EqualTo(step.action is RuleActionKind.MoveObject or RuleActionKind.ResizeObject?"completion":"instant"));
+                Assert.That(definition.Duration,Is.EqualTo("completion"));
                 Assert.That(definition.Channels,Is.EqualTo(new[]{"wholeTarget"}));
                 var args=CapabilityArguments.FromStep(step);
                 Assert.That(BehaviourCatalog.TryInvocation(definition.Id,1,args,out var restored,out var error),Is.True,error);

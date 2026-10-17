@@ -444,7 +444,7 @@ namespace Maestro.Quest.Tests
             var before=block.transform.position;yield return new WaitForSeconds(.12f);Assert.That(block.transform.position.x,Is.GreaterThan(before.x));
 
             var executor=new RoomAgentExecutor(editor);var request=ObjectEditRequest(ObjectEditCall("object.delete",created));
-            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.Find(created),Is.Null);EditEvidence("deleted",executor,source);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);Assert.That(editor.Find(created),Is.Null);EditEvidence("deleted",executor,source);
             string run=(string)request.commands[0].execution["runId"];
             Assert.That((string)new InvocationReceipts(directory).Find(run)["phase"],Is.EqualTo("completed"));
             Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==created),Is.False);
@@ -515,6 +515,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);var paint=ObjectEditRequest(ObjectEditCall("object.color.set",id,("red",.2),("green",.4),("blue",1)));
             Assert.That(executor.Execute(paint,out error,out _),Is.True,error);
             Assert.That(item.transform.localPosition,Is.EqualTo(position));Assert.That(body.linearVelocity,Is.EqualTo(velocity));Assert.That(body.angularVelocity,Is.EqualTo(spin));
+            yield return AgentPlacementCompleted(executor);
             Assert.That(editor.Read(id).position,Is.EqualTo(position));EditEvidence("painted",executor);
             int revision=editor.ObjectRevision(id);Assert.That(executor.Execute(paint,out error,out _),Is.True,error);Assert.That(editor.ObjectRevision(id),Is.EqualTo(revision));
             var move=ObjectEditRequest(ObjectEditCall("object.position.set",id,("x",.5),("y",2),("z",1)));
@@ -549,7 +550,8 @@ namespace Maestro.Quest.Tests
             before=JsonUtility.ToJson(editor.Read(id));
             Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"room.v999.json"),"preserve newer save");
             var failing=ObjectEditRequest(ObjectEditCall("object.color.set",id,("red",1),("green",0),("blue",0)));
-            Assert.That(executor.Execute(failing,out error,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));
+            Assert.That(executor.Execute(failing,out error,out _),Is.False);
+            Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(before));
             Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("failed"));
             Assert.That(File.ReadAllText(Path.Combine(directory,"room.v999.json")),Is.EqualTo("preserve newer save"));
         }
@@ -564,7 +566,10 @@ namespace Maestro.Quest.Tests
             var sequence=new RuleSequence {id="",name="Collection painting",program=source};
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",reference="collection",sequence=sequence}}},out var error,out var ids),Is.True,error);
             int count=editor.Snapshot().objects.Length;Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
-            for(int i=0;i<60&&!runtime.Scheduler.ObserveRuns().Any(r=>r.waiting);i++)yield return null;
+            float deadline=Time.realtimeSinceStartup+20;
+            while(!runtime.Scheduler.ObserveRuns().Any(r=>r.waiting)){
+                Assert.Less(Time.realtimeSinceStartup,deadline,"Collection edits did not reach their event wait");yield return null;
+            }
             var run=runtime.Scheduler.ObserveRuns().Single();Assert.That(run.waiting,Is.True,runtime.Scheduler.LastError);
             var state=run.state.Single(v=>v.name=="items");Assert.That(state.type,Is.EqualTo("list"));var items=JArray.Parse(state.value);Assert.That(items.Count,Is.EqualTo(2));
             Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+2));

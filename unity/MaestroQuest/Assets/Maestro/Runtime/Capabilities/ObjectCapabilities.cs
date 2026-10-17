@@ -82,7 +82,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.position.set";
         public override string Label=>"Move object";
-        public override string Description=>"Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Applies the requested placement at native acceptance."+PersistedEditOperation.Persistence;
+        public override string Description=>"Place an existing object at x/y/z in room metres, within 25 m of origin. Keeps rotation and scale. Applies the requested placement at native acceptance."+PersistedEditOperation.PlacementPersistence;
         public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
@@ -105,7 +105,7 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.scale.set";
         public override string Label=>"Resize object";
-        public override string Description=>"Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5."+PersistedEditOperation.Persistence;
+        public override string Description=>"Set uniform scale while retaining current position, rotation, model and recipe. User objects allow 0.1–4, the book 0.65–1.8, and Maestro 0.3–1.5."+PersistedEditOperation.PlacementPersistence;
         public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
@@ -126,8 +126,8 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"object.color.set";
         public override string Label=>"Paint object";
-        public override string Description=>"Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. If a root appearance is bound, updates its explicit local tint override without changing the shared definition or another object; specific part/material bindings still win. Saves before completion, one Undo edit.";
-        public override string Duration=>"instant";
+        public override string Description=>"Set RGB tint, each 0–1, on a user-created object. Preserves its live position and velocity. Recipes, drawings and imported models keep their geometry. The included book and Maestro cannot be painted. If a root appearance is bound, updates its explicit local tint override without changing the shared definition or another object; specific part/material bindings still win."+PersistedEditOperation.Persistence;
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override JObject InputSchema=>Object(new JObject {["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32)),["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)});
@@ -136,15 +136,18 @@ namespace Maestro.Quest.Programs
             return context.Editor.CanEditObject((string)arguments["target"],true,out error);
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.PaintObject((string)arguments["target"],ObjectCapabilityData.Color(arguments),out error))return false;operation=new CompletedCapability();return true;
+            string target=(string)arguments["target"];var color=ObjectCapabilityData.Color(arguments);
+            return PersistedEditOperation.Start(context.Editor,target,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>context.Editor.BeginPaint(target,color,out pending,out issue),out operation,out error,
+                (out string issue)=>context.Editor.CanEditObject(target,true,out issue));
         }
     }
     internal sealed class DeleteObjectCapability : CapabilityModule
     {
         public override string Id=>"object.delete";
         public override string Label=>"Delete object";
-        public override string Description=>"Remove a user-created object by its saved identity after saving the room, even when its native model is unavailable or dormant. Deletion does not load the target or repair unrelated missing views. Held objects, active animation/authoring and pending native transitions still prevent deletion. Dependent definitions keep their exact references and report the missing target. One Undo edit restores its saved geometry and animation data through normal preparation; unavailable assets remain unavailable. The included book and Maestro cannot be deleted. Stop or receipt replay does not undo deletion; later actions targeting the removed ID fail.";
-        public override string Duration=>"instant";
+        public override string Description=>"Remove a user-created object by its saved identity, even when its native model is unavailable or dormant. Deletion does not load the target or repair unrelated missing views. Held objects, active animation/authoring and pending native transitions still prevent deletion. Dependent definitions keep their exact references and report the missing target. One Undo edit restores its saved geometry and animation data through normal preparation; unavailable assets remain unavailable. The included book and Maestro cannot be deleted. Receipt replay does not undo deletion; later actions targeting the removed ID fail."+PersistedEditOperation.Persistence;
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"target.exists","target.unheld","authoring.inactive","storage.writable"};
         public override IReadOnlyList<string> Channels=>new[] {"wholeTarget"};
         public override JObject InputSchema=>Object(new JObject {["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32))});
@@ -153,7 +156,10 @@ namespace Maestro.Quest.Programs
             return context.Editor.CanDeleteObject((string)arguments["target"],out error);
         }
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
-            operation=null;if(!context.Editor.DeleteObject((string)arguments["target"],out error))return false;operation=new CompletedCapability();return true;
+            string target=(string)arguments["target"];
+            return PersistedEditOperation.Start(context.Editor,target,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>context.Editor.BeginDelete(target,out pending,out issue),out operation,out error,
+                (out string issue)=>context.Editor.CanDeleteObject(target,out issue));
         }
     }
     internal sealed class PhysicsImpulseCapability : NativeTargetCapability

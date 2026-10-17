@@ -697,27 +697,28 @@ remain separate gates. No source/test pass by itself establishes Store readiness
 
 ## Current Android compile checkpoint — 2026-10-17
 
-The native runtime through **f5d944cf**, plus the corrected save-recovery fixtures,
-passed fresh Unity **6000.3.24f1** Android export and guarded Java/IL2CPP compilation.
-The export reports **0 errors / 5 build warnings**.
-The production web build also passed. Generated C++ contains shared placement
-admission, the common persisted-edit operation and accepted-primary validation;
-the merged libil2cpp.so differs from the earlier idle-liquid compile.
+Shared move/rotate/resize/paint/delete completion passes fresh Unity
+**6000.3.24f1** Android export and guarded Java/IL2CPP compilation. The export
+reports **0 errors / 5 build warnings**. The production web build also passes.
+Generated C++ contains `RoomEditor_ReserveEdit`, `RoomEditor_BeginPaint`,
+`RoomEditor_BeginDelete`, the common persisted-edit operation and accepted-primary
+validation. The merged libil2cpp.so differs from the previous compile.
 
-Immediately preceding verification covers exactly **3,224 native inputs**:
-**1,434 EditMode / 1,854 PlayMode passes**, with three optional private-asset
-skips. Both full offline journeys pass on identical runtime/assets/package inputs;
-only five corrected PlayMode fixtures differ from the journey inputs. A local
-development compile-only wrapper verifies those hashes, terminal results and the
-owned mirror before reusing them. It retains ordinary mirror synchronization,
-production export/Gradle/ELF checks and guards against signing or packaging.
+Verification covers exactly **3,226 native inputs** and **1,434 EditMode /
+1,864 PlayMode checks**, with three optional private-asset skips. Full suites
+found outdated contract/timing assertions and a destroyed-object null assertion;
+the corrected tests pass in explicit focused reruns. Reports retain both attempts.
+Runtime/assets/package inputs stayed unchanged through those corrections and both
+successful full offline Headless/Book journeys. A guarded local compile-only
+wrapper verifies those source hashes, terminal results and the owned mirror
+before reusing that coverage. Normal mirror synchronization and production
+export/Gradle/ELF checks remain in place.
 
 The Android browser invocation succeeds with **128 passes / two skips / zero
-failures**, and **zero lint errors / 6 warnings**. Its test and lint
-outputs are validated cached results, not fresh test execution; all **106 browser
-inputs** match the previous compile. Fresh Unity export and **41 Gradle
-compilation/merge tasks** execute. All **5,142 tracked inputs** and **14 protected
-local files** remain unchanged before documentation updates.
+failures**, and **zero lint errors / 6 warnings**. These are validated cached
+test/lint results against **106 unchanged browser inputs**. Fresh Unity export
+and **41 Gradle compilation/merge tasks** execute. All **5,144 tracked/new inputs**
+and **14 protected local files** remain unchanged before documentation updates.
 
 Readback confirms:
 
@@ -726,18 +727,18 @@ Readback confirms:
 - All **22 selected ARM64 libraries** have 16 KiB-compatible ELF LOAD segments.
   Five unselected ARMv7 dependency libraries remain in the intermediate; final
   package ABI filtering has not been tested.
-- No APK/AAB, signing, installation, provider, deployment or Meta action.
+- No APK/AAB, signing, installation, paid provider, deployment or Meta action.
 
-Warnings are retained for review. The merged manifest has the required activity;
-the Meta GameActivity warning does not describe that merged result. Absent optional
-projection components retain their existing SDK diagnostics.
-Browser lint and normalized export/compile warning comparisons are recorded
-separately from the Unity BuildReport warning count.
+Warnings are retained; normalized diagnostics match the prior compile. The merged
+manifest has the required activity despite the retained Meta GameActivity warning.
+Browser lint and export/compile diagnostics are recorded separately from the Unity
+BuildReport warning count.
 
-Evidence: .quest-evidence/authoring-integration-20261017/android/ contains current
-logs, exact-source reuse guards, generated-code references, browser XML hashes,
-native-library/manifest receipts and warning comparisons. The export is
-Android-compile-20261017-080748-0a3dbe4e under the owned mirror.
-The previous compile remains in .quest-evidence/android-compile-liquid-20261017/.
-Installed/package versions, physical/acoustic acceptance and Store gates are
+Evidence: .quest-evidence/component-save-20261017/android/ contains logs, source
+reuse guards, generated-code references, browser XML hashes, native-library and
+manifest receipts, and warning comparisons. The export is
+Android-compile-20261017-093430-a3c8c238 under the owned mirror. The previous
+checkpoints remain in .quest-evidence/authoring-integration-20261017/android/
+and .quest-evidence/android-compile-liquid-20261017/.
+Installed/package versions, physical/acoustic acceptance and Store gates remain
 unchanged.

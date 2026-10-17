@@ -1788,3 +1788,22 @@ preserve the accepted primary; external-primary conflicts keep their separate
 tests. The corrected full suites pass. Only five native test files changed after
 the journeys; all runtime, asset and package inputs are identical. These are
 scripted-provider desktop checks, with no new physical or real-provider acceptance.
+
+### Pending paint and deletion (2026-10-17)
+
+`object.color.set` and `object.delete` now report completion after native acceptance
+and saving, just like the placement actions. Probe consumers must observe the same
+receipt rather than assuming the start reply is terminal. The appearance journey
+uses `completeProbeAction` before inspecting the canonical tint. The original book
+already observes completion through its shared action controls. Synchronous legacy
+batch commands keep their existing contract; they are not evidence for the named
+action's pending lifecycle.
+
+The current full Headless run (`b619ede9c9314086a0a8f83b32ffcf25`) and original
+Book run (`eefc59e881fc4225a88f64441decaeb6`) both pass. The paint receipt is
+completed before its canonical appearance is inspected. The Book still protects
+the human edit, refuses stale agent paint, reloads without replay, and retires and
+reacquires an idle area. Runtime/assets/packages are identical across those runs
+and the corrected native suite; all application and Unity processes exited
+successfully. Evidence and explicit test-rerun accounting are in
+`.quest-evidence/component-save-20261017/`.

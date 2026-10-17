@@ -16,9 +16,9 @@ Consumed allowances now survive request removal and demand changes within one
 opportunity; see [the work ledger](#consumed-simulation-work-ledger--2026-10-16).
 Independent quantity groups now have separate execution requests; the current
 implementation and verification status are recorded at the end of this document.
-Full offline Headless and original Book journeys, full native suites and unsigned
-Android compilation now cover shared placement completion, ordered admission and
-accepted saved-room identity. See [the integration refresh](#shared-authoring-integration-refresh--2026-10-17)
+Current desktop and unsigned Android checks cover shared placement, paint/delete
+completion, ordered admission and accepted saved-room identity. See
+[shared paint and deletion completion](#shared-paint-and-deletion-completion--2026-10-17)
 and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
 
@@ -13113,3 +13113,60 @@ boundaries are in the release-build record. Evidence is retained in
 .quest-evidence/authoring-integration-20261017/. Desktop screenshots were inspected,
 but this is not physical Quest, acoustic, real-provider or Store acceptance.
 Device/provider holds and the remaining v1 requirements stay unchanged.
+
+## Shared paint and deletion completion — 2026-10-17
+
+The named `object.color.set` and `object.delete` capabilities now use the same
+pending edit operation as move, rotate and resize. The book, agent and programs
+observe the same completion receipt. All five share bounded arrival-order
+admission without copying a candidate while waiting. The adapter captures the
+target revision and temporary session, then applies the capability's own
+eligibility check again before preparation.
+
+Paint does not hold or reset the body's live pose or velocity. It updates the
+canonical local appearance tint, preserving shared style definitions and more
+specific bindings. Delete uses the saved identity without loading an unavailable
+or dormant target or repairing unrelated missing views. Component edits do not
+require the valid uniform placement frame that move/rotate/resize require.
+The shared action catalog exposes completion duration and the acceptance/save
+boundary. Existing synchronous editor and legacy batch APIs retain their contract.
+
+Cancellation before native acceptance leaves the edit unapplied. After acceptance,
+stopping cannot retract the edit or its pending save; completion waits for durable
+publication. Temporary edits remain local until Keep, and each accepted edit is
+one Undo change. Receipt replay never repeats a deletion after Undo. Unrelated
+authored changes invalidate a prepared candidate; runtime clock/viewpoint progress
+retains the existing merge rules.
+
+Verification evidence is in `.quest-evidence/component-save-20261017/`.
+
+Verification covers **1,434 EditMode, 1,864 PlayMode and 3,184 web tests**, with
+three expected native skips for optional private assets. Full runs exposed
+obsolete duration/immediate-completion assertions and one test's destroyed-Unity-
+object null comparison. The original reports are retained: 1,433 EditMode /
+1,862 PlayMode / 3,180 web passes, followed by successful focused reruns of the
+corrected assertions. The runtime stayed unchanged throughout those corrections.
+Ten new native lifecycle cases cover cancellation, stale edits, hand takeover,
+lost native models, invalid placement frames, temporary Keep/Undo, storage refusal,
+accepted-stop draining, appearance/motion preservation and shared queue ordering.
+Application/probe TypeScript and exact native catalog checks pass.
+
+Both full offline journeys pass with empty periodic object inventories and
+explicit reads. Headless recorded 2,187 observations, 2,179 read sets, 181 motion
+samples and 16 passing steering checks, with zero external provider attempts.
+The original Book recorded 3,203 observations and 1,008 requests; human-edit
+preservation, stale-agent refusal, reload without replay, capture pixels and
+idle-area retirement/reacquisition pass. Visual inspection covered the 819×614
+advanced form and expanded agent-result trace; this is not novice or headset
+optical acceptance.
+
+Fresh unsigned Android export/compilation passes with 0 export errors,
+5 build warnings, 41 executed compile/merge tasks and 22 selected ARM64 libraries
+passing 16 KiB ELF checks. The browser's 128 passes/two skips and lint's six
+warnings are verified cached results against 106 unchanged inputs. Normalized
+diagnostics match the prior compile. Source auditing covers 3,226 native inputs,
+5,144 tracked/new inputs and 14 unchanged protected local files before these
+documentation updates. No APK/AAB, signing, installation, paid provider,
+deployment or Meta action occurred. Snapshot capture/native reconciliation and
+other synchronous authoring APIs still need their separate performance work;
+these results do not establish frame-time or physical acceptance.

@@ -9,7 +9,7 @@ import {parseProgram,sequenceProgram} from './programs';
 
 it.each(behaviourCatalog.adapters.ruleStep.actionIds.map((id,kind)=>({id,kind})))('uses the same named $id contract for simple authoring and saved execution',({kind})=>{
  const definition=capabilityDefinition(stepInvocation(newRuleStep(kind)).id)!;
- const step={...newRuleStep(kind),targetId:definition.duration==='instant'?'f'.repeat(32):'maestro',seconds:kind===3||definition.duration==='instant'?0:1},call=stepInvocation(step);
+ const step={...newRuleStep(kind),targetId:definition.id.startsWith('object.')?'f'.repeat(32):'maestro',seconds:kind===3||['instant','completion'].includes(definition.duration)?0:1},call=stepInvocation(step);
  expect(validCapabilityInvocation(call)).toBe(true);
  expect(validateCapabilityArguments(call.id,call.version,call.arguments)).toBeNull();
  expect(stepInvocation(invocationStep(call,step.id))).toEqual(call);
