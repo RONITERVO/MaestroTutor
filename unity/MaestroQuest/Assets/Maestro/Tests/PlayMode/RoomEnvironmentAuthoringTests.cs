@@ -16,12 +16,18 @@ namespace Maestro.Quest.Tests
     {
         JObject SaveEnvironmentArgs()=>new(){["id"]="",["revision"]=0,["name"]="Virtual actors",["realCollisions"]=false,["members"]=new JArray()};
         string NewEnvironment() {
-            var capability=new EnvironmentProfileSaveCapability();Assert.That(capability.Start(new CapabilityContext(editor,animations),"profile",SaveEnvironmentArgs(),out var operation,out var error),Is.True,error);
-            return (string)operation.Result["id"];
+            string id=Guid.NewGuid().ToString("N");
+            Assert.That(editor.EditEnvironment(new(){id=id,name="Virtual actors",realCollisions=false},id,0,Array.Empty<string>(),out var error),Is.True,error);
+            return id;
         }
-        bool AssignEnvironment(string target,string id,out string error)=>new EnvironmentAssignCapability().Start(new CapabilityContext(editor,animations),"binding",new JObject{["target"]=target,["revision"]=editor.ObjectRevision(target),["profileId"]=id,["profileRevision"]=editor.EnvironmentRevision(id)},out _,out error);
+        bool AssignEnvironment(string target,string id,out string error)=>editor.BindEnvironment(target,editor.ObjectRevision(target),id,editor.EnvironmentRevision(id),out error);
         [UnityTest]public IEnumerator EnvironmentActionsShareSavedFactsAndUndoAndRejectStaleAssignments() {
-            string id=NewEnvironment();int before=editor.ObjectRevision("maestro");Assert.That(AssignEnvironment("maestro",id,out var error),Is.True,error);
+            var contextForAction=new CapabilityContext(editor,animations);
+            Assert.That(new EnvironmentProfileSaveCapability().Start(contextForAction,"profile",SaveEnvironmentArgs(),out var save,out var error),Is.True,error);
+            Assert.That(save.Result,Is.Empty);yield return PlacementOperationDone(save);string id=(string)save.Result["id"];
+            int before=editor.ObjectRevision("maestro");
+            Assert.That(new EnvironmentAssignCapability().Start(contextForAction,"assign",new JObject{["target"]="maestro",["revision"]=before,["profileId"]=id,["profileRevision"]=editor.EnvironmentRevision(id)},out var assignment,out error),Is.True,error);
+            yield return PlacementOperationDone(assignment);
             var fact=editor.ObserveEnvironmentBinding("maestro");Assert.That((string)fact["profileId"],Is.EqualTo(id));Assert.That((bool)fact["state"]["effectiveRealCollisions"],Is.False);
             var args=new JObject{["target"]="maestro",["revision"]=before,["profileId"]="",["profileRevision"]=0};
             Assert.That(new EnvironmentAssignCapability().CanRun(new CapabilityContext(editor,animations),args,out _),Is.False);
@@ -45,7 +51,7 @@ namespace Maestro.Quest.Tests
             block.GetComponent<RigidRoomItem>().SetAnimationOwner(this,true);
             Assert.That(capability.Start(context,"blocked",args,out _,out error),Is.False);Assert.That(editor.ReadEnvironment(id).realCollisions,Is.False);
             block.GetComponent<RigidRoomItem>().SetAnimationOwner(this,false);
-            Assert.That(capability.Start(context,"edit",args,out _,out error),Is.True,error);
+            Assert.That(capability.Start(context,"edit",args,out var update,out error),Is.True,error);yield return PlacementOperationDone(update);
             Assert.That(physics.IncludesRealRoom(block)&&physics.IncludesRealRoom(editor.Find("maestro")),Is.True);
             Assert.That(editor.EditEnvironment(null,id,editor.EnvironmentRevision(id),Array.Empty<string>(),out _),Is.False);
             editor.Undo();Assert.That(physics.IncludesRealRoom(block)||physics.IncludesRealRoom(editor.Find("maestro")),Is.False);yield return null;
@@ -64,7 +70,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;var args=SaveEnvironmentArgs();
             var call=new JObject{["id"]="environment.profile.save",["version"]=1,["arguments"]=args};
             var request=new RoomAgentRequest{version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand{action="execution",execution=new JObject{["operation"]="start",["runId"]=run,["call"]=call}}}};
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return null;
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());
             string id=(string)receipt["output"]["id"];int revision=editor.EnvironmentRevision(id);
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.EnvironmentProfiles().Length,Is.EqualTo(1));Assert.That(editor.EnvironmentRevision(id),Is.EqualTo(revision));
@@ -73,7 +79,7 @@ namespace Maestro.Quest.Tests
             string assignRun=runtime.Scheduler.Receipts.NextId;
             request.commands[0].execution=new JObject{["operation"]="start",["runId"]=assignRun,["call"]=assign};
             request.conditions=new[]{new RoomObjectCondition{id="maestro",revision=editor.ObjectRevision("maestro")}};
-            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return null;
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var assigned=runtime.Scheduler.Invocation(assignRun);Assert.That((string)assigned["phase"],Is.EqualTo("completed"),assigned.ToString());
             var evidence=new JObject{["capabilities"]=new JArray(RoomControls.Capabilities(editor)),["saveCall"]=call,["saveReceipt"]=receipt,["assignCall"]=assign,["assignReceipt"]=assigned,["before"]=before,["after"]=editor.ObserveEnvironmentBinding("maestro"),["profile"]=editor.ObserveEnvironmentProfile(id),["profiles"]=editor.ObserveEnvironmentProfiles(0),["emptyPage"]=editor.ObserveEnvironmentProfiles(16)};
             string output=Environment.GetEnvironmentVariable("MAESTRO_ENTITY_ENVIRONMENT");

@@ -15,13 +15,22 @@ namespace Maestro.Quest.Programs
         internal static JObject TargetSchema()=>Resource(Text("^(book|maestro|[a-fA-F0-9]{32})$",32));
         internal static JObject Bool()=>new(){["type"]="boolean"};
         internal static JObject Featured(JObject schema){schema["x-features"]=new JArray(Feature);return schema;}
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         internal override int MaximumCreatedObjects(JObject args)=>0;
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","environment.revision.current","storage.writable"};
         public override BehaviourCatalog.Claim[] Claims(JObject args)=>CapabilityArguments.Resources(args,InputSchema).Select(id=>new BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
-        protected const string Rules=" Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.";
-        internal static JObject Receipt(RoomEditor editor,string id)=>new(){["id"]=id,["revision"]=editor.EnvironmentRevision(id),["temporary"]=editor.TemporaryRoom};
+        protected const string Rules=" Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space."+PersistedEditOperation.Persistence;
+        protected static bool StartProfile(CapabilityContext context,RoomEnvironmentProfile definition,string id,int revision,string[] members,
+            out CapabilityOperation operation,out string error)
+        {
+            var editor=context.Editor;bool temporary=editor.TemporaryRoom;RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,null,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                    bool ready=editor.BeginEnvironment(definition,id,revision,members,out edit,out issue);pending=edit;return ready;
+                },out operation,out error,validate:(out string issue)=>editor.CanEditEnvironment(definition,id,revision,members,out issue),
+                output:()=>new JObject{["id"]=id,["revision"]=pending.AcceptedEnvironmentRevision(id),["temporary"]=temporary});
+        }
     }
     internal sealed class EnvironmentProfileSaveCapability:EnvironmentProfileCapability
     {
@@ -36,12 +45,11 @@ namespace Maestro.Quest.Programs
         public override bool CanRun(CapabilityContext c,JObject a,out string error) {
             error="Use empty id with revision 0 to create, or an existing profile ID and current revision";
             if(string.IsNullOrEmpty((string)a["id"])!=((int)a["revision"]==0)||!c.Editor)return false;
-            var p=Definition(a);return c.Editor.PrepareEnvironment(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out _,out error);
+            var p=Definition(a);return c.Editor.CanEditEnvironment(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error);
         }
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
             operation=null;if(!CanRun(c,a,out error))return false;var p=Definition(a);
-            if(!c.Editor.EditEnvironment(p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,p.id));return true;
+            return StartProfile(c,p,p.id,(int)a["revision"],((JArray)a["members"]).Values<string>().ToArray(),out operation,out error);
         }
     }
     internal sealed class EnvironmentProfileRemoveCapability:EnvironmentProfileCapability
@@ -52,10 +60,10 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>Featured(Object(new JObject{["id"]=ProfileId(),["revision"]=Revision()}));
         public override JObject OutputSchema=>Object(new JObject{["id"]=ProfileId(),["revision"]=Revision(true),["temporary"]=Bool()});
         public override JObject Example=>new(){["id"]=new string('0',32),["revision"]=1};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.PrepareEnvironment(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.CanEditEnvironment(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.EditEnvironment(null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out error))return false;
-            operation=new CompletedCapability(Receipt(c.Editor,(string)a["id"]));return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            return StartProfile(c,null,(string)a["id"],(int)a["revision"],Array.Empty<string>(),out operation,out error);
         }
     }
     internal sealed class EnvironmentAssignCapability:EnvironmentProfileCapability
@@ -67,10 +75,17 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>ResourceChoice(CurrentInputs(Featured(Object(new JObject{["target"]=TargetSchema(),["revision"]=Revision(),["profileId"]=ProfileId(true),["profileRevision"]=Revision(true)})),"object.environment","revision",new JObject{["target"]="target"},"profileId","profileRevision"),"Collision profile","environment.profiles","profileId","profileRevision","Inherit room collisions");
         public override JObject OutputSchema=>Object(new JObject{["target"]=TargetSchema(),["revision"]=Revision(),["temporary"]=Bool()});
         public override JObject Example=>new(){["target"]="maestro",["revision"]=1,["profileId"]="",["profileRevision"]=0};
-        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.PrepareEnvironmentBinding((string)a["target"],(int)a["revision"],(string)a["profileId"],(int)a["profileRevision"],out _,out error);}
+        public override bool CanRun(CapabilityContext c,JObject a,out string error) {error="Room editor unavailable";return c.Editor&&c.Editor.CanBindEnvironment((string)a["target"],(int)a["revision"],(string)a["profileId"],(int)a["profileRevision"],out error);}
         public override bool Start(CapabilityContext c,string runId,JObject a,out CapabilityOperation operation,out string error) {
-            operation=null;if(!CanRun(c,a,out error)||!c.Editor.BindEnvironment((string)a["target"],(int)a["revision"],(string)a["profileId"],(int)a["profileRevision"],out error))return false;
-            operation=new CompletedCapability(new JObject{["target"]=a["target"].DeepClone(),["revision"]=c.Editor.ObjectRevision((string)a["target"]),["temporary"]=c.Editor.TemporaryRoom});return true;
+            operation=null;if(!CanRun(c,a,out error))return false;
+            var editor=c.Editor;string target=(string)a["target"],profile=(string)a["profileId"];
+            int revision=(int)a["revision"],profileRevision=(int)a["profileRevision"];bool temporary=editor.TemporaryRoom;
+            RoomEditor.PendingPersistedEdit pending=null;
+            return PersistedEditOperation.Start(editor,target,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                    bool ready=editor.BeginEnvironmentBinding(target,revision,profile,profileRevision,out edit,out issue);pending=edit;return ready;
+                },out operation,out error,validate:(out string issue)=>editor.CanBindEnvironment(target,revision,profile,profileRevision,out issue),
+                output:()=>new JObject{["target"]=target,["revision"]=pending.AcceptedObjectRevision(target),["temporary"]=temporary});
         }
     }
     internal static class EnvironmentProfileFacts

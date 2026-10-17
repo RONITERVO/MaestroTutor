@@ -19,7 +19,7 @@ export async function probeWaterTraversal(execute:Execute,directory:string){
  const read=async()=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:fact,version:1,arguments:{target}}}])).value as {target:string;revision:number;mode:string;effectiveMode:string;maxDepthMetres:number;temporary:boolean};
  const placement=async()=>readWaterActorPose(execute,target);
  const before=await read(),pose=await placement();
- const result=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.water.traversal.configure',version:1,arguments:{target,revision:before.revision,mode:'wade',maxDepthMetres:.15}}}}]);
+ const result=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.water.traversal.configure',version:1,arguments:{target,revision:before.revision,mode:'wade',maxDepthMetres:.15}}}}]));
  assert.equal(result.execution?.selected?.phase,'completed',JSON.stringify(result.execution?.selected));
  const after=await read();assert.equal(after.mode,'wade');assert.equal(after.effectiveMode,'wade');assert.equal(after.maxDepthMetres,.15);assert.ok(after.revision>before.revision);
  const unchanged=await placement();assert.deepEqual(unchanged,pose);

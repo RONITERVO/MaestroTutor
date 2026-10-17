@@ -73,3 +73,43 @@ batches; current planners prefer the catalog's native facts and durable receipts
 Controller bindings and movement/view opt-ins are separate, described in
 QUEST_CONTROLLER_CONFIGURATION.md and QUEST_CONTROLLER_MODES.md. Physical scan,
 provider conversation, headset comfort and Store acceptance remain release gates.
+
+## Collision profiles and individual objects
+
+The user and agent can assign a reusable environment profile to Maestro, the
+book or any creation through `object.environment.assign`. A profile with
+`realCollisions=false` lets its members use virtual terrain below the scanned
+floor or beyond the scanned walls. Other objects can keep their inherited real
+room collisions. The global real-room collision switch remains an upper bound;
+profiles cannot turn it back on when it is globally off. Virtual ground and
+virtual object collisions remain active. Rendering, passthrough depth and audio
+are separate choices, so excluding a physical floor from a robot's movement does
+not make it invisible or silent.
+
+Read `environment.profiles` to find a saved definition, `environment.profile`
+for its current revision and complete membership, and `object.environment` for
+an object's current assignment and revision. `environment.profile.save`,
+`environment.profile.remove` and `object.environment.assign` all have
+`completion` duration and use the same bounded save queue as the settings above.
+The book generates the profile picker from these definitions; agent and program
+calls use the same native implementation. No successful output is emitted before
+native application and saving. Profile results retain their exact accepted ID
+and revision even after a later human edit; a successful removal returns revision
+zero. Assignment results retain the accepted object revision.
+
+A shared definition edit must explicitly claim every member. An unused profile
+can be removed; a bound one cannot. A waiting edit rechecks membership, exact
+revisions, released/native targets, ground availability and scanned-surface
+penetration. It does not copy a whole room or reserve bodies while waiting. If a
+real wall becomes obstructive while a save prepares, enabling collisions refuses
+the entire change. It never teleports an actor to make a policy fit. Inputs and
+new IDs are captured once per started action. Cancellation before acceptance
+leaves the room unchanged; after acceptance its save drains and an interruption
+identifies the affected resource for inspection. Undo and temporary Keep/Discard
+remain available, and unchanged choices add no Undo.
+
+Current saved limits remain 16 profiles with at most 16 bound objects per
+profile. Virtual-only movement requires accepted authored ground within the
+existing simulation bounds. This does not override the headset's system boundary
+or establish physical room alignment. Those limits and the distinction between
+collision, visual and acoustic policy are part of the shared contract.

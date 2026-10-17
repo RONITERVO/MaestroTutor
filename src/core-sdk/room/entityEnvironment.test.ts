@@ -6,6 +6,9 @@ import {capabilityDefinition,capabilityResources,validateCapabilityArguments,val
 import {validFactValue,validateFactArguments} from '../../../shared/behaviourFacts';
 import {validExecutionView} from '../../../shared/roomExecutions';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
+it('uses completion receipts for shared collision definitions and bindings',()=>{
+ for(const id of ['environment.profile.save','environment.profile.remove','object.environment.assign'])expect(capabilityDefinition(id)?.duration).toBe('completion');
+});
 it('validates actual native profile receipts and exact target assignments without a second schema',()=>{
  for(const receipt of [native.saveReceipt,native.assignReceipt]){
   const {call,...summary}=receipt;

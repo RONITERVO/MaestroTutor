@@ -33857,7 +33857,7 @@
           "environmentProfiles.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -33869,7 +33869,7 @@
         "environment.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of up to 16 reusable environment profiles, each shared by at most 16 objects. Empty id and revision 0 create a new stable ID. Otherwise read environment.profile and supply its exact revision and every bound member. realCollisions=false lets those objects use virtual terrain below or beyond the real floor/walls. realCollisions=true inherits the global real-room switch. Read environment.profiles to find definitions. Saving does not assign new members; use object.environment.assign. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.",
+      "description": "Create or edit one of up to 16 reusable environment profiles, each shared by at most 16 objects. Empty id and revision 0 create a new stable ID. Otherwise read environment.profile and supply its exact revision and every bound member. realCollisions=false lets those objects use virtual terrain below or beyond the real floor/walls. realCollisions=true inherits the global real-room switch. Read environment.profiles to find definitions. Saving does not assign new members; use object.environment.assign. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -33929,7 +33929,7 @@
           "environmentProfiles.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -33941,7 +33941,7 @@
         "environment.revision.current",
         "storage.writable"
       ],
-      "description": "Remove an unused environment profile by exact ID/revision from environment.profile. Refuses while any object still refers to it; explicitly reassign those objects first. Objects are never silently returned to physical-room collision. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.",
+      "description": "Remove an unused environment profile by exact ID/revision from environment.profile. Refuses while any object still refers to it; explicitly reassign those objects first. Objects are never silently returned to physical-room collision. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "00000000000000000000000000000000",
         "revision": 1
@@ -34042,7 +34042,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -34054,7 +34054,7 @@
         "environment.revision.current",
         "storage.writable"
       ],
-      "description": "Assign a saved environment profile to the book, Maestro or a creation, including all its assembly/import child colliders. Read object.environment for target revision and environment.profile for selected profile revision. An empty profileId with profileRevision 0 explicitly restores inherited real-room participation. One object's assignment does not edit the reusable profile or other members. It does not start physics or walking. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space.",
+      "description": "Assign a saved environment profile to the book, Maestro or a creation, including all its assembly/import child colliders. Read object.environment for target revision and environment.profile for selected profile revision. An empty profileId with profileRevision 0 explicitly restores inherited real-room participation. One object's assignment does not edit the reusable profile or other members. It does not start physics or walking. Stable exact IDs are references; names are display text. Changes use the saved room journal with one Undo and temporary-play Keep/Discard semantics. Already-identical values do not add Undo. All affected targets must be released and free of authoring or competing motion. The entire edit refuses on stale revision, changed membership, missing target, unavailable support during running physics, or new scanned-surface penetration. It never moves an object. Changed targets lose previous throw speeds. Visual depth/opacity and acoustics remain independent; this setting changes collision participation only. The global real-room switch is an upper bound: a profile cannot re-enable it. Virtual collisions remain active. Virtual-only simulation needs accepted authored ground; current bounds are columns up to 16 metres above and 0.25 metres below those surfaces, not unlimited space. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -47288,7 +47288,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
-      "sha256": "346b90a17039aa9d18d122d311355c9eef34f91e6245837a262f8212bff0448c"
+      "sha256": "e0c1f35cbabf259d46a12e94a6705816641b004a1a86682a9093a3300878de2c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowGroupFacts.cs",
@@ -47444,7 +47444,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "bb64e6622386a1667b1ca11f44124355f2362dc939684821ccb48fa15a7c3783"
+      "sha256": "997e7a78715530383312aeb509dfc6671ee3871e2645a8d7e038e5e33d955e63"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -47932,7 +47932,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "131a649d646e8fe8f2766751db6adc718760b77b983aa43dd2611a8fe07532b4"
+      "sha256": "0004fde2a6db471fff3591db03c86e3e813751de4136b9e3e582b7e42e61b4a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48156,11 +48156,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
-      "sha256": "f2a74a94ef2a969235fa0844a8cc0c0b549476f52d1694998d160f441dc28006"
+      "sha256": "974ec5b7ad7b12bd192746c2fad80689a9189490b25f0fc154d1b68ee77da570"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
-      "sha256": "c35474d81b051cf6a11e608e614787009d1d3f471e8d6ca177034d5cafa83b14"
+      "sha256": "a932d8456706e2b003ae36864b1b5e41f7bc533bb65cf145f89c408910d2ab2e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomExecutions.cs",
@@ -48372,7 +48372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "1dad952c54648d09069d24dcf48822beb676ddd9f163bc8adcc0f756d7df2fc1"
+      "sha256": "7effa073ef18fe0298fd570e3b39e3dcef65ef3a3342800cdf241fca9103071a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

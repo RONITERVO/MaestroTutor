@@ -169,5 +169,20 @@ namespace Maestro.Quest.Tests
                 }
             }
         }
+        [TestCase("create")][TestCase("update")][TestCase("same")][TestCase("remove")]
+        public void AcceptedEnvironmentRevisionBelongsToThisEditAfterLaterMutations(string action)
+        {
+            var journal=Room();string id=Guid.NewGuid().ToString("N");var profile=new RoomEnvironmentProfile{id=id,name="Virtual actors",realCollisions=false};
+            if(action!="create")Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,environmentEdits:new(){Replacements=new[]{profile}}));
+            if(action=="update")profile.realCollisions=true;
+            var delta=action=="remove"?new EnvironmentProfileEdits{Removals=new[]{id}}:new EnvironmentProfileEdits{Replacements=new[]{profile}};
+            Assert.IsTrue(journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out var edit,out var error,environmentEdits:delta),error);
+            using(edit){
+                Assert.AreEqual(0,edit.AcceptedEnvironmentRevision(id));Assert.IsTrue(edit.Accept(journal,out error),error);int accepted=journal.EnvironmentRevision(id);
+                Assert.AreEqual(accepted,edit.AcceptedEnvironmentRevision(id));Assert.AreEqual(action=="remove",accepted==0);
+                profile.name="Later human edit";Assert.IsTrue(journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out error,environmentEdits:new(){Replacements=new[]{profile}}),error);
+                Assert.AreNotEqual(accepted,journal.EnvironmentRevision(id));Assert.AreEqual(accepted,edit.AcceptedEnvironmentRevision(id));
+            }
+        }
     }
 }

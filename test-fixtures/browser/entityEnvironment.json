@@ -3,6 +3,7 @@
     "physicsSettings.v1",
     "avatarSettings.v1",
     "physicsRun.v1",
+    "catalogGuides.v1",
     "motions.v1",
     "avatarActivities.v1",
     "catalog.v1",
@@ -12,6 +13,8 @@
     "terrainTraversal.v1",
     "behaviourPrograms.v3",
     "worldAudio.v1",
+    "audioClips.v1",
+    "audioStreams.v1",
     "eventPrograms.v1",
     "eventFields.v1",
     "eventSubscriptions.v1",
@@ -40,15 +43,20 @@
     "groupTransforms.v1",
     "constructionManipulation.v1",
     "constructionSnapping.v1",
+    "roomStagingMaintenance.v1",
     "objectEdits.v1",
     "objectCopy.v1",
     "drawingEdits.v1",
     "drawingSurfaces.v1",
+    "passthroughWindows.v1",
+    "objectLights.v1",
+    "modelGeometry.v1",
     "curvedDrawingSurfaces.v1",
     "drawingTips.v1",
     "drawingErasers.v1",
     "containers.v1",
     "rectangularContainers.v1",
+    "terrainReservoirs.v1",
     "heightFields.v1",
     "heightFieldTransfer.v1",
     "materialStores.v1",
@@ -58,6 +66,9 @@
     "physicalSculpting.v1",
     "physicalMaterialTools.v1",
     "containerPouring.v1",
+    "liquidMedium.v1",
+    "liquidContacts.v1",
+    "waterTraversal.v1",
     "containerScooping.v1",
     "physicalConnections.v1",
     "physicalSliders.v1",
@@ -65,6 +76,7 @@
     "connectedBlueprints.v2",
     "creationPrototypes.v1",
     "constructionCapture.v1",
+    "constructionResources.v1",
     "recipeEdits.v1",
     "latheGeometry.v1",
     "extrusionGeometry.v1",
@@ -92,9 +104,24 @@
     "actionRecovery.v1",
     "temporaryRoom.v1",
     "spatialSettings.v1",
+    "groundedTravel.v1",
+    "groundedFollowing.v1",
+    "avatarAttention.v1",
+    "objectWalkingAnimation.v1",
     "physicsSimulation.v1",
     "physicsEnvironment.v1",
-    "environmentProfiles.v1"
+    "environmentProfiles.v1",
+    "appearances.v1",
+    "appearanceImages.v1",
+    "chatImages.v1",
+    "chatAudio.v1",
+    "visibilityLayers.v1",
+    "worldLighting.v1",
+    "worldRegions.v1",
+    "objectSearch.v1",
+    "objectOverview.v1",
+    "worldTime.v1",
+    "worldWeather.v1"
   ],
   "saveCall": {
     "id": "environment.profile.save",
@@ -108,15 +135,15 @@
     }
   },
   "saveReceipt": {
-    "id": "63c53f70568a45d6b8af92dade83738a",
+    "id": "9d577ab1b8c04248ad7916876a1bf906",
     "capability": "environment.profile.save",
     "version": 1,
     "resources": [],
     "phase": "completed",
     "status": "Action completed",
     "output": {
-      "id": "306edaeeae1c48cb9f9c7200d88d6786",
-      "revision": 7,
+      "id": "0b3b7d46b2e34a208309312422b42b90",
+      "revision": 10,
       "temporary": false
     },
     "call": {
@@ -136,13 +163,13 @@
     "version": 1,
     "arguments": {
       "target": "maestro",
-      "revision": 2,
-      "profileId": "306edaeeae1c48cb9f9c7200d88d6786",
-      "profileRevision": 7
+      "revision": 5,
+      "profileId": "0b3b7d46b2e34a208309312422b42b90",
+      "profileRevision": 10
     }
   },
   "assignReceipt": {
-    "id": "5ed4224bf6a0459b92bb9c9a45542454",
+    "id": "f5cf928784674df9b5e11675f64dd7ba",
     "capability": "object.environment.assign",
     "version": 1,
     "resources": [
@@ -152,7 +179,7 @@
     "status": "Action completed",
     "output": {
       "target": "maestro",
-      "revision": 8,
+      "revision": 11,
       "temporary": false
     },
     "call": {
@@ -160,15 +187,15 @@
       "version": 1,
       "arguments": {
         "target": "maestro",
-        "revision": 2,
-        "profileId": "306edaeeae1c48cb9f9c7200d88d6786",
-        "profileRevision": 7
+        "revision": 5,
+        "profileId": "0b3b7d46b2e34a208309312422b42b90",
+        "profileRevision": 10
       }
     }
   },
   "before": {
     "target": "maestro",
-    "revision": 2,
+    "revision": 5,
     "profileId": "",
     "profileRevision": 0,
     "realCollisions": true,
@@ -182,9 +209,9 @@
   },
   "after": {
     "target": "maestro",
-    "revision": 8,
-    "profileId": "306edaeeae1c48cb9f9c7200d88d6786",
-    "profileRevision": 7,
+    "revision": 11,
+    "profileId": "0b3b7d46b2e34a208309312422b42b90",
+    "profileRevision": 10,
     "realCollisions": false,
     "state": {
       "effectiveRealCollisions": false,
@@ -195,8 +222,8 @@
     "temporary": false
   },
   "profile": {
-    "id": "306edaeeae1c48cb9f9c7200d88d6786",
-    "revision": 7,
+    "id": "0b3b7d46b2e34a208309312422b42b90",
+    "revision": 10,
     "name": "Virtual actors",
     "realCollisions": false,
     "members": [
@@ -210,8 +237,8 @@
     "pageSize": 3,
     "entries": [
       {
-        "id": "306edaeeae1c48cb9f9c7200d88d6786",
-        "revision": 7,
+        "id": "0b3b7d46b2e34a208309312422b42b90",
+        "revision": 10,
         "name": "Virtual actors",
         "realCollisions": false
       }

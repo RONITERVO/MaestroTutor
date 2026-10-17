@@ -88,8 +88,9 @@ namespace Maestro.Quest.Programs
             string status=pending?.InterruptionStatus;if(status==null)return null;
             // Identify an already accepted creation even when saving was interrupted.
             // This is recovery context, not a successful result or permission to replay.
-            string created=(string)output?.Invoke()?["objectId"];
-            return string.IsNullOrEmpty(created)?status:"Created object "+created+". "+status;
+            var receipt=output?.Invoke();string created=(string)receipt?["objectId"],resource=(string)receipt?["id"];
+            return !string.IsNullOrEmpty(created)?"Created object "+created+". "+status:
+                !string.IsNullOrEmpty(resource)?"Resource "+resource+". "+status:status;
         }}
     }
 }

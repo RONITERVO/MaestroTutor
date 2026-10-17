@@ -19,7 +19,7 @@ namespace Maestro.Quest.Creation
             readonly Dictionary<string,RoomObjectData> objectIndex;
             readonly int revision,undoCount,redoCount;
             readonly long runtimePlacements;
-            readonly Dictionary<string,int> targetRevisions;
+            readonly Dictionary<string,int> targetRevisions,environmentRevisions;
             readonly string viewpointState,timeState,operation;
             readonly bool baseline;
             bool ended,accepted;
@@ -29,12 +29,14 @@ namespace Maestro.Quest.Creation
                 objectIndex=this.document.objects.ToDictionary(x=>x.id,StringComparer.Ordinal);
                 revision=owner.clock.Next;runtimePlacements=owner.runtimePlacementAdvances;
                 targetRevisions=change.Before.Concat(change.After).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.ObjectRevision);
+                environmentRevisions=change.BeforeEnvironments.Concat(change.AfterEnvironments).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.EnvironmentRevision);
                 undoCount=owner.undo.Count;redoCount=owner.redo.Count;
                 undoTop=undoCount>0?owner.undo[undoCount-1]:null;redoTop=redoCount>0?owner.redo[redoCount-1]:null;
                 viewpointState=JsonUtility.ToJson(owner.viewpoint);timeState=JsonUtility.ToJson(owner.worldTime);
             }
             internal RoomDocument Snapshot()=>document.Copy();
             internal int AcceptedObjectRevision(string id)=>accepted&&targetRevisions.TryGetValue(id,out var value)?value:0;
+            internal int AcceptedEnvironmentRevision(string id)=>accepted&&environmentRevisions.TryGetValue(id,out var value)?value:0;
             // Native preparation reads detached copies of its targets. Unrelated saved
             // geometry remains owned by the candidate instead of being copied again.
             internal RoomObjectData ReadObject(string id)=>id!=null&&objectIndex.TryGetValue(id,out var value)?value.Copy():null;
@@ -62,6 +64,7 @@ namespace Maestro.Quest.Creation
                 else if(operation=="redo") {owner.redo.RemoveAt(redoCount-1);owner.Publish(change,true);owner.undo.Add(change);}
                 else {owner.Publish(change,true);owner.undo.Add(change);if(owner.undo.Count>32)owner.undo.RemoveAt(0);owner.redo.Clear();}
                 foreach(var id in targetRevisions.Keys.ToArray())targetRevisions[id]=owner.ObjectRevision(id);
+                foreach(var id in environmentRevisions.Keys.ToArray())environmentRevisions[id]=owner.EnvironmentRevision(id);
                 accepted=true;error=null;return true;
             }
             public void Dispose()=>ended=true;

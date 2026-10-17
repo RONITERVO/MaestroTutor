@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation
         public RoomEnvironmentProfile[] EnvironmentProfiles()=>journal.EnvironmentSnapshot();
         public int EnvironmentRevision(string id)=>journal.EnvironmentRevision(id);
         public RoomEnvironmentProfile ReadEnvironment(string id)=>journal.ReadEnvironment(id);
-        internal string[] EnvironmentMembers(string id)=>Snapshot().objects.Where(x=>x.environmentProfile==id).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        internal string[] EnvironmentMembers(string id)=>journal.EnvironmentMembers(id);
         readonly Collider[] environmentOverlaps=new Collider[64];
         bool CanChangeEnvironment(string id,bool real,out string error) {
             if(!CanEditStructures(out error)||!CanEditObject(id,false,out error))return false;
@@ -40,8 +40,8 @@ namespace Maestro.Quest.Creation
             }
             error=null;return true;
         }
-        internal bool PrepareEnvironment(RoomEnvironmentProfile definition,string id,int revision,string[] members,out EnvironmentProfileEdits edits,out string error) {
-            edits=null;if(!CanEditStructures(out error))return false;
+        internal bool CanEditEnvironment(RoomEnvironmentProfile definition,string id,int revision,string[] members,out string error) {
+            if(!CanEditStructures(out error))return false;
             var current=ReadEnvironment(id);
             error="The environment profile changed; read its current revision and members";
             if(EnvironmentRevision(id)!=revision||current==null&&revision!=0||definition==null&&current==null)return false;
@@ -51,6 +51,12 @@ namespace Maestro.Quest.Creation
             if(members==null||members.Length!=members.Distinct().Count()||!expected.ToHashSet().SetEquals(members))return false;
             if(definition==null&&members.Length>0){error="Reassign the bound objects before removing this profile";return false;}
             foreach(string member in members)if(!CanChangeEnvironment(member,definition.realCollisions,out error))return false;
+            error="The room already has the maximum number of environment profiles";
+            if(current==null&&journal.EnvironmentCount>=RoomEnvironmentProfile.MaximumProfiles)return false;
+            error=null;return true;
+        }
+        internal bool PrepareEnvironment(RoomEnvironmentProfile definition,string id,int revision,string[] members,out EnvironmentProfileEdits edits,out string error) {
+            edits=null;if(!CanEditEnvironment(definition,id,revision,members,out error))return false;
             edits=definition==null?new EnvironmentProfileEdits{Removals=new[]{id}}:new EnvironmentProfileEdits{Replacements=new[]{definition.Copy()}};
             if(!edits.Validate(out error))return false;
             var candidate=Snapshot();candidate.environmentProfiles=edits.Apply(candidate.environmentProfiles);return candidate.Validate(out error);
@@ -59,11 +65,17 @@ namespace Maestro.Quest.Creation
             if(!PrepareEnvironment(definition,id,revision,members,out var edits,out error))return false;
             return CommitPersisted(Array.Empty<RoomObjectData>(),Array.Empty<string>(),definition==null?"Environment profile removed":"Environment profile saved",false,out error,environmentEdits:edits);
         }
-        internal bool PrepareEnvironmentBinding(string target,int revision,string profile,int profileRevision,out RoomObjectData data,out string error) {
-            data=null;var definition=string.IsNullOrEmpty(profile)?null:ReadEnvironment(profile);
+        internal bool CanBindEnvironment(string target,int revision,string profile,int profileRevision,out string error) {
+            var definition=string.IsNullOrEmpty(profile)?null:ReadEnvironment(profile);
             error="Read the exact object and selected profile revisions before assigning an environment";
             if(ObjectRevision(target)!=revision||profile==null||profile.Length==0&&profileRevision!=0||profile.Length>0&&(definition==null||EnvironmentRevision(profile)!=profileRevision))return false;
             if(!CanChangeEnvironment(target,definition?.realCollisions??true,out error))return false;
+            error="A shared environment profile supports at most 16 bound objects; use another profile for additional objects";
+            if(profile.Length>0&&Read(target).environmentProfile!=profile&&EnvironmentMembers(profile).Length>=16)return false;
+            error=null;return true;
+        }
+        internal bool PrepareEnvironmentBinding(string target,int revision,string profile,int profileRevision,out RoomObjectData data,out string error) {
+            data=null;if(!CanBindEnvironment(target,revision,profile,profileRevision,out error))return false;
             data=Pose(Read(target),Find(target).transform);data.environmentProfile=profile;
             var candidate=Snapshot();var replacement=data;candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();return candidate.Validate(out error);
         }
@@ -71,6 +83,24 @@ namespace Maestro.Quest.Creation
             if(!PrepareEnvironmentBinding(target,revision,profile,profileRevision,out var data,out error))return false;
             return CommitPersisted(new[]{data},Array.Empty<string>(),"Object environment saved",false,out error);
         }
+        internal bool BeginEnvironment(RoomEnvironmentProfile definition,string id,int revision,string[] members,
+            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
+        {
+            var captured=definition?.Copy();var affected=members==null?null:(string[])members.Clone();
+            return BeginPreparedEdit(()=>CanEditEnvironment(captured,id,revision,affected,out var issue)?null:issue,
+                (out RoomJournal.PreparedEdit edit,out string issue)=>{
+                    edit=null;
+                    return PrepareEnvironment(captured,id,revision,affected,out var edits,out issue)&&
+                        journal.Prepare(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out edit,out issue,environmentEdits:edits);
+                },captured==null?"Environment profile removed":"Environment profile saved",out pending,out error,checkpoint);
+        }
+        internal bool BeginEnvironmentBinding(string target,int revision,string profile,int profileRevision,
+            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)=>
+            BeginContentEdit(()=>CanBindEnvironment(target,revision,profile,profileRevision,out var issue)?null:issue,
+                (out RoomObjectData[] values,out string issue)=>{
+                    bool ready=PrepareEnvironmentBinding(target,revision,profile,profileRevision,out var data,out issue);
+                    values=ready?new[]{data}:null;return ready;
+                },Array.Empty<string>(),"Object environment saved",out pending,out error,checkpoint);
         internal JObject ObserveEnvironmentBinding(string target) {
             var data=Read(target);if(data==null||!TryGetLiveObject(target,out var item,out _))return null;
             string id=data.environmentProfile??"";bool requested=ReadEnvironment(id)?.realCollisions??true;var world=PhysicsWorld;

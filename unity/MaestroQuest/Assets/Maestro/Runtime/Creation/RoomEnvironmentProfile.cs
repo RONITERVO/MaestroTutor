@@ -71,6 +71,8 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,int> environmentRevisions=new(StringComparer.Ordinal);
         public int EnvironmentRevision(string id)=>id!=null&&environmentRevisions.TryGetValue(id,out var value)?value:0;
         public RoomEnvironmentProfile ReadEnvironment(string id)=>id!=null&&environments.TryGetValue(id,out var value)?value.Copy():null;
+        internal string[] EnvironmentMembers(string id)=>items.Values.Where(x=>x.environmentProfile==id).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+        internal int EnvironmentCount=>environments.Count;
         public RoomEnvironmentProfile[] EnvironmentSnapshot()=>environments.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();
         void SetEnvironments(RoomEnvironmentProfile[] before,RoomEnvironmentProfile[] after) {
             foreach(var p in before){environments.Remove(p.id);environmentRevisions.Remove(p.id);}

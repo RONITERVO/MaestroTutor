@@ -456,6 +456,11 @@ try{
  assert.equal(beforeCollisionChoice.capability,'environment.profile.save');
  const collisionBinding=await runNamedAction('object.environment.assign');
  assert.equal(collisionBinding.call.arguments.profileId,collisionProfile.output!.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs profileId',{exact:true}).inputValue(),collisionProfile.output!.id);
+ assert.equal(Number(await page.getByLabel('Action inputs profileRevision',{exact:true}).inputValue()),collisionProfile.output!.revision);
+ await page.getByRole('region',{name:'Collision profile choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-environment.png')});
+ await writeFile(join(directory,'book-native-environment.json'),JSON.stringify({boundary:'Original book generated profile and assignment forms, completed native receipts and exact saved choice reloaded. No headset, alignment, provider or physical collision claim.',collisionProfile,collisionBinding},null,2));
  await openNamedAction('Create or edit a reusable sound','audio.source.edit');
  await page.getByLabel('Action inputs definition name',{exact:true}).fill('Friendly ball beep');
  const sound=await runNamedAction('audio.source.edit');

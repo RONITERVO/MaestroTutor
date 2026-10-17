@@ -75,13 +75,23 @@ namespace Maestro.Quest.Creation
         bool BeginContentEdit(Func<string> validate,PrepareContent prepare,string[] removals,string message,
             out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
         {
+            return BeginPreparedEdit(validate,(out RoomJournal.PreparedEdit edit,out string issue)=>{
+                edit=null;return prepare(out var replacements,out issue)&&journal.Prepare(replacements,removals,out edit,out issue);
+            },message,out pending,out error,publicationCheckpoint);
+        }
+        delegate bool PrepareJournalEdit(out RoomJournal.PreparedEdit edit,out string error);
+        // Resource definitions and object deltas share admission, publication and
+        // native completion. Build one candidate only after its queue turn arrives.
+        bool BeginPreparedEdit(Func<string> validate,PrepareJournalEdit prepare,string message,
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
+        {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
             error=validate();if(error!=null)return false;
             var write=WriteGate.TryWrite(out error);if(write==null)return false;
             RoomJournal.PreparedEdit edit=null;
             try {
-                if(!prepare(out var replacements,out error)||!journal.Prepare(replacements,removals,out edit,out error))return false;
+                if(!prepare(out edit,out error))return false;
                 // Creation/component changes do not hold existing physical poses.
                 // Deletion needs only saved identity, including unavailable models.
                 pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,null,validate,message,false,publicationCheckpoint);
@@ -119,6 +129,7 @@ namespace Maestro.Quest.Creation
             internal bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
             internal bool Accepted=>accepted;
             internal int AcceptedObjectRevision(string id)=>accepted?edit.AcceptedObjectRevision(id):0;
+            internal int AcceptedEnvironmentRevision(string id)=>accepted?edit.AcceptedEnvironmentRevision(id):0;
             internal bool Published=>publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
             internal string InterruptionStatus=>accepted?
                 temporary?"The temporary room edit was accepted. Stopping cannot undo it; use Undo or discard the temporary room. Keep a snapshot to save it.":

@@ -13303,3 +13303,58 @@ Android evidence belongs to the preceding checkpoint. Snapshot capture/native
 reconciliation and remaining synchronous authoring still require performance
 work. Physical interaction, acoustic quality, real-provider and Store gates
 remain open; capacities and holds are unchanged.
+
+## Environment-profile save completion — 2026-10-17
+
+Saving/removing a reusable collision profile and assigning it to an object now
+use the shared bounded completion operation. The original book, agent and
+programs receive success only after native application and durable saving.
+These changes retain independent collision, rendering and acoustic policies:
+Maestro or an NPC can use virtual terrain below the scan while other objects
+still collide with physical surfaces. Global collision opt-out remains an upper
+bound, virtual support is still required, and saved capacities are unchanged.
+
+Resource definitions and object deltas use one prepared-journal entry point.
+Waiting captures immutable preferences and stable IDs, without copying a room or
+holding bodies. Profile membership reads now return journal IDs directly.
+Revision, complete membership, released/native targets, ground and penetration
+are checked again before acceptance. A newly obstructing real wall refuses the
+entire enabling edit. Accepted resource revisions remain exact across later
+human edits, and interrupted accepted work identifies the resource while its
+save drains. Unchanged values add no Undo; temporary Keep/Discard and direct
+editor validators retain their contracts. Other actors and world time continue.
+See [collision-profile authoring](QUEST_SPATIAL_SETTINGS.md#collision-profiles-and-individual-objects).
+
+Current focused native verification passes 27 EditMode and 67 PlayMode tests,
+including nine new asynchronous environment journeys and four accepted-resource
+revision cases. The physics cases verify different actors landing on different
+ground in one scene, per-actor navigation/catch below the scan, global policy
+precedence and scan-loss isolation. All 3,185 web tests, both TypeScript checks
+and generated-catalog checks pass. The complete native suites were not repeated;
+their last full run remains at 7d518ec9, including the unresolved native audio
+crash and the successful unchanged rerun documented above.
+
+The complete Headless journey passes with 2,232 observations and
+2,225 read sets. Profile creation, assignment, shared edits, Undo and
+removal all finish through exact receipt inspection. The complete original Book
+journey passes with 3,244 observations and 1,008 requests;
+its generated profile picker reloads the exact saved ID/revision. The screenshot
+was inspected. Both journeys keep the periodic object list empty and use
+explicit offline fixtures; neither establishes provider or headset acceptance.
+Human-edit preservation, stale-request refusal and no replay after reload remain
+verified.
+
+The first Headless attempt stopped after 884 observations because the previous
+settings checkpoint's gait driver still expected immediate completion. Inspection
+found the same gap in the water-traversal driver. Both now observe the already
+accepted receipt with the common completion helper; their completed assertions
+remain strict and no action is resubmitted. The failed run and corrected complete
+run are retained in .quest-evidence/environment-save-20261017/.
+
+All 5,154 source inputs, 3,236 native inputs and 14 protected
+local files were checked before this delivery-record update. The PR's four inline
+and eight discussion comments are unchanged; no comments were posted. No Android
+build, physical Quest, paid provider, signing, cloud or Meta operation ran.
+Snapshot capture/native reconciliation and other synchronous authoring still
+need performance work. Physical interaction, audio quality, real-provider,
+capacity and Store acceptance remain open; V1 is not complete.

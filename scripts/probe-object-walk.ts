@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict';
 import {nativeProbeObjects} from './native-probe-objects';
+import {completeProbeAction} from './native-probe-contract';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import type {RoomCommand,RoomAgentState} from '../src/core-sdk/room/roomAgent';
@@ -20,7 +21,7 @@ export async function prepareObjectWalk(execute:Execute,directory:string){
  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.apply',version:1,arguments:{placements:[{target,position:{x:-3,y:0,z:-4},rotation:{x:0,y:0,z:0,w:1},scale:1}]}}}}]);
  await readyGeometry();
  const before=await fact('object.walk.settings',{target}),clips=await fact('object.walk.clips',{target,modelHash:hash,offset:0});assert.equal(clips.total,1);
- const saved=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.walk.select',version:1,arguments:{target,revision:before.revision,modelHash:hash,source:'embedded',clipIndex:0}}}}]);assert.equal(saved.execution?.selected?.phase,'completed');
+ const saved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.walk.select',version:1,arguments:{target,revision:before.revision,modelHash:hash,source:'embedded',clipIndex:0}}}}]));assert.equal(saved.execution?.selected?.phase,'completed');
  const after=await fact('object.walk.settings',{target});assert.equal((after.selection as {source:string}).source,'embedded');assert.equal((after.selection as {playbackStatus:string}).playbackStatus,'inactive');
  await writeFile(join(directory,'native-object-walk-selection.json'),JSON.stringify({boundary:'Explicit synthetic skinned character, real shared settings/clip-list/action/save path; selection alone does not move or play.',fixture,before,clips,receipt:saved.execution?.selected,after},null,2));return fixture;
 }
