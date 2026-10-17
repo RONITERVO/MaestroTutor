@@ -7443,6 +7443,126 @@
       }
     },
     {
+      "id": "room.storage.preparations.inspect",
+      "version": 1,
+      "label": "Inspect unfinished save preparations",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false,
+        "x-features": [
+          "roomStagingMaintenance.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Read-only inspection of at most 32 private unfinished save preparations in the current workspace. New preparations are limited to four files of at most 4 MiB each, including abandoned files. Read room.storage.preparations.entry with the returned inspectionId and index. Active, linked, oversized or unreadable files are ineligible. More means this is a partial inventory: inspect again after explicit cleanup if needed. These bytes are not accepted rooms and are never adopted as saves. No private paths or file contents are exposed. Inspection does not authorize deletion.",
+      "example": {},
+      "output": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 32.0
+          },
+          "more": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "inspectionId",
+          "count",
+          "more"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "id": "room.storage.preparations.discard",
+      "version": 1,
+      "label": "Discard unfinished save preparation",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "entryId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "confirmation": {
+            "type": "string",
+            "pattern": "^discard [a-f0-9]{32}$",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "inspectionId",
+          "entryId",
+          "fingerprint",
+          "confirmation"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "roomStagingMaintenance.v1"
+        ],
+        "x-confirmation": "Permanently discard this reviewed unfinished save preparation? It is not an accepted room save. There is no Undo; accepted room and backup files remain protected."
+      },
+      "duration": "completion",
+      "ownership": "none",
+      "channels": [],
+      "requirements": [],
+      "description": "Permanently discard one exact eligible unfinished room-save preparation from room.storage.preparations.entry. Requires its inspectionId, entryId, fingerprint and confirmation equal to discard followed by a space and that entryId. Obtain explicit user intent to discard this unfinished preparation; inspection or a request for more space is not permission. No Undo. Protects active preparations and all accepted room/backup/recovery files. Holds new edits briefly while rechecking and removing only the reviewed bytes. A stopped or failed attempt may have renamed or removed its private stage; inspect again and never automatically retry or replay. Every attempt consumes the review.",
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "entryId": "00000000000000000000000000000000",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000",
+        "confirmation": "discard 00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "fingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "maxLength": 64
+          },
+          "removed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "entryId",
+          "fingerprint",
+          "removed"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "workspace.retention.inspect",
       "version": 1,
       "label": "Inspect retained workspaces",
@@ -42534,6 +42654,76 @@
       ]
     },
     {
+      "id": "room.storage.preparations",
+      "version": 1,
+      "type": {
+        "record": {
+          "runId": "text",
+          "phase": "text",
+          "inspectionId": "text",
+          "count": "number",
+          "more": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Saved preparation maintenance status",
+      "description": "Latest session-local inspection or disposal result. Match runId to the requested execution. Completion of inspection is not deletion permission. Restart clears the inventory; interrupted operations are never replayed. This fact only reads cached status and never scans storage.",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1",
+        "roomStagingMaintenance.v1"
+      ]
+    },
+    {
+      "id": "room.storage.preparations.entry",
+      "version": 1,
+      "type": {
+        "record": {
+          "entryId": "text",
+          "fingerprint": "text",
+          "bytes": "number",
+          "eligible": "boolean",
+          "reason": "text"
+        }
+      },
+      "label": "Reviewed unfinished preparation",
+      "description": "Read one cached entry by exact inspectionId and zero-based index below count. Eligibility is a snapshot, not permission. Disposal rechecks the fingerprint and active ownership. New inspection, any disposal attempt or suspension invalidates this review. No file path or document content is exposed.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 31.0
+          }
+        },
+        "required": [
+          "inspectionId",
+          "index"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "inspectionId": "00000000000000000000000000000000",
+        "index": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "roomStagingMaintenance.v1"
+      ]
+    },
+    {
       "id": "workspace.retention",
       "version": 1,
       "type": {
@@ -46982,7 +47172,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "ff17b37163a976355a641ea86c224960030930cab050a4b57529af3ac4dea132"
+      "sha256": "9f8b72cb8502f35543320f41a216932616439484ec6237eda204fe92e5da0d96"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -47327,6 +47517,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomSessionCapability.cs",
       "sha256": "5a809c3ffcbd36910e36052558d4caf20328f51615816ebbaf4a4766bc60a6a0"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomStagingCapabilities.cs",
+      "sha256": "fdbb23e6e26880ac36d0489da5d1099e261e053fd2e8168e33f23546bac3e43f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomToolRecoveryCapability.cs",
@@ -47902,7 +48096,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "975b85e9bbb479c2441c122aa8920fed33f86a6727454afdbb00758d0375c697"
+      "sha256": "27b8388bbdaab03a7ddaf2618466fdb81dc093ae1bbb44f8905ff67f73fc68a9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -47938,7 +48132,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "494a53a15d5609b976ae5e2a27164f40c16798157e76b0f339504ebae91aa51f"
+      "sha256": "6c329948628dcd1323dfccc1b29f0487e13099b08b13986c5d42969796d62fbc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48231,6 +48425,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
       "sha256": "ad65440204902474ff4b387ac3c4b37931903ee3e37612097982ea930b623eba"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStagingMaintenance.cs",
+      "sha256": "b3ef1f383b770f03327c3d6f7cfcc53c8e408128597008d749a2c35d4eabec89"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
@@ -48942,7 +49140,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/PreparedFileStage.cs",
-      "sha256": "26cf471e5699b1f2bc6c9ac65fc7a25b09d99d4f5a98315c5b47ff11720b4eae"
+      "sha256": "5e8cf631d51cd9377987ccdcb5710c26dcba7ec485d6fcbc3962557149851ebc"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/PreparedStageInventory.cs",
+      "sha256": "a20e7e2adaf86f159b9469ed22216863522af5ca75810e8f2dde8ec095b4ead1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
@@ -49078,7 +49280,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "bb48d2eaee871c8cf8459b1606c6274cd855071d661f79d426947b803c08944e"
+      "sha256": "056edecf080ebea7851fe8eec525edbf00157fd7b32937ae44efe0c4cf24b7e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

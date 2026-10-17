@@ -12795,3 +12795,54 @@ native reports, web output, the failed initial test-literal compilation, initial
 and final diagnostic measurements, source-provenance verification and the next
 implementation boundary. No device, provider, Android compilation, signing,
 deployment or Store acceptance is claimed by this checkpoint.
+
+## Bounded unfinished-save maintenance — 2026-10-17
+
+Private prepared saves now reserve a filesystem slot under the shared room
+coordinator before writing. Admission permits four preparations of up to 4 MiB
+each, counting active and abandoned files across stores; unexpected oversized or
+unsafe entries block further preparation. There is no automatic orphan sweep,
+adoption, or overwrite. Existing room-document capacity is unchanged.
+
+Two shared room-domain completion actions inspect and explicitly discard exact
+unfinished preparations, with cached status/entry facts and the feature
+roomStagingMaintenance.v1. Book catalog forms, programs and delegated requests
+use these same definitions. Inspections expose at most 32 entries, opaque review
+IDs, eligibility, byte counts and fingerprints, without private paths or contents.
+The worker hashes pinned inactive files outside the room coordinator.
+
+Disposal needs explicit intent and the exact reviewed identity, fingerprint and
+confirmation. It freezes new edits, retains a workspace lifetime reader, rechecks
+the file, claims it by rename, checks the claimed bytes again and removes only
+that file. Accepted primaries, backups and unrelated recovery evidence remain
+protected. Cancellation, lifecycle changes and failed attempts invalidate the
+review. An interrupted operation can have completed its filesystem effect; its
+status never promises rollback or authorizes automatic replay. Success cleanup
+preserves an inspection for the next action, while cancellation invalidates it.
+
+This resolves bounded retention and exact cleanup for the private preparation
+family. General corrupted/oversized file recovery remains in the existing
+workspace recovery workflow. It does not migrate other synchronous editing APIs
+or eliminate remaining owner-thread publication and reconciliation work.
+
+Final verification passes **1,403 EditMode**, **56 selected PlayMode** and
+**1,442 web room tests in 143 files**, with zero failures or skips. The new coverage
+includes 14 storage cases and five native integration journeys: exact shared
+receipts/facts and non-replay, active writer/pinned-file refusal, capacity recovery
+followed by a real rotation, cancellation/retirement draining, and changed-byte
+preservation. Actual native receipt output is committed as the web contract fixture.
+
+The first scene run reproduced an inspection invalidation bug during ordinary
+scheduler completion cleanup (55 passed, one failed); completion now retains the
+delivered review while cancellation clears it. The final rerun above includes
+that regression. Initial compilation and failed-run evidence are retained.
+
+All **3,212 native inputs** match the tested mirror except the four documented
+Configure-derived settings. All **14 protected files** are unchanged. The catalog
+adds only the two maintenance actions and two facts; existing definitions and ten
+bundled guides are unchanged. Evidence is in
+.quest-evidence/staging-maintenance-20261017/, including source hashes,
+native reports/receipts, web tests and exact contract comparisons. No device,
+paid-provider, Android compilation, signing, deployment or Store acceptance is
+claimed by this checkpoint. V1 and the broader completion-operation migration
+remain active work.

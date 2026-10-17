@@ -2759,3 +2759,40 @@ Do not interpret background staging as a Quest frame-time guarantee, a durable
 write-ahead native transaction, or support for larger saved worlds. Other edit
 families still need explicit migration to completion operations with their own
 native resource lifetimes.
+
+## Inspecting unfinished room-save preparations
+
+Private save preparations now have bounded admission: at most four files, each
+at most the existing 4 MiB room-document limit. Active and abandoned preparations
+both count. Unexpected oversized files or directories in this private family
+block new staging and remain preserved. This does not reduce the accepted room
+limit or silently clean up data after a crash.
+
+The same catalog used by book forms, programs and agents exposes
+room.storage.preparations.inspect and room.storage.preparations.discard, gated
+by roomStagingMaintenance.v1. Inspection is a completion action on a worker.
+Its receipt supplies an inspectionId, count and more flag; the cached
+room.storage.preparations and room.storage.preparations.entry facts expose
+status and up to 32 entries, without private paths or file contents.
+Hashing an inactive preparation does not hold the room coordinator.
+
+Discard requires explicit intent to permanently remove the reviewed unfinished
+preparation, its inspectionId, entryId and content fingerprint, and confirmation
+equal to “discard ” followed by entryId. Inspection or wanting more space is not
+permission. The action is irreversible. Its generated form includes a confirmation
+message; agents must explain the proposed disposal before obtaining that intent.
+
+Only an inactive, regular, bounded file is eligible. A worker rechecks ownership
+and exact bytes, renames the private file to a unique claim, verifies the claim
+again, and then removes it. Accepted rooms, backups and recovery evidence outside
+this private preparation family are untouched. Changed files remain evidence.
+New edits are briefly frozen during disposal; the worker retains a workspace
+reader until it drains, so retirement cannot remove its directory prematurely.
+
+A review is session-local and one-shot. Starting a new inspection, attempting
+disposal, or suspending the workspace invalidates it. A completed receipt can be
+read again without replaying disposal. Stop cancels outstanding work but cannot
+promise rollback after a filesystem effect: inspect again before another request.
+A restart never automatically retries disposal or adopts a preparation as a save.
+Unsafe, oversized or unreadable entries remain ineligible; this is not a general
+file manager or a substitute for the existing room recovery workflow.

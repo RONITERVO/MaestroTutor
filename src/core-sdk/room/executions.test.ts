@@ -371,3 +371,18 @@ it('reads a native current-saved recovery preview with a distinct manifest and r
  expect(nativeSavedRecovery.preview.manifestHash).not.toBe(nativeSavedRecovery.candidate.manifestHash);
  expect(nativeSavedRecovery.rememberedCount).toBe(23);expect(nativeSavedRecovery.reviewRequired).toBe(false);
 });
+
+import nativePreparations from '../../../test-fixtures/browser/roomPreparations.json';
+it('accepts native preparation inspection and exact disposal through the room execution domain',()=>{
+ for(const execution of [nativePreparations.inspection,nativePreparations.discard])expect(validExecutionView(execution)).toBe(true);
+ expect(validFactValue('room.storage.preparations',nativePreparations.status)).toBe(true);
+ expect(validFactValue('room.storage.preparations.entry',nativePreparations.entry)).toBe(true);
+ const call=nativePreparations.discard.selected.call,execution={operation:'start' as const,call};
+ expect(validExecutionRequest(execution)).toBe(true);
+ expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1']})).toThrow('roomStagingMaintenance.v1');
+ expect(()=>requireRoomCapabilities([{action:'execution',execution}],{capabilities:['execution.v1','roomStagingMaintenance.v1']})).not.toThrow();
+ for(const args of [{...call.arguments,confirmation:''},{...call.arguments,inspectionId:'changed'},{...call.arguments,entryId:'../room'},{...call.arguments,fingerprint:'changed'},{...call.arguments,path:'/private/file'}])expect(validExecutionRequest({operation:'start',call:{...call,arguments:args}})).toBe(false);
+ expect(nativePreparations.entry.eligible).toBe(true);
+ expect(nativePreparations.discard.selected.output).toMatchObject({entryId:nativePreparations.entry.entryId,fingerprint:nativePreparations.entry.fingerprint,removed:true});
+ expect(nativePreparations.inspection.selected.output.inspectionId).toBe(nativePreparations.status.inspectionId);
+});

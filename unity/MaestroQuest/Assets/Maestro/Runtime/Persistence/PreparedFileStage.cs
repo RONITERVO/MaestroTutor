@@ -21,10 +21,9 @@ namespace Maestro.Quest.Persistence
         internal static PreparedFileStage Create(string primary,byte[] bytes,CancellationToken cancellation)
         {
             cancellation.ThrowIfCancellationRequested();
-            string directory=Path.GetDirectoryName(primary);
-            WorkspaceFileInventory.Parents(directory);Directory.CreateDirectory(directory);
-            string path=primary+".prepare."+Guid.NewGuid().ToString("N");
-            var handle=new FileStream(path,FileMode.CreateNew,FileAccess.ReadWrite,FileShare.Read);
+            if(bytes==null||bytes.Length<1||bytes.Length>PreparedStageInventory.MaximumStageBytes)
+                throw new ArgumentException("Prepared room bytes exceed their staging limit.",nameof(bytes));
+            var handle=PreparedStageInventory.Reserve(primary,cancellation,out string path);
             PreparedFileStage stage=null;
             try {
                 stage=new PreparedFileStage(path,bytes,handle);
@@ -32,8 +31,12 @@ namespace Maestro.Quest.Persistence
                     handle.Write(bytes,offset,Math.Min(65536,bytes.Length-offset));
                 }
                 handle.Flush(true);cancellation.ThrowIfCancellationRequested();
-                handle.Dispose();
-                stage.handle=handle=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
+                // Inspection can take an exclusive inactive-file pin. Do not
+                // expose a live stage between its writing and read-only handles.
+                using(var owner=RoomSnapshotTransaction.Enter(Path.GetDirectoryName(primary))){
+                    handle.Dispose();
+                    stage.handle=handle=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.Read);
+                }
                 cancellation.ThrowIfCancellationRequested();return stage;
             } catch {
                 // Remove only the exact complete candidate. Failed partial writes
