@@ -1,23 +1,45 @@
 # Shared spatial settings
 
-The catalog exposes object physics, Maestro follow preferences and walking
-animation selection through the same native save path as their physical tools.
-Original Maestro owns planning and provider access. Discover these actions only
-when the room advertises `spatialSettings.v1`.
+The catalog exposes object physics, Maestro follow preferences, exact walking
+animation selection and water traversal using the physical tools' shared
+validators, definitions and Undo history. Catalog actions use background save
+completion; existing direct physical editor APIs retain their synchronous
+contract. Original Maestro owns planning and provider access. Discover each
+action only when its declared feature is advertised by the room.
 
 | Action | Read first | Saved change |
 |---|---|---|
 | `object.physics.configure` | `object.physics.settings(target)` | Creation's fixed/solid/bouncy mode, automatic/box/sphere collider and 0.05–20 kg mass |
 | `avatar.movement.configure` | `avatar.movement.settings` | Follow distance 0.8–2.5 m and walk speed 0.2–1.2 m/s |
 | `avatar.walk.select` | `avatar.walk.settings` | Included gait, exact compatible library motion ID, or an embedded clip tied to its model hash |
+| `object.walk.select` | `object.walk.settings(target)` | Imported character's exact compatible library or embedded gait, or no gait |
+| `object.water.traversal.configure` | `object.water.traversal.settings(target)` | Default, ignore, avoid or bounded wading policy |
 
 Supply the exact object revision from the current fact. Both movement values and
 all three physics values are required; preserve the values the user did not ask
 to change. Manual edits, Undo/Redo and other changes invalidate stale revisions.
 Each changed edit saves before success and has one room Undo. Identical values do
-not add a spurious Undo. Duplicate action receipts do not save again. Failures
-leave accepted preferences unchanged. In temporary rooms the changes stay in the
-fork until Keep; Discard restores the previous base.
+not add a spurious Undo. Duplicate action receipts do not save again. Refusal or
+cancellation before native acceptance leaves preferences unchanged. After
+acceptance, stopping cannot retract the live edit or its save. An unconfirmed
+save requires inspection; never blindly repeat it. In temporary rooms the
+changes stay in the fork until Keep; Discard restores the previous base.
+
+These five actions have `completion` duration. A started request is not a saved
+result: observe its receipt until completion. There is no successful output while
+waiting or saving. The result contains the exact accepted target revision, even
+if a later user edit has already changed it again. Inspect current values before
+using that result as an edit guard.
+
+Settings share bounded, arrival-ordered save admission with creation, placement,
+paint and deletion. Waiting copies no room candidate and does not hold a body.
+Inputs are captured, and target revision, native eligibility and exact motion
+availability are checked again before acceptance. Automatic checkpoints of
+unrelated moving objects may continue; their newer poses remain live and dirty
+for a subsequent save. Authored edits, edited-target revision changes and
+foreign-fork changes still invalidate the prepared candidate. Snapshot capture
+and native reconciliation remain owner-thread work; this does not establish
+Quest frame-time acceptance.
 
 Shared actions reserve only the target and refuse competing movement, held items
 or animation authoring. Physical controls retain manual interruption priority.

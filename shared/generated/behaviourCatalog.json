@@ -32015,7 +32015,7 @@
           ]
         }
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -32027,7 +32027,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Set a creation's fixed/solid/bouncy mode, collision shape and mass in kilograms through the physical physics tools' save path. Read object.physics.settings. Supply all three preferences and preserve any the user did not request. Book and Maestro are excluded. Live position is retained; changed collision geometry and body configuration can affect current simulation. Other objects are not paused. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Set a creation's fixed/solid/bouncy mode, collision shape and mass in kilograms through the physical physics tools' save path. Read object.physics.settings. Supply all three preferences and preserve any the user did not request. Book and Maestro are excluded. Live position is retained; changed collision geometry and body configuration can affect current simulation. Other objects are not paused. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -32127,7 +32127,7 @@
           ]
         }
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -32139,7 +32139,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid refuses entry but lets an already-wet actor exit shallow water toward a nearest cavity edge or shallower ground, without going deeper. This exit and wading both obey maxDepthMetres in authored-room metres, capped at 60% of walking body height; wade permits travel within that depth; ignore is for deliberate non-walking movement. Following can plan bounded routes around liquid footprints; manual movement and authored recordings keep their literal paths. This is grounded shallow egress, not swimming or an automatic escape planner; obstacles can still block an exit. Swimming is not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Choose how Maestro walking and recorded root movement, or an opted-in creation's recorded root movement, respond to finite liquid cavities. default means Maestro avoids water and other objects ignore it. avoid refuses entry but lets an already-wet actor exit shallow water toward a nearest cavity edge or shallower ground, without going deeper. This exit and wading both obey maxDepthMetres in authored-room metres, capped at 60% of walking body height; wade permits travel within that depth; ignore is for deliberate non-walking movement. Following can plan bounded routes around liquid footprints; manual movement and authored recordings keep their literal paths. This is grounded shallow egress, not swimming or an automatic escape planner; obstacles can still block an exit. Swimming is not provided. Swept upright body checks use live fill levels, including when forces are paused. This changes neither rigid-body buoyancy, gripping, explicit placement, real-room collision profiles nor visibility. Read object.water.traversal.settings and preserve unrequested settings. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -32232,7 +32232,7 @@
           ]
         }
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -32244,7 +32244,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Set Maestro's follow distance (0.8–2.5 metres) and walking speed (0.2–1.2 metres/second) through the physical Distance/Walk speed tools. Read avatar.movement.settings and preserve the unrequested preference. These are preferences for later movement, not a command to move. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Set Maestro's follow distance (0.8–2.5 metres) and walking speed (0.2–1.2 metres/second) through the physical Distance/Walk speed tools. Read avatar.movement.settings and preserve the unrequested preference. These are preferences for later movement, not a command to move. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -32449,7 +32449,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -32461,7 +32461,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Set the animation used for later Maestro walking. Read avatar.walk.settings. included chooses the built-in gait; library requires an exact downloaded compatible motionId; embedded requires the exact loaded modelHash and zero-based clip index from avatar.walk.clips. Clips must be at least 0.1 seconds long. Never substitute a clip by name or tag. A missing/incompatible saved choice stays visible and is not silently replaced. Shares the physical Walk clip chooser; manual Preview walk remains separate. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Set the animation used for later Maestro walking. Read avatar.walk.settings. included chooses the built-in gait; library requires an exact downloaded compatible motionId; embedded requires the exact loaded modelHash and zero-based clip index from avatar.walk.clips. Clips must be at least 0.1 seconds long. Never substitute a clip by name or tag. A missing/incompatible saved choice stays visible and is not silently replaced. Shares the physical Walk clip chooser; manual Preview walk remains separate. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "maestro",
         "revision": 1,
@@ -32680,7 +32680,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -32692,7 +32692,7 @@
         "object.revision.current",
         "storage.writable"
       ],
-      "description": "Assign a created imported humanoid's exact walking pose for later object.navigate and object.follow. Read object.walk.settings and object.walk.clips. none clears the assignment. embedded requires a zero-based clip index for the exact current modelHash; library requires a downloaded compatible exact motionId. At least 0.1 seconds, a supported humanoid rig and animation-enabled geometry are required. Never choose by name or tag without the user's intended choice. Saving and loading never play. Movement waits for its assigned clip to load and fails if it is unavailable, without substituting another. Accepted body steps alone advance every imported node and blend shape. Source horizontal hips travel is removed; vertical bounce remains. Cadence is estimated from model height (0.65m/s at 1.7m tall), with rate clamped 0.25–2; this is not calibrated foot planting, limb contact or retargeting for arbitrary non-humanoid rigs. Blocked/waiting/arrived movement restores the pre-walk pose; continuing movement resumes its phase. Stop releases the clip and restores that pose. A fixed bounds collider still controls navigation. Recipe part animations remain separate and can accompany root navigation. Assignments survive copies, reusable prototypes, saves and archives by exact identity. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.",
+      "description": "Assign a created imported humanoid's exact walking pose for later object.navigate and object.follow. Read object.walk.settings and object.walk.clips. none clears the assignment. embedded requires a zero-based clip index for the exact current modelHash; library requires a downloaded compatible exact motionId. At least 0.1 seconds, a supported humanoid rig and animation-enabled geometry are required. Never choose by name or tag without the user's intended choice. Saving and loading never play. Movement waits for its assigned clip to load and fails if it is unavailable, without substituting another. Accepted body steps alone advance every imported node and blend shape. Source horizontal hips travel is removed; vertical bounce remains. Cadence is estimated from model height (0.65m/s at 1.7m tall), with rate clamped 0.25–2; this is not calibrated foot planting, limb contact or retargeting for arbitrary non-humanoid rigs. Blocked/waiting/arrived movement restores the pre-walk pose; continuing movement resumes its phase. Stop releases the clip and restores that pose. A fixed bounds collider still controls navigation. Recipe part animations remain separate and can accompany root navigation. Assignments survive copies, reusable prototypes, saves and archives by exact identity. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -47440,11 +47440,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectWalkSettingsCapability.cs",
-      "sha256": "5e0024ddba0e3397b1b5b261fffe3963354b01cc75fa1a09551a225d16d14929"
+      "sha256": "e335653316ce9566d42cf9eed17eb5f45989223c1c1025073820ede960a78560"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "426eaf0cc5f6619aebf28acf8574c76292f664a271ea4faa03607b81abee07ca"
+      "sha256": "bb64e6622386a1667b1ca11f44124355f2362dc939684821ccb48fa15a7c3783"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -47576,7 +47576,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialSettingsCapabilities.cs",
-      "sha256": "52ca061029cd7d16d78cad974eaf3eacc90e763eea7b1ea97a104910897e033d"
+      "sha256": "0b445222475942a6408f8b7fb830039aca004ab11c5b1abc95cf6f065a4839d4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/StructureCapabilities.cs",
@@ -47600,7 +47600,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
-      "sha256": "164a0c0de8b4d7baef5b0555bfe099ff312961ae0f1f0b28fa9a976b5786cdc0"
+      "sha256": "721373009acdd87df3b6d0efd101f34db33822098b1af05d3e3071174d05bb67"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowCapability.cs",
@@ -47932,7 +47932,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "078e39dec59156f6c8713a665d4bc9dfe53fbdfaea46d94446dfff9073f079f5"
+      "sha256": "131a649d646e8fe8f2766751db6adc718760b77b983aa43dd2611a8fe07532b4"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
+      "sha256": "ce45be2eb03a5e97c525844470313b3d59987bbf186cf1ac70071ba09a1abae5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48124,7 +48128,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "169fc7921b179bf016ae7086a907a825713fbcb3ff6293b995fea6ef0d5e7e84"
+      "sha256": "e1906877a156a4a1ed759ec40705f9e3951e8fe245b082a6ab50bd49950a391e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48148,7 +48152,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "b98079a5e665b1bb82631dfb4a7fd39bf17b1158ecb5bee589625d5076d1a314"
+      "sha256": "7b96179f667276f454a2ad78ebfca942b6745bd8db6edee7b7e46f00ff414259"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48328,11 +48332,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectSettings.cs",
-      "sha256": "a783616d4732561123a5022d7abe4d609cc74604ea16bb0333c743524d2078ae"
+      "sha256": "864fc2320980ab58d62608e341c13f50df9833a5f84b8470df60f1ecb691eb6a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectWalk.cs",
-      "sha256": "c788bdd9f7177a59f53b1f1171194b1f3e5465a63fb3043ae90970f0d6600790"
+      "sha256": "e776f4ee05cf14f1970671c526d68abc92830b0a510ccb50bf053c17be7de089"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservation.cs",
@@ -48368,7 +48372,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "5f6d13d6df2d5d8cf5570bc0d0c1bca4bf9de09fba580d071498cc4b47149f79"
+      "sha256": "1dad952c54648d09069d24dcf48822beb676ddd9f163bc8adcc0f756d7df2fc1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",

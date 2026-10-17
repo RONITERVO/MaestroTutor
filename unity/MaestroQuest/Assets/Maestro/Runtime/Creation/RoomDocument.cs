@@ -222,6 +222,7 @@ namespace Maestro.Quest.Creation
         // must never make a stale observation current again.
         sealed class RevisionClock { public int Next = 1; }
         readonly RevisionClock clock = new();
+        long runtimePlacementAdvances;
         readonly RoomWorldIdentity world;
         internal RoomWorldIdentity WorldIdentity=>world.Copy();
         public int ObjectRevision(string id) => id != null && revisions.TryGetValue(id,out var value) ? value : 0;
@@ -304,11 +305,12 @@ namespace Maestro.Quest.Creation
         }
         public RoomObjectData Read(string id) => id != null && items.TryGetValue(id, out var value) ? value.Copy() : null;
         // Physics updates persisted placement without filling Undo with every simulation step.
-        public bool UpdatePlacement(string id, Vector3 position, Quaternion rotation)
+        public bool UpdatePlacement(string id, Vector3 position, Quaternion rotation,bool runtime=false)
         {
             if (!items.TryGetValue(id,out var data) || !float.IsFinite(position.sqrMagnitude) || position.sqrMagnitude > 625 || !MotionFrame.ValidRotation(rotation)) return false;
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
-            data.position = position; data.rotation = rotation; revisions[id]=clock.Next++; return true;
+            data.position = position; data.rotation = rotation; revisions[id]=clock.Next++;
+            if(runtime)runtimePlacementAdvances++;return true;
         }
         public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, regions=RegionSnapshot(), world=world.Copy(), viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot(), environmentProfiles=EnvironmentSnapshot(), appearances=AppearanceSnapshot(), visibilityLayers=VisibilitySnapshot(), lighting=Lighting,worldTime=WorldTime,weather=Weather };
 

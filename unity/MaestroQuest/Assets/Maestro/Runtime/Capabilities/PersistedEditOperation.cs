@@ -32,9 +32,9 @@ namespace Maestro.Quest.Programs
             this.validate=validate??((out string error)=>editor.CanEditObject(target,false,out error));
             revision=editor.ObjectRevision(target);temporarySession=editor.TemporarySessionId;
         }
-        internal static bool Start(RoomEditor editor,string target,Begin begin,out CapabilityOperation operation,out string error,Validate validate=null)
+        internal static bool Start(RoomEditor editor,string target,Begin begin,out CapabilityOperation operation,out string error,Validate validate=null,Func<JObject> output=null)
         {
-            var value=new PersistedEditOperation(editor,target,begin,validate);
+            var value=new PersistedEditOperation(editor,target,begin,validate,output);
             operation=null;if(!value.TryBegin(out error))return false;
             operation=value;return true;
         }

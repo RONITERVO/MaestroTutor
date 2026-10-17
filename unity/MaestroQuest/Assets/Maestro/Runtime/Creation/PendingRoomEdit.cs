@@ -118,6 +118,7 @@ namespace Maestro.Quest.Creation
             }
             internal bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
             internal bool Accepted=>accepted;
+            internal int AcceptedObjectRevision(string id)=>accepted?edit.AcceptedObjectRevision(id):0;
             internal bool Published=>publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
             internal string InterruptionStatus=>accepted?
                 temporary?"The temporary room edit was accepted. Stopping cannot undo it; use Undo or discard the temporary room. Keep a snapshot to save it.":

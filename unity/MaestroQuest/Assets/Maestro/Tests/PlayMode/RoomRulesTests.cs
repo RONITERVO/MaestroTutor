@@ -601,6 +601,11 @@ namespace Maestro.Quest.Tests
             var recording=new JObject {["id"]="animation.play",["version"]=1,["arguments"]=new JObject {["target"]=editor.Identity(block),["seconds"]=2,["loop"]=false,["source"]=new JObject {["kind"]="recording"},["channel"]="wholeTarget"}};
             Assert.That(runtime.Scheduler.Invoke(recording,Time.unscaledTime,out var recordingId,out error),Is.True,error);
             var before=block.transform.localPosition;int count=editor.Snapshot().objects.Length;
+            // Isolate the exact impulse from automatic gravity steps while the
+            // asynchronous create/save completes. Restore real simulation before
+            // checking the trajectory; never assume storage finishes within one tick.
+            var simulationMode=Physics.simulationMode;Physics.simulationMode=SimulationMode.Script;
+            try {
             Assert.That(runtime.Trigger(ids.Single()),Is.True,runtime.Scheduler.LastError);
             string created=null;yield return ProgramCreationResult(ids.Single(),"ball",value=>created=value);
             Assert.That(Guid.TryParseExact(created,"N",out _),Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
@@ -608,12 +613,14 @@ namespace Maestro.Quest.Tests
             var body=editor.Find(created).GetComponent<Rigidbody>();Assert.That(body.mass,Is.EqualTo(.5f));
             runtime.Scheduler.Tick(Time.unscaledTime);
             Assert.That(body.linearVelocity.x,Is.EqualTo(1).Within(.001f));Assert.That(body.linearVelocity.y,Is.EqualTo(2).Within(.001f));
+            Physics.simulationMode=simulationMode;
             var persisted=new RoomStorage(directory).Load(out error);Assert.That(persisted.objects.Any(x=>x.id==created),Is.True,error);
             yield return new WaitForSeconds(.15f);Assert.That(block.transform.localPosition.x,Is.GreaterThan(before.x));
             Assert.That(editor.Find(created).transform.localPosition.x,Is.GreaterThan(.35f));
             Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("completed"));
             editor.Undo();Assert.That(editor.Find(created),Is.Null);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
             editor.Redo();Assert.That(editor.Find(created),Is.Not.Null);Assert.That(editor.Read(created).name,Is.EqualTo("Program ball"));
+            } finally {Physics.simulationMode=simulationMode;}
         }
         [UnityTest] public IEnumerator CreationReceiptRetainsExactResultAcrossDuplicateRequestAndRestart()
         {

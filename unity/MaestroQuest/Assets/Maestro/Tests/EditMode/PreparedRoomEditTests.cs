@@ -140,5 +140,34 @@ namespace Maestro.Quest.Tests
             Assert.IsTrue(journal.Prepare(new[]{Block()},Array.Empty<string>(),out var other,out _));
             using(other){journal.Apply(Array.Empty<RoomObjectData>(),Array.Empty<string>(),out _,worldTime:new RoomWorldTime{second=20});Assert.IsFalse(other.Accept(journal,out _,allowRuntimeProgress:true));}
         }
+        [Test] public void BackgroundCandidatePreservesUnrelatedRuntimePlacementAndItsUnsavedCheckpoint()
+        {
+            var journal=Room();var block=Block();journal.Apply(new[]{block},Array.Empty<string>(),out _);
+            block.color=Color.blue;Assert.IsTrue(journal.Prepare(new[]{block},Array.Empty<string>(),out var edit,out _));
+            using(edit){
+                string checkpoint=JsonUtility.ToJson(edit.Snapshot());
+                Assert.IsTrue(journal.UpdatePlacement("maestro",Vector3.right,Quaternion.identity,runtime:true));
+                Assert.IsTrue(journal.UpdatePlacement("maestro",Vector3.right*2,Quaternion.identity,runtime:true));
+                Assert.IsTrue(edit.RuntimeProgressChanged);Assert.IsFalse(edit.Current(journal));Assert.IsTrue(edit.Current(journal,allowRuntimeProgress:true));
+                Assert.AreEqual(checkpoint,JsonUtility.ToJson(edit.Snapshot()));
+                Assert.IsTrue(edit.Accept(journal,out var error,allowRuntimeProgress:true),error);
+                Assert.AreEqual(Vector3.right*2,journal.Read("maestro").position);Assert.AreEqual(Color.blue,journal.Read(block.id).color);
+                journal.Undo();Assert.AreEqual(Vector3.right*2,journal.Read("maestro").position);Assert.AreEqual(Color.white,journal.Read(block.id).color);
+            }
+        }
+        [Test] public void RuntimePlacementToleranceRejectsTargetChangesAndAuthoredChangesAndOtherForks()
+        {
+            foreach(string kind in new[]{"target","authored","fork"}){
+                var journal=Room();var block=Block();journal.Apply(new[]{block},Array.Empty<string>(),out _);block.color=Color.blue;
+                Assert.IsTrue(journal.Prepare(new[]{block},Array.Empty<string>(),out var edit,out _));
+                using(edit){
+                    journal.UpdatePlacement("maestro",Vector3.right,Quaternion.identity,runtime:true);
+                    if(kind=="target")journal.UpdatePlacement(block.id,Vector3.up,Quaternion.identity,runtime:true);
+                    if(kind=="authored"){var changed=journal.Read("maestro");changed.color=Color.red;journal.Apply(new[]{changed},Array.Empty<string>(),out _);}
+                    if(kind=="fork")journal.Fork().UpdatePlacement("book",Vector3.left,Quaternion.identity,runtime:true);
+                    string before=State(journal);Assert.IsFalse(edit.Accept(journal,out _,allowRuntimeProgress:true),kind);Assert.AreEqual(before,State(journal));
+                }
+            }
+        }
     }
 }

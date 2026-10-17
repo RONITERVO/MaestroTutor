@@ -31,16 +31,16 @@ namespace Maestro.Quest.Creation
         {
             if(!CurrentSettings("maestro",revision,false,out error))return false;
             var data=Read("maestro");
-            return source=="embedded"?AvatarWalkSelection.ApplyEmbedded(this,data,modelHash,clipIndex,out error):AvatarWalkSelection.Apply(this,data,source=="included"?"":motionId,out error);
+            return ApplyWalkChoice(data,source,motionId,modelHash,clipIndex,out error);
         }
         internal bool ConfigureWalk(int revision,string source,string motionId,string modelHash,int clipIndex,out string error)
         {
             if(!CanConfigureWalk(revision,source,motionId,modelHash,clipIndex,out error))return false;
-            return EditObject("maestro",false,data=>{
-                if(source=="embedded")AvatarWalkSelection.ApplyEmbedded(this,data,modelHash,clipIndex,out _);
-                else AvatarWalkSelection.Apply(this,data,source=="included"?"":motionId,out _);
-            },"Walking animation saved",false,out error);
+            return EditObject("maestro",false,data=>ApplyWalkChoice(data,source,motionId,modelHash,clipIndex,out _),"Walking animation saved",false,out error);
         }
+        bool ApplyWalkChoice(RoomObjectData data,string source,string motionId,string hash,int index,out string error)=>
+            source=="embedded"?AvatarWalkSelection.ApplyEmbedded(this,data,hash,index,out error):
+            AvatarWalkSelection.Apply(this,data,source is "included" or "none"?"":motionId,out error);
         internal JObject ObservePhysicsSettings(string id)
         {
             var data=Read(id);if(data==null||data.IsBuiltIn)return null;var value=RoomControls.Physics(data);

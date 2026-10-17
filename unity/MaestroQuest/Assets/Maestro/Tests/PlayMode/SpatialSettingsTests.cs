@@ -28,8 +28,7 @@ namespace Maestro.Quest.Tests
         JObject SpatialArgs()=>new() {["target"]="maestro",["revision"]=editor.ObjectRevision("maestro"),["distance"]=1.8,["speed"]=1};
         IEnumerator SaveSettings(string id,JObject args)
         {
-            Assert.That(modeActions.Execute(SettingsRequest(id,args),out var error),Is.True,error);yield return null;
-            Assert.That((string)modeActions.Observe()["selected"]["phase"],Is.EqualTo("completed"),modeActions.Observe().ToString());
+            Assert.That(modeActions.Execute(SettingsRequest(id,args),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(modeActions);
         }
         [UnityTest] public IEnumerator SharedSpatialSettingsSaveBeforeSuccessWithoutPlaybackAndHaveOneUndo()
         {
@@ -41,7 +40,7 @@ namespace Maestro.Quest.Tests
             yield return SaveSettings("avatar.movement.configure",SpatialArgs());var movement=modeActions.Observe().DeepClone();var afterMovement=SettingsFact("avatar.movement.settings");
             Assert.That(motion.Distance,Is.EqualTo(1.8f));Assert.That(motion.Speed,Is.EqualTo(1));Assert.That(motion.Active||authoring.IsPlaying,Is.False);
             var walkBeforeSave=SettingsFact("avatar.walk.settings");
-            var request=SettingsRequest("avatar.walk.select",new JObject {["target"]="maestro",["revision"]=editor.ObjectRevision("maestro"),["source"]="included"});Assert.That(modeActions.Execute(request,out error),Is.True,error);yield return null;var walk=modeActions.Observe().DeepClone();var afterWalk=SettingsFact("avatar.walk.settings");
+            var request=SettingsRequest("avatar.walk.select",new JObject {["target"]="maestro",["revision"]=editor.ObjectRevision("maestro"),["source"]="included"});Assert.That(modeActions.Execute(request,out error),Is.True,error);yield return SpatialSettingsCompletion.Wait(modeActions);var walk=modeActions.Observe().DeepClone();var afterWalk=SettingsFact("avatar.walk.settings");
             Assert.That(modeActions.Execute(request,out error),Is.True,error);Assert.That(JToken.DeepEquals(afterWalk,SettingsFact("avatar.walk.settings")),Is.True,"Duplicate receipt cannot resave");
             editor.Undo();Assert.That(editor.Read(target).mass,Is.EqualTo(2));Assert.That(motion.Speed,Is.EqualTo(.65f),"Selecting the already included walk adds no spurious Undo");editor.Undo();Assert.That(editor.Read(target).mass,Is.EqualTo(.5f));
             editor.Redo();Assert.That(editor.Read(target).mass,Is.EqualTo(2));
@@ -80,7 +79,7 @@ namespace Maestro.Quest.Tests
             var stale=SettingsRequest("avatar.movement.configure",SpatialArgs());editor.SetAvatarMovement(2,.4f);Assert.That(modeActions.Execute(stale,out var error),Is.False);StringAssert.Contains("changed",error);
             world.PausePhysics();editor.SaveNow();var before=SettingsFact("object.physics.settings",target);string file=Path.Combine(directory,RoomStorage.FileName),original=File.ReadAllText(file),pending=file+".pending";Directory.CreateDirectory(pending);
             try{
-                Assert.That(modeActions.Execute(SettingsRequest("object.physics.configure",PhysicsArgs(target)),out _),Is.False);yield return null;
+                Assert.That(modeActions.Execute(SettingsRequest("object.physics.configure",PhysicsArgs(target)),out var saveError),Is.True,saveError);yield return SpatialSettingsCompletion.Wait(modeActions,"failed");
                 Assert.That((string)modeActions.Observe()["selected"]["phase"],Is.EqualTo("failed"));Assert.That(modeActions.Observe()["selected"]["output"],Is.Null);Assert.That(JToken.DeepEquals(before,SettingsFact("object.physics.settings",target)),Is.True);
                 Assert.That(editor.SetItemPhysics(target,new ObjectPhysicsSettings {mode="fixed",shape="box",mass=3}),Is.False);Assert.That(editor.Read(target).mass,Is.EqualTo(.5f));Assert.That(File.ReadAllText(file),Is.EqualTo(original));
             }finally{Directory.Delete(pending);}
@@ -104,8 +103,8 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator SharedWalkSelectionUsesExactLibraryAndEmbeddedIdentitiesAndDoesNotPlay()
         {
             var executions=new RoomExecutions(editor);var before=WalkFact();var embedded=WalkCall("embedded");embedded["arguments"]["modelHash"]=avatar.ModelHash;embedded["arguments"]["clipIndex"]=0;
-            Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=embedded},out var error),Is.True,error);yield return null;Assert.That(avatar.WalkClip,Is.Zero);var embeddedView=executions.Observe().DeepClone();
-            var library=WalkCall("library");library["arguments"]["motionId"]=gait.id;Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=library},out error),Is.True,error);yield return null;var libraryView=executions.Observe().DeepClone();var after=WalkFact();
+            Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=embedded},out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(executions);Assert.That(avatar.WalkClip,Is.Zero);var embeddedView=executions.Observe().DeepClone();
+            var library=WalkCall("library");library["arguments"]["motionId"]=gait.id;Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=library},out error),Is.True,error);yield return SpatialSettingsCompletion.Wait(executions);var libraryView=executions.Observe().DeepClone();var after=WalkFact();
             Assert.That(avatar.WalkMotionId,Is.EqualTo(gait.id));Assert.That(avatar.LibraryMotionId,Is.Null,"Choosing a walk cannot start its playback");Assert.That(authoring.IsPlaying,Is.False);
             Assert.That((string)after["selection"]["motionId"],Is.EqualTo(gait.id));Assert.That((bool)after["selection"]["available"],Is.True);
             Assert.That(new RoomStorage(directory).Load(out error).objects.Single(x=>x.id=="maestro").walkMotionId,Is.EqualTo(gait.id));editor.Undo();Assert.That(avatar.WalkClip,Is.Zero);editor.Redo();Assert.That(avatar.WalkMotionId,Is.EqualTo(gait.id));
@@ -131,7 +130,7 @@ namespace Maestro.Quest.Tests
             var stale=WalkCall("included");Assert.That(editor.SetAvatarWalkMotion(gait.id),Is.True);Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=stale},out _),Is.False);
             File.Delete(Path.Combine(directory,"motions",gait.hash+".motion.glb"));var unavailable=WalkFact();Assert.That((bool)unavailable["selection"]["available"],Is.False);Assert.That((string)unavailable["selection"]["motionId"],Is.EqualTo(gait.id));
             var library=WalkCall("library");library["arguments"]["motionId"]=gait.id;Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=library},out _),Is.False);Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id));
-            Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=WalkCall("included")},out var error),Is.True,error);yield return null;Assert.That((string)WalkFact()["selection"]["source"],Is.EqualTo("included"));
+            Assert.That(executions.Execute(new JObject {["operation"]="start",["call"]=WalkCall("included")},out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(executions);Assert.That((string)WalkFact()["selection"]["source"],Is.EqualTo("included"));
         }
     }
 }

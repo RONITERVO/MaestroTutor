@@ -37,9 +37,15 @@ namespace Maestro.Quest.Tests {
         bool SelectGait(string source,string motionId,out string error)=>editor.ConfigureObjectWalk(editor.Identity(gaitItem),editor.ObjectRevision(editor.Identity(gaitItem)),source,gaitModel.AssetHash,motionId,0,out error);
         [UnityTest]public IEnumerator ObjectWalkSharedChoiceSavesWithoutPlayingAndUndoRetainsIt(){
             yield return WalkingCharacter();string id=editor.Identity(gaitItem);
+            var workshop=root.AddComponent<RuleWorkshop>();workshop.Initialize(editor,directory);
+            while(!workshop.Memory.Ready)yield return null;Assert.That(workshop.Memory.Error,Is.Null);
+            modeRules=root.AddComponent<RoomRules>();modeRules.Initialize(workshop,editor,authoring,null,room,null);
             var action=new ObjectWalkSettingsCapability();var args=new JObject{["target"]=id,["revision"]=editor.ObjectRevision(id),["modelHash"]=gaitModel.AssetHash,["source"]="embedded",["clipIndex"]=0};
             Assert.That(BehaviourCatalog.TryCall(action.Id,1,args,out _,out var error),Is.True,error);
-            Assert.That(SelectGait("embedded",null,out error),Is.True,error);Assert.That(gaitModel.IsPlaying,Is.False);
+            var executions=new RoomExecutions(editor);Assert.That(executions.Execute(new JObject{["operation"]="start",["call"]=new JObject{["id"]=action.Id,["version"]=1,["arguments"]=args}},out error),Is.True,error);
+            Assert.That((string)executions.Observe()["selected"]["phase"],Is.EqualTo("preparing"));Assert.That(executions.Observe()["selected"]["output"],Is.Null);
+            yield return SpatialSettingsCompletion.Wait(executions);Assert.That(gaitModel.IsPlaying,Is.False);
+            Assert.That((int)executions.Observe()["selected"]["output"]["revision"],Is.EqualTo(editor.ObjectRevision(id)));
             var saved=new RoomStorage(directory).Load(out error);Assert.That(error,Is.Null);Assert.That(saved.objects.Single(o=>o.id==id).walkClip,Is.EqualTo(1));
             Assert.That((string)SettingsFact("object.walk.settings",id)["selection"]["source"],Is.EqualTo("embedded"));Assert.That(editor.ConfigureObjectWalk(id,(int)args["revision"],"none",gaitModel.AssetHash,null,-1,out error),Is.False,"Stale revisions cannot replace a selection");
             Assert.That(SelectGait("embedded",null,out error),Is.True,error);editor.Undo();Assert.That(editor.Read(id).walkClip,Is.Zero,"Identical save does not add Undo");editor.Redo();Assert.That(editor.Read(id).walkClip,Is.EqualTo(1));

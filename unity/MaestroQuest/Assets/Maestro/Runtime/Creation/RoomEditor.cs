@@ -556,7 +556,7 @@ namespace Maestro.Quest.Creation
         {
             using var write=WriteGate.TryWrite(out _);if(write==null)return;
             var item = Find(id);
-            if (item && !item.PoseLocked && Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(id,position,rotation)) MarkDirty();
+            if (item && !item.PoseLocked && Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(id,position,rotation,runtime:true)) MarkDirty();
         }
         public void SetAvatarMovement(float distance, float speed)
         {
@@ -599,7 +599,7 @@ namespace Maestro.Quest.Creation
                 var rigid = item.GetComponent<RigidRoomItem>();
                 if (!rigid || !rigid.Dynamic || rigid.AnimationOwned) continue;
                 int before=ObjectRevision(pair.Key);
-                if (Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(pair.Key,position,rotation)) {
+                if (Frame.Read(item.transform,out var position,out var rotation,out _) && journal.UpdatePlacement(pair.Key,position,rotation,runtime:true)) {
                     AcceptNativePhysicsPlacement(pair.Key,before,ObjectRevision(pair.Key));MarkDirty();
                 }
             }

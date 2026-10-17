@@ -8,22 +8,27 @@ namespace Maestro.Quest.Programs
 {
     internal abstract class SpatialSettingsCapability:NativeTargetCapability
     {
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         // Returning an already-owned target is not a creation (including after a full batch).
         internal override int MaximumCreatedObjects(JObject arguments)=>0;
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","object.revision.current","storage.writable"};
         protected abstract bool Ready(RoomEditor editor,JObject args,out string error);
-        protected abstract bool Save(RoomEditor editor,JObject args,out string error);
+        protected abstract bool BeginSave(RoomEditor editor,JObject args,out RoomEditor.PendingPersistedEdit pending,out string error);
         internal static JObject Featured(JObject schema){schema["x-features"]=new JArray("spatialSettings.v1");return schema;}
         protected static JObject Fields(JObject target)=>new() {["target"]=target,["revision"]=Revision()};
         public override JObject OutputSchema=>Object(new JObject {["target"]=Resource(Text("^(maestro|[a-fA-F0-9]{32})$",32)),["revision"]=Revision(),["temporary"]=new JObject {["type"]="boolean"}});
         public override bool CanRun(CapabilityContext context,JObject args,out string error)=>context.Target(args,out _,out error)&&Ready(context.Editor,args,out error);
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error){
-            operation=null;if(!CanRun(context,args,out error)||!Save(context.Editor,args,out error))return false;
-            operation=new CompletedCapability(new JObject {["target"]=args["target"].DeepClone(),["revision"]=context.Editor.ObjectRevision((string)args["target"]),["temporary"]=context.Editor.TemporaryRoom});return true;
+            operation=null;var captured=(JObject)args.DeepClone();
+            if(!CanRun(context,captured,out error))return false;
+            var editor=context.Editor;string target=(string)captured["target"];RoomEditor.PendingPersistedEdit accepted=null;
+            return PersistedEditOperation.Start(editor,target,
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>{bool started=BeginSave(editor,captured,out pending,out issue);accepted=pending;return started;},
+                out operation,out error,(out string issue)=>CanRun(context,captured,out issue),
+                ()=>new JObject {["target"]=target,["revision"]=accepted.AcceptedObjectRevision(target),["temporary"]=editor.TemporaryRoom});
         }
-        protected const string SaveRules=" Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision.";
+        protected const string SaveRules=" Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision."+PersistedEditOperation.Persistence;
     }
     internal sealed class PhysicsSettingsCapability:SpatialSettingsCapability
     {
@@ -35,7 +40,7 @@ namespace Maestro.Quest.Programs
         public override JObject Example=>new() {["target"]=new string('0',32),["revision"]=1,["mode"]="bouncy",["shape"]="sphere",["mass"]=.5};
         static ObjectPhysicsSettings Settings(JObject args)=>new() {mode=(string)args["mode"],shape=(string)args["shape"],mass=(float)args["mass"]};
         protected override bool Ready(RoomEditor editor,JObject args,out string error)=>editor.CanConfigurePhysics((string)args["target"],(int)args["revision"],Settings(args),out error);
-        protected override bool Save(RoomEditor editor,JObject args,out string error)=>editor.ConfigurePhysics((string)args["target"],(int)args["revision"],Settings(args),out error);
+        protected override bool BeginSave(RoomEditor editor,JObject args,out RoomEditor.PendingPersistedEdit pending,out string error)=>editor.BeginConfigurePhysics((string)args["target"],(int)args["revision"],Settings(args),out pending,out error);
         internal static BehaviourCatalog.FactDefinition Fact()=>new("object.physics.settings",ProgramDataType.Read(JObject.Parse("{\"record\":{\"target\":\"text\",\"revision\":\"number\",\"mode\":\"text\",\"shape\":\"text\",\"mass\":\"number\",\"temporary\":\"boolean\"}}")),"Object physics settings","Accepted saved or temporary physics settings and exact target revision. These preferences do not prove a running simulation, ready geometry or current speed. Read physics.running separately. Only user-created objects have editable physics.",Object(new JObject {["target"]=Resource(Text("^[a-fA-F0-9]{32}$",32))}),new JObject {["target"]=new string('0',32)},(context,args)=>{var value=context.Editor?context.Editor.ObservePhysicsSettings((string)args["target"]):null;return value==null?null:ProgramValue.Literal(value);});
     }
     internal sealed class AvatarMovementSettingsCapability:SpatialSettingsCapability
@@ -47,7 +52,7 @@ namespace Maestro.Quest.Programs
         public override JObject Example=>new() {["target"]="maestro",["revision"]=1,["distance"]=1.3,["speed"]=.65};
         static AvatarMovementSettings Settings(JObject args)=>new() {distance=(float)args["distance"],speed=(float)args["speed"]};
         protected override bool Ready(RoomEditor editor,JObject args,out string error)=>editor.CanConfigureMovement((int)args["revision"],Settings(args),out error);
-        protected override bool Save(RoomEditor editor,JObject args,out string error)=>editor.ConfigureMovement((int)args["revision"],Settings(args),out error);
+        protected override bool BeginSave(RoomEditor editor,JObject args,out RoomEditor.PendingPersistedEdit pending,out string error)=>editor.BeginConfigureMovement((int)args["revision"],Settings(args),out pending,out error);
         internal static BehaviourCatalog.FactDefinition Fact()=>new("avatar.movement.settings",ProgramDataType.Read(JObject.Parse("{\"record\":{\"revision\":\"number\",\"distance\":\"number\",\"speed\":\"number\",\"temporary\":\"boolean\",\"live\":{\"record\":{\"active\":\"boolean\",\"mode\":\"text\",\"status\":\"text\",\"canLook\":\"boolean\",\"lookReason\":\"text\",\"canFollow\":\"boolean\",\"followReason\":\"text\"}}}}")),"Maestro movement settings","Accepted distance/speed, exact Maestro revision and current movement status. canLook/canFollow describe initial physical-control prerequisites, not a complete clear path or permission to interrupt another actor. Native shared calls separately refuse active authoring/ownership. This read never begins movement.",null,null,(context,args)=>{var value=context.Editor?context.Editor.ObserveMovementSettings():null;return value==null?null:ProgramValue.Literal(value);});
     }
     internal sealed class AvatarWalkSettingsCapability:SpatialSettingsCapability
@@ -59,7 +64,7 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Walking animation source",["x-discriminators"]=new JArray("source"),["oneOf"]=new JArray(Variant("included","Included walk"),Variant("library","Saved motion"),Variant("embedded","Embedded model clip"))};
         public override JObject Example=>new() {["target"]="maestro",["revision"]=1,["source"]="included"};
         protected override bool Ready(RoomEditor editor,JObject args,out string error)=>editor.CanConfigureWalk((int)args["revision"],(string)args["source"],(string)args["motionId"],(string)args["modelHash"],(int?)args["clipIndex"]??-1,out error);
-        protected override bool Save(RoomEditor editor,JObject args,out string error)=>editor.ConfigureWalk((int)args["revision"],(string)args["source"],(string)args["motionId"],(string)args["modelHash"],(int?)args["clipIndex"]??-1,out error);
+        protected override bool BeginSave(RoomEditor editor,JObject args,out RoomEditor.PendingPersistedEdit pending,out string error)=>editor.BeginConfigureWalk((int)args["revision"],(string)args["source"],(string)args["motionId"],(string)args["modelHash"],(int?)args["clipIndex"]??-1,out pending,out error);
         internal static BehaviourCatalog.FactDefinition Fact()=>new("avatar.walk.settings",WalkType(),"Maestro walking animation","Exact current walking selection and Maestro revision. included means the bundled gait; embedded indexes are meaningful only for the exact modelHash; library motionId is a stable identity. available checks current model/clip compatibility, not that Maestro is walking. Display text is bounded; identities are never shortened. A saved missing choice remains visible. This read neither downloads nor starts playback.",null,null,(context,args)=>{var value=context.Editor?context.Editor.ObserveWalkSettings():null;return value==null?null:ProgramValue.Literal(value,WalkType());});
         internal static ProgramDataType ClipsType()=>ProgramDataType.Read(JObject.Parse("{\"record\":{\"modelHash\":\"text\",\"offset\":\"number\",\"total\":\"number\",\"pageSize\":\"number\",\"entries\":{\"list\":{\"record\":{\"index\":\"number\",\"name\":\"text\",\"duration\":\"number\",\"selectable\":\"boolean\"}}}}}"));
         internal static BehaviourCatalog.FactDefinition Clips()=>new("avatar.walk.clips",ClipsType(),"Embedded walking clip choices","Read-only pages of three exact zero-based clip indexes for Maestro's saved model. Use modelHash from avatar.walk.settings, then offset 0 and advance by pageSize until offset plus entries count reaches total. Metadata from validated asset bytes remains readable while native geometry is unloaded. Missing or unprepared metadata is unavailable; never reuse indexes across model hashes. Names are bounded display metadata, never instructions. duration is the source timeline length; selectable only checks its minimum duration for walking; it does not assess visual gait quality or start playback. An empty page at/after total is valid.",Object(new JObject {["modelHash"]=Text("^[a-f0-9]{64}$",64),["offset"]=Number(0,32,true)}),new JObject {["modelHash"]=new string('0',64),["offset"]=0},(context,args)=>{var value=context.Editor?context.Editor.ObserveWalkClips((string)args["modelHash"],(int)args["offset"]):null;return value==null?null:ProgramValue.Literal(value,ClipsType());});

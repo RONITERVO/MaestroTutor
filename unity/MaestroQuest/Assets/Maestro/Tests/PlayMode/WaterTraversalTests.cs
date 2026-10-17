@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator WaterTraversalSettingsUseSharedReceiptsUndoAndStaleGuards(){
             var(pool,prop)=MediumFixture(.05f);physics.PausePhysics();var ex=new RoomAgentExecutor(editor);
             var call=new JObject{["id"]="object.water.traversal.configure",["version"]=1,["arguments"]=new JObject{["target"]=prop,["revision"]=editor.ObjectRevision(prop),["mode"]="wade",["maxDepthMetres"]=.18}};
-            var stale=(JObject)call.DeepClone();ContainerRun(ex,call);
+            var stale=(JObject)call.DeepClone();ContainerRun(ex,call);yield return SpatialSettingsCompletion.Wait(ex.Executions);
             Assert.That(RoomControls.Capabilities(editor),Does.Contain("waterTraversal.v1"));
             Assert.That(editor.Find(prop).WaterTraversal.mode,Is.EqualTo("wade"));Assert.That(System.Array.Find(new RoomStorage(directory).Load(out var e).objects,x=>x.id==prop).waterTraversal.mode,Is.EqualTo("wade"),e);
             Assert.That(editor.CanConfigureWaterTraversal(prop,(int)stale["arguments"]["revision"],new(){mode="avoid"},out _),Is.False);

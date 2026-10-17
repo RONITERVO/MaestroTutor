@@ -20,6 +20,8 @@ Current desktop and unsigned Android checks cover all five shared creation kinds
 placement, paint/delete completion, ordered admission and accepted saved-room
 identity. See [shared creation completion](#shared-creation-completion--2026-10-17)
 and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
+Later desktop checks cover saved physics, movement, gait and water preferences;
+see [shared settings completion](#shared-settings-completion--2026-10-17).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -13237,3 +13239,67 @@ Snapshot capture/native reconciliation and other synchronous authoring remain
 separate performance work. This checkpoint does not establish headset frame time,
 physical interaction, real-provider, acoustic or Store acceptance. Saved capacity,
 device/provider holds and remaining release gates are unchanged.
+
+## Shared settings completion — 2026-10-17
+
+Object physics, Maestro movement, Maestro/character walking selection and water
+traversal settings now use the same bounded background save operation as
+creation and placement. Book controls, the agent and programs wait for
+completion before receiving success and the exact accepted target revision. A
+later human edit cannot change that receipt. Exact animation IDs and model-bound
+clip indexes remain unchanged; choosing a gait does not start walking.
+
+Queued settings capture their inputs, reserve arrival order, and recheck target
+revision and native eligibility without copying a waiting room or holding a
+body. Identical settings add no Undo. Cancellation before acceptance leaves
+preferences unchanged; stopping an accepted edit lets its save drain without
+claiming success or replaying it. Temporary changes become durable through Keep.
+Physical editor APIs retain their synchronous contract and share the validators
+and application helpers. See [the shared settings
+contract](QUEST_SPATIAL_SETTINGS.md).
+
+A focused test exposed unrelated Maestro following advancing the journal while
+another object's settings prepared. Prepared edits now tolerate only this
+journal's automatic placement checkpoints when all affected target revisions and
+history guards remain current. Authored changes, target movement and other-fork
+changes still invalidate the candidate. Newer unrelated poses stay live and
+dirty for their next save, while the staged snapshot remains immutable.
+
+Evidence is retained in .quest-evidence/spatial-settings-save-20261017/. Full
+EditMode passes 1,439 tests; the full PlayMode rerun passes 1,881, with three
+explicit optional private-asset skips and zero failures. The 18/35 focused
+checks also pass. The initial concurrency failure and a missing
+execution-service fixture are retained. A broader 168/169 run found a
+timing-sensitive launch assertion: automatic gravity could act while creation
+saved. The fixture now isolates the exact impulse, then restores normal physics
+for trajectory assertions. It passes individually and in the full suite; no
+production physics was changed for that correction.
+
+The first full PlayMode attempt completed 517 passing cases and three optional
+asset skips, then failed the repeated native reflection-mix stress test at cycle
+5: initial map computation exceeded its deadline and cleanup did not release the
+context. Unity subsequently exited with access violation -1073741819. The same
+module offset is recorded in the earlier audio-android evidence. The local dump
+identifies Meta XR Audio 85.0.0, MetaXRAudioUnity.dll +0xa1509; that locates the
+exception, not its root cause. The four inspected audio runtime/test files match
+the prior commit. The successful full rerun uses unchanged source and does not
+resolve this intermittent failure. Production reflections remain disabled. The
+failure, dump hash and exact binary identity are retained in full-crash.json; no
+deadline or assertion was relaxed.
+
+All 3,184 web tests, application/probe TypeScript and catalog checks pass. The
+full original-book journey passes with an empty periodic inventory, 3,181
+observations and 1,005 requests. Water preferences and imported gait selection
+complete through generated controls and reload their accepted values. Human
+edits survive, stale paint is refused and reload does not replay actions. Both
+settings screenshots were inspected. These are actual Unity plus original-book
+checks with scripted providers, not real-model or headset acceptance. The
+separate Headless journey was not repeated.
+
+All 3,234 native source inputs, 5,156 tracked/new inputs and 14 protected local
+files were checked before this plan update. No Android build, device,
+paid-provider, signing, deployment or Meta operation was performed. Prior
+Android evidence belongs to the preceding checkpoint. Snapshot capture/native
+reconciliation and remaining synchronous authoring still require performance
+work. Physical interaction, acoustic quality, real-provider and Store gates
+remain open; capacities and holds are unchanged.

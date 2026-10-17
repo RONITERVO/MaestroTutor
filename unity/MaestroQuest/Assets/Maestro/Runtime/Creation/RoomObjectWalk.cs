@@ -14,10 +14,7 @@ namespace Maestro.Quest.Creation {
         }
         internal bool ConfigureObjectWalk(string target,int revision,string source,string hash,string motionId,int index,out string error){
             if(!CanConfigureObjectWalk(target,revision,source,hash,motionId,index,out error))return false;
-            return EditObject(target,true,data=>{
-                if(source=="embedded")AvatarWalkSelection.ApplyEmbedded(this,data,hash,index,out _);
-                else AvatarWalkSelection.Apply(this,data,source=="none"?"":motionId,out _);
-            },"Character walking animation saved",false,out error);
+            return EditObject(target,true,data=>ApplyWalkChoice(data,source,motionId,hash,index,out _),"Character walking animation saved",false,out error);
         }
         internal JObject ObserveObjectWalk(string target){
             var data=Read(target);if(data?.kind!=RoomObjectKind.ImportedModel)return null;

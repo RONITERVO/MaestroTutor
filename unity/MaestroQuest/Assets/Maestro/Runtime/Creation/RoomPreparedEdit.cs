@@ -18,18 +18,23 @@ namespace Maestro.Quest.Creation
             readonly RoomDocument document;
             readonly Dictionary<string,RoomObjectData> objectIndex;
             readonly int revision,undoCount,redoCount;
+            readonly long runtimePlacements;
+            readonly Dictionary<string,int> targetRevisions;
             readonly string viewpointState,timeState,operation;
             readonly bool baseline;
-            bool ended;
+            bool ended,accepted;
             internal PreparedEdit(RoomJournal owner,Change change,RoomDocument document,string operation,bool baseline=false)
             {
                 this.owner=owner;this.change=change;this.document=document.Copy();this.operation=operation;this.baseline=baseline;
                 objectIndex=this.document.objects.ToDictionary(x=>x.id,StringComparer.Ordinal);
-                revision=owner.clock.Next;undoCount=owner.undo.Count;redoCount=owner.redo.Count;
+                revision=owner.clock.Next;runtimePlacements=owner.runtimePlacementAdvances;
+                targetRevisions=change.Before.Concat(change.After).Select(x=>x.id).Distinct().ToDictionary(id=>id,owner.ObjectRevision);
+                undoCount=owner.undo.Count;redoCount=owner.redo.Count;
                 undoTop=undoCount>0?owner.undo[undoCount-1]:null;redoTop=redoCount>0?owner.redo[redoCount-1]:null;
                 viewpointState=JsonUtility.ToJson(owner.viewpoint);timeState=JsonUtility.ToJson(owner.worldTime);
             }
             internal RoomDocument Snapshot()=>document.Copy();
+            internal int AcceptedObjectRevision(string id)=>accepted&&targetRevisions.TryGetValue(id,out var value)?value:0;
             // Native preparation reads detached copies of its targets. Unrelated saved
             // geometry remains owned by the candidate instead of being copied again.
             internal RoomObjectData ReadObject(string id)=>id!=null&&objectIndex.TryGetValue(id,out var value)?value.Copy():null;
@@ -37,8 +42,14 @@ namespace Maestro.Quest.Creation
             // A background save can checkpoint an earlier runtime clock/viewpoint.
             // Publication applies only the authored delta, preserving newer runtime
             // state. Explicit clock edits still require the exact clock position.
-            internal bool RuntimeProgressChanged=>JsonUtility.ToJson(owner.viewpoint)!=viewpointState||JsonUtility.ToJson(owner.worldTime)!=timeState;
-            internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&owner.clock.Next==revision&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
+            internal bool RuntimeProgressChanged=>owner.runtimePlacementAdvances!=runtimePlacements||JsonUtility.ToJson(owner.viewpoint)!=viewpointState||JsonUtility.ToJson(owner.worldTime)!=timeState;
+            // Only explicitly recorded runtime placements may advance the global
+            // clock. Authored edits, another fork and any changed target remain stale.
+            // Apply only this delta; newer unrelated poses remain dirty for a later save.
+            bool RevisionCurrent(bool allowRuntimeProgress)=>owner.clock.Next==revision||allowRuntimeProgress&&
+                (long)owner.clock.Next-revision==owner.runtimePlacementAdvances-runtimePlacements&&
+                targetRevisions.All(x=>owner.ObjectRevision(x.Key)==x.Value);
+            internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&RevisionCurrent(allowRuntimeProgress)&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&
                 (allowRuntimeProgress||JsonUtility.ToJson(owner.viewpoint)==viewpointState)&&
                 (allowRuntimeProgress&&change.AfterWorldTime==null&&change.BeforeWorldTime==null||JsonUtility.ToJson(owner.worldTime)==timeState);
@@ -50,7 +61,8 @@ namespace Maestro.Quest.Creation
                 else if(operation=="undo") {owner.undo.RemoveAt(undoCount-1);owner.Publish(change,false);owner.redo.Add(change);}
                 else if(operation=="redo") {owner.redo.RemoveAt(redoCount-1);owner.Publish(change,true);owner.undo.Add(change);}
                 else {owner.Publish(change,true);owner.undo.Add(change);if(owner.undo.Count>32)owner.undo.RemoveAt(0);owner.redo.Clear();}
-                error=null;return true;
+                foreach(var id in targetRevisions.Keys.ToArray())targetRevisions[id]=owner.ObjectRevision(id);
+                accepted=true;error=null;return true;
             }
             public void Dispose()=>ended=true;
         }
