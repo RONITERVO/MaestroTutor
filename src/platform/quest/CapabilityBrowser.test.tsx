@@ -518,6 +518,9 @@ it('starts and finishes an exact recording session from typed fields while disti
  expect(screen.queryByLabelText('Action inputs revision')).toBeNull();
  fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativeRecording.finish.selected.call,runId:nativeRecording.finish.selected.id}});
+ await receive(undefined,false,{execution:nativeRecording.preparing as RoomAgentState['execution']});
+ expect(screen.getByLabelText('Selected action').textContent).toContain('preparing');
+ expect(screen.queryByLabelText('Action result')).toBeNull();
  await receive(undefined,false,{execution:nativeRecording.finish as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "saved"');
  fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
  const fact=behaviourFact('animation.recording')!;await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:fact.id,version:1,label:fact.label}],status:'Recorder fact'});

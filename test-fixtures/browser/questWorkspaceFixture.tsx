@@ -226,9 +226,9 @@ if(poseSessions){
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','animationPosing.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const recordingSessions=new URLSearchParams(location.search).has('recordingSessions');
-let recordingObservation=nativeRecording.before;
+let recordingObservation=nativeRecording.before,recordingFinishTicks=0;
 if(recordingSessions){
- if(!validExecutionView(nativeRecording.start)||!validExecutionView(nativeRecording.finish))throw new Error('Invalid native recording fixture');
+ if(!validExecutionView(nativeRecording.start)||!validExecutionView(nativeRecording.preparing)||!validExecutionView(nativeRecording.finish))throw new Error('Invalid native recording fixture');
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativeRecording.start)),selected:null,running:[],outcomes:[],nextRunId:nativeRecording.start.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','animationRecording.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
@@ -313,6 +313,10 @@ createRoot(document.getElementById('root')!).render(<QuestBookSurface><div style
 const requestHistory:unknown[]=[];Object.assign(window,{maestroWorkspaceRequests:requestHistory});
 setInterval(()=>{
  const bridge=window.maestroBook;if(!bridge)return;
+ if(recordingFinishTicks>0&&--recordingFinishTicks===0){
+  state.execution=copy(nativeRecording.finish) as RoomAgentState['execution'];recordingObservation=nativeRecording.idle;
+  state.status='Recorded native completed save; browser acknowledgement is simulated';
+ }
  const request=bridge.roomSnapshot().request;
  if(request&&request.session===state.session&&request.sequence===state.ack+1){
   requestHistory.push(copy(request));if(requestHistory.length>32)requestHistory.shift();
@@ -407,7 +411,7 @@ setInterval(()=>{
      else{state.execution=copy([nativePosing.start,nativePosing.rotate,nativePosing.finish][index]) as RoomAgentState['execution'];poseObservation=[nativePosing.active,nativePosing.edited,nativePosing.idle][index];state.status='Captured native pose result; browser acknowledgement is simulated';}
     }
     else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.start.selected.call)){state.execution=copy(nativeRecording.start) as RoomAgentState['execution'];recordingObservation=nativeRecording.active;state.status='Recorded native start; browser acknowledgement is simulated';}
-    else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.finish.selected.call)){state.execution=copy(nativeRecording.finish) as RoomAgentState['execution'];recordingObservation=nativeRecording.idle;state.status='Recorded native finish; browser acknowledgement is simulated';}
+    else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.finish.selected.call)){state.execution=copy(nativeRecording.preparing) as RoomAgentState['execution'];recordingObservation=nativeRecording.saving;recordingFinishTicks=15;state.status='Recorded native preparation; browser acknowledgement is simulated';}
     else if(authoring&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeAuthoring.execution.selected.call)){state.execution=copy(nativeAuthoring.execution) as RoomAgentState['execution'];state.status='Recorded native authoring result; browser acknowledgement is simulated';}
     else if(disposal&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRemoval.removeExecution.workspace.selected.call)){state.execution=copy(nativeRemoval.removeExecution) as RoomAgentState['execution'];state.status='Recorded native disposal result; no files are changed by this browser fixture';}
     else if(moduleEvidence&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(moduleEvidence.published.execution?.selected?.call)){

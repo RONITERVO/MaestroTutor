@@ -33,10 +33,10 @@ namespace Maestro.Quest.Creation
             internal bool First=>Valid&&ReferenceEquals(node.List.First,node);
             public void Dispose(){node.List?.Remove(node);}
         }
-        void CancelPendingEdit()
+        void CancelPendingEdit(PendingPersistedEdit preserveAcceptedRecording=null)
         {
             editAdmissions.Clear();
-            pendingPersistedEdit?.Dispose();
+            if(!ReferenceEquals(pendingPersistedEdit,preserveAcceptedRecording))pendingPersistedEdit?.Dispose();
         }
 
         // The common capability path (book, agent and programs) owns this operation.

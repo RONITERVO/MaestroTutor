@@ -250,10 +250,11 @@ namespace Maestro.Quest.Creation
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
             finally { ownershipLease?.Dispose();ownershipLease=null;stopping = false; }
-            Say(saveError ?? "Stopped — saved animation is ready");
+            Say(saveError ?? (IsSavingRecording?"Saving recording — frames frozen":"Stopped — saved animation is ready"));
         }
         void Update()
         {
+            PollRecordingSave();
             if(editor&&editor.RuntimeGate.Held){if(controlling||IsRecording||IsPlaying||IsPosing||IsImportedPreview)Stop();return;}
             if (walkPreview) { if (!avatar) { Stop(); return; } avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y); }
             if (importedPreview && (!avatar || !avatar.IsImportedClipPlaying)) { Stop(); return; }
@@ -275,9 +276,9 @@ namespace Maestro.Quest.Creation
                 if (!preview.loop && time >= preview.Duration) Stop();
             }
         }
-        void OnApplicationPause(bool paused) { if (paused) Stop(); }
-        void OnApplicationFocus(bool focused) { if (!focused) Stop(); }
-        void OnDisable() { if (editor) Stop(); else if (graph.IsValid()) graph.Destroy(); }
-        void OnDestroy() { if (editor) { Stop(); editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; } if (graph.IsValid()) graph.Destroy(); }
+        void OnApplicationPause(bool paused) { if (paused) { Stop();SuspendRecordingSave(); } }
+        void OnApplicationFocus(bool focused) { if (!focused) { Stop();SuspendRecordingSave(); } }
+        void OnDisable() { if (editor) Stop(); else if (graph.IsValid()) graph.Destroy(); recordingSave?.CancelBeforeAcceptance("Workshop disabled before saving"); }
+        void OnDestroy() { if (editor) { Stop(); editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; } recordingSave?.Retire(); if (graph.IsValid()) graph.Destroy(); }
     }
 }

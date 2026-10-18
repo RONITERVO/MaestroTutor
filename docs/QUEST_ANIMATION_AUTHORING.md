@@ -91,22 +91,35 @@ live/retained take; stale commands cannot finish or discard a later take.
   does not end the recording. A program can start, wait and finish through the
   same capability. Agent/program starts refuse another live actor; only the
   trusted physical Record entry point has manual interruption priority.
-- `finish {sessionId, target}` freezes samples and saves one motion with one
-  Undo entry, without playback. Temporary-room recording stays in the fork until
-  Keep. Selection/avatar changes, pause/focus loss, physical Stop and the
-  30-second/301-frame limit attempt the same finish operation.
+- `finish {sessionId, target}` freezes samples, releases capture controls and
+  joins the room's ordered background edit queue. Its completion confirms native
+  application and durable publication of one Undo edit, without playback.
+  Physical Record/Stop, lifecycle Stop and repeated Finish calls share the same
+  save attempt. Cancelling a caller stops observation; the recording session
+  continues saving. Temporary-room completion is live-only until Keep.
+  Selection/avatar changes, pause/focus loss and the 30-second/301-frame limit
+  freeze the same take. Suspended room interaction defers native acceptance
+  until resume. A physical avatar switch must wait for the take to finish
+  saving before a subsequent selection can replace the avatar.
 - `discard {sessionId}` removes only that in-memory take, preserving the
-  previous saved animation. No target resource is required, so a retained take
+  previous saved animation when native acceptance has not happened. It cancels
+  an unaccepted queued save. After acceptance, wait for publication to settle;
+  discard cannot retract an applied edit. Discarding an applied-but-unconfirmed
+  failed take only releases its in-memory buffer; recover room saving separately.
+  No target resource is required, so an unaccepted retained take
   remains discardable after its object is deleted. Successful save/discard
   issues a new session ID. Old action receipts do not replay recording.
 
-The read-only fact exposes phase (`idle`, `recording`, `unsaved`), target, frame
+The read-only fact exposes phase (`idle`, `recording`, `saving`, `unsaved`), target, frame
 count, sampled duration, object revision, temporary-room state and bounded error
 text. Recording samples on a 0.1-second interval with a final endpoint. Failed
-saves stop sampling and release controls while retaining the frozen frames in
-memory. Record retries that exact take; Discard take abandons it. The Record
-button is amber while a failed take awaits resolution. Retry refuses a changed
-object revision or room session. A retained take blocks workspace and temporary
+preparation stops sampling and retains frozen frames for an exact retry or
+discard. Failed publication may have already applied the animation: its live edit
+remains unconfirmed, old saved files are preserved and further saving is blocked.
+Retry refuses that already-applied take, changed object revisions and different
+room sessions. Record is amber while a frozen take is saving or awaiting recovery.
+Disabling the workshop cancels unaccepted preparation and retains the take;
+accepted publication drains under the editor's existing storage ownership. A retained take blocks workspace and temporary
 room boundaries until saved or discarded. App/process termination loses any
 unsaved in-memory take; recording is never automatically restored on launch.
 

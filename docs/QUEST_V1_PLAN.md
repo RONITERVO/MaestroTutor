@@ -14191,3 +14191,55 @@ The earlier full native-suite checkpoint and unresolved intermittent Meta audio
 SDK crash remain separate. Other saved/lifecycle completion, physical latency,
 headset acceptance and Store release gates remain open. See
 [shared animation authoring](QUEST_ANIMATION_AUTHORING.md).
+
+## Session-owned recording completion — 2026-10-18
+
+Live recording finish now freezes samples and joins the shared ordered edit
+queue. Physical Record/Stop, lifecycle Stop, programs and agent calls use one
+session-owned save attempt. A Finish receipt completes only after native
+application and publication; repeated Finish observes the same attempt.
+Cancelling a receipt stops observation, without cancelling the recording save.
+Explicit discard can cancel an unaccepted take. Accepted publication must settle
+before its buffer can be discarded; discarding an unconfirmed applied buffer
+does not undo the live animation or repair saving.
+
+Pause/focus loss freezes capture. Unaccepted preparation is retired and the same
+frozen take rejoins at the tail after interaction resumes; accepted publication
+continues and keeps its immutable receipt. A disabled workshop retains an
+unaccepted take. A failed preparation preserves frames for exact retry; changed
+target revisions or room sessions refuse retry. A failed publication preserves
+old files, leaves the live result unconfirmed and blocks saving, so it must not
+be blindly replayed. A physical avatar switch now waits for recording completion
+before a subsequent selection can replace the model. Temporary recordings stay
+in the fork until Keep. Motion formats, canonical joint/frame/time limits,
+capability IDs and input/output fields are unchanged; animation.record advertises
+completion and its fact adds the saving phase.
+
+Verification: **75 EditMode, 110 PlayMode and
+3,198 web tests**, application/probe TypeScript and catalog checks.
+Eight new regressions cover shared physical/agent finish, observer cancellation,
+queued discard/stale observers, off-thread publication and immutable results,
+accepted failure without replay, disabled-workshop recovery, stale revisions,
+newer-actor protection and suspension before/after acceptance. Existing physical XRI grip, posing, imported
+avatar, temporary-room and program recording tests pass. The first two native
+runs exposed the pause/queue boundary; both failures and the repairs are retained.
+
+Complete offline Book d2e7897ea78b475dbeaa4d68de49cc35 passes with 3,729
+observations/1,183 requests. Headless 364d9ada1b03401e9e720d05f3fb5b97 passes with
+2,352 observations/2,351 read sets. Its new recorder
+leg uses public start, wait and finish calls, checks actual saved native metadata
+and a new idle identity, then undoes the motion. That probe records a stationary
+pose; physical movement is independently covered by the XRI tests. Chrome replays
+actual native preparation and completion through the production book controls,
+asserting no saved result before completion. Its acknowledgements are replayed,
+not a headset execution. Original world/media flows, human-edit preservation and
+reload without replay remain covered.
+
+Evidence: .quest-evidence/recording-completion-20261018; 3,298
+native source hashes and 14 protected files checked. No device,
+paid provider, Android build, signing, deployment or Meta action ran. Physical
+keyframe/pose-retention saves and existing lifecycle Flush still retain synchronous
+paths; this checkpoint does not claim all owner-thread storage waits are removed.
+Device latency, the previous intermittent Meta audio SDK crash, full headset
+acceptance and Store release gates remain open. See
+[shared recording sessions](QUEST_ANIMATION_AUTHORING.md#shared-recording-sessions).

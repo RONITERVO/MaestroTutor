@@ -7,13 +7,16 @@ import {validExecutionView} from '../../../shared/roomExecutions';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 it('validates native recording identities and distinguishes a completed start receipt from the active take',()=>{
- for(const view of [native.start,native.finish])expect(validExecutionView(view)).toBe(true);
- for(const view of [native.before,native.active,native.idle])expect(validFactValue('animation.recording',view)).toBe(true);
+ for(const view of [native.start,native.preparing,native.finish])expect(validExecutionView(view)).toBe(true);
+ for(const view of [native.before,native.active,native.saving,native.idle])expect(validFactValue('animation.recording',view)).toBe(true);
+ expect(native.preparing.selected.phase).toBe('preparing');expect(native.saving.phase).toBe('saving');
+ expect(native.preparing.selected.call).toEqual(native.finish.selected.call);
+ expect(native.preparing.selected.id).toBe(native.finish.selected.id);
  expect(native.start.selected.phase).toBe('completed');expect(native.start.selected.output.phase).toBe('recording');
  expect(native.finish.selected.output.phase).toBe('saved');expect(native.active.phase).toBe('recording');expect(native.idle.phase).toBe('idle');
  expect(native.before.sessionId).toBe(native.active.sessionId);expect(native.idle.sessionId).not.toBe(native.active.sessionId);
  expect(native.finish.selected.call.arguments.sessionId).toBe(native.start.selected.output.sessionId);
- expect(capabilityDefinition('animation.record')).toMatchObject({duration:'instant',ownership:'authoringSession',channels:[]});
+ expect(capabilityDefinition('animation.record')).toMatchObject({duration:'completion',ownership:'authoringSession',channels:[]});
 });
 it('keeps exact take identities, grants no object authority from results, and rejects unsupported native runtimes',()=>{
  const start=native.start.selected.call,finish=native.finish.selected.call;

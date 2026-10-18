@@ -868,6 +868,29 @@ try{
   const animationUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
   if((animationUndone.catalog?.value as {frames:number}).frames!==(animationCurrent.catalog?.value as {frames:number}).frames)throw new Error('Animation Undo did not restore source');
   await writeFile(join(directory,'animation-authoring.json'),JSON.stringify({boundary:'Actual native 17-joint authoring, completion, readback and Undo. Physical playback and imported retargeting have separate native tests; no provider or headset proof.',before:animationCurrent,search:animationSearch,definition:animationDefinition,current:animationCurrent,facts:[...animationBrowser.facts,animationCurrent],directory:animationBrowser.directory,rest:jointReads,started:animationStarted,after:animationAfter,read:animationRead,joint:animationJoint,undo:animationUndo,undone:animationUndone},null,2));
+  // Live recorder lifecycle through the same public capability used by the book.
+  // This offline leg records a stationary object; XRI movement is covered by native tests.
+  const recordingFact=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.recording',version:1}}]);
+  const recordingBefore=await recordingFact();
+  const recordSession=(recordingBefore.catalog?.value as {sessionId:string;phase:string}).sessionId;
+  if((recordingBefore.catalog?.value as {phase:string}).phase!=='idle')throw new Error('Recorder is not initially idle');
+  const recordStart=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'animation.record',version:1,arguments:{operation:'start',sessionId:recordSession,target:'maestro',revision:(animationUndone.catalog?.value as {revision:number}).revision}}}}]));
+  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'time.wait',version:1,arguments:{seconds:.25}}}}]));
+  const recordingActive=await recordingFact();
+  if((recordingActive.catalog?.value as {phase:string}).phase!=='recording')throw new Error('Start receipt did not leave a live recorder');
+  const recordingStarted=await execute([{action:'execution',execution:{operation:'start',call:{id:'animation.record',version:1,arguments:{operation:'finish',sessionId:recordSession,target:'maestro'}}}}]);
+  const recordingAfter=await completeProbeAction(execute,recordingStarted);
+  const recorded=recordingAfter.execution?.selected?.output as {phase:string;sessionId:string;frames:number;duration:number;revision:number};
+  if(recorded?.phase!=='saved'||recorded.sessionId!==recordSession||recorded.frames<2||recorded.duration<.2)throw new Error('Recorder completion did not confirm the frozen take');
+  const recordingIdle=await recordingFact(),idle=recordingIdle.catalog?.value as {phase:string;sessionId:string};
+  if(idle.phase!=='idle'||idle.sessionId===recordSession)throw new Error('Saved recorder did not issue the next identity');
+  const recordingRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
+  const recordedSaved=recordingRead.catalog?.value as {revision:number;frames:number;duration:number};
+  if(recordedSaved.revision!==recorded.revision||recordedSaved.frames!==recorded.frames||Math.abs(recordedSaved.duration-recorded.duration)>1e-5)throw new Error('Recorder receipt differs from native authored data');
+  await execute([{action:'undo'}]);
+  const recordingUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
+  if((recordingUndone.catalog?.value as {frames:number}).frames!==(animationUndone.catalog?.value as {frames:number}).frames)throw new Error('Recorder Undo did not restore the previous animation');
+  await writeFile(join(directory,'recording-completion.json'),JSON.stringify({boundary:'Real Unity stationary recording, queued finish, receipt, native readback and Undo. XRI movement covered separately; no provider or headset proof.',before:recordingBefore,start:recordStart,active:recordingActive,started:recordingStarted,after:recordingAfter,idle:recordingIdle,read:recordingRead,undone:recordingUndone},null,2));
   const hingeBrowser=await connectionBrowserInputs(layoutIds);
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);

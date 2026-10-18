@@ -1,6 +1,6 @@
 {
   "before": {
-    "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+    "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
     "target": "",
     "phase": "idle",
     "frames": 0,
@@ -11,7 +11,7 @@
   },
   "start": {
     "selected": {
-      "id": "35bd88e89449472186510e7f055ed3ed",
+      "id": "e0715fac44204ad589e1408ed76716e3",
       "capability": "animation.record",
       "version": 1,
       "resources": [
@@ -20,12 +20,12 @@
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+        "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
         "target": "maestro",
         "phase": "recording",
         "frames": 1,
         "duration": 0.0,
-        "revision": 2,
+        "revision": 5,
         "temporary": false
       },
       "call": {
@@ -33,16 +33,16 @@
         "version": 1,
         "arguments": {
           "operation": "start",
-          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
           "target": "maestro",
-          "revision": 2
+          "revision": 5
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "35bd88e89449472186510e7f055ed3ed",
+        "id": "e0715fac44204ad589e1408ed76716e3",
         "capability": "animation.record",
         "version": 1,
         "resources": [
@@ -51,33 +51,100 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
           "target": "maestro",
           "phase": "recording",
           "frames": 1,
           "duration": 0.0,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "d7ebdd98cc9a4348aec4a0cc2223d2a5",
+    "nextRunId": "57f567fad9a045ad805bfe6a043207b4",
     "storageError": null,
     "recovery": null
   },
   "active": {
-    "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+    "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
     "target": "maestro",
     "phase": "recording",
     "frames": 3,
-    "duration": 0.200666428,
-    "revision": 2,
+    "duration": 0.200733185,
+    "revision": 5,
+    "temporary": false,
+    "error": ""
+  },
+  "preparing": {
+    "selected": {
+      "id": "57f567fad9a045ad805bfe6a043207b4",
+      "capability": "animation.record",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "preparing",
+      "status": "Waiting for action completion",
+      "call": {
+        "id": "animation.record",
+        "version": 1,
+        "arguments": {
+          "operation": "finish",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro"
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "57f567fad9a045ad805bfe6a043207b4",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "preparing",
+        "status": "Waiting for action completion"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "e0715fac44204ad589e1408ed76716e3",
+        "capability": "animation.record",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+          "target": "maestro",
+          "phase": "recording",
+          "frames": 1,
+          "duration": 0.0,
+          "revision": 5,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "64b3d9ac9af6445b9c0183fba97dcdc3",
+    "storageError": null,
+    "recovery": null
+  },
+  "saving": {
+    "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
+    "target": "maestro",
+    "phase": "saving",
+    "frames": 4,
+    "duration": 0.26051712,
+    "revision": 5,
     "temporary": false,
     "error": ""
   },
   "finish": {
     "selected": {
-      "id": "d7ebdd98cc9a4348aec4a0cc2223d2a5",
+      "id": "57f567fad9a045ad805bfe6a043207b4",
       "capability": "animation.record",
       "version": 1,
       "resources": [
@@ -86,12 +153,12 @@
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+        "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
         "target": "maestro",
         "phase": "saved",
         "frames": 4,
-        "duration": 0.260721684,
-        "revision": 6,
+        "duration": 0.26051712,
+        "revision": 9,
         "temporary": false
       },
       "call": {
@@ -99,7 +166,7 @@
         "version": 1,
         "arguments": {
           "operation": "finish",
-          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
           "target": "maestro"
         }
       }
@@ -107,7 +174,7 @@
     "running": [],
     "outcomes": [
       {
-        "id": "35bd88e89449472186510e7f055ed3ed",
+        "id": "e0715fac44204ad589e1408ed76716e3",
         "capability": "animation.record",
         "version": 1,
         "resources": [
@@ -116,17 +183,17 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
           "target": "maestro",
           "phase": "recording",
           "frames": 1,
           "duration": 0.0,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       },
       {
-        "id": "d7ebdd98cc9a4348aec4a0cc2223d2a5",
+        "id": "57f567fad9a045ad805bfe6a043207b4",
         "capability": "animation.record",
         "version": 1,
         "resources": [
@@ -135,22 +202,22 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "24388cf9c4374fbea26e0d1349bb18f7",
+          "sessionId": "ed42c0a711ea4a9e965c78b9df694771",
           "target": "maestro",
           "phase": "saved",
           "frames": 4,
-          "duration": 0.260721684,
-          "revision": 6,
+          "duration": 0.26051712,
+          "revision": 9,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "c7e4f2d59d314c538c419504e4a34cce",
+    "nextRunId": "64b3d9ac9af6445b9c0183fba97dcdc3",
     "storageError": null,
     "recovery": null
   },
   "idle": {
-    "sessionId": "10c73220bc4e4b1c91f2cea5ed025caa",
+    "sessionId": "56134c3867854fed9d1f738ee9133531",
     "target": "",
     "phase": "idle",
     "frames": 0,

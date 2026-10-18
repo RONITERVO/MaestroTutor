@@ -703,7 +703,7 @@ namespace Maestro.Quest.Creation
         void RefreshOwnership() {
             worldTimeTickReady=false;
             Ownership.Suspend(ownershipPaused||!ownershipFocused||RuntimeGate.Held);
-            if(Ownership.Suspended){CancelPendingEdit();CancelStagingMaintenance();StopAcousticPreparation();InvalidateNativeDisplay();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
+            if(Ownership.Suspended){CancelPendingEdit(GetComponent<AnimationWorkshop>()?.SuspendRecordingSave());CancelStagingMaintenance();StopAcousticPreparation();InvalidateNativeDisplay();SuspendConstructionPicking();ClearViewCapture();ResetLayerPresentation();}
             if(!Ownership.Suspended)foreach(var item in objects.Values)if(item&&item.Grab.isSelected)OwnHeld(item);
         }
         void OnApplicationPause(bool paused) { ownershipPaused=paused;RefreshOwnership();if (paused) Flush(); }

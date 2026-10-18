@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation
             error=null;return true;
         }
         // Physical authoring owns its target, including retained takes. Share the
-        // saved-data preparation, while its session keeps the synchronous contract.
+        // saved-data preparation, including session-owned recording publication.
         internal bool PrepareAnimation(string target,int revision,RoomMotion motion,JointPose[] joints,bool savePose,out RoomObjectData data,out string error)
         {
             data=null;error="The object changed; inspect its animation before editing";
@@ -32,6 +32,12 @@ namespace Maestro.Quest.Creation
             candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();
             return candidate.Validate(out error);
         }
+        internal bool BeginRecordedAnimation(string target,int revision,RoomMotion motion,JointPose[] joints,bool savePose,
+            Func<string> validate,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)=>
+            BeginAttachedEdit(validate,
+                (out RoomObjectData data,out string issue)=>PrepareAnimation(target,revision,motion,joints,savePose,out data,out issue),
+                RoomEditScope.Content,"Recording saved",out pending,out error,checkpoint);
+
         internal bool BeginAnimation(string target,int revision,RoomMotion motion,JointPose[] joints,bool savePose,
             out RoomObjectData prepared,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
         {

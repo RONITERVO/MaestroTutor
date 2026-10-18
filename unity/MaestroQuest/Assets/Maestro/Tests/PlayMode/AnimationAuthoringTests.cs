@@ -97,7 +97,7 @@ namespace Maestro.Quest.Tests
             AuthorRuntime();
             Assert.IsTrue(workshop.StartRecording(workshop.RecordingSessionId,"maestro",editor.ObjectRevision("maestro"),out _,out var error),error);
             yield return null;
-            using(editor.WriteGate.TryFreeze(out _)){Assert.IsFalse(workshop.FinishRecording(workshop.RecordingSessionId,"maestro",out _,out _));}
+            using(editor.WriteGate.TryFreeze(out _)){Assert.IsFalse(workshop.BeginFinishRecording(workshop.RecordingSessionId,"maestro",out _,out _));}
             Assert.IsTrue(workshop.HasUnsavedRecording);Assert.IsFalse(workshop.ControlsTarget("maestro"));
             Assert.IsFalse(authorActions.Execute(AuthorCall(AuthorArgs("clear")),out _));Assert.IsTrue(workshop.HasUnsavedRecording);
             Assert.IsTrue(workshop.DiscardRecording(workshop.RecordingSessionId,out _,out error),error);

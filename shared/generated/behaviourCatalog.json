@@ -1653,14 +1653,14 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "authoringSession",
       "channels": [],
       "requirements": [
         "authoring.session.current",
         "recording.control.available"
       ],
-      "description": "Control the same recorder as the physical Record/Discard take controls. Read animation.recording first and pass its exact sessionId. start also takes target and its current object revision; it refuses another live actor or retained unsaved take. It begins a persistent authoring session, samples at most 10 times/second for 30 seconds/301 frames, permits gripping the recorded object, and completes the start action immediately. The session owns wholeTarget independently until finish, discard or lifecycle Stop; stopping the completed start receipt does not end the take. finish freezes then saves that exact take as one Undo (temporary in a room fork); failed saves stop sampling and retain frames in memory for retry or discard. Retried saves refuse changed target revisions or room sessions. discard destroys only the matching live/retained take, without changing the previous saved animation. Start a new take only using the next observed sessionId. Pause, focus loss, selection/avatar change, physical Stop and time/frame limits attempt to finish automatically; unsaved failures remain visible. App termination/reopening loses unsaved in-memory frames and issues a different identity. Neither finish nor discard starts playback. Only one recording session exists per room.",
+      "description": "Control the same recorder as the physical Record/Discard take controls. Read animation.recording first and pass its exact sessionId. start also takes target and its current object revision; it refuses another live actor or retained unsaved take. It begins a persistent authoring session, samples at most 10 times/second for 30 seconds/301 frames, permits gripping the recorded object, and completes the start action immediately. The session owns wholeTarget independently until finish, discard or lifecycle Stop; stopping the completed start receipt does not end the take. finish freezes then queues background preparation/publication of that exact take as one Undo (temporary in a room fork). Completion confirms native application and saving. Physical Finish, lifecycle Stop and agent Finish observe the same session-owned save; stopping an observer does not cancel it. Before native acceptance, explicit discard cancels the save and keeps the previous animation; after acceptance, wait for its outcome. Pre-acceptance failures retain frozen frames for retry or discard. Failed publication retains the buffer, leaves the applied edit unconfirmed and blocks saving; do not replay it. Discarding that failed buffer does not undo an applied animation. Retried saves refuse changed target revisions or room sessions. discard destroys only the matching live/retained buffer and does not undo a previously applied edit. Start a new take only using the next observed sessionId. Pause, focus loss, selection/avatar change, physical Stop and time/frame limits freeze and attempt to finish automatically; suspended native interaction defers acceptance until resumed, and unsaved failures remain visible. App termination/reopening loses unsaved in-memory frames and issues a different identity. Neither finish nor discard starts playback. Only one recording session exists per room.",
       "example": {
         "operation": "start",
         "sessionId": "00000000000000000000000000000000",
@@ -42392,7 +42392,7 @@
         }
       },
       "label": "Current recording session",
-      "description": "Native recorder identity and phase: idle issues the next start ID; recording samples a live take; unsaved retains a frozen failed take in memory. Duration is sampled seconds, not wall time. Idle has empty target and zero counts/revision. Read target's authored revision before starting. Finish/discard take the current exact ID; completed receipt cancellation is separate. Error is bounded status, not a recovery token. A new app/room instance never restores an active recording."
+      "description": "Native recorder identity and phase: idle issues the next start ID; recording samples a live take; saving is a frozen session-owned background save; unsaved retains a frozen failed take in memory. Duration is sampled seconds, not wall time. Idle has empty target and zero counts/revision. Read target's authored revision before starting. Finish/discard take the current exact ID; completed receipt cancellation is separate. Error is bounded status, not a recovery token. A new app/room instance never restores an active recording."
     },
     {
       "id": "animation.posing",
@@ -47232,7 +47232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
-      "sha256": "85ff429a33a7376386c152332f2d9fc2d6d799f6a916b8a652baaa8f52836c59"
+      "sha256": "865c4d879b6eaf4a623f2679e56a001a02529f9c0b4fcc4e4aa3fe47c2c8eeda"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
@@ -47792,7 +47792,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
-      "sha256": "06a251a0bd871440f78749b9c84b169b2b4fd291eed258c8b322e5cfce598240"
+      "sha256": "71a9344e939f03239189f762d3ef8aa2e5c1598359c292e2461968aedb875435"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecordingSave.cs",
+      "sha256": "8a4674d4d90123ae04fdec484ccf1b699f38fb1dbbb20d1b2d5e8cc27974644f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
@@ -47800,7 +47804,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "09b18217baa1c1bcd71a73b4c0bfec3b2f1eafa3c221ab8432e4fe6e6178d35f"
+      "sha256": "c8789b2404960a7750f85222af8d9c08df3261ffb37599d4ab46452362419274"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
@@ -48048,7 +48052,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "76c4e0bdb14333d6ea00414880505dcde39b149933ad78f73947304f577371bd"
+      "sha256": "cf30f74b8fe2c78a5d15c50986077df572138b9e89bb2961a6c9ec44e9581b87"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48172,7 +48176,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAnimationEdits.cs",
-      "sha256": "2ed07ab6b4f37fcfc9a3007862ed856db40f71789d0a6cded3736098d29c2fcb"
+      "sha256": "43794cd132975bacdfa514aeafd5eab1b1089d0235e3bf1fbb9753e72d0821cc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
@@ -48284,7 +48288,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "5395296544c520b36990dca46fd3d0d36c7d11b8aab6ae13b8726b8a98dfd4c1"
+      "sha256": "c27f9b98ee7f46b4deb604c5957605609dc06fc1282e53ec7cd697c356f256ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",

@@ -75,10 +75,10 @@ namespace Maestro.Quest.Tests
             workshop.ToggleRecord(); yield return new WaitForSeconds(.12f);
             item.transform.localPosition += Vector3.right * .4f; yield return new WaitForSeconds(.12f);
             workshop.SendMessage("OnApplicationPause",true); Assert.That(workshop.IsRecording,Is.False);
+            Assert.That(workshop.IsSavingRecording,Is.True);workshop.Play();Assert.That(workshop.IsPlaying,Is.False,"Paused ownership prevents new previews");
+            workshop.SendMessage("OnApplicationPause",false);yield return RecordingSettled();
             var motion = editor.Read(block.id).motion; Assert.That(motion.frames.Length,Is.GreaterThanOrEqualTo(3));
             Assert.That(motion.frames[^1].position.x - motion.frames[0].position.x,Is.EqualTo(.4f).Within(.001f));
-            workshop.Play();Assert.That(workshop.IsPlaying,Is.False,"Paused ownership prevents new previews");
-            workshop.SendMessage("OnApplicationPause",false);
             workshop.Play(); yield return new WaitForSeconds(.14f); Assert.That(workshop.IsPlaying,Is.True);
             workshop.SendMessage("OnApplicationFocus",false); Assert.That(workshop.IsPlaying,Is.False);
             Assert.That(item.transform.localPosition,Is.EqualTo(editor.Read(block.id).position));
@@ -105,18 +105,19 @@ namespace Maestro.Quest.Tests
             Assert.That(item.transform.localPosition.x-start.x,Is.GreaterThan(.2f),"XRI actually moved the recorded object");
             handRoot.SetActive(false);yield return null;
             Assert.That(workshop.IsRecording,Is.True);Assert.That(editor.Ownership.Observe().owners.Any(x=>x.role=="grab"),Is.False);
-            workshop.ToggleRecord();var take=editor.Read(block.id).motion;
+            workshop.ToggleRecord();yield return RecordingSettled();var take=editor.Read(block.id).motion;
             Assert.That(take.frames.Length,Is.GreaterThanOrEqualTo(3));Assert.That(take.frames.Max(x=>x.position.x)-take.frames.Min(x=>x.position.x),Is.GreaterThan(.2f));
             workshop.Stop();Assert.That(editor.Ownership.Observe().owners.Any(x=>x.role=="control"),Is.False);
         }
-        [UnityTest] public IEnumerator ChangingAvatarFinishesAndRetainsTheCurrentTake()
+        [UnityTest] public IEnumerator ChangingAvatarWaitsForRecordingPublicationAndRetainsTheCurrentTake()
         {
             var asset = Maestro.Quest.Imports.ModelLibrary.Inspect("recording-avatar.vrm",ModelFixture.Create(avatar:true));
             var save = editor.Models.SaveAsync(asset); yield return new WaitUntil(() => save.IsCompleted); Assert.That(save.Exception,Is.Null);
             editor.Select(avatarItem); workshop.ToggleRecord(); yield return new WaitForSeconds(.12f);
             avatarItem.transform.localPosition += Vector3.right * .4f; yield return new WaitForSeconds(.12f);
+            Assert.That(editor.SetMaestroModel(asset.Hash),Is.False,"An avatar switch cannot replace an unfinished take");
+            Assert.That(workshop.IsRecording,Is.False);yield return RecordingSettled();
             Assert.That(editor.SetMaestroModel(asset.Hash),Is.True);
-            Assert.That(workshop.IsRecording,Is.False);
             var motion = editor.Read("maestro").motion;
             Assert.That(motion,Is.Not.Null,"Changing avatars must keep the take saved when authoring stops");
             Assert.That(motion.frames.Length,Is.GreaterThanOrEqualTo(3));
@@ -126,6 +127,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator TearDown()
         {
+            workshop.DiscardTake();yield return RecordingDrained();
             UnityEngine.Object.Destroy(root); yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }

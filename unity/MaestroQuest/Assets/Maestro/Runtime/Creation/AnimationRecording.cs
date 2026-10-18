@@ -15,11 +15,12 @@ namespace Maestro.Quest.Creation
         string recordingSession=Guid.NewGuid().ToString("N"),recordingTarget,recordingRoomSession;
         bool resolvingRecording;
         PendingTake pendingTake;
-        sealed class PendingTake {
+        internal sealed class PendingTake {
             public RoomMotion Motion;public JointPose[] Pose;public bool SavePose;
-            public int Revision;public string Error;
+            public int Revision;public string Error;public bool Applied;
         }
         public bool HasUnsavedRecording=>pendingTake!=null;
+        internal bool IsSavingRecording=>recordingSave!=null&&!recordingSave.Ended;
         internal bool HasUnfinishedAuthoring(string id)=>ControlsTarget(id)||
             (IsRecording||HasUnsavedRecording)&&recordingTarget==id||pendingPose?.Target==id;
         public string RecordingSessionId=>recordingSession;
@@ -27,7 +28,7 @@ namespace Maestro.Quest.Creation
         {
             bool active=IsRecording||HasUnsavedRecording;
             string error=(pendingTake?.Error??"").Replace("\r"," ").Replace("\n"," ");
-            return new JObject {["sessionId"]=recordingSession,["target"]=active?recordingTarget:"",["phase"]=IsRecording?"recording":HasUnsavedRecording?"unsaved":"idle",
+            return new JObject {["sessionId"]=recordingSession,["target"]=active?recordingTarget:"",["phase"]=IsRecording?"recording":IsSavingRecording?"saving":HasUnsavedRecording?"unsaved":"idle",
                 ["frames"]=recording?.Count??pendingTake?.Motion.frames.Length??0,["duration"]=recording!=null?recording[^1].time:pendingTake?.Motion.Duration??0,
                 ["revision"]=pendingTake?.Revision??(active?editor.ObjectRevision(recordingTarget):0),["temporary"]=editor&&editor.TemporaryRoom,["error"]=error.Length>128?error[..128]:error};
         }
@@ -38,6 +39,7 @@ namespace Maestro.Quest.Creation
             if(sessionId!=recordingSession)return false;
             if(HasUnsavedPose){error=RetainedPosePrompt;return false;}
             if(IsRecording||HasUnsavedRecording){error="Finish or discard the current take first";return false;}
+            if(!isActiveAndEnabled){error="The animation workshop is unavailable";return false;}
             if(!editor||editor.RuntimeGate.Held){error=editor?editor.RuntimeGate.Reason:"The room editor is unavailable";return false;}
             if(!editor.CanSaveRoom||editor.WriteGate.Frozen){error="The room is unavailable for saving";return false;}
             var item=editor.Find(id);if(!item||editor.ObjectRevision(id)!=revision){error="The object changed; inspect its current revision";return false;}
@@ -68,6 +70,8 @@ namespace Maestro.Quest.Creation
         {
             error="This take is no longer current; inspect animation.recording first";
             if(sessionId!=recordingSession||!IsRecording&&!HasUnsavedRecording||!discard&&id!=recordingTarget)return false;
+            if(discard&&IsSavingRecording&&recordingSave.Accepted){error="The take has been applied and is still saving; wait for its outcome before discarding its buffer";return false;}
+            if(!discard&&pendingTake?.Applied==true&&!IsSavingRecording){error="This take was already applied but saving was unconfirmed. Inspect or recover the room; do not save it again.";return false;}
             error=null;return true;
         }
         JObject RecordingResult(string phase,int frames,float duration,int revision)=>new() {
@@ -84,33 +88,33 @@ namespace Maestro.Quest.Creation
         {
             bool previous=resolvingRecording;resolvingRecording=true;try{Stop();}finally{resolvingRecording=previous;}
         }
-        public bool FinishRecording(string sessionId,string id,out JObject result,out string error)
+        internal bool BeginFinishRecording(string sessionId,string id,out RecordingSaveAttempt attempt,out string error,Action<string> checkpoint=null)
         {
-            result=null;if(!CanResolveRecording(sessionId,id,false,out error))return false;
-            FreezeTake();var take=pendingTake;bool accepted=false;
-            saving=true;
-            try {
-                if(recordingRoomSession!=editor.TemporarySessionId)error="The room session changed; discard this retained take";
-                else accepted=editor.WriteAnimation(recordingTarget,take.Revision,take.Motion,take.Pose,take.SavePose,out error);
-            } finally {saving=false;}
-            if(!accepted){take.Error=error;saveError="Take not saved; frames retained. "+error;ReleaseRecordingControls();Say(saveError);error=saveError;return false;}
-            result=RecordingResult("saved",take.Motion.frames.Length,take.Motion.Duration,editor.ObjectRevision(recordingTarget));
-            pendingTake=null;recordingSession=Guid.NewGuid().ToString("N");selectedFrame=-1;saveError=null;
-            ReleaseRecordingControls();Say("Recording saved — Undo restores the previous animation");return true;
+            attempt=null;if(!CanResolveRecording(sessionId,id,false,out error))return false;
+            if(IsSavingRecording){attempt=recordingSave;return true;}
+            FreezeTake();var take=pendingTake;take.Error=null;saveError=null;
+            attempt=recordingSave=new RecordingSaveAttempt(this,take,sessionId,id,recordingRoomSession,checkpoint);
+            // The frozen frames no longer need a live pose/controller owner.
+            // Release before queued preparation; the take remains guarded by identity.
+            ReleaseRecordingControls();
+            if(!attempt.Start(out error))return false;
+            Say("Saving recording — frames frozen; other objects can keep running");return true;
         }
         public bool DiscardRecording(string sessionId,out JObject result,out string error)
         {
             result=null;if(!CanResolveRecording(sessionId,null,true,out error))return false;
+            recordingSave?.CancelBeforeAcceptance("Take discarded before saving");
+            bool applied=pendingTake?.Applied==true;
             var view=ObserveRecording();result=RecordingResult("discarded",(int)view["frames"],(float)view["duration"],editor.ObjectRevision(recordingTarget));
-            recording=null;pendingTake=null;recordingSession=Guid.NewGuid().ToString("N");saveError=null;
-            ReleaseRecordingControls();Say("Take discarded — previous animation kept");return true;
+            recording=null;pendingTake=null;recordingSave=null;recordingSession=Guid.NewGuid().ToString("N");saveError=null;
+            ReleaseRecordingControls();Say(applied?"Take buffer discarded — the applied animation remains; recover saving before editing":"Take discarded — previous animation kept");return true;
         }
         public void ToggleRecord()
         {
-            bool accepted=IsRecording||HasUnsavedRecording?FinishRecording(recordingSession,recordingTarget,out _,out var error):StartRecording(recordingSession,targetId,targetId==null?0:editor.ObjectRevision(targetId),out _,out error,manual:true);
+            bool accepted=IsRecording||HasUnsavedRecording?BeginFinishRecording(recordingSession,recordingTarget,out _,out var error):StartRecording(recordingSession,targetId,targetId==null?0:editor.ObjectRevision(targetId),out _,out error,manual:true);
             if(!accepted)Say(error??saveError);
         }
-        void FinishRecording(){if(IsRecording)FinishRecording(recordingSession,recordingTarget,out _,out _);}
+        void FinishRecording(){if(IsRecording)BeginFinishRecording(recordingSession,recordingTarget,out _,out _);}
         public void DiscardTake(){if(!DiscardRecording(recordingSession,out _,out var error))Say(error);}
     }
 }
