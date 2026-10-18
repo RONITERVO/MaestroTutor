@@ -5,10 +5,14 @@ using System.Linq;
 using Maestro.Quest.Interaction;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
-        internal bool PrepareSnapPoint(string target,int revision,string point,RoomSnapPoint definition,out RoomObjectData data,out string error){
-            data=null;if(!CanEditObject(target,true,out error))return false;
+        internal bool CanEditSnapPoint(string target,int revision,out string error){
+            if(!CanEditObject(target,true,out error))return false;
             if(ObjectRevision(target)!=revision){error="The object changed; read its current snap-point revision";return false;}
             if(RuntimeGate.Held||Ownership.Suspended||GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring and resume room interaction first";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareSnapPoint(string target,int revision,string point,RoomSnapPoint definition,out RoomObjectData data,out string error){
+            data=null;if(!CanEditSnapPoint(target,revision,out error))return false;
             if(!RoomSnapPoint.Identifier(point)){error="Choose a stable snap-point ID";return false;}
             data=Pose(Read(target),Find(target).transform);
             var retained=(data.snapPoints??Array.Empty<RoomSnapPoint>()).Where(p=>p.id!=point);
@@ -17,16 +21,22 @@ namespace Maestro.Quest.Creation {
         }
         internal bool EditSnapPoint(string target,int revision,string point,RoomSnapPoint definition,out string error){
             if(!PrepareSnapPoint(target,revision,point,definition,out var data,out error))return false;
-            return CommitPersisted(new[]{data},Array.Empty<string>(),definition==null?"Snap point removed":"Snap point saved",false,out error);
+            return CommitPersisted(new[]{data},Array.Empty<string>(),definition==null?"Snap point removed":"Snap point saved",false,out error,scope:RoomEditScope.Content);
+        }
+        internal bool CanSnapSources(RoomSnapPlacement request,object physicsOwner,out RoomLayout source,out RoomObjectData other,out string error){
+            source=null;other=null;error="Provide a snap placement";
+            if(request==null||!request.Validate(out error)||!GroupSources(request.members,out source,out error,physicsOwner))return false;
+            var destination=request.destination;
+            if(!CanChangeObject(destination.target,true,true,false,out error,physicsOwner))return false;
+            if(ObjectRevision(destination.target)!=destination.revision){error="The destination changed; read its current revision";return false;}
+            var otherItem=Find(destination.target);other=Pose(Read(destination.target),otherItem.transform);
+            if(!otherItem.isActiveAndEnabled||!otherItem.Grab||!otherItem.Grab.enabled||otherItem.GetComponent<RigidRoomItem>()?.GeometryReady==false||other.recipe?.playing==true||GetComponent<AnimationWorkshop>()?.ControlsTarget(destination.target)==true){error="Release the destination and stop its playback/authoring first";return false;}
+            return new RoomLayout{placements=new[]{Frame.Placement(other.id,otherItem.transform)}}.Validate(out error);
         }
         internal bool PrepareSnap(RoomSnapPlacement request,out RoomObjectData[] replacements,out RoomLayout before,out string error){
-            replacements=null;before=null;error="Provide a snap placement";
-            if(request==null||!request.Validate(out error)||!GroupSources(request.members,out var source,out error))return false;
-            var destination=request.destination;
-            if(!CanEditObject(destination.target,true,out error))return false;
-            if(ObjectRevision(destination.target)!=destination.revision){error="The destination changed; read its current revision";return false;}
-            var otherItem=Find(destination.target);var other=Pose(Read(destination.target),otherItem.transform);
-            if(!otherItem.isActiveAndEnabled||!otherItem.Grab.enabled||otherItem.GetComponent<RigidRoomItem>()?.GeometryReady==false||other.recipe?.playing==true||GetComponent<AnimationWorkshop>()?.ControlsTarget(destination.target)==true){error="Release the destination and stop its playback/authoring first";return false;}
+            replacements=null;before=null;
+            if(!CanSnapSources(request,null,out var source,out var other,out error))return false;
+            var destination=request.destination;var otherItem=Find(destination.target);
             var first=Read(request.members[0].target);
             var from=first.snapPoints?.FirstOrDefault(p=>p.id==request.point);var to=other.snapPoints?.FirstOrDefault(p=>p.id==destination.point);
             if(from==null||to==null||from.family!=to.family){error="Choose existing snap points with the same exact family";return false;}

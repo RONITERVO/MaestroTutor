@@ -23991,7 +23991,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -24002,7 +24002,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure or remove one stable named alignment point on a created object's root, including an import. Points with the same exact family may be aligned by object.layout.snap. Frames coincide: their +Y axes and forward directions match, with optional turn about the destination frame +Y. These are coordinate frames, not outward face normals. Coordinates use object-local metres and scale with the object. At most 64 per object and 256 per room. Names are display text; IDs and family are exact, case-sensitive identifiers. Points survive copy, capture, Undo and workspace export. Editing a point never moves objects or changes a previously accepted physical connection. No occupancy lock, collision check, automatic nearest-point selection or attachment to animated parts is implied.",
+      "description": "Configure or remove one stable named alignment point on a created object's root, including an import. Points with the same exact family may be aligned by object.layout.snap. Frames coincide: their +Y axes and forward directions match, with optional turn about the destination frame +Y. These are coordinate frames, not outward face normals. Coordinates use object-local metres and scale with the object. At most 64 per object and 256 per room. Names are display text; IDs and family are exact, case-sensitive identifiers. Points survive copy, capture, Undo and workspace export. Editing a point never moves objects or changes a previously accepted physical connection. No occupancy lock, collision check, automatic nearest-point selection or attachment to animated parts is implied. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -24304,7 +24304,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -24317,7 +24317,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Align the chosen point of the FIRST moving member with an exact destination point of the same family. Both local frames coincide, with turn in degrees about destination +Y. Move 1–15 distinct idle creations as one rigid arrangement, with optional relative scale (omitted means 1); include every connected member. The destination must be outside that list. Use current revisions for all members and destination. Pause physics and stop member/destination playback, grips and authoring. place only changes poses; join also adds an ordinary fixed connection from the first member to the destination, using explicit break limits (zero means unbreakable). The first member must then use solid/bouncy physics and have no outgoing connection; never silently replace an existing link. One save/Undo includes the live destination pose and the whole moving arrangement. Failed admission/save changes nothing. Temporary edits stay in the fork; Stop does not undo completed edits. Snap points do not enforce occupancy, collision-free placement, nearest-point selection or chess rules. Subsequent point edits do not alter the accepted connection frames. Book controls, user programs and the agent call this same operation.",
+      "description": "Align the chosen point of the FIRST moving member with an exact destination point of the same family. Both local frames coincide, with turn in degrees about destination +Y. Move 1–15 distinct idle creations as one rigid arrangement, with optional relative scale (omitted means 1); include every connected member. The destination must be outside that list. Use current revisions for all members and destination. Pause physics and stop member/destination playback, grips and authoring. place only changes poses; join also adds an ordinary fixed connection from the first member to the destination, using explicit break limits (zero means unbreakable). The first member must then use solid/bouncy physics and have no outgoing connection; never silently replace an existing link. One save/Undo includes the live destination pose and the whole moving arrangement. Failed admission or pre-acceptance preparation changes nothing. Temporary edits stay in the fork; Stop does not undo completed edits. Snap points do not enforce occupancy, collision-free placement, nearest-point selection or chess rules. Subsequent point edits do not alter the accepted connection frames. Book controls, user programs and the agent call this same operation. Current member and destination poses are sampled when admitted to preparation; only those bodies are then held until native application or cancellation. A changed frame during preparation invalidates the request. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "mode": "place",
         "members": [
@@ -47593,11 +47593,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapConstructionCapability.cs",
-      "sha256": "5f4c61f4c3c7c7ed2697bba2119abd52e383199c168bb9e0c19fb6765d45c7d3"
+      "sha256": "62952077ad877547b471648a65683a9f70bebba0469b6218699c4e1b739ef42c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SnapPointCapability.cs",
-      "sha256": "dc7d440c7f38f23f47066c61b6e8bf35e3dc618a583ec5255482db435efd397a"
+      "sha256": "589a3c01c4cff80dee39c4409f216d32a5f70fef1e867902e824ab81fc82e822"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SpatialCapabilities.cs",
@@ -47761,7 +47761,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionManipulator.cs",
-      "sha256": "a7222c7b79e82f2407b55c5c2e9b521653acc83b5da29003e44aad2fa23072a6"
+      "sha256": "f629097da3be06be04423fc8be501bb5418c3796bfe5b8d42b436642bbfd4020"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ConstructionSelection.cs",
@@ -47974,6 +47974,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
       "sha256": "ce45be2eb03a5e97c525844470313b3d59987bbf186cf1ac70071ba09a1abae5"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingSnapEdits.cs",
+      "sha256": "34300150587aaad4e96372bef4b530938df791493a0325e4a1078c81e9253411"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48473,7 +48477,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
-      "sha256": "fb0066f2dc09e6dcf270d9dfaf8184797697042a0599d99a8ce7c4d90008266a"
+      "sha256": "697a72b1afaf8d5882a015d3687e7ff37f0032bf1a19cd00ccc44cf127675055"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapPoint.cs",

@@ -14043,3 +14043,48 @@ ran. The complete native-suite checkpoint 7d518ec9 and unresolved intermittent
 Meta audio SDK crash remain separate; production reflections stay disabled.
 Remaining saved authoring/lifecycle actions, physical latency and broader release
 gates remain open. Full v1 is incomplete.
+
+## Shared snap authoring completion — 2026-10-18
+
+Snap-point definitions and construction snap/place/join now use the shared ordered
+completion/save operation. Requests capture intent and recheck exact member and
+destination revisions. Waiting requests hold no body or room candidate; placement
+samples current poses when admitted and holds only the affected bodies through
+preparation. A changed live frame during preparation refuses the candidate.
+Native application releases holds; completion waits for confirmed saving.
+
+Point edits and Undo use content scope to retain current placement. Snapping keeps
+one live-pose Undo for the complete moving arrangement and stationary destination,
+with an ordinary fixed connection for join. Pre-acceptance cancellation leaves it
+unapplied. Accepted Stop drains its save; failed publication retains the live edit
+unconfirmed, preserves old files and blocks further saves for recovery. Temporary
+completion stays local until Keep. The physical handle now shows saving, refuses
+another grip and observes the exact shared receipt. Public IDs, formats and limits
+are unchanged. Existing joint configure/align/slide/remove and runtime-only rearm
+retain their separate contracts; their break-latch lifecycle needs its own change.
+
+Verification passes **84 EditMode and 67 PlayMode cases**,
+including eight new pending-snap regressions, and **3,198 web tests**,
+app/probe TypeScript and catalog checks. Cases cover copied queued intent, sampled
+admission poses, stale destinations, changed prepared frames, cancellation and body
+release, accepted publication failure, Stop drain, temporary persistence and Undo.
+Existing physical grip/resizing, real fixed constraints, hinges and sliders pass.
+
+Complete offline Book e01eb732b37e44bf99570692e123e5b5 passes with
+3,729 observations/1,183 requests; Headless 93df97197bd8492bb59eb6b4104f6d09
+passes with 2,291 observations/2,290 read sets.
+Headless captures actual preparing and completed snap receipts, exact join frames,
+readback and atomic Undo. Chrome replays those native states through the production
+generated form using captured paged object discovery and fresh exact
+object-definition reads. It verifies both revision guards, invalid-turn refusal,
+visible preparing/completed states and exact output. The replay is a desktop UI contract
+check, not a new physical headset snap. Existing world checks, human-edit
+preservation, stale-request refusal and reload without replay remain covered.
+
+Evidence: .quest-evidence/snap-completion-20261018/.
+All 3,286 native inputs and 14 protected local files are checked.
+No device, paid provider, Android build, signing, deployment or Meta action ran.
+Native preparation/reconciliation still has owner-thread costs. The complete-suite
+checkpoint 7d518ec9 and unresolved intermittent Meta audio SDK crash remain separate;
+production reflections stay disabled. Other saved-authoring/lifecycle paths,
+physical acceptance and broader release gates remain open. Full v1 is incomplete.

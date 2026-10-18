@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests {
             root.transform.SetPositionAndRotation(new Vector3(8,0,5),Quaternion.Euler(0,30,0));Assert.That(editor.ResizeObject(destination,1.5f,out error),Is.True,error);
             var target=editor.Find(destination).transform;target.localPosition=new Vector3(3,3,2);target.localRotation=Quaternion.Euler(0,0,90);
             var original=editor.Find(owner).transform.localPosition;var childOffset=editor.Find(child).transform.localPosition-original;var request=SnapTo(destination,owner,child);request.turn=90;
-            var executor=new RoomAgentExecutor(editor);var wire=SnapRequest(request);Assert.That(executor.Execute(wire,out error,out _),Is.True,error);
+            var executor=new RoomAgentExecutor(editor);var wire=SnapRequest(request);Assert.That(executor.Execute(wire,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var moved=editor.Find(owner).transform;var expected=target.localPosition+target.localRotation*(Vector3.up*.075f);
             Assert.That(Vector3.Distance(moved.localPosition+moved.localRotation*(Vector3.down*.05f),expected),Is.LessThan(.0001f));
             Assert.That(Vector3.Distance(editor.Find(child).transform.localPosition-moved.localPosition,moved.localRotation*childOffset),Is.LessThan(.0001f));
@@ -31,7 +31,7 @@ namespace Maestro.Quest.Tests {
         }
         [UnityTest] public IEnumerator SnapJoinBecomesNativeFixedConstraintAndCaptureKeepsBothPointDefinitions(){
             var (moving,mount)=FixedPieces();SnapPoint(moving,"Bottom",-.05f);SnapPoint(mount,"Top",.05f);var request=SnapTo(mount,moving);request.mode="join";request.breakForce=800;request.breakTorque=100;
-            Assert.That(new RoomAgentExecutor(editor).Execute(SnapRequest(request),out var error,out _),Is.True,error);
+            var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(SnapRequest(request),out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var definition=editor.Read(moving).connections.Single();Assert.That(definition.kind,Is.EqualTo("fixed"));Assert.That(definition.breakForce,Is.EqualTo(800));
             physics.SetSurfaces(true,"Ready");physics.StartPhysics();yield return new WaitForFixedUpdate();var view=editor.Find(moving).GetComponent<RoomConnectionView>();Assert.That(view.Active,Is.True,view.Error);Assert.That(editor.Find(moving).GetComponent<FixedJoint>(),Is.Not.Null);
             Assert.That(editor.Find(moving).GetComponent<RigidRoomItem>().ApplyImpulse(Vector3.up,out error),Is.True,error);for(int i=0;i<12;i++)yield return new WaitForFixedUpdate();Assert.That(Vector3.Distance(editor.Find(moving).transform.localPosition,editor.Read(moving).position),Is.LessThan(.02f));physics.PausePhysics();

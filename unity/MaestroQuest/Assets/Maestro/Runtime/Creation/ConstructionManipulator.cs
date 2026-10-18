@@ -117,7 +117,7 @@ namespace Maestro.Quest.Creation {
                 if(before!=null)foreach(var p in before.placements){var item=editor.Find(p.target);if(item&&editor.ObjectRevision(p.target)==request.members.First(m=>m.target==p.target).revision){item.transform.SetLocalPositionAndRotation(p.position,p.rotation);item.transform.localScale=Vector3.one*p.scale;item.GetComponent<RigidRoomItem>()?.Teleported();}}
                 foreach(string id in ids){var item=editor.Find(id);if(item){item.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);item.Grab.enabled=true;}}
                 before=null;preview=null;request=null;snapping=null;if(snapMarker)snapMarker.SetActive(false);owner?.Dispose();owner=null;
-                if(commit&&valid){bool saved=proposedSnap!=null?SnapConstructionCapability.RunManual(editor,proposedSnap,out status):GroupTransformCapability.RunManual(editor,proposed,out status,out pendingMove);if(!saved){failed=true;status="Move not saved; all pieces restored. "+status;}else Error="";}
+                if(commit&&valid){bool saved=proposedSnap!=null?SnapConstructionCapability.RunManual(editor,proposedSnap,out status,out pendingMove):GroupTransformCapability.RunManual(editor,proposed,out status,out pendingMove);if(!saved){failed=true;status="Move not saved; all pieces restored. "+status;}else Error="";}
                 if(close){Visible=false;if(Handle)Handle.gameObject.SetActive(false);}
                 if(label)label.text=pendingMove==null?"Move pieces\nGrip · two hands resize":"Saving pieces…";
             }finally{busy=false;}

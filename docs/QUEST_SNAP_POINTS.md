@@ -46,8 +46,9 @@ free of drawing/animation authoring. Geometry and poses are validated before a
 save or live change. The complete final arrangement must remain within existing
 room placement bounds. All affected whole-object channels are acquired through
 the shared ownership layer; a user grip takes priority. Missing points, mismatched
-families, stale revisions, incomplete connections and failed saves leave the
-original arrangement intact.
+families, stale revisions, incomplete connections and failures before native
+acceptance leave the original arrangement intact. A publication failure after
+acceptance leaves the live edit unconfirmed; it does not silently roll it back.
 
 Place changes poses only, suitable for loose building or board pieces. Join also
 adds the existing fixed-connection component from the first moving member to the
@@ -60,7 +61,20 @@ Connection limits, breaking and rearming retain their ordinary shared semantics.
 One save and one Undo cover every moving member, the new link if requested, and
 the stationary destination's current live pose. This avoids saving alignment
 against a stale target placement. Exact receipt replay cannot snap twice. Temporary
-edits stay in the room fork. Stop cannot reverse a completed saved edit; Undo can.
+edits stay in the room fork. Both point editing and snapping are completion actions:
+they enter the shared ordered save queue with captured arguments. Waiting requests
+hold no bodies and keep no room candidate. Snapping samples the current member and
+destination poses when admitted, then holds only those bodies through preparation.
+An authored revision change, lost ownership/readiness or changed live frame refuses
+the candidate. Native application releases the holds; completion waits for saving.
+A point-definition edit and its Undo retain current placement and momentum.
+
+Cancellation before acceptance leaves the requested edit unapplied. Stop after
+acceptance cannot retract it or its pending save; Undo is a separate operation.
+Publication failure preserves prior files, retains the accepted live edit and
+blocks later writes for recovery. Inspect before retrying. Temporary completion is
+live-only until Keep. Snapshot/native preparation still runs on Unity's owner
+thread; these semantics are not a Quest latency guarantee.
 
 Points do not reserve exclusive occupancy, prove an overlap-free fit, enforce chess
 rules, infer a destination or merge meshes. Pieces can later be moved by ordinary
@@ -101,9 +115,12 @@ Release restores starting poses, relinquishes grip ownership, then runs ordinary
 `object.layout.snap` with exact IDs, current revisions and the relative scale.
 One save/Undo covers the whole result. A target that becomes held, unavailable or
 changes identity/revision at release cancels the snap and restores the moving
-pieces; it does not silently become a loose placement. Save failure also restores
-all moving pieces. Pause, recall and teardown cancel without saving. Destination
-objects are not reserved during the preview, so another hand can pick one up.
+pieces; it does not silently become a loose placement. The released handle displays
+**Saving pieces…**, refuses another grip and observes the exact shared receipt.
+A preparation failure retains starting poses; an accepted publication failure
+retains the live arrangement with an error requiring inspection. Cancelling a held
+preview through pause, recall or teardown does not save it. Destination objects are
+not reserved during the preview, so another hand can pick one up.
 
 This applies to the explicit construction handle, including a single selected
 piece. Ordinary direct object grips keep their existing physics/throw semantics.
@@ -118,12 +135,12 @@ fresh IDs when instantiated; local point IDs stay stable. Optional snap-point
 fields carry `snapPoints.v1` in the catalog, including nested prototype source.
 Older strict schemas reject this field rather than silently dropping it.
 
-Current room format/file is 8 (`room.v8.json`), paired snapshot intent is 7
-(`room-snapshot.v7.json`), and archive manifest is 7. Clean earlier room formats
-1–5 and 7 can load without snap points; connected room format 6 stays refused.
-Earlier unfinished snapshot transactions/archives are preserved and require the
-existing explicit recovery/reset flow; they are not guessed into the new format.
-Future point component versions make the room read-only and preserve its bytes.
+Snap points were introduced with room format 8. The current format is defined by
+RoomDocument.CurrentVersion; RoomStorage and the shared snapshot/archive
+implementations own compatibility. This completion change does not change those
+versions or component fields. Earlier unfinished transactions/archives are
+preserved for the explicit recovery/reset flow. Future point component versions
+make the room read-only and preserve its bytes.
 
 ## Verification
 
@@ -133,12 +150,16 @@ room budgets, old/future versions, prototypes, template points and room-space ma
 PlayMode exercises rotated/scaled destinations, complete connected groups, actual
 fixed joints under impulse, actual XR grip snapping/resizing, pull-away, destination
 grab invalidation, setting guards, capture with fresh IDs, stale/missing/family failures,
-failed-save rollback, current grip ownership, physics gating and temporary Undo.
+pre-acceptance failure, current grip ownership, physics gating and temporary Undo.
+Pending-edit tests also cover captured queued intent, stale destination edits,
+changed live frames, body-hold release, accepted publication failure and Stop drain.
 
 The native full-app journey records point edits, paging, exact snap/join, connection
 readback and one Undo in `snap-authoring.json`. Chrome replays those actual states
 through the production generated form, requires both current revisions, rejects
-an invalid turn and matches the exact native call and receipt. Desktop checks do
+an invalid turn and matches the exact native call and receipt. The current replay
+selects both objects through actual native directory pages, keeps periodic object
+inventories empty and displays the captured preparing/completed states. Desktop checks do
 not establish Quest readability, reach, comfort or performance; device acceptance
 remains pending while the headset hold is active.
 
