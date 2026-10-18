@@ -14,6 +14,10 @@ namespace Maestro.Quest.Creation
     {
         IPersistedRoomEdit pendingEdit;
         internal bool PendingEditSave=>pendingEdit!=null&&!pendingEdit.Drained;
+        // Startup memory recovery shares the room's disk coordinator. Keep callers
+        // in ordered admission until it drains; never capture an older candidate
+        // after an unobserved recovery or retry an arbitrary failed disk write.
+        internal bool PendingEditInitialization=>TemporaryMemory?.Initialization.IsCompleted==false;
         // Owner-thread admission belongs to this room, so all capability callers
         // share arrival order. A waiter holds no snapshot, body or write lease.
         readonly LinkedList<EditAdmission> editAdmissions=new();

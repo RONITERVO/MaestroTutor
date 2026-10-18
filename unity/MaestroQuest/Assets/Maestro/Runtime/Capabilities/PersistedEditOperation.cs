@@ -72,7 +72,7 @@ namespace Maestro.Quest.Programs
             if(!admission.Valid)return Fail("The object edit workspace ended while waiting",out error);
             // Poll order and a program immediately starting its next step must not
             // let newer requests pass an older waiter. Scheduler timeouts still apply.
-            if(editor.PendingEditSave||!admission.First)return true;
+            if(editor.PendingEditInitialization||editor.PendingEditSave||!admission.First)return true;
             try {
                 if(!begin(out pending,out error))return Fail(error,out error);
                 return true;

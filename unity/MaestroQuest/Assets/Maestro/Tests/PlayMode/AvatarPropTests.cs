@@ -48,7 +48,8 @@ namespace Maestro.Quest.Tests
             var animations=root.AddComponent<AnimationWorkshop>(); animations.Initialize(editor); rules=root.AddComponent<RuleWorkshop>(); rules.Initialize(editor,directory);
             runtime=root.AddComponent<RoomRules>(); runtime.Initialize(rules,editor,animations,null,room,null);
             foreach (var data in editor.Snapshot().objects.Where(x => !x.IsBuiltIn)) { var item=editor.Find(data.id); item.transform.position=new Vector3(6,2,2); editor.RememberPlacement(data.id); }
-            editor.Create(RoomObjectKind.Ball); ball=editor.Find(editor.SelectedId);
+            editor.Create(RoomObjectKind.Ball); yield return PhysicalCreationTestWait.Finish(editor); ball=editor.Find(editor.SelectedId);
+            Assert.That(ball,Is.Not.Null,"Manual prop creation: "+editor.Status+"; selected="+editor.SelectedId+"; saved="+(editor.Read(editor.SelectedId)!=null));
             yield return null;
         }
         void Configure(PropRelease release,float at=.5f)

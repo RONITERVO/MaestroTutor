@@ -47692,7 +47692,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "914e6435ca2f8bfcfe46372fb26f52a5f90bf70fa478d263a742d6f4b04dfb54"
+      "sha256": "0b551a885b691abdc349ab661a3ff0bcf0248738ddc066deeb71cd5020cfc271"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -48212,7 +48212,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "d50a774a29f05f64f3d91e6373566503b2b346f86627a924642bc84777d46bef"
+      "sha256": "28f88031467ea18a862162e0c9bada25c67e31804ec793415a2363e446d078fe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48225,6 +48225,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingWorldPlacement.cs",
       "sha256": "a2379f077cd0b11be62593e4380767a3b139ca39fd95a73d6af7e8db88593670"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalCreationCompletion.cs",
+      "sha256": "c40a360ccee2872f964b58a8771c1ce14b5da389890d659653a8945760613e39"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48452,7 +48456,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "f10ff291427e8ef5367372785d23683dd9adc71fa09f0322115d1e9895b5bd3b"
+      "sha256": "39b2541c2004b9eef9023a10514d9d53e8c259ad8a7f31cc1a9009508d618a52"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",

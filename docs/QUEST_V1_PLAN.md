@@ -14591,3 +14591,58 @@ and catalog checks passing. Only the offline fixture helper and its regression
 changed after the complete native/headless/book verification above; native and
 integration-driver inputs remain unchanged. The failed CI log and before/after
 evidence are preserved under the same evidence directory's `fixture-repair/`.
+
+## Physical creation through shared completion — 2026-10-18
+
+The physical creation tray now uses the same ordered persisted edit operations
+as book/agent catalog actions for primitive creation, painting, duplication and
+erasure. This keeps one authoring contract as the world expands: native
+application and saving complete together, with one Undo entry and no caller
+thread waiting on publication.
+
+Only one physical tool edit is observed at a time. It captures its target,
+colour, destination and copy revision; further taps report the pending edit.
+Changing paint can still select the colour for a future stroke. The physical
+control retains human priority, and a higher-priority target grab or workspace lifecycle
+event can cancel observation. Cancellation before acceptance creates nothing;
+after acceptance the shared writer finishes independently. Failed accepted
+creation reports its exact object identity so inspection does not require
+replaying the action. Selection changes made during saving are preserved.
+
+A focused run exposed creation racing the asynchronous program-memory startup
+reader/recovery on the shared disk coordinator. A held-coordinator regression
+failed before the correction. Shared ordered admission now waits for that known
+startup task before allocating an edit candidate. General disk conflicts still
+fail explicitly; no disk-error retry or owner-thread wait was added.
+
+Paint and Erase still use the existing global `Editing` interruption. Its
+subscribers stop unrelated programs, movement and previews as well as the target.
+Target-specific interruption, preserving retained drafts and explicit whole-room
+stop/recovery, remains v1 continuity work; this increment does not claim that all
+physical authoring keeps unrelated world behaviour running.
+
+The existing temporary-room boundary remains: tools change the live fork and its
+local history; Keep makes it durable. Primitive, paint, copy and erase controls
+are exercised as actual physical tray actions in native tests. Legacy grouped
+edits, model imports, other physical settings and history remain separate
+completion work. This is not a measured headset latency or release-acceptance
+claim. Current verification evidence is recorded in
+`.quest-evidence/physical-creation-completion-20261018/`. Verification reconciled
+1,495 EditMode and 2,079 PlayMode passes plus three allowed private-asset skips
+against all 3,577 discovered native cases. All 3,208 web tests, app/probe TypeScript
+and catalog provenance passed. Full offline Headless
+`61320c657f144c5fb53201956682d85e` and original-book
+`dedd5ad8ddac417b8f338f392cf1deda` completed with clean client/Editor exits,
+sparse discovery and confirmed idle room/behaviour storage.
+
+The first full run exposed one acoustic test fixture still reading a newly
+created object before completion. That fixture now waits; the static physics
+preview selects an existing ball. Runtime source remained unchanged. A guarded
+continuation verified and reused the exact clean EditMode and non-program
+PlayMode batches, reran both program partitions, then completed both full
+integrations. The complete leaf inventory, 3,340 native input hashes, 5,121
+source entries and 14 protected user files were reconciled. First failures and
+the guarded continuation are retained separately. The physical tray preview
+and book completion screenshot were visually reviewed on desktop; they do not
+establish headset acceptance. Earlier Editor startup/shutdown stalls and the
+separate native echo quality failures remain open.

@@ -42,7 +42,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ColdAcousticGeometryMatchesEnginePrimitives()
         {
             foreach(var kind in new[]{RoomObjectKind.Block,RoomObjectKind.Ball,RoomObjectKind.Cylinder}){
-                var before=editor.Snapshot().objects.Select(o=>o.id).ToHashSet();editor.Create(kind);var id=editor.Snapshot().objects.Single(o=>!before.Contains(o.id)).id;
+                var before=editor.Snapshot().objects.Select(o=>o.id).ToHashSet();editor.Create(kind);yield return PhysicalCreationTestWait.Finish(editor);var id=editor.Snapshot().objects.Single(o=>!before.Contains(o.id)).id;
                 yield return CompareColdAcousticGeometry(id);
             }
         }

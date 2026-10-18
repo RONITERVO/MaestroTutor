@@ -373,7 +373,7 @@ namespace Maestro.Quest.Tests
             workshop.Play();Assert.That(created.Model.IsPlaying,Is.True);
             using(editor.RuntimeGate.Hold("Preserving workspace")) {Assert.That(created.Model.IsPlaying,Is.False);workshop.Play();yield return null;Assert.That(created.Model.IsPlaying,Is.False);}
             Assert.That(created.Model.IsPlaying,Is.False);workshop.Play();Assert.That(created.Model.IsPlaying,Is.True);workshop.Stop();
-            editor.Erase(); yield return null; Assert.That(editor.Read(data.id), Is.Null);
+            editor.Erase(); yield return PhysicalCreationTestWait.Finish(editor); yield return null; Assert.That(editor.Read(data.id), Is.Null);
             editor.Undo(); yield return null;
             created = editor.Find(data.id).GetComponent<CreatedRoomObject>(); yield return new WaitUntil(() => created.Model && created.Model.Ready || created.ModelStatus != "Loading local model…");
             Assert.That(created.Model.Ready, Is.True, created.ModelStatus); Assert.That(created.Model.IsPlaying, Is.False);

@@ -27,6 +27,7 @@ namespace Maestro.Quest.Creation
         readonly Dictionary<string,RoomOwnership.Lease> handOwners=new();
         bool ownershipPaused,ownershipFocused=true;
         string selected;
+        uint selectionVersion;
         bool applying, dirty;
         float saveAt;
         Task<string> saveTask;
@@ -40,8 +41,8 @@ namespace Maestro.Quest.Creation
         public bool SurfaceErasing {get;private set;}
         public float DrawingRadius {get;private set;}=.003f;
         public Color Paint { get; private set; } = IllustratedMaterials.Hex("2B8D88");
-        public bool CanUndo => !WriteGate.Frozen && journal != null && journal.CanUndo;
-        public bool CanRedo => !WriteGate.Frozen && journal != null && journal.CanRedo;
+        public bool CanUndo => !WriteGate.Frozen && !ManualCreationPending && journal != null && journal.CanUndo;
+        public bool CanRedo => !WriteGate.Frozen && !ManualCreationPending && journal != null && journal.CanRedo;
         public event Action Changed;
         public event Action Editing;
         public event Action<RoomItem> ItemGrabbed;
@@ -170,17 +171,12 @@ namespace Maestro.Quest.Creation
         internal bool SelectSavedObject(string id)
         {
             var data=Read(id);if(data==null)return false;
-            selected=id;UpdateSelection();
+            selected=id;selectionVersion++;UpdateSelection();
             SetStatus(data.IsBuiltIn ? data.kind + " — move or resize" : data.kind + " — paint, duplicate or erase");
             return true;
         }
 
-        public void Create(RoomObjectKind kind)
-        {
-            if (kind != RoomObjectKind.Block && kind != RoomObjectKind.Ball && kind != RoomObjectKind.Cylinder) return;
-            if (CreatePrimitive(kind,"",SpawnPosition(),1,Paint,out var id,out var error)) { selected=id;UpdateSelection(); }
-            else SetStatus(error);
-        }
+        public void Create(RoomObjectKind kind)=>CreateManually(kind);
 
         public bool CanCreatePrimitive(out string error) {
             error=null;
@@ -321,37 +317,17 @@ namespace Maestro.Quest.Creation
         public bool AddModel(string hash)
         {
             if(!CreateImportedModel(hash,out var id,out var error)){SetStatus(error);return false;}
-            selected=id;UpdateSelection();return true;
+            selected=id;selectionVersion++;UpdateSelection();return true;
         }
-        public void ChoosePaint(Color color)
-        {
-            CapturePhysicsPlacements();
-            Paint = color; Paint = new Color(Paint.r,Paint.g,Paint.b,1);
-            if(DrawingMode){SetStatus("Pencil colour chosen for the next stroke");return;}
-            var item = journal.Read(selected);
-            if (item != null && !item.IsBuiltIn) { Editing?.Invoke(); if(!PaintObject(selected,Paint,out var error))SetStatus(error); }
-            else SetStatus("Paint chosen for your next creation");
-        }
-
-        public void Duplicate()
-        {
-            var item=Read(selected);var live=Find(selected);
-            if(item==null||item.IsBuiltIn||!live){SetStatus("Select one of your creations to duplicate");return;}
-            if(CopyObject(selected,ObjectRevision(selected),item.name,Frame.PointToRoom(live.transform.position)+Vector3.right*.18f,out var id,out var error)){selected=id;UpdateSelection();}
-            else SetStatus(error);
-        }
-
-        public void Erase()
-        {
-            var item = journal.Read(selected);
-            if (item == null || item.IsBuiltIn) { SetStatus("Select one of your creations to erase"); return; }
-            Editing?.Invoke(); if(DeleteObject(selected,out var error)) { selected = null; UpdateSelection(); } else SetStatus(error);
-        }
+        public void ChoosePaint(Color color)=>PaintManually(color);
+        public void Duplicate()=>DuplicateManually();
+        public void Erase()=>EraseManually();
 
         public void Undo()=>ApplyHistory(true);
         public void Redo()=>ApplyHistory(false);
         void ApplyHistory(bool reverse)
         {
+            if(ManualCreationPending){SetStatus("Wait for the creation tool edit before Undo or Redo");return;}
             if(!FinishLiquidPour(out var error)){SetStatus(error);return;}using var write=WriteGate.TryWrite(out error);if(write==null){SetStatus(error);return;}
             if(!journal.HistoryPreservesPlacement(reverse))Editing?.Invoke();if(Busy())return;
             if(!journal.PrepareHistory(reverse,out var edit,out error)){SetStatus(error);return;}
@@ -386,7 +362,7 @@ namespace Maestro.Quest.Creation
             var origin=transform.InverseTransformPoint(worldPoints[0]);
             var points=worldPoints.Select(point=>transform.InverseTransformPoint(point)-origin).ToArray();
             if(!CreateDrawing("",origin,1,color,.003f,points,out var id,out var error)){SetStatus(error);return false;}
-            selected=id;UpdateSelection();return true;
+            selected=id;selectionVersion++;UpdateSelection();return true;
         }
 
         public bool ApplyAgentEdit(int expectedRevision,RoomObjectData[] replacements,string[] removals,out string error)
@@ -620,7 +596,7 @@ namespace Maestro.Quest.Creation
             foreach(var item in objects.Values)if(item)item.GetComponent<ScannedDrawingView>()?.Sync();
             CompleteTemporarySave();
             if (Time.unscaledTime >= captureAt) { captureAt = Time.unscaledTime + 1; CapturePhysicsPlacements(); }
-            CompleteSave();PollLiquidCheckpoints();
+            CompleteSave();PollManualCreation();PollLiquidCheckpoints();
             if (PendingEditSave || saveDispatch.Frozen || journal == null || storage.ReadOnly || TemporaryRoom || !dirty || saveTask != null || Time.unscaledTime < saveAt) return;
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
@@ -705,11 +681,11 @@ namespace Maestro.Quest.Creation
         void OnApplicationFocus(bool focused) { ownershipFocused=focused;RefreshOwnership();if (!focused) Flush(); }
         void OnApplicationQuit() => Flush();
         void OnEnable(){RefreshRegionCollision();}
-        void OnDisable(){CancelPendingEdit();CancelStagingMaintenance();ReleaseResidentCollisions(false);ResetLightControls();ResetAudioMix();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
+        void OnDisable(){CancelManualCreation(false);CancelPendingEdit();CancelStagingMaintenance();ReleaseResidentCollisions(false);ResetLightControls();ResetAudioMix();ReleaseDormantRecoveries();StopAcousticPreparation();InvalidateNativeDisplay();ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();worldTimeTickReady=false;ResetLayerPresentation(true);RefreshRegionCollision();}
         void OnDestroy()
         {
             ResetViewerDemand();StopSpatialPreparation();CancelNativeActivation();ReleaseNativeAcoustics();ReleaseDormantRecoveries();ReleaseDormantCollisions();ReleaseResidentCollisions();ClearViewCapture();FinishLiquidPour(out _);
-            CancelPendingEdit();CancelStagingMaintenance();RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
+            CancelManualCreation(false);CancelPendingEdit();CancelStagingMaintenance();RuntimeGate.Changed-=RefreshOwnership;Ownership.Suspend(true);Flush(); Motions?.Dispose();
             if (room && room.RecoveryEditor==this) room.RecoveryEditor=null;
             foreach (var item in objects.Values) if (item) { item.GrabStarted -= GrabStarted; item.GrabFinished -= GrabFinished;var rigid=item.GetComponent<RigidRoomItem>();if(rigid){rigid.BindPhysicsInputs(null);rigid.ContactStarted-=ContactStarted;} }
         }

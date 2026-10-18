@@ -50,6 +50,43 @@ completion contracts and reuse the same data builders. These changes do not
 increase world capacity or establish a frame-time guarantee. See the current
 verification checkpoint in [the v1 plan](QUEST_V1_PLAN.md).
 
+## Physical creation buttons
+
+The room tray's Block, Ball, Cylinder, Paint, Duplicate and Erase buttons now
+observe the same ordered background edit operations as catalog calls. The tray
+shows preparation/saving and accepts one manual edit at a time; it does not wait
+for the save worker on Unity’s interaction thread. Another tap while that edit is pending reports the
+wait. Changing paint still updates the preference for future strokes/creations,
+without changing the captured colour of an already pending edit.
+
+Shared admission also waits for startup memory recovery to finish before preparing
+an edit. It allocates no candidate or geometry during that wait. A busy or
+conflicting disk operation is not otherwise retried automatically.
+
+Target identity, requested values and any copy-source revision stay attached to
+the original request. Physical controls retain control priority while preparing
+and confirming the edit. Paint and Erase preserve their existing explicit
+global authoring interruption, which can stop unrelated behaviours; replacing it
+with target-specific interruption is remaining continuity work. A higher-priority grab of the target, lost focus, disabled editor or
+room retirement stops observation: unaccepted work is cancelled, while accepted
+work still drains through shared storage ownership. Failure never retries a
+creation automatically. Status identifies an accepted uncertain edit for
+inspection.
+
+A confirmed creation/copy selects its new object only if the user has not changed
+selection in the meantime. Erasing an earlier selection cannot clear a newer
+selection. Undo and Redo wait while this manual edit is pending, then retain the
+same single-edit history. Temporary-room edits change only that live fork and its
+Undo until Keep. Physical pencil modes and retained drawing/sculpt drafts keep
+their separate session controls.
+
+These changes do not replace synchronous legacy APIs or the grouped legacy wire
+contract. Model imports and other remaining physical settings/history paths need
+their own completion audit. Desktop delayed-storage and physical-button tests
+establish ordering and behavior. Native validation, baseline checks, snapshot
+capture and scene reconciliation still include owner-thread work; headset latency
+and comfort need measured acceptance.
+
 ## Shared authoring
 
 The discriminated schema supplies choice titles, descriptions, complete examples

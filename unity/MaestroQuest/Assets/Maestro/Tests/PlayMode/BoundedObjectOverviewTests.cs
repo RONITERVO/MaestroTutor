@@ -15,7 +15,7 @@ namespace Maestro.Quest.Tests
     {
         [UnityTest] public IEnumerator BoundedContextStillFindsAndInspectsEverySavedObjectWithoutSelectingOrLoading()
         {
-            for(int i=0;i<8;i++)editor.Create(RoomObjectKind.Block);
+            for(int i=0;i<8;i++){editor.Create(RoomObjectKind.Block);yield return PhysicalCreationTestWait.Finish(editor);}
             var all=editor.Snapshot().objects.Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray();
             string before=JsonUtility.ToJson(editor.Snapshot()),selected=editor.SelectedId;int revision=editor.Revision;
             var send=SavedInspectionClient();var found=new List<string>();string cursor="";RoomAgentState state=null;

@@ -88,9 +88,9 @@ namespace Maestro.Quest.Tests
         public IEnumerator DrawingPaintDuplicateEraseUndoAndReloadPreserveGeometry()
         {
             Assert.That(editor.AddDrawing(new[] { new Vector3(.2f,1,.5f),new Vector3(.3f,1,.5f),new Vector3(.3f,1.1f,.5f) },Color.blue),Is.True);
-            editor.ChoosePaint(Color.red); editor.Duplicate();
+            editor.ChoosePaint(Color.red); yield return PhysicalCreationTestWait.Finish(editor); editor.Duplicate(); yield return PhysicalCreationTestWait.Finish(editor);
             Assert.That(editor.Snapshot().objects.Count(x => x.kind == RoomObjectKind.Drawing),Is.EqualTo(2));
-            editor.Erase(); yield return null;
+            editor.Erase(); yield return PhysicalCreationTestWait.Finish(editor); yield return null;
             Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(4));
             editor.Undo(); yield return null;
             Assert.That(root.GetComponentsInChildren<CreatedRoomObject>().Length,Is.EqualTo(5));
@@ -130,6 +130,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before));
             Assert.That(router.Begin(0,blockRay),Is.True);
             router.End(0,blockRay);
+            yield return PhysicalCreationTestWait.Finish(editor);
             Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(before+1));
         }
 
@@ -137,7 +138,7 @@ namespace Maestro.Quest.Tests
         public IEnumerator IncludedBookSurvivesEraseAndRoomRecoveryCanBeUndone()
         {
             var book = root.GetComponentsInChildren<RoomItem>().Single(x => x.name == "book");
-            editor.Select(book); editor.Erase(); yield return null;
+            editor.Select(book); editor.Erase(); yield return PhysicalCreationTestWait.Finish(editor); yield return null;
             Assert.That(editor.Snapshot().objects.Any(x => x.id == "book"),Is.True);
             var before = editor.Snapshot().objects.First(x => x.kind == RoomObjectKind.Block).position;
             room.Viewer = root.transform;
@@ -176,7 +177,7 @@ namespace Maestro.Quest.Tests
                 new RoomAgentCommand {action="delete",target="book"}
             }};
             Assert.That(executor.Execute(request,out _,out _),Is.False);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(editor.Revision,Is.EqualTo(revision));
-            editor.Create(RoomObjectKind.Ball);
+            editor.Create(RoomObjectKind.Ball); yield return PhysicalCreationTestWait.Finish(editor);
             request.commands=new[]{new RoomAgentCommand {action="create",reference="robot",name="Robot",kind="boxRobot"}};
             Assert.That(executor.Execute(request,out var status,out _),Is.False);StringAssert.Contains("changed",status);
             Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+1));
@@ -191,7 +192,7 @@ namespace Maestro.Quest.Tests
             var executor=new RoomAgentExecutor(editor);
             var target=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block);
             int revision=editor.ObjectRevision(target.id),scene=editor.Revision;
-            editor.Create(RoomObjectKind.Ball);
+            editor.Create(RoomObjectKind.Ball); yield return PhysicalCreationTestWait.Finish(editor);
             var request=new RoomAgentRequest {version=2,sceneRevision=scene,conditions=new[]{new RoomObjectCondition {id=target.id,revision=revision}},commands=new[]{new RoomAgentCommand {action="paint",target=target.id,color=Color.red}}};
             Assert.That(executor.Execute(request,out var status,out _),Is.True,status);Assert.That(editor.Read(target.id).color,Is.EqualTo(Color.red));
             request.commands[0].color=Color.blue;
@@ -248,6 +249,7 @@ namespace Maestro.Quest.Tests
             var beforeEdit = item.transform.position;
             editor.Create(RoomObjectKind.Block);
             Assert.That(Vector3.Distance(item.transform.position,beforeEdit),Is.LessThan(.001f),"Adding another object reset the flying ball");
+            yield return PhysicalCreationTestWait.Finish(editor);
             editor.SaveNow(); physics.PausePhysics();
             yield return new WaitForSeconds(.15f);
             var saved = editor.Snapshot().objects.Single(x => x.id == data.id);
@@ -258,7 +260,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]
         public IEnumerator ColliderAndMassEditsSurviveUndoAndSaveWithoutChangingTheBook()
         {
-            editor.Create(RoomObjectKind.Block); var id = editor.SelectedId; var item = editor.Find(id);
+            editor.Create(RoomObjectKind.Block); yield return PhysicalCreationTestWait.Finish(editor); var id = editor.SelectedId; var item = editor.Find(id);
             editor.CycleCollider(); editor.CycleCollider(); editor.CycleMass();
             Assert.That(item.Grab.colliders.Single(),Is.TypeOf<SphereCollider>());
             Assert.That(item.GetComponent<Rigidbody>().mass,Is.EqualTo(1));

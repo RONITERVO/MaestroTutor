@@ -94,7 +94,7 @@ namespace Maestro.Quest.Editor
                 }
                 var book = Included("book"); var maestro = Included("maestro");
                 var editor = root.AddComponent<RoomEditor>(); editor.Initialize(room,book,maestro,directory,physics);
-                editor.Create(RoomObjectKind.Ball);
+                editor.Select(editor.Find(editor.Snapshot().objects.Single(x=>x.kind==RoomObjectKind.Ball).id));
                 foreach (var item in root.GetComponentsInChildren<RoomItem>()) item.gameObject.SetActive(false);
                 var scan = root.AddComponent<ScannedRoom>(); scan.Initialize(physics);
                 var board = new GameObject("Solid physics tools"); board.transform.SetParent(root.transform,false); board.AddComponent<PhysicsTools>().Build(editor,physics,scan,room);

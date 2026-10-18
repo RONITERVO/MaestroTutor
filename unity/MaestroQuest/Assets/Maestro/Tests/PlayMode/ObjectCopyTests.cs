@@ -45,7 +45,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator PhysicalDuplicateAndTemporaryCopyUseTheSameIsolatedSavedPath()
         {
-            string source=editor.Identity(block);var before=editor.Read(source);editor.Select(block);editor.Duplicate();string id=editor.SelectedId;Assert.That(id,Is.Not.EqualTo(source));Assert.That(editor.Read(id).motion.frames[0].position,Is.EqualTo(before.motion.frames[0].position+Vector3.right*.18f));Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==id),Is.True);
+            string source=editor.Identity(block);var before=editor.Read(source);editor.Select(block);editor.Duplicate();yield return PhysicalCreationTestWait.Finish(editor);string id=editor.SelectedId;Assert.That(id,Is.Not.EqualTo(source));Assert.That(editor.Read(id).motion.frames[0].position,Is.EqualTo(before.motion.frames[0].position+Vector3.right*.18f));Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==id),Is.True);
             editor.Undo();Assert.That(editor.Find(id),Is.Null);Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;
             var executor=new RoomAgentExecutor(editor);Assert.That(executor.Execute(ObjectEditRequest(CopyCall(source,new Vector3(1,1,1))),out error,out _),Is.True,error);yield return AgentPlacementCompleted(executor);string temporary=(string)executor.Executions.Observe()["selected"]["output"]["objectId"];
             Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==temporary),Is.False);Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Find(temporary),Is.Null);Assert.That(editor.Find(source),Is.Not.Null);

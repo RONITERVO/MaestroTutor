@@ -236,7 +236,7 @@ namespace Maestro.Quest.Tests
             Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="stop"}),Is.True);Assert.That(motion.Active,Is.False);
             Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="follow"}),Is.True);
             tracked=false;yield return null;Assert.That(RoomControls.ObserveAvatar(editor).active,Is.False);Assert.That(RoomControls.ObserveAvatar(editor).canLook,Is.False);
-            editor.Create(RoomObjectKind.Ball);authoring.ToggleRecord();Assert.That(authoring.IsRecording,Is.True);
+            editor.Create(RoomObjectKind.Ball); yield return PhysicalCreationTestWait.Finish(editor);authoring.ToggleRecord();Assert.That(authoring.IsRecording,Is.True);
             Assert.That(Run(new RoomAgentCommand {action="avatarMotion",target="maestro",operation="stop"}),Is.True);
             Assert.That(authoring.IsRecording,Is.True,"Stopping Maestro must preserve recording of another object");authoring.Stop();
         }
