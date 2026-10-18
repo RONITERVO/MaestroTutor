@@ -827,6 +827,20 @@ try{
    layoutBefore=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.create',version:1,arguments:{kind:'template',templateHash:brickHash,name:brickSource.name+' '+(i+1),x:.4+i*.25,y:1.4,z:2,scale:1}}}}]));
    const id=layoutBefore.execution?.selected?.output?.objectId;if(typeof id!=='string')throw new Error('Layout member missing');layoutIds.push(id);
   }
+  async function connectionBrowserInputs(targets:string[]){
+   const directory:RoomAgentState[]=[],facts:RoomAgentState[]=[];let cursor='',world='',total=-1;const ids:string[]=[];
+   for(let index=0;index<24;index++){
+    const query=objectSearchRequest('','all',cursor),state=await execute([{action:'catalog',catalog:query}]),page=readObjectSearchPage(state.catalog,query);
+    if(!page)throw new Error('Connection selection directory is unavailable');
+    if(index===0){world=page.worldId;total=page.total;}
+    if(page.worldId!==world||page.total!==total||page.offset!==ids.length||page.entries.some(entry=>ids.includes(entry.id)))throw new Error('Connection directory changed during paging');
+    directory.push(state);ids.push(...page.entries.map(entry=>entry.id));cursor=page.next;if(!cursor)break;
+   }
+   if(cursor||ids.length!==total||!targets.every(id=>ids.includes(id)))throw new Error('Connection directory is missing an exact member');
+   for(const target of targets)facts.push(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target}}}]));
+   return {directory,facts};
+  }
+  const hingeBrowser=await connectionBrowserInputs(layoutIds);
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);
   const hingeCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
@@ -838,24 +852,27 @@ try{
   }
   const hingeDefaults=capabilityDefinition('object.connection.edit')!.example!.definition as {limits:Record<string,unknown>;drive:Record<string,unknown>};
   const hingeArgs={operation:'configure',target:layoutIds[0],connected:layoutIds[1],revision:hingeValue.revision,definition:{...hingeValue.definition,...hingeFrames,enabled:true,drive:{...hingeDefaults.drive,mode:'spring',target:20},limits:{...hingeDefaults.limits,enabled:true}}};
-  const hingeAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:hingeArgs}}}]);
+  const hingeStarted=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:hingeArgs}}}]);
+  const hingeAfter=await completeProbeAction(execute,hingeStarted);
   const hingeRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   const hingeTuning=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.hinge',version:1,arguments:{target:layoutIds[0]}}}]);
   const hingeSaved=hingeRead.catalog?.value as typeof hingeValue;if(!hingeSaved?.configured||hingeSaved.connected!==layoutIds[1]||(hingeTuning.catalog?.value as {drive:{target:number}}).drive.target!==20)throw new Error('Hinge source did not persist');
-  const hingeAligned=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:{operation:'align',target:layoutIds[0],connected:layoutIds[1],revision:hingeSaved.revision,angle:30}}}}]);
+  const hingeAligned=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:{operation:'align',target:layoutIds[0],connected:layoutIds[1],revision:hingeSaved.revision,angle:30}}}}]));
   const hingeState=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.state',version:1,arguments:{target:layoutIds[0]}}}]);
   if(Math.abs((hingeState.catalog?.value as {angle:number}).angle-30)>.05)throw new Error('Hinge alignment readback differs');
   await execute([{action:'undo'}]);await execute([{action:'undo'}]);
   const hingeUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   if((hingeUndo.catalog?.value as typeof hingeValue).configured)throw new Error('Hinge Undo did not remove component');
-  await writeFile(join(directory,'hinge-authoring.json'),JSON.stringify({boundary:'Real Unity configuration, alignment, readback and Undo. PhysX tested separately; no headset or provider proof.',before:layoutBefore,search:hingeSearch,definition:hingeDefinition,current:hingeCurrent,after:hingeAfter,read:hingeRead,tuning:hingeTuning,aligned:hingeAligned,state:hingeState,undo:hingeUndo},null,2));
+  await writeFile(join(directory,'hinge-authoring.json'),JSON.stringify({boundary:'Real Unity configuration, alignment, readback and Undo. PhysX tested separately; no headset or provider proof.',before:layoutBefore,search:hingeSearch,definition:hingeDefinition,current:hingeCurrent,facts:[...hingeBrowser.facts,hingeCurrent],directory:hingeBrowser.directory,started:hingeStarted,after:hingeAfter,read:hingeRead,tuning:hingeTuning,aligned:hingeAligned,state:hingeState,undo:hingeUndo},null,2));
   const connectionBefore=hingeUndo;
   const connectionPlacementsBefore=[];for(const target of layoutIds)connectionPlacementsBefore.push(await readPlacement(target));
+  const connectionBrowser=await connectionBrowserInputs(layoutIds);
   const connectionSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const connectionDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);
   const connectionCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   const connectionArgs={operation:'attach',target:layoutIds[0],connected:layoutIds[1],revision:(connectionCurrent.catalog?.value as {revision:number}).revision,breakForce:45,breakTorque:3};
-  const connectionAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:connectionArgs}}}]);
+  const connectionStarted=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:connectionArgs}}}]);
+  const connectionAfter=await completeProbeAction(execute,connectionStarted);
   const connectionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   const connectionSaved=connectionRead.catalog?.value as typeof hingeValue;
   if(!connectionSaved?.configured||connectionSaved.definition.kind!=='fixed'||connectionSaved.definition.breakForce!==45||connectionSaved.definition.breakTorque!==3||connectionSaved.connected!==layoutIds[1])throw new Error('Fixed connection did not persist its exact members and break limits');
@@ -866,7 +883,7 @@ try{
   const connectionUndo=await execute([{action:'undo'}]);
   const connectionUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:layoutIds[0]}}}]);
   if((connectionUndone.catalog?.value as typeof hingeValue).configured)throw new Error('Single Undo did not remove fixed connection');
-  await writeFile(join(directory,'connection-authoring.json'),JSON.stringify({boundary:'Real Unity native attach/readback/Undo. PhysX break and typed event tested separately; no headset or provider proof.',before:connectionBefore,search:connectionSearch,definition:connectionDefinition,current:connectionCurrent,arguments:connectionArgs,after:connectionAfter,placementsBefore:connectionPlacementsBefore,placementsAfter:connectionPlacementsAfter,read:connectionRead,state:connectionState,undo:connectionUndo,undone:connectionUndone},null,2));
+  await writeFile(join(directory,'connection-authoring.json'),JSON.stringify({boundary:'Real Unity native attach/readback/Undo. PhysX break and typed event tested separately; no headset or provider proof.',before:connectionBefore,search:connectionSearch,definition:connectionDefinition,current:connectionCurrent,arguments:connectionArgs,facts:[...connectionBrowser.facts,connectionCurrent],directory:connectionBrowser.directory,started:connectionStarted,after:connectionAfter,placementsBefore:connectionPlacementsBefore,placementsAfter:connectionPlacementsAfter,read:connectionRead,state:connectionState,undo:connectionUndo,undone:connectionUndone},null,2));
   const buttonModule=JSON.parse(await readFile('unity/MaestroQuest/Assets/Maestro/Resources/Programs/Modules/SpringButton.json','utf8'));
   const buttonArgs=buttonModule.program.functions.find((f:{name:string})=>f.name==='create').body[0].arguments;
   buttonArgs.position={x:.4,y:1.4,z:2}; // Observe the live slider without pinning unrelated creations.
@@ -874,21 +891,23 @@ try{
   const buttonIds=buttonCreated.execution?.selected?.output?.objectIds;if(!Array.isArray(buttonIds)||buttonIds.length!==2||!buttonIds.every(id=>typeof id==='string'))throw new Error('Spring button did not create two members');
   const sliderTarget=buttonIds[1] as string,sliderMount=buttonIds[0] as string;
   const sliderBefore=structuredClone(lease.state());
+  const sliderBrowser=await connectionBrowserInputs([sliderTarget,sliderMount]);
   const sliderSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const sliderDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);
   const sliderCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection',version:1,arguments:{target:sliderTarget}}}]);
   const sliderConfig=structuredClone(buttonArgs.blueprint.connections[0].definition);sliderConfig.slide.target=.01;
   const sliderArguments={operation:'configure',target:sliderTarget,connected:sliderMount,revision:(sliderCurrent.catalog?.value as {revision:number}).revision,definition:sliderConfig};
-  const sliderAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:sliderArguments}}}]);
+  const sliderStarted=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:sliderArguments}}}]);
+  const sliderAfter=await completeProbeAction(execute,sliderStarted);
   const sliderTuning=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.slider',version:1,arguments:{target:sliderTarget}}}]);
   const sliderSettings=sliderTuning.catalog?.value as {revision:number;slide:{target:number}};if(Math.abs(sliderSettings.slide.target-.01)>.000001)throw new Error('Slider spring target did not persist');
-  const sliderAligned=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:{operation:'slide',target:sliderTarget,connected:sliderMount,revision:sliderSettings.revision,distance:.025}}}}]);
+  const sliderAligned=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.connection.edit',version:1,arguments:{operation:'slide',target:sliderTarget,connected:sliderMount,revision:sliderSettings.revision,distance:.025}}}}]));
   const sliderRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.travel',version:1,arguments:{target:sliderTarget}}}]);
   if(typeof sliderRead.catalog?.value!=='number'||Math.abs(sliderRead.catalog.value-.025)>.0001)throw new Error('Slider distance readback differs');
   await execute([{action:'undo'}]);const sliderUndo=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.connection.travel',version:1,arguments:{target:sliderTarget}}}]);
   if(typeof sliderUndo.catalog?.value!=='number'||Math.abs(sliderUndo.catalog.value)>.0001)throw new Error('Slider Undo did not restore its live travel');
   await execute([{action:'undo'}]);const buttonRemoved=await execute([{action:'undo'}]);if(await nativeObjects.any(buttonIds))throw new Error('Button construction was not one Undo');
-  await writeFile(join(directory,'slider-authoring.json'),JSON.stringify({boundary:'Real Unity native slider configure/linear alignment/readback/Undo. Physical pressing and program response tested in PlayMode; no headset or provider proof.',before:sliderBefore,search:sliderSearch,definition:sliderDefinition,current:sliderCurrent,after:sliderAfter,tuning:sliderTuning,aligned:sliderAligned,read:sliderRead,undo:sliderUndo,removed:buttonRemoved},null,2));
+  await writeFile(join(directory,'slider-authoring.json'),JSON.stringify({boundary:'Real Unity native slider configure/linear alignment/readback/Undo. Physical pressing and program response tested in PlayMode; no headset or provider proof.',before:sliderBefore,search:sliderSearch,definition:sliderDefinition,current:sliderCurrent,facts:[...sliderBrowser.facts,sliderCurrent],directory:sliderBrowser.directory,started:sliderStarted,after:sliderAfter,tuning:sliderTuning,aligned:sliderAligned,read:sliderRead,undo:sliderUndo,removed:buttonRemoved},null,2));
   const snapFrames={position:{x:0,y:.05,z:0},rotation:{x:0,y:0,z:0,w:1}};
   const snapEdited=[];
   for(const [i,target] of layoutIds.entries()){

@@ -12,7 +12,9 @@ save boundary and Undo. There is no separate toy interpreter or agent-only world
   simulate; the connected member may be fixed or dynamic. It records local frames.
 - `configure` saves an explicit `hinge`, `fixed` or `slider` definition. Common settings are
   enabled, local frames, breakForce and breakTorque. Hinges additionally have limits
-  and passive/spring/motor drive. Sliders have their own linear travel/drive settings. Configuration does not align or start physics.
+  and passive/spring/motor drive. Sliders have their own linear travel/drive settings.
+  Configuration does not align or start physics; it preserves current placement and
+  momentum, including Undo.
 - `align` explicitly places the owner against the other member's current frame.
   Hinge angle is bounded by the saved limits; fixed joins require angle zero.
   This saves both current member poses once and creates one live-pose Undo.
@@ -21,8 +23,8 @@ save boundary and Undo. There is no separate toy interpreter or agent-only world
 - `rearm` clears a broken connection's live latch only if both exact members are
   already aligned. It stops their previous velocities without teleporting, saving
   or adding Undo. Starting physics remains a separate action.
-- `remove` removes the saved component. Failed validation, stale revisions or failed
-  saves leave the original live poses and saved connection intact.
+- `remove` removes the saved component while preserving current placement and
+  momentum. Its Undo restores content at the current pose.
 
 Zero breakForce/breakTorque means unbreakable; positive values are bounded to
 10,000 newtons/newton-metres. These map to Unity Joint limits, with zero converted
@@ -32,12 +34,39 @@ contacts or other joints; it does not establish who caused damage. See
 and [OnJointBreak](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/MonoBehaviour.OnJointBreak.html).
 
 A native break releases the dynamic body and stays broken through physics
-pause/resume. Successful configure/attach/align/slide or explicit rearm resets it.
+pause/resume. Accepted native configure/attach/align/slide or successful runtime
+rearm resets it. The repair belongs to native acceptance, before placement holds
+are released; it cannot be skipped by stopping the receipt observer while saving.
 Broken status is play state, not persistent damage: workspace recreation reads
 the saved connection and still requires alignment. Games that need persistent
 damage can remember it in program state and explicitly disable/remove the
-connection. Stop on an already completed edit cannot undo it; pause physics or
-change/remove its component.
+connection. Stop after native acceptance cannot undo the repair or connection;
+pause physics or change/remove its component.
+
+## Completion, cancellation and Undo
+
+Saved configure/attach/align/slide/remove operations use the shared ordered edit
+queue. They capture the request and both authored member revisions. A waiting
+request holds no body or prepared room; a changed member refuses admission rather
+than overwriting a newer human or agent edit.
+
+Configure/remove use content edits and do not acquire placement holds.
+Attach/align/slide sample both live poses when admitted and hold only those two
+bodies through preparation. Changed live frames refuse acceptance. Placement uses
+one Undo containing the admitted live poses, while content Undo preserves the
+current placement and motion. Native application releases the holds without waiting
+for file publication. Other room activity can continue.
+
+Preparing includes the save period; completed confirms saving in the persistent
+room. Temporary-room completion changes only that fork and its Undo until Keep.
+Rearm remains an immediate runtime operation without entering the save queue.
+
+Failed validation, stale revisions and cancellation before acceptance leave the
+requested edit unapplied. After native acceptance, Stop ends observation and lets
+saving drain. A publication failure retains the accepted live edit **unconfirmed**,
+preserves the earlier saved files and blocks further writes for recovery. Inspect
+that result before retrying; a failed receipt does not mean the joint was never
+created. No new output fields, public capability IDs or storage formats are added.
 
 ## Observation and events
 

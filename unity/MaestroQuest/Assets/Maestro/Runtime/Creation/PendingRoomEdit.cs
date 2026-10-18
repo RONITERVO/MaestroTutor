@@ -114,6 +114,7 @@ namespace Maestro.Quest.Creation
             readonly IDisposable write,pose;
             readonly Func<string> validate,validateApplied;
             readonly Action<string> checkpoint;
+            readonly Action afterNativeApply;
             readonly string message;
             readonly bool applyPose,temporary;
             readonly CancellationTokenSource cancellation=new();
@@ -125,10 +126,10 @@ namespace Maestro.Quest.Creation
             bool ended,success,accepted,nativeApplied,committing,released;
             string failure;
             JObject acceptedWorldTime,acceptedWeather;
-            internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint,Func<string> validateApplied=null)
+            internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint,Func<string> validateApplied=null,Action afterNativeApply=null)
             {
                 this.editor=editor;journal=editor.journal;storage=editor.storage;this.edit=edit;this.write=write;
-                this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;this.validateApplied=validateApplied;
+                this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;this.validateApplied=validateApplied;this.afterNativeApply=afterNativeApply;
             }
             internal bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
             internal bool Accepted=>accepted;
@@ -233,6 +234,9 @@ namespace Maestro.Quest.Creation
                     editor.MarkDirty();
                     if(!temporary){editor.dirty=runtimeChanged;editor.lastSaveError=null;}
                     editor.ReconcileEdit(edit,native,applyPose);
+                    // Explicit native repair belongs to acceptance, not a later
+                    // receipt observer which can stop while publication drains.
+                    afterNativeApply?.Invoke();
                     // Some native adapters report readiness instead of throwing.
                     // An accepted save must never hide a failed native application.
                     error=validateApplied?.Invoke();if(error!=null)return Fail(error);

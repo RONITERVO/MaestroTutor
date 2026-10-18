@@ -61,7 +61,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeAreaConnectionsRetireAsAClosureAndPreserveBreaks()
         {
-            var (id,mount)=FixedPieces();Assert.That(Connect(AttachCall(id,mount,.1f),out var error),Is.True,error);string area=NativeAreaFor(id),other=NativeAreaFor(mount);
+            var (id,mount)=FixedPieces();Assert.That(Connect(AttachCall(id,mount,.1f),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);string area=NativeAreaFor(id),other=NativeAreaFor(mount);
             var view=editor.Find(id).GetComponent<RoomConnectionView>();physics.SetSurfaces(true,"Ready");physics.StartPhysics();for(int i=0;i<30&&!view.Broken;i++)yield return new WaitForFixedUpdate();Assert.That(view.Broken,Is.True);physics.PausePhysics();yield return null;
             Assert.That(editor.Ownership.TryAcquire("area-pin","Retain peer",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim(mount,"wholeTarget")},null,out var lease,out error),Is.True,error);
             Assert.That(editor.RetireNativeArea(area,out error),Is.False);Assert.That((bool)editor.Find(id),Is.True);lease.Dispose();

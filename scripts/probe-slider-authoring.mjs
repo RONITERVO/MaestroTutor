@@ -4,6 +4,7 @@ import {chromium} from 'playwright-core';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import assert from 'node:assert/strict';
+import {chooseConnectionObject,confirmConnectionCompletion} from './connection-browser-controls.mjs';
 const base=process.env.MAESTRO_HANDOFF_FIXTURE_URL||'http://127.0.0.1:5190';
 if(!['localhost','127.0.0.1'].includes(new URL(base).hostname))throw new Error('Local fixture required');
 const out=resolve(process.env.MAESTRO_CONNECTION_EVIDENCE_DIR||'.quest-evidence/sliding-connections/slider');await mkdir(out,{recursive:true});
@@ -15,8 +16,8 @@ try{
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(base+'/test-fixtures/browser/quest-hinge.html?kind=slider',{waitUntil:'domcontentloaded',timeout:60000});
  await page.getByLabel('Search actions',{exact:true}).fill('Connect physical pieces');await page.getByRole('button',{name:'Search',exact:true}).click();await page.getByRole('button',{name:/Connect physical pieces.*object.connection.edit/}).click();
- await page.getByLabel('Variant',{exact:true}).selectOption({label:'configure'});await page.getByText('Edit action fields',{exact:true}).click();
- for(const name of ['target','connected'])await page.getByLabel('Action inputs '+name,{exact:true}).selectOption(expected.arguments[name]);
+ await page.getByLabel('Variant',{exact:true}).selectOption({label:'configure'});if(!await page.getByRole('button',{name:'Find Action inputs target',exact:true}).isVisible())await page.getByText('Edit action fields',{exact:true}).click();
+ for(const name of ['target','connected'])await chooseConnectionObject(page,'Action inputs '+name,expected.arguments[name]);
  const d=expected.arguments.definition;
  await page.getByLabel('Connection type',{exact:true}).selectOption({label:'Sliding connection'});
  for(const key of ['breakForce','breakTorque'])await page.getByLabel('Action inputs definition '+key,{exact:true}).fill(String(d[key]));
@@ -30,5 +31,6 @@ try{
  await page.getByLabel('Action inputs definition slide mode',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:resolve(out,'book-slider-editor.png')});
  await page.getByRole('button',{name:'Run action now',exact:true}).click();await page.waitForFunction(()=>window.maestroHingeRequests.some(r=>r.commands[0].action==='execution')&&!window.maestroHingeSnapshot().request);
  const requests=await page.evaluate(()=>window.maestroHingeRequests),request=requests.find(r=>r.commands[0].action==='execution');assert.deepEqual(request.commands[0].execution.call,expected);assert.equal(request.commands[0].execution.runId,native.after.execution.selected.id);assert.deepEqual(errors,[]);
- await writeFile(resolve(out,'browser.json'),JSON.stringify({boundary:native.boundary,request,nativeCallMatched:true,currentRevisionRequired:true,invalidSpringTargetRejected:true,errors},null,2)+'\n');console.log('Chrome slider controls matched native call and receipt; current revision required and invalid spring target refused.');
+ await confirmConnectionCompletion(page,native);assert.deepEqual(errors,[]);
+ await writeFile(resolve(out,'browser.json'),JSON.stringify({boundary:native.boundary,request,nativeCallMatched:true,preparingReceiptObserved:native.started.execution.selected.phase==='preparing',immediateCompletionObserved:native.started.execution.selected.phase==='completed',completedReceiptObserved:true,pagedNativeObjectSelection:true,currentRevisionRequired:true,invalidSpringTargetRejected:true,errors},null,2)+'\n');console.log('Chrome slider controls matched native call and receipt; current revision required and invalid spring target refused.');
 }finally{await browser.close();}

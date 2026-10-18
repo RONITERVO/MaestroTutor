@@ -111,7 +111,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativeActionLoadsConnectedAreasAsOneDependencySet()
         {
-            var (id,peer)=FixedPieces();Assert.That(Connect(AttachCall(id,peer,0),out var error),Is.True,error);string area=NativeAreaFor(id);NativeAreaFor(peer);
+            var (id,peer)=FixedPieces();Assert.That(Connect(AttachCall(id,peer,0),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);string area=NativeAreaFor(id);NativeAreaFor(peer);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
             Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("object.color.set",id,("red",1),("green",0),("blue",0)),Time.unscaledTime,out var run,out error),Is.True,error);
             Assert.That(editor.Find(peer),Is.Null);yield return NativeActionDone(run);

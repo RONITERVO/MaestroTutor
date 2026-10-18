@@ -72,7 +72,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(peer.transform.position,Is.EqualTo(new Vector3(2,4,4)));Assert.That((bool)PhysicsInputFact(b)["interrupted"],Is.False);yield return null;
         }
         [UnityTest]public IEnumerator LocalPhysicsBoundaryKeepsAcceptedPoseAndBreakObservationAfterNativeJointBreak(){
-            var(id,mount)=FixedPieces();Assert.That(Connect(AttachCall(id,mount,.1f),out var error),Is.True,error);
+            var(id,mount)=FixedPieces();Assert.That(Connect(AttachCall(id,mount,.1f),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);
             physics.Contains=p=>p.x<5;var mode=Physics.simulationMode;var gravity=Physics.gravity;
             try{
                 Physics.gravity=Vector3.zero;StartIsland();yield return IslandActive(new[]{id});

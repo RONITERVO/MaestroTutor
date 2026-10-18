@@ -121,7 +121,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator NativePreparationConnectedPeersAreReadyBeforeSimulationAdmission()
         {
-            var(area,ids)=NativePreparationGroup();var(id,mount)=FixedPieces();Assert.That(Connect(AttachCall(id,mount),out var error),Is.True,error);
+            var(area,ids)=NativePreparationGroup();var(id,mount)=FixedPieces();Assert.That(Connect(AttachCall(id,mount),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);
             Assert.That(AssignRegion(id,area,out error),Is.True,error);string peerArea=NativeAreaFor(mount);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
             var task=editor.ActivateNativeArea(peerArea);yield return WaitForPrivateNativeCandidates(task);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.Find(mount),Is.Null);

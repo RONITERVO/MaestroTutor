@@ -146,7 +146,7 @@ namespace Maestro.Quest.Tests {
             var(near,far,camera)=AutomaticHomeScene();
             Assert.That(editor.SetItemPhysics(near,new(){mode="fixed",shape="box",mass=1}),Is.True);
             Assert.That(editor.SetItemPhysics(far,new(){mode="solid",shape="box",mass=1}),Is.True);
-            Assert.That(Connect(AttachCall(far,near),out var error),Is.True,error);
+            Assert.That(Connect(AttachCall(far,near),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Independent piece",new Vector3(4,0,-4),1,Color.red,out var loose,out error),Is.True,error);
             string saved=JsonUtility.ToJson(editor.Snapshot());editor.ConfigureNativeRetirement();
             yield return AutomaticAreaUntil(()=>!editor.Find(loose),"An unrelated home piece was pinned by a connection");

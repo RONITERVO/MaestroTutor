@@ -14088,3 +14088,55 @@ Native preparation/reconciliation still has owner-thread costs. The complete-sui
 checkpoint 7d518ec9 and unresolved intermittent Meta audio SDK crash remain separate;
 production reflections stay disabled. Other saved-authoring/lifecycle paths,
 physical acceptance and broader release gates remain open. Full v1 is incomplete.
+
+## Shared physical connection completion — 2026-10-18
+
+Saved connection configure, attach, align, slide and remove now use the same
+ordered completion/save operation as other world edits. Both referenced authored
+revisions are captured and rechecked at admission. Waiting holds no body or room
+candidate. Runtime-only rearm stays immediate and does not enter the save queue.
+
+Configure/remove and their Undo preserve current placement and momentum.
+Attach/align/slide sample the two live poses when admitted, hold only those bodies
+through preparation and refuse a changed prepared frame. Their single Undo
+restores the admitted live poses. Explicit repair clears the native broken latch
+at acceptance, before releasing holds; Stop during publication cannot skip it.
+Completion waits for confirmed saving. Pre-acceptance cancellation leaves the
+request unapplied; accepted Stop drains saving. Failed publication retains the
+live edit unconfirmed, preserves old files and blocks writes for recovery.
+Temporary edits stay in their fork until Keep.
+
+This keeps physical constructions in the same shared world and capability
+system as user controls, programs and agent actions. Public IDs, input/output
+fields, saved formats and capacity limits are unchanged. The book's generated
+forms show the same preparing/completed receipts as the agent. See
+[physical connections](QUEST_PHYSICAL_CONNECTIONS.md).
+
+Verification passes **84 EditMode and 87 PlayMode cases**,
+including eight new connection completion regressions, plus **3,198 web
+tests**, application/probe TypeScript and catalog checks. Coverage includes
+captured queued requests, live admission poses, stale peers, changed prepared
+frames, cancellation, momentum/Undo continuity, break repair before Stop, failed
+accepted publication, temporary saving and slider placement. Existing physical
+fixed/hinge/slider, native acquisition/retirement and adjacent prepared edits pass.
+
+Complete offline Book a2a22a4208944fda9dbbc046fd496015 passes with
+3,719 observations/1,186 requests. Headless
+bb85d6b8e70c4f7f8ac392422f4edaba passes with 2,317 observations/2,316 read sets.
+Chrome replays actual Unity observations for all three connection types through
+the production generated forms: sparse paged object discovery, fresh exact member
+definitions, both revision guards, invalid-setting refusal and visible preparing/
+completed receipts. Native configure/attach, align/slide, readback and Undo are
+checked, including an action already complete at the first observation. Existing
+world, media, human-edit preservation and reload-without-replay
+checks remain covered. These are desktop checks, not new device or provider
+acceptance.
+
+Evidence: .quest-evidence/connection-completion-20261018. The tested native input
+set contains 3,290 files; 14 protected files are unchanged.
+No device, paid provider, Android build, signing, deployment or Meta action ran.
+The earlier complete native-suite/acoustic checkpoint remains separate, including
+its unresolved intermittent Meta audio SDK crash. Native preparation and
+reconciliation retain owner-thread costs and need physical latency measurement.
+Other saved authoring/lifecycle paths, headset acceptance and Store gates remain
+open; this is progress toward v1, not release completion.

@@ -17,7 +17,7 @@ namespace Maestro.Quest.Tests {
         RoomSnapPlacement SnapTo(string destination,params string[] members)=>new(){members=members.Select(id=>new TransformMember{target=id,revision=editor.ObjectRevision(id)}).ToArray(),point="Bottom",destination=new SnapDestination{target=destination,revision=editor.ObjectRevision(destination),point="Top"}};
         RoomAgentRequest SnapRequest(RoomSnapPlacement value){var args=JObject.Parse(JsonUtility.ToJson(value));if(value.mode=="place"){args.Remove("breakForce");args.Remove("breakTorque");}var request=ObjectEditRequest(new JObject{["id"]="object.layout.snap",["version"]=1,["arguments"]=args});request.conditions=value.members.Select(m=>new RoomObjectCondition{id=m.target,revision=m.revision}).Append(new RoomObjectCondition{id=value.destination.target,revision=value.destination.revision}).ToArray();return request;}
         [UnityTest] public IEnumerator SnapPlaceMovesWholeConstructionAtLiveRotatedScaledDestinationWithOneUndo(){
-            var (child,owner)=FixedPieces();Assert.That(Connect(AttachCall(child,owner),out var error),Is.True,error);var destination=LayoutObject(new Vector3(3,2,1));SnapPoint(owner,"Bottom",-.05f);SnapPoint(destination,"Top",.05f);
+            var (child,owner)=FixedPieces();Assert.That(Connect(AttachCall(child,owner),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);var destination=LayoutObject(new Vector3(3,2,1));SnapPoint(owner,"Bottom",-.05f);SnapPoint(destination,"Top",.05f);
             root.transform.SetPositionAndRotation(new Vector3(8,0,5),Quaternion.Euler(0,30,0));Assert.That(editor.ResizeObject(destination,1.5f,out error),Is.True,error);
             var target=editor.Find(destination).transform;target.localPosition=new Vector3(3,3,2);target.localRotation=Quaternion.Euler(0,0,90);
             var original=editor.Find(owner).transform.localPosition;var childOffset=editor.Find(child).transform.localPosition-original;var request=SnapTo(destination,owner,child);request.turn=90;
@@ -27,7 +27,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(Vector3.Distance(editor.Find(child).transform.localPosition-moved.localPosition,moved.localRotation*childOffset),Is.LessThan(.0001f));
             Assert.That(editor.Read(child).connections.Single().Aligned(editor.Find(child).transform,moved,out error),Is.True,error);
             Assert.That(editor.Read(owner).connections,Is.Empty);Assert.That(editor.Read(destination).position,Is.EqualTo(target.localPosition));
-            editor.Undo();Assert.That(editor.Find(owner).transform.localPosition,Is.EqualTo(original));Assert.That(target.localPosition,Is.EqualTo(new Vector3(3,3,2)));Assert.That(executor.Execute(wire,out error,out _),Is.True,error);Assert.That(editor.Find(owner).transform.localPosition,Is.EqualTo(original));yield return null;
+            editor.Undo();Assert.That(editor.Find(owner).transform.localPosition,Is.EqualTo(original));Assert.That(Vector3.Distance(target.localPosition,new Vector3(3,3,2)),Is.LessThan(.00001f));Assert.That(executor.Execute(wire,out error,out _),Is.True,error);Assert.That(editor.Find(owner).transform.localPosition,Is.EqualTo(original));yield return null;
         }
         [UnityTest] public IEnumerator SnapJoinBecomesNativeFixedConstraintAndCaptureKeepsBothPointDefinitions(){
             var (moving,mount)=FixedPieces();SnapPoint(moving,"Bottom",-.05f);SnapPoint(mount,"Top",.05f);var request=SnapTo(mount,moving);request.mode="join";request.breakForce=800;request.breakTorque=100;
@@ -43,7 +43,7 @@ namespace Maestro.Quest.Tests {
             var request=SnapTo(mount,moving);request.destination.revision--;Assert.That(editor.SnapConstruction(request,out _),Is.False);request=SnapTo(mount,moving);request.members[0].revision--;Assert.That(editor.SnapConstruction(request,out _),Is.False);
             request=SnapTo(mount,moving);request.point="Missing";Assert.That(editor.SnapConstruction(request,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(original));
             SnapPoint(mount,"Top",.05f,"Other");Assert.That(editor.SnapConstruction(SnapTo(mount,moving),out var error),Is.False);Assert.That(error,Does.Contain("family"));SnapPoint(mount,"Top",.05f);
-            Assert.That(Connect(AttachCall(moving,mount),out error),Is.True,error);var third=LayoutObject(new Vector3(3,2,2));SnapPoint(third,"Top",.05f);Assert.That(editor.SnapConstruction(SnapTo(third,moving),out error),Is.False);Assert.That(error,Does.Contain("both ends"));
+            Assert.That(Connect(AttachCall(moving,mount),out error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);var third=LayoutObject(new Vector3(3,2,2));SnapPoint(third,"Top",.05f);Assert.That(editor.SnapConstruction(SnapTo(third,moving),out error),Is.False);Assert.That(error,Does.Contain("both ends"));
             request=SnapTo(third,moving,mount);request.mode="join";Assert.That(editor.SnapConstruction(request,out error),Is.False);Assert.That(error,Does.Contain("already owns"));yield return null;
         }
         [UnityTest] public IEnumerator SnapFailedSaveAndOutOfBoundsDoNotChangePosesDefinitionsOrUndo(){

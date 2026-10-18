@@ -13,8 +13,8 @@ namespace Maestro.Quest.Tests {
             var ids=new string[3];var recipe=new RoomRecipe{parts=new[]{new RecipePart{id="Body",size=Vector3.one*.1f}}};
             for(int i=0;i<3;i++)Assert.That(editor.CreateRecipe("Linked member "+i,new Vector3(spread?(i-1)*8:4+(i-1)*.2f,2,4),1,recipe,null,
                 new ObjectPhysicsSettings{mode=i==1&&fixedMiddle?"fixed":"solid",shape="box",mass=1},out ids[i],out var error),Is.True,error);
-            Assert.That(Connect(AttachCall(ids[0],ids[1]),out var issue),Is.True,issue);
-            Assert.That(Connect(AttachCall(ids[2],ids[1]),out issue),Is.True,issue);return ids;
+            Assert.That(AttachFixture(ids[0],ids[1],out var issue),Is.True,issue);
+            Assert.That(AttachFixture(ids[2],ids[1],out issue),Is.True,issue);return ids;
         }
         void StartIsland(){physics.SetSurfaces(true,"Aligned physics island fixture");physics.StartPhysics();}
         IEnumerator IslandActive(string[] ids){

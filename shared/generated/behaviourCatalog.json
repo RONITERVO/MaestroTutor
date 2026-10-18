@@ -25388,7 +25388,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -25399,7 +25399,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "One connection component for fixed joins, rotating hinges and bounded sliders. Configure saved local frames without moving; attach creates a fixed join at the two CURRENT poses while physics is paused; align explicitly moves the owner to its connected frame (angle must be zero for fixed joins). The slide operation explicitly aligns a slider at distance within its saved limits. Slider distances, target and speed use connected-object local metres along its frame +X; world distance/speed scales with that object. Spring gains are N/m and N*s/m; force caps drive force in N. Motor uses damped velocity control and can stall under load. Owner needs solid/bouncy physics; the other member may be fixed. Zero breakForce/breakTorque means unbreakable; positive limits are newtons/newton-metres. A PhysX break releases the body, emits object.connection.broken and stays broken through pause/resume. Rearm requires the exact members already aligned and clears only the live break latch; it does not save, teleport or add Undo. Configure/attach/align/slide save once with one live-pose Undo and explicitly reset break state after successful persistence. Remove releases the component. Failed edits leave the original poses/connection. Connected-body collisions are suppressed; other collisions remain. Missing, misaligned or animation-owned members freeze the owner. Sixteen total connections, one outgoing link per creation, no cycles. Frames use +X as hinge axis and +Y as zero direction. Scaling/teleporting can require repair. Break state is runtime play state, not a saved damage field: workspace reload reconstructs the saved definition and still requires alignment. No automatic socket search, welding mesh merge or guessed identity. Temporary saved edits stay in their fork.",
+      "description": "One connection component for fixed joins, rotating hinges and bounded sliders. Configure saved local frames without moving; attach creates a fixed join at the two CURRENT poses while physics is paused; align explicitly moves the owner to its connected frame (angle must be zero for fixed joins). The slide operation explicitly aligns a slider at distance within its saved limits. Slider distances, target and speed use connected-object local metres along its frame +X; world distance/speed scales with that object. Spring gains are N/m and N*s/m; force caps drive force in N. Motor uses damped velocity control and can stall under load. Owner needs solid/bouncy physics; the other member may be fixed. Zero breakForce/breakTorque means unbreakable; positive limits are newtons/newton-metres. A PhysX break releases the body, emits object.connection.broken and stays broken through pause/resume. Rearm requires the exact members already aligned and clears only the live break latch; it does not save, teleport or add Undo. Configure/remove edit only content: current placement and momentum are retained, including Undo. Attach/align/slide sample both live poses when admitted, hold only those two bodies through preparation, reject a changed prepared frame and keep one live-pose Undo. Saved edits queue in arrival order and recheck both captured authored revisions; a waiting request holds no body or room candidate. Explicit configure/attach/align/slide reset the live break latch on native acceptance, before body holds are released; stopping the observer cannot skip that repair. Remove releases the component. Rearm completes immediately without joining the save queue. Failed admission or pre-acceptance preparation leaves the requested edit unapplied. Accepted publication failure retains the live edit unconfirmed for recovery. Connected-body collisions are suppressed; other collisions remain. Missing, misaligned or animation-owned members freeze the owner. Sixteen total connections, one outgoing link per creation, no cycles. Frames use +X as hinge axis and +Y as zero direction. Scaling/teleporting can require repair. Break state is runtime play state, not a saved damage field: workspace reload reconstructs the saved definition and still requires alignment. No automatic socket search, welding mesh merge or guessed identity. Temporary saved edits stay in their fork. The following persistence rules apply only to saved editing operations. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -40260,7 +40260,7 @@
         }
       },
       "label": "Live physical connection",
-      "description": "active means an admitted native constraint. broken is latched until an explicit successful configure/attach/align/rearm or workspace recreation. angle is signed degrees about the saved +X axis, not a revolution count or fixed-joint freedom. This reading does not authorize edits or identify the cause of a break.",
+      "description": "active means an admitted native constraint. broken is latched until an explicit accepted configure/attach/align/slide, successful runtime rearm or workspace recreation. angle is signed degrees about the saved +X axis, not a revolution count or fixed-joint freedom. This reading does not authorize edits or identify the cause of a break.",
       "input": {
         "type": "object",
         "properties": {
@@ -47225,7 +47225,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConnectionCapability.cs",
-      "sha256": "73e26371ac314d1b6e7aeddda02a05c3b86d8b37a4c03dd1e450b86d6c146679"
+      "sha256": "2ee92af913a244bdcb0c9539c3560c1b3eaa8b98f813a082aa950fa9cd97c68d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConstructionManipulationCapability.cs",
@@ -47960,6 +47960,10 @@
       "sha256": "b234011b5e72a4085f2c296612a1ae1b3da8abe4dee42930e076332edf8fbd67"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingConnectionEdits.cs",
+      "sha256": "430acddb0cc3cdb4ef0b8f9ae2c7d8849d4509788c8c3a12442bdfc354185002"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingGeometryEdits.cs",
       "sha256": "2b5834eb246fe195ddcb59cc58eb42ee5e38354fa0a6cb0c9d9b2db2a1894705"
     },
@@ -47969,7 +47973,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "f55e6e115480bca49d4b657f2dd3cf094cea869ec46d1f4b63209da4b4770916"
+      "sha256": "76c4e0bdb14333d6ea00414880505dcde39b149933ad78f73947304f577371bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48149,7 +48153,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnectionEdits.cs",
-      "sha256": "17d6f674051644aa6990b43e859cf19283d16f596da6a4e7924d8c742451c158"
+      "sha256": "a110e1db58e422c4d99246bd2cb8548b8c46884bf4b4ed7299beceed2b21e10e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
