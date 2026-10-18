@@ -31,6 +31,8 @@ with shared retry/discard recovery and continued grip/pose preview; see
 [keyframe completion](#physical-keyframe-save-completion--2026-10-18).
 Pause/focus/destruction checkpoints now queue detached saves and expose shared
 persistence status; see [lifecycle checkpoints](#coalesced-lifecycle-checkpoints--2026-10-18).
+Explicit world relocation now shares ordered save completion with authoring; see
+[world-location completion](#shared-world-location-completion--2026-10-18).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -3860,9 +3862,10 @@ virtual destination obstacle; active physics with real collisions and joints
 crossing the two frames instead refuse frame transfer. No ground, path, scale
 change or implicit physics pause is invented.
 
-The old writer is drained before revalidation. After native placement is prepared,
-the exact viewpoint is saved before a callback-free frame transfer; failed saves
-leave journal and poses unchanged. Temporary placement stays in the fork and
+Historical 2026-10-08 behaviour: the old writer drained before revalidation,
+and the exact viewpoint saved before frame transfer. This synchronous contract
+is superseded by [shared world-location completion](#shared-world-location-completion--2026-10-18):
+acceptance moves once, then detached save completion confirms durability. Temporary placement stays in the fork and
 discard retains personal navigation, following the existing viewpoint policy.
 Navigation produces no geometry Undo or scene revision, and replaying a completed
 action receipt cannot repeat relocation. Current saved coordinates remain limited
@@ -14429,8 +14432,10 @@ showed an OVRPlugin stack candidate, then the batch resumed without restart;
 this is an investigation lead, not a confirmed root cause or SDK fix.
 
 Snapshot copying, physical placement capture and native reconciliation still
-run on Unity's owner thread. Explicit compatibility flush APIs and explicit
-world relocation remain synchronous. PC tests do not establish Quest frame
+run on Unity's owner thread. At this checkpoint, explicit compatibility flush
+APIs and world relocation remained synchronous; the later
+[world-location completion](#shared-world-location-completion--2026-10-18)
+checkpoint removes disk waiting from explicit relocation. PC tests do not establish Quest frame
 time, suspend/resume durability, forced-stop recovery or a completed novice
 provider lesson. Installed/packaged APKs and Alpha are unchanged; device,
 paid-provider, signing, deployment and Meta work remain on hold. The complete
@@ -14438,3 +14443,80 @@ v1 and Store release remain unfinished.
 
 Contract: [accepted saves and detached owners](QUEST_ACCEPTED_SAVE.md#lifecycle-checkpoints-and-detached-owners).
 Local evidence: `.quest-evidence/lifecycle-checkpoints-20261018/`.
+
+
+## Shared world-location completion — 2026-10-18
+
+The long-term immersion contract keeps one authored world and independent
+policies for physical collision, virtual support, visibility and sound. An actor
+using virtual terrain can stand downhill below the scanned floor while another
+prop still collides with that floor. A backdrop-opacity change never silently
+changes those participants. This increment preserves those rules while removing
+disk waiting from explicit personal relocation.
+
+`world.viewpoint.set` and the physical **World origin** control now use the same
+ordered completion operation. Navigation and authored edits share a single
+pending owner, admission queue and writer lifetime. Navigation retains its own
+acceptance rules: no geometry Undo, scene revision, object pose reset or
+physical tracking-origin movement. The duplicate synchronous placement entry
+point has been removed.
+
+An admitted move waits asynchronously for earlier accepted saves. Immediately
+before acceptance it samples the current tracked head and rechecks ground,
+obstacles, held controls, workspace state and swept physical transfer. Native
+dependencies remain retained and guarded during this wait. The journal bookmark
+and native frame transfer are accepted once; a detached snapshot saves in the
+background. Success confirms native application and saving, and its result is
+the acceptance-time destination. Later head movement and walking remain
+independent. Inspecting an old receipt does not move the user.
+
+Before acceptance, cancellation leaves placement unchanged. After acceptance,
+Stop cannot retract or replay the relocation; its write lease survives until the
+save drains. A failed accepted save preserves the old durable file, leaves the
+live location unconfirmed and requires shared storage recovery. Workspace
+retirement retains accepted saves after native owners are destroyed. Temporary
+placement remains local until Keep and retains the existing navigation-on-discard
+policy.
+
+Verified desktop coverage: **1,495 EditMode and 2,062 PlayMode tests passed**,
+with three explicitly allowed private-asset skips, covering the exact discovered
+inventory of 3,560 cases. **3,207 web tests passed**; app/probe TypeScript and
+catalog provenance checks passed.
+
+All native batches and both full offline journeys finished with clean process
+exits. Native inputs stayed unchanged when the integration stages were resumed
+after correcting a float-position assertion. Full journeys: Headless `8eb126b14b4345abb8b479183d5228f2`
+(2,391 observations) and original-book `3e6d8b5768944b8e878c99af81a13967`
+(3,809 observations). Both used sparse object discovery, exercised
+world-location completion and return through their real native paths, and ended
+with confirmed idle room/behaviour stores. The headless run also inspected an older
+receipt after returning and confirmed its accepted result stayed unchanged.
+
+All 3,332 frozen native input hashes and 5,133 non-document source-file hashes
+were checked; 14 pre-existing user files remain untouched. Configuration-generated
+mirror differences are recorded separately. Earlier failed focused attempts are
+preserved: unsupported NUnit syntax, a fixture comparing a pre-normalized
+quaternion and a queued object outside native view were corrected before the final
+frozen run. The first full-app attempt exposed a resident import whose collision
+geometry was still loading; relocation now waits for it instead of refusing the
+action. Actual-loader tests cover obstruction and cancellation, and direct
+completion covers dormant ground. The focused 35-case placement/dependency/walking
+run also passed.
+
+A later full-app attempt exposed a saved/live position difference of 0.000000048 m
+after a world rotation round trip. The shared probe now allows only 0.00001 m
+of positional roundoff, keeping other values exact; two regressions reject actual
+movement and non-position edits. A second saved-rotation assertion exposed
+quaternion roundoff; the water-policy
+proof now reuses the shared native placement validator, with actual-rotation,
+position, identity and invalid-value regressions. These failed invocations remain
+recorded; the clean native results and the resumed full integration results are distinct.
+
+Evidence: `.quest-evidence/world-placement-completion-20261018/`.
+
+These scheduling changes are not a headset frame-time claim. Snapshot copying,
+collision queries and native frame application still run on Unity's owner thread.
+Other synchronous authoring/import entry points, existing Editor stalls, acoustic
+quality, physical Quest acceptance and paid-provider coverage remain separate
+release work. Installed builds, production services and Meta release state are
+unchanged.

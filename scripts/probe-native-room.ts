@@ -33,6 +33,7 @@ import {probeObjectLights} from './probe-object-lights';
 import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeWorldRegions} from './probe-world-regions';
+import {probeWorldLocation} from './probe-world-location';
 import {probeConstructionResources} from './probe-construction-resources';
 import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering';
 import {runAgentPhysicsProof} from './probe-agent-physics';
@@ -285,6 +286,7 @@ try{
   }finally{clearTimeout(timer);await agent.disconnect();await writeFile(join(directory,'agent-journal.json'),JSON.stringify(await agent.store.list(),null,2));await client.save();}
 
  }else{
+   await probeWorldLocation(execute,directory);
    await probeNativeSteering(execute,()=>transport.lease(),directory,!!probeOwner.sparseObjectView);
    await probeNativeSparsePrograms(execute,directory);
   await probeNativeMotion(execute,()=>lease.state(),directory);

@@ -56,13 +56,29 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.ReadRetention().Reasons(id)&RoomRetentionReason.Ownership,Is.EqualTo(RoomRetentionReason.None));
             Assert.That(actions.Execute(request,out error),Is.True,error);Assert.That(editor.Revision,Is.EqualTo(revision));
         }
+        [UnityTest]public IEnumerator PlacementDemandDirectCompletionPreparesDormantGroundBeforeSaving()
+        {
+            SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;
+            var target=TravelPoint();string id=PlacementTerrain(editor,target.position,out var area);
+            Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);Assert.That(view.Enter(),Is.True);
+            var frame=room.transform.position;int revision=editor.Revision;
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out var operation,out error),Is.True,error);
+            try {
+                Assert.That(operation.State(out error),Is.EqualTo(RuleActionState.Preparing),error);
+                Assert.That(room.transform.position,Is.EqualTo(frame));
+                yield return WaitPlacement(operation,RuleActionState.Ready);Assert.That(operation.Complete(out error),Is.True,error);
+                Assert.That(editor.Find(id),Is.Not.Null);Assert.That(view.ReadViewpoint(out var actual),Is.True);
+                Assert.That(Vector3.Distance(actual.position,target.position),Is.LessThan(.001));Assert.That(editor.Revision,Is.EqualTo(revision));
+                Assert.That(editor.ReadRetention().Reasons(id)&RoomRetentionReason.Ownership,Is.EqualTo(RoomRetentionReason.None));
+            }finally{operation.Stop(false);}
+        }
         [UnityTest]public IEnumerator PlacementDemandLoadsDormantObstacleAndRefusesOccupiedDestination()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;
             var target=TravelPoint();Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Unloaded wall",target.position+Vector3.up,2,Color.blue,out var id,out var error),Is.True,error);
             string area=PlacementArea(editor,id);Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);
             var frame=room.transform.position;var saved=JsonUtility.ToJson(editor.Snapshot().viewpoint);int revision=editor.Revision;
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.False);Assert.That(error,Does.Contain("Prepare"));
+            Assert.That(editor.CanSetWorldViewpoint(null,target,true,out error),Is.False);Assert.That(error,Does.Contain("Prepare"));
             var actions=new RoomExecutions(editor,host);Assert.That(actions.Execute(TravelRequest(actions,target),out error),Is.True,error);
             yield return PlacementReceipt(actions,"failed");Assert.That((string)actions.Observe()["selected"]["status"],Does.Contain("occupied"));
             Assert.That(editor.Find(id),Is.Not.Null);Assert.That(room.transform.position,Is.EqualTo(frame));Assert.That(editor.Revision,Is.EqualTo(revision));
@@ -72,14 +88,14 @@ namespace Maestro.Quest.Tests
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;
             string id=PlacementTerrain(editor,Vector3.zero,out var area);var target=TravelPoint();
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            string error;yield return PlaceWorld(editor,null,target,true);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);Assert.That(view.Enter(),Is.True);
             var controls=host.Current.Controls;var frame=room.transform.position;
             controls.ReturnToWorldOrigin();Assert.That(editor.NativeActivationPending,Is.True);controls.Recover();string recovered=controls.Status;
             yield return PlacementLoadingDone(editor);yield return null;Assert.That(room.transform.position,Is.EqualTo(frame));
             Assert.That(controls.Status,Is.EqualTo(recovered),"Cancelled preparation must not overwrite newer recovery feedback");
             Assert.That(view.Enter(),Is.True);controls.ReturnToWorldOrigin();
-            yield return PlacementLoadingDone(editor);yield return null;
+            yield return PlacementLoadingDone(editor);yield return WaitOrigin(controls);
             Assert.That(editor.Find(id),Is.Not.Null);Assert.That(view.ReadViewpoint(out var origin),Is.True);Assert.That(origin.position.magnitude,Is.LessThan(.001),controls.Status);
         }
         [UnityTest]public IEnumerator PlacementDemandStaleGuardDoesNotLoadDestination()

@@ -9,6 +9,7 @@ import {createServer,type ViteDevServer} from 'vite';
 import {readFile,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
+import {assertWorldLocation,type WorldLocation} from './probe-world-location';
 import {gaitFixture} from './probe-object-walk';
 import {RoomProbeChannel} from '../src/headless/roomTransport';
 import type {RoomAgentState} from '../src/core-sdk/room/roomAgent';
@@ -305,6 +306,25 @@ try{
   await page!.waitForFunction(({id,previous})=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.id!==previous&&r?.capability===id&&r.phase==='completed';},{id,previous},{timeout});
   return page!.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
  };
+ // Navigate through visible generated forms, then return to the starting location.
+ const locationBefore=await readResourceFact('world.viewpoint','Your world location') as unknown as WorldLocation;
+ assert.equal(locationBefore.located,true);
+ const locationRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ const chooseLocation=async(location:Pick<WorldLocation,'position'|'yaw'>)=>{
+  await openNamedAction('Go to a world location','world.viewpoint.set');
+  await page!.getByRole('button',{name:'Load current values',exact:true}).click();await page!.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  for(const axis of ['x','y','z'] as const)await page!.getByLabel('Action inputs position '+axis,{exact:true}).fill(String(location.position[axis]));
+  await page!.getByLabel('Action inputs yaw',{exact:true}).fill(String(location.yaw));
+  return runNamedAction('world.viewpoint.set');
+ };
+ const locationTarget={position:locationBefore.position,yaw:(locationBefore.yaw+25+540)%360-180};
+ const locationMoved=await chooseLocation(locationTarget);assertWorldLocation(locationMoved.output as WorldLocation,locationTarget);
+ const locationAfter=await readResourceFact('world.viewpoint','Your world location') as unknown as WorldLocation;
+ assertWorldLocation(locationAfter,locationTarget);assert.notEqual(locationAfter.stateId,locationBefore.stateId);
+ const locationRestored=await chooseLocation(locationBefore);assertWorldLocation(locationRestored.output as WorldLocation,locationBefore);
+ assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),locationRevision);
+ await page.getByLabel('Action result',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-world-location-completion.png')});
+ await writeFile(join(directory,'book-world-location-completion.json'),JSON.stringify({before:locationBefore,target:locationTarget,moved:locationMoved,after:locationAfter,restored:locationRestored,boundary:'Visible generated book controls with actual desktop Unity completions, fresh guards, current location and unchanged scene revision. No provider or physical headset claim.'},null,2));
  await openNamedAction('Set world lighting','world.lighting.set');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByLabel('Action inputs settings enabled',{exact:true}).selectOption('true');

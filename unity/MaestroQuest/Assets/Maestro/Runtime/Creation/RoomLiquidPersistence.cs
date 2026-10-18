@@ -21,7 +21,7 @@ namespace Maestro.Quest.Creation
         internal bool PendingLiquidSave=>liquidCheckpoints.Count>0;
         internal bool LiquidCheckpointCapacity=>LiquidCheckpointWait==null;
         internal string LiquidCheckpointWait=>liquidCheckpoints.Count>=MaximumLiquidCheckpoints?
-            "Liquid checkpoints are still saving":PendingEditSave&&!pendingPersistedEdit.Accepted?
+            "Liquid checkpoints are still saving":PendingEditSave&&!pendingEdit.Accepted?
             "A room edit is preparing its save":null;
         void InvalidateLiquidReports(RoomJournal.PreparedEdit edit) {
             if(acceptingLiquidFlow||edit.VisualOnly)return;

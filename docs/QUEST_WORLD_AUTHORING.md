@@ -3167,3 +3167,37 @@ acoustic policies. Choosing which actors respect the physical floor never needs
 to hide that floor, remove another actor's collision, or alter its saved tools.
 Native view preparation and reconciliation still run on Unity's owner thread.
 Physical latency and headset acceptance remain separate release checks.
+
+
+## Personal world-location completion
+
+Explicit personal relocation shares the ordered edit queue and completion
+contract with authoring. The generated book action `world.viewpoint.set`,
+programs, agent calls and the physical **World origin** control use one native
+operation. The latter supplies the authored origin and zero heading; it does not
+redefine a spawn. A new operation waits for earlier saves while the world keeps
+running. Final acceptance uses the latest physical head pose and rechecks
+retained native dependencies, destination support/clearance and physical transfer.
+A resident imported object may still be loading its collision geometry. Completion
+waits for usable geometry; a placeholder cannot prove clearance. Missing or
+changed dependencies still fail before movement, and cancellation never applies a
+late move when loading finishes.
+
+Acceptance moves the authored frame once and records a personal bookmark.
+Detached disk work follows. Only successful completion confirms both native
+application and saving. Its output keeps that accepted destination, even if the
+user has already walked elsewhere. It creates no geometry Undo or scene revision,
+moves no physical tracking origin and resets no NPC activity or body velocity.
+Real-room collision participation remains per actor and independent of visual
+opacity, virtual ground and sound policies.
+
+Stop before acceptance leaves the requested move unapplied. Stop after
+acceptance cannot move the world back and does not abandon the accepted save.
+Failed saving leaves the live location unconfirmed, preserves the prior durable
+checkpoint and blocks further writes until shared recovery. Later bookmarks stay
+dirty until their own save; an older completion cannot replace them. Temporary
+rooms keep local navigation until Keep, with existing discard behaviour.
+
+This is asynchronous persistence, not asynchronous geometry or a measured
+frame-time guarantee. Native frame transfer and snapshot capture remain
+owner-thread operations. Headset acceptance remains separate.

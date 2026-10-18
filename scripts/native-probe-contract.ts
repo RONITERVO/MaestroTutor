@@ -69,12 +69,21 @@ function vector(value:unknown){
 export function placementReply(state:RoomAgentState){
  const fact=factReply(state),value=fact.value;
  if(fact.capability!=='object.placement'||!fact.available||!record(value)||typeof value.target!=='string'||value.target!==fact.arguments?.target||!finite(value.scale)||value.scale<=0||!record(value.rotation)||!finite(value.rotation.w))throw new Error('Expected an available placement for the requested target');
+ return placementValue(value);
+}
+function placementValue(value:unknown){
+ if(!record(value)||typeof value.target!=='string'||!finite(value.scale)||value.scale<=0||!record(value.rotation)||!finite(value.rotation.w))throw new Error('Expected a complete finite native placement');
  const rotation={...vector(value.rotation),w:value.rotation.w};
  if(Math.abs(Math.hypot(rotation.x,rotation.y,rotation.z,rotation.w)-1)>.001)throw new Error('Native placement rotation is not a unit quaternion');
  return {target:value.target,position:vector(value.position),rotation,scale:value.scale};
 }
 export function assertSamePlacement(before:RoomAgentState,after:RoomAgentState,label:string){
- const a=placementReply(before),b=placementReply(after),axes=['x','y','z'] as const,rotationAxes=['x','y','z','w'] as const;
+ assertSamePlacementValues(placementReply(before),placementReply(after),label);
+}
+// Some proofs retain saved definition and live position facts separately. Compare
+// their actual values with the same validator without fabricating native replies.
+export function assertSamePlacementValues(before:unknown,after:unknown,label:string){
+ const a=placementValue(before),b=placementValue(after),axes=['x','y','z'] as const,rotationAxes=['x','y','z','w'] as const;
  const tolerance=.00001;
  const sameRotation=rotationAxes.every(k=>Math.abs(a.rotation[k]-b.rotation[k])<=tolerance)||rotationAxes.every(k=>Math.abs(a.rotation[k]+b.rotation[k])<=tolerance);
  if(a.target!==b.target||Math.abs(a.scale-b.scale)>tolerance||axes.some(k=>Math.abs(a.position[k]-b.position[k])>tolerance)||!sameRotation)throw new Error(label+': native position, rotation or scale changed');

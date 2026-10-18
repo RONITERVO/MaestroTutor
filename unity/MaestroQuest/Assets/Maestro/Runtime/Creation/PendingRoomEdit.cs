@@ -12,8 +12,8 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        PendingPersistedEdit pendingPersistedEdit;
-        internal bool PendingEditSave=>pendingPersistedEdit!=null&&!pendingPersistedEdit.Drained;
+        IPersistedRoomEdit pendingEdit;
+        internal bool PendingEditSave=>pendingEdit!=null&&!pendingEdit.Drained;
         // Owner-thread admission belongs to this room, so all capability callers
         // share arrival order. A waiter holds no snapshot, body or write lease.
         readonly LinkedList<EditAdmission> editAdmissions=new();
@@ -36,7 +36,7 @@ namespace Maestro.Quest.Creation
         void CancelPendingEdit(PendingPersistedEdit preserveAcceptedAuthoring=null)
         {
             editAdmissions.Clear();
-            if(!ReferenceEquals(pendingPersistedEdit,preserveAcceptedAuthoring))pendingPersistedEdit?.Dispose();
+            if(!ReferenceEquals(pendingEdit,preserveAcceptedAuthoring))pendingEdit?.Dispose();
         }
 
         // The common capability path (book, agent and programs) owns this operation.
@@ -60,7 +60,7 @@ namespace Maestro.Quest.Creation
                 var data=Pose(Read(id),Find(id).transform);change(data);
                 if(!journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out error))return false;
                 pose=Find(id).GetComponent<RigidRoomItem>()?.HoldForEdit(poseOwner);
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,pose,
+                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,pose,
                     ()=>CanChangeObject(id,false,true,false,out var issue,poseOwner)?null:issue,message,true,publicationCheckpoint);
                 edit=null;write=null;pose=null;return true;
             } finally {pose?.Dispose();edit?.Dispose();write?.Dispose();}
@@ -97,7 +97,7 @@ namespace Maestro.Quest.Creation
                 if(!prepare(out edit,out error))return false;
                 // Creation/component changes do not hold existing physical poses.
                 // Deletion needs only saved identity, including unavailable models.
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint,validateApplied);
+                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint,validateApplied);
                 edit=null;write=null;return true;
             } finally {edit?.Dispose();write?.Dispose();}
         }
@@ -105,7 +105,7 @@ namespace Maestro.Quest.Creation
         // Preparation and final disk publication are detached workers. The owner
         // thread accepts/reconciles once, then observes the same ordered save future.
         // No worker holds a disk coordinator while awaiting native authorization.
-        internal sealed class PendingPersistedEdit:IDisposable
+        internal sealed class PendingPersistedEdit:IPersistedRoomEdit
         {
             readonly RoomEditor editor;
             readonly RoomJournal journal;
@@ -131,8 +131,8 @@ namespace Maestro.Quest.Creation
                 this.editor=editor;journal=editor.journal;storage=editor.storage;this.edit=edit;this.write=write;
                 this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;this.validateApplied=validateApplied;this.afterNativeApply=afterNativeApply;
             }
-            internal bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
-            internal bool Accepted=>accepted;
+            public bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
+            public bool Accepted=>accepted;
             internal int AcceptedLightingRevision=>accepted?edit.AcceptedLightingRevision:0;
             internal int AcceptedVisibilityRevision(string id)=>accepted?edit.AcceptedVisibilityRevision(id):0;
             internal int AcceptedObjectRevision(string id)=>accepted?edit.AcceptedObjectRevision(id):0;
@@ -145,7 +145,7 @@ namespace Maestro.Quest.Creation
             internal JObject AcceptedWeatherObservation=>(JObject)acceptedWeather?.DeepClone();
             internal bool Published=>edit.HasTemporalCheckpoint?saving?.IsCompletedSuccessfully==true&&saving.Result==null:
                 publication?.Completion.IsCompletedSuccessfully==true&&publication.Completion.Result.Saved;
-            internal string InterruptionStatus=>accepted?
+            public string InterruptionStatus=>accepted?
                 temporary?"The temporary room edit was accepted. Stopping cannot undo it; use Undo or discard the temporary room. Keep a snapshot to save it.":
                 Published?"The room edit was accepted and saved. Stopping cannot retract it; inspect the room before retrying.":
                 "The live room edit was accepted. Saving is still pending or unconfirmed; stopping cannot retract it. Inspect its outcome before retrying.":null;
@@ -190,7 +190,7 @@ namespace Maestro.Quest.Creation
             }
             // State polling advances the completion action. Ready is a confirmed
             // native + durable outcome, never merely a dispatched worker.
-            internal bool Poll(out bool ready,out string error)
+            public bool Poll(out bool ready,out string error)
             {
                 ready=false;error=failure;
                 if(committing){error=null;return true;}
@@ -253,7 +253,7 @@ namespace Maestro.Quest.Creation
                     return Fail(error);
                 } finally {committing=false;}
             }
-            internal bool Complete(out string error)
+            public bool Complete(out string error)
             {
                 if(committing){error="The room edit is already completing";return false;}
                 if(!Poll(out var ready,out error))return false;

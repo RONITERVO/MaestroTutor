@@ -35,8 +35,8 @@ namespace Maestro.Quest.Interaction
             if(!PreparePose(position,rotation,out error))return false;
             ApplyPreparedPose();return true;
         }
-        // Main-thread transaction: prepare, persist, then apply with no callbacks or
-        // physics steps between. Admission must never fail after the durable write.
+        // Owner-thread transaction: prepare and apply without a callback, await or
+        // physics step between. Explicit navigation publishes its accepted bookmark separately.
         internal bool PreparePose(Vector3 position,Quaternion rotation,out string error)
         {
             prepared=false;

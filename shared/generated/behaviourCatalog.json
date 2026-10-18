@@ -5445,7 +5445,7 @@
           "worldViewpoint.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "nativeWorldPlacement",
       "channels": [],
       "requirements": [
@@ -5454,7 +5454,7 @@
         "head.tracked",
         "destination.clear"
       ],
-      "description": "Explicitly relocate the user's viewpoint to an authored floor position and horizontal heading by placing virtual content around the current physical view. Use only when the user intends to relocate themselves or recenter the world; moving Maestro is a different action. Read world.viewpoint and pass its stateId. (0,0,0), yaw 0 is the fixed authored origin, not a user-defined spawn. Coordinates are currently limited to a 25-metre sphere. This preserves entity poses, ongoing programs, motion, physics velocities, view and movement opt-ins, and physical head/room tracking. It does not align the real room, recall tools, change scale, reset activity, create ground, or navigate a path. Relevant native ground and destination obstacles are prepared and retained before placement. Unknown collision extents require conservative preparation; missing assets, cancellation or changed dependencies leave placement unchanged. Destination clearance is rechecked; virtual view additionally needs accepted authored ground within the shared slope policy. Read world.ground to inspect support; it does not reserve clearance. Held items, workspace boundaries, tracking loss, crossing physical/virtual connections, blocked or unverifiable physical transfer paths during active physics, and failed saving refuse the entire operation. Swept conservative collider envelopes respect each object's environment profile; irregular shapes can require extra clearance. Real participants must remain inside an aligned room. Virtual-only objects can move through scanned floors and walls. Save occurs before native placement; temporary rooms retain a temporary bookmark. Personal navigation creates no geometry Undo or scene revision. Center the user's movement stick after relocation. Completed receipts never repeat movement.",
+      "description": "Explicitly relocate the user's viewpoint to an authored floor position and horizontal heading by placing virtual content around the current physical view. Use only when the user intends to relocate themselves or recenter the world; moving Maestro is a different action. Read world.viewpoint and pass its stateId. (0,0,0), yaw 0 is the fixed authored origin, not a user-defined spawn. Coordinates are currently limited to a 25-metre sphere. This preserves entity poses, ongoing programs, motion, physics velocities, view and movement opt-ins, and physical head/room tracking. It does not align the real room, recall tools, change scale, reset activity, create ground, or navigate a path. Relevant native ground and destination obstacles are prepared and retained before placement. Resident imported objects may still be loading their actual geometry; the action waits for that geometry rather than treating its placeholder as usable or as a permanent failure. Unknown collision extents require conservative preparation; missing assets, cancellation or changed dependencies leave placement unchanged. Destination clearance is rechecked; virtual view additionally needs accepted authored ground within the shared slope policy. Read world.ground to inspect support; it does not reserve clearance. Held items, workspace boundaries, tracking loss, crossing physical/virtual connections, blocked or unverifiable physical transfer paths during active physics, and unavailable storage refuse placement before acceptance. Swept conservative collider envelopes respect each object's environment profile; irregular shapes can require extra clearance. Real participants must remain inside an aligned room. Virtual-only objects can move through scanned floors and walls. Uses the shared ordered edit queue without blocking on disk. At acceptance the latest tracked head pose, ground, clearance and physical transfer are rechecked and the world moves once; the accepted bookmark then saves in the background. Completion confirms native placement and saving and returns that immutable acceptance-time location. Before acceptance Stop leaves placement unchanged. After acceptance Stop cannot undo or repeat movement; a failed save leaves the live location unconfirmed and requires shared storage recovery. Later movement remains independent and is saved separately. Temporary rooms retain a temporary bookmark. Personal navigation creates no geometry Undo or scene revision. Center the user's movement stick after relocation. Completed receipts never repeat movement.",
       "example": {
         "stateId": "00000000000000000000000000000000",
         "position": {
@@ -47692,7 +47692,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "f046c757749632bab307d82bf7417ffd37c2e6902b9b2a8d11a2f12b675359e7"
+      "sha256": "914e6435ca2f8bfcfe46372fb26f52a5f90bf70fa478d263a742d6f4b04dfb54"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -47920,7 +47920,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldViewpointCapability.cs",
-      "sha256": "eda2de163ec0d16e28d6131f893d5133f96b958d07dc023ae04da1005079d14b"
+      "sha256": "996d56bd5e7ef6a9c96d3b8c22eca9b0bd48e8278d90dea3890ebad0619289a2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldWeatherCapability.cs",
@@ -48103,6 +48103,10 @@
       "sha256": "b1bb685247298b4ebbd602bc74e44921e81ded1f30d284cb0f21885ec3e89234"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/IPersistedRoomEdit.cs",
+      "sha256": "27322a3100a10334b4800a66ece88b5f04a7bd9f8d39019919af48f3ab506235"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/InkResources.cs",
       "sha256": "11404e0e0e9b17a417194d903f0e1fb24afffce04ea5d59c7e652cc3ff543afd"
     },
@@ -48196,7 +48200,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingConnectionEdits.cs",
-      "sha256": "430acddb0cc3cdb4ef0b8f9ae2c7d8849d4509788c8c3a12442bdfc354185002"
+      "sha256": "28f62bf7b9c2c92cd2a66ea187f6c39d21d6c46708efc081658bff3b628ad6ed"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingGeometryEdits.cs",
@@ -48208,7 +48212,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "f07dcf18097bb7f1fb92004c51018a8a79c0a2dfa364db45cd3fa462ef8be7c2"
+      "sha256": "a3111d928c1d093536ea7d54deaa64b130899840b007ff093590f5e920607221"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48216,7 +48220,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingSnapEdits.cs",
-      "sha256": "34300150587aaad4e96372bef4b530938df791493a0325e4a1078c81e9253411"
+      "sha256": "1be37ca31a3849989649bee21a8b50f4b71044f0676454fd1272c159f5a9e165"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingWorldPlacement.cs",
+      "sha256": "a2379f077cd0b11be62593e4380767a3b139ca39fd95a73d6af7e8db88593670"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48500,7 +48508,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
-      "sha256": "f6cb468ddc7fa318dd4cbed60a56e1a363ebb3f2d50f0ea71f195df824e51f08"
+      "sha256": "54410f375563ce22e3d49da375d8f6870ac9debfa832899ae00e9d075e5fc950"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLifecycleSave.cs",
@@ -48536,7 +48544,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidPersistence.cs",
-      "sha256": "20720ce1cfe79ee36a06b52ec073d2219f94fcff43204a82eecf15d78f1d489d"
+      "sha256": "a5caf99c0d5f5336ed634a4c9aef09ff6383310da10d45124f18e12b0568284f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMaterialEdits.cs",
@@ -48836,7 +48844,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldPlacement.cs",
-      "sha256": "77eaa869351de4d0e86ba877d76bed15a786bd47c9bf6b3cb088adc8dc7d4326"
+      "sha256": "97075e70f41327353b6fac88c95d40ab9fc134cd626a8347137cb28b4941c66b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWorldTime.cs",
@@ -49388,7 +49396,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldMotion.cs",
-      "sha256": "1f4ce7f38f053ceeeab974cb1ce9275cd34a6b1d4972a80202b8613a0ef30eb6"
+      "sha256": "1e60cf70cdb8fc9f9a1702d34b76d37be958e1227de0765f2bca6831daf9f35b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWorldPath.cs",
@@ -49444,7 +49452,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.Placement.cs",
-      "sha256": "3075bf5ae89abd2f0203ead7fd481f171d4c0bb07bbd1969410e4b36fec6a8f6"
+      "sha256": "6081701b2a5c46539eb3c72386ef0b980c6f2cdd34adce6bdbf7746fa64e91c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.cs",

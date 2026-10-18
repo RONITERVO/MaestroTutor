@@ -5,7 +5,7 @@ import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {capabilityDefinition} from '../shared/capabilities';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
-import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
+import {completeProbeAction,factReply,assertSamePlacementValues,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function readWaterActorPose(execute:Execute,target:string){
  const saved=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target}}}]));
@@ -13,6 +13,12 @@ export async function readWaterActorPose(execute:Execute,target:string){
  assert.equal(saved.available,true);assert.equal(live.available,true);
  const data=saved.value as Record<string,unknown>;
  return {target,saved:{position:data.position,rotation:data.rotation,scale:data.scale},live:live.value};
+}
+export function assertWaterActorPose(before:Awaited<ReturnType<typeof readWaterActorPose>>,after:Awaited<ReturnType<typeof readWaterActorPose>>){
+ const label='Water policy must preserve actor placement';
+ assertSamePlacementValues({target:before.target,...before.saved},{target:after.target,...after.saved},label);
+ assertSamePlacementValues({target:before.target,...before.saved,position:before.live},{target:after.target,...after.saved,position:after.live},label);
+ assert.equal(after.saved.scale,before.saved.scale,'Water policy must preserve exact authored scale');
 }
 export async function probeWaterTraversal(execute:Execute,directory:string){
  const target='maestro',fact='object.water.traversal.settings';
@@ -22,11 +28,11 @@ export async function probeWaterTraversal(execute:Execute,directory:string){
  const result=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.water.traversal.configure',version:1,arguments:{target,revision:before.revision,mode:'wade',maxDepthMetres:.15}}}}]));
  assert.equal(result.execution?.selected?.phase,'completed',JSON.stringify(result.execution?.selected));
  const after=await read();assert.equal(after.mode,'wade');assert.equal(after.effectiveMode,'wade');assert.equal(after.maxDepthMetres,.15);assert.ok(after.revision>before.revision);
- const unchanged=await placement();assert.deepEqual(unchanged,pose);
+ const unchanged=await placement();assertWaterActorPose(pose,unchanged);
  await execute([{action:'undo'}]);const undone=await read();assert.equal(undone.mode,before.mode);assert.equal(undone.maxDepthMetres,before.maxDepthMetres);
  await execute([{action:'redo'}]);assert.equal((await read()).mode,'wade');await execute([{action:'undo'}]);
  const egress=await probeShallowEgress(execute);
- assert.deepEqual(await placement(),pose,'The egress fixture must leave Maestro placement unchanged');
+ assertWaterActorPose(pose,await placement());
  await writeFile(join(directory,'water-traversal.json'),JSON.stringify({boundary:'Native shared action/fact transport, exact revisions, placement preservation, directional shallow-egress queries and Undo/Redo. Actual walking/solid clearance have separate PlayMode coverage; no headset or provider claim.',before,after,undone,receipt:result.execution?.selected,egress},null,2));
 }
 

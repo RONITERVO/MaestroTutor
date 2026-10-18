@@ -19,15 +19,21 @@ namespace Maestro.Quest.Programs
         readonly RoomEditor editor;
         readonly string target,temporarySession;
         readonly int revision;
-        readonly Begin begin;
+        internal delegate bool BeginState(out IPersistedRoomEdit pending,out string error);
+        readonly BeginState begin;
         readonly Validate validate;
         readonly Func<JObject> output;
         JObject result;
-        RoomEditor.PendingPersistedEdit pending;
+        IPersistedRoomEdit pending;
         RoomEditor.EditAdmission admission;
         bool stopped;
         string failure;
+        static BeginState Adapt(Begin begin)=>(out IPersistedRoomEdit pending,out string error)=>{
+            bool started=begin(out var edit,out error);pending=edit;return started;
+        };
         PersistedEditOperation(RoomEditor editor,string target,Begin begin,Validate validate,Func<JObject> output=null)
+            :this(editor,target,Adapt(begin),validate,output){}
+        PersistedEditOperation(RoomEditor editor,string target,BeginState begin,Validate validate,Func<JObject> output=null)
         {
             this.editor=editor;this.target=target;this.begin=begin;this.output=output;
             this.validate=validate??((out string error)=>editor.CanEditObject(target,false,out error));
@@ -44,6 +50,12 @@ namespace Maestro.Quest.Programs
             var value=new PersistedEditOperation(editor,source,begin,validate??((out string issue)=>editor.CanCreatePrimitive(out issue)),output);
             operation=null;if(!value.TryBegin(out error))return false;
             operation=value;return true;
+        }
+        internal static bool StartStateChange(RoomEditor editor,BeginState begin,Validate validate,Func<JObject> output,
+            out CapabilityOperation operation,out string error)
+        {
+            var value=new PersistedEditOperation(editor,null,begin,validate,output);
+            operation=null;if(!value.TryBegin(out error))return false;operation=value;return true;
         }
         bool TryBegin(out string error)
         {

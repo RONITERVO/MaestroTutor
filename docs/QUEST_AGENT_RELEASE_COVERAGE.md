@@ -3375,3 +3375,30 @@ private-asset skips), both complete offline journeys, 2,952 web tests / 313 file
 with fresh native fixtures, and unsigned Android compilation. The book mix form
 was visually checked. Evidence is in `.quest-evidence/audio-role-mix/`; it also
 retains the concurrent-compiler web failure and unchanged successful idle rerun.
+
+
+## Explicit world-location completion coverage
+
+The native focused suite covers earlier-writer delay, fresh head sampling,
+pre-acceptance cancellation and tracking/dependency changes, immutable
+acceptance-time results, continued later walking, accepted-save failure,
+ordering behind object edits and retirement after native-owner destruction.
+Existing placement/dependency/walking cases retain ground, occupancy, swept
+frame-transfer, physical binding, temporary-room and receipt-replay checks.
+Actual importer barriers additionally prove waiting on resident geometry,
+obstruction refusal after loading and no late movement after cancellation. Direct
+completion also prepares dormant ground before accepting a relocation.
+
+The full offline headless journey now starts an actual Unity
+`world.viewpoint.set` action, waits on the same native receipt, restores the
+starting viewpoint and inspects the earlier completion without repeating it.
+The visible-book journey uses generated current-value and position/heading
+fields, waits for native completion and restores the initial location. Both
+assert that personal navigation does not create geometry revisions. Their
+artifacts are `world-location-completion.json` and
+`book-world-location-completion.json` (plus the book screenshot).
+
+These are deterministic desktop transport and UI checks. They neither spend
+provider credits nor establish physical Quest comfort, performance or provider
+planning quality. Delayed publication is injected only in the native tests,
+not faked by either transport journey.

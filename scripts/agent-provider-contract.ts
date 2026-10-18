@@ -10,10 +10,19 @@ const saved = (object: RoomAgentState['objects'][number]) => ({
   id: object.id, name: object.name, kind: object.kind, position: object.position,
   scale: object.scale, color: object.color, physics: object.physics,
 });
+// Native world/local transforms use float32. A dormant saved position and its
+// reloaded live position can differ by roundoff after world relocation. Allow
+// only ten micrometres; metadata, scale, colour and physics remain exact.
+function sameSavedObject(actual: RoomObjects['objects'][number], expected: RoomObjects['objects'][number]) {
+  const a = saved(actual), b = saved(expected);
+  const finite = [a.position.x, a.position.y, a.position.z, b.position.x, b.position.y, b.position.z].every(Number.isFinite);
+  return finite && Math.hypot(a.position.x - b.position.x, a.position.y - b.position.y, a.position.z - b.position.z) <= 0.00001
+    && isDeepStrictEqual({ ...a, position: b.position }, b);
+}
 function unchangedOthers(before: RoomObjects, after: RoomObjects, target?: string) {
   for (const object of before.objects.filter(object => object.id !== target)) {
     const current = after.objects.find(candidate => candidate.id === object.id);
-    if (!current || !isDeepStrictEqual(saved(current), saved(object))) throw new Error('Provider scenario changed an unrelated object: ' + object.name);
+    if (!current || !sameSavedObject(current, object)) throw new Error('Provider scenario changed an unrelated object: ' + object.name);
   }
 }
 export function assertCreatedParityBall(before: RoomObjects, after: RoomObjects, colour: 'blue' | 'red' = 'blue', expectedScale?: number) {
@@ -34,7 +43,7 @@ export function assertPaintedParityBall(before: RoomObjects, after: RoomObjects,
   const ball = after.objects.find(object => object.id === target);
   if (!old || !ball || after.objects.length !== before.objects.length
     || ball.color.r < 0.8 || ball.color.g > 0.2 || ball.color.b > 0.2 || ball.color.a !== 1
-    || !isDeepStrictEqual({ ...saved(ball), color: old.color }, saved(old))) {
+    || !sameSavedObject({ ...ball, color: old.color }, old)) {
     throw new Error('Provider did not paint only the existing ParityBall red.');
   }
   unchangedOthers(before, after, target);

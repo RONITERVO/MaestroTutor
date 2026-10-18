@@ -41,4 +41,25 @@ describe('conversational provider semantic proof', () => {
     expect(() => assertSameRoomObjects(before, after)).toThrow();
     expect(() => assertSameRoomObjects(before, structuredClone(before))).not.toThrow();
   });
+  it('accepts only float32 transform roundoff between saved and live positions', () => {
+    const before = state([{ ...object('old'), position: { x: 0.69, y: 1.45, z: 0.8 } }]);
+    const live = state([{ ...before.objects[0], position: { x: 0.69, y: 1.45, z: 0.799999952 } }]);
+    expect(() => assertSameRoomObjects(before, live)).not.toThrow();
+    expect(() => assertCreatedParityBall(before, state([...live.objects, object('new')]))).not.toThrow();
+    expect(() => assertPaintedParityBall(before, state([{ ...live.objects[0], color: { r: 1, g: 0, b: 0, a: 1 } }]), 'old')).not.toThrow();
+    for (const z of [0.801, NaN, Infinity]) {
+      expect(() => assertSameRoomObjects(before, state([{ ...live.objects[0], position: { ...live.objects[0].position, z } }]))).toThrow();
+    }
+    // The allowance is a distance, not an independent allowance on each axis.
+    expect(() => assertSameRoomObjects(state([object('old')]), state([{ ...object('old'), position: { x: 0.000008, y: 1.000008, z: 0.000008 } }]))).toThrow();
+  });
+  it('keeps non-position values exact while allowing transform roundoff', () => {
+    const before = state([object('old')]);
+    for (const patch of [{ scale: 0.50000001 }, { name: 'Renamed' }, { kind: 'Block' },
+      { color: { ...before.objects[0].color, b: 0.99999999 } },
+      { physics: { mode: 'fixed' as const, shape: 'automatic' as const, mass: 0.5 } }]) {
+      expect(() => assertSameRoomObjects(before, state([{ ...object('old'), ...patch }]))).toThrow();
+    }
+  });
+
 });

@@ -5,6 +5,7 @@ using System.Collections;
 using System.IO;
 using Maestro.Quest.Creation;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Programs;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -17,7 +18,7 @@ namespace Maestro.Quest.Tests
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;
             var target=TravelPoint();string upper=PlacementTerrain(editor,target.position,out var area);
             PlacementTerrain(editor,target.position-Vector3.up*.12f,out _);
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            string error;yield return PlaceWorld(editor,null,target,true);
             // This test supplies movement directly; do not also run the neutral hardware loop.
             host.Current.Controls.enabled=false;
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);int revision=editor.Revision;
@@ -33,7 +34,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator WalkingDemandLoadsDormantWallBeforeTestingActualClearance()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;var target=TravelPoint();
-            PlacementTerrain(editor,target.position,out _);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            PlacementTerrain(editor,target.position,out _);string error;yield return PlaceWorld(editor,null,target,true);
             // This test supplies movement directly; do not also run the neutral hardware loop.
             host.Current.Controls.enabled=false;
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Wall across walking body",target.position+Vector3.up,2,Color.red,out var id,out error),Is.True,error);
@@ -47,7 +48,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator WalkingDemandNeutralControlsCancelPendingWorkWithoutLateMovement()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;var target=TravelPoint();
-            string id=PlacementTerrain(editor,target.position,out var area);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            string id=PlacementTerrain(editor,target.position,out var area);string error;yield return PlaceWorld(editor,null,target,true);
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);var frame=room.transform.position;
             Assert.That(view.Move(room.transform.TransformDirection(Vector3.right*.02f)),Is.False);Assert.That(editor.NativeActivationPending,Is.True);
             // Real controller-loop neutral input, not disposal of a test-only owner.
@@ -58,18 +59,18 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator WalkingDemandInactiveGeometryCannotProveClearanceAndNeedsFreshInput()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;var target=TravelPoint();
-            string id=PlacementTerrain(editor,target.position,out _);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            string id=PlacementTerrain(editor,target.position,out _);string error;yield return PlaceWorld(editor,null,target,true);
             Assert.That(view.Enter(),Is.True);
             var item=editor.Find(id);item.gameObject.SetActive(false);var step=room.transform.TransformDirection(Vector3.right*.02f);
             Assert.That(view.Move(step),Is.False);Assert.That(view.MovementError,Does.Contain("unavailable"));
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.False);Assert.That(error,Does.Contain("unavailable"));
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out _,out error),Is.False);Assert.That(error,Does.Contain("unavailable"));
             item.gameObject.SetActive(true);Assert.That(view.Move(step),Is.False,"Holding a failed input must not silently retry");
             view.Move(Vector3.zero);Assert.That(view.Move(step),Is.True,view.MovementError);
         }
         [UnityTest]public IEnumerator WalkingDemandCoversRaisedBodyCorridorButLeavesKnownDistantAreaDormant()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;var target=TravelPoint();
-            PlacementTerrain(editor,target.position,out _);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            PlacementTerrain(editor,target.position,out _);string error;yield return PlaceWorld(editor,null,target,true);
             // This test supplies movement directly; do not also run the neutral hardware loop.
             host.Current.Controls.enabled=false;
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Possible raised-step obstacle",target.position+Vector3.up*2.15f,1,Color.red,out var overhead,out error),Is.True,error);
@@ -82,7 +83,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator WalkingDemandFocusLossCancelsLoadingWithoutLateMovement()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;var target=TravelPoint();
-            string id=PlacementTerrain(editor,target.position,out var area);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            string id=PlacementTerrain(editor,target.position,out var area);string error;yield return PlaceWorld(editor,null,target,true);
             host.Current.Controls.enabled=false;
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);var frame=room.transform.position;
             var step=room.transform.TransformDirection(Vector3.right*.02f);Assert.That(view.Move(step),Is.False);
@@ -94,7 +95,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator WalkingDemandInvalidInputReleasesResidentGeometry()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;room.Viewer.GetComponent<Camera>().enabled=false;var target=TravelPoint();
-            string id=PlacementTerrain(editor,target.position,out var area);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            string id=PlacementTerrain(editor,target.position,out var area);string error;yield return PlaceWorld(editor,null,target,true);
             Assert.That(view.Move(room.transform.TransformDirection(Vector3.right*.02f)),Is.True,view.MovementError);
             Assert.That(editor.RetireNativeArea(area,out error),Is.False);
             Assert.That(view.Move(new Vector3(float.NaN,0,0)),Is.False);
@@ -104,7 +105,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator WalkingDemandUnboundPersistentViewCannotUseStandaloneFallback()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;var target=TravelPoint();
-            PlacementTerrain(editor,target.position,out _);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.True,error);
+            PlacementTerrain(editor,target.position,out _);yield return PlaceWorld(editor,null,target,true);
             view.UnbindWalking(editor);var frame=room.transform.position;
             Assert.That(view.Move(room.transform.TransformDirection(Vector3.right*.02f)),Is.False);Assert.That(view.MovementError,Does.Contain("workspace"));Assert.That(room.transform.position,Is.EqualTo(frame));
         }

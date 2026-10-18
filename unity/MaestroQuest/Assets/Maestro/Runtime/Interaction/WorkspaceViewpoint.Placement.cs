@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using Maestro.Quest.Creation;
+using Maestro.Quest.Programs;
+using Maestro.Quest.Rules;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Interaction
@@ -62,7 +64,9 @@ namespace Maestro.Quest.Interaction
         // Preserve Maestro's independent binding and actor, and both movement opt-ins.
         internal void WorldPlaced(){userGate.Reset();Array.Clear(buttonReady,0,buttonReady.Length);}
         RoomNativeDemand originDemand;
-        void CancelOriginPlacement(){originDemand?.Dispose();originDemand=null;}
+        CapabilityOperation originPlacement;
+        internal bool OriginPlacementPending=>originDemand!=null;
+        void CancelOriginPlacement(){originPlacement?.Stop(false);originPlacement=null;originDemand?.Dispose();originDemand=null;}
         public async void ReturnToWorldOrigin()
         {
             if(originDemand!=null){Say("The world destination is already being prepared");return;}
@@ -71,20 +75,32 @@ namespace Maestro.Quest.Interaction
             if(!editor.CanPrepareWorldViewpoint(expected,target,true,out var error)){Say(error);return;}
             using var demand=editor.DemandNativeEntities(editor.WorldPlacementTargets(target),()=>editor.WorldPlacementTargets(target),
                 ()=>this&&isActiveAndEnabled&&editor&&editor.CanPrepareWorldViewpoint(expected,target,true,out _));
-            originDemand=demand;
+            originDemand=demand;CapabilityOperation operation=null;
+            var timeout=System.Threading.Tasks.Task.Delay(30000);
             try {
                 if(!demand.Preparation.IsCompleted)Say("Preparing the world destination");
                 // Same 30-second preparation limit as a shared room action.
-                var timeout=System.Threading.Tasks.Task.Delay(30000);
                 if(await System.Threading.Tasks.Task.WhenAny(demand.Preparation,timeout)!=demand.Preparation){
                     if(ReferenceEquals(originDemand,demand))Say("Destination preparation timed out; try again");return;
                 }
                 if(!ReferenceEquals(originDemand,demand))return;
                 error=demand.Error;
-                if(error==null)editor.SetWorldViewpoint(expected,target,true,out _,out error);
-                if(this&&isActiveAndEnabled)Say(error??"World origin — activity kept; center your stick before moving");
-            } catch(Exception){if(this&&isActiveAndEnabled&&ReferenceEquals(originDemand,demand))Say("The destination could not be prepared; try again");}
-            finally {if(ReferenceEquals(originDemand,demand))originDemand=null;}
+                if(error==null&&WorldViewpointCapability.StartPlacement(editor,expected,target,true,out operation,out error)){
+                    originPlacement=operation;
+                    while(ReferenceEquals(originDemand,demand)){
+                        var state=operation.State(out error);
+                        if(state==RuleActionState.Failed)break;
+                        if(state==RuleActionState.Ready){if(!operation.Complete(out error))error??="World placement did not confirm completion";break;}
+                        if(timeout.IsCompleted){error=operation.InterruptionStatus==null?"World placement timed out before acceptance.":"World placement timed out.";break;}
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+                }
+                if(this&&isActiveAndEnabled&&ReferenceEquals(originDemand,demand)){
+                    if(error!=null&&operation?.InterruptionStatus is string accepted)error+=" "+accepted;
+                    Say(error??"World origin — activity kept; center your stick before moving");
+                }
+            } catch(Exception){if(this&&isActiveAndEnabled&&ReferenceEquals(originDemand,demand))Say("World placement could not finish. "+(operation?.InterruptionStatus??"Inspect the destination before retrying."));}
+            finally {operation?.Stop(false);if(ReferenceEquals(originPlacement,operation))originPlacement=null;if(ReferenceEquals(originDemand,demand))originDemand=null;}
         }
     }
 }

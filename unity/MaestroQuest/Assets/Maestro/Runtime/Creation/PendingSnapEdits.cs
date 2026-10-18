@@ -42,7 +42,7 @@ namespace Maestro.Quest.Creation
                     }
                     return null;
                 }
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,poses,CurrentIssue,
+                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,poses,CurrentIssue,
                     captured.mode=="join"?"Construction snapped and joined — one Undo restores it":"Construction snapped — one Undo restores it",true,checkpoint);
                 edit=null;write=null;poses=null;return true;
             }finally{poses?.Dispose();edit?.Dispose();write?.Dispose();}

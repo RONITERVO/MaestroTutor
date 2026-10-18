@@ -3897,3 +3897,24 @@ source fixture is deliberately a minimal skinned triangle, not a production
 character. No device, paid provider, signing, deployment or Meta operation ran;
 installed and Alpha builds are unchanged. The existing holds and audio-quality
 failures remain open.
+
+
+## Explicit world-location save completion
+
+On a future device build containing this increment, test a user-requested world
+relocation and the physical **World origin** control while ordinary saves are
+pending. Head tracking, existing NPC activity and unrelated physics should
+continue; the destination must be checked again before movement. Test both a
+virtual-only actor below the real floor and a real-room participant, retaining
+their separate collision policies through relocation and backdrop changes.
+Also request relocation while imported destination geometry is still loading:
+it must wait, then use the actual collision geometry, and must remain unmoved if
+cancelled during loading.
+
+With an instrumented slow writer, cancel once before native acceptance and once
+after it. The first must leave the frame unchanged; the second must keep the
+accepted location and finish saving without repeating movement. Move physically
+while saving and confirm that the later bookmark survives completion and reload.
+Test suspend/retirement and failed-save recovery separately. A completed old
+receipt must be inspectable without another relocation. These physical checks
+have not yet been performed for the new completion path.

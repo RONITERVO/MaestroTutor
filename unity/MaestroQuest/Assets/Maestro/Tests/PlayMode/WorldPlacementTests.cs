@@ -32,6 +32,7 @@ namespace Maestro.Quest.Tests
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;var actions=new RoomExecutions(editor,host);var target=TravelPoint();
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Moving prop",new Vector3(-3,1,4),1,Color.red,out var id,out var error),Is.True,error);
+            Assert.That(editor.TryFlush(out error),Is.True,error);
             var body=editor.Find(id).GetComponent<Rigidbody>();body.isKinematic=false;body.useGravity=false;body.linearVelocity=new Vector3(.3f,.2f,-.1f);
             var oldFrame=editor.Frame;var authoredVelocity=oldFrame.VectorToRoom(body.linearVelocity);var authoredPose=oldFrame.PointToRoom(body.position);
             var definitions=editor.Snapshot().objects.Select(JsonUtility.ToJson).ToArray();int revision=editor.Revision;var physical=room.Viewer.position;var heading=room.Viewer.rotation;
@@ -39,49 +40,58 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.Ownership.TryAcquire("placement-npc","NPC activity",RoomActorRole.Program,new[]{new BehaviourCatalog.Claim("maestro","wholeTarget")},null,out var actor,out error),Is.True,error);
             using(actor){
                 var before=ViewpointFact();var request=TravelRequest(actions,target);Assert.That(actions.Execute(request,out error),Is.True,error);
-                Assert.That((string)actions.Observe()["selected"]["phase"],Is.EqualTo("completed"));
+                Assert.That((string)actions.Observe()["selected"]["phase"],Is.EqualTo("preparing").Or.EqualTo("completed"));
                 Assert.That(view.ReadViewpoint(out var actual),Is.True);Assert.That(Vector3.Distance(actual.position,target.position),Is.LessThan(.0001f));Assert.That(Mathf.Abs(Mathf.DeltaAngle(actual.yaw,target.yaw)),Is.LessThan(.001f));
                 Assert.That(room.Viewer.position,Is.EqualTo(physical));Assert.That(room.Viewer.rotation,Is.EqualTo(heading));Assert.That(actor.Held,Is.True);
                 Assert.That((string)runtime.Scheduler.Invocation(waiting)["phase"],Is.EqualTo("running"));Assert.That(editor.Revision,Is.EqualTo(revision));
                 CollectionAssert.AreEqual(definitions,editor.Snapshot().objects.Select(JsonUtility.ToJson).ToArray());
                 Assert.That(Vector3.Distance(editor.Frame.PointToRoom(body.position),authoredPose),Is.LessThan(.0001f));Assert.That(Vector3.Distance(editor.Frame.VectorToRoom(body.linearVelocity),authoredVelocity),Is.LessThan(.0001f));
+                yield return PlacementReceipt(actions,"completed");
                 var saved=new RoomStorage(editor.SaveDirectory).Load(out error);Assert.That(JsonUtility.ToJson(saved.viewpoint),Is.EqualTo(JsonUtility.ToJson(target)),error);
                 var placed=room.transform.position;Assert.That(actions.Execute(request,out error),Is.True,error);Assert.That(room.transform.position,Is.EqualTo(placed));
-                Assert.That(editor.SetWorldViewpoint((string)before["stateId"],new RoomViewpoint{active=true},false,out _,out error),Is.False);Assert.That(error,Does.Contain("changed"));
+                Assert.That(WorldViewpointCapability.StartPlacement(editor,(string)before["stateId"],new RoomViewpoint{active=true},false,out _,out error),Is.False);Assert.That(error,Does.Contain("changed"));
                 string evidence=System.Environment.GetEnvironmentVariable("MAESTRO_WORLD_PLACEMENT");
                 if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"placement.json"),new JObject {["before"]=before,["request"]=request,["receipt"]=actions.Observe(),["after"]=ViewpointFact()}.ToString());}
             }
         }
-        [UnityTest]public IEnumerator WorldPlacementFailureLeavesFrameAndDurableBookmarkUnchanged()
+        [UnityTest]public IEnumerator WorldPlacementSaveFailureRetainsAcceptedLocationAndProtectsDurableBookmark()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;Assert.That(editor.MoveObject("book",new Vector3(0,1,2),out var error),Is.True,error);Assert.That(editor.TryFlush(out error),Is.True,error);
-            var original=JsonUtility.ToJson(editor.Snapshot());var position=room.transform.position;var rotation=room.transform.rotation;var state=(string)ViewpointFact()["stateId"];
-            using(var locked=new FileStream(Path.Combine(editor.SaveDirectory,RoomStorage.FileName),FileMode.Open,FileAccess.Read,FileShare.None)){
-                Assert.That(editor.SetWorldViewpoint(state,TravelPoint(),false,out _,out error),Is.False);Assert.That(error,Is.Not.Null.And.Not.Empty);
-                Assert.That(room.transform.position,Is.EqualTo(position));Assert.That(room.transform.rotation,Is.EqualTo(rotation));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(original));
-                Assert.That((string)ViewpointFact()["stateId"],Is.EqualTo(state));
+            string path=Path.Combine(editor.SaveDirectory,RoomStorage.FileName);var original=File.ReadAllBytes(path);
+            var position=room.transform.position;var state=(string)ViewpointFact()["stateId"];
+            using(var locked=new FileStream(path,FileMode.Open,FileAccess.Read,FileShare.None)){
+                Assert.That(WorldViewpointCapability.StartPlacement(editor,state,TravelPoint(),false,out var operation,out error),Is.True,error);
+                try {
+                    yield return WaitPlacement(operation,Maestro.Quest.Rules.RuleActionState.Failed);
+                    Assert.That(room.transform.position,Is.Not.EqualTo(position));
+                    Assert.That(JsonUtility.ToJson(editor.Snapshot().viewpoint),Is.EqualTo(JsonUtility.ToJson(TravelPoint())));
+                    Assert.That(operation.InterruptionStatus,Does.Contain("accepted").And.Contain("unconfirmed"));
+                    Assert.That(editor.CanSaveRoom,Is.False);
+                    var placed=room.transform.position;operation.Stop(false);Assert.That(room.transform.position,Is.EqualTo(placed));
+                }finally{operation.Stop(false);}
             }
+            CollectionAssert.AreEqual(original,File.ReadAllBytes(path),"Failed publication preserves the prior durable checkpoint");
         }
         [UnityTest]public IEnumerator WorldPlacementRefusesTrackingWorkspaceBoundsAndOccupiedDestination()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;var target=TravelPoint();var point=room.transform.position;
             recoveryHeadTracked=false;Assert.That((bool)ViewpointFact()["located"],Is.False);
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.False);recoveryHeadTracked=true;
-            using(editor.RuntimeGate.Hold("Review"))Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.False);
-            using(editor.WriteGate.TryFreeze(out _))Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.False);
-            var bad=target.Copy();bad.position=new Vector3(25,0,25);Assert.That(editor.SetWorldViewpoint(null,bad,true,out _,out error),Is.False);
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out _,out var error),Is.False);recoveryHeadTracked=true;
+            using(editor.RuntimeGate.Hold("Review"))Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out _,out error),Is.False);
+            using(editor.WriteGate.TryFreeze(out _))Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out _,out error),Is.False);
+            var bad=target.Copy();bad.position=new Vector3(25,0,25);Assert.That(WorldViewpointCapability.StartPlacement(editor,null,bad,true,out _,out error),Is.False);
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Occupied destination",target.position+Vector3.up*.8f,1,Color.blue,out var id,out error),Is.True,error);
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.False);Assert.That(error,Does.Contain("occupied"));Assert.That(room.transform.position,Is.EqualTo(point));
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out _,out error),Is.False);Assert.That(error,Does.Contain("occupied"));Assert.That(room.transform.position,Is.EqualTo(point));
             Assert.That(editor.DeleteObject(id,out error),Is.True,error);yield return null;
-            Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.True,error);
+            yield return PlaceWorld(editor,null,target,true);
         }
         [UnityTest]public IEnumerator WorldPlacementRequiresAcceptedVirtualGroundAndKeepsModes()
         {
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;var target=TravelPoint();
-            Assert.That(view.Enter(),Is.True);Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out var error),Is.False);Assert.That(error,Does.Contain("ground"));
-            TravelGround();Assert.That(editor.SetWorldViewpoint(null,target,true,out _,out error),Is.True,error);Assert.That(view.Active,Is.True);
+            Assert.That(view.Enter(),Is.True);Assert.That(WorldViewpointCapability.StartPlacement(editor,null,target,true,out _,out var error),Is.False);Assert.That(error,Does.Contain("ground"));
+            TravelGround();yield return PlaceWorld(editor,null,target,true);Assert.That(view.Active,Is.True);
             var controls=host.Current.Controls;controls.ToggleUser();Assert.That(controls.UserEnabled,Is.True,controls.Status);
-            controls.ReturnToWorldOrigin();Assert.That(view.ReadViewpoint(out var origin),Is.True);Assert.That(origin.position.magnitude,Is.LessThan(.0001f));Assert.That(Mathf.Abs(origin.yaw),Is.LessThan(.001f));
+            controls.ReturnToWorldOrigin();yield return WaitOrigin(controls);Assert.That(view.ReadViewpoint(out var origin),Is.True);Assert.That(origin.position.magnitude,Is.LessThan(.0001f));Assert.That(Mathf.Abs(origin.yaw),Is.LessThan(.001f));
             Assert.That(controls.UserEnabled,Is.True);Assert.That(view.Active,Is.True);
             // Tray is owned by the workspace alongside the controls component.
             var actions=editor.GetComponentsInChildren<Maestro.Quest.Rules.RuleToolAction>(true);
@@ -92,13 +102,13 @@ namespace Maestro.Quest.Tests
             SetupTravel();yield return ReadyHost();var editor=host.Current.Editor;
             physics.SetSurfaces(true,"Accepted room");physics.StartPhysics();Assert.That(physics.Running,Is.True);
             physics.Contains=point=>false;
-            Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out var error),Is.False);Assert.That(error,Does.Contain("outside"));Assert.That(physics.Running,Is.True);
-            physics.Contains=null;Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out error),Is.True,error);
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,null,TravelPoint(),true,out _,out var error),Is.False);Assert.That(error,Does.Contain("outside"));Assert.That(physics.Running,Is.True);
+            physics.Contains=null;yield return PlaceWorld(editor,null,TravelPoint(),true);
             physics.PausePhysics();
             var joint=book.gameObject.AddComponent<FixedJoint>();joint.connectedBody=null;
-            Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out error),Is.False);Assert.That(error,Does.Contain("connection"));
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,null,TravelPoint(),true,out _,out error),Is.False);Assert.That(error,Does.Contain("connection"));
             UnityEngine.Object.Destroy(joint);yield return null;
-            Assert.That(editor.SetWorldViewpoint(null,TravelPoint(),true,out _,out error),Is.True,error);
+            yield return PlaceWorld(editor,null,TravelPoint(),true);
         }
         [UnityTest]public IEnumerator WorldPlacementExcludesPhysicalBindingsFromVirtualDestinationQuery()
         {
@@ -107,7 +117,7 @@ namespace Maestro.Quest.Tests
             attached.transform.position=target.position+Vector3.up;attached.AddComponent<BoxCollider>();
             var body=attached.AddComponent<Rigidbody>();body.isKinematic=true;attached.AddComponent<PhysicalPlacementTestBinding>();Physics.SyncTransforms();
             var fixedPosition=body.position;
-            Assert.That(editor.SetWorldViewpoint((string)ViewpointFact()["stateId"],target,false,out _,out var error),Is.True,error);
+            yield return PlaceWorld(editor,(string)ViewpointFact()["stateId"],target,false);
             Assert.That(Vector3.Distance(body.position,fixedPosition),Is.LessThan(.0001f),"Controller/scan bindings stay physical");
             Assert.That(view.ReadViewpoint(out var actual),Is.True);Assert.That(Vector3.Distance(actual.position,target.position),Is.LessThan(.0001f));
         }
@@ -118,8 +128,8 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.MoveObject("book",new Vector3(0,1,2),out var error),Is.True,error);Assert.That(editor.TryFlush(out error),Is.True,error);var before=JsonUtility.ToJson(new RoomStorage(editor.SaveDirectory).Load(out error).viewpoint);var old=ViewpointFact();
             Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);
             while(editor.TemporarySavePending){editor.PollTemporarySave();yield return null;}
-            Assert.That(editor.SetWorldViewpoint((string)old["stateId"],TravelPoint(),false,out _,out error),Is.False);
-            Assert.That(editor.SetWorldViewpoint((string)ViewpointFact()["stateId"],TravelPoint(),false,out var result,out error),Is.True,error);Assert.That((bool)result["temporary"],Is.True);
+            Assert.That(WorldViewpointCapability.StartPlacement(editor,(string)old["stateId"],TravelPoint(),false,out _,out error),Is.False);
+            yield return PlaceWorld(editor,(string)ViewpointFact()["stateId"],TravelPoint(),false);Assert.That((bool)lastPlacementReceipt["temporary"],Is.True);
             Assert.That(JsonUtility.ToJson(new RoomStorage(editor.SaveDirectory).Load(out error).viewpoint),Is.EqualTo(before));
             var placed=room.transform.position;Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(room.transform.position,Is.EqualTo(placed));
             Assert.That(editor.TryFlush(out error),Is.True,error);Assert.That(JsonUtility.ToJson(new RoomStorage(editor.SaveDirectory).Load(out error).viewpoint),Is.EqualTo(JsonUtility.ToJson(TravelPoint())));

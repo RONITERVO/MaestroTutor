@@ -73,7 +73,7 @@ namespace Maestro.Quest.Creation
                 var replacements=captured.placements.Select(p=>{var data=Read(p.target);p.Apply(data);return data;}).ToArray();
                 if(!journal.Prepare(replacements,Array.Empty<string>(),out edit,out error,observedBefore:before))return false;
                 foreach(var placement in captured.placements)poses.Add(Find(placement.target).GetComponent<RigidRoomItem>()?.HoldForEdit(owner));
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,poses,
+                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,poses,
                     ()=>CanApplyCapturedLayout(captured,expected,owner,guard,out var issue)?null:issue,
                     "Layout applied — one Undo restores the previous arrangement",true,checkpoint);
                 edit=null;write=null;poses=null;return true;

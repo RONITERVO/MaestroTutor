@@ -42,7 +42,7 @@ namespace Maestro.Quest.Creation
                     if(!view)throw new InvalidOperationException("The accepted connection has no native view");
                     view.ResetBreak();
                 }
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,poses,CurrentIssue,
+                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,poses,CurrentIssue,
                     "Connection "+operation,placement,checkpoint,afterNativeApply:Repair);
                 edit=null;write=null;poses=null;return true;
             }finally{poses?.Dispose();edit?.Dispose();write?.Dispose();}
