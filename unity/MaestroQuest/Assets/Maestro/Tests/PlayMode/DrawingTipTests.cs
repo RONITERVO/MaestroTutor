@@ -18,7 +18,7 @@ namespace Maestro.Quest.Tests
     {
         (string id,DrawingTipView view,Transform patch) DrawingTipStage()
         {
-            var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());string id=CreateTemplateFixture(TemplateCall("chalk",new Vector3(2,1,0)));
+            var ex=new RoomAgentExecutor(editor);SurfaceFixture(SurfaceConfigure());string id=CreateTemplateFixture(TemplateCall("chalk",new Vector3(2,1,0)));
             var view=editor.Find(id).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);return(id,view,block.GetComponent<DrawingSurfaceView>().Surface("Front"));
         }
         void PlaceTip(string id,Transform patch,float x,float z=0)
@@ -51,10 +51,10 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SharedTipEditingIsRevisionBoundUndoableAndTemporaryWithBoundedReadback()
         {
-            var (id,view,patch)=DrawingTipStage();var ex=new RoomAgentExecutor(editor);var call=TipCall(id);call["arguments"]["definition"]["enabled"]=false;SurfaceRun(ex,call);Assert.That(editor.Read(id).drawingTips[0].enabled,Is.False);Assert.That(ex.Execute(ObjectEditRequest(call),out _,out _),Is.False);
+            var (id,view,patch)=DrawingTipStage();var ex=new RoomAgentExecutor(editor);var call=TipCall(id);call["arguments"]["definition"]["enabled"]=false;yield return SurfaceRun(ex,call);Assert.That(editor.Read(id).drawingTips[0].enabled,Is.False);Assert.That(ex.Execute(ObjectEditRequest(call),out _,out _),Is.False);
             Assert.That(BehaviourCatalog.TryRead("object.drawingTip",1,new JObject{["target"]=id},new BehaviourCatalog.FactContext(editor:editor),out var fact),Is.True);Assert.That(fact.Characters,Is.LessThanOrEqualTo(1024));Assert.That((bool)((JObject)fact.Value)["configured"],Is.True);
-            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;SurfaceRun(ex,TipCall(id,true));Assert.That(editor.Read(id).drawingTips,Is.Empty);Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(id).drawingTips.Single().enabled,Is.False);
-            SurfaceRun(ex,TipCall(id,true));editor.Undo();Assert.That(editor.Read(id).drawingTips.Single().enabled,Is.False);yield return null;
+            Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;yield return SurfaceRun(ex,TipCall(id,true));Assert.That(editor.Read(id).drawingTips,Is.Empty);Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(id).drawingTips.Single().enabled,Is.False);
+            yield return SurfaceRun(ex,TipCall(id,true));editor.Undo();Assert.That(editor.Read(id).drawingTips.Single().enabled,Is.False);yield return null;
         }
         [UnityTest] public IEnumerator RealControllerGripActivatesTheComponentAndReleaseClosesTheStroke()
         {

@@ -127,7 +127,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest]public IEnumerator LightObservationHiddenScanLampAndCasterDoNotBlockPreparedCapture(){
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);
-            string id=MakeLayer(out _);InkAdd(id);ScanObservationLamp(id);string area=ScanBoundsArea(id);yield return ScanBoundsPrepared(id);
+            string id=MakeLayer(out _);yield return InkAdd(id);ScanObservationLamp(id);string area=ScanBoundsArea(id);yield return ScanBoundsPrepared(id);
             // Establish dormant input without the fixture's primary viewer
             // correctly retaining it through predictive/grace demand.
             var camera=viewer.GetComponent<Camera>();bool enabled=camera&&camera.enabled;if(camera)camera.enabled=false;

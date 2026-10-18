@@ -21282,7 +21282,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -21293,7 +21293,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
+      "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -23591,7 +23591,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -23602,7 +23602,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Give a created/imported object one saved sculpt tip on its root (empty part) or a stable recipe part. Local +Z points toward the surface. The enabled tip works only while the user or Maestro holds it and it contacts the accepted top surface within one world centimetre. Loose objects are inert. Radius/height use the receiving field's local metres. Choose raise/lower/level; the same object.field.sculpt operation applies its swept path once, not per frame. Live previews change visible geometry only; release/contact loss publishes matching collision and source with one save/Undo. Physics keeps the accepted surface until then. At most 32 path samples; reaching the limit ends the gesture and requires separating the tool before another. Failed or interrupted saves retain the draft for explicit object.field.resolve retry/discard. Pause/tracking loss never retries automatically. Manual holding has control priority; Maestro-held tools use program priority and cannot take over a user's surface. Only one shared sculpt capture runs, and drawing and sculpt captures cannot overlap. Disable an object's drawing tip before enabling its sculpt tip. Copy/prototypes, saved/temporary rooms and archives retain the exact configuration. Scoop mode uses a configured material store with the same material label and colour as the field. Its local +Z is the opening normal: face it up to take material or down to deposit. Touch within 15 mm, then lift to save one bounded amount (0.001–20 local litres); remaining capacity and available material limit it. Stationary contact and dragging never multiply the amount. Both the surface and carried balance publish in one save/Undo. The carried heap is a bounded visual; no loose grains or airborne spilling are simulated. Inspect object.material.capture for the exact preview and measured balance. Configure the store separately or create a template containing both components.",
+      "description": "Give a created/imported object one saved sculpt tip on its root (empty part) or a stable recipe part. Local +Z points toward the surface. The enabled tip works only while the user or Maestro holds it and it contacts the accepted top surface within one world centimetre. Loose objects are inert. Radius/height use the receiving field's local metres. Choose raise/lower/level; the same object.field.sculpt operation applies its swept path once, not per frame. Live previews change visible geometry only; release/contact loss publishes matching collision and source with one save/Undo. Physics keeps the accepted surface until then. At most 32 path samples; reaching the limit ends the gesture and requires separating the tool before another. Failed or interrupted saves retain the draft for explicit object.field.resolve retry/discard. Pause/tracking loss never retries automatically. Manual holding has control priority; Maestro-held tools use program priority and cannot take over a user's surface. Only one shared sculpt capture runs, and drawing and sculpt captures cannot overlap. Disable an object's drawing tip before enabling its sculpt tip. Copy/prototypes, saved/temporary rooms and archives retain the exact configuration. Scoop mode uses a configured material store with the same material label and colour as the field. Its local +Z is the opening normal: face it up to take material or down to deposit. Touch within 15 mm, then lift to save one bounded amount (0.001–20 local litres); remaining capacity and available material limit it. Stationary contact and dragging never multiply the amount. Both the surface and carried balance publish in one save/Undo. The carried heap is a bounded visual; no loose grains or airborne spilling are simulated. Inspect object.material.capture for the exact preview and measured balance. Configure the store separately or create a template containing both components. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -26087,7 +26087,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -26098,7 +26098,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure reusable plane, cylinder or sphere drawing patches on user-created objects or named recipe parts. This is an explicit configured surface, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, removeStrokes (1–32 unique current IDs), clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. Optional shape is plane (default), cylinder or sphere. Curves require curvatureRadius .01–4 local metres, width at most 2*pi*radius; spheres also require height at most .9*pi*radius to avoid poles. Coordinates are arc lengths at the equator: P=(r*sin(x/r), y, r*(1-cos(x/r))) for cylinders and P=(r*cos(y/r)*sin(x/r), r*sin(y/r), r*(1-cos(y/r)*cos(x/r))) for spheres. No seam wrapping: begin another stroke after crossing a patch edge. Plane radius is zero. Curved strokes tessellate at five-degree steps, at most 2048 rendered points each; these count against the shared room point budget. No inferred mesh UVs, skin deformation, physics or drawing-input start is added.",
+      "description": "Configure reusable plane, cylinder or sphere drawing patches on user-created objects or named recipe parts. This is an explicit configured surface, not projection onto collision boxes, imported mesh triangles, skin or the physical room. Position/rotation belong to the object or part; local X/Y are paper coordinates and the front faces local -Z. Width/height are .02–4 local metres. Use empty part for the object root. Existing marks stay in their patch coordinates; moving/reorienting a patch moves them deliberately and shrinking cannot crop them silently. enabled controls new physical/add strokes, not visibility. add supplies 2–64 planar points (z=0) and returns an exact stroke ID; empty stroke generates one. splice exposes up to 512 points per stroke in batches of 64. removeStroke, removeStrokes (1–32 unique current IDs), clear and removeSurface explicitly remove marks with one Undo. Four surfaces per object, 64 surfaces/128 strokes and 32768 drawing points per room including spatial strokes. Failed saves preserve ink. Temporary edits stay in the fork until Keep. Optional shape is plane (default), cylinder or sphere. Curves require curvatureRadius .01–4 local metres, width at most 2*pi*radius; spheres also require height at most .9*pi*radius to avoid poles. Coordinates are arc lengths at the equator: P=(r*sin(x/r), y, r*(1-cos(x/r))) for cylinders and P=(r*cos(y/r)*sin(x/r), r*sin(y/r), r*(1-cos(y/r)*cos(x/r))) for spheres. No seam wrapping: begin another stroke after crossing a patch edge. Plane radius is zero. Curved strokes tessellate at five-degree steps, at most 2048 rendered points each; these count against the shared room point budget. No inferred mesh UVs, skin deformation, physics or drawing-input start is added. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -26295,7 +26295,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -26306,7 +26306,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Save or remove a rectangular/elliptical passthrough opening on an existing plane surface of a created object. Inspect object.surfaces and object.surface; configure a plane with object.surface.edit first if needed. The window uses that plane's position, rotation, width and height, follows its object or recipe part, and is visible from either side. For an exact physical wall/floor attachment create a scanned layer with drawing.layer.edit, then attach this component to its Canvas: no ink is required. Loaded exact anchors keep it physical during virtual movement; missing anchors hide it without deleting the source. reveal=0 closes the opening; 1 fully reveals physical passthrough where foreground virtual depth permits, multiplied by the host's visual-layer opacity. Surface drawing enabled and ordinary material opacity do not control this mask. Keep a frame's opening free of opaque geometry; this is a plane mask, not a hole cut into the model. Mask depth is the plane's depth, not measured real-world depth. Front opaque geometry and sorted translucent surfaces can cover the opening. Normal transparent sorting limitations apply to intersecting translucent geometry. No colliders, navigation, environment profiles, camera sharing, scan permission, physics or programs are changed. An active headset passthrough subsystem is required for rendering; desktop/headless readback proves saved source only. Four windows per object, one per plane, 16 per room; repeated overlapping masks multiply remaining coverage. Virtual-only camera captures omit masks, while a shared composed headset view includes what is actually rendered. Saves one Undo; copied objects and construction blueprints retain this component. Changing/removing a referenced plane is validated; remove the window before deleting/curving its plane. Temporary edits remain in the fork.",
+      "description": "Save or remove a rectangular/elliptical passthrough opening on an existing plane surface of a created object. Inspect object.surfaces and object.surface; configure a plane with object.surface.edit first if needed. The window uses that plane's position, rotation, width and height, follows its object or recipe part, and is visible from either side. For an exact physical wall/floor attachment create a scanned layer with drawing.layer.edit, then attach this component to its Canvas: no ink is required. Loaded exact anchors keep it physical during virtual movement; missing anchors hide it without deleting the source. reveal=0 closes the opening; 1 fully reveals physical passthrough where foreground virtual depth permits, multiplied by the host's visual-layer opacity. Surface drawing enabled and ordinary material opacity do not control this mask. Keep a frame's opening free of opaque geometry; this is a plane mask, not a hole cut into the model. Mask depth is the plane's depth, not measured real-world depth. Front opaque geometry and sorted translucent surfaces can cover the opening. Normal transparent sorting limitations apply to intersecting translucent geometry. No colliders, navigation, environment profiles, camera sharing, scan permission, physics or programs are changed. An active headset passthrough subsystem is required for rendering; desktop/headless readback proves saved source only. Four windows per object, one per plane, 16 per room; repeated overlapping masks multiply remaining coverage. Virtual-only camera captures omit masks, while a shared composed headset view includes what is actually rendered. Saves one Undo; copied objects and construction blueprints retain this component. Changing/removing a referenced plane is validated; remove the window before deleting/curving its plane. Temporary edits remain in the fork. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "save",
         "target": "00000000000000000000000000000000",
@@ -26591,7 +26591,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -26602,7 +26602,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Save or remove an exact point/spot lamp on a created object or existing recipe part. Use object.lights for the current revision. Position/rotation use the attachment's local frame; spot beams point along local +Z. Range scales with the attachment. Colours are sRGB hex and intensity is a multiplier. Use world lighting/day-cycle controls for dark surroundings; local lamps add to existing ambient/sun light. enabled controls emission independently of the object's paint opacity or visual layer. No real-camera pixels, book pages or control lettering are relit. Hard shadows come from opaque virtual geometry and texture cutouts; blended/faded surfaces transmit light. Scanned/unscanned real obstacles are not shadow casters. Two lamps per object, four per room, six reserved shadow-map faces total: a point light uses six, a spot uses one, including disabled definitions. This bounds rendering work, not a physical Quest performance guarantee. Use object.light.control for transient on/off, intensity and colour without saving. Saves one Undo; copy and creation prototypes preserve the lamps. Changes do not change collisions, physics or the world clock. Readback confirms the native light state, not physical pixels.",
+      "description": "Save or remove an exact point/spot lamp on a created object or existing recipe part. Use object.lights for the current revision. Position/rotation use the attachment's local frame; spot beams point along local +Z. Range scales with the attachment. Colours are sRGB hex and intensity is a multiplier. Use world lighting/day-cycle controls for dark surroundings; local lamps add to existing ambient/sun light. enabled controls emission independently of the object's paint opacity or visual layer. No real-camera pixels, book pages or control lettering are relit. Hard shadows come from opaque virtual geometry and texture cutouts; blended/faded surfaces transmit light. Scanned/unscanned real obstacles are not shadow casters. Two lamps per object, four per room, six reserved shadow-map faces total: a point light uses six, a spot uses one, including disabled definitions. This bounds rendering work, not a physical Quest performance guarantee. Use object.light.control for transient on/off, intensity and colour without saving. Saves one Undo; copy and creation prototypes preserve the lamps. Changes do not change collisions, physics or the world clock. Readback confirms the native light state, not physical pixels. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "save",
         "target": "00000000000000000000000000000000",
@@ -47297,7 +47297,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceCapability.cs",
-      "sha256": "c47030b5d5546e3abe520fb055d1da36278388272f8f0acd2fc4ac2d61014827"
+      "sha256": "15b0bf3edb9ab70236e1b82738affcf79ca4e5a08a960c1c539efe0499e73d27"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingSurfaceFacts.cs",
@@ -47305,7 +47305,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingTipCapability.cs",
-      "sha256": "59b0ca023390cd7aeb5e2c06d762a62087b6f319ae77486c5d7e6eeac2585de5"
+      "sha256": "13ad6f6636d6b5a6302ed5131ee5c89d70ba37283ecbe0f905cc92dc26cc4560"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingToolCapability.cs",
@@ -47457,7 +47457,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightCapability.cs",
-      "sha256": "b8ce04b47db238f15a7591ff8cc163f8eb7b46d40dd39176f7687dbb773e995a"
+      "sha256": "7e81c986bcfa454e80f8dc3e0224651fd0e0533c954010803975ce4a218b57de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightControlCapability.cs",
@@ -47585,7 +47585,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",
-      "sha256": "7a9aac6abd1216ce978125b4e36d4c5ffb81f9e7a25701268a403aa357122f82"
+      "sha256": "0c9d64a0927d04842d4a6d9bebddb1a1b10f2d5007738dc2f0b3762260855e4f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SimulationWorkFacts.cs",
@@ -47633,7 +47633,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowCapability.cs",
-      "sha256": "6b40d08fbf788f602be717ed9b54c0586e82abbdf2ba4bfe499126bf54497eb8"
+      "sha256": "bdfa86147e7c9e59fda3b7039f826595a0d834b9b14d71f2fe0963062a69b7f5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowResourceFacts.cs",
@@ -47956,6 +47956,10 @@
       "sha256": "72a35c066e5cfef7aa0d4a10f4080708c5c79f26bc6d92bfeaac71e34f7d5a93"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingAttachedEdits.cs",
+      "sha256": "b234011b5e72a4085f2c296612a1ae1b3da8abe4dee42930e076332edf8fbd67"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingGeometryEdits.cs",
       "sha256": "2b5834eb246fe195ddcb59cc58eb42ee5e38354fa0a6cb0c9d9b2db2a1894705"
     },
@@ -48133,7 +48137,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
-      "sha256": "3cacc53be024270bff16d8a025233c595c0590f97213b189bd174cdeb84b12a5"
+      "sha256": "d420632d78bb52a3c1c4c9f5756e6dbb823e944157186d075a5c6c98c4e3dea7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomConnection.cs",
@@ -48177,7 +48181,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDrawingTipEdits.cs",
-      "sha256": "faba309d3ec26c76a9f8a3f250c935134ba9a7c561fce8be532a556aec44e009"
+      "sha256": "91ac59c94ecd6cf6106a84e99445d43cb9d5d649050fe666a55de6724b312de7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditFields.cs",
@@ -48257,7 +48261,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLightEdits.cs",
-      "sha256": "21c00642cd5b8fc3a53e5bd1f6e46b79558965a02c19806c3ae795d3f0fdfccd"
+      "sha256": "fe2137bb14c8063dc1421278b4bdf67383569e46b12928e306aaaf1195904cc7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLightObservation.cs",
@@ -48513,7 +48517,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfaceEdits.cs",
-      "sha256": "7951f0b984d44ac9cabe7b24f552131cb476a0f82a97238319e5de0d7d13ede5"
+      "sha256": "a8641c653d45da7a461bdc12024af7927a6ce9b07caefc8ed6a1f758f85faee4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomTerrainReservoir.cs",
@@ -48569,7 +48573,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWindowEdits.cs",
-      "sha256": "ab3de0c46e4ad33092897372e037efcccfcf6f869f1d031681b9c93922058189"
+      "sha256": "dac5e19748930ed3e4dd91accbfb324aebfb218779dd7a8520530435cafec48a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWindowView.cs",

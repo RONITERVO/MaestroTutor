@@ -8,9 +8,13 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        internal bool PrepareLightEdit(string target,int revision,JObject args,out RoomObjectData data,out string error){
-            data=null;if(!CanEditObject(target,true,out error,true))return false;
+        internal bool CanEditLight(string target,int revision,out string error) {
+            if(!CanEditObject(target,true,out error,true))return false;
             if(ObjectRevision(target)!=revision){error="The object changed; read object.lights again";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareLightEdit(string target,int revision,JObject args,out RoomObjectData data,out string error){
+            data=null;if(!CanEditLight(target,revision,out error))return false;
             data=Pose(Read(target),Find(target).transform);string id=(string)args["light"];var lights=data.lights.ToList();
             if((string)args["operation"]=="remove") {if(lights.RemoveAll(l=>l.id==id)==0){error="This lamp was removed";return false;}}
             else {var light=JsonUtility.FromJson<RoomLight>(args["settings"].ToString());light.id=id;lights.RemoveAll(l=>l.id==id);lights.Add(light);}

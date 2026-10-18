@@ -21,7 +21,7 @@ namespace Maestro.Quest.Tests
             try{for(int i=0;i<count;i++){var owner=new RoomResourceOwner(editor.WorldIdentity,"pending","window");held.Add(bundles?WindowResources.Bundle(owner):WindowResources.Mask(owner,"Pending"));}return held;}catch{foreach(var lease in held)lease.Dispose();throw;}
         }
         static void ReleaseWindows(IEnumerable<WindowResources.Lease> leases){foreach(var lease in leases)lease.Dispose();}
-        void CreateWindow(){var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());SurfaceRun(ex,WindowCall());}
+        void CreateWindow(){SurfaceFixture(SurfaceConfigure());var a=(JObject)WindowCall()["arguments"];Assert.IsTrue(editor.EditWindow((string)a["target"],(int)a["revision"],a,out var error),error);}
         Renderer WindowMask()=>block.GetComponentsInChildren<Renderer>(true).Single(RoomWindowView.IsMask);
         [UnityTest]public IEnumerator WindowAdmissionFullBudgetReusesAndRebindsMasksBeforeRemovingTheirOldSurface(){
             CreateWindow();string id=editor.Identity(block);var mask=WindowMask();var mesh=mask.GetComponent<MeshFilter>().sharedMesh;var material=mask.sharedMaterial;var held=FillWindows();held.AddRange(FillWindows(true));
@@ -36,7 +36,7 @@ namespace Maestro.Quest.Tests
             }finally{ReleaseWindows(held);}
         }
         [UnityTest]public IEnumerator WindowAdmissionFailedImmediateSaveNeverPublishesAndRetainsDeferredCharges(){
-            SurfaceRun(new RoomAgentExecutor(editor),SurfaceConfigure());string id=editor.Identity(block);Assert.That(editor.TryFlush(out var error),Is.True,error);string saved=JsonUtility.ToJson(editor.Snapshot());var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));int revision=editor.Revision;bool undo=editor.CanUndo,redo=editor.CanRedo;
+            yield return SurfaceRun(new RoomAgentExecutor(editor),SurfaceConfigure());string id=editor.Identity(block);Assert.That(editor.TryFlush(out var error),Is.True,error);string saved=JsonUtility.ToJson(editor.Snapshot());var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));int revision=editor.Revision;bool undo=editor.CanUndo,redo=editor.CanRedo;
             using(var locked=new FileStream(Path.Combine(directory,RoomStorage.FileName),FileMode.Open,FileAccess.Read,FileShare.Read))Assert.That(editor.EditWindow(id,editor.ObjectRevision(id),(JObject)WindowCall()["arguments"],out error),Is.False);
             Assert.That(editor.Revision,Is.EqualTo(revision));Assert.That(editor.CanUndo,Is.EqualTo(undo));Assert.That(editor.CanRedo,Is.EqualTo(redo));Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));CollectionAssert.AreEqual(bytes,File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName)));Assert.That(block.GetComponent<RoomWindowView>(),Is.Null);Assert.That((int)WindowResources.ObserveBudget()["retiring"],Is.EqualTo(2));yield return null;
             Assert.That((int)WindowResources.ObserveBudget()["masks"],Is.Zero);Assert.That((int)WindowResources.ObserveBudget()["bundles"],Is.Zero);Assert.That(editor.EditWindow(id,editor.ObjectRevision(id),(JObject)WindowCall()["arguments"],out error),Is.True,error);Assert.That(block.GetComponent<RoomWindowView>().Requested,Is.True);

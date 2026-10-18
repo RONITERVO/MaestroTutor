@@ -14001,3 +14001,45 @@ The complete-native-suite checkpoint 7d518ec9 and unresolved intermittent Meta a
 SDK crash remain separate; production reflections stay disabled. Legacy synchronous
 APIs, other authoring/lifecycle paths, owner-thread costs, physical latency and
 the broader release gates remain open. Full v1 is incomplete.
+
+## Shared attached-component completion — 2026-10-18
+
+Saved drawing/sculpt tips, surface patches and ink, lamps and passthrough openings
+now use the shared ordered completion path. The original book, agent and programs
+capture intent before waiting, then recheck current source and native prerequisites.
+Outputs retain the accepted revision and generated stroke identity. This extends
+the existing world system without new public IDs, storage versions or native limits.
+
+Cancellation before acceptance leaves the requested change unapplied. Once accepted,
+Stop lets saving drain; failed publication retains the live edit unconfirmed and
+preserves old files for recovery. Light/windows keep visual scope; tips/surfaces use
+content scope, retaining current root placement through application and Undo.
+Other actors, physics and the world clock continue. Physical contact capture and
+legacy synchronous editor APIs keep their existing separate contracts. Native
+preparation/reconciliation still incur Unity owner-thread costs.
+
+Verification passes **154 EditMode and 111 PlayMode cases**,
+including seven new regressions, plus **3,198 web tests**, app/probe
+TypeScript and catalog checks. Tests cover captured queued intent for all five
+actions, cancellation, immutable results and generated ink identity, stale human
+edits, accepted publication failure, Stop during saving, continued physics and Undo.
+The first runtime run passed 110/111: its surface Undo test repeated unchanged
+settings and therefore undid setup. It now makes a real change and asserts a new
+revision before Undo. The initial compile failure and runtime result are retained;
+no runtime rule, timeout or tolerance was relaxed.
+
+Complete offline Book d91c89315f434fc587c166e22265fb80 passes with
+3,733 observations/1,187 requests; Headless 2a8591feeed045b78310e28e13d18e08
+passes with 2,291 observations/2,290 read sets.
+Lamp and opening controls use actual generated book forms and completed native
+receipts. Six browser fixtures are refreshed from exact native captures.
+Existing world checks, human edit preservation, stale-request refusal, sparse
+periodic inventories and reload without replay remain covered.
+
+Evidence: .quest-evidence/attached-completion-20261018/.
+All 3,282 native inputs and 14 protected files are verified.
+No Android build, headset/device, paid provider, signing, deployment or Meta action
+ran. The complete native-suite checkpoint 7d518ec9 and unresolved intermittent
+Meta audio SDK crash remain separate; production reflections stay disabled.
+Remaining saved authoring/lifecycle actions, physical latency and broader release
+gates remain open. Full v1 is incomplete.

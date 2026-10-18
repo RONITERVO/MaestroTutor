@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests
             editor.Undo();Assert.That(editor.Find(id).GetComponent<MeshFilter>().sharedMesh.vertexCount,Is.GreaterThan(0));yield return null;
         }
         [UnityTest]public IEnumerator InkAdmissionBatchAndFailedStorageReleaseOnlyNewInk(){
-            var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());SurfaceRun(ex,SurfaceAdd());string id=editor.Identity(block);var view=block.GetComponent<DrawingSurfaceView>();var patch=view.Surface("Front");var mesh=patch.GetComponentInChildren<MeshFilter>().sharedMesh;
+            var ex=new RoomAgentExecutor(editor);yield return SurfaceRun(ex,SurfaceConfigure());yield return SurfaceRun(ex,SurfaceAdd());string id=editor.Identity(block);var view=block.GetComponent<DrawingSurfaceView>();var patch=view.Surface("Front");var mesh=patch.GetComponentInChildren<MeshFilter>().sharedMesh;
             Assert.That(editor.TryFlush(out var error),Is.True,error);string saved=JsonUtility.ToJson(editor.Snapshot());var bytes=File.ReadAllBytes(Path.Combine(directory,RoomStorage.FileName));int revision=editor.Revision;var data=editor.Read(id);
             var a=data.surfaces[0].strokes[0].Copy();a.id=Guid.NewGuid().ToString("N");var b=a.Copy();b.id=Guid.NewGuid().ToString("N");data.surfaces[0].strokes=new[]{data.surfaces[0].strokes[0],a,b};var held=FillInk(1);
             try{

@@ -3140,3 +3140,29 @@ saved settings alone cannot produce a successful completion receipt.
 Geometry construction and reconciliation still run on Unity's owner thread.
 Moving persistence preparation off that thread is not a frame-time guarantee.
 Legacy synchronous editor entry points retain their existing semantics.
+
+
+### Completion for attached authoring components
+
+Saved object.drawingTip.edit, object.sculptTip.edit, object.surface.edit,
+object.light.edit and object.window.edit use the same ordered completion
+operation as the other persisted object edits. The book, agent and programs
+wait for native application and saving. Source revisions and native availability
+are checked again after waiting; arguments are captured before admission.
+Cancellation before acceptance leaves the requested edit unapplied. An accepted
+edit continues saving after Stop. Publication failure leaves a visible but
+unconfirmed edit, preserves old files and requires recovery, with no automatic
+replay. Outputs retain the accepted revision and generated stroke identity.
+
+Light and window edits keep their visual transaction scope. Drawing patches and
+tool definitions use content scope so acceptance and Undo preserve the object's
+current placement. Other objects and the world clock continue running. These
+configuration actions do not begin physical drawing, sculpting or a contact
+gesture. A saved opening on desktop still does not establish active Quest
+passthrough; the separate rendering/anchor facts explain availability.
+
+This preserves independent real-room collision, virtual terrain, visual-layer and
+acoustic policies. Choosing which actors respect the physical floor never needs
+to hide that floor, remove another actor's collision, or alter its saved tools.
+Native view preparation and reconciliation still run on Unity's owner thread.
+Physical latency and headset acceptance remain separate release checks.

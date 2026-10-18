@@ -15,8 +15,8 @@ using UnityEngine.XR.Interaction.Toolkit.Interactors;
 namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
         (string target,string tool,DrawingTipView view,Transform patch) EraserStage(){
-            var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());string target=editor.Identity(block);
-            foreach(float x in new[]{-.03f,.03f}){var call=SurfaceAdd();call["arguments"]["points"]=new JArray(new JObject{["x"]=x,["y"]=-.04,["z"]=0},new JObject{["x"]=x,["y"]=.04,["z"]=0});SurfaceRun(ex,call);}
+            var ex=new RoomAgentExecutor(editor);SurfaceFixture(SurfaceConfigure());string target=editor.Identity(block);
+            foreach(float x in new[]{-.03f,.03f}){var call=SurfaceAdd();call["arguments"]["points"]=new JArray(new JObject{["x"]=x,["y"]=-.04,["z"]=0},new JObject{["x"]=x,["y"]=.04,["z"]=0});SurfaceFixture(call);}
             string tool=CreateTemplateFixture(TemplateCall("eraser",new Vector3(2,1,0)));var view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);return(target,tool,view,block.GetComponent<DrawingSurfaceView>().Surface("Front"));
         }
         void PlaceRootTip(string tool,Transform patch,float x,float z=0){var item=editor.Find(tool);item.transform.rotation=patch.rotation;item.transform.position=patch.TransformPoint(new Vector3(x,0,z))-item.transform.TransformVector(editor.Read(tool).drawingTips[0].position);}
@@ -38,7 +38,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.Ownership.TryAcquire("human","Human",RoomActorRole.Control,claims,null,out lease,out error),Is.True,error);Assert.That(capture.HasUnsavedStroke,Is.True);Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));lease.Dispose();Assert.That(capture.Resolve(capture.SessionId,true,out _,out error),Is.True,error);Assert.That(patch.Cast<Transform>().Count(t=>t.gameObject.activeSelf),Is.EqualTo(2));yield return null;
         }
         [UnityTest] public IEnumerator HeldEraserSharesAtomicStrokeRemovalAndTemporaryDiscard(){
-            var(target,tool,view,patch)=EraserStage();var ex=new RoomAgentExecutor(editor);var ids=editor.Read(target).surfaces[0].strokes.Select(x=>x.id).ToArray();var call=SurfaceCall("removeStrokes",new JObject{["strokes"]=new JArray(ids[0],ids[0])});Assert.That(ex.Execute(ObjectEditRequest(call),out _,out _),Is.False);Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));call=SurfaceCall("removeStrokes",new JObject{["strokes"]=new JArray(ids)});SurfaceRun(ex,call);Assert.That(ex.Execute(ObjectEditRequest(call),out _,out _),Is.False);editor.Undo();
+            var(target,tool,view,patch)=EraserStage();var ex=new RoomAgentExecutor(editor);var ids=editor.Read(target).surfaces[0].strokes.Select(x=>x.id).ToArray();var call=SurfaceCall("removeStrokes",new JObject{["strokes"]=new JArray(ids[0],ids[0])});Assert.That(ex.Execute(ObjectEditRequest(call),out _,out _),Is.False);Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));call=SurfaceCall("removeStrokes",new JObject{["strokes"]=new JArray(ids)});yield return SurfaceRun(ex,call);Assert.That(ex.Execute(ObjectEditRequest(call),out _,out _),Is.False);editor.Undo();
             Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;patch=editor.Find(target).GetComponent<DrawingSurfaceView>().Surface("Front");view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);PlaceRootTip(tool,patch,-.03f);view.Sample(true,RoomActorRole.Control);Assert.That(editor.DiscardTemporaryRoom(out _),Is.False);view.Sample(false,RoomActorRole.Control);Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(1));Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));yield return null;
         }
         [UnityTest] public IEnumerator HeldEraserRealGripReleaseUsesItsOwnWidthAndKeepsTrayPreferences(){
@@ -51,7 +51,7 @@ namespace Maestro.Quest.Tests {
             Assert.That(root.GetComponent<SpatialDrawing>().IsDrawing,Is.False);Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(1));Assert.That(editor.Read(target).surfaces[0].strokes[0].points[0].x,Is.EqualTo(.03f));editor.Undo();Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));yield return null;
         }
         [UnityTest] public IEnumerator HeldEraserPencilAndBrushDefaultsDrawThroughTheSamePhysicalTip(){
-            var ex=new RoomAgentExecutor(editor);SurfaceRun(ex,SurfaceConfigure());var patch=block.GetComponent<DrawingSurfaceView>().Surface("Front");string target=editor.Identity(block);
+            var ex=new RoomAgentExecutor(editor);yield return SurfaceRun(ex,SurfaceConfigure());var patch=block.GetComponent<DrawingSurfaceView>().Surface("Front");string target=editor.Identity(block);
             foreach(string id in new[]{"pencil","brush"}){string tool=CreateTemplateFixture(TemplateCall(id,new Vector3(2,1,0)));var view=editor.Find(tool).GetComponent<DrawingTipView>();view.Sample(false,RoomActorRole.Control);PlaceRootTip(tool,patch,-.03f);view.Sample(true,RoomActorRole.Control);PlaceRootTip(tool,patch,.03f);view.Sample(true,RoomActorRole.Control);view.Sample(false,RoomActorRole.Control);Assert.That(editor.Read(target).surfaces[0].strokes.Last().radius,Is.EqualTo(editor.Read(tool).drawingTips[0].radius));editor.Find(tool).transform.position=new Vector3(3,1,0);patch=block.GetComponent<DrawingSurfaceView>().Surface("Front");}
             Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));yield return null;
         }

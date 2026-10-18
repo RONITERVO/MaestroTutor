@@ -14,7 +14,22 @@ current object revision and patch ID. Changing patch position/rotation moves its
 existing ink deliberately; shrinking cannot silently crop it. `enabled` controls
 new drawing, not whether saved ink is visible. Each successful edit is one saved
 edit and one Undo, or one edit in the current temporary fork. Keep/Discard retain
-the existing room semantics. Failed storage does not publish partial ink.
+the existing room semantics.
+
+Shared surface and drawing-tip configuration actions now return completion after
+native application and confirmed saving. They use the room's ordered save queue;
+waiting captures the arguments, without retaining a room snapshot or holding a
+moving body. A newer authored revision invalidates the request. Cancellation before
+acceptance leaves source and ink untouched. After acceptance, Stop lets saving
+drain; a publication failure retains the visible edit as unconfirmed, preserves the
+previous files and requires recovery, rather than replaying the stroke. A generated
+stroke ID and revision belong to that accepted edit even if later edits occur
+before its result is read. Editing and Undo preserve current root placement.
+In temporary play, completion remains local until Keep.
+
+Physical contact capture and retained-stroke retry/discard keep their separate
+existing contracts; this change does not claim that every legacy synchronous
+editor call or physical gesture has moved to background saving.
 
 `object.surfaces` reads patch IDs, anchors, enabled state, stroke counts and object
 revision. `object.surface` reads the complete patch configuration. Revision-bound

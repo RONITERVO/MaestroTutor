@@ -2,41 +2,42 @@
   "boundary": "Real Unity native configuration/readback/Undo; physical grip tested separately. No headset or provider proof.",
   "before": {
     "version": 1,
-    "revision": 299,
-    "sceneRevision": 54,
-    "ack": 120,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "revision": 4138,
+    "sceneRevision": 221,
+    "ack": 1706,
+    "session": "332e2a5a21294d829907c879a2f93a90",
     "status": "Action completed",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -53,12 +54,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -87,15 +94,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -103,6 +127,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -115,6 +140,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -129,11 +155,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -147,14 +198,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -275,195 +326,17 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "object.surfaces",
@@ -515,21 +388,21 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "dd6deeb4830b4ffd8ccbbd2f52911258"
+        "target": "b6e7de3a564b49b88841c88e8d560f5c"
       },
       "available": false,
       "value": null
     },
     "execution": {
       "selected": {
-        "id": "1c9c989710454e86aa0163028f26b394",
+        "id": "3fefb51656e14936869d0e2732dc75d4",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          "objectId": "472ec2d891a64f98a9c72b07383c899e"
         },
         "call": {
           "id": "object.create",
@@ -548,33 +421,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "948f74080fc849c5bd81d5701f4ac462",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "0c98c1501e154b88a35114fffeca69c5"
-          }
-        },
-        {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
-          "capability": "object.container.edit",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "id": "e35256b856304b218c0e90138d5a73e9",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
+            "05f1ca84ebfa4a36ad0cbaee56d35942",
+            "1b32725e7d954e8aa5d0cf45fe9d379b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -583,40 +435,61 @@
           }
         },
         {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
           }
         },
         {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
           }
         },
         {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "d7dd14e95c7c47599c1b65bc0f34f487"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "81490960c829458da2382b8a4f3fd0fa",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
+          }
+        },
+        {
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -624,39 +497,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -664,100 +537,100 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         }
       ],
-      "nextRunId": "1d60d00aad284521bcc993d56ba316ed",
+      "nextRunId": "e99ed173f5ed4973af9126e7edfafd67",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }
@@ -765,41 +638,42 @@
   },
   "search": {
     "version": 1,
-    "revision": 301,
-    "sceneRevision": 54,
-    "ack": 121,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
-    "status": "Found 1 actions. Search does not run or enable anything.",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "revision": 4140,
+    "sceneRevision": 221,
+    "ack": 1707,
+    "session": "332e2a5a21294d829907c879a2f93a90",
+    "status": "Found 2 actions. Search does not run or enable anything.",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -816,12 +690,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -850,15 +730,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -866,6 +763,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -878,6 +776,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -892,11 +791,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -910,14 +834,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1038,220 +962,47 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "search",
       "query": "Configure an object's drawing tip",
       "offset": 0,
       "pageSize": 6,
-      "total": 1,
+      "total": 2,
       "entries": [
         {
           "id": "object.drawingTip.edit",
           "version": 1,
           "label": "Configure an object's drawing tip"
+        },
+        {
+          "id": "object.sculptTip.edit",
+          "version": 1,
+          "label": "Configure an object's sculpt tip"
         }
       ],
-      "status": "Found 1 actions. Search does not run or enable anything."
+      "status": "Found 2 actions. Search does not run or enable anything."
     },
     "execution": {
       "selected": {
-        "id": "1c9c989710454e86aa0163028f26b394",
+        "id": "3fefb51656e14936869d0e2732dc75d4",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          "objectId": "472ec2d891a64f98a9c72b07383c899e"
         },
         "call": {
           "id": "object.create",
@@ -1270,33 +1021,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "948f74080fc849c5bd81d5701f4ac462",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "0c98c1501e154b88a35114fffeca69c5"
-          }
-        },
-        {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
-          "capability": "object.container.edit",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "id": "e35256b856304b218c0e90138d5a73e9",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
+            "05f1ca84ebfa4a36ad0cbaee56d35942",
+            "1b32725e7d954e8aa5d0cf45fe9d379b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1305,40 +1035,61 @@
           }
         },
         {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
           }
         },
         {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
           }
         },
         {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "d7dd14e95c7c47599c1b65bc0f34f487"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "81490960c829458da2382b8a4f3fd0fa",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
+          }
+        },
+        {
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -1346,39 +1097,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -1386,100 +1137,100 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         }
       ],
-      "nextRunId": "1d60d00aad284521bcc993d56ba316ed",
+      "nextRunId": "e99ed173f5ed4973af9126e7edfafd67",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }
@@ -1487,41 +1238,42 @@
   },
   "definition": {
     "version": 1,
-    "revision": 303,
-    "sceneRevision": 54,
-    "ack": 122,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "revision": 4142,
+    "sceneRevision": 221,
+    "ack": 1708,
+    "session": "332e2a5a21294d829907c879a2f93a90",
     "status": "Action definition. Check concrete arguments before running it.",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -1538,12 +1290,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -1572,15 +1330,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -1588,6 +1363,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -1600,6 +1376,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -1614,11 +1391,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -1632,14 +1434,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1760,195 +1562,17 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "object.drawingTip.edit",
@@ -2190,7 +1814,7 @@
             }
           ]
         },
-        "duration": "instant",
+        "duration": "completion",
         "ownership": "exclusiveTargetAndProp",
         "channels": [
           "wholeTarget"
@@ -2201,7 +1825,7 @@
           "source.revision.current",
           "storage.writable"
         ],
-        "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data.",
+        "description": "Give any created/imported object one saved drawing tip, or remove it. Empty part means its root; otherwise use a stable recipe part. Local +Z points toward the drawing patch. Ink colour and radius are independent of object paint and tray pencil preferences. Radius uses the receiving patch's local metres. The enabled tip draws only while a user or Maestro holds the tool and its tip is within one world centimetre of an enabled plane/cylinder/sphere patch. Optional mode is draw (default) or erase. A held eraser sweeps complete strokes within twice its radius (minimum 1 cm) plus ink thickness; contact loss or release saves the selected IDs with one Undo. The preview hides selected ink while accepted source remains unchanged until save. Interrupted or failed erasing is retained for the same explicit retry/discard; no automatic deletion retry. Loose tools do not draw or erase. No arbitrary-mesh, skin or scanned-wall painting. One room capture at a time; loss of contact ends one saved stroke/Undo. After interruption or a busy/failed capture, separate the tip before starting again. Failed saves retain the draft for explicit retry/discard. Manual holding uses control priority; Maestro holding uses program priority and cannot interrupt a user. Configuration does not itself create ink or move objects. Copy, Undo, temporary rooms and portable workspaces retain the same tip data. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
         "example": {
           "operation": "configure",
           "target": "00000000000000000000000000000000",
@@ -2234,14 +1858,14 @@
     },
     "execution": {
       "selected": {
-        "id": "1c9c989710454e86aa0163028f26b394",
+        "id": "3fefb51656e14936869d0e2732dc75d4",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          "objectId": "472ec2d891a64f98a9c72b07383c899e"
         },
         "call": {
           "id": "object.create",
@@ -2260,33 +1884,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "948f74080fc849c5bd81d5701f4ac462",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "0c98c1501e154b88a35114fffeca69c5"
-          }
-        },
-        {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
-          "capability": "object.container.edit",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "id": "e35256b856304b218c0e90138d5a73e9",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
+            "05f1ca84ebfa4a36ad0cbaee56d35942",
+            "1b32725e7d954e8aa5d0cf45fe9d379b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2295,40 +1898,61 @@
           }
         },
         {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
           }
         },
         {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
           }
         },
         {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "d7dd14e95c7c47599c1b65bc0f34f487"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "81490960c829458da2382b8a4f3fd0fa",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
+          }
+        },
+        {
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -2336,39 +1960,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -2376,100 +2000,100 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         }
       ],
-      "nextRunId": "1d60d00aad284521bcc993d56ba316ed",
+      "nextRunId": "e99ed173f5ed4973af9126e7edfafd67",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }
@@ -2477,41 +2101,42 @@
   },
   "current": {
     "version": 1,
-    "revision": 305,
-    "sceneRevision": 54,
-    "ack": 123,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "revision": 4145,
+    "sceneRevision": 221,
+    "ack": 1709,
+    "session": "332e2a5a21294d829907c879a2f93a90",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -2528,12 +2153,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -2562,15 +2193,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -2578,6 +2226,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -2590,6 +2239,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -2604,11 +2254,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -2622,14 +2297,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2750,195 +2425,17 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 48,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "object.drawingTip",
@@ -3011,11 +2508,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "6c44d54c1c5c4e19b021336f9a086825"
+        "target": "472ec2d891a64f98a9c72b07383c899e"
       },
       "available": true,
       "value": {
-        "revision": 48,
+        "revision": 225,
         "configured": true,
         "definition": {
           "part": "Chalk",
@@ -3044,14 +2541,14 @@
     },
     "execution": {
       "selected": {
-        "id": "1c9c989710454e86aa0163028f26b394",
+        "id": "3fefb51656e14936869d0e2732dc75d4",
         "capability": "object.create",
         "version": 1,
         "resources": [],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+          "objectId": "472ec2d891a64f98a9c72b07383c899e"
         },
         "call": {
           "id": "object.create",
@@ -3070,33 +2567,12 @@
       "running": [],
       "outcomes": [
         {
-          "id": "948f74080fc849c5bd81d5701f4ac462",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "0c98c1501e154b88a35114fffeca69c5"
-          }
-        },
-        {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
-          "capability": "object.container.edit",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
-          ],
-          "phase": "completed",
-          "status": "Action completed"
-        },
-        {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
+          "id": "e35256b856304b218c0e90138d5a73e9",
           "capability": "object.container.transfer",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
+            "05f1ca84ebfa4a36ad0cbaee56d35942",
+            "1b32725e7d954e8aa5d0cf45fe9d379b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -3105,40 +2581,61 @@
           }
         },
         {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
           }
         },
         {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
           }
         },
         {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
+          "capability": "object.container.edit",
+          "version": 1,
+          "resources": [
+            "d7dd14e95c7c47599c1b65bc0f34f487"
+          ],
+          "phase": "completed",
+          "status": "Action completed"
+        },
+        {
+          "id": "81490960c829458da2382b8a4f3fd0fa",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
+          }
+        },
+        {
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -3146,39 +2643,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -3186,100 +2683,100 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         }
       ],
-      "nextRunId": "1d60d00aad284521bcc993d56ba316ed",
+      "nextRunId": "e99ed173f5ed4973af9126e7edfafd67",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }
@@ -3287,41 +2784,42 @@
   },
   "after": {
     "version": 1,
-    "revision": 309,
-    "sceneRevision": 55,
-    "ack": 124,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "revision": 4152,
+    "sceneRevision": 222,
+    "ack": 1712,
+    "session": "332e2a5a21294d829907c879a2f93a90",
     "status": "Action completed",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -3338,12 +2836,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -3372,15 +2876,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -3388,6 +2909,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -3400,6 +2922,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -3414,11 +2937,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -3432,14 +2980,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3560,247 +3108,65 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 49,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "inspect",
-      "capability": "object.drawingTip",
+      "capability": "object.definition",
       "version": 1,
       "definition": {
-        "id": "object.drawingTip",
+        "id": "object.definition",
         "version": 1,
         "type": {
           "record": {
+            "target": "text",
             "revision": "number",
-            "configured": "boolean",
-            "definition": {
+            "kind": "text",
+            "name": "text",
+            "position": {
               "record": {
-                "part": "text",
-                "position": {
-                  "record": {
-                    "x": "number",
-                    "y": "number",
-                    "z": "number"
-                  }
-                },
-                "rotation": {
-                  "record": {
-                    "x": "number",
-                    "y": "number",
-                    "z": "number",
-                    "w": "number"
-                  }
-                },
-                "color": {
-                  "record": {
-                    "r": "number",
-                    "g": "number",
-                    "b": "number",
-                    "a": "number"
-                  }
-                },
-                "radius": "number",
-                "enabled": "boolean",
-                "mode": "text"
+                "x": "number",
+                "y": "number",
+                "z": "number"
+              }
+            },
+            "rotation": {
+              "record": {
+                "x": "number",
+                "y": "number",
+                "z": "number",
+                "w": "number"
+              }
+            },
+            "scale": "number",
+            "content": {
+              "record": {
+                "points": "number",
+                "parts": "number",
+                "frames": "number",
+                "modelHash": "text",
+                "recipePlaying": "boolean"
               }
             }
           }
         },
-        "label": "Object drawing tip",
-        "description": "Saved tip configuration and current object revision. configured=false returns inert default fields for editing; it does not add a component. Reads do not draw. Use object.drawing.capture for the shared active/retained capture.",
+        "label": "Saved object definition",
+        "description": "Canonical object metadata and exact authored revision, from the temporary fork when active. Position/rotation/scale are saved room-local values, not live physics, camera coordinates or the animated pose. Content counts describe stored drawings, recipe parts and recorded frames; modelHash is an exact asset reference, not proof of availability or completed loading. Saved metadata remains readable when the native instance is inactive or unavailable. Use object.presence to distinguish that condition from missing saved content. Name is bounded display text; an empty copy name retains the original full name. Reading grants no edit authority and takes no ownership. Use this revision for kind=copy; a missing source is unavailable.",
         "input": {
           "type": "object",
           "properties": {
             "target": {
               "type": "string",
-              "pattern": "^[a-fA-F0-9]{32}$",
+              "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
               "maxLength": 32,
               "x-resource": "object"
             }
@@ -3811,54 +3177,51 @@
           "additionalProperties": false
         },
         "example": {
-          "target": "00000000000000000000000000000000"
+          "target": "book"
         },
         "features": [
-          "factQueries.v1",
-          "drawingTips.v1"
+          "factQueries.v1"
         ]
       },
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "6c44d54c1c5c4e19b021336f9a086825"
+        "target": "472ec2d891a64f98a9c72b07383c899e"
       },
       "available": true,
       "value": {
-        "revision": 49,
-        "configured": true,
-        "definition": {
-          "part": "Chalk",
-          "position": {
-            "x": 0,
-            "y": 0.07999999821186066,
-            "z": 0
-          },
-          "rotation": {
-            "x": -0.7071067690849304,
-            "y": 0,
-            "z": 0,
-            "w": 0.7071067690849304
-          },
-          "color": {
-            "r": 0.10000000149011612,
-            "g": 0.5,
-            "b": 0.8999999761581421,
-            "a": 1
-          },
-          "radius": 0.004000000189989805,
-          "enabled": true,
-          "mode": "draw"
+        "target": "472ec2d891a64f98a9c72b07383c899e",
+        "revision": 226,
+        "kind": "Assembly",
+        "name": "Chalk",
+        "position": {
+          "x": 0.4,
+          "y": 1,
+          "z": 0.6
+        },
+        "rotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        },
+        "scale": 1,
+        "content": {
+          "points": 0,
+          "parts": 1,
+          "frames": 0,
+          "modelHash": "",
+          "recipePlaying": false
         }
       }
     },
     "execution": {
       "selected": {
-        "id": "1d60d00aad284521bcc993d56ba316ed",
+        "id": "e99ed173f5ed4973af9126e7edfafd67",
         "capability": "object.drawingTip.edit",
         "version": 1,
         "resources": [
-          "6c44d54c1c5c4e19b021336f9a086825"
+          "472ec2d891a64f98a9c72b07383c899e"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -3867,8 +3230,8 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "6c44d54c1c5c4e19b021336f9a086825",
-            "revision": 48,
+            "target": "472ec2d891a64f98a9c72b07383c899e",
+            "revision": 225,
             "definition": {
               "part": "Chalk",
               "position": {
@@ -3898,64 +3261,61 @@
       "running": [],
       "outcomes": [
         {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
+          }
+        },
+        {
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
+          }
+        },
+        {
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
+          }
+        },
+        {
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
           "capability": "object.container.edit",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
+            "d7dd14e95c7c47599c1b65bc0f34f487"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
-          "capability": "object.container.transfer",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "transferredMl": 125
-          }
-        },
-        {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "81490960c829458da2382b8a4f3fd0fa",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
-          }
-        },
-        {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
-          }
-        },
-        {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -3963,39 +3323,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -4003,110 +3363,110 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         },
         {
-          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "id": "e99ed173f5ed4973af9126e7edfafd67",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "6c44d54c1c5c4e19b021336f9a086825"
+            "472ec2d891a64f98a9c72b07383c899e"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
       ],
-      "nextRunId": "a4d7164069c94b738d9a5f236a8e828c",
+      "nextRunId": "f1a2e975b41f4e598293b447c4b09985",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }
@@ -4114,41 +3474,42 @@
   },
   "read": {
     "version": 1,
-    "revision": 311,
-    "sceneRevision": 55,
-    "ack": 125,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "revision": 4154,
+    "sceneRevision": 222,
+    "ack": 1713,
+    "session": "332e2a5a21294d829907c879a2f93a90",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -4165,12 +3526,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -4199,15 +3566,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -4215,6 +3599,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -4227,6 +3612,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -4241,11 +3627,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -4259,14 +3670,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4387,195 +3798,17 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 49,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "object.drawingTip",
@@ -4648,11 +3881,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "6c44d54c1c5c4e19b021336f9a086825"
+        "target": "472ec2d891a64f98a9c72b07383c899e"
       },
       "available": true,
       "value": {
-        "revision": 49,
+        "revision": 226,
         "configured": true,
         "definition": {
           "part": "Chalk",
@@ -4681,11 +3914,11 @@
     },
     "execution": {
       "selected": {
-        "id": "1d60d00aad284521bcc993d56ba316ed",
+        "id": "e99ed173f5ed4973af9126e7edfafd67",
         "capability": "object.drawingTip.edit",
         "version": 1,
         "resources": [
-          "6c44d54c1c5c4e19b021336f9a086825"
+          "472ec2d891a64f98a9c72b07383c899e"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -4694,8 +3927,8 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "6c44d54c1c5c4e19b021336f9a086825",
-            "revision": 48,
+            "target": "472ec2d891a64f98a9c72b07383c899e",
+            "revision": 225,
             "definition": {
               "part": "Chalk",
               "position": {
@@ -4725,64 +3958,61 @@
       "running": [],
       "outcomes": [
         {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
+          }
+        },
+        {
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
+          }
+        },
+        {
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
+          }
+        },
+        {
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
           "capability": "object.container.edit",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
+            "d7dd14e95c7c47599c1b65bc0f34f487"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
-          "capability": "object.container.transfer",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "transferredMl": 125
-          }
-        },
-        {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "81490960c829458da2382b8a4f3fd0fa",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
-          }
-        },
-        {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
-          }
-        },
-        {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -4790,39 +4020,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -4830,110 +4060,110 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         },
         {
-          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "id": "e99ed173f5ed4973af9126e7edfafd67",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "6c44d54c1c5c4e19b021336f9a086825"
+            "472ec2d891a64f98a9c72b07383c899e"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
       ],
-      "nextRunId": "a4d7164069c94b738d9a5f236a8e828c",
+      "nextRunId": "f1a2e975b41f4e598293b447c4b09985",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }
@@ -4941,41 +4171,42 @@
   },
   "undo": {
     "version": 1,
-    "revision": 315,
-    "sceneRevision": 56,
-    "ack": 127,
-    "session": "f0299e7b03c048e59f9d43a5144d488e",
+    "revision": 4159,
+    "sceneRevision": 223,
+    "ack": 1715,
+    "session": "332e2a5a21294d829907c879a2f93a90",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "10d4a7c230344df0bc5727a2aca01167",
+    "selectedId": "f270a0582e064ea0beb0597aa9872b5b",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "c04bf7c5b8df40f19febd4d768f1452f",
+      "stateId": "fbcfecba86c8424aa6b83122caa0a718",
       "error": "",
       "visible": false,
       "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -4992,12 +4223,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -5026,15 +4263,32 @@
       "groupTransforms.v1",
       "constructionManipulation.v1",
       "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
       "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
       "curvedDrawingSurfaces.v1",
       "drawingTips.v1",
       "drawingErasers.v1",
       "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
       "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -5042,6 +4296,7 @@
       "connectedBlueprints.v2",
       "creationPrototypes.v1",
       "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
       "extrusionGeometry.v1",
@@ -5054,6 +4309,7 @@
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -5068,11 +4324,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -5086,14 +4367,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "e3fd8f9ad43140cdb26fa91642552d54",
+      "id": "8a3e05581fb543d5a4e5dbe21cd83772",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -5214,195 +4495,17 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "6395fdba3fd448818e0db9cb72b74470",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "6c44d54c1c5c4e19b021336f9a086825",
-        "name": "Chalk",
-        "kind": "Assembly",
-        "objectRevision": 50,
-        "position": {
-          "x": 0.4000000059604645,
-          "y": 1,
-          "z": 0.6000000238418579
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "solid",
-          "shape": "automatic",
-          "mass": 0.05000000074505806
-        },
-        "movement": null
-      },
-      {
-        "id": "97482e27f08b4fcca0a0ca7691c04771",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "a454a7680201495185792eec7eb0d376",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
-    "created": [],
-    "capture": {
-      "captureId": "30cd4ed53b3b476d9f092b596d56fe4a",
-      "sha256": "852cbebf2a4ec97b57803a674051a85b1ab82710377fc801e2406c67f608b993",
-      "mimeType": "image/jpeg",
-      "width": 512,
-      "height": 384,
-      "capturedAt": "2026-10-04T06:07:37.2155527Z",
-      "sceneRevision": 3,
-      "verticalFov": 60,
-      "position": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 0,
-        "y": 0,
-        "z": 0,
-        "w": 1
-      }
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
     },
+    "objects": [],
+    "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": null,
     "catalog": {
       "operation": "inspect",
       "capability": "object.drawingTip",
@@ -5475,11 +4578,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "6c44d54c1c5c4e19b021336f9a086825"
+        "target": "472ec2d891a64f98a9c72b07383c899e"
       },
       "available": true,
       "value": {
-        "revision": 50,
+        "revision": 227,
         "configured": true,
         "definition": {
           "part": "Chalk",
@@ -5508,11 +4611,11 @@
     },
     "execution": {
       "selected": {
-        "id": "1d60d00aad284521bcc993d56ba316ed",
+        "id": "e99ed173f5ed4973af9126e7edfafd67",
         "capability": "object.drawingTip.edit",
         "version": 1,
         "resources": [
-          "6c44d54c1c5c4e19b021336f9a086825"
+          "472ec2d891a64f98a9c72b07383c899e"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -5521,8 +4624,8 @@
           "version": 1,
           "arguments": {
             "operation": "configure",
-            "target": "6c44d54c1c5c4e19b021336f9a086825",
-            "revision": 48,
+            "target": "472ec2d891a64f98a9c72b07383c899e",
+            "revision": 225,
             "definition": {
               "part": "Chalk",
               "position": {
@@ -5552,64 +4655,61 @@
       "running": [],
       "outcomes": [
         {
-          "id": "4d5f8be40a614a9cb12031e27e9e8e29",
+          "id": "6a728b29003b448e8bf1b19c3e45ca1a",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "4f25a0f266e643458c0f9bc74e41c525"
+          }
+        },
+        {
+          "id": "78d7d616d22f4c2e8689efdf6d924e36",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "dcd8ed1a110241ed9e005d2bbfc242c7"
+          }
+        },
+        {
+          "id": "e051ba71446f44da86984b2c3aca2b1a",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "d7dd14e95c7c47599c1b65bc0f34f487"
+          }
+        },
+        {
+          "id": "29ea6bc35e184f8fb6b2cac939f85a64",
           "capability": "object.container.edit",
           "version": 1,
           "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5"
+            "d7dd14e95c7c47599c1b65bc0f34f487"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "b697d32df1be4aa3806354d2c68f9a68",
-          "capability": "object.container.transfer",
-          "version": 1,
-          "resources": [
-            "79cffbc68e5f4d85af01411db45bb4a5",
-            "0c98c1501e154b88a35114fffeca69c5"
-          ],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "transferredMl": 125
-          }
-        },
-        {
-          "id": "e3095f70b3ef40f8b5bbf41ded516ac8",
+          "id": "81490960c829458da2382b8a4f3fd0fa",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "470224b5d7804039b54d7e4ffbb386a1"
+            "objectId": "7435eadc7bca4be3ae0a0dad36269b56"
           }
         },
         {
-          "id": "ca571c6ddc0c452ba336c65901245797",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "f1a0ae20bd7f4cc29395044ef63ae811"
-          }
-        },
-        {
-          "id": "f5c13a7ae98c4750a149982897d1a023",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "a41eebcb796544adae6d3985142033a1"
-          }
-        },
-        {
-          "id": "2224086730974e17819a7fe086016b5f",
+          "id": "ec683634020e4dd4b4910904bc2a1048",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -5617,39 +4717,39 @@
           "status": "Action completed"
         },
         {
-          "id": "38bffb3159bb4f3ba2b578629d3598d9",
+          "id": "9898e44b3a204662a524272fa5b61b95",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 35,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 212,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "6da1904adaf14d24a698a5b29035f019",
+          "id": "63c14d7ae00641ba99a60a35865e8426",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "a41eebcb796544adae6d3985142033a1"
+            "7435eadc7bca4be3ae0a0dad36269b56"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "a41eebcb796544adae6d3985142033a1",
-            "revision": 36,
+            "target": "7435eadc7bca4be3ae0a0dad36269b56",
+            "revision": 213,
             "surface": "Front",
-            "stroke": "7f99022c15824ea7b61ec542724e0029"
+            "stroke": "826c524f93c84ecdbe135ed45b05c13d"
           }
         },
         {
-          "id": "2fd5508daed944dd9d396919aba7739d",
+          "id": "cc9c4d004ccf44189ee0fc73a7f58038",
           "capability": "drawing.tool.set",
           "version": 1,
           "resources": [],
@@ -5657,110 +4757,110 @@
           "status": "Action completed"
         },
         {
-          "id": "6718c49eedb047a88948a461b0dc2098",
+          "id": "20302bb877b54ac9b30d79bc6739018a",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "objectId": "b6e7de3a564b49b88841c88e8d560f5c"
           }
         },
         {
-          "id": "6b66a6ec6e69450088a3294da6200336",
+          "id": "b933b0b3db84459e81974cf6dd1efc1e",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 40,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 217,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "e90f59516fd3491787f5f1c08725d796",
+          "id": "bf6df48852604618a8bcd25771c32892",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 41,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 218,
             "surface": "Front",
-            "stroke": "237d1b1a7b5048419d962166e6ba3e33"
+            "stroke": "fddb8121efa04626a40f4824ae5a0443"
           }
         },
         {
-          "id": "a69f8a2dcec54339a09f5c5ae33fe413",
+          "id": "888a4ff7778b4fbd90dc8ba46460638f",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 42,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 219,
             "surface": "Front",
-            "stroke": "fda5b64e5e124df8bb36a7e6640ec394"
+            "stroke": "85eee1621f544a26953779fdec7d33be"
           }
         },
         {
-          "id": "a48671770a854e058b40b645e220993b",
+          "id": "a750373773da492692326e670535b677",
           "capability": "object.surface.edit",
           "version": 1,
           "resources": [
-            "dd6deeb4830b4ffd8ccbbd2f52911258"
+            "b6e7de3a564b49b88841c88e8d560f5c"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "dd6deeb4830b4ffd8ccbbd2f52911258",
-            "revision": 43,
+            "target": "b6e7de3a564b49b88841c88e8d560f5c",
+            "revision": 220,
             "surface": "Front",
             "stroke": ""
           }
         },
         {
-          "id": "1c9c989710454e86aa0163028f26b394",
+          "id": "3fefb51656e14936869d0e2732dc75d4",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "6c44d54c1c5c4e19b021336f9a086825"
+            "objectId": "472ec2d891a64f98a9c72b07383c899e"
           }
         },
         {
-          "id": "1d60d00aad284521bcc993d56ba316ed",
+          "id": "e99ed173f5ed4973af9126e7edfafd67",
           "capability": "object.drawingTip.edit",
           "version": 1,
           "resources": [
-            "6c44d54c1c5c4e19b021336f9a086825"
+            "472ec2d891a64f98a9c72b07383c899e"
           ],
           "phase": "completed",
           "status": "Action completed"
         }
       ],
-      "nextRunId": "a4d7164069c94b738d9a5f236a8e828c",
+      "nextRunId": "f1a2e975b41f4e598293b447c4b09985",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "53a8d0b0fa7e43d6991e6240fe7f58b3",
+        "nextRunId": "b1cd9caadc6c4b56b33ef51e3f24f4aa",
         "storageError": null,
         "recovery": null
       }

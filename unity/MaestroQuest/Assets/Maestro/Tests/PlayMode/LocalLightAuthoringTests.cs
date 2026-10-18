@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
             string target=editor.Identity(block);var args=LampArguments(target,new RoomLight{kind="spot",shadows="hard"});
             Assert.That(RoomControls.Capabilities(editor),Does.Contain(ObjectLightCapability.Feature));
             var call=new JObject{["id"]="object.light.edit",["version"]=1,["arguments"]=args};var request=ObjectEditRequest(call);var executor=new RoomAgentExecutor(editor);
-            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);int revision=editor.ObjectRevision(target);yield return null;
+            Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);int revision=editor.ObjectRevision(target);yield return null;
             var view=block.GetComponent<RoomLightView>();Assert.That(view.Active("Lamp"),Is.True);Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.ObjectRevision(target),Is.EqualTo(revision));
             Assert.That(new RoomStorage(directory).Load(out error).objects.Single(o=>o.id==target).lights.Length,Is.EqualTo(1),error);
             Assert.That(ObjectLightCapability.Fact().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["target"]=target},out _),Is.True);

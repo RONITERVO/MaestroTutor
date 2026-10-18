@@ -7,9 +7,13 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        internal bool PrepareWindowEdit(string target,int revision,JObject args,out RoomObjectData data,out string error) {
-            data=null;if(!CanEditObject(target,true,out error,true))return false;
+        internal bool CanEditWindow(string target,int revision,out string error) {
+            if(!CanEditObject(target,true,out error,true))return false;
             if(ObjectRevision(target)!=revision){error="The object changed; read object.windows again";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareWindowEdit(string target,int revision,JObject args,out RoomObjectData data,out string error) {
+            data=null;if(!CanEditWindow(target,revision,out error))return false;
             data=Read(target);string id=(string)args["window"];var windows=data.windows.ToList();
             if((string)args["operation"]=="remove"){
                 if(windows.RemoveAll(w=>w.id==id)==0){error="This window was removed";return false;}

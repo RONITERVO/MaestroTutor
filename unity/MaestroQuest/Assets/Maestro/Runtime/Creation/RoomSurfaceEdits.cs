@@ -9,11 +9,15 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        internal bool PrepareSurfaceEdit(string target,int revision,JObject args,out RoomObjectData data,out string strokeId,out string error)
-        {
-            data=null;strokeId="";if(!CanEditObject(target,true,out error,true))return false;
+        internal bool CanEditSurface(string target,int revision,out string error) {
+            if(!CanEditObject(target,true,out error,true))return false;
             if(ObjectRevision(target)!=revision){error="The object changed; inspect its current surface revision";return false;}
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object first";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareSurfaceEdit(string target,int revision,JObject args,out RoomObjectData data,out string strokeId,out string error)
+        {
+            strokeId="";data=null;if(!CanEditSurface(target,revision,out error))return false;
             data=Pose(Read(target),Find(target).transform);var list=(data.surfaces??Array.Empty<DrawingSurface>()).ToList();string id=(string)args["surface"],op=(string)args["operation"];
             var surface=list.FirstOrDefault(s=>s.id==id);
             if(op=="configure") {

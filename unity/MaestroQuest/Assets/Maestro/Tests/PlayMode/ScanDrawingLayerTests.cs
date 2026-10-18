@@ -24,16 +24,16 @@ namespace Maestro.Quest.Tests
             Assert.That(id,Is.Not.Null,receipt.ToString());int count=editor.Snapshot().objects.Length;Assert.That(modeActions.Execute(request,out error),Is.True,error);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count),"Receipt replay cannot create a second layer");return id;
         }
         JObject InkFact(string id){Assert.That(ScanFact("object.scanDrawing",new JObject{["target"]=id},out var fact),Is.True);return (JObject)fact;}
-        void InkAdd(string id)
+        IEnumerator InkAdd(string id)
         {
             var args=new JObject{["operation"]="add",["target"]=id,["revision"]=editor.ObjectRevision(id),["surface"]="Canvas",["stroke"]="",["red"]=.2,["green"]=.4,["blue"]=.9,["radius"]=.003,["points"]=new JArray(new JObject{["x"]=-.03,["y"]=0,["z"]=0},new JObject{["x"]=.03,["y"]=0,["z"]=0})};
-            Assert.That(modeActions.Execute(SettingsRequest("object.surface.edit",args),out var error),Is.True,error);
+            Assert.That(modeActions.Execute(SettingsRequest("object.surface.edit",args),out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(modeActions);
         }
         [UnityTest] public IEnumerator ScannedInkUsesSharedSurfaceEditsUndoStorageAndExactReceipts()
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);string id=MakeLayer(out var receipt);var item=editor.Find(id);var view=item.GetComponent<ScannedDrawingView>();var status=InkFact(id);
             Assert.That(view.Visible,Is.True);Assert.That(item.PoseLocked,Is.True);Assert.That(item.transform.position,Is.EqualTo(new Vector3(.1f,1.3f,ScanDrawingAnchor.Offset)));Assert.That(Vector3.Dot(-item.transform.forward,Vector3.forward),Is.GreaterThan(.999f));Assert.That(item.GetComponentsInChildren<Collider>().All(c=>c.isTrigger),Is.True);Assert.That(item.GetComponent<MeshRenderer>(),Is.Null,"No background panel");
-            InkAdd(id);Assert.That(item.GetComponent<DrawingSurfaceView>().StrokeCount,Is.EqualTo(1));Assert.That(ScanFact("object.drawing",new JObject{["target"]=id},out _),Is.False);editor.Undo();Assert.That(item.GetComponent<DrawingSurfaceView>().StrokeCount,Is.Zero);editor.Redo();Assert.That(item.GetComponent<DrawingSurfaceView>().StrokeCount,Is.EqualTo(1));
+            yield return InkAdd(id);Assert.That(item.GetComponent<DrawingSurfaceView>().StrokeCount,Is.EqualTo(1));Assert.That(ScanFact("object.drawing",new JObject{["target"]=id},out _),Is.False);editor.Undo();Assert.That(item.GetComponent<DrawingSurfaceView>().StrokeCount,Is.Zero);editor.Redo();Assert.That(item.GetComponent<DrawingSurfaceView>().StrokeCount,Is.EqualTo(1));
             var saved=new RoomStorage(directory).Load(out var error);Assert.That(saved,Is.Not.Null,error);Assert.That(saved.objects.Single(o=>o.id==id).scanAnchors[0].roomId,Is.EqualTo(source.RoomId));Assert.That(editor.MoveObject(id,Vector3.one,out _),Is.False);Assert.That(editor.CanEditObject(id,true,out _),Is.False);Assert.That(authoring.CanStartRecording(authoring.RecordingSessionId,id,editor.ObjectRevision(id),out _),Is.False);var before=item.transform.position;item.RestoreHome();Assert.That(item.transform.position,Is.EqualTo(before));
             var legacy=new RoomAgentExecutor(editor);string unchanged=JsonUtility.ToJson(editor.Read(id));
             foreach(string action in new[]{"move","paint","resize"}){
@@ -45,7 +45,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator MissingAndWrongRoomAnchorsHideInkUntilExactRecoveryOrExplicitRebind()
         {
-            var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);string id=MakeLayer(out _);InkAdd(id);var item=editor.Find(id);var view=item.GetComponent<ScannedDrawingView>();string originalRoom=source.RoomId;var original=editor.Read(id).Copy();
+            var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);string id=MakeLayer(out _);yield return InkAdd(id);var item=editor.Find(id);var view=item.GetComponent<ScannedDrawingView>();string originalRoom=source.RoomId;var original=editor.Read(id).Copy();
             source.Entries=Array.Empty<ScannedSurface>();yield return null;Assert.That((bool)InkFact(id)["visible"],Is.False);Assert.That(item.gameObject.activeSelf,Is.False);Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));
             source.Entries=new[]{InkWall(2)};yield return null;Assert.That((bool)InkFact(id)["visible"],Is.False,"Same label does not replace the anchor");source.Entries=new[]{InkWall()};source.RoomId=Guid.NewGuid().ToString("N");yield return null;Assert.That((bool)InkFact(id)["visible"],Is.False);
             var rebind=LayerArgs("rebind",id);rebind["x"]=-.2;Assert.That(modeActions.Execute(SettingsRequest("drawing.layer.edit",rebind),out var error),Is.True,error);Assert.That((bool)InkFact(id)["visible"],Is.True);Assert.That(editor.Read(id).surfaces[0].strokes.Length,Is.EqualTo(1));editor.Undo();Assert.That((bool)InkFact(id)["visible"],Is.False);Assert.That(editor.Read(id).scanAnchors[0].roomId,Is.EqualTo(originalRoom));source.RoomId=originalRoom;yield return null;yield return null;Assert.That(view.Visible,Is.True,"Editor must recover an inactive layer without another edit");
@@ -54,7 +54,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator HiddenScannedInkCanBeDeletedThroughTheSharedActionAndUndone()
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);
-            string id=MakeLayer(out _);InkAdd(id);var saved=editor.Read(id).Copy();source.Entries=Array.Empty<ScannedSurface>();yield return null;
+            string id=MakeLayer(out _);yield return InkAdd(id);var saved=editor.Read(id).Copy();source.Entries=Array.Empty<ScannedSurface>();yield return null;
             Assert.That(editor.Find(id).gameObject.activeSelf,Is.False);Assert.That(editor.NativeEntityDormant(id),Is.False);
             Assert.That(modeActions.Execute(SettingsRequest("object.delete",new JObject{["target"]=id}),out var error),Is.True,error);
             float deadline=Time.realtimeSinceStartup+20;

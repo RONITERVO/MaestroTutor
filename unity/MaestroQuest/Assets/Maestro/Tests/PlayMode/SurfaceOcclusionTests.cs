@@ -14,7 +14,7 @@ namespace Maestro.Quest.Tests
         Transform SurfaceOcclusionStage()
         {
             block.transform.position=new Vector3(4,1,2);
-            SurfaceRun(new RoomAgentExecutor(editor),SurfaceConfigure());
+            SurfaceFixture(SurfaceConfigure());
             return block.GetComponent<DrawingSurfaceView>().Surface("Front");
         }
         BoxCollider SurfaceObstacle(Transform patch,float z=-.06f,float depth=.01f)
@@ -59,7 +59,7 @@ namespace Maestro.Quest.Tests
             var obstacle=SurfaceObstacle(patch);pencil.Move(0,SurfaceRay(patch,.03f));Assert.That(pencil.IsDrawing,Is.False);
             string target=editor.Identity(block);Assert.That(editor.Read(target).surfaces[0].strokes.Single().points.Length,Is.EqualTo(2),"No segment through the obstacle");
             Assert.That(editor.ConfigureDrawing("surfaceErase",Color.white,.003f,out var error),Is.True,error);pencil.Begin(0,SurfaceRay(patch,0,.03f));Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(1));
-            SurfaceRun(new RoomAgentExecutor(editor),SurfaceAdd());Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));editor.Undo();Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(1));
+            yield return SurfaceRun(new RoomAgentExecutor(editor),SurfaceAdd());Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(2));editor.Undo();Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(1));
             obstacle.enabled=false;pencil.Begin(0,SurfaceRay(patch,0,.03f));Assert.That(editor.Read(target).surfaces[0].strokes,Is.Empty);editor.Undo();Assert.That(editor.Read(target).surfaces[0].strokes.Length,Is.EqualTo(1));yield return null;
         }
         [UnityTest] public IEnumerator SurfaceOcclusionHeldChalkIgnoresItselfAndStopsAtScannedContact()

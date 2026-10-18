@@ -6,11 +6,15 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomEditor
     {
-        internal bool PrepareDrawingTip(string target,int revision,DrawingTip tip,out RoomObjectData data,out string error)
-        {
-            data=null;if(!CanEditObject(target,true,out error))return false;
+        internal bool CanEditDrawingTip(string target,int revision,out string error) {
+            if(!CanEditObject(target,true,out error))return false;
             if(ObjectRevision(target)!=revision){error="The object changed; inspect its current drawing-tip revision";return false;}
             if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object first";return false;}
+            error=null;return true;
+        }
+        internal bool PrepareDrawingTip(string target,int revision,DrawingTip tip,out RoomObjectData data,out string error)
+        {
+            data=null;if(!CanEditDrawingTip(target,revision,out error))return false;
             if(tip!=null){tip=tip.Copy();tip.version=tip.Mode=="erase"?2:1;}
             data=Pose(Read(target),Find(target).transform);data.drawingTips=tip==null?Array.Empty<DrawingTip>():new[]{tip.Copy()};
             var candidate=Snapshot();var next=data;candidate.objects=candidate.objects.Select(x=>x.id==target?next:x).ToArray();return candidate.Validate(out error);
