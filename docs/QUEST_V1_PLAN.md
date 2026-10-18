@@ -14576,3 +14576,18 @@ acceptance was performed. The 31 measured native echo quality failures and
 earlier Editor stalls remain open. Legacy physical save-first editor calls still
 need a separate call-site and completion review; they were not changed in this
 increment. Evidence: `.quest-evidence/controller-completion-20261018/`.
+
+
+### CI fixture determinism follow-up
+
+The release gate on controller commit `313b0d31` exposed an unrelated synthetic
+Word-document fixture comparing ZIP bytes across a timestamp boundary. All ZIP
+entries, including automatically created folders, now receive a fixed timestamp.
+A clock-separated regression failed before the repair and passed after it, while
+also confirming that the document text remains readable.
+
+The subsequent full web suite passed **3,208 tests**, with app/probe TypeScript
+and catalog checks passing. Only the offline fixture helper and its regression
+changed after the complete native/headless/book verification above; native and
+integration-driver inputs remain unchanged. The failed CI log and before/after
+evidence are preserved under the same evidence directory's `fixture-repair/`.
