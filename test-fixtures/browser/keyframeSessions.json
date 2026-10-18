@@ -1,0 +1,130 @@
+{
+  "before": {
+    "sessionId": "296b4a833449412d9806b2caceaf9532",
+    "target": "",
+    "phase": "idle",
+    "revision": 0,
+    "frames": 0,
+    "duration": 0.0,
+    "loop": false,
+    "writesPose": false,
+    "poseSaved": false,
+    "temporary": false,
+    "applied": false,
+    "error": ""
+  },
+  "beforeExecution": {
+    "selected": null,
+    "running": [],
+    "outcomes": [],
+    "nextRunId": "5ca8b3177b4340bd955223003dfaca62",
+    "storageError": null,
+    "recovery": null
+  },
+  "pending": {
+    "sessionId": "296b4a833449412d9806b2caceaf9532",
+    "target": "5cce7275990f49a99d652e33d4961532",
+    "phase": "saving",
+    "revision": 6,
+    "frames": 1,
+    "duration": 0.0,
+    "loop": false,
+    "writesPose": false,
+    "poseSaved": false,
+    "temporary": false,
+    "applied": false,
+    "error": ""
+  },
+  "preparing": {
+    "selected": {
+      "id": "5ca8b3177b4340bd955223003dfaca62",
+      "capability": "animation.edit.resolve",
+      "version": 1,
+      "resources": [],
+      "phase": "preparing",
+      "status": "Waiting for action completion",
+      "call": {
+        "id": "animation.edit.resolve",
+        "version": 1,
+        "arguments": {
+          "operation": "retry",
+          "sessionId": "296b4a833449412d9806b2caceaf9532"
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "5ca8b3177b4340bd955223003dfaca62",
+        "capability": "animation.edit.resolve",
+        "version": 1,
+        "resources": [],
+        "phase": "preparing",
+        "status": "Waiting for action completion"
+      }
+    ],
+    "outcomes": [],
+    "nextRunId": "3269edc50f614c25a63736a9eb294b2a",
+    "storageError": null,
+    "recovery": null
+  },
+  "complete": {
+    "selected": {
+      "id": "5ca8b3177b4340bd955223003dfaca62",
+      "capability": "animation.edit.resolve",
+      "version": 1,
+      "resources": [],
+      "phase": "completed",
+      "status": "Action completed",
+      "output": {
+        "sessionId": "296b4a833449412d9806b2caceaf9532",
+        "target": "5cce7275990f49a99d652e33d4961532",
+        "phase": "saved",
+        "revision": 9,
+        "temporary": false
+      },
+      "call": {
+        "id": "animation.edit.resolve",
+        "version": 1,
+        "arguments": {
+          "operation": "retry",
+          "sessionId": "296b4a833449412d9806b2caceaf9532"
+        }
+      }
+    },
+    "running": [],
+    "outcomes": [
+      {
+        "id": "5ca8b3177b4340bd955223003dfaca62",
+        "capability": "animation.edit.resolve",
+        "version": 1,
+        "resources": [],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "296b4a833449412d9806b2caceaf9532",
+          "target": "5cce7275990f49a99d652e33d4961532",
+          "phase": "saved",
+          "revision": 9,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "3269edc50f614c25a63736a9eb294b2a",
+    "storageError": null,
+    "recovery": null
+  },
+  "idle": {
+    "sessionId": "f7efc506772e47aa9c331ad6cb6e1555",
+    "target": "",
+    "phase": "idle",
+    "revision": 0,
+    "frames": 0,
+    "duration": 0.0,
+    "loop": false,
+    "writesPose": false,
+    "poseSaved": false,
+    "temporary": false,
+    "applied": false,
+    "error": ""
+  }
+}

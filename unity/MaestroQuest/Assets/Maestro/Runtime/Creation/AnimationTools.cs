@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Maestro.Quest.Creation
 {
-    public enum AnimationTool { Pose, Record, AddFrame, Play, Stop, Previous, Next, Replace, Delete, Loop, Gesture, Automatic, Faster, Slower, DiscardTake, SavePose, DiscardPose }
+    public enum AnimationTool { Pose, Record, AddFrame, Play, Stop, Previous, Next, Replace, Delete, Loop, Gesture, Automatic, Faster, Slower, DiscardTake, SavePose, DiscardPose,DiscardEdit }
     public sealed class AnimationToolAction : PhysicalAction
     {
         public AnimationWorkshop Workshop;
@@ -21,6 +21,7 @@ namespace Maestro.Quest.Creation
                 case AnimationTool.DiscardTake: Workshop.DiscardTake(); break;
                 case AnimationTool.SavePose: Workshop.SaveRetainedPose(); break;
                 case AnimationTool.DiscardPose: Workshop.DiscardRetainedPose(); break;
+                case AnimationTool.DiscardEdit: Workshop.DiscardFrameEdit(); break;
                 case AnimationTool.AddFrame: Workshop.AddFrame(); break;
                 case AnimationTool.Play: Workshop.Play(); break;
                 case AnimationTool.Stop: Workshop.Stop(); break;
@@ -53,8 +54,8 @@ namespace Maestro.Quest.Creation
             var handle = gameObject.AddComponent<BoxCollider>(); handle.size = new Vector3(.76f,.50f,.055f);
             var item = gameObject.AddComponent<RoomItem>(); item.Configure(new Collider[] { handle },1,1); room.Register(item,true);
             var kinds = new[] { AnimationTool.Pose,AnimationTool.Record,AnimationTool.AddFrame,AnimationTool.Play,AnimationTool.Stop,AnimationTool.Loop,
-                AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower,AnimationTool.DiscardTake,AnimationTool.SavePose,AnimationTool.DiscardPose };
-            var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower","Discard take","Save pose","Discard pose" };
+                AnimationTool.Previous,AnimationTool.Next,AnimationTool.Replace,AnimationTool.Delete,AnimationTool.Gesture,AnimationTool.Automatic,AnimationTool.Faster,AnimationTool.Slower,AnimationTool.DiscardTake,AnimationTool.SavePose,AnimationTool.DiscardPose,AnimationTool.DiscardEdit };
+            var labels = new[] { "Pose Maestro","Record","Save frame","Play","Stop","Loop","Earlier","Later","Replace","Remove","Gesture","Auto gestures","Faster","Slower","Discard take","Save pose","Discard pose","Discard edit" };
             for (int i = 0; i < kinds.Length; i++)
             {
                 var tool = new GameObject(labels[i]); tool.transform.SetParent(transform,false);
@@ -66,16 +67,26 @@ namespace Maestro.Quest.Creation
                 if (kinds[i] == AnimationTool.AddFrame || kinds[i] == AnimationTool.Replace) Part(tool.transform,PrimitiveType.Cube,new Vector3(0,0,-.02f),new Vector3(.027f,.025f,.006f),paper);
                 Label(tool.transform,new Vector3(0,-.059f,-.02f),labels[i].Replace(" ","\n"),.0044f);
             }
-            status = Label(transform,new Vector3(0,-.215f,-.029f),"",.0048f);
+            status = Label(transform,new Vector3(0,-.215f,-.029f),"",.0042f);
             workshop.Changed += Refresh; Refresh();
         }
         void OnEnable()=>Refresh();
         void Refresh()
         {
             if(!isActiveAndEnabled||!workshop||!status||!recordPaint||!posePaint)return;
-            status.text = workshop.Status.Length > 80 ? workshop.Status.Substring(0,80) + "…" : workshop.Status;
+            status.text = FitStatus(workshop.Status);
             recordPaint.color = IllustratedMaterials.Hex(workshop.IsRecording ? "F04C42" : workshop.HasUnsavedRecording ? "E5A42A" : "B8644E");
             posePaint.color = IllustratedMaterials.Hex(workshop.HasUnsavedPose ? "E5A42A" : workshop.IsPosing ? "2B8D88" : "73534E");
+        }
+        static string FitStatus(string value)
+        {
+            value=(value??"").Replace("\r"," ").Replace("\n"," ").Trim();
+            const int width=48;
+            if(value.Length<=width)return value;
+            int split=value.LastIndexOf(' ',width);if(split<width/2)split=width;
+            string rest=value[split..].TrimStart();
+            if(rest.Length>width)rest=rest[..(width-1)]+"…";
+            return value[..split]+"\n"+rest;
         }
         Material Paint(string hex) { var value = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(hex)); materials.Add(value); return value; }
         static void Part(Transform parent, PrimitiveType type, Vector3 position, Vector3 size, Material paint)

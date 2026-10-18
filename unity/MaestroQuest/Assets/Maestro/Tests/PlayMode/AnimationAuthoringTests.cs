@@ -52,10 +52,10 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator PhysicalAndAgentFrameEditsShareTimingRemovalAndSavedUndo()
         {
-            AuthorRuntime();string id=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block).id;editor.Select(editor.Find(id));workshop.AddFrame();editor.Find(id).transform.localPosition+=Vector3.right*.2f;workshop.AddFrame();workshop.Stop();
+            AuthorRuntime();string id=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block).id;editor.Select(editor.Find(id));workshop.AddFrame();yield return FrameSettled();editor.Find(id).transform.localPosition+=Vector3.right*.2f;workshop.AddFrame();yield return FrameSettled();workshop.Stop();
             var settings=AuthorArgs("settings",id);settings["duration"]=2;settings["loop"]=true;yield return Author(settings);Assert.That(editor.Read(id).motion.Duration,Is.EqualTo(2));Assert.That(editor.Read(id).motion.loop,Is.True);
             var remove=AuthorArgs("removeFrames",id);remove["times"]=new JArray(0);yield return Author(remove);Assert.That(editor.Read(id).motion.frames.Length,Is.EqualTo(1));Assert.That(editor.Read(id).motion.frames[0].time,Is.Zero);editor.Undo();Assert.That(editor.Read(id).motion.frames.Length,Is.EqualTo(2));
-            workshop.StepFrame(1);workshop.ReplaceFrame();workshop.ToggleLoop();workshop.ChangeSpeed(.8f);workshop.Stop();Assert.That(editor.Read(id).motion.Duration,Is.EqualTo(1.6f).Within(.001f));Assert.That(editor.Read(id).motion.loop,Is.False);
+            workshop.StepFrame(1);workshop.ReplaceFrame();yield return FrameSettled();workshop.ToggleLoop();yield return FrameSettled();workshop.ChangeSpeed(.8f);yield return FrameSettled();workshop.Stop();Assert.That(editor.Read(id).motion.Duration,Is.EqualTo(1.6f).Within(.001f));Assert.That(editor.Read(id).motion.loop,Is.False);
             yield return Author(AuthorArgs("clear",id));Assert.That(editor.Read(id).motion,Is.Null);editor.Undo();Assert.That(editor.Read(id).motion.frames.Length,Is.EqualTo(2));
         }
         [UnityTest] public IEnumerator SavedPoseAndAutomaticResetUseCanonicalJointsAndPreserveMotion()

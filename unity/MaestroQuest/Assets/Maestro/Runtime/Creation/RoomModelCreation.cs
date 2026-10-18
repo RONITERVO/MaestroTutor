@@ -30,7 +30,7 @@ namespace Maestro.Quest.Creation
             var data=new RoomObjectData{id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.ImportedModel,modelHash=hash,position=SpawnPosition()};
             bool Current(){
                 if(!this||!ReferenceEquals(journal,expectedJournal)||TemporarySessionId!=session||RuntimeGate.Held||Ownership.Suspended||!CanSaveRoom||AnyHeld||DrawingInProgress)return false;
-                var authoring=GetComponent<AnimationWorkshop>();return !authoring||!(authoring.ControlsTarget(SelectedId)||authoring.HasUnsavedPose||authoring.HasUnsavedRecording);
+                var authoring=GetComponent<AnimationWorkshop>();return !authoring||!(authoring.ControlsTarget(SelectedId)||authoring.HasUnsavedPose||authoring.HasUnsavedRecording||authoring.HasUnsavedFrameEdit);
             }
             cancellation.ThrowIfCancellationRequested();if(!Current())throw new OperationCanceledException();
             var asset=await Models.ReadAsync(hash);

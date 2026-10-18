@@ -32,7 +32,7 @@ namespace Maestro.Quest.Imports
             if(disposed||!isActiveAndEnabled||!HasArchive||id!=selectionId||version!=archiveVersion||archiveVersion>=1000000||index<0||index>=archiveMembers.Count||Busy||selectionPhase is not ("archive" or "preview"))return false;
             if(selectionPaused||!selectionFocused||editor.RuntimeGate.Held){error="Resume Maestro before choosing a ZIP model";return false;}
             if(editor.WriteGate.Frozen||!editor.CanSaveRoom){error="Room saving is unavailable";return false;}
-            if(editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.IsPosing||animationWorkshop.IsRecording||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording)){error="Finish the active interaction before changing the model preview";return false;}
+            if(editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.IsPosing||animationWorkshop.IsRecording||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)){error="Finish the active interaction before changing the model preview";return false;}
             error=null;return true;
         }
         internal void ChooseArchiveMember(string id,int version,int index)

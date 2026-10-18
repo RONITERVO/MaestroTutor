@@ -49,7 +49,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator FailedStopRetainsPoseWithoutRepeatedSavesAndRetryIsOneUndo()
         {
-            editor.Select(avatarItem);workshop.AddFrame();workshop.Stop();editor.SaveNow();yield return null;
+            editor.Select(avatarItem);workshop.AddFrame();yield return FrameSettled();workshop.Stop();editor.SaveNow();yield return null;
             var before=editor.Read("maestro").joints;workshop.TogglePose();var expected=EditHead(35);string file=BlockPoseSave();int revision=editor.ObjectRevision("maestro");
             workshop.Stop();yield return PoseSettled(false);Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(workshop.SaveRetainedPose(out _),Is.True);yield return PoseSettled(false);
             workshop.SendMessage("OnApplicationFocus",false);workshop.SendMessage("OnApplicationPause",true);workshop.SendMessage("OnApplicationFocus",true);workshop.SendMessage("OnApplicationPause",false);

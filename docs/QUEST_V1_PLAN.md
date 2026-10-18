@@ -26,6 +26,9 @@ Shared container and terrain actions now also await native application and durab
 saving through the ordered edit queue; see [terrain completion](#shared-terrain-authoring-and-transfer-completion--2026-10-17).
 Physical sculpting, scooping and hand/controller packing now share completion and
 interruption semantics; see [physical gesture completion](#physical-sculpt-scoop-and-packing-completion--2026-10-18).
+Physical keyframe saves now preserve captured intent through ordered completion,
+with shared retry/discard recovery and continued grip/pose preview; see
+[keyframe completion](#physical-keyframe-save-completion--2026-10-18).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -14298,3 +14301,67 @@ provider, Android build, signing, deployment or Meta action ran. Physical keyfra
 saves and lifecycle Flush remain synchronous. Headset latency, the previously
 intermittent Meta audio SDK crash, full device acceptance and Store gates remain
 open. See [shared posing](QUEST_ANIMATION_AUTHORING.md#shared-live-posing).
+
+## Physical keyframe save completion — 2026-10-18
+
+Physical Save frame, Replace, Remove, Loop, speed and Auto gestures now capture
+immutable intent into the existing ordered persisted-edit queue. The same native
+preparation/content scope serves direct agent animation edits, recording and
+these physical saves. Completion confirms native application and publication;
+temporary edits remain in their fork until Keep.
+
+One pending edit belongs to the workshop. Save frame joins/retries that exact
+edit; Discard edit cancels only unaccepted work. Selection changes never redirect
+it. The shared animation.edit.pending fact and animation.edit.resolve capability
+let the book, agent and programs inspect and resolve the same session, without
+another LLM tool. Stopping a receipt only stops observation. Applied/unconfirmed
+publication is not replayed and requires room recovery. Saved edits remain
+individually undoable.
+
+The existing physical grip/live-pose workflow is preserved: saving a frame does
+not release a cooperative grip, rewind subsequent movement or replace newer
+live joints. Only the same accepted keyframe edit can advance already queued
+pose revisions. Retry after releasing authoring refuses a newer actor. Paused
+preparation rejoins after resume; accepted publication stays observable across
+suspension/disable, while unaccepted disabled work is retained.
+
+Verification: **75 EditMode, 146 PlayMode and
+3,201 web tests**, application/probe TypeScript and catalog checks.
+Twelve new native regressions cover frozen values, selection changes,
+observer cancellation, exact retries, discard/stale observers, later queued
+poses, ongoing live preview, accepted failure without replay, suspension,
+disable, changed revisions, temporary forks, shared native receipts, actual
+solid recovery buttons, tray text bounds and continued XRI grip movement. The existing room-frame
+layout test now waits for its asynchronous action completion.
+
+Intermediate failures are preserved: two tests assumed completed baseline/layout
+saves, a suspension test invoked the intentionally synchronous room Flush through
+GameObject SendMessage, and a physical retry landed within its 300ms debounce.
+The new held-object test also exposed the earlier Ready guard, which now permits
+Add/Replace capture only under the existing cooperative authoring lease.
+The harness assumptions were corrected; product debounce and lifecycle Flush
+were not relaxed. Two configuration shutdown attempts also crashed with access
+violation c0000005; Windows reported KERNELBASE.dll+0xb2734. Its root cause remains unresolved and is separate
+from the earlier Meta audio crash evidence.
+Configuration and EditMode attempts reached their result markers but exceeded
+the unchanged shutdown deadline, so they remain incomplete process evidence.
+The final Configure pass used its original environment; EditMode/PlayMode used
+process-only offline proxy settings with local connections bypassed. All passed
+and exited cleanly. Global settings and SDK packages were unchanged.
+
+Complete offline Book 26205fa0a88342a88c56d140c5524566 passes with 3,749
+observations/1,185 requests. Headless a8a416d38a904229b77ebbbc718fcd98 passes with
+2,374 observations/2,373 read sets. Existing world,
+media, recording, versioned posing, human-edit preservation and reload-without-
+replay flows remain covered. Headless additionally discovers the real native
+keyframe fact and completion contract. Chrome reads the native captured session
+and sends an exact retry through production book fields; saved output appears
+only after the captured completion. Browser acknowledgement is simulated;
+physical mutation is separately covered by real Unity integration tests.
+
+Evidence: .quest-evidence/keyframe-completion-20261018; 3,308
+native source inputs and 14 protected files checked.
+Lifecycle Flush and direct compatibility save APIs remain synchronous and need
+separate durability review. Headset latency, the earlier intermittent Meta audio
+SDK crash, provider/device acceptance and Store gates remain open. No device,
+paid provider, Android build, signing, deployment or Meta action ran.

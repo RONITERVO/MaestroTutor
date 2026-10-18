@@ -20,7 +20,7 @@ namespace Maestro.Quest.Imports
             if(!isActiveAndEnabled||selectionPaused||!selectionFocused||editor.RuntimeGate.Held||editor.Ownership.Suspended){error="Resume the room before accepting the model";return false;}
             if(editor.WriteGate.Frozen||!editor.CanSaveRoom){error="Room saving is unavailable";return false;}
             if(editor.AnyHeld||editor.DrawingInProgress){error="Release objects and finish drawing before accepting the model";return false;}
-            if(animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording)){error="Finish authoring and resolve retained poses or takes first";return false;}
+            if(animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)){error="Finish authoring and resolve retained poses, takes or keyframe edits first";return false;}
             if(destination=="object")return editor.CanCreatePrimitive(out error);
             if(destination=="maestro"){
                 if(!preview.IsHumanoid){error=preview.HumanoidIssue??"Choose a valid humanoid for Maestro";return false;}
@@ -54,7 +54,7 @@ namespace Maestro.Quest.Imports
                 } else {
                     await editor.Models.SaveAsync(asset);token.ThrowIfCancellationRequested();
                     if(!this||disposed||!isActiveAndEnabled||editor.RuntimeGate.Held||editor.TemporarySessionId!=roomSession)throw new OperationCanceledException();
-                    if((destination is "object" or "maestro") && (editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording)))
+                    if((destination is "object" or "maestro") && (editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)))
                         throw new ModelImportException("Room interaction changed while importing. Finish the active edit, then retry this preview.");
                     if(destination=="object"){
                         objectId=await editor.CreateImportedModelAsync(asset.Hash,token);

@@ -52,10 +52,12 @@ large imported animation library.
 ## Saving and ownership
 
 Physical Add/Replace/Remove frame, timing and loop controls share the detached
-RoomMotionEdits helpers. Both saving paths use RoomEditor.PrepareAnimation to
-copy and validate canonical data. Physical recording and pose-retention sessions
-keep their synchronous save/retry contract; their frames must remain available
-after failed saving.
+RoomMotionEdits helpers. Physical keyframe, recording and pose-session saves use
+the ordered persisted-edit queue; physical and shared calls validate canonical
+animation through RoomEditor.PrepareAnimation. Their captured work remains
+available after pre-acceptance failure. Applied/unconfirmed publication requires
+room recovery instead of replay. Lifecycle Flush and direct compatibility APIs
+still have synchronous completion contracts.
 
 Saved animation actions use the common ordered edit queue. A waiter keeps copied
 intent, not a candidate room or held body. When admitted, it checks the original
@@ -213,6 +215,43 @@ ends both sessions; a failed recording retains the combined take through
 `animation.record`. Temporary poses stay in the fork until Keep. No authoring
 session auto-resumes on app launch, and unsaved memory is lost on termination.
 
+## Pending physical keyframe edits
+
+Save frame, Replace, Remove, Loop, speed and Auto gestures freeze one immutable
+edit, its target, original object revision and room/fork identity. The workshop
+retains that edit until confirmed or explicitly discarded. Other keyframe edits
+wait. Save frame retries the same captured edit while one is pending; it cannot
+accidentally record another frame. Discard edit is a solid button on the existing
+animation tray. Selection changes cannot redirect either operation.
+
+The original authoring lease can cooperate with a physical grip or live pose
+while a captured frame saves. Later movement and joint edits remain visible.
+Only acceptance of this workshop's exact edit may advance already queued pose
+saves; unrelated changes do not silently rebase them. A retry after authoring
+released control must not interrupt a newer actor.
+
+The user and agent inspect `animation.edit.pending`: sessionId, target, phase
+(idle/saving/unsaved), original revision, frame count, duration, loop, writesPose,
+poseSaved, temporary, applied and bounded error. Applied is not a durability
+claim. Idle has a fresh session identity and no target.
+
+`animation.edit.resolve {operation, sessionId}` uses that exact identity.
+`retry` observes a running attempt or retries its frozen values at the original
+room/object revision. It completes only after native application and successful
+publication, returning sessionId, target, phase, accepted revision and temporary.
+A discard receipt identifies the original captured revision.
+`discard` cancels unaccepted work and clears its buffer; accepted publication
+must settle first. Discard does not undo accepted edits or repair failed saving.
+Cancelling an execution receipt stops observation only. Both operations use the
+same workshop as the physical controls and require `animationEditResolution.v1`;
+no separate LLM tool or mutable target parameter is introduced.
+
+Pause retires unaccepted preparation and rejoins the ordered queue on resume.
+Accepted publication stays observable, including while the workshop component
+is disabled. Disable retains unaccepted work for retry; destruction retires
+observation while accepted storage drains. Temporary edits remain live-only
+until Keep. Unsaved buffers are memory-only and do not survive termination.
+
 ## Book and verification
 
 The expert action catalog derives typed fields, nested frame/joint lists and
@@ -255,3 +294,16 @@ temporary Keep. `test-fixtures/browser/posingSessions.json` contains native
 start/rotate/finish receipts and session/joint facts. The Chrome probe reads each
 version and sends matching requests through generated fields; acknowledgements
 replay the native capture and are not provider/headset acceptance.
+
+
+Keyframe verification includes actual XRI grip movement and solid Save frame/
+Discard edit pointer taps, immutable shared receipts, selection changes, exact
+retry, stale revisions and observers, competing actors, queued later poses,
+preparation/publication failure, suspension, disable and temporary forks.
+`test-fixtures/browser/keyframeSessions.json` is captured from real native
+pending/completed execution. `scripts/probe-keyframe-sessions.mjs` reads that
+session through the book and sends the exact generated retry request. Chrome
+replays the captured acknowledgement and never shows saved output during
+preparation. The complete offline Headless journey additionally discovers the
+native pending fact and resolution contract. Physical-save mutation is covered
+by native PlayMode integration; the browser replay is not headset evidence.

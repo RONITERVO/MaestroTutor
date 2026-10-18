@@ -38,7 +38,7 @@ namespace Maestro.Quest.Imports {
             if(editor.AnyHeld||editor.DrawingInProgress)return false;
             var animation=editor.GetComponent<AnimationWorkshop>();
             issue="Save or discard the current pose or recording before importing";
-            if(animation&&(animation.IsPosing||animation.IsRecording||animation.HasUnsavedPose||animation.HasUnsavedRecording))return false;
+            if(animation&&(animation.IsPosing||animation.IsRecording||animation.HasUnsavedPose||animation.HasUnsavedRecording||animation.HasUnsavedFrameEdit))return false;
             issue="The file chooser is unavailable or its previous stream is still closing";
             if(choose){try{if(picker==null||!picker.ReadyToStart)return false;}catch(Exception){return false;}}
             issue=null;return true;

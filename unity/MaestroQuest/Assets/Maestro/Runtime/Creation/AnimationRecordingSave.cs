@@ -78,7 +78,7 @@ namespace Maestro.Quest.Creation
                         if(admission?.Valid!=true)return Fail("The room edit queue ended; frames retained",out error);
                         if(owner.editor.PendingEditSave||!admission.First)return true;
                         try{
-                            if(!owner.editor.BeginRecordedAnimation(target,take.Revision,take.Motion,take.Pose,take.SavePose,
+                            if(!owner.editor.BeginCapturedAnimation(target,take.Revision,take.Motion,take.Pose,take.SavePose,
                                 Issue,out pending,out error,checkpoint))return Fail(error,out error);
                         }finally{admission.Dispose();}
                     }

@@ -24,7 +24,7 @@ namespace Maestro.Quest.Creation
             if(!avatar||avatar.ModelBusy){error="Wait for Maestro to finish loading";return false;}
             var authoring=GetComponent<AnimationWorkshop>();
             if(authoring&&authoring.HasUnsavedPose){error="Save or discard the retained pose before changing avatars";return false;}
-            if(authoring&&(authoring.ControlsTarget("maestro")||authoring.HasUnsavedRecording)){error="Finish authoring and save or discard the retained take first";return false;}
+            if(authoring&&(authoring.ControlsTarget("maestro")||authoring.HasUnsavedRecording||authoring.HasUnsavedFrameEdit)){error="Finish authoring and save or discard the retained take or keyframe edit first";return false;}
             error=null;return true;
         }
         internal bool BeginMaestroModel(string hash,int revision,CancellationToken cancellation,out Task<bool> completion,out string error)

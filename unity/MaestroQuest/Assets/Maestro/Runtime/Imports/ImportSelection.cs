@@ -43,7 +43,7 @@ namespace Maestro.Quest.Imports
             else if(editor.WriteGate.Frozen||!editor.CanSaveRoom)error="Room saving is unavailable";
             else if(busy||picking||HasPreview||selectionWrite!=null||!ignoreBatch&&Batches&&Batches.HasSession)error="Finish or cancel the current import first";
             else if(editor.AnyHeld||editor.DrawingInProgress)error="Release objects and finish drawing before opening the picker";
-            else if(animationWorkshop&&(animationWorkshop.IsPosing||animationWorkshop.IsRecording||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording))error="Finish authoring and save or discard the retained pose or take first";
+            else if(animationWorkshop&&(animationWorkshop.IsPosing||animationWorkshop.IsRecording||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit))error="Finish authoring and save or discard the retained pose, take or keyframe edit first";
             else if(requirePicker)try{if(modelPicker==null||!modelPicker.ReadyToStart)error="The file chooser is unavailable or its previous stream is still closing";}catch(Exception){error="Resume Maestro before choosing a model";}
             return error==null;
         }

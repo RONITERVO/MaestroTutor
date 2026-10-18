@@ -100,7 +100,7 @@ namespace Maestro.Quest.Creation
         }
         PendingPose CapturePose()=>new() {Target="maestro",RoomSession=editor.TemporarySessionId,Session=poseSession,
             Version=poseVersion,Revision=editor.ObjectRevision("maestro"),Joints=avatar.PoseRig.Capture(),Temporary=editor.TemporaryRoom};
-        void ObservePoseAcceptance(){foreach(var save in poseSaves)save.ObserveAcceptance();}
+        void ObservePoseAcceptance(){ObserveFrameAcceptance();foreach(var save in poseSaves)save.ObserveAcceptance();}
         internal bool BeginPoseSave(string session,int version,bool finish,out PoseSaveAttempt attempt,out string error,
             bool manual=false,Action<string> checkpoint=null,bool lifecycle=false)
         {
@@ -136,6 +136,7 @@ namespace Maestro.Quest.Creation
         }
         void PollPoseSaves()
         {
+            ObserveFrameAcceptance();
             if(pollingPoseSaves||poseSaves.Count==0)return;
             pollingPoseSaves=true;
             try{
@@ -168,7 +169,11 @@ namespace Maestro.Quest.Creation
             foreach(var save in poseSaves)accepted=save.Suspend()??accepted;
             return accepted;
         }
-        internal RoomEditor.PendingPersistedEdit SuspendAuthoringSave()=>SuspendRecordingSave()??SuspendPoseSaves();
+        internal RoomEditor.PendingPersistedEdit SuspendAuthoringSave()
+        {
+            var frame=frameSave?.Suspend();var recording=SuspendRecordingSave();var pose=SuspendPoseSaves();
+            return frame??recording??pose;
+        }
         void RetirePoseSaves(string reason){if(IsSavingPose)FailPoseSaves(reason);}
     }
 }

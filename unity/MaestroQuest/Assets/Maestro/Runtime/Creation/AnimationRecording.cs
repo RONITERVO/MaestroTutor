@@ -22,7 +22,7 @@ namespace Maestro.Quest.Creation
         public bool HasUnsavedRecording=>pendingTake!=null;
         internal bool IsSavingRecording=>recordingSave!=null&&!recordingSave.Ended;
         internal bool HasUnfinishedAuthoring(string id)=>ControlsTarget(id)||
-            (IsRecording||HasUnsavedRecording)&&recordingTarget==id||pendingPose?.Target==id;
+            (IsRecording||HasUnsavedRecording)&&recordingTarget==id||pendingPose?.Target==id||pendingFrame?.Target==id;
         public string RecordingSessionId=>recordingSession;
         public JObject ObserveRecording()
         {
@@ -37,6 +37,7 @@ namespace Maestro.Quest.Creation
         {
             error="The recording session changed; inspect animation.recording first";
             if(sessionId!=recordingSession)return false;
+            if(HasUnsavedFrameEdit){error=FrameEditPrompt;return false;}
             if(HasUnsavedPose){error=RetainedPosePrompt;return false;}
             if(IsRecording||HasUnsavedRecording){error="Finish or discard the current take first";return false;}
             if(!isActiveAndEnabled){error="The animation workshop is unavailable";return false;}

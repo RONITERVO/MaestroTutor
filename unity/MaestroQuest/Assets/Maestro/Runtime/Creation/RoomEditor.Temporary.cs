@@ -59,6 +59,7 @@ namespace Maestro.Quest.Creation
                 if(!memory.Ready||memory.Pending||memory.Error!=null){error=memory.Error??"Wait for remembered values to finish loading or saving";return false;}
                 if(memory.Temporary!=TemporaryRoom){error="Temporary room and memory scopes do not match";return false;}
             }
+            if(GetComponent<AnimationWorkshop>()?.HasUnsavedFrameEdit==true){error="Save or discard the retained animation edit before changing workspaces or temporary rooms";return false;}
             if(GetComponent<AnimationWorkshop>()?.HasUnsavedPose==true){error="Save or discard the retained pose before changing workspaces or temporary rooms";return false;}
             if(GetComponent<AnimationWorkshop>()?.HasUnsavedRecording==true){error="Save or discard the retained recording before changing workspaces or temporary rooms";return false;}
             if(Liquids?.Active==true){error="Finish pouring or pause room physics before changing the temporary room";return false;}

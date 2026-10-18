@@ -58,38 +58,30 @@ namespace Maestro.Quest.Creation
         void SelectionChanged()
         {
             if (saving || stopping || targetId == editor.SelectedId) return;
-            Stop(); targetId = editor.SelectedId; target = editor.Find(targetId); avatar = target ? target.GetComponent<MaestroAvatar>() : null;
+            Stop(); selectionSerial++; targetId = editor.SelectedId; target = editor.Find(targetId); avatar = target ? target.GetComponent<MaestroAvatar>() : null;
             selectedFrame = -1; Say(HasUnsavedPose ? RetainedPosePrompt : target ? "Selected " + editor.Read(targetId).kind : "Select an object, or choose Pose Maestro");
         }
         void Grabbed(RoomItem item) { if (IsPlaying || importedPreview || walkPreview) Stop(); }
         void Say(string value) { Status = value; Changed?.Invoke(); }
-        bool Ready()
+        bool Ready(bool capture=false)
         {
+            if(HasUnsavedFrameEdit){Say(FrameEditPrompt);return false;}
             if(HasUnsavedPose){Say(RetainedPosePrompt);return false;}
             if(editor.RuntimeGate.Held){Say(editor.RuntimeGate.Reason);return false;}
             if(HasUnsavedRecording){Say("Save or discard the retained take first");return false;}
             if (!target) { Say("Select an object first"); return false; }
             if(!editor.Frame.Read(target.transform,out _,out _,out _)){Say("The animation needs a valid uniform room frame");return false;}
             if (avatar && avatar.ModelBusy) { Say("Wait for Maestro to finish changing avatars"); return false; }
-            if (editor.AnyHeld || (avatar && avatar.PoseRig && avatar.PoseRig.IsHolding)) { Say("Release the object or joint first"); return false; }
+            bool ownCapture=capture&&ownershipLease?.Held==true&&editor.Ownership.Covers(ownershipId,RecordingClaims(targetId));
+            if(editor.AnyHeld&&!(ownCapture&&ownershipLease.AllowsGrab&&target.Grab.isSelected)||
+                avatar&&avatar.PoseRig&&avatar.PoseRig.IsHolding&&!(ownCapture&&posing)){
+                Say("Release the object or joint first");return false;
+            }
             return true;
         }
         MotionFrame Capture(float time) {
             var pose=editor.Frame.Placement(targetId,target.transform);
             return new() {time=time,position=pose.position,rotation=pose.rotation,scale=pose.scale,joints=avatar&&avatar.PoseRig?avatar.PoseRig.Capture():null};
-        }
-        bool Save(RoomMotion motion, bool savePose = false, JointPose[] joints = null)
-        {
-            saving = true;
-            try
-            {
-                bool accepted = editor.SaveAnimation(targetId,motion,joints,savePose);
-                saveError = accepted ? null : editor.Status;
-                if(accepted&&posing)PoseEdited();
-                if (!accepted) Say(saveError);
-                return accepted;
-            }
-            finally { saving = false; }
         }
         public void TogglePose()
         {
@@ -110,13 +102,14 @@ namespace Maestro.Quest.Creation
         }
         public void AddFrame()
         {
-            if (!Ready() || IsRecording) return;
+            if(HasUnsavedFrameEdit){RetryFrameEdit();return;}
+            if (!Ready(capture:true) || IsRecording) return;
             if(!TakeControl(allowsGrab:true))return;
             StopPlayback();
             var motion = editor.Read(targetId).motion ?? new RoomMotion();
             if (motion.frames.Length >= RoomMotion.MaximumFrames || motion.Duration >= RoomMotion.MaximumSeconds) { Say("This animation is full"); return; }
             if(!RoomMotionEdits.Put(motion,new[]{Capture(motion.frames.Length==0?0:motion.Duration+1)},false,out var edited,out var error)){Say(error);return;}
-            if (Save(edited,avatar,avatar ? avatar.PoseRig.Capture() : null)) { selectedFrame = edited.frames.Length - 1; Say("Frame " + edited.frames.Length + " saved; move or pose, then add another"); }
+            QueueFrameEdit(edited,avatar,avatar ? avatar.PoseRig.Capture() : null,"Frame " + edited.frames.Length + " saved; move or pose, then add another",edited.frames.Length-1);
         }
         public void StepFrame(int direction)
         {
@@ -130,11 +123,11 @@ namespace Maestro.Quest.Creation
         }
         public void ReplaceFrame()
         {
-            if (!Ready() || IsRecording || IsPlaying) return;
+            if (!Ready(capture:true) || IsRecording || IsPlaying) return;
             var motion = editor.Read(targetId).motion;
             if (motion == null || selectedFrame < 0 || selectedFrame >= motion.frames.Length) { Say("Choose a frame first"); return; }
             if(!RoomMotionEdits.Put(motion,new[]{Capture(motion.frames[selectedFrame].time)},false,out var edited,out var error)){Say(error);return;}
-            if (Save(edited)) Say("Frame " + (selectedFrame+1) + " replaced");
+            QueueFrameEdit(edited,false,null,"Frame " + (selectedFrame+1) + " replaced",selectedFrame);
         }
         public void DeleteFrame()
         {
@@ -142,7 +135,7 @@ namespace Maestro.Quest.Creation
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null || selectedFrame < 0 || selectedFrame >= motion.frames.Length) { Say("Choose a frame first"); return; }
             if(!RoomMotionEdits.Remove(motion,new[]{motion.frames[selectedFrame].time},out var edited,out var error)){Say(error);return;}
-            if (Save(edited)) { selectedFrame = -1; Say("Frame removed — Undo restores it"); }
+            QueueFrameEdit(edited,false,null,"Frame removed — Undo restores it",-1);
         }
         public void Play()
         {
@@ -164,7 +157,7 @@ namespace Maestro.Quest.Creation
             StopPlayback(); var motion = editor.Read(targetId).motion;
             if (motion == null) { Say("Save a frame first"); return; }
             if(!RoomMotionEdits.Settings(motion,!motion.loop,null,out var edited,out var error)){Say(error);return;}
-            if (Save(edited)) Say(edited.loop ? "Loop on" : "Loop off");
+            QueueFrameEdit(edited,false,null,edited.loop ? "Loop on" : "Loop off",selectedFrame);
         }
         void Apply(MotionFrame frame)
         {
@@ -178,7 +171,7 @@ namespace Maestro.Quest.Creation
             if (!Ready() || IsRecording) return;
             Stop(); if(!Ready())return;
             if (!avatar) { Say("Choose Maestro to restore automatic gestures"); return; }
-            if(Save(editor.Read(targetId).motion,true,null))Say("Maestro follows tutor activity again");
+            QueueFrameEdit(editor.Read(targetId).motion,true,null,"Maestro follows tutor activity again",selectedFrame);
         }
         public void Gesture()
         {
@@ -220,7 +213,7 @@ namespace Maestro.Quest.Creation
             if (motion == null || motion.frames.Length < 2) { Say("Save at least two frames first"); return; }
             float duration = Mathf.Clamp(motion.Duration * factor,.1f,RoomMotion.MaximumSeconds);
             if(!RoomMotionEdits.Settings(motion,null,duration,out var edited,out var error)){Say(error);return;}
-            if (Save(edited)) Say("Animation duration: " + duration.ToString("0.0") + " seconds");
+            QueueFrameEdit(edited,false,null,"Animation duration: " + duration.ToString("0.0") + " seconds",selectedFrame);
         }
         void StopPlayback()
         {
@@ -250,11 +243,11 @@ namespace Maestro.Quest.Creation
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
             finally { ownershipLease?.Dispose();ownershipLease=null;stopping = false; }
-            Say(saveError ?? (IsSavingRecording?"Saving recording — frames frozen":IsSavingPose?"Saving pose — captured version queued":"Stopped — saved animation is ready"));
+            Say(saveError ?? (IsSavingRecording?"Saving recording — frames frozen":IsSavingPose?"Saving pose — captured version queued":IsSavingFrameEdit?"Saving animation edit — captured values queued":"Stopped — saved animation is ready"));
         }
         void Update()
         {
-            PollRecordingSave();PollPoseSaves();
+            PollFrameSave();PollRecordingSave();PollPoseSaves();
             if(editor&&editor.RuntimeGate.Held){if(controlling||IsRecording||IsPlaying||IsPosing||IsImportedPreview)Stop();return;}
             if (walkPreview) { if (!avatar) { Stop(); return; } avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y); }
             if (importedPreview && (!avatar || !avatar.IsImportedClipPlaying)) { Stop(); return; }
@@ -278,7 +271,7 @@ namespace Maestro.Quest.Creation
         }
         void OnApplicationPause(bool paused) { if (paused) { Stop();SuspendAuthoringSave(); } }
         void OnApplicationFocus(bool focused) { if (!focused) { Stop();SuspendAuthoringSave(); } }
-        void OnDisable() { if (editor) Stop(); else if (graph.IsValid()) graph.Destroy(); recordingSave?.CancelBeforeAcceptance("Workshop disabled before saving"); RetirePoseSaves("Workshop disabled before pose saving completed"); }
-        void OnDestroy() { if (editor) { Stop(); editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; } recordingSave?.Retire(); RetirePoseSaves("Workshop closed before pose saving completed"); if (graph.IsValid()) graph.Destroy(); }
+        void OnDisable() { if (editor) Stop(); else if (graph.IsValid()) graph.Destroy(); recordingSave?.CancelBeforeAcceptance("Workshop disabled before saving"); RetirePoseSaves("Workshop disabled before pose saving completed"); frameSave?.CancelBeforeAcceptance("Workshop disabled before animation edit saving completed"); }
+        void OnDestroy() { if (editor) { Stop(); editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; } recordingSave?.Retire(); RetirePoseSaves("Workshop closed before pose saving completed"); frameSave?.Retire("Workshop closed before animation edit saving completed"); if (graph.IsValid()) graph.Destroy(); }
     }
 }

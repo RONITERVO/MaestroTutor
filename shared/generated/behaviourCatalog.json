@@ -1543,6 +1543,85 @@
       }
     },
     {
+      "id": "animation.edit.resolve",
+      "version": 1,
+      "label": "Resolve a pending keyframe edit",
+      "input": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "retry",
+              "discard"
+            ]
+          },
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "operation",
+          "sessionId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "animationEditResolution.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "authoringSession",
+      "channels": [],
+      "requirements": [
+        "authoring.session.current"
+      ],
+      "description": "Inspect animation.edit.pending to resolve the exact edit captured by physical Save frame, Replace, Remove, Loop, speed or Auto gestures. retry observes a running save or retries its frozen values at the original room/object revision. It never captures a different frame or interrupts another actor. Completion confirms native application and publication; temporary edits remain in the fork until Keep. Stopping observation does not stop the session-owned save. discard cancels unaccepted work and drops the retained buffer; an accepted publication must settle first. Applied/unconfirmed failures require room recovery and must never be replayed. Discard does not undo accepted edits or repair storage. Selecting another object cannot redirect this edit. Live posing can continue while its earlier captured keyframe saves; newer pose edits remain separate. Paused preparation rejoins after resume; accepted publication drains. A disabled workshop retains a failed buffer in memory. Process termination loses unsaved buffers. Use animation.edit to author saved keyframes directly.",
+      "example": {
+        "operation": "retry",
+        "sessionId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "saved",
+              "discarded"
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "sessionId",
+          "target",
+          "phase",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "animation.record",
       "version": 1,
       "label": "Record, save or discard a take",
@@ -42395,6 +42474,28 @@
       "description": "Native recorder identity and phase: idle issues the next start ID; recording samples a live take; saving is a frozen session-owned background save; unsaved retains a frozen failed take in memory. Duration is sampled seconds, not wall time. Idle has empty target and zero counts/revision. Read target's authored revision before starting. Finish/discard take the current exact ID; completed receipt cancellation is separate. Error is bounded status, not a recovery token. A new app/room instance never restores an active recording."
     },
     {
+      "id": "animation.edit.pending",
+      "version": 1,
+      "type": {
+        "record": {
+          "sessionId": "text",
+          "target": "text",
+          "phase": "text",
+          "revision": "number",
+          "frames": "number",
+          "duration": "number",
+          "loop": "boolean",
+          "writesPose": "boolean",
+          "poseSaved": "boolean",
+          "temporary": "boolean",
+          "applied": "boolean",
+          "error": "text"
+        }
+      },
+      "label": "Pending physical keyframe edit",
+      "description": "One immutable physical keyframe edit, independently of selection and live posing. saving means queued/preparing/publishing; unsaved retains a failed buffer for exact retry or discard; idle has no buffer. revision is the captured target revision. writesPose indicates whether this operation changes the saved pose; poseSaved indicates a non-null captured pose. applied never means saving is confirmed. Error text is bounded. animation.edit.resolve uses this exact sessionId; idle cannot be resolved."
+    },
+    {
       "id": "animation.posing",
       "version": 1,
       "type": {
@@ -47224,6 +47325,10 @@
       "sha256": "c2401ef6d15e8709b3010d86233d03e02f2ce39f90c98757c3046707d4d1ba17"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationEditResolutionCapability.cs",
+      "sha256": "9bd2ed856d0b59795fde2c95e571362f3caff541fae2c35de05d0148b128ebdb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
       "sha256": "92d9678de3662d15d9522feabd1a6f339bef46cecafaceba902b224ab2549a34"
     },
@@ -47277,7 +47382,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "9f8b72cb8502f35543320f41a216932616439484ec6237eda204fe92e5da0d96"
+      "sha256": "23f9d7d82dbd4b719b0f8d546be6e4e618f1978eaadf11d384344bc50ef8074e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -47784,32 +47889,36 @@
       "sha256": "2c1d56c2f096cb6fd56fd7bab66d148a1bebaec7d368a247fc78c30f1d7a9499"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationFrameSave.cs",
+      "sha256": "357a1d9da13f9d6e67987a474e4280c8aad9ad270c365deca5cc82a783f24940"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
       "sha256": "c79d16a34a694fb261ed519657a1dd72eb8ec17b7b5ce4148a3d04ea2367f7e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseSave.cs",
-      "sha256": "b345c5eba3329bb2f7fc9137d5b961c8d5ed5286bae633d33872e713ee9b4aa4"
+      "sha256": "61c91c9e17d4959e039b11423f8cd7fd9242c345682661398637e3f1a255698a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPosing.cs",
-      "sha256": "3fa1f4324df6d570705a46d58a66d7df11ab4f8a0e865ef524e689ed9111f3f0"
+      "sha256": "d5a1f77985b9d5f56cc52e67bbde60c83951e51d1c62e81926e067e308301945"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
-      "sha256": "71a9344e939f03239189f762d3ef8aa2e5c1598359c292e2461968aedb875435"
+      "sha256": "903b294098791dfecb0e48fdec79050ee2a278d6cd2d675b624fb6f34a1caf5e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecordingSave.cs",
-      "sha256": "8a4674d4d90123ae04fdec484ccf1b699f38fb1dbbb20d1b2d5e8cc27974644f"
+      "sha256": "ee54b5f4127780799e72362282d6485146bfcc3a20bfe73499a9292fc74f0d5f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
-      "sha256": "141091630d05207f2db8f492451da1dc4ad58f5ba54749191a566f659ee31caf"
+      "sha256": "a6fc40ab8b7a50c121170de3799fba295b7ce34c4e8e0aaf544a72d2519818bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "2fc0c028356d2fadf785da668070810e1d30c91f0c4badb22c678635541dd16d"
+      "sha256": "c81f99683d4733d29bfa4dd3aa616744ea1a6044e0971c22f144bcb6c59f3ad8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
@@ -47821,7 +47930,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
-      "sha256": "ccd5f31960951f14609fc1ea553dadbd9e0fe659473b7cb5bab20cf4ef155a63"
+      "sha256": "437de6d0be0148426651c72132d1b137ee149a685072dce250d87cc3ae5e3402"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarWalkSelection.cs",
@@ -48181,7 +48290,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAnimationEdits.cs",
-      "sha256": "efcecca8e13f3f3589080ed2833ee171b10f5fbecb2fb36d655889b43dc1db48"
+      "sha256": "b90775a52c99981410d4574968645f9594a5a26d4223dacf459a8f146ef9d9d9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
@@ -48253,7 +48362,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "27b8388bbdaab03a7ddaf2618466fdb81dc093ae1bbb44f8905ff67f73fc68a9"
+      "sha256": "7e5974ab95f0715a14252b95f88290800d9cea58188eca6bec8e685c20acbd57"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -48289,7 +48398,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "ae03f3fb79cc36130a54e899dad4f9a020a6a3b141af69065f92d159b1b05044"
+      "sha256": "f9137d4c69480884cab3ca703abd5a710583a206f08ffd268c8a744369e6b0f6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
@@ -48405,7 +48514,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelCreation.cs",
-      "sha256": "435b6aea369398d71d3c9fd0fa52a821ab66b2e7e5e1e6d2a7fdee0b210e18d8"
+      "sha256": "1f4db98d1f81725ba532da6726fc4df68c95594e75d917f5288c70eee4adf723"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelGeometry.cs",
@@ -48789,7 +48898,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioImportWorkshop.cs",
-      "sha256": "838b91153fadf56fa37c915c4bfe382e384533fb76bef3372c3e4a3d1100a7ed"
+      "sha256": "f64e2170444b1da2c205f38a8bb6ab7ea1c26c0c0a7671578e60f0a04de38d10"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/AudioLibrary.cs",
@@ -48833,7 +48942,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageImportWorkshop.cs",
-      "sha256": "cb5760fde2ab382bff2fce3fa845a69a9957226edc88fb7b896527841018b48c"
+      "sha256": "dd0f87393b7a33b018c078ab6a93f77bc7228043835c5df3ba7631cd024c8ccb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImageLibrary.cs",
@@ -48841,11 +48950,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
-      "sha256": "0e7ccb9c662cb0cdc7dadecbcb22db12bcc47755e5a36f1ac92977915d0d8673"
+      "sha256": "b28d962c8acd4f405c13d21119809d26148305a2dce220c5b84d3054ae546eb8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportArchiveSelection.cs",
-      "sha256": "81e0129104c2373fe6a681843df6f21e60b9e3c8e12eb1c7e5102cfeb07adad9"
+      "sha256": "d37f6a29cfbddb11ca3fb7919513a99299b8bd75e99b46143d699a29cfba7c70"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportBatchSession.cs",
@@ -48861,7 +48970,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportSelection.cs",
-      "sha256": "990d7fac8510aa8ecf606d3193951bddd07bad0cb2deda361e88f3593decbbc5"
+      "sha256": "5efa295f6931928146ac7045b10c0183afc551f894b0be8740adb2c80b8f3a4b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportTools.cs",
@@ -49453,7 +49562,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "7a7e55791415641b2bf9d4fae41c189c21337d7efb6942086b916c8ea9eb89c4"
+      "sha256": "c3de0faeab636df6c10fa20d906615f2946669cd4487cd14a03ba952d378d45b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

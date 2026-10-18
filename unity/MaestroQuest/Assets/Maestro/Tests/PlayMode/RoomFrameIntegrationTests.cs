@@ -65,7 +65,7 @@ namespace Maestro.Quest.Tests
             FrameNear(editor.ObserveObjects().Single(x=>x.id==id).position,before);
             var layout=Layout(id);layout.placements[0].scale=.8f;layout.placements[0].rotation=Quaternion.Euler(0,20,0);
             var executor=new RoomAgentExecutor(editor);
-            Assert.That(executor.Execute(LayoutRequest(layout),out var error,out _),Is.True,error);
+            Assert.That(executor.Execute(LayoutRequest(layout),out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             FrameNear(item.transform.position,editor.transform.TransformPoint(layout.placements[0].position));Assert.That(item.transform.parent,Is.SameAs(group));
             var saved=new RoomStorage(directory).Load(out error);Assert.That(error,Is.Null);FrameNear(saved.objects.Single(x=>x.id==id).position,layout.placements[0].position);
             editor.Undo();FrameNear(item.transform.position,editor.transform.TransformPoint(before));
@@ -100,8 +100,8 @@ namespace Maestro.Quest.Tests
             string id=LayoutObject(new Vector3(.4f,1.2f,.7f));FrameGroup(id);var item=editor.Find(id);
             Assert.That(editor.SetItemPhysics(id,new ObjectPhysicsSettings {mode="solid",shape="box",mass=1}),Is.True);
             editor.Select(item);var start=new Vector3(.5f,1.4f,.3f);var end=start+Vector3.right;
-            item.transform.position=editor.transform.TransformPoint(start);animations.AddFrame();
-            item.transform.position=editor.transform.TransformPoint(end);animations.AddFrame();
+            item.transform.position=editor.transform.TransformPoint(start);animations.AddFrame();yield return FrameSaveCompletion.Wait(animations);
+            item.transform.position=editor.transform.TransformPoint(end);animations.AddFrame();yield return FrameSaveCompletion.Wait(animations);
             var motion=editor.Read(id).motion;Assert.That(motion.frames.Length,Is.EqualTo(2));FrameNear(motion.frames[0].position,start);FrameNear(motion.frames[1].position,end);
             animations.StepFrame(-1);FrameNear(item.transform.position,editor.transform.TransformPoint(start));animations.Stop();
             physics.SetSurfaces(true,"Synthetic aligned room");physics.StartPhysics();

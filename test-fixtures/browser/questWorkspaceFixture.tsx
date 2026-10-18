@@ -31,6 +31,7 @@ import nativeRemoval from './workspaceRemoval.json';
 import nativeAuthoring from './animationAuthoring.json';
 import nativeRecording from './recordingSessions.json';
 import nativePosing from './posingSessions.json';
+import nativeFrames from './keyframeSessions.json';
 import nativeModelImport from './modelSelection.json';
 import nativeImportReadback from './importReadback.json';
 import nativeController from './controllerConfiguration.json';
@@ -217,6 +218,14 @@ if(modelSelection){
  state.execution={...JSON.parse(JSON.stringify(nativeModelImport.select)),selected:null,running:[],outcomes:[],nextRunId:nativeModelImport.select.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','modelImport.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
+const keyframeSessions=new URLSearchParams(location.search).has('keyframeSessions');
+let frameObservation=nativeFrames.pending,frameFinishTicks=0;
+if(keyframeSessions){
+ if(![nativeFrames.beforeExecution,nativeFrames.preparing,nativeFrames.complete].every(validExecutionView))throw new Error('Invalid native keyframe fixture');
+ state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
+ state.execution=JSON.parse(JSON.stringify(nativeFrames.beforeExecution));
+ state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','animationEditResolution.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
+}
 const poseSessions=new URLSearchParams(location.search).has('poseSessions');
 let poseObservation:typeof nativePosing.active=nativePosing.before,poseFinishTicks=0;
 if(poseSessions){
@@ -313,6 +322,10 @@ createRoot(document.getElementById('root')!).render(<QuestBookSurface><div style
 const requestHistory:unknown[]=[];Object.assign(window,{maestroWorkspaceRequests:requestHistory});
 setInterval(()=>{
  const bridge=window.maestroBook;if(!bridge)return;
+ if(frameFinishTicks>0&&--frameFinishTicks===0){
+  state.execution=copy(nativeFrames.complete) as RoomAgentState['execution'];frameObservation=nativeFrames.idle;
+  state.status='Recorded native keyframe completion; browser acknowledgement is simulated';
+ }
  if(poseFinishTicks>0&&--poseFinishTicks===0){
   state.execution=copy(nativePosing.finish) as RoomAgentState['execution'];poseObservation=nativePosing.idle;
   state.status='Recorded native pose completion; browser acknowledgement is simulated';
@@ -408,6 +421,10 @@ setInterval(()=>{
      const index=[nativeModelImport.select,nativeModelImport.accept].findIndex(view=>input.call?.id===view.selected.call.id&&input.call.version===view.selected.call.version&&JSON.stringify(Object.entries(input.call.arguments).sort())===JSON.stringify(Object.entries(view.selected.call.arguments).sort()));
      if(index<0){state.ok=false;state.status='Only the captured native import requests can be replayed';}
      else{state.execution=copy([nativeModelImport.select,nativeModelImport.accept][index]) as RoomAgentState['execution'];modelImportObservation=[nativeModelImport.preview,nativeModelImport.after][index];state.status='Captured native model preview/import; no system picker is opened in this browser fixture';}
+    }
+    else if(keyframeSessions&&input.operation==='start'){
+     if(JSON.stringify(input.call)!==JSON.stringify(nativeFrames.complete.selected.call)){state.ok=false;state.status='Only the captured native keyframe request can be replayed';}
+     else{state.execution=copy(nativeFrames.preparing) as RoomAgentState['execution'];frameFinishTicks=15;state.status='Captured native keyframe save; browser acknowledgement is simulated';}
     }
     else if(poseSessions&&input.operation==='start'){
      const index=[nativePosing.start,nativePosing.rotate,nativePosing.finish].findIndex(view=>JSON.stringify(input.call)===JSON.stringify(view.selected.call));
@@ -557,6 +574,12 @@ setInterval(()=>{
      const definition=behaviourFact('model.import.selection')!;
      if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found import state'};
      else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(modelImportObservation):null,status:'Captured native import session'};
+     continue;
+    }
+    if(keyframeSessions&&query.operation!=='check'&&query.category==='facts'){
+     const definition=behaviourFact('animation.edit.pending')!;
+     if(query.operation==='search')state.catalog={operation:'search',category:'facts',query:query.query,offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Found pending keyframe state'};
+     else state.catalog={operation:'inspect',category:'facts',capability:query.capability,version:1,definition:query.capability===definition.id?definition:null,available:query.capability===definition.id,value:query.capability===definition.id?copy(frameObservation):null,status:'Captured native keyframe edit'};
      continue;
     }
     if(poseSessions&&query.operation!=='check'&&query.category==='facts'){

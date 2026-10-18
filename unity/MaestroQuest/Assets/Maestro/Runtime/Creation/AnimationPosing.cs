@@ -38,7 +38,7 @@ namespace Maestro.Quest.Creation
         internal bool CanStartPose(string session,int revision,out string error,bool manual=false)
         {
             error="The pose session changed; inspect animation.posing first";if(session!=poseSession)return false;
-            if(posing||HasUnsavedPose||IsRecording||HasUnsavedRecording||controlling){error="Finish or resolve current animation authoring first";return false;}
+            if(posing||HasUnsavedPose||IsRecording||HasUnsavedRecording||HasUnsavedFrameEdit||controlling){error="Finish or resolve current animation authoring first";return false;}
             if(!editor||editor.RuntimeGate.Held){error=editor?editor.RuntimeGate.Reason:"Room editor is unavailable";return false;}
             if(!editor.CanSaveRoom||editor.WriteGate.Frozen){error="Room saving is unavailable";return false;}
             if(editor.DrawingInProgress){error="Finish the current stroke before posing";return false;}

@@ -61,12 +61,12 @@ namespace Maestro.Quest.Tests
             Assert.That(Quaternion.Angle(before,head.localRotation),Is.LessThanOrEqualTo(76));
             handRoot.SetActive(false); yield return null;yield return PoseSettled();
             Assert.That(editor.Read("maestro").joints,Is.Not.Null);
-            workshop.AddFrame();
-            avatar.PoseRig.Rotate(PoseJoint.Head,head.parent.rotation * before); avatar.PoseRig.FinishedHandle();yield return PoseSettled(); workshop.AddFrame();
+            workshop.AddFrame();yield return FrameSettled();
+            avatar.PoseRig.Rotate(PoseJoint.Head,head.parent.rotation * before); avatar.PoseRig.FinishedHandle();yield return PoseSettled(); workshop.AddFrame();yield return FrameSettled();
             Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo(2));
             workshop.Stop();yield return PoseSettled();workshop.Play(); Assert.That(workshop.IsPlaying,Is.True); yield return new WaitForSeconds(.2f);
             workshop.Stop(); Assert.That(avatarItem.Grab.enabled,Is.True); Assert.That(workshop.IsPosing,Is.False);
-            workshop.ResetPose(); Assert.That(editor.Read("maestro").joints,Is.Null);
+            workshop.ResetPose();yield return FrameSettled(); Assert.That(editor.Read("maestro").joints,Is.Null);
             editor.Undo(); Assert.That(editor.Read("maestro").joints,Is.Not.Null);
         }
         [UnityTest] public IEnumerator ObjectRecordingAndFocusLossKeepTakeAndStopPreviewWithoutAutoplay()
@@ -127,6 +127,8 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator TearDown()
         {
+            if(workshop.IsSavingFrameEdit){workshop.DiscardFrameEdit();float frameEnd=Time.realtimeSinceStartup+20;while(workshop.IsSavingFrameEdit&&Time.realtimeSinceStartup<frameEnd)yield return null;}
+            workshop.DiscardFrameEdit();yield return RecordingDrained();
             workshop.DiscardTake();yield return RecordingDrained();
             if(workshop.IsSavingPose){workshop.DiscardRetainedPose();float end=Time.realtimeSinceStartup+20;while(workshop.IsSavingPose&&Time.realtimeSinceStartup<end)yield return null;}
             workshop.DiscardRetainedPose();yield return RecordingDrained();

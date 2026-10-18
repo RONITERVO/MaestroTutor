@@ -13,7 +13,7 @@ namespace Maestro.Quest.Creation
             if(ObjectRevision(target)!=revision){error="The object changed; inspect its animation before editing";return false;}
             if(RuntimeGate.Held||Ownership.Suspended){error="Resume room interaction before editing animations";return false;}
             var workshop=GetComponent<AnimationWorkshop>();
-            if(workshop&&workshop.HasUnfinishedAuthoring(target)){error="Finish or discard this object's recording or pose before editing its saved animation";return false;}
+            if(workshop&&workshop.HasUnfinishedAuthoring(target)){error="Finish or discard this object's recording, pose or keyframe edit before editing its saved animation";return false;}
             var avatar=item.GetComponent<MaestroAvatar>();
             if(avatar&&(avatar.ModelBusy||avatar.UpperBodyActive||avatar.GetComponent<AvatarSpatialMotion>()?.Active==true)){
                 error="Wait for Maestro's model and current movement or gesture before editing its animation";return false;
@@ -32,7 +32,7 @@ namespace Maestro.Quest.Creation
             candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();
             return candidate.Validate(out error);
         }
-        internal bool BeginRecordedAnimation(string target,int revision,RoomMotion motion,JointPose[] joints,bool savePose,
+        internal bool BeginCapturedAnimation(string target,int revision,RoomMotion motion,JointPose[] joints,bool savePose,
             Func<string> validate,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)=>
             BeginAttachedEdit(validate,
                 (out RoomObjectData data,out string issue)=>PrepareAnimation(target,revision,motion,joints,savePose,out data,out issue),

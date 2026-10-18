@@ -924,6 +924,14 @@ try{
   const poseUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
   if((poseUndone.catalog?.value as {poseSaved:boolean}).poseSaved!==(recordingUndone.catalog?.value as {poseSaved:boolean}).poseSaved)throw new Error('Second pose Undo did not restore the original saved pose state');
   await writeFile(join(directory,'pose-completion.json'),JSON.stringify({boundary:'Real Unity versioned live posing, queued save and finish, saved joint readback and two Undo operations. No provider or headset execution.',before:poseBefore,start:poseStart,active:poseActive,rotate:poseRotate,edited:poseEdited,liveJoint:poseLiveJoint,saving:poseSaving,saved:poseSaved,continuing:poseContinuing,later:poseLater,latest:poseLatest,finishing:poseFinishing,finished:poseFinished,idle:poseIdle,read:poseRead,undoSummary:poseUndoSummary,undoJoint:poseUndoJoint,undone:poseUndone},null,2));
+  // Pending physical edits are discoverable through the same sparse native catalog.
+  const framePending=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.edit.pending',version:1}}]);
+  const frameState=framePending.catalog?.value as {sessionId:string;phase:string;target:string;frames:number};
+  if(frameState?.phase!=='idle'||frameState.target!==''||frameState.frames!==0||!/^[a-f0-9]{32}$/.test(frameState.sessionId))throw new Error('Pending keyframe fact is not a valid idle session');
+  if(!framePending.capabilities?.includes('animationEditResolution.v1'))throw new Error('Native keyframe resolution feature is missing');
+  const frameDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'animation.edit.resolve',version:1}}]);
+  if(frameDefinition.catalog?.definition?.duration!=='completion'||frameDefinition.catalog?.definition?.ownership!=='authoringSession')throw new Error('Native keyframe recovery contract differs from shared catalog');
+  await writeFile(join(directory,'keyframe-discovery.json'),JSON.stringify({pending:framePending,definition:frameDefinition,boundary:'Real Unity sparse catalog discovery. Pending physical save, retry/discard and publication are exercised separately by PlayMode integration tests; no headset or provider execution.'},null,2));
   const hingeBrowser=await connectionBrowserInputs(layoutIds);
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);
