@@ -451,13 +451,10 @@ namespace Maestro.Quest.Creation
         }
         internal bool WriteAnimation(string id,int revision,RoomMotion motion,JointPose[] joints,bool savePose,out string error)
         {
-            error="The object changed; inspect its animation before editing";
-            if(journal==null||ObjectRevision(id)!=revision)return false;
-            var data=Read(id);if(data==null)return false;
-            data.motion=motion?.Copy();if(savePose)data.joints=MotionFrame.CopyJoints(joints);
+            if(!PrepareAnimation(id,revision,motion,joints,savePose,out var data,out error))return false;
             // Physical authoring already owns the target (and can be recording a grip).
-            // Remote callers separately require released/idle ownership before entering.
-            return CommitPersisted(new[]{data},Array.Empty<string>(),"Animation saved",false,out error);
+            // Both paths edit content only; Undo must not rewind unrelated root motion.
+            return CommitPersisted(new[]{data},Array.Empty<string>(),"Animation saved",false,out error,scope:RoomEditScope.Content);
         }
         public void RestorePose(string id)
         {

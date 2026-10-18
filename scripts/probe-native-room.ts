@@ -840,6 +840,34 @@ try{
    for(const target of targets)facts.push(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target}}}]));
    return {directory,facts};
   }
+  const animationBrowser=await connectionBrowserInputs(['maestro']);
+  const animationSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Edit pose or recorded motion',offset:0}}]);
+  const animationDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'animation.author',version:1}}]);
+  const animationCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
+  const animationRevision=(animationCurrent.catalog?.value as {revision:number}).revision;
+  const animationFrame=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.frame',version:1,arguments:{target:'maestro',revision:animationRevision,index:-1}}}]);
+  const frameSource=animationFrame.catalog?.value as {position:unknown;rotation:unknown;scale:number};
+  const restJoints:{joint:string;rotation:{x:number;y:number;z:number;w:number}}[]=[];const jointReads:RoomAgentState[]=[];
+  for(const joint of ['Hips','Spine','Chest','Neck','Head','LeftUpperArm','LeftLowerArm','LeftHand','RightUpperArm','RightLowerArm','RightHand','LeftUpperLeg','LeftLowerLeg','LeftFoot','RightUpperLeg','RightLowerLeg','RightFoot']){
+   const read=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.joint',version:1,arguments:{target:'maestro',revision:animationRevision,index:-2,joint}}}]);jointReads.push(read);
+   restJoints.push({joint,rotation:read.catalog?.value as {x:number;y:number;z:number;w:number}});
+  }
+  const nodJoints=structuredClone(restJoints),head=nodJoints.find(j=>j.joint==='Head')!.rotation;
+  const sine=Math.sin(Math.PI/12),cosine=Math.cos(Math.PI/12);
+  Object.assign(head,{x:head.x*cosine+head.w*sine,y:head.y*cosine+head.z*sine,z:head.z*cosine-head.y*sine,w:head.w*cosine-head.x*sine});
+  const animationArgs={operation:'frames',target:'maestro',revision:animationRevision,replace:true,frames:[0,.25,.5].map((time,index)=>({time,position:frameSource.position,rotation:frameSource.rotation,scale:frameSource.scale,joints:index===1?nodJoints:restJoints}))};
+  const animationStarted=await execute([{action:'execution',execution:{operation:'start',call:{id:'animation.author',version:1,arguments:animationArgs}}}]);
+  const animationAfter=await completeProbeAction(execute,animationStarted);
+  const animationRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
+  const animationSaved=animationRead.catalog?.value as {revision:number;frames:number;duration:number};
+  if(animationSaved.frames!==3||animationSaved.duration!==.5||animationSaved.revision<=animationRevision)throw new Error('Authored animation metadata did not advance');
+  const animationJoint=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.joint',version:1,arguments:{target:'maestro',revision:animationSaved.revision,index:1,joint:'Head'}}}]);
+  const savedHead=animationJoint.catalog?.value as typeof head;
+  if(Object.keys(head).some(k=>Math.abs(savedHead[k as keyof typeof head]-head[k as keyof typeof head])>1e-5))throw new Error('Authored canonical joint readback differs');
+  const animationUndo=await execute([{action:'undo'}]);
+  const animationUndone=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'animation.authored',version:1,arguments:{target:'maestro'}}}]);
+  if((animationUndone.catalog?.value as {frames:number}).frames!==(animationCurrent.catalog?.value as {frames:number}).frames)throw new Error('Animation Undo did not restore source');
+  await writeFile(join(directory,'animation-authoring.json'),JSON.stringify({boundary:'Actual native 17-joint authoring, completion, readback and Undo. Physical playback and imported retargeting have separate native tests; no provider or headset proof.',before:animationCurrent,search:animationSearch,definition:animationDefinition,current:animationCurrent,facts:[...animationBrowser.facts,animationCurrent],directory:animationBrowser.directory,rest:jointReads,started:animationStarted,after:animationAfter,read:animationRead,joint:animationJoint,undo:animationUndo,undone:animationUndone},null,2));
   const hingeBrowser=await connectionBrowserInputs(layoutIds);
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);

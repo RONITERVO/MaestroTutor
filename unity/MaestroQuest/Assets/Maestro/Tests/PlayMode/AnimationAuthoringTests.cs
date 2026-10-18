@@ -25,7 +25,7 @@ namespace Maestro.Quest.Tests
         JObject AuthorCall(JObject args)=>new() {["operation"]="start",["runId"]=authorActions.Observe()["nextRunId"].DeepClone(),["call"]=new JObject {["id"]="animation.author",["version"]=1,["arguments"]=args}};
         IEnumerator Author(JObject args)
         {
-            authorRequest=AuthorCall(args);Assert.That(authorActions.Execute(authorRequest,out var error),Is.True,error);yield return null;
+            authorRequest=AuthorCall(args);Assert.That(authorActions.Execute(authorRequest,out var error),Is.True,error);yield return SpatialSettingsCompletion.Wait(authorActions);
             authorState=authorActions.Observe();Assert.That((string)authorState["selected"]["phase"],Is.EqualTo("completed"),authorState.ToString());
         }
         JObject Fact(string id,JObject args){Assert.That(BehaviourCatalog.TryRead(id,1,args,new BehaviourCatalog.FactContext(editor:editor),out var value),Is.True,id);return JObject.FromObject(value.Value);}
@@ -92,10 +92,26 @@ namespace Maestro.Quest.Tests
             var bone=avatar.PoseRig.Bone(PoseJoint.Head);Assert.That(bone,Is.Not.SameAs(avatar.PoseRig.CanonicalBone(PoseJoint.Head)));var before=bone.localRotation;
             editor.Select(avatarItem);workshop.Play();Assert.That(workshop.IsPlaying,Is.True);yield return new WaitForSeconds(.24f);Assert.That(Quaternion.Angle(before,bone.localRotation),Is.GreaterThan(15));workshop.Stop();
         }
+        [UnityTest] public IEnumerator SavedAnimationEditingProtectsRetainedRecordingAndPoseAfterControlsRelease()
+        {
+            AuthorRuntime();
+            Assert.IsTrue(workshop.StartRecording(workshop.RecordingSessionId,"maestro",editor.ObjectRevision("maestro"),out _,out var error),error);
+            yield return null;
+            using(editor.WriteGate.TryFreeze(out _)){Assert.IsFalse(workshop.FinishRecording(workshop.RecordingSessionId,"maestro",out _,out _));}
+            Assert.IsTrue(workshop.HasUnsavedRecording);Assert.IsFalse(workshop.ControlsTarget("maestro"));
+            Assert.IsFalse(authorActions.Execute(AuthorCall(AuthorArgs("clear")),out _));Assert.IsTrue(workshop.HasUnsavedRecording);
+            Assert.IsTrue(workshop.DiscardRecording(workshop.RecordingSessionId,out _,out error),error);
+            workshop.TogglePose();Assert.IsTrue(workshop.IsPosing);
+            avatar.PoseRig.Rotate(PoseJoint.Head,avatar.PoseRig.Bone(PoseJoint.Head).rotation*Quaternion.Euler(12,0,0));
+            using(editor.WriteGate.TryFreeze(out _)){avatar.PoseRig.FinishedHandle();workshop.Stop();}
+            Assert.IsTrue(workshop.HasUnsavedPose);Assert.IsFalse(workshop.ControlsTarget("maestro"));
+            Assert.IsFalse(authorActions.Execute(AuthorCall(AuthorArgs("clear")),out _));Assert.IsTrue(workshop.HasUnsavedPose);
+            workshop.DiscardRetainedPose();yield return Author(AuthorArgs("clear"));
+        }
         [UnityTest] public IEnumerator FailedDurableAnimationSaveLeavesPoseRevisionAndUndoUnchanged()
         {
             AuthorRuntime();int revision=editor.ObjectRevision("maestro");bool undo=editor.CanUndo;editor.SaveNow();yield return null;string file=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(file);
-            var args=AuthorArgs("frames");args["replace"]=true;args["frames"]=new JArray(FrameJson("maestro",0),FrameJson("maestro",1));Assert.That(authorActions.Execute(AuthorCall(args),out _),Is.False);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Assert.That(editor.Read("maestro").motion,Is.Null);Assert.That(editor.CanUndo,Is.EqualTo(undo));
+            var args=AuthorArgs("frames");args["replace"]=true;args["frames"]=new JArray(FrameJson("maestro",0),FrameJson("maestro",1));Assert.That(authorActions.Execute(AuthorCall(args),out _),Is.True);yield return SpatialSettingsCompletion.Wait(authorActions,"failed");Assert.That((string)authorActions.Observe()["selected"]["phase"],Is.EqualTo("failed"));Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Assert.That(editor.Read("maestro").motion,Is.Null);Assert.That(editor.CanUndo,Is.EqualTo(undo));
             Assert.That(editor.SaveAnimation("maestro",new RoomMotion {frames=new[]{new MotionFrame()}},null,false),Is.False);Assert.That(editor.Read("maestro").motion,Is.Null);
         }
     }

@@ -15,10 +15,10 @@ namespace Maestro.Quest.Programs
     {
         public override string Id=>"animation.author";
         public override string Label=>"Edit pose or recorded motion";
-        public override string Duration=>"instant";
+        public override string Duration=>"completion";
         public override IReadOnlyList<string> Channels=>new[]{"wholeTarget"};
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","storage.writable","object.revision.current"};
-        public override string Description=>"Author the same canonical pose and motion used by physical joint/keyframe tools. Inspect animation.authored, animation.frame and animation.joint first. Pass the exact object revision. Each call is one atomic saved edit and Undo outside temporary-room mode; inside temporary mode it edits the fork until Keep. No playback starts. frames replaces the motion or patches up to eight frames by exact time (seconds); all resulting frames must begin at zero, have distinct increasing times and identical ordered joint channels, at most 301 frames/30 seconds. removeFrames removes exact existing times and rebases the first remaining time to zero; removing all clears the motion. settings adjusts loop and/or total duration. clear removes the motion but keeps the saved pose. pose replaces the complete saved Maestro pose; null restores automatic activity. Positions/rotations are in the target parent room space, scale is uniform, and joint rotations are canonical local rotations, not world rotations or imported-model bone coordinates. Use rest joint facts for neutral authored poses; omitted joints are not synthesized. Physical recording/pose preview must be stopped first. Stop after completion does not revert an edit; Undo is separate.";
+        public override string Description=>"Author the same canonical pose and motion used by physical joint/keyframe tools. Inspect animation.authored, animation.frame and animation.joint first. Pass the exact object revision. Each call is one atomic saved edit and Undo outside temporary-room mode; inside temporary mode it edits the fork until Keep. No playback starts. frames replaces the motion or patches up to eight frames by exact time (seconds); all resulting frames must begin at zero, have distinct increasing times and identical ordered joint channels, at most 301 frames/30 seconds. removeFrames removes exact existing times and rebases the first remaining time to zero; removing all clears the motion. settings adjusts loop and/or total duration. clear removes the motion but keeps the saved pose. pose replaces the complete saved Maestro pose; null restores automatic activity. Positions/rotations are in the target parent room space, scale is uniform, and joint rotations are canonical local rotations, not world rotations or imported-model bone coordinates. Use rest joint facts for neutral authored poses; omitted joints are not synthesized. Physical recording/pose preview must be stopped and retained takes resolved first. Edits and Undo preserve current root placement and momentum; playback remains explicit. The result is the exact accepted animation metadata and revision, never a later edit."+PersistedEditOperation.Persistence;
         internal static JObject Target()=>Resource(Text("^(maestro|book|[a-fA-F0-9]{32})$",32));
         internal static JObject JointSchema()=>Object(new JObject {["joint"]=Choice(Enum.GetNames(typeof(PoseJoint))),["rotation"]=Vector(true)});
         internal static JObject JointsSchema(){var value=List(JointSchema(),0,17);value["nullable"]=true;return value;}
@@ -26,7 +26,7 @@ namespace Maestro.Quest.Programs
         static JObject Variant(string operation,string label,JObject fields,params string[] optional)
         {
             var props=new JObject {["operation"]=Choice(operation),["target"]=operation=="pose"?Resource(Choice("maestro")):Target(),["revision"]=Revision()};props["operation"]["x-static"]=true;
-            foreach(var property in fields.Properties())props[property.Name]=property.Value.DeepClone();var value=Object(props,optional);value["title"]=label;value["x-features"]=new JArray("animationAuthoring.v1");return value;
+            foreach(var property in fields.Properties())props[property.Name]=property.Value.DeepClone();var value=CurrentInputs(Object(props,optional),"animation.authored","revision",new JObject {["target"]="target"});value["title"]=label;value["x-features"]=new JArray("animationAuthoring.v1");return value;
         }
         public override JObject InputSchema=>new() {["type"]="object",["title"]="Animation edit",["x-discriminators"]=new JArray("operation"),["oneOf"]=new JArray(
             Variant("frames","Write keyframes",new JObject {["replace"]=new JObject {["type"]="boolean"},["frames"]=List(FrameSchema(),1,8)}),
@@ -57,8 +57,7 @@ namespace Maestro.Quest.Programs
             motion=null;pose=null;writePose=(string)args["operation"]=="pose";
             if(!context.Target(args,out _,out error))return false;
             var editor=context.Editor;string target=(string)args["target"];
-            if(!editor.CanEditObject(target,false,out error))return false;
-            if(editor.ObjectRevision(target)!=(int)args["revision"]){error="The object changed; inspect its animation before editing";return false;}
+            if(!editor.CanEditAnimation(target,(int)args["revision"],out error))return false;
             var data=editor.Read(target);motion=data.motion;
             switch((string)args["operation"]){
                 case "frames":if(!RoomMotionEdits.Put(motion,((JArray)args["frames"]).Select(Frame).ToArray(),(bool)args["replace"],out motion,out error))return false;break;
@@ -67,20 +66,25 @@ namespace Maestro.Quest.Programs
                 case "pose":pose=Joints(args["joints"]);break;
                 case "clear":motion=null;break;
             }
-            data.motion=motion;if(writePose)data.joints=pose;
-            var document=editor.Snapshot();document.objects=document.objects.Select(x=>x.id==target?data:x).ToArray();return document.Validate(out error);
+            return editor.PrepareAnimation(target,(int)args["revision"],motion,pose,writePose,out _,out error);
         }
         public override bool CanRun(CapabilityContext context,JObject args,out string error)=>Prepare(context,args,out _,out _,out _,out error);
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error)
         {
-            operation=null;if(!Prepare(context,args,out var motion,out var pose,out var writePose,out error))return false;string target=(string)args["target"];
-            if(!context.Editor.WriteAnimation(target,(int)args["revision"],motion,pose,writePose,out error))return false;
-            operation=new CompletedCapability(Summary(context.Editor,target));return true;
+            string target=(string)args["target"];int revision=(int)args["revision"];var captured=(JObject)args.DeepClone();
+            RoomObjectData prepared=null;RoomEditor.PendingPersistedEdit accepted=null;
+            return PersistedEditOperation.Start(context.Editor,target,
+                (out RoomEditor.PendingPersistedEdit edit,out string issue)=>{
+                    edit=null;if(!Prepare(context,captured,out var motion,out var pose,out var writePose,out issue))return false;
+                    bool started=context.Editor.BeginAnimation(target,revision,motion,pose,writePose,out prepared,out edit,out issue);
+                    accepted=edit;return started;
+                },out operation,out error,validate:(out string issue)=>context.Target(captured,out _,out issue)&&context.Editor.CanEditAnimation(target,revision,out issue),
+                output:()=>Summary(prepared,accepted.AcceptedObjectRevision(target)));
         }
-        internal static JObject Summary(RoomEditor editor,string id)
-        {
-            var data=editor.Read(id);return new JObject {["target"]=id,["revision"]=editor.ObjectRevision(id),["frames"]=data.motion?.frames.Length??0,["duration"]=data.motion?.Duration??0,["loop"]=data.motion?.loop??false,["poseSaved"]=data.joints!=null};
-        }
+        internal static JObject Summary(RoomEditor editor,string id)=>Summary(editor.Read(id),editor.ObjectRevision(id));
+        static JObject Summary(RoomObjectData data,int revision)=>new() {["target"]=data.id,["revision"]=revision,
+            ["frames"]=data.motion?.frames.Length??0,["duration"]=data.motion?.Duration??0,["loop"]=data.motion?.loop??false,["poseSaved"]=data.joints!=null};
+
     }
     internal static class AnimationAuthoringFacts
     {

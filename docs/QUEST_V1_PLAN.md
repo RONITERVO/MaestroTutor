@@ -14140,3 +14140,54 @@ its unresolved intermittent Meta audio SDK crash. Native preparation and
 reconciliation retain owner-thread costs and need physical latency measurement.
 Other saved authoring/lifecycle paths, headset acceptance and Store gates remain
 open; this is progress toward v1, not release completion.
+
+## Shared saved animation completion — 2026-10-18
+
+Saved animation.author frames, removal, timing/looping, clear and pose edits now
+use the ordered completion queue. Requests retain copied intent and their exact
+original object revision while waiting, without holding a body or copying a room
+candidate. Admission and preparation recheck availability, current avatar
+activity and active or retained authoring. Unsaved takes stay protected after
+their physical controls release the target.
+
+Physical tools and saved actions share canonical data preparation and content
+Undo. Editing/Undo preserves current root placement and momentum. Saving
+keyframes does not start playback; saving a pose applies its canonical joints.
+The accepted result keeps its own metadata and revision even if a newer edit
+finishes before the observer collects it. Pre-acceptance cancellation leaves the
+edit unapplied. Accepted Stop still drains publication; publication failure keeps
+the live edit unconfirmed, preserves saved files and blocks further saving.
+Temporary edits remain in the fork until Keep.
+
+The live recording and pose-retention session contracts remain synchronous.
+Their existing save/retry/discard and ownership tests pass. This increment does
+not claim those physical saves are asynchronous or that headset latency is
+measured. Public action IDs, input/output fields, stored motion formats and
+canonical-joint/room budgets are unchanged. Generated book controls load the
+current animation revision instead of requiring a manually typed revision.
+
+Verification: **75 EditMode, 102 PlayMode and
+3,198 web tests**, application/probe TypeScript and catalog checks.
+Seven new regressions cover copied queued intent, immutable accepted receipts,
+stale/cancelled waiters, active preview, retained take/pose protection, current
+placement/momentum with Undo, accepted Stop and failed publication. Existing
+17-joint included/imported-rig playback, recording and posing tests pass.
+
+Complete offline Book bbbdeb9a885044ef80b9c3f6a0a3f804 passes with 3,669
+observations/1,182 requests. Headless 9d0704a356d740b68d1c64c6502a5ffe passes with
+2,344 observations/2,343 read sets. The new Headless
+capture verifies a three-frame, 17-joint nod, actual completion, exact canonical
+joint readback and Undo. Chrome replays those exact observations through the
+production generated book fields with paged sparse object selection, current
+revision loading and a fresh object-definition guard. Existing fixed, hinge and
+slider browser fixtures remain regression checks using their previously verified
+native captures. Original world/media flows, human-edit preservation and reload
+without replay pass. These are desktop checks, not new headset/provider acceptance.
+
+Evidence: .quest-evidence/animation-completion-20261018; 3,294
+native input hashes checked and 14 protected files unchanged.
+No device, paid provider, Android build, signing, deployment or Meta action ran.
+The earlier full native-suite checkpoint and unresolved intermittent Meta audio
+SDK crash remain separate. Other saved/lifecycle completion, physical latency,
+headset acceptance and Store release gates remain open. See
+[shared animation authoring](QUEST_ANIMATION_AUTHORING.md).

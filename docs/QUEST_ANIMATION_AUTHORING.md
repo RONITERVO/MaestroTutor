@@ -1,7 +1,7 @@
 # Shared pose and motion authoring
 
 The agent, programs and optional book action catalog can edit the same saved
-motion used by the physical animation tray. `animation.author` is an instant,
+motion used by the physical animation tray. `animation.author` is a completion,
 whole-target capability; discovery, schema validation, readiness, execution
 receipts and Undo use the existing shared paths. It adds no model-provider
 connection. Saving an edit never starts playback.
@@ -52,17 +52,31 @@ large imported animation library.
 ## Saving and ownership
 
 Physical Add/Replace/Remove frame, timing and loop controls share the detached
-`RoomMotionEdits` helpers. Physical and agent saves share `RoomEditor.WriteAnimation`:
-one validated durable edit and one Undo entry. Storage failure leaves the saved
-motion, journal and revision unchanged. Physical recording can still sample an
-object while the user grips it. A remote edit requires the target released,
-physical authoring stopped and compatible ownership available; it cannot overwrite
-a live take or pose preview.
+RoomMotionEdits helpers. Both saving paths use RoomEditor.PrepareAnimation to
+copy and validate canonical data. Physical recording and pose-retention sessions
+keep their synchronous save/retry contract; their frames must remain available
+after failed saving.
 
+Saved animation actions use the common ordered edit queue. A waiter keeps copied
+intent, not a candidate room or held body. When admitted, it checks the original
+object revision, availability, current movement/gesture and authoring ownership
+again. Active previews, recordings and retained unsaved takes/poses are protected,
+including after their controls have released the target. Preparation rechecks
+these conditions before native acceptance.
+
+Outside temporary play, completion confirms both native reconciliation and disk
+publication. Cancellation before acceptance leaves the edit unapplied. Stop
+after acceptance cannot retract the edit or its save. An accepted publication
+failure retains the unconfirmed live edit, preserves saved files and blocks
+further saves until recovery. Inspect the outcome instead of replaying blindly.
+The result comes from the exact accepted candidate and revision, even if a newer
+edit succeeds before the observer collects the result.
+
+Content edits and Undo preserve current root placement and momentum. Saving a
+pose applies those canonical joints; saving keyframes does not start playback.
 Temporary-room edits affect only the fork until Keep. Discard restores the
-baseline; Keep persists a detached snapshot. Stopping an already completed edit
-does not undo it. Action receipts prevent duplicate dispatch; a separate Undo
-reverts an edit. The same catalog also exposes live recording sessions below.
+baseline; Keep persists a detached snapshot. Receipts prevent duplicate dispatch.
+The same catalog also exposes live recording sessions below.
 
 ## Shared recording sessions
 
@@ -179,7 +193,7 @@ temporary Keep/Discard. `test-fixtures/browser/animationAuthoring.json` is captu
 from native execution, including a three-frame, 17-joint nod and exact readback.
 The web verifies its receipt and fact types. `scripts/probe-animation-authoring.mjs`
 fills the nested book controls without entering JSON and checks that the generated
-request matches the captured native call. The Chrome acknowledgement is a fixture;
+request and completion match the captured native call, with a freshly loaded\nrevision and object-definition guard. The Chrome acknowledgement is a fixture;
 it is not a real-provider or headset test. Device comfort, authoring performance
 and real-provider journeys remain release gates.
 

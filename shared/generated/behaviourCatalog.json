@@ -1176,6 +1176,21 @@
               "frames"
             ],
             "additionalProperties": false,
+            "x-current": {
+              "fact": "animation.authored",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Write keyframes",
             "x-features": [
               "animationAuthoring.v1"
@@ -1220,6 +1235,21 @@
               "times"
             ],
             "additionalProperties": false,
+            "x-current": {
+              "fact": "animation.authored",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Remove keyframes",
             "x-features": [
               "animationAuthoring.v1"
@@ -1261,6 +1291,21 @@
               "revision"
             ],
             "additionalProperties": false,
+            "x-current": {
+              "fact": "animation.authored",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Timing and looping",
             "x-features": [
               "animationAuthoring.v1"
@@ -1367,6 +1412,21 @@
               "joints"
             ],
             "additionalProperties": false,
+            "x-current": {
+              "fact": "animation.authored",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Saved Maestro pose",
             "x-features": [
               "animationAuthoring.v1"
@@ -1400,6 +1460,21 @@
               "revision"
             ],
             "additionalProperties": false,
+            "x-current": {
+              "fact": "animation.authored",
+              "version": 1,
+              "arguments": {
+                "target": "target"
+              },
+              "fields": {
+                "revision": [
+                  "revision"
+                ]
+              },
+              "guards": [
+                "revision"
+              ]
+            },
             "title": "Clear recorded motion",
             "x-features": [
               "animationAuthoring.v1"
@@ -1407,7 +1482,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -1419,7 +1494,7 @@
         "storage.writable",
         "object.revision.current"
       ],
-      "description": "Author the same canonical pose and motion used by physical joint/keyframe tools. Inspect animation.authored, animation.frame and animation.joint first. Pass the exact object revision. Each call is one atomic saved edit and Undo outside temporary-room mode; inside temporary mode it edits the fork until Keep. No playback starts. frames replaces the motion or patches up to eight frames by exact time (seconds); all resulting frames must begin at zero, have distinct increasing times and identical ordered joint channels, at most 301 frames/30 seconds. removeFrames removes exact existing times and rebases the first remaining time to zero; removing all clears the motion. settings adjusts loop and/or total duration. clear removes the motion but keeps the saved pose. pose replaces the complete saved Maestro pose; null restores automatic activity. Positions/rotations are in the target parent room space, scale is uniform, and joint rotations are canonical local rotations, not world rotations or imported-model bone coordinates. Use rest joint facts for neutral authored poses; omitted joints are not synthesized. Physical recording/pose preview must be stopped first. Stop after completion does not revert an edit; Undo is separate.",
+      "description": "Author the same canonical pose and motion used by physical joint/keyframe tools. Inspect animation.authored, animation.frame and animation.joint first. Pass the exact object revision. Each call is one atomic saved edit and Undo outside temporary-room mode; inside temporary mode it edits the fork until Keep. No playback starts. frames replaces the motion or patches up to eight frames by exact time (seconds); all resulting frames must begin at zero, have distinct increasing times and identical ordered joint channels, at most 301 frames/30 seconds. removeFrames removes exact existing times and rebases the first remaining time to zero; removing all clears the motion. settings adjusts loop and/or total duration. clear removes the motion but keeps the saved pose. pose replaces the complete saved Maestro pose; null restores automatic activity. Positions/rotations are in the target parent room space, scale is uniform, and joint rotations are canonical local rotations, not world rotations or imported-model bone coordinates. Use rest joint facts for neutral authored poses; omitted joints are not synthesized. Physical recording/pose preview must be stopped and retained takes resolved first. Edits and Undo preserve current root placement and momentum; playback remains explicit. The result is the exact accepted animation metadata and revision, never a later edit. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "settings",
         "target": "maestro",
@@ -47141,7 +47216,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationAuthoringCapability.cs",
-      "sha256": "1c35d6a6ee305c1a551c705a72a272099d183b8c5396f0c4710ba72a2d633be2"
+      "sha256": "e1289058705a120b02e17eed356fd65a1dda94e9e887d3c7844a6f7d83ab614a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationCapabilitySupport.cs",
@@ -47717,7 +47792,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
-      "sha256": "0cc8db1ff16e32c977f1d705516f122a51d706cbfffcf8d03048ebf74804c8a5"
+      "sha256": "06a251a0bd871440f78749b9c84b169b2b4fd291eed258c8b322e5cfce598240"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationTools.cs",
@@ -48096,6 +48171,10 @@
       "sha256": "c593cb2575f6093e15883276e059c368140c1887f8adc50aefd23e64a83fac21"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAnimationEdits.cs",
+      "sha256": "2ed07ab6b4f37fcfc9a3007862ed856db40f71789d0a6cded3736098d29c2fcb"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
       "sha256": "7b117a8554a063076925d836c0d7746c740c1c5afcd6d71a22526ce01c2f4936"
     },
@@ -48205,7 +48284,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "246206c16a22131cfe1131026ebcf3c6c5d0ea69e0fff3ade95092236341f6b5"
+      "sha256": "5395296544c520b36990dca46fd3d0d36c7d11b8aab6ae13b8726b8a98dfd4c1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",

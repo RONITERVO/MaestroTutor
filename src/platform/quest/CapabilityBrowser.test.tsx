@@ -471,7 +471,8 @@ it('authors motion from typed book fields and shows the native receipt without s
  await receive({operation:'inspect',capability:definition.id,version:definition.version,definition,status:'Authoring contract'});
  expect((screen.getByText('Edit action fields').closest('details') as HTMLDetailsElement).open).toBe(true);
  fireEvent.change(screen.getByLabelText('Animation edit'),{target:{value:'0'}});
- fireEvent.change(screen.getByLabelText('Action inputs revision'),{target:{value:2}});
+ expect((screen.getByRole('button',{name:'Run action now'}) as HTMLButtonElement).disabled).toBe(true);
+ await loadCurrentDraft(screen,receive,definition,{target:'maestro',revision:2,frames:0,duration:0,loop:false,poseSaved:false});
  fireEvent.change(screen.getByLabelText('Action inputs replace'),{target:{value:'true'}});
  fireEvent.change(screen.getByLabelText('Action inputs frames 1 scale'),{target:{value:1}});
  fireEvent.click(screen.getByRole('button',{name:'Clear Action inputs frames 1 joints'}));

@@ -23,7 +23,7 @@ it('accepts the native authored motion receipt and exact-revision frame and join
 });
 it('bounds authoring inputs and requires the feature for both direct and saved calls',()=>{
  const {call}=native.execution.selected,definition=capabilityDefinition(call.id)!;
- expect(definition).toMatchObject({duration:'instant',channels:['wholeTarget']});
+ expect(definition).toMatchObject({duration:'completion',channels:['wholeTarget']});
  for(const argumentsValue of [{...call.arguments,revision:0},{...call.arguments,frames:Array(9).fill(call.arguments.frames[0])},{operation:'pose',target:'book',revision:1,joints:null},{operation:'frames',target:'maestro',revision:1,replace:true,frames:[{...call.arguments.frames[0],rotation:{x:0,y:0,z:0,w:0}}]}])
   expect(validateCapabilityArguments(call.id,1,argumentsValue)).not.toBeNull();
  const direct=[{action:'execution',execution:{operation:'start',call}}];

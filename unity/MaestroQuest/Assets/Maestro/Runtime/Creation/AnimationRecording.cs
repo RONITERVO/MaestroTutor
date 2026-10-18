@@ -20,6 +20,8 @@ namespace Maestro.Quest.Creation
             public int Revision;public string Error;
         }
         public bool HasUnsavedRecording=>pendingTake!=null;
+        internal bool HasUnfinishedAuthoring(string id)=>ControlsTarget(id)||
+            (IsRecording||HasUnsavedRecording)&&recordingTarget==id||pendingPose?.Target==id;
         public string RecordingSessionId=>recordingSession;
         public JObject ObserveRecording()
         {
