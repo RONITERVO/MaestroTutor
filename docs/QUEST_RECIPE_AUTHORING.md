@@ -45,16 +45,27 @@ remain authoritative; the existing shared value limits are unchanged.
 
 ## Saving and ownership
 
-Successful patches persist before acknowledging completion, with one Undo, or
-stay in the temporary fork until Keep. Validation and write failures leave visible
-geometry and saved data unchanged. Held/owned/actively authored targets are refused.
+Shared patches use ordered completion, with one Undo, or stay in the temporary
+fork until Keep. Intent is captured before waiting and the target revision and
+ownership are checked again on admission. Before acceptance, cancellation, stale
+inputs and failed save preparation leave visible geometry and saved data unchanged.
+After acceptance, Stop lets saving drain. A publication failure retains the live
+edit as unconfirmed, preserves prior files and requires workspace recovery. Held,
+owned or actively authored targets are refused. Recipe playback stops at acceptance;
+root placement and body motion remain current through acceptance and Undo/Redo.
+Only confirmed saving (or temporary local acceptance) returns an immutable accepted
+recipe summary. Later edits do not rewrite that historical result.
 The saved patch refreshes geometry, selection bounds, tint and the default approximate
 collider. Explicit collision recipes stay unchanged; edit them separately.
 Recipe parts remain visual children of one grabbable rigid assembly; this does not
 add articulated part physics or cloth/hair interaction.
 
 The visual workshop keeps stale and rejected drafts. Apply requires native feature
-support and a completed matching receipt before clearing its draft. There is no
+support and a completed matching receipt before clearing its draft. Dispatch
+acknowledgement is not completion: the workshop follows the exact run in selected
+results or outcomes until it finishes. A failed/interrupted run, changed room or
+later native revision preserves the draft for inspection; successful delayed
+saving re-enables Undo. There is no
 fallback through a different edit path. Historical receipt replay never reapplies
 an edit after Undo. Older command handling remains for prototype callers; the
 current book and agent instructions prefer the shared operation.

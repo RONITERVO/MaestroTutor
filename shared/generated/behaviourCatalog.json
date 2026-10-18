@@ -27112,7 +27112,7 @@
           ]
         }
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -27124,7 +27124,7 @@
         "model.loaded",
         "storage.writable"
       ],
-      "description": "Set the scale, pivot and collision geometry of an imported room object. Read object.model.geometry for its current settings, exact model hash, source dimensions, local dimensions and revision. Pause physics and stop animation first. fitted keeps the usual 0.35m largest dimension and requires metresPerUnit=1; source uses explicit metres per source unit (glTF is normally metres). center centers geometry, base puts its bottom at the object origin, and source retains its imported origin. Object placement/rotation/scale and separately authored components remain unchanged. Local geometry is limited to 12.5m before the object scale, and a source pivot may be at most 12.5m from its centre. meshCollision preserves exact rigid mesh holes/interiors, at most 32 meshes and 50,000 triangles; it requires fixed physics, automatic shape, no custom collision recipe and no recorded root motion. Skins/blend shapes are refused. Embedded/library playback is disabled while rigid mesh collision is enabled. walkable additionally publishes these colliders as accepted ground; slope, step, body clearance and water policies still apply. Turning mesh collision off restores the ordinary bounds/custom-shape path. Real-room participation, visibility, sound and camera sharing remain independent. One saved edit and Undo, retained by copies/blueprints/archives. These are bounded active-region settings, not streamed-world support.",
+      "description": "Set the scale, pivot and collision geometry of an imported room object. Read object.model.geometry for its current settings, exact model hash, source dimensions, local dimensions and revision. Pause physics and stop animation first. fitted keeps the usual 0.35m largest dimension and requires metresPerUnit=1; source uses explicit metres per source unit (glTF is normally metres). center centers geometry, base puts its bottom at the object origin, and source retains its imported origin. Object placement/rotation/scale and separately authored components remain unchanged. Local geometry is limited to 12.5m before the object scale, and a source pivot may be at most 12.5m from its centre. meshCollision preserves exact rigid mesh holes/interiors, at most 32 meshes and 50,000 triangles; it requires fixed physics, automatic shape, no custom collision recipe and no recorded root motion. Skins/blend shapes are refused. Embedded/library playback is disabled while rigid mesh collision is enabled. walkable additionally publishes these colliders as accepted ground; slope, step, body clearance and water policies still apply. Turning mesh collision off restores the ordinary bounds/custom-shape path. Real-room participation, visibility, sound and camera sharing remain independent. One saved edit and Undo, retained by copies/blueprints/archives. These are bounded active-region settings, not streamed-world support. Native readiness is checked after application; saved settings alone do not establish completion. Root placement is retained through acceptance and Undo/Redo, and the result retains the accepted object revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -29100,7 +29100,7 @@
           "actionResults.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -29112,7 +29112,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Apply one exact-revision patch to an editable recipe object. parts and tracks set whole entries by stable part ID; unspecified entries remain. removeParts/removeTracks delete only named existing entries, without cascading. IDs must be unique and cannot be both removed and set. Parents must exist; native code orders parents before children and rejects cycles. A removed part must have its children reparented/removed and its track removed in the same patch. Read object.recipe, object.recipe.part and object.recipe.track first. duration retimes untouched tracks proportionally; supplied track times use the new duration. loop is the saved playback preference. All edits stop this object's recipe playback and clear its saved autoplay flag; use animation.play explicitly afterward. Placement, tint, physics and recorded root motion remain. Unrelated actors continue. Each accepted patch saves one Undo, or changes only the temporary fork until Keep. Failed writes/validation leave geometry and data intact. Held/owned/actively authored targets are refused. No new object, physics start or animation playback. Full capacity remains 32 parts, 17 tracks and 16 keys per track; use smaller explicit patches within the shared message limits. Receipt replay is historical even after Undo.",
+      "description": "Apply one exact-revision patch to an editable recipe object. parts and tracks set whole entries by stable part ID; unspecified entries remain. removeParts/removeTracks delete only named existing entries, without cascading. IDs must be unique and cannot be both removed and set. Parents must exist; native code orders parents before children and rejects cycles. A removed part must have its children reparented/removed and its track removed in the same patch. Read object.recipe, object.recipe.part and object.recipe.track first. duration retimes untouched tracks proportionally; supplied track times use the new duration. loop is the saved playback preference. All edits stop this object's recipe playback and clear its saved autoplay flag; use animation.play explicitly afterward. Placement, tint, physics and recorded root motion remain. Unrelated actors continue. Each accepted patch saves one Undo, or changes only the temporary fork until Keep. Refusal or failed preparation leaves geometry and data intact. An accepted save failure keeps the live edit unconfirmed and requires recovery. Held/owned/actively authored targets are refused. No new object, physics start or animation playback. Full capacity remains 32 parts, 17 tracks and 16 keys per track; use smaller explicit patches within the shared message limits. Receipt replay is historical even after Undo. Current root placement and body velocity are preserved through acceptance and Undo/Redo. The result is the immutable accepted recipe summary. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -31859,7 +31859,7 @@
           ]
         }
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -31871,7 +31871,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Replace a creation's independent root-local collision recipe and select automatic collision mode. Works for recipe objects, drawings and imported models. Box, sphere, cylinder and ring shapes form one rigid body; their centres/dimensions are local metres and rotate with the whole object. Ring walls leave an open centre; combine with a cylinder floor for a cup. Collision shapes do not follow animated visual parts or change when visual geometry is edited: edit both explicitly. Empty shapes clears the recipe and restores the object's default automatic collider. Existing box/sphere overrides retain this recipe but temporarily bypass it. Read object.collision and every object.collision.shape before replacing anything unrequested. Up to 16 uniquely named shapes/64 convex pieces per object; the room reserves at most 512 pieces including stored inactive recipes. Saved/temporary edits, Undo, ownership and historical receipt replay use the normal shared path. Mass, physics mode, visuals and live pose are preserved. This neither starts physics nor makes a fluid container.",
+      "description": "Replace a creation's independent root-local collision recipe and select automatic collision mode. Works for recipe objects, drawings and imported models. Box, sphere, cylinder and ring shapes form one rigid body; their centres/dimensions are local metres and rotate with the whole object. Ring walls leave an open centre; combine with a cylinder floor for a cup. Collision shapes do not follow animated visual parts or change when visual geometry is edited: edit both explicitly. Empty shapes clears the recipe and restores the object's default automatic collider. Existing box/sphere overrides retain this recipe but temporarily bypass it. Read object.collision and every object.collision.shape before replacing anything unrequested. Up to 16 uniquely named shapes/64 convex pieces per object; the room reserves at most 512 pieces including stored inactive recipes. Saved/temporary edits, Undo, ownership and historical receipt replay use the normal shared path. Mass, physics mode, visuals and live pose are preserved. This neither starts physics nor makes a fluid container. Current root placement and body velocity are preserved through acceptance and Undo/Redo. The result is the immutable accepted collision summary. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -47221,7 +47221,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CollisionCapability.cs",
-      "sha256": "5efbb671d3b9c488ecf145cfd48557cbbad61bdf4a38e6a2d0d282b626ddd827"
+      "sha256": "b37dc5f1f81c301f77e42baf958a2e60f25284896672ee6db671b19e4a3c7a07"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ConnectionCapability.cs",
@@ -47425,7 +47425,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelGeometryCapability.cs",
-      "sha256": "d8dec29a4f1df31ac2d37b73a943ddd8473fa24b1f3a1b2ff6a9aab97c6d6a01"
+      "sha256": "863d90d23f9adf290c3b76b994666f7e6d1e18559f86723096391395095714bd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ModelImportCapability.cs",
@@ -47517,11 +47517,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditCapability.cs",
-      "sha256": "386b1ffde89655f0486c414b4f5e3dd6511494736afb82cc0128031a1e7a3f8a"
+      "sha256": "f5bbba766fefc6d125d9db5d60e1eb197a909d3b16757a68b460ac6b8da26fcc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipeEditFacts.cs",
-      "sha256": "05b339eebfb393b4320f5e971ef10e273e63ae3afe3062dc369391f4ae282fb2"
+      "sha256": "e4b594b8f8e906d7ac040e41debb1fa2e9413999b9205cfb6b3595b78100bd49"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RecipePartAnimationCapability.cs",
@@ -47956,12 +47956,16 @@
       "sha256": "72a35c066e5cfef7aa0d4a10f4080708c5c79f26bc6d92bfeaac71e34f7d5a93"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingGeometryEdits.cs",
+      "sha256": "2b5834eb246fe195ddcb59cc58eb42ee5e38354fa0a6cb0c9d9b2db2a1894705"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomCreation.cs",
       "sha256": "d4257ae18b7266b7860b6c7d35fcd0111647ec80587c54c3468e077035e41862"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "acf660a8c4c60e12066c7d5b8c7abd8cc1708775244c1fe482ee6e77799808e8"
+      "sha256": "f55e6e115480bca49d4b657f2dd3cf094cea869ec46d1f4b63209da4b4770916"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48121,7 +48125,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionEdits.cs",
-      "sha256": "449946bfc240d337d1428b1ffb4b9a02570b490c2df0af5a3951c8c1f09c1bc3"
+      "sha256": "9fe609beaf89b4eb6041e7fe776b3574ccdae9c38731810b25ca49a05c10bcde"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionGuard.cs",
@@ -48309,7 +48313,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelGeometryEdits.cs",
-      "sha256": "d4b0e0359bd09f3a00d142bf47be8b71b91b364ea90e030197d7050021446002"
+      "sha256": "acae693652dc3228a0ecc4a0e19b464e0574152ee5a5a634f968c09b2cb61596"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMotion.cs",
@@ -48421,7 +48425,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipeEdits.cs",
-      "sha256": "8be8002440509909f0617ae86d21d8c14bef602fe315538068ed075e1726ceeb"
+      "sha256": "a2eb122eba56f795b96f8c6228d7e354a38c5378220bd5b7277267a2cebae2e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegion.cs",

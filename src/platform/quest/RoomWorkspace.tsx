@@ -19,6 +19,7 @@ import {TemporaryRoomControls} from './TemporaryRoomControls';
 import {RuleWorkspace} from './RuleWorkspace';
 import {CapabilityBrowser,type CatalogInsert,type OpenCatalog} from './CapabilityBrowser';
 type Draft={id:string;revision:number;recipe:RoomRecipe|null;source:RoomAgentState};
+type RecipeSubmission={runId:string;draft:Draft;session:string;temporaryId:string|undefined};
 const identity={x:0,y:0,z:0,w:1};
 const axes=['x','y','z'] as const;
 // Hide binary32 serialization noise without changing the stored native coordinate.
@@ -37,12 +38,27 @@ export function RoomWorkspace({client}:{client:RoomAgentClient}) {
  return <><div hidden={Boolean(catalog)||state?.workspaceView==='rules'}><ObjectsWorkspace client={client} onCatalog={openCatalog} active={!catalog&&state?.workspaceView!=='rules'}/></div><ObjectReferenceProvider client={client} active={!catalog&&state?.workspaceView==='rules'}><div hidden={Boolean(catalog)||state?.workspaceView!=='rules'}><RuleWorkspace client={client} onCatalog={openCatalog}/></div></ObjectReferenceProvider>{catalog&&state?.visible&&<CapabilityBrowser key={state.session} client={client} onClose={()=>setCatalog(null)} onInsert={catalog.insert} initialCall={catalog.initialCall}/>}</>;
 }
 function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCatalog:OpenCatalog;active:boolean}) {
- const {state,pending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
+ const {state,pending:requestPending}=useSyncExternalStore(client.subscribe,client.getSnapshot);
+ const [submission,setSubmission]=useState<RecipeSubmission|null>(null);
+ const pending=requestPending||submission!==null;
  const [draft,setDraft]=useState<Draft|null>(null),[dirty,setDirty]=useState(false),[error,setError]=useState('');
  const [partId,setPartId]=useState(''),[tab,setTab]=useState<'parts'|'animation'>('parts'),[keyIndex,setKeyIndex]=useState(0);
  useEffect(()=>{if(!dirty&&state){setDraft(fromState(state));}},[state?.session,state?.temporaryRoom?.id,state?.inspection?.id,state?.inspection?.objectRevision,dirty]);
  useEffect(()=>{setPartId('');setKeyIndex(0);setError('');},[draft?.id]);
  useEffect(()=>{if(!dirty&&state?.inspection?.partId)setPartId(state.inspection.partId);},[state?.inspection?.partId,dirty]);
+ // Dispatch acknowledgement can precede native application and durable saving.
+ // Track this exact run without discarding a newer draft or another room's work.
+ useEffect(()=>{
+  if(!submission)return;
+  if(!state||state.session!==submission.session||state.temporaryRoom?.id!==submission.temporaryId){setSubmission(null);setError('The room changed while saving. Your draft is kept; inspect the room before retrying.');return;}
+  const view=state.execution,receipt=[view?.selected,...view?.running??[],...view?.outcomes??[]].find(r=>r?.id===submission.runId&&r.capability==='object.recipe.edit');
+  if(!receipt){if(!requestPending){setSubmission(null);setError('The recipe result is no longer visible. Your draft is kept; inspect action history before retrying.');}return;}
+  if(receipt.phase==='preparing'||receipt.phase==='running')return;
+  setSubmission(null);
+  if(receipt.phase!=='completed'){setError(receipt.status+' Your draft is kept; inspect the result before retrying.');return;}
+  if(draft!==submission.draft||state.inspection?.id!==submission.draft.id||state.inspection.objectRevision!==receipt.output?.revision){setError('The recipe edit completed, but the object or draft changed again. Your draft is kept; reload the latest version.');return;}
+  setDraft(fromState(state));setDirty(false);setError('');
+ },[state,submission,draft,requestPending]);
  if(!state?.visible)return null;
  const currentItem=inspectedRoomObject(state),item=currentItem?.id===draft?.id?currentItem:draft?inspectedRoomObject(draft.source):undefined,recipe=draft?.recipe;
  const part=recipe?.parts.find(value=>value.id===partId)??recipe?.parts[0];
@@ -51,6 +67,7 @@ function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCa
  const profileY=(y:number)=>part?.shape==='sweep'?100-y*sweepZoom:(.5-y)*200;
  const track=recipe?.tracks.find(value=>value.part===part?.id),key=track?.keys[Math.min(keyIndex,track.keys.length-1)];
  const stale=Boolean(draft&&(draft.source.session!==state.session||draft.source.temporaryRoom?.id!==state.temporaryRoom?.id||state.inspection?.id!==draft.id||state.inspection.objectRevision!==draft.revision)),blocked=pending||stale;
+ const savedRecipe=[state.execution?.selected,...state.execution?.outcomes??[]].some(r=>r?.capability==='object.recipe.edit'&&r.phase==='completed'&&r.output?.target===draft?.id&&r.output?.revision===draft?.revision);
  const send=async(commands:RoomCommand[],expected?:RoomAgentState)=>{
   setError('');try {const result=await client.request(commands,expected);if(!result.ok)setError(result.status);return result;}
   catch(e){setError(e instanceof Error?e.message:'The room could not complete this action.');return null;}
@@ -63,9 +80,10 @@ function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCa
   if(!state.capabilities?.includes('recipeEdits.v1')||!runId){setError('This room cannot accept shared recipe edits yet. Your draft is kept.');return;}
   try {
    const call=recipeEditCall(draft.id,draft.revision,draft.source.inspection!.recipe!,draft.recipe);
+   const submitted={runId,draft,session:state.session,temporaryId:state.temporaryRoom?.id};setSubmission(submitted);
    const result=await send([{action:'execution',execution:{operation:'start',call,runId}}],draft.source);
-   if(result?.ok&&result.execution?.selected?.id===runId&&result.execution.selected.phase==='completed'){setDraft(fromState(result));setDirty(false);}
-   else if(result?.ok)setError('The recipe edit has not completed. Your draft is kept.');
+   const view=result?.execution,receipt=[view?.selected,...view?.running??[],...view?.outcomes??[]].find(r=>r?.id===runId&&r.capability==='object.recipe.edit');
+   if(!result?.ok||!receipt){setSubmission(current=>current===submitted?null:current);if(result?.ok)setError('The recipe edit has no matching receipt. Your draft is kept; inspect the room before retrying.');}
   } catch(e){setError(e instanceof Error?e.message:'The recipe edit could not be prepared.');}
  };
  const create=async()=>{if(dirty){setError('Apply or discard your draft first.');return;}const result=await send([{action:'create',reference:'robot',name:'Practice robot',kind:'boxRobot',scale:.4}]);if(result?.ok&&result.created[0])await select(result.created[0]);};
@@ -83,7 +101,7 @@ function ObjectsWorkspace({client,onCatalog,active}:{client:RoomAgentClient;onCa
   </section>
   <section className="room-workspace-page room-inspector" aria-label="Object editor">
    <div className="room-workspace-heading"><div><span className="room-eyebrow">EDIT TOGETHER</span><h2>{item?.name??'Choose an object'}</h2></div>{item?.kind==='Assembly'&&<span className="room-status-pill">{item.animated?'Playing':'Stopped'}</span>}</div>
-   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(stale?'This object changed while you were editing. Your draft is kept; reload the latest version before applying.':pending?'Waiting for the room…':dirty?'Draft changes · Apply saves one edit and stops this object’s recipe animation':state.status)}</div>
+   <div role="status" className={error||stale?'room-message room-message-warning':'room-message'}>{error||(submission?'Waiting for the recipe edit to finish saving…':stale?'This object changed while you were editing. Your draft is kept; reload the latest version before applying.':pending?'Waiting for the room…':dirty?'Draft changes · Apply saves one edit and stops this object’s recipe animation':savedRecipe?(state.temporaryRoom?.active?'Recipe changes applied in the temporary room.':'Recipe changes saved.'):state.status)}</div>
    {draft&&<div className="room-workspace-actions"><button disabled={pending||!dirty||stale} onClick={()=>void save()}>Apply changes</button><button disabled={pending} onClick={()=>{setDirty(false);setDraft(fromState(state));setError('');}}> {stale?'Reload latest':'Discard draft'}</button></div>}
    {item&&!recipe&&<div className="room-simple-inspector"><p>{item.kind==='ImportedModel'?'This imported asset retains its original mesh. Its placement, size and tint can be edited here.':'Edit this object directly, or describe a change in chat.'}</p>
     <fieldset disabled={blocked}><legend>Size · {item.scale.toFixed(2)}×</legend><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale-.1).toFixed(2))}],state)}>Smaller</button><button onClick={()=>void send([{action:'resize',target:item.id,scale:Number((item.scale+.1).toFixed(2))}],state)}>Larger</button></fieldset>

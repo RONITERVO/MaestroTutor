@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 // @vitest-environment jsdom
+import type {ExecutionDetail} from '../../../shared/roomExecutions';
 import {act,cleanup,fireEvent,render,waitFor} from '@testing-library/react';
 import {afterEach,describe,expect,it} from 'vitest';
 import {RoomAgentClient} from './roomAgentBridge';
@@ -11,6 +12,7 @@ import robot from '../../../test-fixtures/browser/recipeRobot.json';
 afterEach(cleanup);
 const id='b'.repeat(32);
 const execution={selected:null,running:[],outcomes:[],nextRunId:'c'.repeat(32),storageError:null,recovery:null};
+const recipeExecution=(selected:ExecutionDetail)=>{const {call,...summary}=selected;const running=selected.phase==='preparing'||selected.phase==='running';return {...execution,selected,running:running?[summary]:[],outcomes:running?[]:[summary]};};
 const state=(more:Partial<RoomAgentState>={}):RoomAgentState=>({version:1,session:'a'.repeat(32),revision:1,sceneRevision:4,ack:0,ok:true,status:'Ready',capabilities:['recipeEdits.v1','execution.v1','executionReceipts.v1','actionResults.v1'],execution,canUndo:false,canRedo:false,physicsRunning:false,visible:true,created:[],objects:[{id,objectRevision:3,name:'Robot',kind:'Assembly',position:{x:0,y:0,z:0},scale:1,color:{r:1,g:1,b:1,a:1},animated:true}],inspection:{id,objectRevision:3,recipe:parseRecipe(robot)},...more});
 describe('shared visual recipe workspace',()=>{
  it('edits the native part and applies one revision-checked recipe transaction',async()=>{
@@ -23,7 +25,11 @@ describe('shared visual recipe workspace',()=>{
   const invocation=request.commands[0].execution!;expect(invocation.operation).toBe('start');if(invocation.operation!=='start')throw new Error('Expected recipe invocation');expect(invocation.call.id).toBe('object.recipe.edit');
   const patch=invocation.call.arguments,changed=structuredClone(parseRecipe(robot)!);expect(patch.revision).toBe(3);expect(patch.parts).toHaveLength(1);changed.parts=changed.parts.map(p=>p.id==='Head'?(patch.parts as typeof changed.parts)[0]:p);changed.playing=false;expect(changed.parts.find(x=>x.id==='Head')!.size.x).toBeCloseTo(robot.parts.find(x=>x.id==='Head')!.size.x+.01);expect(patch.tracks).toEqual([]);
   const completed={...execution,selected:{id:invocation.runId!,capability:invocation.call.id,version:1,resources:[id],phase:'completed' as const,status:'Saved',call:invocation.call,output:{target:id,revision:5,parts:changed.parts.length,tracks:changed.tracks.length,duration:changed.duration,loop:changed.loop,playing:false,autoplay:false}}};
-  await act(async()=>{client.receive(state({revision:3,sceneRevision:5,ack:2,canUndo:true,execution:completed,inspection:{id,objectRevision:5,recipe:changed},objects:[{...state().objects[0],objectRevision:5}]}));});
+  const preparing={...completed,selected:{...completed.selected,phase:'preparing' as const,output:undefined}};delete preparing.selected.output;
+  await act(async()=>{expect(client.receive(state({revision:3,ack:2,execution:recipeExecution(preparing.selected)}))).toBe(true);});
+  expect(screen.getByRole('status').textContent).toContain('finish saving');expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true);
+  await act(async()=>{client.receive(state({revision:4,sceneRevision:5,ack:2,canUndo:true,execution:recipeExecution(completed.selected),inspection:{id,objectRevision:5,recipe:changed},objects:[{...state().objects[0],objectRevision:5}]}));});
+  expect((screen.getByRole('button',{name:'Undo'}) as HTMLButtonElement).disabled).toBe(false);expect(screen.getByRole('status').textContent).toBe('Recipe changes saved.');
   await waitFor(()=>expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(true));
  });
  it('keeps a dirty draft when the native object changes and requires explicit reload',()=>{
@@ -112,4 +118,43 @@ it('opens optional physical tools through catalog discovery and preserves dirty 
 
 it('does not expose physical tool controls when the native service is absent',()=>{
  const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);expect(screen.queryByRole('button',{name:'Physical tools'})).toBeNull();
+});
+
+async function waitingRecipe(){
+ const client=new RoomAgentClient();client.receive(state());const screen=render(<RoomWorkspace client={client}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Size x plus'}));fireEvent.click(screen.getByRole('button',{name:'Apply changes'}));
+ const invocation=client.snapshot().request!.commands[0].execution!;if(invocation.operation!=='start')throw Error('Expected recipe start');
+ const receipt={id:invocation.runId!,capability:invocation.call.id,version:1,resources:[id],phase:'preparing' as const,status:'Preparing',call:invocation.call};
+ await act(async()=>{expect(client.receive(state({revision:2,ack:1,execution:recipeExecution(receipt)}))).toBe(true);});
+ return {client,screen,receipt};
+}
+it.each(['failed','cancelled','interrupted'] as const)('keeps the visual draft after a delayed %s recipe result',async phase=>{
+ const {client,screen,receipt}=await waitingRecipe();const dimensions=screen.getByRole('group',{name:'Dimensions · metres'}).textContent;
+ await act(async()=>{expect(client.receive(state({revision:3,ack:1,execution:recipeExecution({...receipt,phase,status:'Native edit '+phase})}))).toBe(true);});
+ expect(screen.getByRole('status').textContent).toContain('Native edit '+phase);expect(screen.getByRole('status').textContent).toContain('draft is kept');
+ expect(screen.getByRole('group',{name:'Dimensions · metres'}).textContent).toBe(dimensions);expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(false);expect(client.snapshot().request).toBeNull();
+});
+it('does not discard a recipe draft when a later native edit overtakes its saved result',async()=>{
+ const {client,screen,receipt}=await waitingRecipe();const recipe=parseRecipe(robot)!;
+ const completed={...receipt,phase:'completed' as const,status:'Saved',output:{target:id,revision:5,parts:recipe.parts.length,tracks:recipe.tracks.length,duration:recipe.duration,loop:recipe.loop,playing:false,autoplay:false}};
+ await act(async()=>{expect(client.receive(state({revision:3,ack:1,sceneRevision:6,canUndo:true,execution:recipeExecution(completed),inspection:{id,objectRevision:6,recipe},objects:[{...state().objects[0],objectRevision:6}]}))).toBe(true);});
+ expect(screen.getByRole('status').textContent).toContain('changed again');expect(screen.getByRole('button',{name:'Reload latest'})).toBeTruthy();expect(client.snapshot().request).toBeNull();
+});
+it('keeps a recipe draft when the room changes during saving',async()=>{
+ const {client,screen}=await waitingRecipe();await act(async()=>{expect(client.receive(state({revision:1,session:'f'.repeat(32)}))).toBe(true);});
+ expect(screen.getByRole('status').textContent).toContain('room changed while saving');expect(screen.getByRole('button',{name:'Reload latest'})).toBeTruthy();expect(client.snapshot().request).toBeNull();
+});
+
+it('recognizes its delayed recipe completion in outcomes after another action is selected',async()=>{
+ const {client,screen,receipt}=await waitingRecipe();const recipe=parseRecipe(robot)!;
+ recipe.parts=recipe.parts.map(part=>(receipt.call.arguments.parts as typeof recipe.parts).find(p=>p.id===part.id)??part);recipe.playing=false;
+ const completed={...receipt,phase:'completed' as const,status:'Saved',output:{target:id,revision:5,parts:recipe.parts.length,tracks:recipe.tracks.length,duration:recipe.duration,loop:recipe.loop,playing:false,autoplay:false}};
+ await act(async()=>{expect(client.receive(state({revision:3,ack:1,sceneRevision:5,canUndo:true,execution:{...recipeExecution(completed),selected:null},inspection:{id,objectRevision:5,recipe},objects:[{...state().objects[0],objectRevision:5}]}))).toBe(true);});
+ expect((screen.getByRole('button',{name:'Undo'}) as HTMLButtonElement).disabled).toBe(false);expect(screen.getByRole('status').textContent).toBe('Recipe changes saved.');expect(screen.queryByRole('button',{name:'Reload latest'})).toBeNull();expect(client.snapshot().request).toBeNull();
+});
+
+it('releases local waiting and keeps the draft if its result leaves the bounded history',async()=>{
+ const {client,screen}=await waitingRecipe();await act(async()=>{expect(client.receive(state({revision:3,ack:1,execution}))).toBe(true);});
+ expect(screen.getByRole('status').textContent).toContain('inspect action history');expect(screen.getByRole('status').textContent).toContain('draft is kept');
+ expect((screen.getByRole('button',{name:'Apply changes'}) as HTMLButtonElement).disabled).toBe(false);expect(client.snapshot().request).toBeNull();
 });

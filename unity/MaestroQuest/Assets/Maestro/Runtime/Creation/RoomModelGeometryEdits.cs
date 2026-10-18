@@ -9,12 +9,23 @@ namespace Maestro.Quest.Creation
     {
         internal bool PrepareModelGeometry(string target,int revision,RoomModelGeometry settings,out RoomObjectData data,out string error)
         {
+            return ModelGeometrySource(target,revision,settings,out data,out error)&&ComponentCandidate(new[]{data},out error);
+        }
+        bool ModelGeometrySource(string target,int revision,RoomModelGeometry settings,out RoomObjectData data,out string error)
+        {
             data=null;if(!ComponentSource(target,revision,out data,out error))return false;
             if(PhysicsWorld&&PhysicsWorld.Running){error="Pause physics before changing imported geometry";return false;}
             if(data.kind!=RoomObjectKind.ImportedModel){error="Choose an imported room object";return false;}
             data.modelGeometry=settings?.Copy();
-            if(!ComponentCandidate(new[]{data},out error))return false;
+            if(!RoomModelGeometry.Validate(data,out error))return false;
             return Find(target).GetComponent<CreatedRoomObject>().CanConfigureModelGeometry(settings,out error);
+        }
+        internal bool CanEditModelGeometry(string target,int revision,RoomModelGeometry settings,out string error)=>
+            ModelGeometrySource(target,revision,settings,out _,out error);
+        string AppliedModelGeometryIssue(string target)
+        {
+            var view=Find(target)?.GetComponent<CreatedRoomObject>();
+            return view&&view.ModelGeometryReady?null:"Imported geometry was accepted but native application is unavailable: "+(view?view.ModelGeometryIssue:"Object unavailable");
         }
         internal bool EditModelGeometry(string target,int revision,RoomModelGeometry settings,out string error)
         {

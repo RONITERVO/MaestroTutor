@@ -53,10 +53,16 @@ are separate components. Existing objects use a separate collision edit. New rec
 geometry, collision and physics atomically; bundled defaults use that same path.
 See [starter objects](QUEST_CREATION_TEMPLATES.md).
 
-Held/owned targets and active animation-authoring sessions refuse edits. Accepted
-changes share save-before-apply, temporary-room behaviour, Undo/Redo, copying and
-receipts. Stale revisions and failed saves leave the prior shapes active. Replaced
-geometry releases its native meshes. Unknown saved collision versions remain
+Held/owned targets and active animation-authoring sessions refuse edits. Shared
+changes use ordered completion, temporary-room behaviour, Undo/Redo, copying and
+receipts. The captured recipe is revalidated at admission. Stale revisions,
+cancellation and failed save preparation leave prior shapes active. After native
+acceptance, Stop lets persistence drain; a failed publication retains the live
+shapes as unconfirmed, preserves prior files and requires workspace recovery.
+Success reports the immutable accepted shape counts and object revision only
+after saving completes (or local acceptance in a temporary room). Replacement
+and Undo preserve current root placement, velocity and spin. Replaced geometry
+releases its native meshes. Unknown saved collision versions remain
 invalid and preserved for recovery; they are never silently treated as absent.
 Current room storage protects the whole unreadable room. Per-object quarantine
 for future component versions is still release-hardening work.

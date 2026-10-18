@@ -1,7 +1,7 @@
 {
   "before": {
-    "target": "6dc547a0fc4a4828a13c9c9abcf84ea3",
-    "revision": 9,
+    "target": "53a7489dc4ac44fc8d601f251608d202",
+    "revision": 12,
     "parts": 19,
     "tracks": 2,
     "duration": 2.0,
@@ -16,6 +16,9 @@
         "id": "Hips",
         "parent": "",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.47999998927116394,
@@ -37,12 +40,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Spine",
         "parent": "Hips",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.10999999940395355,
@@ -64,12 +77,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Chest",
         "parent": "Spine",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.12999999523162842,
@@ -91,12 +114,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Neck",
         "parent": "Chest",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.11999999731779099,
@@ -118,12 +151,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Head",
         "parent": "Neck",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.14000000059604645,
@@ -145,12 +188,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftUpperArm",
         "parent": "Chest",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": -0.2199999988079071,
           "y": 0.0,
@@ -172,12 +225,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftLowerArm",
         "parent": "LeftUpperArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.15999999642372131,
@@ -199,12 +262,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftHand",
         "parent": "LeftLowerArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.11999999731779099,
@@ -226,12 +299,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftUpperLeg",
         "parent": "Hips",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": -0.090000003576278687,
           "y": -0.14000000059604645,
@@ -253,12 +336,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftLowerLeg",
         "parent": "LeftUpperLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.18000000715255737,
@@ -280,12 +373,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftFoot",
         "parent": "LeftLowerLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.10999999940395355,
@@ -307,12 +410,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftEye",
         "parent": "Head",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": -0.054999999701976776,
           "y": 0.02500000037252903,
@@ -334,12 +447,22 @@
           "g": 0.079999998211860657,
           "b": 0.11999999731779099,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightUpperArm",
         "parent": "Chest",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.2199999988079071,
           "y": 0.0,
@@ -361,12 +484,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightLowerArm",
         "parent": "RightUpperArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.15999999642372131,
@@ -388,12 +521,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightHand",
         "parent": "RightLowerArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.11999999731779099,
@@ -415,12 +558,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightUpperLeg",
         "parent": "Hips",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.090000003576278687,
           "y": -0.14000000059604645,
@@ -442,12 +595,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightLowerLeg",
         "parent": "RightUpperLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.18000000715255737,
@@ -469,12 +632,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightFoot",
         "parent": "RightLowerLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.10999999940395355,
@@ -496,12 +669,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightEye",
         "parent": "Head",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.054999999701976776,
           "y": 0.02500000037252903,
@@ -523,6 +706,13 @@
           "g": 0.079999998211860657,
           "b": 0.11999999731779099,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       }
     ],
@@ -645,13 +835,16 @@
     "id": "object.recipe.edit",
     "version": 1,
     "arguments": {
-      "target": "6dc547a0fc4a4828a13c9c9abcf84ea3",
-      "revision": 9,
+      "target": "53a7489dc4ac44fc8d601f251608d202",
+      "revision": 12,
       "parts": [
         {
           "id": "Head",
           "parent": "Neck",
           "shape": "box",
+          "profile": [],
+          "path": [],
+          "segments": 0,
           "position": {
             "x": 0.0,
             "y": 0.14000000059604645,
@@ -673,6 +866,13 @@
             "g": 0.64999997615814209,
             "b": 0.62999999523162842,
             "a": 1.0
+          },
+          "pattern": {
+            "kind": "solid",
+            "plane": "uv",
+            "secondary": "#FFFFFF",
+            "columns": 1,
+            "rows": 1
           }
         }
       ],
@@ -685,17 +885,17 @@
   },
   "receipt": {
     "selected": {
-      "id": "fbb5e360d83245148c8f8a590bc2c8b1",
+      "id": "ee34504bb705444da355dc09a4b29c45",
       "capability": "object.recipe.edit",
       "version": 1,
       "resources": [
-        "6dc547a0fc4a4828a13c9c9abcf84ea3"
+        "53a7489dc4ac44fc8d601f251608d202"
       ],
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "target": "6dc547a0fc4a4828a13c9c9abcf84ea3",
-        "revision": 10,
+        "target": "53a7489dc4ac44fc8d601f251608d202",
+        "revision": 13,
         "parts": 19,
         "tracks": 2,
         "duration": 2.0,
@@ -707,13 +907,16 @@
         "id": "object.recipe.edit",
         "version": 1,
         "arguments": {
-          "target": "6dc547a0fc4a4828a13c9c9abcf84ea3",
-          "revision": 9,
+          "target": "53a7489dc4ac44fc8d601f251608d202",
+          "revision": 12,
           "parts": [
             {
               "id": "Head",
               "parent": "Neck",
               "shape": "box",
+              "profile": [],
+              "path": [],
+              "segments": 0,
               "position": {
                 "x": 0.0,
                 "y": 0.14000000059604645,
@@ -735,6 +938,13 @@
                 "g": 0.64999997615814209,
                 "b": 0.62999999523162842,
                 "a": 1.0
+              },
+              "pattern": {
+                "kind": "solid",
+                "plane": "uv",
+                "secondary": "#FFFFFF",
+                "columns": 1,
+                "rows": 1
               }
             }
           ],
@@ -749,17 +959,17 @@
     "running": [],
     "outcomes": [
       {
-        "id": "fbb5e360d83245148c8f8a590bc2c8b1",
+        "id": "ee34504bb705444da355dc09a4b29c45",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "6dc547a0fc4a4828a13c9c9abcf84ea3"
+          "53a7489dc4ac44fc8d601f251608d202"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "6dc547a0fc4a4828a13c9c9abcf84ea3",
-          "revision": 10,
+          "target": "53a7489dc4ac44fc8d601f251608d202",
+          "revision": 13,
           "parts": 19,
           "tracks": 2,
           "duration": 2.0,
@@ -769,13 +979,13 @@
         }
       }
     ],
-    "nextRunId": "089be8f71aa24cabb9964c472518f778",
+    "nextRunId": "3ac705043c8e4fafa228e4b4bbb6b591",
     "storageError": null,
     "recovery": null
   },
   "after": {
-    "target": "6dc547a0fc4a4828a13c9c9abcf84ea3",
-    "revision": 10,
+    "target": "53a7489dc4ac44fc8d601f251608d202",
+    "revision": 13,
     "parts": 19,
     "tracks": 2,
     "duration": 2.0,
@@ -790,6 +1000,9 @@
         "id": "Hips",
         "parent": "",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.47999998927116394,
@@ -811,12 +1024,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Spine",
         "parent": "Hips",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.10999999940395355,
@@ -838,12 +1061,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Chest",
         "parent": "Spine",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.12999999523162842,
@@ -865,12 +1098,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Neck",
         "parent": "Chest",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.11999999731779099,
@@ -892,12 +1135,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "Head",
         "parent": "Neck",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": 0.14000000059604645,
@@ -919,12 +1172,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftUpperArm",
         "parent": "Chest",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": -0.2199999988079071,
           "y": 0.0,
@@ -946,12 +1209,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftLowerArm",
         "parent": "LeftUpperArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.15999999642372131,
@@ -973,12 +1246,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftHand",
         "parent": "LeftLowerArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.11999999731779099,
@@ -1000,12 +1283,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftUpperLeg",
         "parent": "Hips",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": -0.090000003576278687,
           "y": -0.14000000059604645,
@@ -1027,12 +1320,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftLowerLeg",
         "parent": "LeftUpperLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.18000000715255737,
@@ -1054,12 +1357,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftFoot",
         "parent": "LeftLowerLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.10999999940395355,
@@ -1081,12 +1394,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "LeftEye",
         "parent": "Head",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": -0.054999999701976776,
           "y": 0.02500000037252903,
@@ -1108,12 +1431,22 @@
           "g": 0.079999998211860657,
           "b": 0.11999999731779099,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightUpperArm",
         "parent": "Chest",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.2199999988079071,
           "y": 0.0,
@@ -1135,12 +1468,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightLowerArm",
         "parent": "RightUpperArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.15999999642372131,
@@ -1162,12 +1505,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightHand",
         "parent": "RightLowerArm",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.11999999731779099,
@@ -1189,12 +1542,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightUpperLeg",
         "parent": "Hips",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.090000003576278687,
           "y": -0.14000000059604645,
@@ -1216,12 +1579,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightLowerLeg",
         "parent": "RightUpperLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.18000000715255737,
@@ -1243,12 +1616,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightFoot",
         "parent": "RightLowerLeg",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.0,
           "y": -0.10999999940395355,
@@ -1270,12 +1653,22 @@
           "g": 0.64999997615814209,
           "b": 0.62999999523162842,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       },
       {
         "id": "RightEye",
         "parent": "Head",
         "shape": "box",
+        "profile": [],
+        "path": [],
+        "segments": 0,
         "position": {
           "x": 0.054999999701976776,
           "y": 0.02500000037252903,
@@ -1297,6 +1690,13 @@
           "g": 0.079999998211860657,
           "b": 0.11999999731779099,
           "a": 1.0
+        },
+        "pattern": {
+          "kind": "solid",
+          "plane": "uv",
+          "secondary": "#FFFFFF",
+          "columns": 1,
+          "rows": 1
         }
       }
     ],

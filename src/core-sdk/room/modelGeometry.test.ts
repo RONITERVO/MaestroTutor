@@ -12,6 +12,7 @@ const target='a'.repeat(32),id='object.model.geometry.set';
 const settings={version:1,scaleMode:'source',metresPerUnit:1,pivot:'source',meshCollision:true,walkable:true};
 const args={target,revision:1,settings};
 it('shares one guarded model geometry action and feature across users, agent and programs',()=>{
+ expect(capabilityDefinition(id)).toMatchObject({duration:'completion',channels:['wholeTarget']});
  expect(validateCapabilityArguments(id,1,args)).toBeNull();expect(capabilityResources(id,args)).toEqual([target]);
  const commands=[{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}];
  expect(()=>requireRoomCapabilities(commands,{capabilities:['execution.v1','actionResults.v1']})).toThrow('modelGeometry.v1');

@@ -3118,3 +3118,25 @@ This does not establish a blanket latency guarantee. Legacy synchronous editor
 entry points keep save-before-return semantics. Other authoring/import paths,
 lifecycle flushes, owner-thread snapshot/reconciliation costs and Quest physical
 performance remain separate work.
+
+## Shared geometry edit completion
+
+`object.recipe.edit`, `object.collision.edit` and `object.model.geometry.set` use
+the same ordered pending-edit path as other shared world authoring. Book controls,
+programs and agent calls capture independent arguments, wait for admission and
+recheck source revision, ownership and geometry prerequisites before acceptance.
+No new action IDs or storage versions are introduced. Their results describe the
+accepted edit, even if another edit occurs before the caller reads its receipt.
+
+Before acceptance, cancellation or failed preparation preserves native geometry,
+playback and the saved room. After acceptance, Stop lets saving drain. Publication
+failure leaves the live edit unconfirmed and the prior file intact, blocks further
+saves and requires recovery. Content-only transactions retain current root
+placement and motion during acceptance and history. Recipe edits stop part playback
+at acceptance; custom collision remains independent. Imported geometry still
+requires paused physics and checks actual native readiness after application;
+saved settings alone cannot produce a successful completion receipt.
+
+Geometry construction and reconciliation still run on Unity's owner thread.
+Moving persistence preparation off that thread is not a frame-time guarantee.
+Legacy synchronous editor entry points retain their existing semantics.

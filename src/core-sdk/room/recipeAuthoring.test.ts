@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
-import {capabilityResources,validateCapabilityArguments,type CapabilityInvocation} from '../../../shared/capabilities';
+import {capabilityDefinition,capabilityResources,validateCapabilityArguments,type CapabilityInvocation} from '../../../shared/capabilities';
 import {boundedCapabilityCall} from '../../../shared/roomCatalog';
 import {recipeEditCall} from '../../../shared/recipeEdits';
 import {parseRecipe} from '../../../shared/roomRecipe';
@@ -26,5 +26,6 @@ import {validateCapabilityOutput} from '../../../shared/capabilities';
 it('uses the actual native patch and saved outcome for the same visual draft',()=>{
  const before=parseRecipe(native.beforeRecipe)!,after=structuredClone(before);after.parts.find(p=>p.id==='Head')!.size.x+=.01;
  expect(recipeEditCall(native.before.target,native.before.revision,before,after)).toEqual(native.call);
+ expect(capabilityDefinition(native.call.id)).toMatchObject({duration:'completion',channels:['wholeTarget']});expect(native.receipt.selected.phase).toBe('completed');
  expect(validExecutionView(native.receipt)).toBe(true);expect(validateCapabilityOutput(native.call.id,1,native.receipt.selected.output)).toBeNull();expect(native.receipt.selected.output).toEqual(native.after);expect(native.after.playing).toBe(false);expect(native.after.autoplay).toBe(false);expect(native.after.revision).toBeGreaterThan(native.before.revision);
 });

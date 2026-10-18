@@ -17,7 +17,7 @@ export async function prepareObjectWalk(execute:Execute,directory:string){
  };
  const readyGeometry=async()=>{const deadline=Date.now()+30000;let value=await fact('object.model.geometry',{target});while(value.ready!==true&&Date.now()<deadline){await new Promise(r=>setTimeout(r,100));value=await fact('object.model.geometry',{target});}assert.equal(value.ready,true,JSON.stringify(value));return value;};
  const geometry=await readyGeometry();
- await execute([{action:'execution',execution:{operation:'start',call:{id:'object.model.geometry.set',version:1,arguments:{target,revision:geometry.revision,settings:{...geometry.settings as object,pivot:'base'}}}}}]);
+ await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.model.geometry.set',version:1,arguments:{target,revision:geometry.revision,settings:{...geometry.settings as object,pivot:'base'}}}}}]));
  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.layout.apply',version:1,arguments:{placements:[{target,position:{x:-3,y:0,z:-4},rotation:{x:0,y:0,z:0,w:1},scale:1}]}}}}]));
  await readyGeometry();
  const before=await fact('object.walk.settings',{target}),clips=await fact('object.walk.clips',{target,modelHash:hash,offset:0});assert.equal(clips.total,1);

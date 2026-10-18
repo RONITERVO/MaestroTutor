@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator CollisionAdmissionIncludesTerrainAndImportedReplacementWithoutChangingTheirAcceptedState()
         {
-            root.AddComponent<RuntimeDiagnostics>();yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);ContainerRun(ex,GeometryCall(BuildingSettings()));
+            root.AddComponent<RuntimeDiagnostics>();yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,GeometryCall(BuildingSettings()));
             string snow=Snow(ex);yield return null;var view=editor.Find(geometryTarget).GetComponent<CreatedRoomObject>();var model=view.Model;var old=editor.Find(geometryTarget).Grab.colliders.ToArray();var field=editor.Find(snow).GetComponent<HeightFieldView>().Collision;
             string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;var pending=FillCollisionAdmission();
             try{

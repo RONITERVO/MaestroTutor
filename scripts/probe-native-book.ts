@@ -166,6 +166,7 @@ try{
  await page.waitForFunction(id=>{const s=window.nativeBookEvidence!().state;return !!s?.inspection&&s.inspection.id===id&&s.execution?.selected?.capability==='object.recipe.edit'&&s.execution.selected.phase==='completed';},robot.id);
  const edited=await page.evaluate(()=>window.nativeBookEvidence!().state!);
  assert.notDeepEqual(edited.inspection!.recipe,robot.recipe);assert.equal(edited.inspection!.id,robot.id);
+ await page.getByRole('status').filter({hasText:'Recipe changes saved.'}).waitFor();
  await page.screenshot({path:join(directory,'book-native-edit.png')});
  await page.getByRole('button',{name:'Undo',exact:true}).first().click();
  await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,edited.sceneRevision);
@@ -863,6 +864,28 @@ try{
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  const windowRemoved=await runNamedAction('object.window.edit');assert.equal(windowRemoved.call.arguments.operation,'remove');
  await writeFile(join(directory,'book-native-window.json'),JSON.stringify({boundary:'Actual original book generated forms, native plane/mask save/removal and revision guards. Desktop only; mask rendering is disabled without headset passthrough.',windowPlane,windowSaved,windowRemoved},null,2));
+
+ // Replace a real collision proxy through generated inputs, then undo the same native edit.
+ const collisionBefore=await readResourceFact('object.collision','Collision shape summary',{target:ball.id});
+ await openNamedAction('Edit collision shapes','object.collision.edit');await chooseObject('Action inputs target',ball.id);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ await page.getByText('Action inputs collision shapes · 1 entries',{exact:true}).click();
+ await page.getByLabel('Action inputs collision shapes 1 id',{exact:true}).fill('BookProxy');
+ for(const [key,value] of Object.entries({x:.24,y:.18,z:.2}))await page.getByLabel('Action inputs collision shapes 1 size '+key,{exact:true}).fill(String(value));
+ const collisionEdited=await runNamedAction('object.collision.edit');
+ assert.equal(collisionEdited.output!.target,ball.id);assert.equal(collisionEdited.output!.shapes,1);assert.equal(collisionEdited.output!.pieces,1);assert.equal(collisionEdited.output!.customActive,true);
+ await page.getByRole('heading',{name:'Edit collision shapes',exact:true}).scrollIntoViewIfNeeded();
+ await page.screenshot({path:join(directory,'book-native-collision-completion.png')});
+ const collisionAfter=await readResourceFact('object.collision','Collision shape summary',{target:ball.id});
+ assert.equal(collisionAfter.revision,collisionEdited.output!.revision);assert.equal(collisionAfter.shapes,1);
+ const collisionShape=await readResourceFact('object.collision.shape','Collision shape source',{target:ball.id,revision:String(collisionAfter.revision),index:'0'});
+ const proxy=collisionShape.shape as unknown as {id:string;size:{x:number;y:number;z:number}};assert.equal(proxy.id,'BookProxy');
+ for(const [axis,value] of Object.entries({x:.24,y:.18,z:.2}))assert.ok(Math.abs(proxy.size[axis as 'x'|'y'|'z']-value)<1e-6);
+ await book.workshop();const collisionSceneRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(previous=>window.nativeBookEvidence!().state!.sceneRevision>previous,collisionSceneRevision);
+ const collisionRestored=await readResourceFact('object.collision','Collision shape summary',{target:ball.id});
+ for(const key of ['shapes','pieces','customActive'])assert.equal(collisionRestored[key],collisionBefore[key]);
+ await writeFile(join(directory,'book-native-collision-completion.json'),JSON.stringify({boundary:'Actual original-book collision proxy inputs, completed native receipt, exact shape readback and ordinary Undo. Desktop only; no headset/provider acceptance.',collisionBefore,collisionEdited,collisionAfter,collisionShape,collisionRestored},null,2));
 
  // Model settings are edited through the same generated form and native guard used by agents.
  const modelFixture=await readFile(join(directory,'model-fixture.json'),'utf8').then(text=>JSON.parse(text) as {target:string;hash:string}).catch(error=>{if(error.code==='ENOENT')return null;throw error;});

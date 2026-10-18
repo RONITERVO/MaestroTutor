@@ -85,7 +85,7 @@ namespace Maestro.Quest.Creation
         // Resource definitions and object deltas share admission, publication and
         // native completion. Build one candidate only after its queue turn arrives.
         bool BeginPreparedEdit(Func<string> validate,PrepareJournalEdit prepare,string message,
-            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null,IDisposable acceptanceLease=null)
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null,IDisposable acceptanceLease=null,Func<string> validateApplied=null)
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
@@ -97,7 +97,7 @@ namespace Maestro.Quest.Creation
                 if(!prepare(out edit,out error))return false;
                 // Creation/component changes do not hold existing physical poses.
                 // Deletion needs only saved identity, including unavailable models.
-                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint);
+                pending=pendingPersistedEdit=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint,validateApplied);
                 edit=null;write=null;return true;
             } finally {edit?.Dispose();write?.Dispose();}
         }
@@ -112,7 +112,7 @@ namespace Maestro.Quest.Creation
             readonly RoomStorage storage;
             readonly RoomJournal.PreparedEdit edit;
             readonly IDisposable write,pose;
-            readonly Func<string> validate;
+            readonly Func<string> validate,validateApplied;
             readonly Action<string> checkpoint;
             readonly string message;
             readonly bool applyPose,temporary;
@@ -125,10 +125,10 @@ namespace Maestro.Quest.Creation
             bool ended,success,accepted,nativeApplied,committing,released;
             string failure;
             JObject acceptedWorldTime,acceptedWeather;
-            internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint)
+            internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint,Func<string> validateApplied=null)
             {
                 this.editor=editor;journal=editor.journal;storage=editor.storage;this.edit=edit;this.write=write;
-                this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;
+                this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;this.validateApplied=validateApplied;
             }
             internal bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
             internal bool Accepted=>accepted;
@@ -233,6 +233,9 @@ namespace Maestro.Quest.Creation
                     editor.MarkDirty();
                     if(!temporary){editor.dirty=runtimeChanged;editor.lastSaveError=null;}
                     editor.ReconcileEdit(edit,native,applyPose);
+                    // Some native adapters report readiness instead of throwing.
+                    // An accepted save must never hide a failed native application.
+                    error=validateApplied?.Invoke();if(error!=null)return Fail(error);
                     nativeApplied=true;
                     // The target can resume immediately after application; storage
                     // only owns detached data. End/Stop can dispose this lease again.

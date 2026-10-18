@@ -13951,3 +13951,53 @@ The complete-native-suite checkpoint 7d518ec9 and unresolved intermittent Meta a
 SDK crash remain separate; production reflections stay disabled. Legacy synchronous
 APIs, remaining authoring/lifecycle paths, owner-thread snapshot/geometry costs,
 physical latency and the broader release gates remain open. Full v1 is incomplete.
+
+## Shared geometry authoring completion — 2026-10-18
+
+Recipe patches, compound collision edits and imported-model geometry settings now
+use the shared ordered completion path. Book controls, programs and agent calls
+capture intent before waiting and recheck source revision and prerequisites on
+admission. Results retain exact acceptance-time identities, counts and revisions.
+No public IDs, storage versions, geometry limits or parallel runtime were added.
+
+Before acceptance, cancellation or failed preparation preserves native geometry,
+playback and saved data. After acceptance, Stop lets saving drain; publication
+failure keeps the live edit unconfirmed and prior files intact for recovery.
+Content-only acceptance and Undo preserve current root placement and motion.
+Imported models must also pass actual native readiness after application: saved
+settings alone cannot establish a completed result. Geometry construction and
+reconciliation still incur Unity owner-thread costs.
+
+The original Book journey found that the recipe workshop only checked its initial
+dispatch response, leaving the draft dirty and Undo disabled after native success.
+It now follows the exact run through selected results or history, reports saved
+status accurately and preserves the draft after failure, session change or a newer
+native edit. Seven new UI regressions cover this lifecycle. The old immediate-success
+fixture now includes a valid outcome and asserts that the client accepts it.
+
+Verification passes **131 EditMode and 84 PlayMode cases**,
+including nine pending-geometry regressions, and **3,198 web tests**,
+application/probe TypeScript and catalog checks. Native coverage includes captured
+queued patches, cancellation, stale targets, delayed publication, native resource
+refusal/retry, immutable results, real model unloading during acceptance and motion
+through collision edits/Undo. Old immediate-failure and destroyed-collider test
+assumptions were corrected. The Undo position check permits one micrometre for
+collider mass recalculation; a retained diagnostic measured 3.86910131e-8 metres.
+Velocity and spin remain exact; runtime physics and deadlines were unchanged.
+
+Complete offline Book f05b5355f4de4cb58ab6d251b407e3f4 passes with
+3,777 observations/1,183 requests. Headless 8d1ec3e9512e4f9c9104793150e04fb2
+passes with 2,277 observations/2,269 read sets. The new visible
+collision scenario edits a proxy, reads its exact dimensions/revision and undoes
+it. Recipe editing/Undo and rigid imported-model readiness also pass through
+actual book controls. Five browser fixtures come directly from native captures.
+Existing world-editing, preserved human edits, stale-request refusal, empty periodic
+inventories and reload-without-replay checks remain intact.
+
+Evidence: .quest-evidence/geometry-completion-20261018/. All 3,278 native
+inputs, 5,200 source inputs and 14 protected files are checked.
+No Android build, device, paid provider, signing, deployment or Meta action ran.
+The complete-native-suite checkpoint 7d518ec9 and unresolved intermittent Meta audio
+SDK crash remain separate; production reflections stay disabled. Legacy synchronous
+APIs, other authoring/lifecycle paths, owner-thread costs, physical latency and
+the broader release gates remain open. Full v1 is incomplete.

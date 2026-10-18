@@ -98,11 +98,11 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator CollisionResourcesImportedSaveFailureDrainsOnlyPreparedCandidateAndKeepsAcceptedModel()
         {
             root.AddComponent<RuntimeDiagnostics>();yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);
-            ContainerRun(ex,GeometryCall(BuildingSettings()));var prior=CollisionOwners(geometryTarget).Single();var view=editor.Find(geometryTarget).GetComponent<CreatedRoomObject>();var model=view.Model;
+            yield return ContainerAction(ex,GeometryCall(BuildingSettings()));var prior=CollisionOwners(geometryTarget).Single();var view=editor.Find(geometryTarget).GetComponent<CreatedRoomObject>();var model=view.Model;
             var collider=editor.Find(geometryTarget).Grab.colliders.Single();Assert.AreEqual(((MeshCollider)collider).sharedMesh.triangles.Length/3,(int)prior["sourceTriangles"]);
             string pending=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(pending);
-            try{var changed=BuildingSettings();changed.pivot="base";Assert.IsFalse(ex.Execute(ContainerRequest(GeometryCall(changed)),out _,out _));}finally{Directory.Delete(pending);}
-            var during=CollisionOwners(geometryTarget);Assert.AreEqual(2,during.Length);Assert.AreEqual(1,during.Count(o=>(string)o["phase"]=="retiring"));Assert.AreEqual(1,during.Count(o=>(string)o["phase"]=="ready"));
+            try{var changed=BuildingSettings();changed.pivot="base";Assert.IsTrue(ex.Execute(ContainerRequest(GeometryCall(changed)),out _,out _));yield return SpatialSettingsCompletion.Wait(ex.Executions,"failed");}finally{Directory.Delete(pending);}
+            var during=CollisionOwners(geometryTarget);Assert.AreEqual(1,during.Length,"Failed save preparation must not allocate replacement native geometry");Assert.IsTrue(JToken.DeepEquals(prior,during.Single()));
             Assert.AreSame(collider,editor.Find(geometryTarget).Grab.colliders.Single());Assert.IsTrue(collider.enabled);yield return null;
             Assert.IsTrue(JToken.DeepEquals(prior,CollisionOwners(geometryTarget).Single()));Assert.AreSame(model,view.Model);
             Assert.IsTrue(new RoomStorage(directory).Load(out _).objects.Single(o=>o.id==geometryTarget).modelGeometry.meshCollision);

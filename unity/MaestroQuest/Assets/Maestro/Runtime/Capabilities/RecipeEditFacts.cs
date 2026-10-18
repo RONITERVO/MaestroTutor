@@ -9,7 +9,8 @@ namespace Maestro.Quest.Programs
 {
     internal static class RecipeEditFacts
     {
-        internal static JObject Summary(RoomEditor editor,string target){if(!editor.TryGetLiveObject(target,out var item,out _)||!item.GetComponent<RecipeObject>())return null;var r=editor.Read(target)?.recipe;if(r==null)return null;return new JObject {["target"]=target,["revision"]=editor.ObjectRevision(target),["parts"]=r.parts.Length,["tracks"]=r.tracks.Length,["duration"]=r.duration,["loop"]=r.loop,["playing"]=item.GetComponent<RecipeObject>().IsPlaying,["autoplay"]=r.playing};}
+        internal static JObject Summary(RoomEditor editor,string target){if(!editor.TryGetLiveObject(target,out var item,out _)||!item.GetComponent<RecipeObject>())return null;var data=editor.Read(target);return data?.recipe==null?null:Summary(data,editor.ObjectRevision(target),item.GetComponent<RecipeObject>().IsPlaying);}
+        internal static JObject Summary(RoomObjectData data,int revision,bool playing){var r=data.recipe;return new JObject {["target"]=data.id,["revision"]=revision,["parts"]=r.parts.Length,["tracks"]=r.tracks.Length,["duration"]=r.duration,["loop"]=r.loop,["playing"]=playing,["autoplay"]=r.playing};}
         static JObject VectorType(bool rotation=false){var fields=new JObject {["x"]="number",["y"]="number",["z"]="number"};if(rotation)fields["w"]="number";return new JObject {["record"]=fields};}
         static JObject Input(bool page,bool track=false){var props=new JObject {["target"]=RecipeEditCapability.Target()};if(page){props["revision"]=Revision();props["index"]=Number(0,track?16:31,true);if(track)props["offset"]=Number(0,16,true);}return Object(props);}
         static JObject Example(bool page,bool track=false){var args=new JObject {["target"]=new string('0',32)};if(page){args["revision"]=1;args["index"]=0;if(track)args["offset"]=0;}return args;}

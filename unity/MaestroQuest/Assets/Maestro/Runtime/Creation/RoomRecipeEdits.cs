@@ -11,13 +11,19 @@ namespace Maestro.Quest.Creation
     {
         internal bool PrepareRecipeEdit(string target,int revision,JObject patch,out RoomObjectData data,out string error)
         {
-            data=null;if(!CanEditObject(target,true,out error))return false;
-            if(ObjectRevision(target)!=revision){error="The recipe changed; inspect its current revision before editing";return false;}
-            if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object before editing its recipe";return false;}
-            data=Read(target);if(data.kind!=RoomObjectKind.Assembly){error="Choose an existing recipe object";return false;}
+            data=null;if(!CanEditRecipe(target,revision,out error))return false;
+            data=Read(target);
             if(!RecipeEdits.Apply(RecipeForEditing(data),patch,out var recipe,out error)||!ApplyRecipeAppearance(data,recipe,out error))return false;
             data=Pose(data,Find(target).transform);
             var replacement=data;var candidate=Snapshot();candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();return candidate.Validate(out error);
+        }
+        internal bool CanEditRecipe(string target,int revision,out string error)
+        {
+            if(!CanEditObject(target,true,out error))return false;
+            if(ObjectRevision(target)!=revision){error="The recipe changed; inspect its current revision before editing";return false;}
+            if(GetComponent<AnimationWorkshop>()?.ControlsTarget(target)==true){error="Finish authoring this object before editing its recipe";return false;}
+            if(Read(target).kind!=RoomObjectKind.Assembly){error="Choose an existing recipe object";return false;}
+            error=null;return true;
         }
         internal bool EditRecipe(string target,int revision,JObject patch,out string error)
         {

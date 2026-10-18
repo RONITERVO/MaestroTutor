@@ -360,7 +360,7 @@ try{
   const inspected=await execute([{action:'inspect',target:cupId}]);
   if(inspected.inspection?.recipe?.parts[0].shape!=='lathe')throw new Error('The shared client cannot inspect the native lathe.');
   const changed=structuredClone(inspected.inspection.recipe.parts[0]);if(!changed.profile||changed.profile.length<2)throw new Error('Native lathe profile is missing');changed.profile[1].x=.48;changed.segments=32;
-  await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:cupId,revision:inspected.inspection.objectRevision,parts:[changed],removeParts:[],tracks:[],removeTracks:[],duration:cup.duration,loop:false}}}}]);
+  await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:cupId,revision:inspected.inspection.objectRevision,parts:[changed],removeParts:[],tracks:[],removeTracks:[],duration:cup.duration,loop:false}}}}]));
   const revision=await nativeObjects.revision(cupId);
   const profile=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:cupId,revision,part:'Body',offset:0}}}]);
   const value=profile.catalog?.value as {segments?:number;points?:{x:number;y:number}[]}|undefined;
@@ -371,7 +371,7 @@ try{
   const collisionCatalog=await execute([{action:'catalog',catalog:{operation:'search',query:'Edit collision shapes',offset:0}}]);
   const collisionDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.collision.edit',version:1}}]);
   const collisionCurrent=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.collision',version:1,arguments:{target:cupId}}}]);
-  const collided=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.collision.edit',version:1,arguments:{target:cupId,revision:restored.inspection!.objectRevision,collision:collisionCases[0].collision}}}}]);
+  const collided=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.collision.edit',version:1,arguments:{target:cupId,revision:restored.inspection!.objectRevision,collision:collisionCases[0].collision}}}}]));
   const collisionRevision=await nativeObjects.revision(cupId);
   const readCollisionOwnership=async()=>{
    const budgetReply=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'runtime.collisionResources',version:1}}]);
@@ -408,7 +408,7 @@ try{
   const extrusionId=extrusionCreated.execution?.selected?.output?.objectId;if(typeof extrusionId!=='string')throw new Error('Extrusion creation did not return an object');
   const extrusionBefore=await execute([{action:'inspect',target:extrusionId}]);if(extrusionBefore.inspection?.recipe?.parts[0].shape!=='extrude')throw new Error('Native extrusion source is not inspectable');
   const extrusionPart=structuredClone(extrusionBefore.inspection.recipe.parts[0]);extrusionPart.profile![3].x=0;
-  const extrusionAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:extrusionId,revision:extrusionBefore.inspection.objectRevision,parts:[extrusionPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]);
+  const extrusionAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:extrusionId,revision:extrusionBefore.inspection.objectRevision,parts:[extrusionPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]));
   const extrusionRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.profile',version:1,arguments:{target:extrusionId,revision:await nativeObjects.revision(extrusionId),part:'Outline',offset:0}}}]);
   const extrusionValue=extrusionRead.catalog?.value as {segments:number;points:{x:number;y:number}[]};if(extrusionValue?.segments!==0||extrusionValue.points[3].x!==0)throw new Error('Extrusion profile readback differs from edit');
   const extrusionUndo=await execute([{action:'undo'}]);const extrusionRestored=await execute([{action:'inspect',target:extrusionId}]);if(Math.abs((extrusionRestored.inspection?.recipe?.parts[0].profile?.[3].x??0)+.1)>.00001)throw new Error('Extrusion Undo did not restore source');
@@ -419,7 +419,7 @@ try{
   const sweepId=sweepCreated.execution?.selected?.output?.objectId;if(typeof sweepId!=='string')throw new Error('Sweep creation did not return an object');
   const sweepBefore=await execute([{action:'inspect',target:sweepId}]);if(sweepBefore.inspection?.recipe?.parts[0].shape!=='sweep')throw new Error('Native sweep source is not inspectable');
   const sweepPart=structuredClone(sweepBefore.inspection.recipe.parts[0]);sweepPart.path![2].z=.05;
-  const sweepAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:sweepId,revision:sweepBefore.inspection.objectRevision,parts:[sweepPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]);
+  const sweepAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:sweepId,revision:sweepBefore.inspection.objectRevision,parts:[sweepPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:false}}}}]));
   const sweepRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.path',version:1,arguments:{target:sweepId,revision:await nativeObjects.revision(sweepId),part:'Handle',offset:0}}}]);
   const sweepValue=sweepRead.catalog?.value as {count:number;points:{x:number;y:number;z:number}[]};if(sweepValue?.count!==6||Math.abs(sweepValue.points[2].z-.05)>.00001)throw new Error('Sweep path readback differs from edit');
   const sweepUndo=await execute([{action:'undo'}]);const sweepRestored=await execute([{action:'inspect',target:sweepId}]);if(sweepRestored.inspection?.recipe?.parts[0].path?.[2].z!==0)throw new Error('Sweep Undo did not restore source');
@@ -430,7 +430,7 @@ try{
   const patternId=patternCreated.execution?.selected?.output?.objectId;if(typeof patternId!=='string')throw new Error('Pattern creation failed');
   const patternBefore=await execute([{action:'inspect',target:patternId}]);if(!patternBefore.inspection?.recipe)throw new Error('Pattern source missing');
   const patternPart=structuredClone(patternBefore.inspection.recipe.parts[0]);patternPart.pattern={kind:'stripes',plane:'xz',columns:4,rows:8,secondary:'#eeddcc'};
-  const patternAfter=await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:patternId,revision:patternBefore.inspection.objectRevision,parts:[patternPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:patternBefore.inspection.recipe.loop}}}}]);
+  const patternAfter=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.recipe.edit',version:1,arguments:{target:patternId,revision:patternBefore.inspection.objectRevision,parts:[patternPart],removeParts:[],tracks:[],removeTracks:[],duration:2,loop:patternBefore.inspection.recipe.loop}}}}]));
   const patternRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.recipe.part',version:1,arguments:{target:patternId,revision:await nativeObjects.revision(patternId),index:0}}}]);
   if(!isDeepStrictEqual((patternRead.catalog?.value as {part:{pattern:unknown}}).part.pattern,patternPart.pattern))throw new Error('Pattern readback differs from accepted edit');
   const patternUndo=await execute([{action:'undo'}]);const patternRestored=await execute([{action:'inspect',target:patternId}]);if(patternRestored.inspection?.recipe?.parts[0].pattern?.kind!=='checker')throw new Error('Pattern Undo failed');

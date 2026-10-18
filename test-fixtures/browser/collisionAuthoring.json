@@ -2,21 +2,22 @@
   "boundary": "Real Unity native states; browser acknowledgements replayed separately. Not headset or provider proof.",
   "before": {
     "version": 1,
-    "revision": 30,
-    "sceneRevision": 8,
-    "ack": 12,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
+    "revision": 2214,
+    "sceneRevision": 42,
+    "ack": 941,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
     "status": "Object inspected",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 11,
+      "objectRevision": 44,
       "recipe": {
         "version": 1,
         "parts": [
@@ -50,6 +51,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -72,6 +74,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -79,20 +88,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 44,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -100,7 +149,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -109,12 +187,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -131,17 +215,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -156,11 +288,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -174,14 +331,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -240,12 +397,12 @@
           "choices": [
             {
               "motionId": "21da54acb5c38d147ad297bf7ef22977",
-              "name": "Missing saved motion",
+              "name": "Idle_4",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -254,12 +411,12 @@
           "choices": [
             {
               "motionId": "bd0bf1a849d86d785e00c3a392639359",
-              "name": "Missing saved motion",
+              "name": "Listening_Gesture",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -268,12 +425,12 @@
           "choices": [
             {
               "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
-              "name": "Missing saved motion",
+              "name": "Idle_12",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -282,194 +439,57 @@
           "choices": [
             {
               "motionId": "b56ece79da8e21bac89927310921d734",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Hands_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             },
             {
               "motionId": "852ac885964d693deb8d3d3ba835acec",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Right_Hand_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             }
           ]
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 11,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "inspect",
       "capability": "object.recipe.profile",
@@ -495,8 +515,8 @@
             }
           }
         },
-        "label": "Lathe profile points",
-        "description": "Read up to four exact profile points for an existing lathe part at a fixed object revision. x is radius and y is height in normalized part coordinates. segments is the angular subdivision count. vertices is a conservative generated vertex cost for the whole recipe; the room limit is 262144. Offset equal to count returns an empty page. Missing/non-lathe parts, stale revisions and later offsets are unavailable. The profile is geometry, not a fluid container or a hollow collider.",
+        "label": "Recipe profile points",
+        "description": "Read up to four exact profile points for an existing lathe, extrude or sweep part at a fixed object revision. For lathe, x is radius, y is height and segments is the angular subdivision count. For extrude, x/y are the normalized XY outline and segments is zero; thickness is part.size.z. For sweep, the XY section follows object.recipe.path and segments is zero. vertices is a conservative generated vertex cost for the whole recipe; the room limit is 262144. Offset equal to count returns an empty page. Missing/non-profile parts, stale revisions and later offsets are unavailable. The profile is geometry, not a fluid container or a hollow collider.",
         "input": {
           "type": "object",
           "properties": {
@@ -509,7 +529,7 @@
             "revision": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 1000000
+              "maximum": 2147483647
             },
             "part": {
               "type": "string",
@@ -519,7 +539,7 @@
             "offset": {
               "type": "integer",
               "minimum": 0,
-              "maximum": 16
+              "maximum": 32
             }
           },
           "required": [
@@ -544,8 +564,8 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53",
-        "revision": 10,
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "revision": 43,
         "part": "Body",
         "offset": 0
       },
@@ -554,17 +574,17 @@
     },
     "execution": {
       "selected": {
-        "id": "d2f38a59cd8145efaf34e398dc426533",
+        "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 10,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 43,
           "parts": 1,
           "tracks": 0,
           "duration": 2,
@@ -576,8 +596,8 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 9,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 42,
             "parts": [
               {
                 "id": "Body",
@@ -609,6 +629,7 @@
                     "y": -0.4000000059604645
                   }
                 ],
+                "path": [],
                 "segments": 32,
                 "position": {
                   "x": 0,
@@ -631,6 +652,13 @@
                   "g": 0.6499999761581421,
                   "b": 0.6000000238418579,
                   "a": 1
+                },
+                "pattern": {
+                  "kind": "solid",
+                  "plane": "uv",
+                  "secondary": "#FFFFFF",
+                  "columns": 1,
+                  "rows": 1
                 }
               }
             ],
@@ -645,39 +673,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -687,14 +830,14 @@
           }
         }
       ],
-      "nextRunId": "9cb5267c0a6148e29776c040c19dff34",
+      "nextRunId": "7d97c708fc3d428586ef599af0079c37",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }
@@ -702,21 +845,22 @@
   },
   "search": {
     "version": 1,
-    "revision": 32,
-    "sceneRevision": 8,
-    "ack": 13,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
-    "status": "Found 1 actions. Search does not run or enable anything.",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "revision": 2216,
+    "sceneRevision": 42,
+    "ack": 942,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
+    "status": "Found 2 actions. Search does not run or enable anything.",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 11,
+      "objectRevision": 44,
       "recipe": {
         "version": 1,
         "parts": [
@@ -750,6 +894,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -772,6 +917,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -779,20 +931,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 44,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -800,7 +992,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -809,12 +1030,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -831,17 +1058,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -856,11 +1131,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -874,14 +1174,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -940,12 +1240,12 @@
           "choices": [
             {
               "motionId": "21da54acb5c38d147ad297bf7ef22977",
-              "name": "Missing saved motion",
+              "name": "Idle_4",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -954,12 +1254,12 @@
           "choices": [
             {
               "motionId": "bd0bf1a849d86d785e00c3a392639359",
-              "name": "Missing saved motion",
+              "name": "Listening_Gesture",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -968,12 +1268,12 @@
           "choices": [
             {
               "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
-              "name": "Missing saved motion",
+              "name": "Idle_12",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -982,222 +1282,90 @@
           "choices": [
             {
               "motionId": "b56ece79da8e21bac89927310921d734",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Hands_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             },
             {
               "motionId": "852ac885964d693deb8d3d3ba835acec",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Right_Hand_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             }
           ]
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 11,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "search",
       "query": "Edit collision shapes",
       "offset": 0,
       "pageSize": 6,
-      "total": 1,
+      "total": 2,
       "entries": [
         {
           "id": "object.collision.edit",
           "version": 1,
           "label": "Edit collision shapes"
+        },
+        {
+          "id": "object.model.geometry.set",
+          "version": 1,
+          "label": "Set imported model geometry"
         }
       ],
-      "status": "Found 1 actions. Search does not run or enable anything."
+      "status": "Found 2 actions. Search does not run or enable anything."
     },
     "execution": {
       "selected": {
-        "id": "d2f38a59cd8145efaf34e398dc426533",
+        "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 10,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 43,
           "parts": 1,
           "tracks": 0,
           "duration": 2,
@@ -1209,8 +1377,8 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 9,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 42,
             "parts": [
               {
                 "id": "Body",
@@ -1242,6 +1410,7 @@
                     "y": -0.4000000059604645
                   }
                 ],
+                "path": [],
                 "segments": 32,
                 "position": {
                   "x": 0,
@@ -1264,6 +1433,13 @@
                   "g": 0.6499999761581421,
                   "b": 0.6000000238418579,
                   "a": 1
+                },
+                "pattern": {
+                  "kind": "solid",
+                  "plane": "uv",
+                  "secondary": "#FFFFFF",
+                  "columns": 1,
+                  "rows": 1
                 }
               }
             ],
@@ -1278,39 +1454,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -1320,14 +1611,14 @@
           }
         }
       ],
-      "nextRunId": "9cb5267c0a6148e29776c040c19dff34",
+      "nextRunId": "7d97c708fc3d428586ef599af0079c37",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }
@@ -1335,21 +1626,22 @@
   },
   "definition": {
     "version": 1,
-    "revision": 34,
-    "sceneRevision": 8,
-    "ack": 14,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
+    "revision": 2218,
+    "sceneRevision": 42,
+    "ack": 943,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
     "status": "Action definition. Check concrete arguments before running it.",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 11,
+      "objectRevision": 44,
       "recipe": {
         "version": 1,
         "parts": [
@@ -1383,6 +1675,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -1405,6 +1698,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -1412,20 +1712,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 44,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -1433,7 +1773,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -1442,12 +1811,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -1464,17 +1839,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -1489,11 +1912,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -1507,14 +1955,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1573,12 +2021,12 @@
           "choices": [
             {
               "motionId": "21da54acb5c38d147ad297bf7ef22977",
-              "name": "Missing saved motion",
+              "name": "Idle_4",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -1587,12 +2035,12 @@
           "choices": [
             {
               "motionId": "bd0bf1a849d86d785e00c3a392639359",
-              "name": "Missing saved motion",
+              "name": "Listening_Gesture",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -1601,12 +2049,12 @@
           "choices": [
             {
               "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
-              "name": "Missing saved motion",
+              "name": "Idle_12",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -1615,194 +2063,57 @@
           "choices": [
             {
               "motionId": "b56ece79da8e21bac89927310921d734",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Hands_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             },
             {
               "motionId": "852ac885964d693deb8d3d3ba835acec",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Right_Hand_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             }
           ]
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 11,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "inspect",
       "capability": "object.collision.edit",
@@ -1823,7 +2134,7 @@
             "revision": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 1000000
+              "maximum": 2147483647
             },
             "collision": {
               "type": "object",
@@ -2363,7 +2674,7 @@
             ]
           }
         },
-        "duration": "instant",
+        "duration": "completion",
         "ownership": "exclusiveTargetAndProp",
         "channels": [
           "wholeTarget"
@@ -2375,7 +2686,7 @@
           "authoring.inactive",
           "storage.writable"
         ],
-        "description": "Replace a creation's independent root-local collision recipe and select automatic collision mode. Works for recipe objects, drawings and imported models. Box, sphere, cylinder and ring shapes form one rigid body; their centres/dimensions are local metres and rotate with the whole object. Ring walls leave an open centre; combine with a cylinder floor for a cup. Collision shapes do not follow animated visual parts or change when visual geometry is edited: edit both explicitly. Empty shapes clears the recipe and restores the object's default automatic collider. Existing box/sphere overrides retain this recipe but temporarily bypass it. Read object.collision and every object.collision.shape before replacing anything unrequested. Up to 16 uniquely named shapes/64 convex pieces per object; the room reserves at most 512 pieces including stored inactive recipes. Saved/temporary edits, Undo, ownership and historical receipt replay use the normal shared path. Mass, physics mode, visuals and live pose are preserved. This neither starts physics nor makes a fluid container.",
+        "description": "Replace a creation's independent root-local collision recipe and select automatic collision mode. Works for recipe objects, drawings and imported models. Box, sphere, cylinder and ring shapes form one rigid body; their centres/dimensions are local metres and rotate with the whole object. Ring walls leave an open centre; combine with a cylinder floor for a cup. Collision shapes do not follow animated visual parts or change when visual geometry is edited: edit both explicitly. Empty shapes clears the recipe and restores the object's default automatic collider. Existing box/sphere overrides retain this recipe but temporarily bypass it. Read object.collision and every object.collision.shape before replacing anything unrequested. Up to 16 uniquely named shapes/64 convex pieces per object; the room reserves at most 512 pieces including stored inactive recipes. Saved/temporary edits, Undo, ownership and historical receipt replay use the normal shared path. Mass, physics mode, visuals and live pose are preserved. This neither starts physics nor makes a fluid container. Current root placement and body velocity are preserved through acceptance and Undo/Redo. The result is the immutable accepted collision summary. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
         "example": {
           "target": "00000000000000000000000000000000",
           "revision": 1,
@@ -2416,7 +2727,7 @@
             "revision": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 1000000
+              "maximum": 2147483647
             },
             "shapes": {
               "type": "integer",
@@ -2450,17 +2761,17 @@
     },
     "execution": {
       "selected": {
-        "id": "d2f38a59cd8145efaf34e398dc426533",
+        "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 10,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 43,
           "parts": 1,
           "tracks": 0,
           "duration": 2,
@@ -2472,8 +2783,8 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 9,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 42,
             "parts": [
               {
                 "id": "Body",
@@ -2505,6 +2816,7 @@
                     "y": -0.4000000059604645
                   }
                 ],
+                "path": [],
                 "segments": 32,
                 "position": {
                   "x": 0,
@@ -2527,6 +2839,13 @@
                   "g": 0.6499999761581421,
                   "b": 0.6000000238418579,
                   "a": 1
+                },
+                "pattern": {
+                  "kind": "solid",
+                  "plane": "uv",
+                  "secondary": "#FFFFFF",
+                  "columns": 1,
+                  "rows": 1
                 }
               }
             ],
@@ -2541,39 +2860,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -2583,14 +3017,14 @@
           }
         }
       ],
-      "nextRunId": "9cb5267c0a6148e29776c040c19dff34",
+      "nextRunId": "7d97c708fc3d428586ef599af0079c37",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }
@@ -2598,21 +3032,22 @@
   },
   "current": {
     "version": 1,
-    "revision": 36,
-    "sceneRevision": 8,
-    "ack": 15,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
+    "revision": 2221,
+    "sceneRevision": 42,
+    "ack": 944,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 11,
+      "objectRevision": 44,
       "recipe": {
         "version": 1,
         "parts": [
@@ -2646,6 +3081,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -2668,6 +3104,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -2675,20 +3118,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 44,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -2696,7 +3179,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -2705,12 +3217,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -2727,17 +3245,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -2752,11 +3318,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -2770,14 +3361,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2836,12 +3427,12 @@
           "choices": [
             {
               "motionId": "21da54acb5c38d147ad297bf7ef22977",
-              "name": "Missing saved motion",
+              "name": "Idle_4",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -2850,12 +3441,12 @@
           "choices": [
             {
               "motionId": "bd0bf1a849d86d785e00c3a392639359",
-              "name": "Missing saved motion",
+              "name": "Listening_Gesture",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -2864,12 +3455,12 @@
           "choices": [
             {
               "motionId": "9a66ea13d9ba08b954b9a0cbdc7d89dc",
-              "name": "Missing saved motion",
+              "name": "Idle_12",
               "weight": 1,
               "speed": 1,
               "cooldown": 0,
               "loop": true,
-              "available": false
+              "available": true
             }
           ]
         },
@@ -2878,194 +3469,57 @@
           "choices": [
             {
               "motionId": "b56ece79da8e21bac89927310921d734",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Hands_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             },
             {
               "motionId": "852ac885964d693deb8d3d3ba835acec",
-              "name": "Missing saved motion",
+              "name": "Talk_with_Right_Hand_Open",
               "weight": 1,
               "speed": 1,
               "cooldown": 2,
               "loop": false,
-              "available": false
+              "available": true
             }
           ]
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 11,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "inspect",
       "capability": "object.collision",
@@ -3111,12 +3565,12 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53"
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
       },
       "available": true,
       "value": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53",
-        "revision": 11,
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "revision": 44,
         "shapes": 0,
         "pieces": 1,
         "customActive": false,
@@ -3125,17 +3579,17 @@
     },
     "execution": {
       "selected": {
-        "id": "d2f38a59cd8145efaf34e398dc426533",
+        "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
         "capability": "object.recipe.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 10,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 43,
           "parts": 1,
           "tracks": 0,
           "duration": 2,
@@ -3147,8 +3601,8 @@
           "id": "object.recipe.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 9,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 42,
             "parts": [
               {
                 "id": "Body",
@@ -3180,6 +3634,7 @@
                     "y": -0.4000000059604645
                   }
                 ],
+                "path": [],
                 "segments": 32,
                 "position": {
                   "x": 0,
@@ -3202,6 +3657,13 @@
                   "g": 0.6499999761581421,
                   "b": 0.6000000238418579,
                   "a": 1
+                },
+                "pattern": {
+                  "kind": "solid",
+                  "plane": "uv",
+                  "secondary": "#FFFFFF",
+                  "columns": 1,
+                  "rows": 1
                 }
               }
             ],
@@ -3216,39 +3678,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -3258,14 +3835,14 @@
           }
         }
       ],
-      "nextRunId": "9cb5267c0a6148e29776c040c19dff34",
+      "nextRunId": "7d97c708fc3d428586ef599af0079c37",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }
@@ -3273,21 +3850,22 @@
   },
   "after": {
     "version": 1,
-    "revision": 38,
-    "sceneRevision": 9,
-    "ack": 16,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
-    "status": "Action completed",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "revision": 2224,
+    "sceneRevision": 43,
+    "ack": 945,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
+    "status": "Waiting for action completion",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 12,
+      "objectRevision": 45,
       "recipe": {
         "version": 1,
         "parts": [
@@ -3321,6 +3899,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -3343,6 +3922,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -3350,20 +3936,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 45,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -3371,7 +3997,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -3380,12 +4035,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -3402,17 +4063,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -3427,11 +4136,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -3445,14 +4179,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3573,174 +4307,37 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 12,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "inspect",
       "capability": "object.collision",
@@ -3786,12 +4383,12 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53"
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
       },
       "available": true,
       "value": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53",
-        "revision": 12,
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "revision": 45,
         "shapes": 2,
         "pieces": 13,
         "customActive": true,
@@ -3800,17 +4397,17 @@
     },
     "execution": {
       "selected": {
-        "id": "9cb5267c0a6148e29776c040c19dff34",
+        "id": "7d97c708fc3d428586ef599af0079c37",
         "capability": "object.collision.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 12,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 45,
           "shapes": 2,
           "pieces": 13,
           "customActive": true,
@@ -3820,8 +4417,8 @@
           "id": "object.collision.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 11,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 44,
             "collision": {
               "version": 1,
               "shapes": [
@@ -3877,39 +4474,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -3919,17 +4631,17 @@
           }
         },
         {
-          "id": "9cb5267c0a6148e29776c040c19dff34",
+          "id": "7d97c708fc3d428586ef599af0079c37",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 12,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 45,
             "shapes": 2,
             "pieces": 13,
             "customActive": true,
@@ -3937,14 +4649,14 @@
           }
         }
       ],
-      "nextRunId": "d4d3e920f7254239abdb754a84c47742",
+      "nextRunId": "fe1abb988cc9412c906ee1e215789bc6",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }
@@ -3952,21 +4664,22 @@
   },
   "summary": {
     "version": 1,
-    "revision": 42,
-    "sceneRevision": 9,
-    "ack": 17,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
+    "revision": 2233,
+    "sceneRevision": 43,
+    "ack": 949,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 12,
+      "objectRevision": 45,
       "recipe": {
         "version": 1,
         "parts": [
@@ -4000,6 +4713,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -4022,6 +4736,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -4029,20 +4750,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 45,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -4050,7 +4811,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -4059,12 +4849,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -4081,17 +4877,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -4106,11 +4950,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -4124,14 +4993,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4252,174 +5121,37 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 12,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "inspect",
       "capability": "object.collision",
@@ -4465,12 +5197,12 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53"
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
       },
       "available": true,
       "value": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53",
-        "revision": 12,
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "revision": 45,
         "shapes": 2,
         "pieces": 13,
         "customActive": true,
@@ -4479,17 +5211,17 @@
     },
     "execution": {
       "selected": {
-        "id": "9cb5267c0a6148e29776c040c19dff34",
+        "id": "7d97c708fc3d428586ef599af0079c37",
         "capability": "object.collision.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 12,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 45,
           "shapes": 2,
           "pieces": 13,
           "customActive": true,
@@ -4499,8 +5231,8 @@
           "id": "object.collision.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 11,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 44,
             "collision": {
               "version": 1,
               "shapes": [
@@ -4556,39 +5288,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -4598,17 +5445,17 @@
           }
         },
         {
-          "id": "9cb5267c0a6148e29776c040c19dff34",
+          "id": "7d97c708fc3d428586ef599af0079c37",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 12,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 45,
             "shapes": 2,
             "pieces": 13,
             "customActive": true,
@@ -4616,14 +5463,14 @@
           }
         }
       ],
-      "nextRunId": "d4d3e920f7254239abdb754a84c47742",
+      "nextRunId": "fe1abb988cc9412c906ee1e215789bc6",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }
@@ -4631,21 +5478,22 @@
   },
   "wall": {
     "version": 1,
-    "revision": 44,
-    "sceneRevision": 9,
-    "ack": 18,
-    "session": "d74812d2eb134f90af1179dabafc7f62",
+    "revision": 2235,
+    "sceneRevision": 43,
+    "ack": 950,
+    "session": "7310f8c2e7924f4bae6645bc00f305d3",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "717b64ee692b4d6994c1aad86a5c1c53",
+    "selectedId": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
     "physicsRunning": false,
     "visible": false,
+    "workspaceReady": true,
     "inspection": {
-      "id": "717b64ee692b4d6994c1aad86a5c1c53",
+      "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
       "partId": "",
-      "objectRevision": 12,
+      "objectRevision": 45,
       "recipe": {
         "version": 1,
         "parts": [
@@ -4679,6 +5527,7 @@
                 "y": -0.4000000059604645
               }
             ],
+            "path": [],
             "segments": 24,
             "position": {
               "x": 0,
@@ -4701,6 +5550,13 @@
               "g": 0.6499999761581421,
               "b": 0.6000000238418579,
               "a": 1
+            },
+            "pattern": {
+              "kind": "solid",
+              "plane": "uv",
+              "secondary": "#FFFFFF",
+              "columns": 1,
+              "rows": 1
             }
           }
         ],
@@ -4708,20 +5564,60 @@
         "playing": false,
         "loop": false,
         "duration": 2
+      },
+      "item": {
+        "id": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "name": "Native profile cup",
+        "kind": "Assembly",
+        "runtimeState": "active",
+        "positionSource": "live",
+        "objectRevision": 45,
+        "position": {
+          "x": 0.20000000298023224,
+          "y": 1.399999976158142,
+          "z": 1.5
+        },
+        "scale": 1,
+        "color": {
+          "r": 1,
+          "g": 1,
+          "b": 1,
+          "a": 1
+        },
+        "animated": false,
+        "held": false,
+        "simulating": false,
+        "physics": {
+          "mode": "fixed",
+          "shape": "automatic",
+          "mass": 0.5
+        },
+        "movement": null
       }
+    },
+    "constructionSelection": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "collecting": false,
+      "members": []
+    },
+    "constructionManipulation": {
+      "stateId": "e39639ae19ef4b8180788d63bf3f87f7",
+      "error": "",
+      "visible": false,
+      "holding": false
     },
     "workspaceView": "objects",
     "rules": {
-      "revision": 1,
+      "revision": 7,
       "bindingPage": 0,
       "bindingCount": 0,
       "queued": 0,
       "eventQueue": 0,
       "eventsDropped": 0,
-      "canUndo": false,
+      "canUndo": true,
       "canRedo": false,
       "readOnly": false,
-      "status": "Create an action sequence, then add triggers or buttons",
+      "status": "Behaviour edit applied. Undo restores this batch.",
       "selectedError": "",
       "sequences": [],
       "selected": null,
@@ -4729,7 +5625,36 @@
       "bindings": [],
       "buttons": [],
       "running": [],
-      "outcomes": []
+      "outcomes": [
+        {
+          "id": "c57ec9ad271a4d51897313379571e89b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "completed",
+          "nodeId": "delay",
+          "status": "Program completed"
+        },
+        {
+          "id": "facf0a540fa545c9ba3d11318e9c290b",
+          "sequenceId": "cf1d3bf9170f48f58dca945995f045c7",
+          "phase": "cancelled",
+          "nodeId": "wait",
+          "status": "Behaviour stopped"
+        },
+        {
+          "id": "8858abaed285449e9c814c38127a70e9",
+          "sequenceId": "6041a38739334c44a630c0f1d6d81e76",
+          "phase": "completed",
+          "nodeId": "fork",
+          "status": "Program completed"
+        },
+        {
+          "id": "fbd8d756da6f4fdf967d19bd8e253169",
+          "sequenceId": "cf0602ac50a5472cbc7a932cefa3e3e9",
+          "phase": "cancelled",
+          "nodeId": "interval",
+          "status": "Behaviour stopped"
+        }
+      ]
     },
     "motions": null,
     "capabilities": [
@@ -4738,12 +5663,18 @@
       "physicsRun.v1",
       "avatarMotion.v1",
       "avatarWalk.v1",
+      "catalogGuides.v1",
       "motions.v1",
       "avatarActivities.v1",
       "catalog.v1",
       "catalogVocabulary.v1",
       "roomOwnership.v1",
+      "worldIdentity.v1",
+      "terrainTraversal.v1",
       "behaviourPrograms.v3",
+      "worldAudio.v1",
+      "audioClips.v1",
+      "audioStreams.v1",
       "eventPrograms.v1",
       "eventFields.v1",
       "eventSubscriptions.v1",
@@ -4760,17 +5691,65 @@
       "executionReceipts.v1",
       "actionResults.v1",
       "recipeCreation.v1",
+      "creationComponents.v1",
+      "creationTemplates.v1",
+      "layoutEdits.v1",
+      "structures.v1",
+      "batchCreation.v1",
+      "structuredResults.v1",
+      "structuredInputs.v1",
+      "indexedInputs.v1",
+      "constructionSelection.v1",
+      "groupTransforms.v1",
+      "constructionManipulation.v1",
+      "constructionSnapping.v1",
+      "roomStagingMaintenance.v1",
       "objectEdits.v1",
       "objectCopy.v1",
       "drawingEdits.v1",
+      "drawingSurfaces.v1",
+      "passthroughWindows.v1",
+      "objectLights.v1",
+      "modelGeometry.v1",
+      "curvedDrawingSurfaces.v1",
+      "drawingTips.v1",
+      "drawingErasers.v1",
+      "containers.v1",
+      "rectangularContainers.v1",
+      "terrainReservoirs.v1",
+      "heightFields.v1",
+      "heightFieldTransfer.v1",
+      "materialStores.v1",
+      "materialTransfer.v1",
+      "materialPacking.v1",
+      "physicalMaterialPacking.v1",
+      "physicalSculpting.v1",
+      "physicalMaterialTools.v1",
+      "containerPouring.v1",
+      "liquidMedium.v1",
+      "liquidContacts.v1",
+      "waterTraversal.v1",
+      "containerScooping.v1",
+      "physicalConnections.v1",
+      "physicalSliders.v1",
+      "snapPoints.v1",
+      "connectedBlueprints.v2",
+      "creationPrototypes.v1",
+      "constructionCapture.v1",
+      "constructionResources.v1",
       "recipeEdits.v1",
       "latheGeometry.v1",
+      "extrusionGeometry.v1",
+      "sweepGeometry.v1",
+      "recipePatterns.v1",
+      "roomViewCapture.v1",
       "collisionShapes.v1",
       "recipePartPlayback.v1",
       "objectAttachments.v1",
       "anchorZones.v1",
       "channelWaits.v1",
       "objectLaunch.v1",
+      "physicalCatching.v1",
       "calendarSchedules.v1",
       "animationAuthoring.v1",
       "animationRecording.v1",
@@ -4785,11 +5764,36 @@
       "actionRecovery.v1",
       "temporaryRoom.v1",
       "spatialSettings.v1",
+      "groundedTravel.v1",
+      "groundedFollowing.v1",
+      "avatarAttention.v1",
+      "objectWalkingAnimation.v1",
       "physicsSimulation.v1",
+      "physicsEnvironment.v1",
+      "environmentProfiles.v1",
+      "appearances.v1",
+      "appearanceImages.v1",
+      "chatImages.v1",
+      "chatAudio.v1",
+      "visibilityLayers.v1",
+      "worldLighting.v1",
+      "worldRegions.v1",
+      "objectSearch.v1",
+      "objectOverview.v1",
+      "worldTime.v1",
+      "worldWeather.v1",
       "roomEnvironment.v1",
       "surfacePlacement.v1",
+      "scanPlacement.v1",
+      "roomScanLayout.v1",
+      "scanDrawingLayers.v1",
+      "physicalTools.v1",
+      "toolRecovery.v1",
+      "worldViewpoint.v1",
       "controllerConfiguration.v1",
       "controllerModes.v1",
+      "worldPresentation.v1",
+      "layerPresentation.v1",
       "runtimeDiagnostics.v1",
       "workspaceMaintenance.v1",
       "workspaceArchiveActivation.v1",
@@ -4803,14 +5807,14 @@
       "workspaceDisposal.v1"
     ],
     "physics": {
-      "ready": false,
+      "ready": true,
       "running": false,
-      "status": "Load or scan your room to use gravity"
+      "status": "Physics paused — Start resumes without old throw speeds"
     },
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "7343205c807b42389341a049e1d24252",
+      "id": "3c925d6048bb49d08540919782217e28",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4931,174 +5935,37 @@
         }
       ]
     },
-    "objects": [
-      {
-        "id": "321cb5b1e7e34c8299b0a50882e25053",
-        "name": "Cylinder",
-        "kind": "Cylinder",
-        "objectRevision": 5,
-        "position": {
-          "x": 0.8600000143051147,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.16862745583057404,
-          "g": 0.5529412031173706,
-          "b": 0.5333333611488342,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "717b64ee692b4d6994c1aad86a5c1c53",
-        "name": "Native profile cup",
-        "kind": "Assembly",
-        "objectRevision": 12,
-        "position": {
-          "x": 0.20000000298023224,
-          "y": 1,
-          "z": 0.5
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "7d50667846c347b2b49e009f06098d5a",
-        "name": "Block",
-        "kind": "Block",
-        "objectRevision": 3,
-        "position": {
-          "x": 0.5199999809265137,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.45098039507865906,
-          "g": 0.32549020648002625,
-          "b": 0.30588236451148987,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "book",
-        "name": "Book",
-        "kind": "Book",
-        "objectRevision": 1,
-        "position": {
-          "x": 0,
-          "y": 1.159999966621399,
-          "z": 0.6499999761581421
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "c3ff768944f448bfa57e1ed0a3a1ba4f",
-        "name": "Ball",
-        "kind": "Ball",
-        "objectRevision": 4,
-        "position": {
-          "x": 0.6899999976158142,
-          "y": 1.4500000476837158,
-          "z": 0.800000011920929
-        },
-        "scale": 1,
-        "color": {
-          "r": 0.7647058963775635,
-          "g": 0.6000000238418579,
-          "b": 0.3137255012989044,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": null
-      },
-      {
-        "id": "maestro",
-        "name": "Maestro",
-        "kind": "Maestro",
-        "objectRevision": 2,
-        "position": {
-          "x": -0.7799999713897705,
-          "y": 0,
-          "z": 1.399999976158142
-        },
-        "scale": 1,
-        "color": {
-          "r": 1,
-          "g": 1,
-          "b": 1,
-          "a": 1
-        },
-        "animated": false,
-        "held": false,
-        "simulating": false,
-        "physics": {
-          "mode": "fixed",
-          "shape": "automatic",
-          "mass": 0.5
-        },
-        "movement": {
-          "distance": 1.3,
-          "speed": 0.65
-        }
-      }
-    ],
+    "objectOverview": {
+      "version": 1,
+      "limit": 4,
+      "scope": "context",
+      "exhaustive": false
+    },
+    "objects": [],
     "created": [],
+    "chatImage": null,
+    "chatAudio": null,
+    "capture": {
+      "captureId": "8492f838d528476dab034830eca96c62",
+      "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+      "mimeType": "image/jpeg",
+      "width": 512,
+      "height": 384,
+      "capturedAt": "2026-10-18T00:25:23.2917888Z",
+      "sceneRevision": 37,
+      "verticalFov": 60,
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      }
+    },
     "catalog": {
       "operation": "inspect",
       "capability": "object.collision.shape",
@@ -5157,7 +6024,7 @@
             "revision": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 1000000
+              "maximum": 2147483647
             },
             "index": {
               "type": "integer",
@@ -5185,13 +6052,13 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "717b64ee692b4d6994c1aad86a5c1c53",
-        "revision": 12,
+        "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+        "revision": 45,
         "index": 1
       },
       "available": true,
       "value": {
-        "revision": 12,
+        "revision": 45,
         "index": 1,
         "total": 2,
         "shape": {
@@ -5220,17 +6087,17 @@
     },
     "execution": {
       "selected": {
-        "id": "9cb5267c0a6148e29776c040c19dff34",
+        "id": "7d97c708fc3d428586ef599af0079c37",
         "capability": "object.collision.edit",
         "version": 1,
         "resources": [
-          "717b64ee692b4d6994c1aad86a5c1c53"
+          "58b3ae591b3e4a1e9aa5d01bcf04c43d"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "target": "717b64ee692b4d6994c1aad86a5c1c53",
-          "revision": 12,
+          "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+          "revision": 45,
           "shapes": 2,
           "pieces": 13,
           "customActive": true,
@@ -5240,8 +6107,8 @@
           "id": "object.collision.edit",
           "version": 1,
           "arguments": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 11,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 44,
             "collision": {
               "version": 1,
               "shapes": [
@@ -5297,39 +6164,154 @@
       "running": [],
       "outcomes": [
         {
-          "id": "17f8d53118534b29b7c020601c598b1d",
+          "id": "6a196a739ac541888ef0cdba2c1de9a8",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "c6833235daaa4a6d9397e5d553cf91f4"
+            "objectId": "63ee2b4cc2f541e69a1c97c1cd2fd874"
           }
         },
         {
-          "id": "0fab57dcab1d44249dfc74e2ec58646e",
-          "capability": "object.create",
-          "version": 1,
-          "resources": [],
-          "phase": "completed",
-          "status": "Action completed",
-          "output": {
-            "objectId": "717b64ee692b4d6994c1aad86a5c1c53"
-          }
-        },
-        {
-          "id": "d2f38a59cd8145efaf34e398dc426533",
-          "capability": "object.recipe.edit",
-          "version": 1,
+          "id": "1ca31c3556ed40ea901475f8ef546d4b",
+          "capability": "object.physics.launch",
+          "version": 2,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "3b8d6e4dbbbd4acd9ee562b9de27a2b9"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 10,
+            "target": "3b8d6e4dbbbd4acd9ee562b9de27a2b9",
+            "origin": {
+              "x": 0.2,
+              "y": 0.0325,
+              "z": 2.5
+            },
+            "destination": {
+              "x": 1.2,
+              "y": 0.7,
+              "z": 2.5
+            },
+            "velocity": {
+              "x": 1.6232518,
+              "y": 4.228999,
+              "z": 0
+            },
+            "seconds": 0.619999766,
+            "speed": 4.52983236,
+            "radius": 0.0325,
+            "phase": "launched"
+          }
+        },
+        {
+          "id": "1248b06d615b40d5a14377d8ffcb9c40",
+          "capability": "object.model.geometry.set",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 36
+          }
+        },
+        {
+          "id": "f9a85ea9b8ef47fe850388b12f0edb54",
+          "capability": "object.layout.apply",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "count": 1,
+            "temporary": false
+          }
+        },
+        {
+          "id": "21d30b3267f84edc84fe4cd4b9b78226",
+          "capability": "object.walk.select",
+          "version": 1,
+          "resources": [
+            "8fb38eeeb3654fde9aa60ed5c226d372"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "8fb38eeeb3654fde9aa60ed5c226d372",
+            "revision": 38,
+            "temporary": false
+          }
+        },
+        {
+          "id": "2dc1508834a94383b8abbf7f58ffaf05",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "18e7b77981bd4d5288428794f81e581d"
+          }
+        },
+        {
+          "id": "f2b09d0494834c5f930d38c489b3f02c",
+          "capability": "room.view.capture",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "captureId": "8492f838d528476dab034830eca96c62",
+            "sha256": "08f52c8cc6faa2db36228d8ce8f1195a701c4395d5deecf220cb8b50aac37d49",
+            "mimeType": "image/jpeg",
+            "width": 512,
+            "height": 384,
+            "capturedAt": "2026-10-18T00:25:23.2917888Z",
+            "sceneRevision": 37,
+            "verticalFov": 60,
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            }
+          }
+        },
+        {
+          "id": "fb0ff7b290dc44468f90ea6e6dcf9364",
+          "capability": "object.create",
+          "version": 1,
+          "resources": [],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "objectId": "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          }
+        },
+        {
+          "id": "d3ae4f001d0a4dac8681b4b8eb2211a1",
+          "capability": "object.recipe.edit",
+          "version": 1,
+          "resources": [
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
+          ],
+          "phase": "completed",
+          "status": "Action completed",
+          "output": {
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 43,
             "parts": 1,
             "tracks": 0,
             "duration": 2,
@@ -5339,17 +6321,17 @@
           }
         },
         {
-          "id": "9cb5267c0a6148e29776c040c19dff34",
+          "id": "7d97c708fc3d428586ef599af0079c37",
           "capability": "object.collision.edit",
           "version": 1,
           "resources": [
-            "717b64ee692b4d6994c1aad86a5c1c53"
+            "58b3ae591b3e4a1e9aa5d01bcf04c43d"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "717b64ee692b4d6994c1aad86a5c1c53",
-            "revision": 12,
+            "target": "58b3ae591b3e4a1e9aa5d01bcf04c43d",
+            "revision": 45,
             "shapes": 2,
             "pieces": 13,
             "customActive": true,
@@ -5357,14 +6339,14 @@
           }
         }
       ],
-      "nextRunId": "d4d3e920f7254239abdb754a84c47742",
+      "nextRunId": "fe1abb988cc9412c906ee1e215789bc6",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "e670c37a8c264c5d86b9605da5574ba4",
+        "nextRunId": "ef279afca69c4fe6b450f226daf2990f",
         "storageError": null,
         "recovery": null
       }

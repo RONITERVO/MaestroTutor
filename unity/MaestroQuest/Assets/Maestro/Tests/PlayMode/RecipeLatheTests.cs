@@ -20,7 +20,7 @@ namespace Maestro.Quest.Tests
             var recipe=LatheCup();Assert.That(editor.CreateRecipe("Editable cup",new Vector3(.2f,1,.4f),1,recipe,out string target,out string error),Is.True,error);
             var item=editor.Find(target);var geometry=item.GetComponent<RecipeObject>();var original=geometry.Part("Body").GetComponentInChildren<MeshFilter>().sharedMesh;
             var call=RecipePatch(target);recipe.parts[0].profile[1].x=.48f;recipe.parts[0].segments=32;call["arguments"]["parts"]=new JArray(JObject.Parse(JsonUtility.ToJson(recipe.parts[0])));
-            var receipt=RecipeRun(new RoomAgentExecutor(editor),call);yield return null;
+            var executor=new RoomAgentExecutor(editor);yield return ContainerAction(executor,call);var receipt=executor.Executions.Observe();yield return null;
             Assert.That(original==null,Is.True,"Replaced procedural meshes must be released");Assert.That(editor.Find(target),Is.SameAs(item));
             var replacement=geometry.Part("Body").GetComponentInChildren<MeshFilter>().sharedMesh;Assert.That(replacement.vertexCount,Is.GreaterThan(0));
             var args=new JObject {["target"]=target,["revision"]=editor.ObjectRevision(target),["part"]="Body",["offset"]=0};

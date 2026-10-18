@@ -19,7 +19,7 @@ namespace Maestro.Quest.Tests
         JObject CollisionCall(string target,CollisionRecipe recipe=null)=>new() {["id"]="object.collision.edit",["version"]=1,["arguments"]=new JObject {["target"]=target,["revision"]=editor.ObjectRevision(target),["collision"]=JObject.Parse(JsonUtility.ToJson(recipe??JsonUtility.FromJson<CollisionRecipe>(JArray.Parse(File.ReadAllText(Path.Combine(Application.dataPath,"Maestro/Tests/Fixtures/collision-contract.json")))[0]["collision"].ToString())))}};
         string CollisionCup(){Assert.That(editor.CreateRecipe("Physical cup",new Vector3(2,.111f,0),1,LatheCup(),out var target,out var error),Is.True,error);return target;}
         [UnityTest] public IEnumerator SharedCollisionEditsPersistReadBackUndoAndReleaseOwnedMeshes(){
-            string target=CollisionCup();var item=editor.Find(target);var executor=new RoomAgentExecutor(editor);var result=RecipeRun(executor,CollisionCall(target));yield return null;
+            string target=CollisionCup();var item=editor.Find(target);var executor=new RoomAgentExecutor(editor);yield return ContainerAction(executor,CollisionCall(target));var result=executor.Executions.Observe();yield return null;
             Assert.That((string)result["selected"]["phase"],Is.EqualTo("completed"));Assert.That(item.Grab.colliders.Count,Is.EqualTo(13));Assert.That(item.Grab.colliders.All(c=>c.enabled&&c.attachedRigidbody==item.GetComponent<Rigidbody>()),Is.True);
             var meshes=item.Grab.colliders.OfType<MeshCollider>().Select(c=>c.sharedMesh).ToArray();
             Assert.That(new RoomStorage(directory).Load(out _).objects.Single(o=>o.id==target).collision.Pieces,Is.EqualTo(13));
@@ -27,10 +27,10 @@ namespace Maestro.Quest.Tests
             var copy=editor.Read(target).Copy();copy.collision.shapes[0].id="changed";Assert.That(editor.Read(target).collision.shapes[0].id,Is.EqualTo("Floor"));
             editor.Undo();yield return null;Assert.That(item.Grab.colliders.Count,Is.EqualTo(1));Assert.That(item.Grab.colliders[0],Is.TypeOf<BoxCollider>());Assert.That(meshes.All(m=>m==null),Is.True);Assert.That(BehaviourCatalog.TryRead("object.collision.shape",1,args,new BehaviourCatalog.FactContext(editor:editor),out _),Is.False);
             editor.Redo();yield return null;Assert.That(item.Grab.colliders.Count,Is.EqualTo(13));
-            RecipeRun(executor,CollisionCall(target,new CollisionRecipe()));yield return null;Assert.That(item.Grab.colliders.Count,Is.EqualTo(1));Assert.That(editor.Read(target).collision,Is.Null);
+            yield return ContainerAction(executor,CollisionCall(target,new CollisionRecipe()));yield return null;Assert.That(item.Grab.colliders.Count,Is.EqualTo(1));Assert.That(editor.Read(target).collision,Is.Null);
         }
         [UnityTest] public IEnumerator CompoundCupCatchesBallInsideWallsAndCanFallAsOneRigidBody(){
-            RoomPhysicsLayers.Configure();string target=CollisionCup();RecipeRun(new RoomAgentExecutor(editor),CollisionCall(target));var cup=editor.Find(target);
+            RoomPhysicsLayers.Configure();string target=CollisionCup();yield return ContainerAction(new RoomAgentExecutor(editor),CollisionCall(target));var cup=editor.Find(target);
             var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(root.transform,false);floor.transform.position=new Vector3(2,-.1f,0);floor.transform.localScale=new Vector3(4,.2f,4);floor.layer=RoomPhysicsLayers.Scanned;
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Cup ball",new Vector3(2,.6f,0),.3f,Color.white,out var ballId,out var error),Is.True,error);
             Assert.That(editor.ConfigurePhysics(ballId,editor.ObjectRevision(ballId),new ObjectPhysicsSettings {mode="solid",shape="automatic",mass=.1f},out error),Is.True,error);var ball=editor.Find(ballId);var rb=ball.GetComponent<Rigidbody>();
@@ -46,7 +46,7 @@ namespace Maestro.Quest.Tests
             Assert.That(peak,Is.GreaterThan(.2f));Assert.That(cup.transform.position.y,Is.LessThan(.15f));
         }
         [UnityTest] public IEnumerator CompoundHandlesGrabAndStaleHeldOrFailedEditsDoNotChangeCollision(){
-            string target=CollisionCup();var executor=new RoomAgentExecutor(editor);var stale=CollisionCall(target);RecipeRun(executor,stale);var item=editor.Find(target);
+            string target=CollisionCup();var executor=new RoomAgentExecutor(editor);var stale=CollisionCall(target);yield return ContainerAction(executor,stale);var item=editor.Find(target);
             Assert.That(executor.Execute(ObjectEditRequest(stale),out _,out _),Is.False);
             var hand=Hand(1,item.transform.position);manager.SelectEnter((IXRSelectInteractor)hand,item.Grab);Assert.That(item.Grab.isSelected,Is.True);
             Assert.That(executor.Execute(ObjectEditRequest(CollisionCall(target,new CollisionRecipe())),out _,out _),Is.False);Assert.That(item.Grab.colliders.Count,Is.EqualTo(13));
@@ -54,7 +54,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.ConfigurePhysics(target,editor.ObjectRevision(target),new ObjectPhysicsSettings {mode="fixed",shape="sphere",mass=.5f},out var error),Is.True,error);Assert.That(item.Grab.colliders.Single(),Is.TypeOf<SphereCollider>());Assert.That(editor.Read(target).collision.Pieces,Is.EqualTo(13));
             Assert.That(editor.ConfigurePhysics(target,editor.ObjectRevision(target),new ObjectPhysicsSettings {mode="fixed",shape="automatic",mass=.5f},out error),Is.True,error);Assert.That(item.Grab.colliders.Count,Is.EqualTo(13));yield return null;
             string saved=JsonUtility.ToJson(editor.Read(target));var meshes=item.Grab.colliders.ToArray();string obstacle=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(obstacle);
-            try{Assert.That(executor.Execute(ObjectEditRequest(CollisionCall(target,new CollisionRecipe())),out _,out _),Is.False);Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(saved));Assert.That(item.Grab.colliders,Is.EqualTo(meshes));}finally{Directory.Delete(obstacle);}
+            try{Assert.That(executor.Execute(ObjectEditRequest(CollisionCall(target,new CollisionRecipe())),out _,out _),Is.True);yield return SpatialSettingsCompletion.Wait(executor.Executions,"failed");Assert.That(JsonUtility.ToJson(editor.Read(target)),Is.EqualTo(saved));Assert.That(item.Grab.colliders,Is.EqualTo(meshes));}finally{Directory.Delete(obstacle);}
         }
     }
 }
