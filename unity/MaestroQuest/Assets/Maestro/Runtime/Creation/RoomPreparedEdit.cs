@@ -49,6 +49,11 @@ namespace Maestro.Quest.Creation
             internal bool VisualOnly=>change.Scope==RoomEditScope.Visual;
             internal bool LiquidContentsOnly=>change.Scope==RoomEditScope.LiquidContents;
             internal bool PreservesPlacement=>change.Scope!=RoomEditScope.Full;
+            internal bool OnlyChangesObjects=>change.BeforeRegions.Length==0&&change.AfterRegions.Length==0&&
+                change.BeforeStructures.Length==0&&change.AfterStructures.Length==0&&change.BeforeAudio.Length==0&&change.AfterAudio.Length==0&&
+                change.BeforeEnvironments.Length==0&&change.AfterEnvironments.Length==0&&change.BeforeAppearances.Length==0&&change.AfterAppearances.Length==0&&
+                change.BeforeVisibility.Length==0&&change.AfterVisibility.Length==0&&change.BeforeLighting==null&&change.AfterLighting==null&&
+                change.BeforeWorldTime==null&&change.AfterWorldTime==null&&change.BeforeWeather==null&&change.AfterWeather==null;
             internal bool HasTemporalCheckpoint=>change.TimeEdit!=WorldTimeEdit.Exact||change.WeatherTransition;
             // Capture once immediately after native acceptance, before observers run.
             // Later clock/placement progress remains dirty for its normal checkpoint.

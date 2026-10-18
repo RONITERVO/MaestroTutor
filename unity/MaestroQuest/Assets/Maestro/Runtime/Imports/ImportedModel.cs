@@ -201,6 +201,7 @@ namespace Maestro.Quest.Imports
         }
         public void Stop()
         {
+            ReleasePreviewOwner();
             if (animationPlayer) animationPlayer.Stop(); if (!instance) return;
             foreach (var pair in instance.InitialTransformStates)
             {
@@ -226,7 +227,7 @@ namespace Maestro.Quest.Imports
         // owner must dispose explicitly when abandoning a prepared replacement.
         public void Dispose()
         {
-            if(destroyed)return;destroyed=true;
+            if(destroyed)return;destroyed=true;ReleasePreviewOwner();
             if(waitingForImporter!=null) {
                 // No importer work can begin after destroyed is set. Cancel the
                 // waiter independently; it must not retain admission behind a

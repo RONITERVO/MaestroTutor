@@ -59,12 +59,16 @@ namespace Maestro.Quest.Tests
             yield return new WaitForSeconds(.12f);Assert.That(RecordingFact()["frames"],Is.EqualTo(frozen["frames"]));Assert.That(workshop.CanStartRecording(session,"maestro",revision,out _),Is.False);Assert.That(editor.BeginTemporaryRoom(out error),Is.False);Assert.That(error,Does.Contain("retained recording"));Assert.That(workshop.HasUnsavedRecording,Is.True);
             yield return RecordingDrained();Directory.Delete(file);yield return RecordAction("finish");Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo((int)frozen["frames"]));Assert.That(workshop.HasUnsavedRecording,Is.False);Assert.That(workshop.RecordingSessionId,Is.Not.EqualTo(session));
         }
-        [UnityTest] public IEnumerator RetainedTakeRefusesChangedObjectsButCanBeDiscardedAfterDeletion()
+        [UnityTest] public IEnumerator RetainedTakeRefusesChangedObjectsAndProtectsDeletionUntilDiscard()
         {
             AuthorRuntime();string id=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block).id;yield return RecordAction("start",id);yield return new WaitForSeconds(.12f);editor.SaveNow();yield return null;
             string file=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(file);Assert.That(authorActions.Execute(RecordingRequest(RecordingCall("finish",id)),out _),Is.True);yield return SpatialSettingsCompletion.Wait(authorActions,"failed");yield return RecordingDrained();Directory.Delete(file);
             Assert.That(editor.MoveObject(id,Vector3.right,out var error),Is.True,error);Assert.That(authorActions.Execute(RecordingRequest(RecordingCall("finish",id)),out _),Is.False);Assert.That(workshop.HasUnsavedRecording,Is.True);
-            Assert.That(editor.DeleteObject(id,out error),Is.True,error);yield return RecordAction("discard",id);Assert.That(workshop.HasUnsavedRecording,Is.False);Assert.That(editor.Find(id),Is.Null);
+            int frames=(int)RecordingFact()["frames"];
+            Assert.That(editor.DeleteObject(id,out error),Is.False);Assert.That(error,Does.Contain("unfinished animation"));
+            Assert.That(editor.Find(id),Is.Not.Null);Assert.That(workshop.HasUnsavedRecording,Is.True);Assert.That((int)RecordingFact()["frames"],Is.EqualTo(frames));
+            yield return RecordAction("discard",id);Assert.That(workshop.HasUnsavedRecording,Is.False);
+            Assert.That(editor.DeleteObject(id,out error),Is.True,error);Assert.That(editor.Find(id),Is.Null);
         }
         [UnityTest] public IEnumerator RecordingInTemporaryRoomRequiresKeepAndPauseFinishesOnlyOnce()
         {

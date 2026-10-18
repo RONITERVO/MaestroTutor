@@ -239,7 +239,7 @@ namespace Maestro.Quest.Creation
             CanChangeObject(id,creationOnly,true,allowScanLayer,out error);
         internal bool CanDeleteObject(string id,out string error) {
             if(!CanChangeObject(id,true,false,true,out error))return false;
-            if(GetComponent<AnimationWorkshop>()?.ControlsTarget(id)==true){error="Stop authoring this object before deleting it";return false;}
+            if(GetComponent<AnimationWorkshop>()?.HasUnfinishedAuthoring(id)==true){error="Finish saving or discard this object's unfinished animation before deleting it";return false;}
             if(NativeEntityDormant(id)&&(NativePhase(id)==NativeEntityPhase.Preparing||NativePhase(id)==NativeEntityPhase.Retiring)){
                 error="Wait for this object's native preparation or retirement to finish before deleting it";return false;
             }
@@ -329,12 +329,28 @@ namespace Maestro.Quest.Creation
         {
             if(ManualCreationPending){SetStatus("Wait for the creation tool edit before Undo or Redo");return;}
             if(!FinishLiquidPour(out var error)){SetStatus(error);return;}using var write=WriteGate.TryWrite(out error);if(write==null){SetStatus(error);return;}
-            if(!journal.HistoryPreservesPlacement(reverse))Editing?.Invoke();if(Busy())return;
             if(!journal.PrepareHistory(reverse,out var edit,out error)){SetStatus(error);return;}
             using(edit) {
-                using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return;}
-                if(!edit.Accept(journal,out error)){SetStatus(error);return;}
-                ReconcileEdit(edit,native,true,history:true);MarkDirty();SetStatus(reverse?"Undone":"Redone");
+                RoomOwnership.Lease owner=null;
+                try{
+                    if(!edit.PreservesPlacement){
+                        if(edit.OnlyChangesObjects){
+                            var claims=edit.ChangedObjects.Select(id=>new Maestro.Quest.Programs.BehaviourCatalog.Claim(id,"wholeTarget")).ToArray();
+                            if(!Ownership.TryAcquire("history:"+Guid.NewGuid().ToString("N"),"Undo / Redo",RoomActorRole.Control,claims,_=>{},
+                                out owner,out error,preservePlacement:true,replaceControl:true)){SetStatus(error);return;}
+                            if(edit.ChangedObjects.Any(id=>GetComponent<AnimationWorkshop>()?.HasUnfinishedAuthoring(id)==true)){
+                                SetStatus("Finish saving or discard the affected object's unfinished animation before Undo or Redo");return;
+                            }
+                        }else Editing?.Invoke();
+                    }
+                    if(Busy())return;
+                    // Takeover may finish authoring and change the history. Never
+                    // substitute a newer undo entry or discard the retained draft.
+                    if(!edit.Current(journal)){SetStatus("The room changed during Undo / Redo; inspect it before retrying");return;}
+                    using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null){SetStatus(error);return;}
+                    if(!edit.Accept(journal,out error)){SetStatus(error);return;}
+                    ReconcileEdit(edit,native,true,history:true);MarkDirty();SetStatus(reverse?"Undone":"Redone");
+                }finally{owner?.Dispose();}
             }
         }
         internal bool DrawingInProgress=>(GetComponent<SpatialDrawing>() is SpatialDrawing drawing&&(drawing.IsDrawing||drawing.HasUnsavedStroke))||SculptingInProgress;

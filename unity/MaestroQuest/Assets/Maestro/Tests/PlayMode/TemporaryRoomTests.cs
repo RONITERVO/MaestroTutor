@@ -172,7 +172,9 @@ namespace Maestro.Quest.Tests
             editor.SendMessage("OnApplicationPause",true);
             yield return FinishLifecycleSave();
             Assert.That(Saved().objects.Single(x=>x.id==id).position,Is.EqualTo(Vector3.up*2));
-            editor.Undo();Assert.That(editor.Find(id),Is.Null,"Previous saved Undo remains available");
+            editor.Undo();Assert.That(editor.Find(id),Is.Not.Null,"Paused controls must not consume the restored history");Assert.That(editor.Status,Does.Contain("paused"));
+            editor.SendMessage("OnApplicationPause",false);
+            editor.Undo();Assert.That(editor.Find(id),Is.Null,"Previous saved Undo remains available after resume");
         }
         [UnityTest] public IEnumerator SavedAndHistoricalMotionReferencesRemainProtectedAcrossTheFork()
         {

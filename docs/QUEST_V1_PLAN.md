@@ -33,6 +33,9 @@ Pause/focus/destruction checkpoints now queue detached saves and expose shared
 persistence status; see [lifecycle checkpoints](#coalesced-lifecycle-checkpoints--2026-10-18).
 Explicit world relocation now shares ordered save completion with authoring; see
 [world-location completion](#shared-world-location-completion--2026-10-18).
+Physical creation buttons now share persisted completion. Target-scoped edits,
+physical object history and owned model previews preserve unrelated activity;
+see [editing continuity](#scoped-physical-editing-and-preview-continuity--2026-10-18).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -14646,3 +14649,66 @@ the guarded continuation are retained separately. The physical tray preview
 and book completion screenshot were visually reviewed on desktop; they do not
 establish headset acceptance. Earlier Editor startup/shutdown stalls and the
 separate native echo quality failures remain open.
+
+## Scoped physical editing and preview continuity — 2026-10-18
+
+Physical Paint and Erase now use the existing shared ownership coordinator to
+replace only their target's control/program ownership. They preserve unrelated
+programs, movement, sounds and imported-model previews. Higher-priority grips
+still refuse the edit without displacing the grip or stopping other activity.
+Taking over authoring may freeze a recording or pose draft; an unfinished target
+animation must be saved or explicitly discarded before editing. Shared object
+deletion also checks retained drafts after their original control lease has ended.
+
+Physical object Undo/Redo now reserves only its affected targets. It validates
+the exact prepared history entry again after takeover; a reentrant authoring
+change causes an explicit refusal, never substitution of a newer history entry.
+Legacy whole-room history and explicit whole-room stop retain their global
+interruption. The existing global held/drawing guard and legacy history
+checkpoint remain; this is not completion unification of every history path.
+
+Saved imported-object clip previews now hold normal human-control ownership.
+Agents keep program priority and cannot select a higher role. Selected Stop,
+Next and Loop controls do not stop other previews or programs. Natural clip
+completion, disable and disposal release the reservation. Maestro motion previews
+retain their existing animation-workshop path, and unaccepted import previews
+remain private.
+
+The four baseline continuity regressions failed against the preceding runtime.
+After scoped tools/previews, two of nine tests still found that Undo stopped
+unrelated programs; the assertions were retained and ordinary object history
+was corrected. Eleven focused native regressions now pass, including actual
+clip playback, native audio-instance continuity, higher-priority grip refusal,
+retained failed recording, target-only history takeover and reentrant-history
+refusal. These are desktop control and runtime tests, not headset-input or
+perceptual audio acceptance. Two existing fixtures were updated after the first
+full run: deletion now requires resolving the retained recording, and a paused
+editor must resume before Undo. Both retain their recovery assertions and add
+refusal checks. A later broad run exposed a timing assumption in the new sound
+fixture: creating an output did not prove that Unity had consumed its first
+buffer. That fixture now waits for actual listener PCM before editing and
+requires more PCM, an advancing cursor, and the same live voice/output afterward.
+The listener probe mutes its output; no microphone or provider is used. All
+thirteen focused cases pass without further runtime changes.
+
+The exact clean EditMode, non-rule PlayMode and first rule partition were retained.
+A guard verifies unchanged runtime and retained inputs, and proves that the only
+test-source difference is inside this one sound-test body before rerunning the
+entire final rule partition. Both failed attempts and the guard evidence are
+retained.
+
+Full verification reconciles 1,495 EditMode and 2,090 PlayMode passes plus three
+explicitly allowed private-asset skips against all 3,588 discovered native cases.
+All 3,208 web tests, app/probe TypeScript and catalog provenance passed. Full
+offline Headless `885899f9e9104618a204c272af4d1fd0` and original-book
+`a799366e8f95444084337096e8237833` completed with clean client/Editor exits,
+sparse discovery and confirmed idle room/behaviour storage. These integrations
+exercise the original book and real native catalog; physical editing input is
+covered by the native tests, not simulated headset input.
+
+The final evidence reconciles 3,346 native inputs, 5,127 source hashes and
+14 unchanged protected user files. It is retained in
+`.quest-evidence/scoped-physical-editing-20261018/`. Editor startup/shutdown
+stalls, headset/provider acceptance and separate native echo quality failures
+remain open. No device, paid provider, signing, deployment or Meta action was
+performed for this increment.

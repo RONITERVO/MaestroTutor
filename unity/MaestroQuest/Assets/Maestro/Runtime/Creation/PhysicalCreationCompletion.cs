@@ -75,7 +75,7 @@ namespace Maestro.Quest.Creation
             // A delayed save must not steal a newer hand/book selection.
             if(selected==previous&&selectionVersion==version&&Read(id)!=null)SelectSavedObject(id);
         }
-        void StartManualCreation(string target,bool stopEditing,StartManualEdit start,Action completed)
+        void StartManualCreation(string target,bool replaceTargetControl,StartManualEdit start,Action completed)
         {
             if(manualCreation!=null){SetStatus("Wait for the pending creation tool edit");return;}
             if(!isActiveAndEnabled||journal==null||Ownership.Suspended){SetStatus("Room actions are not ready");return;}
@@ -84,17 +84,20 @@ namespace Maestro.Quest.Creation
             var request=new ManualCreation {Completed=completed,Deadline=Time.realtimeSinceStartup+30};
             manualCreation=request;
             try {
-                // Preserve the tray's existing explicit authoring interruption.
-                // Shared handlers still own validation, revisions and persistence.
-                if(stopEditing)Editing?.Invoke();
-                if(!ReferenceEquals(manualCreation,request))return;
+                // The physical tool may replace the exact target's controls,
+                // never broadcast an unrelated whole-room authoring stop.
                 var claims=target==null?Array.Empty<BehaviourCatalog.Claim>():new[]{new BehaviourCatalog.Claim(target,"wholeTarget")};
                 if(!Ownership.TryAcquire("creation:"+Guid.NewGuid().ToString("N"),"Creation tools",RoomActorRole.Control,claims,
                     notice=>{if(ReferenceEquals(manualCreation,request))CancelManualCreation(true,notice.Message);},
-                    out request.Lease,out var error,preservePlacement:true)){
+                    out request.Lease,out var error,preservePlacement:true,replaceControl:replaceTargetControl)){
                     EndManualCreation(request);SetStatus(error);return;
                 }
                 if(!ReferenceEquals(manualCreation,request)){EndManualCreation(request);return;}
+                // Taking over a recorder/poser can freeze a new save or retained
+                // draft. Keep its target intact until that session is resolved.
+                if(replaceTargetControl&&GetComponent<AnimationWorkshop>()?.HasUnfinishedAuthoring(target)==true){
+                    EndManualCreation(request);SetStatus("Finish saving or discard this object's unfinished animation before editing it");return;
+                }
                 if(!start(out request.Operation,out error)){EndManualCreation(request);SetStatus(error);return;}
                 if(!ReferenceEquals(manualCreation,request)){EndManualCreation(request);return;}
                 SetStatus("Preparing and saving creation tool edit");

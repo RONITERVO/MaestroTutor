@@ -65,9 +65,10 @@ conflicting disk operation is not otherwise retried automatically.
 
 Target identity, requested values and any copy-source revision stay attached to
 the original request. Physical controls retain control priority while preparing
-and confirming the edit. Paint and Erase preserve their existing explicit
-global authoring interruption, which can stop unrelated behaviours; replacing it
-with target-specific interruption is remaining continuity work. A higher-priority grab of the target, lost focus, disabled editor or
+and confirming the edit. Paint and Erase replace only the exact target’s control
+or program ownership; unrelated programs, movement, sounds and model previews
+continue. A retained animation draft on that target must be saved or explicitly
+discarded before editing. A higher-priority grab of the target, lost focus, disabled editor or
 room retirement stops observation: unaccepted work is cancelled, while accepted
 work still drains through shared storage ownership. Failure never retries a
 creation automatically. Status identifies an accepted uncertain edit for
@@ -76,7 +77,12 @@ inspection.
 A confirmed creation/copy selects its new object only if the user has not changed
 selection in the meantime. Erasing an earlier selection cannot clear a newer
 selection. Undo and Redo wait while this manual edit is pending, then retain the
-same single-edit history. Temporary-room edits change only that live fork and its
+same single-edit history. Physical object history interrupts only its affected
+targets, protects unfinished target animation drafts, and refuses a history entry
+that changes during takeover rather than silently undoing another edit. Legacy
+whole-room history and explicit whole-room stop still interrupt the room. The
+existing held/drawing guard and asynchronous history checkpoint remain separate
+from the queued creation completion path. Temporary-room edits change only that live fork and its
 Undo until Keep. Physical pencil modes and retained drawing/sculpt drafts keep
 their separate session controls.
 
@@ -86,6 +92,17 @@ their own completion audit. Desktop delayed-storage and physical-button tests
 establish ordering and behavior. Native validation, baseline checks, snapshot
 capture and scene reconciliation still include owner-thread work; headset latency
 and comfort need measured acceptance.
+
+## Imported model preview continuity
+
+Physical previews on saved imported objects now reserve the same target channels
+as other controls. A conflicting program cannot overwrite the preview. Painting,
+erasing or explicitly taking over that target releases the preview; edits to
+other objects leave it running. Stop, Next and Loop affect the selected preview.
+Finite completion, disable and disposal release its ownership. Saved Maestro
+motion previews retain their existing animation-workshop ownership; detached
+import previews remain private until accepted. Whole-room stop/lifecycle actions
+still stop all previews and programs.
 
 ## Shared authoring
 

@@ -31455,7 +31455,7 @@
         "authoring.inactive",
         "storage.writable"
       ],
-      "description": "Remove a user-created object by its saved identity, even when its native model is unavailable or dormant. Deletion does not load the target or repair unrelated missing views. Held objects, active animation/authoring and pending native transitions still prevent deletion. Dependent definitions keep their exact references and report the missing target. One Undo edit restores its saved geometry and animation data through normal preparation; unavailable assets remain unavailable. The included book and Maestro cannot be deleted. Receipt replay does not undo deletion; later actions targeting the removed ID fail. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running."
+      "description": "Remove a user-created object by its saved identity, even when its native model is unavailable or dormant. Deletion does not load the target or repair unrelated missing views. Held objects, active authoring, unfinished captured animation drafts and pending native transitions still prevent deletion. Save or explicitly discard an unfinished target animation before deleting it. Dependent definitions keep their exact references and report the missing target. One Undo edit restores its saved geometry and animation data through normal preparation; unavailable assets remain unavailable. The included book and Maestro cannot be deleted. Receipt replay does not undo deletion; later actions targeting the removed ID fail. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running."
     },
     {
       "id": "object.collision.edit",
@@ -47672,7 +47672,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "355913b0a9d9ee43ea64b8f6159457cc768bb27925bf5d9aaded65c9bff8aade"
+      "sha256": "1a916bb0ff75d2666f2a164206f34eaf557d5fa5ac6f318005dfc9aa3b24c1c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightCapability.cs",
@@ -48228,7 +48228,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalCreationCompletion.cs",
-      "sha256": "c40a360ccee2872f964b58a8771c1ce14b5da389890d659653a8945760613e39"
+      "sha256": "07bc7454991d4c82cca8215b2cc5bde53ce750a13b76624e25a27b25d7f2fedf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48456,7 +48456,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "39b2541c2004b9eef9023a10514d9d53e8c259ad8a7f31cc1a9009508d618a52"
+      "sha256": "24afb39df971d61b4b25d075382e0d355cafa33d84dc2b2e5f5f1ea9b0c7d7d3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48684,7 +48684,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "4a18e55556d6c449283bc36df07ce32b6823d0341e33cc7a7ba8d33a33649e95"
+      "sha256": "1fb26b94a5d3fc545b77c142ad6a8d0774f3226188f177bf98c8d32d9bbd9214"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -49036,7 +49036,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",
-      "sha256": "54ce7c01a9dda22a37136a8be6087cefb768a1790ddbd9afb94d8c49f9ce0c6a"
+      "sha256": "dd0e5bba2e84b6dc6f8ffd4b17c57d072ccadfb603ce37f0aefaf69f6629049f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshopPreview.cs",
+      "sha256": "0c7de73c1f5e13af6c94aaffcf66957a38af265fcb21c841c011dc735c8246e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",
@@ -49044,11 +49048,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "0bd7f3035a662b918cb2b1fd5798e122495150a5085b0612dfc455a0ed51d08a"
+      "sha256": "6289fce06e30c8bdd9220cffde36e7016830703ff7c3aa4e203dbd2b1238c4d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
       "sha256": "d933d53bca7e57494f93031a856d987f9b1ed173dd7fd3e55c77fbd07148dc38"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelPreview.cs",
+      "sha256": "237b0a77693f41f69679f6bd16e228d1891e6452a9fe85177a761f4760ebcf90"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedMotionPose.cs",
