@@ -25,7 +25,7 @@ namespace Maestro.Quest.Programs
   sealed class Loaded {public Dictionary<string,Entry> Entries=new(),Included=new();public string Error;public bool Overflow;}
   readonly object gate=new();
   readonly string directory;readonly string[] includedSources;readonly Task<Loaded> loading;
-  Dictionary<string,Entry> entries=new(),included=new();Write write;bool overflow;
+  Dictionary<string,Entry> entries=new(),included=new();Write write;bool overflow,retired;Task retirement;
   public bool Ready {get;private set;}
   public string Error {get;private set;}
   public int Revision {get;private set;}=1;
@@ -112,11 +112,21 @@ namespace Maestro.Quest.Programs
    write.Revision=Revision;write.Pending=false;write.Lease?.Dispose();write.Lease=null;
   }}
   public void Flush(){loading.GetAwaiter().GetResult();if(write?.Pending==true)write.Task.GetAwaiter().GetResult();Poll();}
+  // A closing library no longer needs owner-thread publication, but its file
+  // write and workspace lease must outlive the destroyed scene.
+  internal Task Retire(){lock(gate){
+   if(retirement!=null)return retirement;retired=true;
+   return retirement=Drain(loading,write?.Task,write?.Lease);
+  }}
+  static async Task Drain(Task loading,Task writing,IDisposable lease){
+   try{await Task.WhenAll(loading,writing??Task.CompletedTask).ConfigureAwait(false);}
+   catch(Exception){}finally{lease?.Dispose();}
+  }
   public Entry[] Search(string query){Poll();lock(gate){var terms=query.Trim().Split(' ',StringSplitOptions.RemoveEmptyEntries);return VisibleEntries().Where(e=>terms.All(t=>(e.Name+" "+e.Hash+" "+string.Join(" ",e.Definition?["exports"]?.Values<string>()??Array.Empty<string>())).IndexOf(t,StringComparison.OrdinalIgnoreCase)>=0)).OrderBy(e=>e.Name,StringComparer.Ordinal).ThenBy(e=>e.Hash,StringComparer.Ordinal).ToArray();}}
   public Entry Inspect(string hash){Poll();lock(gate)return entries.TryGetValue(hash,out var entry)?entry:included.TryGetValue(hash,out entry)?entry:null;}
   // Called by the existing off-thread retained-save audit. It never commits owner-thread state.
   public bool Retains(string id,out bool uncertain){var loaded=loading.GetAwaiter().GetResult();lock(gate){var current=(Ready?entries:loaded.Entries).Values.Concat((Ready?included:loaded.Included).Values);uncertain=Pending||(Ready?Error:loaded.Error)!=null||current.Any(e=>e.Error!=null);return current.Any(e=>e.References.Contains(id));}}
-  public bool CanWrite(out string error){Poll();error=workspaceWrites.Frozen?Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason:!Ready?"Module library is loading":Pending?"Wait for the dispatched library write":Revision>=1000000?"Reopen the room before changing the library":null;return error==null;}
+  public bool CanWrite(out string error){Poll();error=retired?"The previous module library is closing.":workspaceWrites.Frozen?Maestro.Quest.Persistence.WorkspaceWriteGate.FrozenReason:!Ready?"Module library is loading":Pending?"Wait for the dispatched library write":Revision>=1000000?"Reopen the room before changing the library":null;return error==null;}
   public bool CanPublish(JObject module,out string error){lock(gate){
    if(!CanWrite(out error))return false;string hash=ProgramModules.Hash(module);
    if(entries.TryGetValue(hash,out var entry)&&entry.Error!=null){error="The existing library copy is damaged; remove it explicitly before publishing again";return false;}

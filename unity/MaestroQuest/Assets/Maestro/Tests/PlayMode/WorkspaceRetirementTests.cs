@@ -22,7 +22,7 @@ namespace Maestro.Quest.Tests
                 BuildShell(path);Open();Assert.That(host.Ready,Is.False);Assert.That(host.Current,Is.Null);Assert.That(builds,Is.Zero);
                 UnityEngine.Object.Destroy(oldRoot);yield return null;yield return null;
                 Assert.That(host.Current,Is.Null);Assert.That(oldHost.Retirement.IsCompleted,Is.False);Assert.That(oldEditor.WriteGate.TryWrite(out _),Is.Null);
-                writer.Dispose();for(int i=0;i<120&&!host.Current;i++)yield return null;
+                writer.Dispose();yield return ReadyHost();
                 Assert.That(oldHost.Retirement.IsCompleted,Is.True);Assert.That(host.Current,Is.Not.Null,host.Status);Assert.That(builds,Is.EqualTo(1));
             }finally{writer.Dispose();if(oldRoot)UnityEngine.Object.Destroy(oldRoot);}
         }
@@ -45,7 +45,8 @@ namespace Maestro.Quest.Tests
             IDisposable writer=null;afterContentBuild=()=>{writer=host.Current.Editor.WriteGate.Write();throw new IOException("Injected initialization failure");};Open();Assert.That(host.Current,Is.Null);Assert.That(host.Retiring,Is.True);afterContentBuild=null;
             try {
                 yield return null;Assert.That(host.TryOpenSelected(out _),Is.False);Assert.That(builds,Is.EqualTo(1));writer.Dispose();
-                for(int i=0;i<120&&host.Retiring;i++)yield return null;
+                float deadline=Time.realtimeSinceStartup+10;while(host.Retiring&&Time.realtimeSinceStartup<deadline)yield return null;
+                Assert.IsFalse(host.Retiring,"Retiring writes did not drain");
                 Assert.That(host.TryOpenSelected(out var error),Is.True,error);Assert.That(host.Current,Is.Not.Null);Assert.That(builds,Is.EqualTo(2));
             }finally{writer?.Dispose();}
         }

@@ -70,7 +70,9 @@ namespace Maestro.Quest.Editor
                 }catch(Exception e){Fail(e);}
             }else if(state==PlayModeStateChange.EnteredEditMode){
                 directory=SessionState.GetString(Key,"");if(string.IsNullOrEmpty(directory))return;
-                int exit=SessionState.GetInt(Key+".exit",1);SessionState.EraseString(Key);SessionState.EraseInt(Key+".exit");EditorApplication.Exit(exit);
+                Debug.Log("MAESTRO_PROBE_ENTERED_EDIT_MODE");
+                int exit=SessionState.GetInt(Key+".exit",1);SessionState.EraseString(Key);SessionState.EraseInt(Key+".exit");
+                Debug.Log("MAESTRO_PROBE_EXIT_REQUESTED "+exit);EditorApplication.Exit(exit);
             }
         }
         static void Tick()
@@ -121,7 +123,7 @@ namespace Maestro.Quest.Editor
         {
             if(finishing)return;finishing=true;SessionState.SetInt(Key+".exit",code);
             try{Publish("terminal.json",new JObject {["version"]=1,["id"]=id,["exitCode"]=code,["error"]=error});}
-            finally{EditorApplication.ExitPlaymode();}
+            finally{Debug.Log("MAESTRO_PROBE_EXIT_PLAYMODE_REQUESTED "+code);EditorApplication.ExitPlaymode();}
         }
     }
 }

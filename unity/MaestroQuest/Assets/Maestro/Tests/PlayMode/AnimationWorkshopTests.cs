@@ -132,7 +132,9 @@ namespace Maestro.Quest.Tests
             workshop.DiscardTake();yield return RecordingDrained();
             if(workshop.IsSavingPose){workshop.DiscardRetainedPose();float end=Time.realtimeSinceStartup+20;while(workshop.IsSavingPose&&Time.realtimeSinceStartup<end)yield return null;}
             workshop.DiscardRetainedPose();yield return RecordingDrained();
+            var closingRules=root.GetComponent<Maestro.Quest.Rules.RuleWorkshop>();
             UnityEngine.Object.Destroy(root); yield return null;
+            yield return TestLifecycleDrain.Complete(editor,closingRules);
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
     }

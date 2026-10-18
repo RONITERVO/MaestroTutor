@@ -29,6 +29,8 @@ interruption semantics; see [physical gesture completion](#physical-sculpt-scoop
 Physical keyframe saves now preserve captured intent through ordered completion,
 with shared retry/discard recovery and continued grip/pose preview; see
 [keyframe completion](#physical-keyframe-save-completion--2026-10-18).
+Pause/focus/destruction checkpoints now queue detached saves and expose shared
+persistence status; see [lifecycle checkpoints](#coalesced-lifecycle-checkpoints--2026-10-18).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -14365,3 +14367,74 @@ Lifecycle Flush and direct compatibility save APIs remain synchronous and need
 separate durability review. Headset latency, the earlier intermittent Meta audio
 SDK crash, provider/device acceptance and Store gates remain open. No device,
 paid provider, Android build, signing, deployment or Meta action ran.
+
+## Coalesced lifecycle checkpoints — 2026-10-18
+
+Pause, focus loss, quit and destruction now dispatch detached accepted room and
+behaviour snapshots without synchronously waiting for disk. Each store has one
+active writer and one replaceable waiting snapshot. A newer accepted edit cannot
+be cleared by completion of an older snapshot. Existing storage recovery and
+accepted-primary identity checks still protect the original files.
+
+Workspace retirement retains ordinary checkpoints and the module library until
+their detached workers finish. A regression using real storage locks reproduced
+a further race: destruction could consume an earlier failure and dispatch a
+retry after retirement captured its initial tasks. Retirement now also awaits
+those final completion tasks after destruction callbacks. Module retirement
+rejects new writes and releases its lease without requiring a destroyed owner
+to poll.
+
+The shared `room.persistence` fact exposes room and behaviour pending, dirty,
+held and error status to the original book, programs and agent. Observation
+cannot save, retry or Keep a temporary fork. An idle ordinary store does not
+certify separate authoring buffers, module publication, imports or program
+memory. Temporary-room lifecycle callbacks only drain an explicitly dispatched
+baseline/Keep; later temporary edits are never silently promoted.
+
+The public verifier now discovers actual Unity leaf cases and checks exact
+coverage across disjoint bounded batches. Every discovered test must finish
+once. Missing, duplicated, unexpected, failed or incomplete results fail the
+gate; the three optional private-asset cases require fully qualified names.
+Coverage-checker tests run in CI without Unity. Each native process retains its
+30-minute execution and 60-second shutdown deadlines.
+
+Verified desktop coverage: **1,495 EditMode and 2,051 PlayMode tests passed**,
+with three explicitly allowed private-asset skips, covering the exact discovered
+inventory of 3,549 cases. **3,203 web tests passed**; app/probe TypeScript,
+catalog, lint and coverage-checker checks passed.
+
+Both complete offline journeys passed with clean client and Editor exits:
+Headless `4405d0c84d234b849dceb32751997bf9` (2,386 observations) and original-book
+`2c8461b12a1f47198539f87ef35dc5c7` (3,700 observations). Both used sparse object discovery
+and reached confirmed idle room/behaviour stores. All eight native checkpoint
+fact fixtures match the web fixtures.
+
+Evidence is assembled from clean process stages, not a claimed uninterrupted
+public-verifier pass. The runtime was identical across those stages. One
+test-only correction replaced exact live-transform equality after a physics
+tick with a one-micrometre bound while retaining exact accepted coordinates;
+the measured rounding was 0.34 micrometres. The affected 703-case batch was
+rerun in full. All 3,326 native input hashes and 5,244 source-file hashes were
+checked, with that single recorded test delta; 14 pre-existing user files
+remain untouched.
+
+Earlier failed attempts remain recorded, including teardown races exposed by
+asynchronous saves and a baseline Book run whose assertions finished but whose
+Editor did not exit. A written result or terminal marker is never a process
+pass. Configuration now requests exit from an Editor delay callback; probes
+record the Play-to-Edit and exit-request phases and stop the owned build helper
+only after native shutdown begins. Intermittent startup/shutdown delays remain
+unresolved. A local filtered diagnostic during an earlier attempt's delayed startup
+showed an OVRPlugin stack candidate, then the batch resumed without restart;
+this is an investigation lead, not a confirmed root cause or SDK fix.
+
+Snapshot copying, physical placement capture and native reconciliation still
+run on Unity's owner thread. Explicit compatibility flush APIs and explicit
+world relocation remain synchronous. PC tests do not establish Quest frame
+time, suspend/resume durability, forced-stop recovery or a completed novice
+provider lesson. Installed/packaged APKs and Alpha are unchanged; device,
+paid-provider, signing, deployment and Meta work remain on hold. The complete
+v1 and Store release remain unfinished.
+
+Contract: [accepted saves and detached owners](QUEST_ACCEPTED_SAVE.md#lifecycle-checkpoints-and-detached-owners).
+Local evidence: `.quest-evidence/lifecycle-checkpoints-20261018/`.

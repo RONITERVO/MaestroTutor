@@ -106,7 +106,7 @@ namespace Maestro.Quest.Tests
         {
             Configure(PropRelease.Return); string id=rules.Selected.SimpleSteps()[0].propId;
             rules.ClearProp(); rules.Undo(); Assert.That(rules.Selected.SimpleSteps()[0].propId,Is.EqualTo(id));
-            rules.SendMessage("OnApplicationPause",true); Assert.That(new RuleStorage(directory).Load(out _).sequences[0].SimpleSteps()[0].propId,Is.EqualTo(id));
+            rules.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(rules.LifecycleCompletion); Assert.That(new RuleStorage(directory).Load(out _).sequences[0].SimpleSteps()[0].propId,Is.EqualTo(id));
             rules.SendMessage("OnApplicationPause",false); world.StartPhysics();
             Assert.That(runtime.Trigger(rules.Selected.id),Is.True,rules.Status); yield return new WaitForSeconds(.2f); var before=ball.transform.position;
             var hand=new GameObject("User prop grip"); hand.SetActive(false); hand.transform.SetParent(root.transform,false); hand.transform.position=before;
@@ -152,6 +152,7 @@ namespace Maestro.Quest.Tests
         [UnityTearDown] public IEnumerator Cleanup()
         {
             UnityEngine.Object.Destroy(root); Time.captureDeltaTime=delta; yield return null; yield return null;
+            yield return TestLifecycleDrain.Complete(editor,rules);
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
     }

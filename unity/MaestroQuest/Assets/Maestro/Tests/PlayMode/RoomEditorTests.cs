@@ -221,7 +221,7 @@ namespace Maestro.Quest.Tests
         [UnityTearDown]
         public IEnumerator TearDown()
         {
-            UnityEngine.Object.Destroy(root); yield return null;
+            yield return TestLifecycleDrain.Destroy(root); yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
 
@@ -265,6 +265,7 @@ namespace Maestro.Quest.Tests
             editor.Undo(); Assert.That(item.GetComponent<Rigidbody>().mass,Is.EqualTo(.5f));
             editor.Redo(); editor.SaveNow();
             editor.SendMessage("OnApplicationPause",true);
+            yield return TestLifecycleDrain.Wait(editor.LifecycleCompletion);
             var loaded = new RoomStorage(directory).Load(out var error); Assert.That(loaded,Is.Not.Null,error);
             var data = loaded.objects.Single(value => value.id == id);
             Assert.That(data.collisionShape,Is.EqualTo(ItemCollider.Sphere)); Assert.That(data.mass,Is.EqualTo(1));

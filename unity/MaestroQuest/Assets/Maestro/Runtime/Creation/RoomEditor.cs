@@ -625,9 +625,10 @@ namespace Maestro.Quest.Creation
             var snapshot = journal.Snapshot(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
-        string SaveSnapshot(RoomDocument snapshot)
+        string SaveSnapshot(RoomDocument snapshot)=>SaveSnapshot(storage,snapshot);
+        static string SaveSnapshot(RoomStorage target,RoomDocument snapshot)
         {
-            try { return storage.Save(snapshot,out var error) ? null : error ?? "Room save was not confirmed; your edits remain unsaved."; }
+            try { return target.Save(snapshot,out var error) ? null : error ?? "Room save was not confirmed; your edits remain unsaved."; }
             catch (Exception) { return "Room save was not confirmed; your edits remain unsaved. Check storage and try again."; }
         }
         void CompleteSave(bool wait=false)
@@ -691,13 +692,7 @@ namespace Maestro.Quest.Creation
             else if(!dirty)ClearSaveError();
             return error==null;
         }
-        void Flush()
-        {
-            // Lifecycle callbacks can finish a dispatched baseline/Keep but must
-            // never persist the later live fork, even when its baseline failed.
-            if(TemporaryRoom) {CompleteTemporarySave(wait:true);return;}
-            if(journal!=null)TryFlush(out _);
-        }
+        void Flush()=>QueueLifecycleSave();
         public void ReportStatus(string value)=>SetStatus(value);
         void SetStatus(string value) { Status = value; Changed?.Invoke(); }
         void RefreshOwnership() {

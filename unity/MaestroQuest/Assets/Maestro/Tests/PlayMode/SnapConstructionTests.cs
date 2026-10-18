@@ -26,7 +26,13 @@ namespace Maestro.Quest.Tests {
             Assert.That(Vector3.Distance(moved.localPosition+moved.localRotation*(Vector3.down*.05f),expected),Is.LessThan(.0001f));
             Assert.That(Vector3.Distance(editor.Find(child).transform.localPosition-moved.localPosition,moved.localRotation*childOffset),Is.LessThan(.0001f));
             Assert.That(editor.Read(child).connections.Single().Aligned(editor.Find(child).transform,moved,out error),Is.True,error);
-            Assert.That(editor.Read(owner).connections,Is.Empty);Assert.That(editor.Read(destination).position,Is.EqualTo(target.localPosition));
+            Assert.That(editor.Read(owner).connections,Is.Empty);
+            // Kinematic physics can round-trip through world space under a rotated parent.
+            yield return new WaitForFixedUpdate();
+            var savedDestination=editor.Read(destination).position;
+            Assert.That(savedDestination,Is.EqualTo(new Vector3(3,3,2)));
+            Assert.That(Vector3.Distance(savedDestination,target.localPosition),Is.LessThan(.000001f),
+                $"saved={savedDestination.ToString("R")} live={target.localPosition.ToString("R")} distance={Vector3.Distance(savedDestination,target.localPosition):R}");
             editor.Undo();Assert.That(editor.Find(owner).transform.localPosition,Is.EqualTo(original));Assert.That(Vector3.Distance(target.localPosition,new Vector3(3,3,2)),Is.LessThan(.00001f));Assert.That(executor.Execute(wire,out error,out _),Is.True,error);Assert.That(editor.Find(owner).transform.localPosition,Is.EqualTo(original));yield return null;
         }
         [UnityTest] public IEnumerator SnapJoinBecomesNativeFixedConstraintAndCaptureKeepsBothPointDefinitions(){

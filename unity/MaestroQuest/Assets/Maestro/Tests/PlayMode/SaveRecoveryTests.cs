@@ -16,7 +16,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 namespace Maestro.Quest.Tests
 {
-    public sealed class SaveRecoveryTests
+    public sealed partial class SaveRecoveryTests
     {
         GameObject root;
         RoomEditor editor;
@@ -65,7 +65,7 @@ namespace Maestro.Quest.Tests
             Assert.That(room.objects.Single(x=>x.id==id).name,Is.EqualTo(name));
             var saved=new RuleStorage(directory).Load(out error);Assert.That(saved.sequences.Length,Is.EqualTo(sequences),error);
         }
-        [Test] public void FailedPauseSavesRetainAcceptedEditsUntilAnotherLifecycleFlush()
+        [UnityTest] public IEnumerator FailedPauseSavesRetainAcceptedEditsUntilAnotherLifecycleFlush()
         {
             var roomBytes=File.ReadAllBytes(RoomPath);var ruleBytes=File.ReadAllBytes(RulesPath);
             Rename("Accepted before pause");rules.NewSequence();Block();
@@ -76,6 +76,7 @@ namespace Maestro.Quest.Tests
             Assert.That(File.ReadAllBytes(RoomPath),Is.EqualTo(roomBytes));Assert.That(File.ReadAllBytes(RulesPath),Is.EqualTo(ruleBytes));
             Unblock(); // No new edit or SaveNow: the failed flush itself must preserve the need to save.
             editor.SendMessage("OnApplicationFocus",false);rules.SendMessage("OnApplicationFocus",false);
+            yield return FinishWorkers();Tick(editor);Tick(rules);
             Assert.That(editor.HasUnsavedChanges,Is.False);Assert.That(rules.HasUnsavedChanges,Is.False);
             AssertSaved("Accepted before pause",2);
             Assert.That(editor.Status,Is.EqualTo("Room saved"));Assert.That(rules.Status,Is.EqualTo("Behaviours saved"));
@@ -134,6 +135,7 @@ namespace Maestro.Quest.Tests
         {
             Rename("Starting accepted edit");Block();Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);
             Rename("Temporary edit");editor.SendMessage("OnApplicationPause",true);
+            yield return FinishTemporaryWorker();
             Assert.That(editor.TemporarySaveError,Is.Not.Null);Unblock();
             Assert.That(editor.TryFlush(out error),Is.False);Assert.That(error,Does.Contain("temporary"));
             editor.SendMessage("OnApplicationFocus",false);AssertSaved("Saved baseline",1);
@@ -153,6 +155,7 @@ namespace Maestro.Quest.Tests
         [UnityTearDown] public IEnumerator TearDown()
         {
             Unblock();if(root)UnityEngine.Object.Destroy(root);yield return null;
+            yield return WaitLifecycle(System.Threading.Tasks.Task.WhenAll(editor.LifecycleCompletion,rules.LifecycleCompletion,rules.Modules.Retire()));
             if(Directory.Exists(directory))Directory.Delete(directory,true);
         }
     }

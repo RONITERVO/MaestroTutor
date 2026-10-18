@@ -42860,6 +42860,44 @@
       ]
     },
     {
+      "id": "room.persistence",
+      "version": 1,
+      "type": {
+        "record": {
+          "room": {
+            "record": {
+              "phase": "text",
+              "pending": "boolean",
+              "dirty": "boolean",
+              "dispatchHeld": "boolean",
+              "error": "text"
+            }
+          },
+          "behaviours": {
+            "record": {
+              "phase": "text",
+              "pending": "boolean",
+              "dirty": "boolean",
+              "dispatchHeld": "boolean",
+              "error": "text"
+            }
+          }
+        }
+      },
+      "label": "Room and behaviour save status",
+      "description": "Passive checkpoint status for journal-accepted room and behaviour edits. saving remains unconfirmed until the owner observes disk completion; dirty also includes edits newer than an in-flight snapshot. idle means these stores have no pending or dirty journal snapshot, not that authoring buffers, program memory, imported assets or modules are saved. unconfirmed retains accepted edits and the save error; original files remain protected by storage recovery. dispatchHeld means a review/recovery operation owns save dispatch. Temporary room forks never save implicitly: temporary means no room checkpoint is pending, not that the fork is durable. Reading this fact never flushes, retries, keeps a fork or waits for disk.",
+      "input": {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": false
+      },
+      "example": {},
+      "features": [
+        "factQueries.v1"
+      ]
+    },
+    {
       "id": "room.storage.preparations",
       "version": 1,
       "type": {
@@ -47725,6 +47763,10 @@
       "sha256": "f0ee8b95058044fadc99ea54bb091d5677ddf3b68b842897629db177e7a9c47d"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomPersistenceFact.cs",
+      "sha256": "22e64ab236a4691a93fc88b0a952313b75eb3bc9fc111412d487d77fd55d926e"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomScanFacts.cs",
       "sha256": "ef909e8b2a4175fd423070cb1c344c26ce2d797ea76e031c13d7c89aae43154e"
     },
@@ -48402,7 +48444,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "2f2d67e8773b6e290a515ee676464f97029853a892968a9bda32296ebf73601a"
+      "sha256": "f10ff291427e8ef5367372785d23683dd9adc71fa09f0322115d1e9895b5bd3b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48459,6 +48501,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayout.cs",
       "sha256": "f6cb468ddc7fa318dd4cbed60a56e1a363ebb3f2d50f0ea71f195df824e51f08"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLifecycleSave.cs",
+      "sha256": "b5ff7d359cc427e8e0e90c69b12795c2b7722018973fe10c08927c7a5f197c61"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLight.cs",
@@ -49421,6 +49467,10 @@
       "sha256": "c7ba989735724e3fb3bffef8434d6ea7eddafb75087f0705a29cf3923380014b"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/LatestCheckpoint.cs",
+      "sha256": "cb349f4ca24ef240c8aaff056bcf49e56037bba9622da6b91b38451e62bb4678"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/PreparedFileStage.cs",
       "sha256": "572dfa2df235cb0a3ff474e258f695b0821362f1db4d7ff2ed7e66fe89772290"
     },
@@ -49454,7 +49504,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceContent.cs",
-      "sha256": "81b7114639afe9c1871ecb52c96201074f1ff8c73c78d41be8c5e1984aab3cda"
+      "sha256": "9f8d086f7195d06343178b5f1499de97901f7bd44e599bb69954c05b80d03015"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceDefaults.cs",
@@ -49562,7 +49612,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c3de0faeab636df6c10fa20d906615f2946669cd4487cd14a03ba952d378d45b"
+      "sha256": "1dd66fe701c6463278360a720fc4dbf8cbb15eb90aac7b0e57e8294a678df3ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
@@ -49574,7 +49624,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CapabilityArguments.cs",
-      "sha256": "d76e39ecdc6f53bb8e5d5c7fce0fc1098e0736b7451cb4d426093afff5c74b1d"
+      "sha256": "cbdbc5237dd19b30f70a7217ae692917d1866b38a8bc767fc64232c956904caa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ConditionSubscription.cs",
@@ -49618,7 +49668,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModuleLibrary.cs",
-      "sha256": "6a909219d09d4b8356865ae2564edb492df0c1a1298e7dfc2ad21b7e5f6f5d1d"
+      "sha256": "78c2f1dd790e8053bbac285063da13f70a6ab32f01b4d1c730f5f8b2ee6a729e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramModules.cs",
@@ -49685,6 +49735,10 @@
       "sha256": "6d06bcb69768768ae624218ded01a512f127f98e2c633e92b3e84de68ef1e1bd"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleLifecycleSave.cs",
+      "sha256": "1d2ce2fbd56829a8e62f98097af589c08d7e63455394954e27013ee4cf7aec64"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleMemory.cs",
       "sha256": "7ca5e3dc7c96e29188f8519ade448bf72893dd079239b17769f0b54fa425ae33"
     },
@@ -49706,7 +49760,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleWorkshop.cs",
-      "sha256": "54d6b8aaa8c53dae6c5b187a1db7baaff5103fb018e3116e444cc97f0bf9ee6e"
+      "sha256": "182b8b4a8a23d2726e62bfcd54ae31845482edc3d21ddae5daacb88d3ca6ace0"
     }
   ]
 }

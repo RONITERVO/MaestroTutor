@@ -3115,9 +3115,10 @@ world.liquidPersistence describes the automatic checkpoint queue, while the shar
 execution receipt exposes a requested action's preparation and completion.
 
 This does not establish a blanket latency guarantee. Legacy synchronous editor
-entry points keep save-before-return semantics. Other authoring/import paths,
-lifecycle flushes, owner-thread snapshot/reconciliation costs and Quest physical
-performance remain separate work.
+entry points keep save-before-return semantics. Lifecycle callbacks now dispatch
+[coalesced checkpoints](QUEST_ACCEPTED_SAVE.md#lifecycle-checkpoints-and-detached-owners)
+without waiting for disk. Other authoring/import paths, owner-thread snapshot and
+reconciliation costs, and Quest physical performance remain separate work.
 
 ## Shared geometry edit completion
 

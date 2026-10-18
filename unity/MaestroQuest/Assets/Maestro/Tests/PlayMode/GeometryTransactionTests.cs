@@ -23,14 +23,14 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator GeometryTransactionUndoRefusalLeavesCurrentSourceAndHistoryAvailable()
         {
-            yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);ContainerRun(ex,GeometryCall(BuildingSettings()));ContainerRun(ex,GeometryCall(new RoomModelGeometry()));
+            yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,GeometryCall(BuildingSettings()));yield return ContainerAction(ex,GeometryCall(new RoomModelGeometry()));
             var model=editor.Find(geometryTarget).GetComponent<CreatedRoomObject>().Model;Assert.IsTrue(model.CollisionMeshes(out var filters,out _));foreach(var f in filters)f.sharedMesh.UploadMeshData(true);
             var before=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;bool redo=editor.CanRedo;editor.Undo();
             Assert.AreEqual(before,JsonUtility.ToJson(editor.Snapshot()),"Unavailable native geometry must not consume Undo");Assert.AreEqual(revision,editor.Revision);Assert.IsTrue(editor.CanUndo);Assert.AreEqual(redo,editor.CanRedo);StringAssert.Contains("readable",editor.Status);yield return null;
         }
         [UnityTest] public IEnumerator GeometryTransactionRedoRefusalLeavesCurrentSourceAndHistoryAvailable()
         {
-            yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);ContainerRun(ex,GeometryCall(BuildingSettings()));editor.Undo();
+            yield return GeometryModel(BuildingModelFixture.Create());var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,GeometryCall(BuildingSettings()));editor.Undo();
             var model=editor.Find(geometryTarget).GetComponent<CreatedRoomObject>().Model;Assert.IsTrue(model.CollisionMeshes(out var filters,out _));foreach(var f in filters)f.sharedMesh.UploadMeshData(true);
             var before=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;editor.Redo();
             Assert.AreEqual(before,JsonUtility.ToJson(editor.Snapshot()),"Unavailable native geometry must not consume Redo");Assert.AreEqual(revision,editor.Revision);Assert.IsTrue(editor.CanRedo);StringAssert.Contains("readable",editor.Status);yield return null;
@@ -40,7 +40,7 @@ namespace Maestro.Quest.Tests
             yield return GeometryModel(BuildingModelFixture.Create());physics.SetSurfaces(true,"Synthetic transaction floor");physics.StartPhysics();Assert.IsTrue(physics.Running);
             var geometry=editor.Read(geometryTarget);geometry.modelGeometry=BuildingSettings();string original=JsonUtility.ToJson(editor.Snapshot());
             Assert.IsFalse(editor.ApplyAgentEdit(editor.Revision,new[]{geometry},Array.Empty<string>(),out var error));StringAssert.Contains("Pause physics",error);Assert.AreEqual(original,JsonUtility.ToJson(editor.Snapshot()));
-            physics.PausePhysics();var ex=new RoomAgentExecutor(editor);ContainerRun(ex,GeometryCall(BuildingSettings()));ContainerRun(ex,GeometryCall(new RoomModelGeometry()));
+            physics.PausePhysics();var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,GeometryCall(BuildingSettings()));yield return ContainerAction(ex,GeometryCall(new RoomModelGeometry()));
             string fitted=JsonUtility.ToJson(editor.Snapshot());physics.StartPhysics();Assert.IsTrue(physics.Running);editor.Undo();StringAssert.Contains("Pause physics",editor.Status);Assert.AreEqual(fitted,JsonUtility.ToJson(editor.Snapshot()));Assert.IsTrue(editor.CanUndo);
             physics.PausePhysics();editor.Undo();string rigid=JsonUtility.ToJson(editor.Snapshot());Assert.IsTrue(editor.Read(geometryTarget).modelGeometry.meshCollision);
             physics.StartPhysics();Assert.IsTrue(physics.Running);editor.Redo();StringAssert.Contains("Pause physics",editor.Status);Assert.AreEqual(rigid,JsonUtility.ToJson(editor.Snapshot()));Assert.IsTrue(editor.CanRedo);

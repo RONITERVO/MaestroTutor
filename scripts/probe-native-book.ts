@@ -1,3 +1,4 @@
+import {validFactValue} from '../shared/behaviourFacts';
 import {nativeBookObjects,readNativeBookObjects} from './native-book-objects';
 import {readObjectReference} from '../shared/objectReference';
 import {chatSoundFixture} from './probe-chat-audio';
@@ -107,6 +108,21 @@ try{
   await page!.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,revision);
   assert.equal(await book.exists(target),false);await book.workshop();
  };
+ const checkpointSamples:unknown[]=[];const checkpointDeadline=Date.now()+20000;
+ do{
+  const value=(await book.fact('room.persistence','Room and behaviour save status')).value;
+  assert.ok(validFactValue('room.persistence',value));checkpointSamples.push(value);
+  const stores=Object.values(value as Record<string,{phase:string;dirty:boolean;pending:boolean;dispatchHeld:boolean;error:string}>);
+  assert.ok(stores.every(store=>!['unconfirmed','unavailable','temporary'].includes(store.phase)),JSON.stringify(value));
+  if(stores.every(store=>store.phase==='idle'&&!store.dirty&&!store.pending&&!store.dispatchHeld&&store.error===''))break;
+  await page.waitForTimeout(100);
+ }while(Date.now()<checkpointDeadline);
+ const checkpointLast=checkpointSamples.at(-1) as Record<string,{phase:string;dirty:boolean;pending:boolean;dispatchHeld:boolean;error:string}>;
+ assert.ok(Object.values(checkpointLast).every(store=>store.phase==='idle'&&!store.dirty&&!store.pending&&!store.dispatchHeld&&store.error===''),'Book did not observe confirmed journal checkpoints');
+ await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();
+ await page.screenshot({path:join(directory,'book-room-persistence.png')});
+ await writeFile(join(directory,'book-room-persistence.json'),JSON.stringify({samples:checkpointSamples,boundary:'Visible original-book catalog controls reading real native checkpoint state; desktop only, no headset or provider claim.'},null,2));
+ await book.workshop();
  const initialObjects=await readNativeBookObjects(page);
  assert.ok(initialObjects.objects.some(o=>o.id==='book')&&initialObjects.objects.some(o=>o.id==='maestro'));
  await writeFile(join(directory,'book-explicit-read-set.json'),JSON.stringify({boundary:'Real visible generated facts and object inspector; separate exact object/physics read set with no hydration or hidden native requests.',initialObjects},null,2));

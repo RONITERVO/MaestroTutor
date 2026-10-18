@@ -42,6 +42,46 @@ Existing stale-content, commit-reconciliation and damaged-selection tests remain
 
 The tests prove scheduling and ordering on the PC runtime. They do not establish
 a Quest frame-time budget. Snapshot copying, small review/operation receipt writes,
-other synchronous edit paths and ordinary shutdown flushes remain separate
-performance work. This change does not make every save asynchronous or promise
+other synchronous edit paths remain separate performance work. This change does
+not make every save asynchronous or promise
 durability after a forced process kill. Physical Quest acceptance remains pending.
+
+## Lifecycle checkpoints and detached owners
+
+Pause, focus loss, quit and destruction dispatch accepted room and behaviour
+snapshots without waiting for disk on the Unity thread. Snapshot copying and
+current placement capture still run on that thread. Each store has one writer
+and one replaceable waiting snapshot: repeated notifications retain the newest
+captured state without an unbounded queue. Writes follow the previously
+dispatched writer; the completion represents the newest queued snapshot.
+Later accepted edits stay dirty until their own save completes.
+
+`room.persistence` exposes both stores through the shared capability catalog.
+`saving` is pending, `unsaved` includes newer journal changes, `unconfirmed`
+retains a failed save and its error, and `idle` means that store has no pending or
+dirty journal snapshot. Completed tasks remain pending until the owner observes
+their result. `dispatchHeld` identifies review/recovery ownership. Reading this
+fact never starts a save, retry or temporary-room Keep.
+
+Temporary forks remain temporary. Lifecycle callbacks only drain an explicitly
+dispatched starting baseline or Keep snapshot; they never capture later fork
+changes. An ordinary save status does not cover unaccepted drawing/animation
+buffers, program memory, imported assets or the module library's separate
+publication receipt. Explicit `TryFlush` and module `Flush` callers keep their
+synchronous completion contract.
+
+Workspace retirement includes ordinary checkpoints even though these carry no
+editing lease. It retains the previous generation until its scene objects and
+detached writers finish, including a final retry dispatched by a destruction
+callback after an earlier failure. A retiring module library rejects new writes and drains
+its dispatched load/write off-thread, releasing the write lease even when there
+is no longer a live owner to poll it. File recovery and accepted-primary checks
+still apply; save dispatch does not certify durability or bypass damaged files.
+
+These are lifecycle best efforts, not a forced-termination guarantee. Unity's
+[quit callback documentation](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/MonoBehaviour.OnApplicationQuit.html)
+warns that mobile termination may omit that callback. Focus and
+[pause notifications](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/MonoBehaviour.OnApplicationPause.html)
+provide earlier checkpoints, but the OS can still terminate unfinished workers.
+Confirmed primary/backup files remain authoritative. Physical Quest frame time,
+suspend/resume and forced-stop recovery still require device acceptance.

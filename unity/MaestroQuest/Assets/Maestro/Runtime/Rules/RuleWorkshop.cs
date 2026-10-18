@@ -267,9 +267,10 @@ namespace Maestro.Quest.Rules
             var snapshot = document.Copy(); dirty = false;
             saveTask = Task.Run(() => SaveSnapshot(snapshot));
         }
-        string SaveSnapshot(RuleDocument snapshot)
+        string SaveSnapshot(RuleDocument snapshot)=>SaveSnapshot(storage,snapshot);
+        static string SaveSnapshot(RuleStorage target,RuleDocument snapshot)
         {
-            try { return storage.Save(snapshot,out var error) ? null : error ?? "Behaviour save was not confirmed; your edits remain unsaved."; }
+            try { return target.Save(snapshot,out var error) ? null : error ?? "Behaviour save was not confirmed; your edits remain unsaved."; }
             catch (Exception) { return "Behaviour save was not confirmed; your edits remain unsaved. Check storage and try again."; }
         }
         void CompleteSave(bool wait=false)
@@ -328,10 +329,10 @@ namespace Maestro.Quest.Rules
             else if(!dirty)ClearSaveError();
             return error==null;
         }
-        void Flush()=>TryFlush(out _);
-        void OnApplicationPause(bool paused) { if (paused) {Flush();Modules?.Flush();} }
+        void Flush()=>QueueLifecycleSave();
+        void OnApplicationPause(bool paused) { if (paused) Flush(); }
         void OnApplicationFocus(bool focused) { if (!focused) Flush(); }
-        void OnApplicationQuit() {Flush();Modules?.Flush();}
-        void OnDestroy() {Flush();Modules?.Flush();}
+        void OnApplicationQuit() {Flush();_=Modules?.Retire();}
+        void OnDestroy() {Flush();_=Modules?.Retire();}
     }
 }

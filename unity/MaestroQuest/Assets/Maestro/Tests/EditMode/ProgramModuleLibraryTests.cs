@@ -61,5 +61,25 @@ namespace Maestro.Quest.Tests
    Assert.Throws<ProgramFault>(()=>ProgramModuleLibrary.Definition(Source,"Counter",new[]{"missing"}));Assert.Throws<ProgramFault>(()=>ProgramModuleLibrary.Definition(Source,"Counter",Array.Empty<string>()));
    Assert.Throws<ProgramFault>(()=>library.Remove("../outside"));Assert.That(Directory.GetFiles(directory,"*",SearchOption.AllDirectories),Is.Empty);
   }
+  [Test] public async Task RetirementDrainsACompletedFileWriteWithoutOwnerPollingAndRejectsNewWrites(){
+   var gate=new Maestro.Quest.Persistence.WorkspaceWriteGate();library=new ProgramModuleLibrary(directory,gate);library.Flush();
+   var write=library.Publish(Definition("Closing module"));
+   var retired=library.Retire();Assert.AreSame(retired,library.Retire());
+   await retired;Assert.IsFalse(library.CanWrite(out var issue));Assert.That(issue,Does.Contain("closing"));
+   using var held=gate.TryFreeze(out issue);Assert.IsNotNull(held,issue);
+   Assert.IsTrue(File.Exists(Path.Combine(directory,"program-modules.v1",write.Hash+".json")));
+   library.Poll();Assert.IsFalse(write.Pending);Assert.IsNull(write.Error);
+  }
+  [TestCase(false)][TestCase(true)] public async Task RetirementKeepsTheWorkspaceLeaseUntilAStillRunningModuleWriteEnds(bool failed){
+   var gate=new Maestro.Quest.Persistence.WorkspaceWriteGate();library=new ProgramModuleLibrary(directory,gate);library.Flush();
+   var completion=new TaskCompletionSource<ProgramModuleLibrary.Result>(TaskCreationOptions.RunContinuationsAsynchronously);
+   var pending=new ProgramModuleLibrary.Write {Task=completion.Task,Lease=gate.Write(),Hash=new string('c',64)};
+   typeof(ProgramModuleLibrary).GetField("write",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).SetValue(library,pending);
+   var retiring=library.Retire();var writers=gate.Retire();Assert.IsFalse(retiring.IsCompleted);Assert.IsFalse(writers.IsCompleted);
+   completion.SetResult(new ProgramModuleLibrary.Result {Removed=true,Error=failed?"Write failed":null});
+   await retiring;await writers;library.Poll();Assert.IsFalse(pending.Pending);
+   Assert.That(pending.Error,Is.EqualTo(failed?"Write failed":null));
+  }
+
  }
 }

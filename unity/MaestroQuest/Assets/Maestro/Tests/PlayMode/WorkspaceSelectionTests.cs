@@ -136,7 +136,7 @@ namespace Maestro.Quest.Tests
         [UnityTearDown] public IEnumerator Cleanup()
         {
             if(imports&&picker.Current!=null){imports.Cancel(picker.Current);yield return Finish(picker.Current,"cancelled");}
-            if(root)UnityEngine.Object.Destroy(root);yield return null;
+            if(root)yield return TestLifecycleDrain.Destroy(root);yield return null;
             if(Directory.Exists(appRoot))Directory.Delete(appRoot,true);
         }
     }

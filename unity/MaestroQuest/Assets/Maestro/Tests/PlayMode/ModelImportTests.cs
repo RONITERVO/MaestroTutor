@@ -22,7 +22,7 @@ namespace Maestro.Quest.Tests
         string directory;
         float previousCaptureDelta;
         [UnitySetUp] public IEnumerator Setup() { previousCaptureDelta = Time.captureDeltaTime; Time.captureDeltaTime = 1f/72; root = new GameObject("Imported model test"); directory = Path.Combine(Path.GetTempPath(), "MaestroImportTests-" + Guid.NewGuid().ToString("N")); yield return null; }
-        [UnityTearDown] public IEnumerator Cleanup() { UnityEngine.Object.Destroy(root); Time.captureDeltaTime = previousCaptureDelta; yield return null; yield return null; if (Directory.Exists(directory)) Directory.Delete(directory, true); }
+        [UnityTearDown] public IEnumerator Cleanup() { yield return TestLifecycleDrain.Destroy(root); Time.captureDeltaTime = previousCaptureDelta; yield return null; yield return null; if (Directory.Exists(directory)) Directory.Delete(directory, true); }
         [UnityTest] public IEnumerator LoadsActualGeometryStylesItAndPlaysOnlyWhenRequested()
         {
             var model = root.AddComponent<ImportedModel>(); var task = model.LoadAsync(ModelLibrary.Inspect("triangle.glb", ModelFixture.Create()));

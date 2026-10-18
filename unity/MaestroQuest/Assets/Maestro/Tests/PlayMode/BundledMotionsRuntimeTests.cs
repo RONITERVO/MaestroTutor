@@ -35,7 +35,7 @@ namespace Maestro.Quest.Tests
             }
             avatar.ReducedMotion=true;yield return null;Assert.That(avatar.ActivityMotionId,Is.Null);avatar.ReducedMotion=false;
             Assert.That(editor.ActivityProfiles.Remove(included.Hash,TutorMotionRole.Speaking,null,out var error),Is.True,error);yield return null;Assert.That(avatar.ActivityMotionId,Is.Null);
-            editor.SaveNow();UnityEngine.Object.Destroy(root);yield return null;Open(included,pack);yield return Loaded();
+            editor.SaveNow();yield return TestLifecycleDrain.Destroy(root);Open(included,pack);yield return Loaded();
             Assert.That(editor.ActivityProfiles.Find(included.Hash).roles.Any(x=>x.role==TutorMotionRole.Speaking),Is.False);avatar.ObserveTutorState(new BookSnapshot {version=1,activity="speaking"});yield return new WaitForSeconds(.3f);Assert.That(avatar.ActivityMotionId,Is.Null);
         }
         [UnityTest]public IEnumerator ExistingRoomWithoutProfilesDoesNotAcquireNewDefaults()

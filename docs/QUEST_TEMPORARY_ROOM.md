@@ -224,8 +224,10 @@ requirements on both a variant container and its chosen branch.
 Room Undo continues to affect layout only. Behaviour definitions, modules, chat,
 imports and preferences keep their existing stores; temporary memory does not
 make them transactional. No running program, animation, velocity or external
-action is replayed. Lifecycle flush finishes only an accepted paired save; it
-never saves later unkept memory. Workspace retirement waits for accepted writes.
+action is replayed. Lifecycle callbacks preserve only an already accepted paired
+save and return without waiting for disk; they never save later unkept memory.
+Workspace retirement waits for accepted writes. See the shared
+[lifecycle checkpoint contract](QUEST_ACCEPTED_SAVE.md#lifecycle-checkpoints-and-detached-owners).
 
 This remains desktop-verified development work. Quest power-loss behaviour, storage
 latency, user comfort and lifecycle acceptance still need device testing. No new

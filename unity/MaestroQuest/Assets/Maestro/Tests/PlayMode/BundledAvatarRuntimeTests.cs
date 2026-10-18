@@ -37,7 +37,7 @@ namespace Maestro.Quest.Tests
         {
             var included=BundledAvatarFixture.Write(Path.Combine(directory,"package1"),ModelFixture.Mixamo());Open(included);yield return Loaded();
             Assert.That(avatar.ModelHash,Is.EqualTo(included.Hash),avatar.ModelStatus);Assert.That(avatar.CustomModel.IsHumanoid,Is.True);Assert.That(avatar.IsImportedClipPlaying,Is.False);Assert.That(avatar.CustomModel.IsPlaying,Is.False);Assert.That(avatar.PoseRig.Capture(),Has.Length.EqualTo(17));Assert.That((string)Fact("avatar.included")["modelHash"],Is.EqualTo(included.Hash));Assert.That((string)Fact("avatar.model")["phase"],Is.EqualTo("ready"));
-            editor.SaveNow();UnityEngine.Object.Destroy(root);yield return null;
+            editor.SaveNow();yield return TestLifecycleDrain.Destroy(root);
             var changed=BundledAvatarFixture.Write(Path.Combine(directory,"package2"),ModelFixture.Mixamo(j=>j["animations"][0]["name"]="A later default"));File.Delete(Path.Combine(directory,"package1",BundledAvatar.RelativePath));Open(changed);yield return Loaded();
             Assert.That(avatar.ModelHash,Is.EqualTo(included.Hash));Assert.That(editor.Read("maestro").modelHash,Is.EqualTo(included.Hash));Assert.That((string)Fact("avatar.included")["modelHash"],Is.EqualTo(changed.Hash));
         }
@@ -72,7 +72,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown]public IEnumerator TearDown(){
             var modelLoad=avatar?avatar.ModelLoad:null;var includedCopy=editor?editor.Motions?.IncludedInitialization:null;
-            UnityEngine.Object.Destroy(root);yield return null;
+            yield return TestLifecycleDrain.Destroy(root);yield return null;
             // Destroy requests disposal; an in-flight atomic copy still owns its
             // file until the background task exits. Never delete its workspace early.
             float until=Time.realtimeSinceStartup+20;

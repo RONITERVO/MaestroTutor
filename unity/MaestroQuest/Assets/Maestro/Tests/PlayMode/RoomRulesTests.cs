@@ -589,6 +589,7 @@ namespace Maestro.Quest.Tests
             string output=Environment.GetEnvironmentVariable("MAESTRO_DATA_EVIDENCE");if(!string.IsNullOrEmpty(output)){Directory.CreateDirectory(output);File.WriteAllText(Path.Combine(output,"collections.json"),new JObject {["program"]=JObject.Parse(source),["rules"]=JObject.Parse(JsonUtility.ToJson(workshop.Observe(true))),["objects"]=JArray.FromObject(items.Select(v=>JObject.Parse(JsonUtility.ToJson(editor.Read((string)v["id"])))))}.ToString());}
             Assert.That(runtime.Scheduler.StopSequence(ids.Single()),Is.True);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count+2),"Stopping never erases completed creations");
             workshop.SendMessage("OnApplicationPause",true);
+            yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);
             Assert.That(new RuleStorage(directory).Load(out error).sequences.Single(v=>v.id==ids.Single()).program,Is.EqualTo(source));
         }
         [UnityTest] public IEnumerator CreationResultChainsIntoRealPhysicsWithoutInterruptingAnotherObject()
@@ -699,7 +700,7 @@ namespace Maestro.Quest.Tests
             for(int i=0;i<120&&(string)executor.Executions.Observe()["selected"]?["phase"]!="completed";i++)yield return null;
             Assert.That((string)executor.Executions.Observe()["selected"]["phase"],Is.EqualTo("completed"));Assert.That(workshop.Modules.Inspect(hash),Is.Null);
             Assert.That(runtime.Scheduler.ObserveRuns().Single().id,Is.EqualTo(run.id));Assert.That(workshop.Selected.program,Is.EqualTo(saved));Assert.That(executor.Catalog.Observe()["definition"].Type,Is.EqualTo(JTokenType.Null),"Cached inspection must refresh after deletion");Evidence("removed");
-            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==callerId).program,Is.EqualTo(saved));
+            workshop.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==callerId).program,Is.EqualTo(saved));
             var library=new Maestro.Quest.Programs.ProgramModuleLibrary(directory);library.Flush();Assert.That(library.Count,Is.EqualTo(1));Assert.That(library.Inspect(second),Is.Not.Null);Assert.That(library.Inspect(hash),Is.Null);
             workshop.SendMessage("OnApplicationPause",false);Assert.That(Rule(new RuleRequest {action="play",revision=workshop.Revision,target=callerId},out error),Is.True,error);
             for(int i=0;i<60&&!runtime.Scheduler.ObserveRuns().Any(r=>r.nodeId=="wait");i++)yield return null;
@@ -752,7 +753,7 @@ namespace Maestro.Quest.Tests
             var corrupted=workshop.Selected;var changed=JObject.Parse(source);changed["imports"][0]["module"]["name"]="Unexpected replacement";corrupted.program=changed.ToString();
             Assert.That(Execute(new RuleRequest {action="edit",revision=revision,edits=new[]{new RuleEdit {kind="save",sequence=corrupted}}},out error),Is.False);Assert.That(error,Does.Contain("pinned hash"));Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));Assert.That(workshop.Revision,Is.EqualTo(revision));
             Assert.That(Execute(new RuleRequest {action="stop"},out error),Is.True,error);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
-            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==sequence.id).program,Is.EqualTo(source));
+            workshop.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==sequence.id).program,Is.EqualTo(source));
             workshop.SendMessage("OnApplicationPause",false);
             Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sequence.id},out error),Is.True,error);runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
         }
@@ -787,7 +788,7 @@ namespace Maestro.Quest.Tests
             Assert.That(Execute(new RuleRequest {action="stop"},out error),Is.True,error);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("stopped");
             Assert.That(Execute(new RuleRequest {action="play",revision=revision,target=sender.id},out error),Is.True,error);Assert.That(Value(sender.id,"total"),Is.EqualTo("0"));Assert.That(Value(sender.id,"amounts"),Is.EqualTo("[]"));
             runtime.SendMessage("OnApplicationPause",true);runtime.SendMessage("OnApplicationPause",false);yield return null;Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Evidence("paused");
-            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==sender.id).program,Is.EqualTo(source));
+            workshop.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==sender.id).program,Is.EqualTo(source));
         }
 
         [UnityTest] public IEnumerator EventProgramsSaveSignalAnimateAndStopThroughTheSharedNativeExecutor()
@@ -1089,6 +1090,7 @@ namespace Maestro.Quest.Tests
             leftAnchor.SetActive(false); yield return null; Assert.That(button.GetComponent<Collider>().enabled,Is.False);
             leftAnchor.SetActive(true); yield return null; Assert.That(button.GetComponent<Collider>().enabled,Is.True);
             workshop.SendMessage("OnApplicationPause",true);
+            yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);
             var restored = new RuleStorage(directory).Load(out var error); Assert.That(error,Is.Null); Assert.That(restored.buttons.Single().position,Is.EqualTo(adjusted.position));
         }
         [UnityTest] public IEnumerator AuthoringAndUserGripTakePriorityAndRuleEditsUndoAsOneDocument()
@@ -1132,7 +1134,7 @@ namespace Maestro.Quest.Tests
             var restored=workshop.Selected;string added=restored.SimpleSteps()[1].id;restored.SetSimpleSteps(restored.SimpleSteps().Reverse().ToArray());
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[]{new RuleEdit {kind="save",sequence=restored}}},out _,out _),Is.True);
             Assert.That(workshop.Selected.SimpleSteps()[0].id,Is.EqualTo(added));workshop.AddStep();Assert.That(workshop.Observe().revision,Is.GreaterThan(revision));
-            workshop.SendMessage("OnApplicationPause",true);var loaded=new RuleStorage(directory).Load(out _);Assert.That(loaded.sequences.First(x=>x.id==sequence.id).SimpleSteps()[0].id,Is.EqualTo(added));
+            workshop.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);var loaded=new RuleStorage(directory).Load(out _);Assert.That(loaded.sequences.First(x=>x.id==sequence.id).SimpleSteps()[0].id,Is.EqualTo(added));
             yield return null;
         }
         [UnityTest] public IEnumerator AgentRuleRecipePlaybackSharesTutorEventsAndActualButtonInput()
@@ -1190,7 +1192,7 @@ namespace Maestro.Quest.Tests
             var saved=workshop.Selected;string original=saved.program;Assert.That(runtime.Trigger(id),Is.True);saved.name="Changed program";
             Assert.That(workshop.Execute(new RuleRequest {action="edit",revision=workshop.Revision,edits=new[] {new RuleEdit {kind="save",sequence=saved}}},out error,out _),Is.True,error);
             Assert.That(runtime.Scheduler.RunningCount,Is.Zero,"Editing stops the previous program revision");workshop.Undo();Assert.That(workshop.Selected.name,Is.EqualTo("Programmed wave"));Assert.That(workshop.Selected.program,Is.EqualTo(original));
-            workshop.SendMessage("OnApplicationPause",true);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==id).program,Is.EqualTo(original),error);workshop.SendMessage("OnApplicationPause",false);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
+            workshop.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(workshop.LifecycleCompletion);var restored=new RuleStorage(directory).Load(out error);Assert.That(restored.sequences.Single(x=>x.id==id).program,Is.EqualTo(original),error);workshop.SendMessage("OnApplicationPause",false);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);
             Assert.That(workshop.Execute(new RuleRequest {action="play",revision=workshop.Revision,target=id},out error,out _),Is.True,error);
             for(int i=0;i<20&&!geometry.IsPlaying;i++)yield return null;Assert.That(geometry.IsPlaying,Is.True);runtime.SendMessage("OnApplicationPause",true);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(geometry.IsPlaying,Is.False);
         }
@@ -1336,7 +1338,9 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator TearDown()
         {
-            UnityEngine.Object.Destroy(root); yield return null;
+            yield return TestLifecycleDrain.Destroy(root);
+            // Some lifetime tests deliberately destroy the root before TearDown.
+            yield return TestLifecycleDrain.Complete(editor,workshop);yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
     }

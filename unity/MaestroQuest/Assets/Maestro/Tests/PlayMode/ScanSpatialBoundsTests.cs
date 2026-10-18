@@ -69,7 +69,7 @@ namespace Maestro.Quest.Tests
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()},WorldCoordinates=true};yield return LoadedLayout(scan,platform,source);
             string id=MakeLayer(out _);yield return InkAdd(id);string area=ScanBoundsArea(id);var original=editor.ReadSpatialBounds(id,out _);
-            Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
+            Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error+"; "+editor.ObserveRegionRetention(area));yield return null;
             string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;
             source.Entries[0].Position+=Vector3.right*4;source.Entries[0].Rotation=Quaternion.Euler(0,65,20);yield return null;
             var moved=editor.ReadSpatialBounds(id,out var kind);Assert.That(kind,Is.EqualTo("retained"));Assert.That(moved.Visual.Known,Is.True);Assert.That(Vector3.Distance(moved.Visual.Bounds.center,original.Visual.Bounds.center),Is.GreaterThan(3));
@@ -85,7 +85,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ScanSpatialBoundsNeverReuseOldPoseForMissingWrongOrNonfittingAnchors()
         {
             var scan=SharedEnvironment(out var platform);var wall=InkWall();var source=new LayoutSource{Entries=new[]{wall}};yield return LoadedLayout(scan,platform,source);
-            string id=MakeLayer(out _);yield return InkAdd(id);yield return ScanBoundsPrepared(id);string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
+            string id=MakeLayer(out _);yield return InkAdd(id);yield return ScanBoundsPrepared(id);string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error+"; "+editor.ObserveRegionRetention(area));yield return null;
             var saved=JsonUtility.ToJson(editor.Snapshot());string roomId=source.RoomId;
             foreach(string problem in new[]{"missing","wrong-anchor","wrong-room","too-small","not-plane","invalid","unavailable"}){
                 source.Entries=new[]{wall.Copy()};source.RoomId=roomId;source.Available=true;
@@ -106,7 +106,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ScanSpatialBoundsHoldScaledFrameAndVirtualModeRemainUnknownUntilExactRecovery()
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);string id=MakeLayer(out _);yield return InkAdd(id);
-            string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
+            string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error+"; "+editor.ObserveRegionRetention(area));yield return null;
             root.transform.localScale=Vector3.one*2;Assert.That(editor.ReadSpatialBounds(id,out _).Visual.Known,Is.False);root.transform.localScale=Vector3.one;
             scan.SetVirtualView(true);Assert.That(editor.ReadSpatialBounds(id,out _).Visual.Known,Is.False);scan.SetVirtualView(false);world.SetSurfaces(true,"Restored synthetic scan");
             using(editor.RuntimeGate.Hold("Workspace review"))Assert.That(editor.ReadSpatialBounds(id,out _).Visual.Known,Is.False);
@@ -124,7 +124,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ScanSpatialBoundsDormantSavedInkEditAndUndoInvalidateOnlyTheDerivedEnvelope()
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()}};yield return LoadedLayout(scan,platform,source);
-            string id=MakeLayer(out _);yield return InkAdd(id);string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
+            string id=MakeLayer(out _);yield return InkAdd(id);string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error+"; "+editor.ObserveRegionRetention(area));yield return null;
             var original=editor.ReadSpatialBounds(id,out _);var edited=editor.Read(id);edited.surfaces[0].width=1.2f;edited.scanAnchors[0].x=-.3f;edited.scanAnchors[0].angle=35;
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{edited},Array.Empty<string>(),out error),Is.True,error);Assert.That(editor.ReadSpatialBounds(id,out _).Visual.Known,Is.False);
             yield return ScanBoundsPrepared(id);var changed=editor.ReadSpatialBounds(id,out var kind);Assert.That(kind,Is.EqualTo("authored"));Assert.That(changed.Visual.Bounds.size.sqrMagnitude,Is.GreaterThan(original.Visual.Bounds.size.sqrMagnitude));Assert.That(changed.Collision.Known,Is.False);Assert.That(editor.Find(id),Is.Null);
@@ -134,7 +134,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ScanSpatialBoundsObservedDormantInkReappearsAtCurrentPlaneThroughSharedDisplayAdmission()
         {
             var scan=SharedEnvironment(out var platform);var source=new LayoutSource{Entries=new[]{InkWall()},WorldCoordinates=true};yield return LoadedLayout(scan,platform,source);
-            string id=MakeLayer(out _);yield return InkAdd(id);string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
+            string id=MakeLayer(out _);yield return InkAdd(id);string area=ScanBoundsArea(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error+"; "+editor.ObserveRegionRetention(area));yield return null;
             source.Entries[0].Position+=Vector3.right*3;yield return null;
             var expected=editor.ReadSpatialBounds(id,out _);string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;
             var camera=ScanBoundsCamera(new Vector3(3,1.3f,3),Vector3.back);var exact=source.Entries[0];source.Entries=new[]{InkWall(2)};

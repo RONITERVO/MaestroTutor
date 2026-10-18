@@ -7,6 +7,12 @@ namespace Maestro.Quest.Tests {
     public sealed class CapabilityOptionalPatternTests {
         [TestCase("")][TestCase("The route is blocked")]
         public void UnrestrictedTextDoesNotTreatJsonNullAsARegex(string value){Assert.That(CapabilityArguments.Validate(new JValue(value),CapabilitySchema.Text(null,32),out var error),Is.True,error);}
+        [Test]public void TypedNullStringIsRejectedWithoutThrowing(){
+            var value=JValue.CreateString(null);
+            Assert.That(value.Type,Is.EqualTo(JTokenType.String));
+            Assert.That(CapabilityArguments.Validate(value,CapabilitySchema.Text(null,32),out var error),Is.False);
+            Assert.That(error,Is.Not.Null.And.Not.Empty);
+        }
         [Test]public void OptionalPatternStillEnforcesTextAndLengthBounds(){
             Assert.That(CapabilityArguments.Validate(new JValue("line\nbreak"),CapabilitySchema.Text(null,32),out _),Is.False);
             Assert.That(CapabilityArguments.Validate(new JValue(new string('x',33)),CapabilitySchema.Text(null,32),out _),Is.False);

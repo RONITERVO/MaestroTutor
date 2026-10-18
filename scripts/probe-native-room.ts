@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {probeRoomPersistence} from './probe-room-persistence';
 import {readNativeObjectIdentity,assertResumedNativeIdentity,readNativeResumeReceipt,isNativeIdentityRead} from './native-probe-identity';
 import {probeNativeSteering} from './probe-native-steering';
 import {probeNativeSparsePrograms} from './probe-native-sparse-programs';
@@ -932,6 +933,7 @@ try{
   const frameDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',category:'actions',capability:'animation.edit.resolve',version:1}}]);
   if(frameDefinition.catalog?.definition?.duration!=='completion'||frameDefinition.catalog?.definition?.ownership!=='authoringSession')throw new Error('Native keyframe recovery contract differs from shared catalog');
   await writeFile(join(directory,'keyframe-discovery.json'),JSON.stringify({pending:framePending,definition:frameDefinition,boundary:'Real Unity sparse catalog discovery. Pending physical save, retry/discard and publication are exercised separately by PlayMode integration tests; no headset or provider execution.'},null,2));
+  await probeRoomPersistence(execute,directory);
   const hingeBrowser=await connectionBrowserInputs(layoutIds);
   const hingeSearch=await execute([{action:'catalog',catalog:{operation:'search',query:'Connect physical pieces',offset:0}}]);
   const hingeDefinition=await execute([{action:'catalog',catalog:{operation:'inspect',capability:'object.connection.edit',version:1}}]);

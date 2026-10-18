@@ -61,6 +61,9 @@ jobs:
       - name: Test Unity diagnostic log gate
         shell: pwsh
         run: ./unity/Tools/Test-QuestUnityLog.ps1
+      - name: Test native suite coverage gate
+        shell: pwsh
+        run: ./unity/Tools/Test-QuestTestCoverage.ps1
       - name: Type-check native integration drivers
         run: npm run verify:quest-probes
       - name: Test app and shared core

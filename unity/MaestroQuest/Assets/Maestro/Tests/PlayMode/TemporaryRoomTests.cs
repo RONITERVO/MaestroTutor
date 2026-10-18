@@ -48,9 +48,16 @@ namespace Maestro.Quest.Tests
             while(editor.TemporarySavePending && Time.realtimeSinceStartup<deadline)yield return null;
             Assert.That(editor.TemporarySavePending,Is.False,"Snapshot writer did not finish");
         }
+        IEnumerator FinishLifecycleSave()
+        {
+            var pending=editor.LifecycleCompletion;float end=Time.realtimeSinceStartup+10;
+            while(!pending.IsCompleted&&Time.realtimeSinceStartup<end)yield return null;
+            Assert.IsTrue(pending.IsCompleted,"Lifecycle checkpoint did not drain");Assert.IsFalse(pending.IsFaulted);
+        }
         [UnityTearDown] public IEnumerator TearDown()
         {
             if(root)UnityEngine.Object.Destroy(root);yield return null;
+            yield return FinishLifecycleSave();
             if(Directory.Exists(directory))Directory.Delete(directory,true);
         }
         [UnityTest] public IEnumerator EditsPhysicsAutosavePauseAndDestroyCannotLeakTemporaryData()
@@ -163,6 +170,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
             Assert.That(editor.Find(temp),Is.Null);Assert.That(editor.Read(id).position,Is.EqualTo(Vector3.up*2));
             editor.SendMessage("OnApplicationPause",true);
+            yield return FinishLifecycleSave();
             Assert.That(Saved().objects.Single(x=>x.id==id).position,Is.EqualTo(Vector3.up*2));
             editor.Undo();Assert.That(editor.Find(id),Is.Null,"Previous saved Undo remains available");
         }
@@ -195,6 +203,7 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishSave();var kept=Create("Keep on pause");
             Assert.That(editor.KeepTemporaryRoom(out error),Is.True,error);var late=Create("Do not keep on pause");
             editor.SendMessage("OnApplicationPause",true);
+            yield return FinishLifecycleSave();yield return FinishSave();
             Assert.That(editor.TemporarySavePending,Is.False);Assert.That(editor.TemporarySaveError,Is.Null);
             Assert.That(Saved().objects.Any(x=>x.id==kept),Is.True);Assert.That(Saved().objects.Any(x=>x.id==late),Is.False);
             Assert.That(editor.Find(late),Is.Not.Null);yield return null;

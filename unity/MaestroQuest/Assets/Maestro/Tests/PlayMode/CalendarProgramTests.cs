@@ -42,6 +42,6 @@ namespace Maestro.Quest.Tests
    Assert.That(runtime.Trigger(id),Is.True);runtime.SendMessage("OnApplicationPause",true);clock.Now=clock.Now.AddDays(7);runtime.SendMessage("OnApplicationPause",false);yield return new WaitForSecondsRealtime(.2f);Assert.That(runtime.Scheduler.RunningCount,Is.Zero);Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));
    Assert.That(runtime.Trigger(id),Is.True);yield return Until(()=>runtime.Scheduler.RunningCount==0);Assert.That(runtime.Scheduler.LastError,Does.Contain("missed"));Assert.That(editor.Snapshot().objects.Length,Is.EqualTo(count));Assert.That(runtime.Scheduler.Outcomes.Last().phase,Is.EqualTo("failed"));
   }
-  [UnityTearDown] public IEnumerator Cleanup(){if(root)UnityEngine.Object.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
+  [UnityTearDown] public IEnumerator Cleanup(){if(root)yield return TestLifecycleDrain.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
  }
 }

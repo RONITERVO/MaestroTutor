@@ -63,7 +63,7 @@ namespace Maestro.Quest.Tests
         [UnityTearDown] public IEnumerator Cleanup()
         {
             var library=root.GetComponent<LibraryBookController>(); if (library) { library.SetVisible(false); yield return Until(() => !library.UsagePending); }
-            UnityEngine.Object.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
+            yield return TestLifecycleDrain.Destroy(root); Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }
         [UnityTest] public IEnumerator ImportedWalkAndUpperBodyLayerRetargetTogetherWithoutLosingTheMotionLease()
@@ -409,7 +409,7 @@ namespace Maestro.Quest.Tests
             var rename = editor.Motions.UpdateAsync(greeting.id,"My greeting",new[] { "greeting" },true); yield return Until(() => rename.IsCompleted); Assert.That(rename.Exception,Is.Null);
             Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(greeting.id)); Assert.That(rules.Summary,Does.Contain("My greeting"));
             rules.AssignLibraryMotion(gait.id); rules.Undo(); Assert.That(rules.Selected.SimpleSteps()[0].motionId,Is.EqualTo(greeting.id));
-            rules.SendMessage("OnApplicationPause",true); var restored = new RuleStorage(directory).Load(out var error); Assert.That(error,Is.Null);
+            rules.SendMessage("OnApplicationPause",true);yield return TestLifecycleDrain.Wait(rules.LifecycleCompletion); var restored = new RuleStorage(directory).Load(out var error); Assert.That(error,Is.Null);
             Assert.That(restored.sequences.Single().SimpleSteps().Single().motionId,Is.EqualTo(greeting.id)); Assert.That(restored.buttons.Single().mount,Is.EqualTo(ButtonMount.LeftController));
         }
         [UnityTest] public IEnumerator SavedObjectMotionRunsAndStopsWithoutMovingItsRoomPlacement()
@@ -519,6 +519,7 @@ namespace Maestro.Quest.Tests
             editor.Undo(); yield return Until(() => !avatar.ModelBusy); Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id));
             editor.Undo(); Assert.That(editor.Read("maestro").walkMotionId,Is.Null.Or.Empty); editor.Redo();
             editor.SaveNow(); editor.SendMessage("OnApplicationPause",true);
+            yield return TestLifecycleDrain.Wait(editor.LifecycleCompletion);
             var saved = new RoomStorage(directory).Load(out var error); Assert.That(error,Is.Null); Assert.That(saved.version,Is.EqualTo(RoomDocument.CurrentVersion)); Assert.That(saved.objects.Single(x => x.id == "maestro").walkMotionId,Is.EqualTo(gait.id));
             editor.SendMessage("OnApplicationPause",false);
             var add = editor.Motions.ImportAsync("unavailable.glb",Clip(13,"Lower leg")); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); var missing = add.Result.Single();

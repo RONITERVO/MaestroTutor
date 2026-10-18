@@ -91,7 +91,12 @@ namespace Maestro.Quest.Persistence
             try{if(Editor){activity=Editor.RuntimeGate.Hold("Closing the previous workspace");Editor.PrepareAgentEdit();}}
             catch(Exception){Debug.LogWarning("Previous workspace authoring could not finish while closing.");}
             finally{
-                var writers=Editor?.WriteGate.Retire()??Task.CompletedTask;
+                // Ordinary checkpoints carry no editing lease. Capture them before
+                // retiring writes, and keep this generation alive until they drain.
+                var roomSave=Editor?Editor.QueueLifecycleSave():Editor?.LifecycleCompletion??Task.CompletedTask;
+                var ruleSave=Rules?Rules.QueueLifecycleSave():Rules?.LifecycleCompletion??Task.CompletedTask;
+                var modules=Rules?.Modules?.Retire()??Task.CompletedTask;
+                var writers=Task.WhenAll(Editor?.WriteGate.Retire()??Task.CompletedTask,roomSave,ruleSave,modules);
                 if(this){Detach(preserveBookLock);gameObject.SetActive(false);Destroy(gameObject);}else destroyed.TrySetResult(true);
                 retirement=FinishRetirement(writers,activity);
             }
@@ -99,7 +104,15 @@ namespace Maestro.Quest.Persistence
         }
         async Task FinishRetirement(Task writers,IDisposable activity)
         {
-            try{await Task.WhenAll(writers,destroyed.Task);await Task.Yield();}
+            try{
+                await Task.WhenAll(writers,destroyed.Task);await Task.Yield();
+                // OnDestroy can consume a completed failure and dispatch a retry.
+                // After every destruction callback, retain those final detached
+                // writers too. These CLR properties do not call Unity APIs.
+                await Task.WhenAll(Editor?.LifecycleCompletion??Task.CompletedTask,
+                    Rules?.LifecycleCompletion??Task.CompletedTask,
+                    Rules?.Modules?.Retire()??Task.CompletedTask);
+            }
             finally{activity?.Dispose();}
         }
         void OnDestroy(){try{Detach();}finally{destroyed.TrySetResult(true);}}

@@ -29,7 +29,7 @@ namespace Maestro.Quest.Tests
    runtime=root.AddComponent<RoomRules>();runtime.Initialize(workshop,editor,animations,null,room,null);
    observer=root.AddComponent<RoomAgent>();observer.Initialize(editor,null);executions=new RoomExecutions(editor);float memoryDeadline=Time.realtimeSinceStartup+5;while(!workshop.Memory.Ready&&Time.realtimeSinceStartup<memoryDeadline)yield return null;Assert.That(workshop.Memory.Ready,Is.True);Assert.That(workshop.Memory.Error,Is.Null);yield return null;
   }
-  [UnityTearDown] public IEnumerator Cleanup(){if(root)UnityEngine.Object.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
+  [UnityTearDown] public IEnumerator Cleanup(){if(root)yield return TestLifecycleDrain.Destroy(root);yield return null;if(Directory.Exists(directory))Directory.Delete(directory,true);}
   JObject Call(string operation,string session=null)=>new() {["id"]="room.session",["version"]=1,["arguments"]=new JObject {["operation"]=operation,["sessionId"]=session??editor.TemporarySessionId}};
   JObject Request(JObject call)=>new() {["operation"]="start",["runId"]=runtime.Scheduler.Receipts.NextId,["call"]=call};
   string Start(string operation){var request=Request(Call(operation));Assert.That(executions.Execute(request,out var error),Is.True,error);return (string)request["runId"];}
@@ -98,8 +98,10 @@ namespace Maestro.Quest.Tests
    try {
     Start("begin");Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Later",Vector3.up,1,Color.white,out id,out _),Is.True);
    } finally {gate.TrySetResult(null);}
-   editor.SendMessage("OnApplicationPause",true);Assert.That(editor.TemporarySavePending,Is.False);
-   Assert.That(Saved().objects.Any(x=>x.id==id),Is.False);Assert.That(editor.Find(id),Is.Not.Null);yield return Finish();
+   editor.SendMessage("OnApplicationPause",true);
+   // Pause queues the baseline; wait for its owner to observe completion.
+   yield return Finish();Assert.That(editor.TemporarySavePending,Is.False);
+   Assert.That(Saved().objects.Any(x=>x.id==id),Is.False);Assert.That(editor.Find(id),Is.Not.Null);
   }
   [UnityTest] public IEnumerator NativeCatalogCycleHasDurableReceiptsFreshScopesAndOneGroupedUndo(){
    Evidence("initial");string inactive=editor.TemporarySessionId;var gate=EarlierSaveGate();var begin=Request(Call("begin"));

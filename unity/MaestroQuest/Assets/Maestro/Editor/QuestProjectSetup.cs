@@ -22,6 +22,21 @@ namespace Maestro.Quest.Editor
     {
         public const string ScenePath = "Assets/Maestro/Scenes/MaestroRoom.unity";
 
+        // One-shot verification entry point. Configure saves and validates all
+        // generated assets first; leave an editor update before requesting exit.
+        // The external verifier still requires a clean process and error-free log.
+        public static void ConfigureAndExit()
+        {
+            if(!Application.isBatchMode)throw new InvalidOperationException("Use a dedicated batch verification process.");
+            Configure();
+            EditorApplication.delayCall+=ExitConfigured;
+        }
+        static void ExitConfigured()
+        {
+            Debug.Log("MAESTRO_CONFIGURATION_EXIT");
+            EditorApplication.Exit(0);
+        }
+
         // Android can start on a different profile than the Editor. These are
         // rendering requirements, so every selectable profile must retain them.
         public static void ConfigureQuality()

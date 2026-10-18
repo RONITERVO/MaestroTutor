@@ -508,7 +508,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
-            UnityEngine.Object.Destroy(physicalRoot); if (viewer) UnityEngine.Object.Destroy(viewer);
+            yield return TestLifecycleDrain.Destroy(physicalRoot); if (viewer) UnityEngine.Object.Destroy(viewer);
             Time.captureDeltaTime = captureDelta; yield return null; yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }

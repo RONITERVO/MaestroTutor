@@ -125,9 +125,13 @@ try{
   [IO.File]::WriteAllText($pending,$stop,[Text.UTF8Encoding]::new($false))
   [IO.File]::Move($pending,(Join-Path $directory 'request.json'),$true)
  }
- $deadline=[DateTime]::UtcNow.AddSeconds(60);$cleanupAt=[DateTime]::UtcNow.AddSeconds(10)
+ $deadline=[DateTime]::UtcNow.AddSeconds(60);$shutdownAt=$null;$helperStopped=$false
  while(!$process.WaitForExit(1000)){
-  if([DateTime]::UtcNow -gt $cleanupAt){Stop-QuestBuildHelper;$cleanupAt=[DateTime]::MaxValue}
+  # A client result or exit request is not native Editor shutdown. Match the
+  # verifier: do not stop an inherited helper during the Play-to-Edit transition.
+  if(!$shutdownAt -and (Test-Path -LiteralPath $log) -and
+     (Select-String -LiteralPath $log -Pattern 'Batchmode quit successfully invoked|Killing ADB server|Exiting batchmode' -Quiet)){$shutdownAt=[DateTime]::UtcNow}
+  if(!$helperStopped -and $shutdownAt -and [DateTime]::UtcNow -gt $shutdownAt.AddSeconds(10)){Stop-QuestBuildHelper;$helperStopped=$true}
   if([DateTime]::UtcNow -gt $deadline){$process.Kill();$process.WaitForExit();throw "Probe Editor did not exit. Evidence: $directory"}
  }
  $terminal=Get-Content -LiteralPath (Join-Path $directory 'terminal.json') -Raw | ConvertFrom-Json

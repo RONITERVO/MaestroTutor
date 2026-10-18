@@ -22,6 +22,7 @@ if ($ModelAsMaestro -and !$ModelPreview) { throw 'ModelAsMaestro requires a loca
 . (Join-Path $PSScriptRoot 'QuestBuildProcesses.ps1')
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 $sourceProject = Join-Path $repoRoot 'unity/MaestroQuest'
+if(Get-Process Unity -ErrorAction SilentlyContinue){throw 'Close the other Unity process before native verification.'}
 $mirrorRoot = [IO.Path]::GetFullPath($BuildMirror).TrimEnd('\','/')
 $editorPath = (Resolve-Path -LiteralPath $Editor).Path
 if ($mirrorRoot.Length -gt 80 -or $mirrorRoot.StartsWith($repoRoot, [StringComparison]::OrdinalIgnoreCase)) {
@@ -65,8 +66,8 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
     # hang trying to stop it; give build children their own server endpoint.
     Stop-QuestBuildHelper
     $process = Start-Process -FilePath $editorPath -ArgumentList $argumentsWithPaths -WindowStyle Hidden -PassThru -Environment @{ ADB_SERVER_SOCKET = 'tcp:localhost:5041'; MAESTRO_QUEST_RELEASE_PROFILE = ''; MAESTRO_QUEST_KEYSTORE = ''; MAESTRO_QUEST_KEY_ALIAS = ''; MAESTRO_QUEST_STORE_PASSWORD = ''; MAESTRO_QUEST_KEY_PASSWORD = '' }
-    # The complete PlayMode suite now exceeds 1,400 cases (~19 minutes).
-    # Keep a bounded deadline with room for slower shared development machines.
+    # Each discovered test batch has bounded execution and shutdown deadlines.
+    # Exact inventory coverage is checked after all batches finish.
     $deadline = [DateTime]::UtcNow.AddMinutes(30)
     $reportWrittenAt = $null
     $shutdownAt = $null
@@ -95,7 +96,7 @@ function Invoke-QuestEditor([string[]]$Arguments, [string]$LogName, [string]$Res
     if ($process.ExitCode -ne 0) { Get-Content -LiteralPath $logPath -Tail 50; throw "Unity exited $($process.ExitCode); see $logPath" }
     & (Join-Path $PSScriptRoot 'Assert-QuestUnityLog.ps1') -LogPath $logPath
 }
-Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.Configure') 'configure.log'
+Invoke-QuestEditor @('-executeMethod','Maestro.Quest.Editor.QuestProjectSetup.ConfigureAndExit') 'configure.log'
 $nativeCatalog = Join-Path $logRoot 'behaviour-catalog.json'
 $sharedCatalog = Join-Path $repoRoot 'shared/generated/behaviourCatalog.json'
 if (!(Test-Path -LiteralPath $nativeCatalog)) { throw 'Native behaviour catalog was not exported.' }
@@ -105,11 +106,14 @@ $sharedJson = Get-Content -LiteralPath $sharedCatalog -Raw | ConvertFrom-Json | 
 if ($nativeJson -cne $sharedJson) { throw 'Behaviour catalog drift. Review registrations, then run Verify-Quest.ps1 with -UpdateBehaviourCatalog.' }
 $env:MAESTRO_BEHAVIOUR_CATALOG = $sharedCatalog
 $env:MAESTRO_RECEIPT_EVIDENCE = Join-Path $logRoot 'receipt-evidence'
+$env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }
+$env:MAESTRO_MOTION_DIRECTORY = if ($MotionAuditDirectory) { (Resolve-Path -LiteralPath $MotionAuditDirectory).Path } else { '' }
+$env:MAESTRO_REQUIRE_HUMANOID = if ($ModelAsMaestro) { '1' } else { '' }
+$inventoryPath=Join-Path $logRoot 'test-inventory.json'
+Invoke-QuestEditor @('-executeMethod','Maestro.Quest.Editor.QuestTestInventory.Export') 'test-inventory.log' $inventoryPath
 $testResult = Join-Path $logRoot 'editmode-results.xml'
 Invoke-QuestEditor @('-runTests','-testPlatform','EditMode','-testResults', ('"' + $testResult + '"')) 'editmode.log' $testResult
-[xml]$testReport = Get-Content -LiteralPath $testResult
-if ($testReport.'test-run'.result -ne 'Passed' -or [int]$testReport.'test-run'.passed -lt 151) { throw 'Unity test results did not satisfy the current development checks.' }
-$playResult = Join-Path $logRoot 'playmode-results.xml'
+$editCoverage=& (Join-Path $PSScriptRoot 'Assert-QuestTestCoverage.ps1') -Inventory $inventoryPath -Platform EditMode -Results @($testResult)
 $env:MAESTRO_RUNTIME_DIAGNOSTICS = Join-Path $logRoot 'runtime-diagnostics'
 $env:MAESTRO_PROGRAM_EVIDENCE = Join-Path $logRoot 'program-evidence'
 $env:MAESTRO_PROGRAM_MEMORY_EVIDENCE = Join-Path $logRoot 'program-memory-evidence'
@@ -122,21 +126,25 @@ $env:MAESTRO_CREATION_EVIDENCE = Join-Path $logRoot 'creation-evidence'
 $env:MAESTRO_EVENT_EVIDENCE = Join-Path $logRoot 'event-evidence'
 $env:MAESTRO_CHANNEL_EVIDENCE = Join-Path $logRoot 'channel-evidence'
 $env:MAESTRO_IMPORT_EVIDENCE = if ($RenderImports) { Join-Path $repoRoot '.quest-evidence/art' } else { '' }
-$env:MAESTRO_EXTERNAL_MODEL = if ($ModelPreview) { (Resolve-Path -LiteralPath $ModelPreview).Path } else { '' }
-$env:MAESTRO_MOTION_DIRECTORY = if ($MotionAuditDirectory) { (Resolve-Path -LiteralPath $MotionAuditDirectory).Path } else { '' }
-$env:MAESTRO_REQUIRE_HUMANOID = if ($ModelAsMaestro) { '1' } else { '' }
-Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testResults', ('"' + $playResult + '"')) 'playmode.log' $playResult
-[xml]$playReport = Get-Content -LiteralPath $playResult
-# Unity marks the whole report Skipped:Ignored when only the deliberately
-# optional private-file checks are ignored. Never permit other skipped tests.
+# Bound the large interaction suite without omitting newly discovered cases.
+# The inventory comparison below also rejects overlaps and incomplete reports.
+$playResults=@()
+$partitions=[ordered]@{
+ 'other'='!^Maestro\.Quest\.Tests\.RoomRulesTests(?:\.|$)'
+ 'rules-a-m'='^Maestro\.Quest\.Tests\.RoomRulesTests\.[A-M]'
+ 'rules-other'='^Maestro\.Quest\.Tests\.RoomRulesTests\.(?![A-M])'
+}
+foreach($part in $partitions.Keys){
+ $result=Join-Path $logRoot ("playmode-"+$part+"-results.xml")
+ Invoke-QuestEditor @('-runTests','-testPlatform','PlayMode','-testFilter',$partitions[$part],'-testResults', ('"' + $result + '"')) ("playmode-"+$part+".log") $result
+ $playResults+=$result
+}
 $expectedSkipped = @()
-if (!$ModelPreview) { $expectedSkipped += 'SelectedExternalModelLoadsAndPlaysEmbeddedSkeletalAnimationWhenPresent' }
-if (!$ModelAsMaestro) { $expectedSkipped += 'SelectedExternalHumanoidUsesTheRealTutorReplacementAndPosePath' }
-if (!$MotionAuditDirectory) { $expectedSkipped += 'SelectedCollectionMotionsMatchSourceTransformsAndDeformedMeshes' }
-$unexpectedCases = @($playReport.SelectNodes('//test-case[@result!="Passed"]') | Where-Object {
-    $_.result -ne 'Skipped' -or $_.label -ne 'Ignored' -or $expectedSkipped -notcontains $_.name
-})
-if ($playReport.'test-run'.result -notin @('Passed','Skipped:Ignored') -or [int]$playReport.'test-run'.passed -lt 98 -or $unexpectedCases.Count -gt 0) { throw 'Unity interaction tests did not pass.' }
+if (!$ModelPreview) { $expectedSkipped += 'Maestro.Quest.Tests.ModelImportTests.SelectedExternalModelLoadsAndPlaysEmbeddedSkeletalAnimationWhenPresent' }
+if (!$ModelAsMaestro) { $expectedSkipped += 'Maestro.Quest.Tests.ModelImportTests.SelectedExternalHumanoidUsesTheRealTutorReplacementAndPosePath' }
+if (!$MotionAuditDirectory) { $expectedSkipped += 'Maestro.Quest.Tests.MotionPlaybackTests.SelectedCollectionMotionsMatchSourceTransformsAndDeformedMeshes' }
+$playCoverage=& (Join-Path $PSScriptRoot 'Assert-QuestTestCoverage.ps1') -Inventory $inventoryPath -Platform PlayMode -Results $playResults -AllowedSkipped $expectedSkipped
+@{editMode=$editCoverage;playMode=$playCoverage}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath (Join-Path $logRoot 'test-coverage.json')
 if ($MotionAuditDirectory) {
     $env:MAESTRO_MOTION_AUDIT = Join-Path $repoRoot '.quest-evidence/motion-library'
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestMotionAudit.Inspect') 'motion-audit.log'
@@ -173,7 +181,7 @@ if ($RenderPhysics) {
     $env:MAESTRO_ART_EVIDENCE = Join-Path $repoRoot '.quest-evidence/art'
     Invoke-QuestEditor @('-quit','-executeMethod','Maestro.Quest.Editor.QuestArtPreview.RenderPhysics') 'physics-preview.log'
 }
-Write-Output "Unity checks passed: $($testReport.'test-run'.passed) EditMode and $($playReport.'test-run'.passed) PlayMode tests. Evidence: $logRoot"
+Write-Output "Unity checks passed: $($editCoverage.passed) EditMode and $($playCoverage.passed) PlayMode tests. Evidence: $logRoot"
 
 # The complete app can advertise combinations absent from small test fixtures.
 # Exercise its real room inbox with the same shared client used by the book.

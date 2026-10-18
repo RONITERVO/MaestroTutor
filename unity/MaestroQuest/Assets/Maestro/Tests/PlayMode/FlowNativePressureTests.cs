@@ -70,11 +70,11 @@ namespace Maestro.Quest.Tests {
    RemoveFlowFixtureStarters(editor);
    var(a,b,c,d)=IndependentFlowCups();var main=editor;var mainPhysics=physics;
    var fixtures=new List<NativeFlowFixture>{new(){Editor=main,Physics=mainPhysics,Sources=new[]{a,c},Receivers=new[]{b,d}}};
-   var secondaryRoots=new List<GameObject>();var evidence=new JObject();var trace=new JArray();evidence["trace"]=trace;
+   var evidence=new JObject();var trace=new JArray();evidence["trace"]=trace;
    try {
     yield return ParkFlowFixtureCopies(fixtures[0],RoomContainer.MaximumPerRoom-4);
     for(int roomIndex=1;roomIndex<9;roomIndex++) {
-     var secondaryRoot=new GameObject("Independent native flow room "+roomIndex);secondaryRoot.transform.SetParent(root.transform,false);secondaryRoots.Add(secondaryRoot);
+     var secondaryRoot=new GameObject("Independent native flow room "+roomIndex);secondaryRoot.transform.SetParent(root.transform,false);
      var room=secondaryRoot.AddComponent<RoomInteraction>();
      RoomItem Included(string name) {
       var go=new GameObject(name);go.transform.SetParent(secondaryRoot.transform,false);
@@ -174,7 +174,8 @@ namespace Maestro.Quest.Tests {
    } finally {
     editor=main;physics=mainPhysics;
     foreach(var f in fixtures)if(f.Physics)f.Physics.PausePhysics();
-    foreach(var go in secondaryRoots)UnityEngine.Object.Destroy(go);
+    // Keep secondary roots owned by the fixture so TearDown captures and
+    // drains every child room checkpoint before deleting their saved files.
    }
    yield return null;
   }

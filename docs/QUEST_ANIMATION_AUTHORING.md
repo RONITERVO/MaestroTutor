@@ -56,8 +56,10 @@ RoomMotionEdits helpers. Physical keyframe, recording and pose-session saves use
 the ordered persisted-edit queue; physical and shared calls validate canonical
 animation through RoomEditor.PrepareAnimation. Their captured work remains
 available after pre-acceptance failure. Applied/unconfirmed publication requires
-room recovery instead of replay. Lifecycle Flush and direct compatibility APIs
-still have synchronous completion contracts.
+room recovery instead of replay. Lifecycle checkpoints now queue detached
+snapshots without waiting for disk;
+explicit TryFlush and direct compatibility APIs retain synchronous completion
+contracts. See [accepted-save ownership](QUEST_ACCEPTED_SAVE.md).
 
 Saved animation actions use the common ordered edit queue. A waiter keeps copied
 intent, not a candidate room or held body. When admitted, it checks the original

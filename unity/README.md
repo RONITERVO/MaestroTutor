@@ -21,6 +21,31 @@ copies Library caches into the repository. Optional `-PageCapture` uses an
 unmodified browser screenshot as the book texture for a desktop art preview.
 This does not validate the live Android WebView or any headset interaction.
 
+Verification first exports Unity's discovered test inventory. EditMode and three
+disjoint PlayMode batches must account for every discovered test exactly once;
+missing, duplicate, unexpected or failed cases fail the run. Only the explicitly
+named optional private-asset tests may be skipped. Each process has a 30-minute
+execution deadline and a 60-second shutdown deadline after its result is written.
+Logs, individual XML reports, `test-inventory.json` and `test-coverage.json` remain
+in the mirror's `Logs` folder. A report written by a timed-out process is not a pass.
+The batch layout bounds the growing suite without reducing its coverage.
+
+The room-probe log separately marks its request to leave Play mode, return to
+Edit mode and request to exit. These are diagnostics; only a clean Editor exit
+completes verification. Probe helper cleanup waits for native shutdown, using the
+same markers and unchanged deadline as the test verifier.
+
+Configuration uses the batch-only `ConfigureAndExit` entry point: it saves and
+validates generated assets, then requests exit through an
+[Editor delay callback](https://docs.unity3d.com/6000.3/Documentation/ScriptReference/EditorApplication-delayCall.html).
+Do not combine that entry point with `-quit`. Interactive `Configure` still leaves
+the Editor open. The verifier requires a clean process exit and an error-free log;
+the deferred exit does not waive those checks or guarantee all SDK shutdown
+issues are resolved.
+
+The coverage checker itself runs without Unity:
+`pwsh -File unity/Tools/Test-QuestTestCoverage.ps1`.
+
 `-RenderImports` captures the actual solid import tray and imported test geometry.
 Optional `-ModelAuditDirectory` inspects user-supplied VRM files without modifying
 them, and `-ModelPreview` imports/renders one local file in the Editor. See

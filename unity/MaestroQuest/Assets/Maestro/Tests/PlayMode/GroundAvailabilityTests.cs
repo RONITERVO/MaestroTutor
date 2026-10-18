@@ -88,7 +88,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator GroundAvailabilityFailedImportedSurfaceNeverBecomesEmptyGround()
         {
             yield return GeometryModel(BuildingModelFixture.Create());string id=geometryTarget;
-            ContainerRun(new RoomAgentExecutor(editor),GeometryCall(BuildingSettings()));
+            yield return ContainerAction(new RoomAgentExecutor(editor),GeometryCall(BuildingSettings()));
             var extent=editor.ReadSpatialBounds(id,out _).Visual;Assert.That(extent.Known&&extent.HasBounds,Is.True);
             var point=extent.Bounds.center;string area=NativeAreaFor(id);
             Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;
@@ -123,7 +123,7 @@ namespace Maestro.Quest.Tests
             // imported rigid geometry; result truncation must cover both kinds.
             for(int i=0;i<2;i++){
                 yield return GeometryModel(StaticModelFixture.Create());
-                ContainerRun(new RoomAgentExecutor(editor),GeometryCall(BuildingSettings()));
+                yield return ContainerAction(new RoomAgentExecutor(editor),GeometryCall(BuildingSettings()));
                 var imported=editor.Read(geometryTarget);imported.position=new Vector3(4,0,4);
                 Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{imported},Array.Empty<string>(),out error),Is.True,error);
                 string extra=NativeAreaFor(geometryTarget);Assert.That(editor.RetireNativeArea(extra,out error),Is.True,error);yield return null;

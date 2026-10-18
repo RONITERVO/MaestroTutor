@@ -158,7 +158,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator Cleanup()
         {
-            if(root)UnityEngine.Object.Destroy(root);yield return null;review?.Dispose();review=null;
+            if(root)yield return TestLifecycleDrain.Destroy(root);yield return null;review?.Dispose();review=null;
             if(gate!=null){using(var cleanup=gate.Hold("After owner destruction"))Assert.That(gate.Reason,Is.EqualTo("After owner destruction"));Assert.That(gate.Held,Is.False);}
             if(Directory.Exists(directory))Directory.Delete(directory,true);
         }
