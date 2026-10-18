@@ -39,6 +39,18 @@ namespace Maestro.Quest.Creation
             if(!ReferenceEquals(pendingEdit,preserveAcceptedAuthoring))pendingEdit?.Dispose();
         }
 
+        // Personal stores can share ordered admission and workspace lifetime
+        // without becoming room geometry or participating in temporary Undo.
+        internal bool BeginPersistedStateEdit(Func<IDisposable,IPersistedRoomEdit> create,
+            out IPersistedRoomEdit pending,out string error)
+        {
+            pending=null;
+            if(PendingEditSave){error="Wait for the pending edit to finish or cancel it first";return false;}
+            var write=WriteGate.TryWrite(out error);if(write==null)return false;
+            try{pendingEdit=pending=create(write);write=null;error=null;return true;}
+            finally{write?.Dispose();}
+        }
+
         // The common capability path (book, agent and programs) owns this operation.
         // Synchronous API callers retain their existing completion contract.
         internal bool BeginRotation(string id,Quaternion rotation,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>

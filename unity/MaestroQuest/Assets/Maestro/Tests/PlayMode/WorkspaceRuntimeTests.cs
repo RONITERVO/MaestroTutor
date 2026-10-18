@@ -100,7 +100,7 @@ namespace Maestro.Quest.Tests
             var objectData=editor.Read(objectId);objectData.name="Accepted before autosave";
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{objectData},Array.Empty<string>(),out var error),Is.True,error);
             Assert.That(editor.HasUnsavedChanges,Is.True);Assert.That(workshop.HasUnsavedChanges,Is.True);
-            var preferences=controls.Preferences;preferences.deadZone=.3f;Assert.That(controls.Apply(preferences),Is.True);
+            var preferences=controls.Preferences;preferences.deadZone=.3f;Assert.That(controls.Apply(preferences),Is.True);yield return ControllerSaveTestWait.Manual(controls);
             var before=JsonUtility.ToJson(editor.Snapshot());var behaviourBefore=JsonUtility.ToJson(workshop.Snapshot());var revision=editor.Revision;var ruleRevision=workshop.Revision;
             Assert.That(WorkspaceEditHold.TryAcquire(editor,workshop,controls,out var hold,out error),Is.True,error);
             using(hold) {

@@ -14520,3 +14520,59 @@ Other synchronous authoring/import entry points, existing Editor stalls, acousti
 quality, physical Quest acceptance and paid-provider coverage remain separate
 release work. Installed builds, production services and Meta release state are
 unchanged.
+
+
+## Shared controller preference completion — 2026-10-18
+
+The physical movement tray and `controller.configure` now use one ordered
+completion operation. A detached preference copy saves on a worker; active
+bindings and their exact configuration identity remain unchanged until success
+is confirmed on Unity's owner thread. Input must return to neutral after a
+confirmed change. Saving never enables movement, enters virtual view or runs a
+bound program.
+
+Stop before save dispatch cancels without changing controls. After dispatch the
+accepted save continues even if its receipt observer stops. Ordinary failed
+writes retain prior live values for explicit retry; independently changed,
+newer-format or unconfirmed files block further writes until recovery/reopening.
+Completed results retain their accepted identity after later edits. The writer
+survives until storage and live application finish; closing its native owner
+immediately ends live completion while the detached writer drains before workspace
+reuse. Listener failure cannot strand the writer.
+
+Personal preferences remain outside room geometry Undo and temporary-room
+Discard. Reserved recovery controls, exact program references and independent
+movement opt-ins retain their behavior. Human controls and shared actions use the
+same persistence authority. The catalog declares completion explicitly.
+
+Verified in one complete public verifier invocation: **1,495 EditMode and
+2,070 PlayMode tests passed**, with three documented private-asset skips and the
+exact 3,568-case discovered native inventory. **3,207 web tests**, application/probe
+TypeScript and catalog provenance checks passed. Eight new native regressions
+cover delayed IO, copied intent, cancellation, stale queueing, immutable output,
+conflicting files, uncertain publication, listener failure and retirement.
+
+Full offline Headless `bc32075d82d3477ca9cebe389b472761` (2,408 observations,
+2,407 read sets) and book `f60b3c574bce4a3cb5db6283e25a8fe5` (3,809
+observations, 1,218 requests) passed with clean client/Editor exits and
+confirmed idle room/behaviour stores. Both used sparse discovery and the real
+Unity controller save path. The headless proof additionally verifies immutable
+earlier receipts and duplicate replay after restoration. The book screenshot was
+visually checked.
+
+All 3,336 frozen native inputs, 5,117 frozen source-file entries (including native inputs) and 14
+protected pre-existing files were checked; generated mirror differences remain
+separately recorded. The first focused run exposed a destroyed owner's receipt
+remaining preparing after its write drained. That failure is preserved; the
+corrected 54-case focused run and subsequent complete public run passed.
+
+Movement documentation was checked against the current native implementation and
+corrected where it still described Virtual-only walking or resetting the world
+on MR return. One world retains independent presentation, movement and collision
+participation. These corrections do not add a runtime feature.
+
+V1 remains incomplete. No headset, paid provider, signing, deployment or Meta
+acceptance was performed. The 31 measured native echo quality failures and
+earlier Editor stalls remain open. Legacy physical save-first editor calls still
+need a separate call-site and completion review; they were not changed in this
+increment. Evidence: `.quest-evidence/controller-completion-20261018/`.

@@ -34,6 +34,7 @@ import {probeWorldTime} from './probe-world-time';
 import {probeVisibilityLayers} from './probe-visibility-layers';
 import {probeWorldRegions} from './probe-world-regions';
 import {probeWorldLocation} from './probe-world-location';
+import {probeControllerCompletion} from './probe-controller-completion';
 import {probeConstructionResources} from './probe-construction-resources';
 import {runAgentSteeringProof,type ReceiptObserver} from './probe-agent-steering';
 import {runAgentPhysicsProof} from './probe-agent-physics';
@@ -287,6 +288,7 @@ try{
 
  }else{
    await probeWorldLocation(execute,directory);
+   await probeControllerCompletion(execute,directory);
    await probeNativeSteering(execute,()=>transport.lease(),directory,!!probeOwner.sparseObjectView);
    await probeNativeSparsePrograms(execute,directory);
   await probeNativeMotion(execute,()=>lease.state(),directory);

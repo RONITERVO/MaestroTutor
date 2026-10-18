@@ -3,6 +3,8 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Maestro.Quest.Creation;
+using Maestro.Quest.Programs;
 namespace Maestro.Quest.Interaction
 {
     public sealed partial class MovementControls
@@ -33,20 +35,16 @@ namespace Maestro.Quest.Interaction
             error="Controller settings changed; read controller.settings again before editing";
             return expected==configurationId&&CanApplyPreferences(next,out error);
         }
-        bool TryApplyPreferences(ControllerPreferences next,out string error)
+        internal bool StartConfiguration(string expected,ControllerPreferences next,
+            out CapabilityOperation operation,out string error,Action<string> checkpoint=null)
         {
-            if(!CanApplyPreferences(next,out error))return false;
-            using var write=editor.WriteGate.TryWrite(out error);if(write==null)return false;
-            if(!storage.Save(next,out error))return false;
-            preferences=next.Copy();configurationId=Guid.NewGuid().ToString("N");
-            if(preferences.avatarStick==MovementStick.None)AvatarEnabled=false;
-            if(preferences.userStick==MovementStick.None)UserEnabled=false;
-            Interrupt();CurrentModeId();Status="Controls saved — release sticks and buttons before using them";Changed?.Invoke();return true;
-        }
-        internal bool Configure(string expected,ControllerPreferences next,out JObject result,out string error)
-        {
-            result=null;if(!CanConfigure(expected,next,out error)||!TryApplyPreferences(next,out error))return false;
-            result=new JObject {["configurationId"]=configurationId,["saved"]=true};return true;
+            operation=null;if(!CanConfigure(expected,next,out error))return false;
+            var captured=next.Copy();PendingConfiguration pending=null;
+            return PersistedEditOperation.StartStateChange(editor,
+                (out IPersistedRoomEdit edit,out string issue)=>editor.BeginPersistedStateEdit(write=>
+                    configurationSave=pending=new PendingConfiguration(this,expected,captured,write,checkpoint),out edit,out issue),
+                (out string issue)=>CanConfigure(expected,captured,out issue),
+                ()=>pending?.Result??new JObject(),out operation,out error);
         }
         internal JObject ObserveConfiguration()
         {

@@ -34,7 +34,7 @@ namespace Maestro.Quest.Tests
         JObject ControlRequest(JObject args)=>new() {["operation"]="start",["runId"]=controlActions.Observe()["nextRunId"].DeepClone(),["call"]=new JObject {["id"]="controller.configure",["version"]=1,["arguments"]=args}};
         IEnumerator ConfigureControls(JObject args)
         {
-            Assert.That(controlActions.Execute(ControlRequest(args),out var error),Is.True,error);yield return null;
+            Assert.That(controlActions.Execute(ControlRequest(args),out var error),Is.True,error);yield return ControllerSaveTestWait.Receipt(controlActions);
             Assert.That((string)controlActions.Observe()["selected"]["phase"],Is.EqualTo("completed"),controlActions.Observe().ToString());
         }
         [UnityTest] public IEnumerator SharedControllerConfigurationPersistsExactBindingsAndReplaysReceiptWithoutResaving()
@@ -42,7 +42,7 @@ namespace Maestro.Quest.Tests
             var controls=BindingControls();var before=ControlFact();Assert.That(RoomControls.Capabilities(editor),Does.Contain("controllerConfiguration.v1"));
             yield return ConfigureControls(MovementArgs());var movement=controlActions.Observe().DeepClone();var afterMovement=ControlFact();
             Assert.That((string)afterMovement["avatarStick"],Is.EqualTo("left"));Assert.That((string)afterMovement["userStick"],Is.EqualTo("right"));Assert.That(JToken.DeepEquals(before["buttons"],afterMovement["buttons"]),Is.True);
-            var request=ControlRequest(ButtonArgs());Assert.That(controlActions.Execute(request,out var error),Is.True,error);yield return null;var button=controlActions.Observe().DeepClone();var after=ControlFact();
+            var request=ControlRequest(ButtonArgs());Assert.That(controlActions.Execute(request,out var error),Is.True,error);yield return ControllerSaveTestWait.Receipt(controlActions);var button=controlActions.Observe().DeepClone();var after=ControlFact();
             Assert.That((string)after["buttons"][1]["programId"],Is.EqualTo(sequenceId));Assert.That((bool)after["buttons"][1]["available"],Is.True);
             Assert.That((string)after["configurationId"],Is.EqualTo((string)button["selected"]["output"]["configurationId"]));Assert.That((string)after["configurationId"],Is.Not.EqualTo((string)afterMovement["configurationId"]));
             var persisted=new ControllerPreferenceStorage(directory).Load(out error);Assert.That(error,Is.Null);Assert.That(persisted.avatarStick,Is.EqualTo(MovementStick.Left));Assert.That(persisted.userSpeed,Is.EqualTo(.8f));Assert.That(persisted.buttons[1].sequenceId,Is.EqualTo(sequenceId));
@@ -57,11 +57,11 @@ namespace Maestro.Quest.Tests
             bindingFrame.a=false;yield return null;bindingFrame.a=true;yield return new WaitForSeconds(.3f);
             Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1));Assert.That(block.transform.position.x,Is.GreaterThan(position.x+.02f));
             yield return new WaitForSeconds(.1f);Assert.That(runtime.Scheduler.RunningCount,Is.EqualTo(1),"Holding the button does not repeatedly restart its program");runtime.StopAll();
-            controls.BindButton(1,ControllerCommand.None);Assert.That((string)ControlFact()["buttons"][1]["command"],Is.EqualTo("none"));
+            controls.BindButton(1,ControllerCommand.None);yield return ControllerSaveTestWait.Manual(controls);Assert.That((string)ControlFact()["buttons"][1]["command"],Is.EqualTo("none"));
         }
         [UnityTest] public IEnumerator SharedBindingsRejectStaleReservedConflictingAndMissingProgramChoices()
         {
-            var controls=BindingControls();var stale=MovementArgs();controls.SwapSticks();var current=ControlFact();
+            var controls=BindingControls();var stale=MovementArgs();controls.SwapSticks();yield return ControllerSaveTestWait.Manual(controls);var current=ControlFact();
             Assert.That(BehaviourCatalog.TryCall("controller.configure",1,stale,out var call,out var error),Is.True,error);Assert.That(call.Definition.Module.CanRun(new CapabilityContext(editor,animations),stale,out error),Is.False);StringAssert.Contains("changed",error);
             var conflict=MovementArgs();conflict["userStick"]="left";Assert.That(BehaviourCatalog.TryCall("controller.configure",1,conflict,out _,out _),Is.False);
             foreach(string reserved in new[]{"b","y","menu","system","trigger","grip"}){var args=ButtonArgs(reserved);Assert.That(BehaviourCatalog.TryCall("controller.configure",1,args,out _,out _),Is.False,reserved);}
@@ -70,14 +70,14 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator FailedControlSaveKeepsAcceptedIdentityAndAllowsExplicitRetry()
         {
-            var controls=BindingControls();Assert.That(controls.Apply(controls.Preferences),Is.True);var before=ControlFact();var args=MovementArgs();string path=Path.Combine(directory,"controls.v2.json"),pending=path+".pending",original=File.ReadAllText(path);Directory.CreateDirectory(pending);
-            try{Assert.That(controlActions.Execute(ControlRequest(args),out _),Is.False);yield return null;Assert.That((string)controlActions.Observe()["selected"]["phase"],Is.EqualTo("failed"));Assert.That(JToken.DeepEquals(ControlFact(),before),Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(original));}
+            var controls=BindingControls();Assert.That(controls.Apply(controls.Preferences),Is.True);yield return ControllerSaveTestWait.Manual(controls);var before=ControlFact();var args=MovementArgs();string path=Path.Combine(directory,"controls.v2.json"),pending=path+".pending",original=File.ReadAllText(path);Directory.CreateDirectory(pending);
+            try{Assert.That(controlActions.Execute(ControlRequest(args),out _),Is.True);yield return ControllerSaveTestWait.Receipt(controlActions);Assert.That((string)controlActions.Observe()["selected"]["phase"],Is.EqualTo("failed"));Assert.That(JToken.DeepEquals(ControlFact(),before),Is.True);Assert.That(File.ReadAllText(path),Is.EqualTo(original));}
             finally{Directory.Delete(pending);}
             yield return ConfigureControls(args);Assert.That((string)ControlFact()["configurationId"],Is.Not.EqualTo((string)before["configurationId"]));
         }
         [UnityTest] public IEnumerator ControlFactsFitAllFourProgramBindingsAndRestartInvalidatesOldConfiguration()
         {
-            var controls=BindingControls();for(int i=0;i<4;i++)controls.BindButton(i,ControllerCommand.Sequence,sequenceId);
+            var controls=BindingControls();for(int i=0;i<4;i++){controls.BindButton(i,ControllerCommand.Sequence,sequenceId);yield return ControllerSaveTestWait.Manual(controls);}
             var before=ControlFact();Assert.That(((JArray)before["buttons"]).All(b=>(string)b["programId"]==sequenceId),Is.True);var stale=MovementArgs();
             UnityEngine.Object.Destroy(controls);yield return null;controls=BindingControls();var after=ControlFact();Assert.That(JToken.DeepEquals(before["buttons"],after["buttons"]),Is.True);Assert.That((string)before["configurationId"],Is.Not.EqualTo((string)after["configurationId"]));
             Assert.That(BehaviourCatalog.TryCall("controller.configure",1,stale,out var call,out _),Is.True);Assert.That(call.Definition.Module.CanRun(new CapabilityContext(editor,animations),stale,out _),Is.False);Assert.That(controls.UserEnabled||controls.AvatarEnabled,Is.False);
@@ -85,7 +85,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator ControllerConfigurationRespectsPreservationAndKeepsItsSeparateSavedBoundary()
         {
             var controls=BindingControls();var before=ControlFact();var next=controls.Preferences;next.deadZone=.35f;
-            using(editor.RuntimeGate.Hold("Review room first")){Assert.That(controls.Apply(next),Is.True,"Activity review still permits manual configuration");Assert.That(controls.AvatarEnabled||controls.UserEnabled,Is.False);}
+            using(editor.RuntimeGate.Hold("Review room first")){Assert.That(controls.Apply(next),Is.True,"Activity review still permits manual configuration");yield return ControllerSaveTestWait.Manual(controls);Assert.That(controls.AvatarEnabled||controls.UserEnabled,Is.False);}
             before=ControlFact();
             string error;using(editor.WriteGate.TryFreeze(out error)){Assert.That(error,Is.Null);Assert.That(controls.Apply(next),Is.False);Assert.That(JToken.DeepEquals(ControlFact(),before),Is.True);}
             Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;
@@ -94,8 +94,8 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator UnavailablePreferenceStorageIsExplicitAndCannotBeOverwrittenBySharedOrManualEdits()
         {
-            var controls=BindingControls();Assert.That(controls.Apply(controls.Preferences),Is.True);var before=ControlFact();string file=Path.Combine(directory,"controls.v2.json"),original=File.ReadAllText(file);
-            File.WriteAllText(Path.Combine(directory,"controls.v99.json"),"future format");var args=MovementArgs();Assert.That(controlActions.Execute(ControlRequest(args),out _),Is.False);yield return null;
+            var controls=BindingControls();Assert.That(controls.Apply(controls.Preferences),Is.True);yield return ControllerSaveTestWait.Manual(controls);var before=ControlFact();string file=Path.Combine(directory,"controls.v2.json"),original=File.ReadAllText(file);
+            File.WriteAllText(Path.Combine(directory,"controls.v99.json"),"future format");var args=MovementArgs();Assert.That(controlActions.Execute(ControlRequest(args),out _),Is.True);yield return ControllerSaveTestWait.Receipt(controlActions);
             var after=ControlFact();Assert.That((bool)after["storageReady"],Is.False);Assert.That((string)after["configurationId"],Is.EqualTo((string)before["configurationId"]));Assert.That(File.ReadAllText(file),Is.EqualTo(original));
             Assert.That(controls.Apply(controls.Preferences),Is.False);UnityEngine.Object.Destroy(controls);yield return null;controls=BindingControls();Assert.That((bool)ControlFact()["storageReady"],Is.False);Assert.That(File.ReadAllText(file),Is.EqualTo(original));
         }

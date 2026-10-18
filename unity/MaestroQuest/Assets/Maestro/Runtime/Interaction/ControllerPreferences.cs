@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Maestro.Quest.Creation;
 using UnityEngine;
 
@@ -35,10 +36,23 @@ namespace Maestro.Quest.Interaction
     public sealed class ControllerPreferenceStorage
     {
         readonly VersionedRoomFile<ControllerPreferences> file;
-        public bool ReadOnly => file.ReadOnly;
-        public ControllerPreferenceStorage(string directory) => file = new(directory,"controls",8192,x => x.Validate(),x => x.Copy(),null,x => x.version=2);
+        volatile string unconfirmed;
+        public bool ReadOnly => unconfirmed!=null||file.ReadOnly;
+        public ControllerPreferenceStorage(string directory) => file = new(directory,"controls",8192,x => x.Validate(),x => x.Copy(),null,x => x.version=2,trackAcceptedPrimary:true);
         public ControllerPreferences Load(out string message) => file.Load(out message) ?? new ControllerPreferences();
-        public bool Save(ControllerPreferences value,out string error) => file.Save(value,out error);
+        public bool Save(ControllerPreferences value,out string error)
+        {error=unconfirmed;return error==null&&file.Save(value,out error);}
+        // The caller supplies a detached copy and retains the workspace until the
+        // confirmed values have also been committed on Unity's owner thread.
+        internal Task<string> SaveAsync(ControllerPreferences owned,Action<string> checkpoint=null)=>Task.Run(()=>{
+            try{
+                checkpoint?.Invoke("saving");
+                if(!Save(owned,out var error))return error??"Controller settings could not be saved.";
+                checkpoint?.Invoke("saved");return null;
+            }catch(Exception){
+                return unconfirmed="Controller saving could not be confirmed. Preserve its files and reopen or recover the workspace before another edit.";
+            }
+        });
     }
     public struct ControllerFrame
     {

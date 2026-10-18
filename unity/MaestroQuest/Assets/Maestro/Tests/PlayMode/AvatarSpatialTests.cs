@@ -405,7 +405,7 @@ namespace Maestro.Quest.Tests
             Assert.That(controls.UserEnabled,Is.True); frame.leftStick=Vector2.zero; frame.rightStick=Vector2.zero; yield return null;
             frame.leftStick=Vector2.right; yield return new WaitForSeconds(.3f);
             Assert.That(root.transform.position.x,Is.LessThan(-.1f)); Assert.That(viewer.transform.position,Is.EqualTo(initial)); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero)); Assert.That(motion.Active,Is.False);
-            controls.SwapSticks(); Assert.That(controls.Preferences.userStick,Is.EqualTo(MovementStick.Right));
+            controls.SwapSticks();yield return ControllerSaveTestWait.Manual(controls); Assert.That(controls.Preferences.userStick,Is.EqualTo(MovementStick.Right));
             var saved=new ControllerPreferenceStorage(directory).Load(out _); Assert.That(saved.avatarStick,Is.EqualTo(MovementStick.Left));
             var at=avatar.transform.position; yield return new WaitForSeconds(.1f); Assert.That(avatar.transform.position,Is.EqualTo(at),"Rebinding requires neutral");
             controls.Recover(); Assert.That(view.Active,Is.False); Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero));

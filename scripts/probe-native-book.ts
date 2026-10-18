@@ -4,6 +4,7 @@ import {readObjectReference} from '../shared/objectReference';
 import {chatSoundFixture} from './probe-chat-audio';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+import {assertControllerSettings,type ControllerSettings} from './probe-controller-completion';
 import {chromium,type Browser} from 'playwright-core';
 import {createServer,type ViteDevServer} from 'vite';
 import {readFile,writeFile} from 'node:fs/promises';
@@ -325,6 +326,28 @@ try{
  assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),locationRevision);
  await page.getByLabel('Action result',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-world-location-completion.png')});
  await writeFile(join(directory,'book-world-location-completion.json'),JSON.stringify({before:locationBefore,target:locationTarget,moved:locationMoved,after:locationAfter,restored:locationRestored,boundary:'Visible generated book controls with actual desktop Unity completions, fresh guards, current location and unchanged scene revision. No provider or physical headset claim.'},null,2));
+ // Personal settings use the same completion operation through visible book fields.
+ const controlsBefore=await readResourceFact('controller.settings','Controller settings and bindings') as unknown as ControllerSettings;
+ const controlsRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ const editControls=async(value:ControllerSettings)=>{
+  await openNamedAction('Configure controller bindings','controller.configure');
+  await page!.getByLabel('Controller settings',{exact:true}).selectOption(String(['right','left','none'].indexOf(value.avatarStick)));
+  await page!.getByRole('button',{name:'Load current values',exact:true}).click();await page!.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page!.getByLabel('Action inputs userStick',{exact:true}).selectOption(value.userStick);
+  for(const key of ['deadZone','userSpeed'] as const)await page!.getByLabel('Action inputs '+key,{exact:true}).fill(String(value[key]));
+  return runNamedAction('controller.configure');
+ };
+ const controlsTarget={...controlsBefore,deadZone:controlsBefore.deadZone===.3?.25:.3};
+ const controlsChanged=await editControls(controlsTarget);
+ const controlsAfter=await readResourceFact('controller.settings','Controller settings and bindings') as unknown as ControllerSettings;
+ assertControllerSettings(controlsAfter,controlsTarget);assert.notEqual(controlsAfter.configurationId,controlsBefore.configurationId);
+ assert.deepEqual(controlsChanged.output,{configurationId:controlsAfter.configurationId,saved:true});
+ const controlsRestored=await editControls(controlsBefore);
+ await page.getByLabel('Action result',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-controller-completion.png')});
+ const controlsFinal=await readResourceFact('controller.settings','Controller settings and bindings') as unknown as ControllerSettings;
+ assertControllerSettings(controlsFinal,controlsBefore);assert.notEqual(controlsFinal.configurationId,controlsAfter.configurationId);
+ assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),controlsRevision);
+ await writeFile(join(directory,'book-controller-completion.json'),JSON.stringify({before:controlsBefore,target:controlsTarget,changed:controlsChanged,after:controlsAfter,restored:controlsRestored,final:controlsFinal,boundary:'Visible generated book forms with real desktop Unity preference save completions. Input neutral/cancellation/lifetime tested separately in native suites. No headset or provider proof.'},null,2));
  await openNamedAction('Set world lighting','world.lighting.set');
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  await page.getByLabel('Action inputs settings enabled',{exact:true}).selectOption('true');

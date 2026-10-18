@@ -16,7 +16,7 @@ it('shares captured native controller preferences and exact save identities with
  expect(new Set([native.before.configurationId,native.afterMovement.configurationId,native.after.configurationId]).size).toBe(3);
  expect(native.afterMovement.buttons).toEqual(native.before.buttons);
  expect(native.after.buttons[1]).toEqual({button:'a',command:'program',programId:native.programId,available:true});
- expect(capabilityDefinition('controller.configure')).toMatchObject({duration:'instant',channels:[]});
+ expect(capabilityDefinition('controller.configure')).toMatchObject({duration:'completion',channels:[]});
 });
 it('exposes all valid independent stick combinations and rejects reserved inputs and malformed settings',()=>{
  const id='controller.configure',base=native.movement.selected.call.arguments;

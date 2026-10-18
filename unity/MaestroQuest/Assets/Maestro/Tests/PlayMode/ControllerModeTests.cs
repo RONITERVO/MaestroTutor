@@ -59,7 +59,7 @@ namespace Maestro.Quest.Tests
             var controls=SharedModes(out _,out _);var stale=ModeRequest("view.virtual");controls.Recover();Assert.That(modeActions.Execute(stale,out _),Is.False,"Recall while already off still invalidates an older enable request");
             stale=ModeRequest("view.virtual");controls.ToggleAvatar();controls.ToggleAvatar();
             Assert.That(modeActions.Execute(stale,out var error),Is.False);StringAssert.Contains("changed",error);
-            stale=ModeRequest("view.virtual");controls.SwapSticks();Assert.That(modeActions.Execute(stale,out error),Is.False);
+            stale=ModeRequest("view.virtual");controls.SwapSticks();yield return ControllerSaveTestWait.Manual(controls);Assert.That(modeActions.Execute(stale,out error),Is.False);
             var request=ModeRequest("view.virtual");Assert.That(modeActions.Execute(request,out error),Is.True,error);yield return null;
             string notified=null;Action observed=()=>notified=(string)ModeFact()["stateId"];controls.Changed+=observed;controls.Recover();controls.Changed-=observed;var recovered=ModeFact();Assert.That(notified,Is.EqualTo((string)recovered["stateId"]),"Change listeners must observe the final recovery identity");Assert.That(modeActions.Execute(request,out error),Is.True,error);Assert.That(JToken.DeepEquals(recovered,ModeFact()),Is.True);Assert.That(controls.Virtual,Is.False,"A replayed completion cannot enter Virtual again after Recall");
             stale=ModeRequest("view.virtual");controls.SendMessage("OnApplicationFocus",false);controls.SendMessage("OnApplicationFocus",true);Assert.That(modeActions.Execute(stale,out _),Is.False);
@@ -86,7 +86,7 @@ namespace Maestro.Quest.Tests
         {
             var controls=SharedModes(out var view,out var origin);TravelGround();
             Assert.That(controls.UserEnabled,Is.False);yield return ChangeMode("user.enable");Assert.That(controls.UserEnabled,Is.True);string error;
-            var prefs=controls.Preferences;prefs.avatarStick=MovementStick.None;Assert.That(controls.Apply(prefs),Is.True);
+            var prefs=controls.Preferences;prefs.avatarStick=MovementStick.None;Assert.That(controls.Apply(prefs),Is.True);yield return ControllerSaveTestWait.Manual(controls);
             Assert.That(modeActions.Execute(ModeRequest("maestro.enable"),out error),Is.False);StringAssert.Contains("binding",error);
             world.PausePhysics();yield return ChangeMode("view.virtual");yield return ChangeMode("user.enable");frame.leftStick=Vector2.right;yield return new WaitForSeconds(.2f);Assert.That(root.transform.position.x,Is.LessThan(0));Assert.That(origin.position,Is.EqualTo(Vector3.zero));
             controls.SendMessage("OnApplicationPause",true);Assert.That(view.Active||controls.UserEnabled,Is.False);Assert.That(origin.localPosition,Is.EqualTo(Vector3.zero));

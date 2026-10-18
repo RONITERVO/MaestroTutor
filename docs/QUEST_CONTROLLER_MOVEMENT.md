@@ -1,7 +1,8 @@
 # Controller movement and bindings
 
-Development implementation, updated 2026-10-07. The spatial-state refactor is
-in progress. Desktop evidence does not establish headset comfort or acceptance.
+Development implementation, updated 2026-10-18. One authored world has independent
+presentation and collision participation. Desktop evidence does not establish
+headset comfort or acceptance.
 
 ## Physical controls
 
@@ -10,7 +11,7 @@ No new overlay covers conversation pages. Both movement modes begin disabled on
 every launch and after focus loss, pause, head-tracking loss.
 
 - Maestro stick enables direct walking using the selected avatar stick.
-- Your movement enables user walking only in the explicit Virtual view.
+- Your movement enables user walking at any backdrop opacity.
 - Virtual / MR changes presentation while keeping world position and activity.
   Stop / MR disables the movement opt-ins and restores the mixed view.
 - Maestro binding and Your binding cycle Off, Left and Right, skipping the other
@@ -57,34 +58,31 @@ replacement, focus loss and conflicting rule ownership changes interrupt movemen
 
 ## User movement and mixed reality
 
-Artificial user movement currently requires explicit Virtual view. That view
-stops ARCameraManager passthrough and uses an opaque background; scanned surfaces
-are visible as geometry. It creates no floor or other world object. The physical
-tracking origin and MRUK world lock keep updating in both views. Virtual content
-moves relative to that fixed physical frame. Loading/scanning and physical
-surface placement currently wait for MR view.
+Artificial user movement requires its own opt-in and a tracked, ready world.
+Passthrough backdrop opacity, real-depth occlusion and each entity's physical
+collision participation are independent. Full virtual presentation hides the real
+room without creating a synthetic floor. Passthrough windows and authored
+material opacity retain their own definitions. Physical tracking and world lock
+continue independently; content moves relative to that fixed physical frame.
 
-Horizontal walking and snap turns transform virtual content, including its
-accepted ground, bodies, velocities and navigation. Held objects and physically
-bound content keep their physical poses. Unsupported cross-frame joints and
-active physics against real-room colliders refuse movement. Pause physics or
-explicitly disable real collisions before virtual travel; a view switch never
-changes that policy. Swept admission for active real collisions remains open.
+Walking and snap turns transform virtual content, including accepted ground,
+bodies, velocities and navigation. Held objects and physically bound content keep
+their physical poses. The complete frame transfer checks joints and sweeps each
+participant that still collides with the scanned room. An actor with real-room
+collision disabled can use virtual ground below the scanned floor while another
+prop remains constrained by it. Changing backdrop opacity never changes these
+collision policies.
 
-Walking uses a swept body capsule against virtual obstacles and checks accepted
-authored ground under the current and destination footprints. There is no hidden
-flat fallback. Current planar travel refuses missing ground, ledges and ground
-outside the small level tolerance of the physical floor. Following slopes,
-stairs, gravity for the user's body and teleportation remain unimplemented. The
-headset still moves physically; application collision does not constrain the
-real person or replace the Quest system boundary.
+Walking uses the shared ground motor, accepted authored ground and swept body
+clearance. Loading ground/obstacles retain their preparation demand. Unsupported
+ground, excessive steps/slopes or occupied paths refuse; there is no hidden flat
+fallback. Supported terrain height changes move the virtual content frame. This
+does not provide foot planting or constrain the real person's physical movement.
 
-Returning to MR restores camera and passthrough settings and disables user
-locomotion. It retains Maestro's separate controller opt-in, world pose, authored
-ground, physics, programs and autonomous actors. Manual view changes use the same
-path as the shared action. View entry/exit do not acquire actor ownership or cancel
-animation authoring. Focus, pause and head-tracking loss disable both movement
-opt-ins and restore MR without rewinding the world. Other subsystem lifecycle
+Returning to MR preserves the world pose, programs, physics and both movement
+opt-ins. View changes reset input gates without taking actor ownership.
+Focus, pause and head-tracking loss disable movement and restore ordinary
+presentation without rewinding world placement. Other subsystem lifecycle
 handlers still stop unsafe activity on actual interruption.
 
 B/Y, Home, palm Recall and the creation tray recover only the book and seven
@@ -98,7 +96,9 @@ lower-priority book actor; shared calls refuse a competing book owner. The saved
 book placement is one Undo; recovered tray positions are transient. Workspace
 holds, invalid frames, tracking loss and unavailable saving refuse all placement.
 
-World recentering is a separate operation still to be implemented. Once the user
+Explicit relocation and **World origin** use a separate completion operation,
+`world.viewpoint.set`, with fresh tracked-head, ground, occupancy and transfer
+checks followed by asynchronous saving. It is separate from Recall. Once the user
 moves or turns the virtual world, a workspace-owned bookmark records the authored
 floor position and horizontal heading. It is sampled at most once per second
 while tracking is valid, with explicit save/flush capture where available. Reload
@@ -146,6 +146,9 @@ Touch Plus/controller-hand switching, simultaneous sticks, comfort and text
 placement, MRUK alignment, passthrough lifecycle, grabs/throws during movement,
 seated/standing heights and sustained performance.
 
-Independent blend/opacity, passthrough windows, terrain-following locomotion,
-persistent physical alignment and active real-collision world movement remain release
-work in the shared spatial-state refactor.
+Blend/opacity, passthrough windows, supported terrain travel and swept transfer
+with active real-room participants now have native desktop coverage. Physical
+alignment, Quest presentation/comfort, foot planting, broader imported worlds,
+larger regions and the remaining release gates still require acceptance.
+See [spatial settings](QUEST_SPATIAL_SETTINGS.md) and
+[world authoring](QUEST_WORLD_AUTHORING.md) for individual collision policies.

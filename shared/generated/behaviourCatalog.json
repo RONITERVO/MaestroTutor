@@ -7190,7 +7190,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "none",
       "channels": [],
       "requirements": [
@@ -7198,7 +7198,7 @@
         "controls.configuration.current",
         "storage.writable"
       ],
-      "description": "Edit the same saved controller preferences as the physical movement tray. Read controller.settings and supply its exact configurationId; every successful manual/shared save issues a new ID, as does a new room runtime. movement changes the two independent stick bindings, user's speed and dead zone together, preserving buttons. button changes only one of X, A or the two stick clicks, preserving other settings. program binds an exact existing readable saved program ID, never runs it; missing references are visible and can be replaced or cleared. B/Y, system controls and palm Recall are reserved and cannot be reassigned. A successful save resets input gates: sticks/buttons must return to neutral before acting. It never enables movement, enters Virtual view or starts a program. Existing enabled modes remain enabled unless their stick becomes none. Preferences save immediately even in temporary rooms; room Undo/Discard does not revert controller settings. To revert, read the new identity and explicitly restore the prior values. Duplicate receipts do not apply again. Saved bindings survive restart but movement remains opt-in; a receipt ID is not a current configuration ID.",
+      "description": "Edit the same saved controller preferences as the physical movement tray. Read controller.settings and supply its exact configurationId; every successful manual/shared save issues a new ID, as does a new room runtime. movement changes the two independent stick bindings, user's speed and dead zone together, preserving buttons. button changes only one of X, A or the two stick clicks, preserving other settings. program binds an exact existing readable saved program ID, never runs it; missing references are visible and can be replaced or cleared. B/Y, system controls and palm Recall are reserved and cannot be reassigned. Uses the shared ordered edit queue and saves a detached preference copy on a worker. Before save dispatch Stop leaves settings unchanged. After dispatch saving continues even if observation stops. Active bindings and configurationId change only after confirmed saving; failed saves retain the prior live settings. Completion returns the immutable new configurationId. Workspace retirement drains the accepted writer. A successful save resets input gates: sticks/buttons must return to neutral before acting. It never enables movement, enters Virtual view or starts a program. Existing enabled modes remain enabled unless their stick becomes none. Preferences save outside temporary-room Undo even in temporary rooms; room Undo/Discard does not revert controller settings. To revert, read the new identity and explicitly restore the prior values. Duplicate receipts do not apply again. Saved bindings survive restart but movement remains opt-in; a receipt ID is not a current configuration ID.",
       "example": {
         "operation": "movement.right",
         "configurationId": "00000000000000000000000000000000",
@@ -42198,7 +42198,7 @@
         }
       },
       "label": "Controller settings and bindings",
-      "description": "Accepted stick preferences and all four configurable buttons, plus live opt-in flags. storageReady false means the preserved preferences file is unavailable for editing; displayed preferences can be startup fallback defaults. Other runtime holds may also temporarily prevent writes. configurationId binds an edit to this exact accepted configuration/runtime; saves rotate it, rejected writes keep it, and restart issues a new ID. Read again before each edit. programId is an exact saved program ID; available reports readable program presence, not that all targets/assets are currently ready. Snap turns require user movement enabled and complete-frame clearance at any backdrop opacity; this read never enables anything. Settings persist immediately even during temporary room mode. System buttons, B/Y and palm Recall stay reserved."
+      "description": "Accepted stick preferences and all four configurable buttons, plus live opt-in flags. storageReady false means the preserved preferences file is unavailable for editing; displayed preferences can be startup fallback defaults. Other runtime holds may also temporarily prevent writes. configurationId binds an edit to this exact accepted configuration/runtime; saves rotate it, rejected writes keep it, and restart issues a new ID. Read again before each edit. programId is an exact saved program ID; available reports readable program presence, not that all targets/assets are currently ready. Snap turns require user movement enabled and complete-frame clearance at any backdrop opacity; this read never enables anything. Settings persist independently even during temporary room mode; an in-flight edit is visible in its action receipt. Accepted settings remain unchanged until its save is confirmed. System buttons, B/Y and palm Recall stay reserved."
     },
     {
       "id": "controller.mode",
@@ -47480,7 +47480,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerConfigurationCapability.cs",
-      "sha256": "8bed2fc0746906c9097a81ec4d419d8159e5a351e63ad6471baad4ef7e5e1782"
+      "sha256": "cb6bdf75e157de716a487dcf1d0a4e0492996b819c66963b2c9b68b8572aa938"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ControllerModeCapability.cs",
@@ -48212,7 +48212,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "a3111d928c1d093536ea7d54deaa64b130899840b007ff093590f5e920607221"
+      "sha256": "d50a774a29f05f64f3d91e6373566503b2b346f86627a924642bc84777d46bef"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -49172,7 +49172,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ControllerPreferences.cs",
-      "sha256": "98cba76c895db2fcc68d2c4fcde875f23a53b70fe4aafa10b0273a437c04ff8e"
+      "sha256": "6b5abe653739548b3febec60a1e8b5cc0792260450403222840dc9623b8b90f4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GestureOwnership.cs",
@@ -49204,11 +49204,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfiguration.cs",
-      "sha256": "9f75b574b6ba4c37cbc14340cfd04d2bf01bc4d00a0b59ceb4fbd82dfa9ab29b"
+      "sha256": "57f663460d56b760a2cfa00f4dfdc76d2854aa0ca859ef2c5e461472d7b9d447"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementConfigurationSave.cs",
+      "sha256": "23d57ef828e72faeb3911888a83fc8664e420327fe54a6238a9061fde9764280"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementControls.cs",
-      "sha256": "d0b97e9260bba0f7c2c0c05a1cdd8405cf5b2b379f989e38ee1e82f50fbf1cc5"
+      "sha256": "6c482537bb3fa3318e3774f539972eec47470efc8ec328896c894f82e86f96b6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MovementModes.cs",

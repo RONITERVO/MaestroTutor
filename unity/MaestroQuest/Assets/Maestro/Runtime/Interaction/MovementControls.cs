@@ -49,7 +49,7 @@ namespace Maestro.Quest.Interaction
         }
         public bool Apply(ControllerPreferences next)
         {
-            if(TryApplyPreferences(next,out var error))return true;Say(error);return false;
+            return BeginManualConfiguration(next);
         }
         public void CycleStick(bool user)
         {
@@ -103,6 +103,7 @@ namespace Maestro.Quest.Interaction
         void Update() => Tick(Mathf.Min(Time.deltaTime,.05f));
         public void Tick(float deltaTime)
         {
+            PollManualConfiguration();
             if (preferences == null) return;
             CurrentModeId();
             if (!RuntimeReady()||paused || !focused || !HeadReady) { Recover(false); return; }
@@ -151,10 +152,10 @@ namespace Maestro.Quest.Interaction
         void Say(string message) { if (Status == message) return; Status=message; Changed?.Invoke(); }
         void OnApplicationPause(bool value) { paused=value; CurrentModeId(); if (value) Recover(); }
         void OnApplicationFocus(bool value) { focused=value; CurrentModeId(); if (!value) Recover(); }
-        void OnDisable() => Recover();
+        void OnDisable() {CancelManualConfiguration();Recover();}
         void OnDestroy()
         {
-            Recover(); if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; if (editor) editor.Editing-=Interrupt; if (animations) animations.Starting-=Authoring; if (workshop) workshop.Changed-=RulesChanged;
+            CancelManualConfiguration();configurationSave?.OwnerDestroyed();Recover(); if(runtimeGate!=null)runtimeGate.Changed-=RuntimeChanged; if (editor) editor.Editing-=Interrupt; if (animations) animations.Starting-=Authoring; if (workshop) workshop.Changed-=RulesChanged;
         }
     }
 }

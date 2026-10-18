@@ -3402,3 +3402,23 @@ These are deterministic desktop transport and UI checks. They neither spend
 provider credits nor establish physical Quest comfort, performance or provider
 planning quality. Delayed publication is injected only in the native tests,
 not faked by either transport journey.
+
+
+## Controller preference completion coverage
+
+`controller.configure` is a completion action shared by physical controls,
+generated book fields, headless execution and event programs. Native delayed-save
+tests cover old live bindings while the worker runs, neutral input after
+confirmation, exact copied intent, pre-dispatch cancellation, accepted saving after
+Stop, queued stale edits, immutable output, ordinary retry, independent file
+conflicts, ambiguous publication and owner destruction during retirement.
+The existing manual/shared tests retain reserved input, exact program references,
+mode opt-in and temporary-room persistence behavior.
+
+The full offline headless journey writes `controller-completion.json` after
+changing and restoring actual Unity preferences, inspecting the old receipt and
+replaying it without reapplying old bindings. The full book journey uses visible
+generated controls and emits `book-controller-completion.json` and its screenshot.
+Both verify that settings do not edit geometry or silently enable movement.
+These transport and UI checks do not establish physical input latency, headset
+comfort or provider planning quality.
