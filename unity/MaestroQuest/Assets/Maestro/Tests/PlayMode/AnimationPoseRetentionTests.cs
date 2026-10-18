@@ -69,7 +69,7 @@ namespace Maestro.Quest.Tests
             Assert.That(workshop.IsRecording,Is.False);Assert.That(workshop.IsPosing,Is.False);Assert.That(workshop.ControlsTarget("maestro"),Is.False);Assert.That(editor.Read("maestro").motion,Is.Null);
             workshop.DiscardRetainedPose();Assert.That(workshop.HasUnsavedPose,Is.False);Assert.That(editor.Read("maestro").joints,Is.Null);
             Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);yield return FinishAuthoringSave();Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
-            Assert.That(editor.SetMaestroModel(null),Is.True,editor.Status);workshop.TogglePose();Assert.That(workshop.IsPosing,Is.True);
+            Assert.That(editor.SetMaestroModel(null),Is.True,editor.Status);yield return PhysicalCreationTestWait.Until(()=>editor.AvatarSelectionCompletion.IsCompleted,"Default avatar did not finish");Assert.That(editor.AvatarSelectionCompletion.Result,Is.True,editor.Status);workshop.TogglePose();Assert.That(workshop.IsPosing,Is.True);
         }
         [UnityTest] public IEnumerator RetainedPoseNeverOverwritesANewerEditAndDiscardPreservesIt()
         {

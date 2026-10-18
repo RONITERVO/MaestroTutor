@@ -2971,7 +2971,7 @@
         "model.humanoid",
         "storage.writable"
       ],
-      "description": "Choose the current included Maestro with empty modelHash (resolved once to the exact hash from avatar.included), or an exact imported hash from model.library.inspect. The resolved hash is saved and returned; app artwork updates never replace saved selections. Inspect avatar.model and supply its revision. Shares the physical Use Maestro/Default path: loads and validates a hidden humanoid first, then saves and applies it as one Undo; temporary rooms remain unsaved until Keep. The current model, saved pose and recorded motions survive preparation/save failure or cancellation before commit. Embedded walk index resets on model change (the bundled default uses its declared walk clip); exact library motion/activity choices are retained and may be incompatible, never silently replaced. Other actions must release Maestro first. Stop while preparing prevents later commit; after a successful commit use Undo or explicit selection to revert. No file picker or downloaded code is used. Selection does not request a clip or recording; configured automatic tutor activity may resume when ready. Restart loads only the saved selection. Completion reports a ready selected model; avatar.model separates saved and displayed identities when an existing saved model later becomes unavailable.",
+      "description": "Choose the current included Maestro with empty modelHash (resolved once to the exact hash from avatar.included), or an exact imported hash from model.library.inspect. The resolved hash is saved and returned; app artwork updates never replace saved selections. Inspect avatar.model and supply its revision. Shares the physical Use Maestro/Default path: loads and validates a hidden humanoid first, then saves and applies it as one Undo; temporary rooms remain unsaved until Keep. Preparation failure or cancellation before publication retains the previous saved and displayed model. Saving runs in the background and briefly reserves authored edits; unrelated runtime movement continues. Unconfirmed publication may leave disk and live identities different: saving is blocked for inspection or recovery, never automatically retried. Saved poses and recorded motions are retained. Embedded walk index resets on model change (the bundled default uses its declared walk clip); exact library motion/activity choices are retained and may be incompatible, never silently replaced. Other actions must release Maestro first. Stop before publication acceptance prevents later commit; once accepted, publication and display drain even after Stop or pause. Use Undo or explicit selection to revert confirmed completion. No file picker or downloaded code is used. Selection does not request a clip or recording; configured automatic tutor activity may resume when ready. Restart loads only the saved selection. Completion reports a ready selected model with its immutable accepted revision, even if a later observer edit changes the current revision; avatar.model separates saved and displayed identities when an existing saved model later becomes unavailable.",
       "example": {
         "target": "maestro",
         "modelHash": "",
@@ -42597,7 +42597,7 @@
         }
       },
       "label": "Current Maestro model",
-      "description": "Saved versus displayed model identity; empty hash denotes the original sketch fallback, while a packaged included avatar has its exact model hash. Read avatar.included to identify the current bundled default. loading retains the previous display during preparation, ready means selected and displayed identities match, unavailable means a saved selection could not be displayed. A failed new selection leaves the previous saved identity; bounded status explains it. Read the revision before selecting. Poses use canonical joints across supported humanoids."
+      "description": "Live selected versus displayed model identity; empty hash denotes the original sketch fallback, while a packaged included avatar has its exact model hash. Read avatar.included to identify the current bundled default. loading includes queueing, preparation and publication while retaining the previous display. ready means live selected and displayed identities match, not independent disk verification; unavailable means those identities differ or publication was not confirmed. Rejected preparation leaves the previous saved identity. Unconfirmed publication can leave disk different from both live identities and blocks saves; bounded status reports this and recovery is required. Read the revision before selecting. Poses use canonical joints across supported humanoids."
     },
     {
       "id": "avatar.included",
@@ -47172,7 +47172,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/MaestroAvatar.cs",
-      "sha256": "9c331eaac29b4cfd704c5f6601f940ec891939dbf396e1c81171d1bfbd1318c5"
+      "sha256": "41618b4307c4804633fbda628946d5d91fdb2f02c7bc07f1dd16deb072cbd588"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/PropAttachment.cs",
@@ -47408,7 +47408,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
-      "sha256": "e48abe61fc90a9142c154a7197f3e092386dffc4ce509023412c2e3a5fcddf02"
+      "sha256": "1017e791db4e48f071e06579871ffc22e3d37d0154fc758c6d1020b48872d46e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
@@ -47972,7 +47972,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarModelSelection.cs",
-      "sha256": "437de6d0be0148426651c72132d1b137ee149a685072dce250d87cc3ae5e3402"
+      "sha256": "57abebfaea19218ec6e58fa6c4d603ae320b22905c4ce73f5fecc9f8ae1240fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AvatarWalkSelection.cs",
@@ -48199,6 +48199,10 @@
       "sha256": "b234011b5e72a4085f2c296612a1ae1b3da8abe4dee42930e076332edf8fbd67"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingAvatarSelection.cs",
+      "sha256": "d3fc69897a8d84fa8831ebbc24fae858bf76655e2799f7bb7f1dd4ea755a4bf9"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingConnectionEdits.cs",
       "sha256": "28f62bf7b9c2c92cd2a66ea187f6c39d21d6c46708efc081658bff3b628ad6ed"
     },
@@ -48228,7 +48232,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalCreationCompletion.cs",
-      "sha256": "661f123494da2b591ec102eb2499df680904930fa5e99db2b2f771eae8f567cf"
+      "sha256": "7cdf0dcaf0d2e45d1158033249e73f75853474e4c974e5203723f46386ea016d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48268,7 +48272,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomSave.cs",
-      "sha256": "40bce35e23eb192eda4f15ce7b06b44fb1a8fccd5e84d66e3a6d9d1c4361ebc3"
+      "sha256": "c4625dde504351ef540b08145ae645272aa0a5ad40d2fe8a1318649d5fe7a906"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomWindows.cs",
@@ -48428,7 +48432,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "630655f73c586fc4d9e2a661236542a62afd5b693163e0e470ae8ca0b9d252a8"
+      "sha256": "21dbcc6753c0c6dd717aac49a681d6686b2ecbb148bfbab0c88e69c041665d3d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48456,7 +48460,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "b445eba3d991b44bd410ad84dc99c421aa55d0e82b87c38da0dfc6436659ebfb"
+      "sha256": "73323180554a51b81568c00105b48dff65d52990570d1680ebe8a9b7d2f9cdfe"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48516,7 +48520,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLifecycleSave.cs",
-      "sha256": "b5ff7d359cc427e8e0e90c69b12795c2b7722018973fe10c08927c7a5f197c61"
+      "sha256": "56d1772323f857e307abcfc7e5f71c6ae4cad7daae7bd82546759ebe12a70dbd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLight.cs",
@@ -48684,7 +48688,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "1fb26b94a5d3fc545b77c142ad6a8d0774f3226188f177bf98c8d32d9bbd9214"
+      "sha256": "fbc0ca065322bfe6d5dd7135663b91786ec21570d517151632a80fb69217b58d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -49008,7 +49012,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportAcceptance.cs",
-      "sha256": "b28d962c8acd4f405c13d21119809d26148305a2dce220c5b84d3054ae546eb8"
+      "sha256": "2b404712865ef244ead8531df59c91e962c5f96bcb9e44f804c1c70f4752f333"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportArchiveSelection.cs",
@@ -49036,7 +49040,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshop.cs",
-      "sha256": "dd0e5bba2e84b6dc6f8ffd4b17c57d072ccadfb603ce37f0aefaf69f6629049f"
+      "sha256": "83ede99dcc353d26fcf926a965b6710b67a25733183883519304c96ecd0c57f3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportWorkshopPreview.cs",

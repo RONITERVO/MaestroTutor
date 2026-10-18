@@ -76,6 +76,12 @@ namespace Maestro.Quest.Creation
             return coordinationError="The live room edit was accepted, but its save was not confirmed. Saved files are preserved and further saves are blocked. Inspect or recover the workspace before retrying. "+detail;
         }
 
+        internal volatile bool SelectionPublicationUnconfirmed;
+        internal string PreserveUnconfirmedSelection(string detail){
+            SelectionPublicationUnconfirmed=true;
+            return coordinationError="Avatar publication was not confirmed. Live and saved avatar identities may differ. Further saves are blocked. Inspect or recover the workspace before retrying. "+detail;
+        }
+
         bool PublishPreparedCandidate(VersionedRoomFile<RoomDocument>.PreparedSave candidate,out string error,bool wait=false)
         {
             error=coordinationError;if(error!=null)return false;

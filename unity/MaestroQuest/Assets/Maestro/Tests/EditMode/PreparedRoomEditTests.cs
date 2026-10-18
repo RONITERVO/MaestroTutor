@@ -287,5 +287,46 @@ namespace Maestro.Quest.Tests
                 journal.Undo();Assert.AreEqual(Vector3.right*3,journal.Read(block.id).position);Assert.IsNull(journal.ReadRegion(region.id));
             }
         }
+
+        [Test] public void SelectionPublicationReservationBlocksAuthoredEditsButPreservesRuntimePlacement()
+        {
+            var journal=Room();var block=Block();Assert.IsTrue(journal.Apply(new[]{block},Array.Empty<string>(),out var error),error);
+            var previous=journal.Read("book");previous.position=Vector3.up;
+            Assert.IsTrue(journal.Prepare(new[]{previous},Array.Empty<string>(),out var earlier,out error),error);
+            var next=journal.Read("maestro");next.modelHash=new string('a',64);
+            Assert.IsTrue(journal.Prepare(new[]{next},Array.Empty<string>(),out var selected,out error,scope:RoomEditScope.Content),error);
+            using(earlier)using(selected){
+                Assert.IsTrue(selected.ReservePublication(out error),error);
+                Assert.IsFalse(earlier.Accept(journal,out _,allowRuntimeProgress:true));
+                Assert.IsFalse(journal.Prepare(new[]{block},Array.Empty<string>(),out _,out error));
+                Assert.That(error,Does.Contain("publishing"));Assert.IsFalse(journal.Undo());
+                Assert.IsFalse(journal.ApplySnapshot(journal.Snapshot(),out _));
+                Assert.IsFalse(journal.UpdatePlacement(block.id,Vector3.right,Quaternion.identity));
+                Assert.IsTrue(journal.UpdatePlacement(block.id,Vector3.up,Quaternion.identity,runtime:true));
+                Assert.IsTrue(selected.Accept(journal,out error,allowRuntimeProgress:true),error);
+            }
+            Assert.IsFalse(journal.PublicationReserved);
+            Assert.AreEqual(next.modelHash,journal.Read("maestro").modelHash);Assert.AreEqual(Vector3.up,journal.Read(block.id).position);
+            Assert.IsTrue(journal.Undo());Assert.IsNull(journal.Read("maestro").modelHash);Assert.AreEqual(Vector3.up,journal.Read(block.id).position);
+        }
+        [Test] public void CancelledSelectionReservationReleasesWithoutChangingStateOrHistory()
+        {
+            var journal=Room();string before=State(journal);var next=journal.Read("maestro");next.modelHash=new string('b',64);
+            Assert.IsTrue(journal.Prepare(new[]{next},Array.Empty<string>(),out var selected,out var error,scope:RoomEditScope.Content),error);
+            Assert.IsTrue(selected.ReservePublication(out error),error);
+            selected.Dispose();selected.Dispose();
+            Assert.AreEqual(before,State(journal));Assert.IsFalse(journal.CanUndo);Assert.IsFalse(journal.PublicationReserved);
+            Assert.IsTrue(journal.Apply(new[]{Block()},Array.Empty<string>(),out error),error);
+        }
+        [Test] public void SelectionReservationRefusesStaleOrAlreadyReservedCandidates()
+        {
+            var journal=Room();var next=journal.Read("maestro");next.modelHash=new string('b',64);
+            Assert.IsTrue(journal.Prepare(new[]{next},Array.Empty<string>(),out var first,out var error,scope:RoomEditScope.Content),error);
+            Assert.IsTrue(journal.Prepare(new[]{next},Array.Empty<string>(),out var second,out error,scope:RoomEditScope.Content),error);
+            using(first)using(second){Assert.IsTrue(first.ReservePublication(out error),error);Assert.IsFalse(second.ReservePublication(out _));}
+            Assert.IsTrue(journal.Prepare(new[]{next},Array.Empty<string>(),out var stale,out error,scope:RoomEditScope.Content),error);
+            using(stale){Assert.IsTrue(journal.Apply(new[]{Block()},Array.Empty<string>(),out error),error);Assert.IsFalse(stale.ReservePublication(out _));}
+            Assert.IsFalse(journal.PublicationReserved);
+        }
     }
 }

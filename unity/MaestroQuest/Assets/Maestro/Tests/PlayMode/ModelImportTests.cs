@@ -113,7 +113,7 @@ namespace Maestro.Quest.Tests
             var pose = avatar.PoseRig.Capture(); Assert.That(pose.Length,Is.EqualTo(17));
             Assert.That(Quaternion.Angle(channelsBefore.Single(x => x.joint == PoseJoint.Head).rotation,pose.Single(x => x.joint == PoseJoint.Head).rotation),Is.GreaterThan(10));
             editor.SaveAnimation("maestro",null,pose,true); avatar.SetEditing(false);
-            workshop.DefaultMaestro(); Assert.That(avatar.CustomModel,Is.Null); Assert.That(editor.Read("maestro").modelHash,Is.Null);
+            workshop.DefaultMaestro(); yield return PhysicalCreationTestWait.Until(()=>editor.AvatarSelectionCompletion.IsCompleted,"Default avatar did not finish"); Assert.That(editor.AvatarSelectionCompletion.Result,Is.True,workshop.Status); Assert.That(avatar.CustomModel,Is.Null); Assert.That(editor.Read("maestro").modelHash,Is.Null);
             editor.Undo(); yield return new WaitUntil(() => !avatar.ModelBusy); Assert.That(avatar.ModelHash,Is.EqualTo(hash),avatar.ModelStatus);
             Assert.That(Quaternion.Angle(avatar.PoseRig.Capture().Single(x => x.joint == PoseJoint.Head).rotation,pose.Single(x => x.joint == PoseJoint.Head).rotation),Is.LessThan(.1f));
             editor.SaveNow(); editor.SendMessage("OnApplicationPause",true); editor.SendMessage("OnApplicationPause",false); yield return null;
@@ -251,7 +251,7 @@ namespace Maestro.Quest.Tests
             editor.SaveNow(); rules.SendMessage("OnApplicationPause",true); rules.SendMessage("OnApplicationPause",false); yield return new WaitForSeconds(.2f);
             Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x => x.id == "maestro").walkClip,Is.EqualTo(1));
             Assert.That(new RuleStorage(directory).Load(out _).sequences.Single().SimpleSteps()[0].clipModelHash,Is.EqualTo(step.clipModelHash));
-            imports.DefaultMaestro(); Assert.That(editor.Read("maestro").walkClip,Is.Zero);
+            imports.DefaultMaestro(); yield return PhysicalCreationTestWait.Until(()=>editor.AvatarSelectionCompletion.IsCompleted,"Default avatar did not finish"); Assert.That(editor.AvatarSelectionCompletion.Result,Is.True,imports.Status); Assert.That(editor.Read("maestro").walkClip,Is.Zero);
             Assert.That(runtime.Trigger(rules.Selected.id),Is.False,"A clip must not silently resolve against another avatar");
             editor.Undo(); yield return new WaitUntil(() => !avatar.ModelBusy);
             Assert.That(avatar.WalkClip,Is.Zero); Assert.That(runtime.Trigger(rules.Selected.id),Is.True,runtime.Scheduler.LastError); runtime.StopAll();

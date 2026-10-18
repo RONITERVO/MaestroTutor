@@ -19,8 +19,8 @@ namespace Maestro.Quest.Imports
             if(disposed||Busy||!HasPreview||selectionPhase!="preview"||id!=selectionId||hash!=pending.Hash)return false;
             if(!isActiveAndEnabled||selectionPaused||!selectionFocused||editor.RuntimeGate.Held||editor.Ownership.Suspended){error="Resume the room before accepting the model";return false;}
             if(editor.WriteGate.Frozen||!editor.CanSaveRoom){error="Room saving is unavailable";return false;}
-            if(editor.AnyHeld||editor.DrawingInProgress){error="Release objects and finish drawing before accepting the model";return false;}
-            if(animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)){error="Finish authoring and resolve retained poses, takes or keyframe edits first";return false;}
+            if(destination!="maestro"&&(editor.AnyHeld||editor.DrawingInProgress)){error="Release objects and finish drawing before accepting the model";return false;}
+            if(destination!="maestro"&&animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)){error="Finish authoring and resolve retained poses, takes or keyframe edits first";return false;}
             if(destination=="object")return editor.CanCreatePrimitive(out error);
             if(destination=="maestro"){
                 if(!preview.IsHumanoid){error=preview.HumanoidIssue??"Choose a valid humanoid for Maestro";return false;}
@@ -42,10 +42,16 @@ namespace Maestro.Quest.Imports
         }
         async Task<JObject> AcceptSelectionAsync(ModelAsset asset,string destination,int revision,CancellationTokenSource cancellation,RoomOwnership.Lease owner)
         {
-            var token=cancellation.Token;string roomSession=editor.TemporarySessionId;Say("Saving the selected "+destination+"…");
+            var token=cancellation.Token;string roomSession=editor.TemporarySessionId;var selectMaestro=editor.CaptureCompletedSelection("maestro");
+            var gate=editor.RuntimeGate;
+            // Own interruption from acceptance, including the library-copy wait
+            // before a room loader or avatar operation has started.
+            void Interrupted(){if(gate.Held)cancellation.Cancel();}
+            gate.Changed+=Interrupted;
             try{
+                Say("Saving the selected "+destination+"…");
                 await Task.Yield();token.ThrowIfCancellationRequested();
-                string objectId="";string[] motions=Array.Empty<string>();
+                string objectId="";string[] motions=Array.Empty<string>();JObject avatarReceipt=null;
                 if(destination=="motions"){
                     // Once accepted by the library, this atomic write is allowed to drain.
                     // Cancellation never promises to remove an already committed library entry.
@@ -54,24 +60,23 @@ namespace Maestro.Quest.Imports
                 } else {
                     await editor.Models.SaveAsync(asset);token.ThrowIfCancellationRequested();
                     if(!this||disposed||!isActiveAndEnabled||editor.RuntimeGate.Held||editor.TemporarySessionId!=roomSession)throw new OperationCanceledException();
-                    if((destination is "object" or "maestro") && (editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)))
+                    if(destination=="object" && (editor.AnyHeld||editor.DrawingInProgress||animationWorkshop&&(animationWorkshop.ControlsTarget(editor.SelectedId)||animationWorkshop.HasUnsavedPose||animationWorkshop.HasUnsavedRecording||animationWorkshop.HasUnsavedFrameEdit)))
                         throw new ModelImportException("Room interaction changed while importing. Finish the active edit, then retry this preview.");
                     if(destination=="object"){
                         objectId=await editor.CreateImportedModelAsync(asset.Hash,token);
                         editor.Select(editor.Find(objectId));
                     }else if(destination=="maestro"){
-                        if(!editor.BeginMaestroModel(asset.Hash,revision,token,out var loading,out var error))throw new ModelImportException(error);
-                        if(!await loading)throw new ModelImportException(maestro?maestro.ModelStatus:"The avatar could not be selected");
-                        objectId="maestro";editor.Select(editor.Find(objectId));
+                        avatarReceipt=await editor.SelectMaestroModelAsync(asset.Hash,revision,token);
+                        objectId="maestro";selectMaestro();
                     }
                 }
-                selectionResult=new JObject {["destination"]=destination,["objectId"]=objectId,["revision"]=objectId==""?0:editor.ObjectRevision(objectId),["temporary"]=editor.TemporaryRoom,["motionIds"]=new JArray(motions)};
+                selectionResult=new JObject {["destination"]=destination,["objectId"]=objectId,["revision"]=avatarReceipt?["revision"]??new JValue(objectId==""?0:editor.ObjectRevision(objectId)),["temporary"]=avatarReceipt?["temporary"]??new JValue(editor.TemporaryRoom),["motionIds"]=new JArray(motions)};
                 selectionPhase="completed";ClearPreview();if(destination=="motions")ShowLibraryDetails();Say("Import completed — ready to use");
                 var result=(JObject)selectionResult.DeepClone();result["requestId"]=selectionId;result["modelHash"]=asset.Hash;return result;
             }catch(OperationCanceledException){selectionPhase=HasPreview?"preview":"cancelled";selectionError="Import stopped. A verified library copy may remain; no interrupted placement will restart.";Say(selectionError);return null;}
             catch(Exception ex){selectionPhase=HasPreview?"preview":"failed";selectionError=Bounded(ex is ModelImportException?ex.Message:"Import could not finish. Inspect the preview before retrying; copied library assets may remain.");Say(selectionError);return null;}
             finally{
-                owner?.Dispose();cancellation.Dispose();busy=false;
+                gate.Changed-=Interrupted;owner?.Dispose();cancellation.Dispose();busy=false;
                 if(disposed||!this||!isActiveAndEnabled){selectionPhase=selectionResult==null?"cancelled":"completed";ClearPreview();EndSelectionOwner();}
             }
         }

@@ -89,17 +89,17 @@ namespace Maestro.Quest.Imports
             if(HasPreview)return await AcceptPreviewManually("maestro");
             using var write=editor.WriteGate.TryWrite(out var blocked);if(write==null){Say(blocked);return false;}
             if (Busy || !maestro || maestro.ModelBusy) return false;
-            if (editor.AnyHeld) { Say("Release the object before changing Maestro"); return false; }
             var target = Target;
             if (!target || !target.Ready || !target.IsHumanoid) { Say(target?.HumanoidIssue ?? "Preview or select a GLB or VRM humanoid, then choose Use Maestro"); return false; }
             string hash = HasPreview ? pending.Hash : editor.Read(editor.SelectedId)?.modelHash;
+            var selectCompleted=editor.CaptureCompletedSelection("maestro");
             busy = true;
             try
             {
                 if (HasPreview) { await editor.Models.SaveAsync(pending); if (!this || disposed) return false; ClearPreview(); await Task.Yield(); }
                 if (!this || disposed || !editor.SetMaestroModel(hash)) return false;
-                bool ready = await maestro.ModelLoad;
-                if (ready && this && !disposed) editor.Select(editor.Find("maestro"));
+                bool ready = await editor.AvatarSelectionCompletion;
+                if (ready && this && !disposed) selectCompleted();
                 if (this && !disposed) Say(maestro.ModelStatus);
                 return ready;
             }
@@ -110,7 +110,7 @@ namespace Maestro.Quest.Imports
         {
             if(Busy)return;
             if(!editor.SetMaestroModel(null)){Say(editor.Status);return;}
-            bool ready=await maestro.ModelLoad;
+            bool ready=await editor.AvatarSelectionCompletion;
             if(this&&!disposed)Say(ready?"Included Maestro restored — Undo brings back your custom avatar":maestro.ModelStatus);
         }
         void MaestroChanged() { motionRequest++; if (libraryMode) ShowLibraryDetails(); if (maestro) Say(maestro.ModelStatus); }

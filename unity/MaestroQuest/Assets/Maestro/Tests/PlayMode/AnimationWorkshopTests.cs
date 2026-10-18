@@ -127,12 +127,14 @@ namespace Maestro.Quest.Tests
         }
         [UnityTearDown] public IEnumerator TearDown()
         {
+            if(workshop){
             if(workshop.IsSavingFrameEdit){workshop.DiscardFrameEdit();float frameEnd=Time.realtimeSinceStartup+20;while(workshop.IsSavingFrameEdit&&Time.realtimeSinceStartup<frameEnd)yield return null;}
             workshop.DiscardFrameEdit();yield return RecordingDrained();
             workshop.DiscardTake();yield return RecordingDrained();
             if(workshop.IsSavingPose){workshop.DiscardRetainedPose();float end=Time.realtimeSinceStartup+20;while(workshop.IsSavingPose&&Time.realtimeSinceStartup<end)yield return null;}
             workshop.DiscardRetainedPose();yield return RecordingDrained();
-            var closingRules=root.GetComponent<Maestro.Quest.Rules.RuleWorkshop>();
+            }
+            var closingRules=root?root.GetComponent<Maestro.Quest.Rules.RuleWorkshop>():null;
             UnityEngine.Object.Destroy(root); yield return null;
             yield return TestLifecycleDrain.Complete(editor,closingRules);
             if (Directory.Exists(directory)) Directory.Delete(directory,true);

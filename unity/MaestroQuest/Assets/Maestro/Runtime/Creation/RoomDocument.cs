@@ -308,6 +308,7 @@ namespace Maestro.Quest.Creation
         // Physics updates persisted placement without filling Undo with every simulation step.
         public bool UpdatePlacement(string id, Vector3 position, Quaternion rotation,bool runtime=false)
         {
+            if(PublicationReserved&&!runtime)return false;
             if (!items.TryGetValue(id,out var data) || !float.IsFinite(position.sqrMagnitude) || position.sqrMagnitude > 625 || !MotionFrame.ValidRotation(rotation)) return false;
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
             data.position = position; data.rotation = rotation; revisions[id]=clock.Next++;
@@ -340,7 +341,8 @@ namespace Maestro.Quest.Creation
         }
         internal bool Prepare(RoomObjectData[] replacements, string[] removals, out PreparedEdit prepared,out string error, RoomLayout observedBefore=null, StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,RegionEdits regionEdits=null,RoomEditScope scope=RoomEditScope.Full,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false)
         {
-            prepared=null;error="Choose valid unique object replacements and removals";
+            prepared=null;if(PublicationReserved){error=PublicationBusy;return false;}
+            error="Choose valid unique object replacements and removals";
             if(replacements==null||removals==null||replacements.Any(x=>x==null||string.IsNullOrEmpty(x.id))||removals.Any(string.IsNullOrEmpty)||replacements.Select(x=>x.id).Distinct().Count()!=replacements.Length)return false;
             if(timeEdit!=WorldTimeEdit.Exact||weatherTransition) {
                 error="Temporal edits must contain only clock settings, a clock position or a weather transition";

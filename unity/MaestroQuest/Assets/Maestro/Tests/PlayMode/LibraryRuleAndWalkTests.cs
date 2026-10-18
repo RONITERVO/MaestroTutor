@@ -55,7 +55,7 @@ namespace Maestro.Quest.Tests
             runtime = root.AddComponent<RoomRules>(); runtime.Initialize(rules,editor,authoring,null,room,null,_ => anchor.transform);
             var bytes = Clip(5,"Greeting"); var asset = ModelLibrary.Inspect("avatar.glb",bytes);
             var save = editor.Models.SaveAsync(asset); yield return Until(() => save.IsCompleted); Assert.That(save.Exception,Is.Null);
-            Assert.That(editor.SetMaestroModel(asset.Hash),Is.True); yield return Until(() => !avatar.ModelBusy); Assert.That(avatar.CustomModel,Is.Not.Null,avatar.ModelStatus);
+            Assert.That(editor.SetMaestroModel(asset.Hash),Is.True); yield return Until(() => !avatar.ModelBusy&&!editor.AvatarSelectionPending); Assert.That(avatar.CustomModel,Is.Not.Null,avatar.ModelStatus);
             var add = editor.Motions.ImportAsync("greeting.glb",bytes); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); greeting = add.Result.Single();
             add = editor.Motions.ImportAsync("walk.glb",Clip(12,"Walking")); yield return Until(() => add.IsCompleted); Assert.That(add.Exception,Is.Null); gait = add.Result.Single();
             rules.NewSequence(); rules.AssignLibraryMotion(greeting.id);
@@ -181,7 +181,7 @@ namespace Maestro.Quest.Tests
             query.query="calm";query.favouritesOnly=true;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(executor.Motions.Observe().entries.Single().name,Is.EqualTo("Everyday walk"));
             var archive=editor.Motions.ArchiveAsync(gait.id,true);yield return Until(()=>archive.IsCompleted);Assert.That(executor.Motions.Observe().total,Is.Zero);
             query.archivedOnly=true;Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(executor.Motions.Observe().entries.Single().archived,Is.True);
-            Assert.That(editor.SetMaestroModel(null),Is.True);yield return Until(()=>!avatar.ModelBusy);
+            Assert.That(editor.SetMaestroModel(null),Is.True);yield return Until(()=>!avatar.ModelBusy&&!editor.AvatarSelectionPending);
             page=executor.Motions.Observe();Assert.That(page.ready,Is.False);Assert.That(page.entries,Is.Empty);Assert.That(page.modelHash,Is.Empty);
             Assert.That(executor.Execute(request,out error,out _),Is.False);Assert.That(error,Does.Contain("loaded imported model"));
         }
@@ -305,8 +305,8 @@ namespace Maestro.Quest.Tests
             yield return null; avatar.SendMessage("OnApplicationPause",true); yield return new WaitForSeconds(.3f); Assert.That(avatar.ActivityMotionId,Is.Null);
             avatar.SendMessage("OnApplicationPause",false); avatar.ObserveTutorState(observed); yield return new WaitForSeconds(.15f); Assert.That(avatar.ActivityMotionId,Is.Null,"Resume rejects the old snapshot object");
             avatar.ObserveTutorState(new BookSnapshot { version=1,activity="speaking" }); yield return Until(() => avatar.ActivityMotionId == greeting.id);
-            Assert.That(editor.SetMaestroModel(""),Is.True); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
-            Assert.That(editor.SetMaestroModel(model),Is.True); yield return Until(() => !avatar.ModelBusy); yield return Until(() => avatar.ActivityMotionId == greeting.id);
+            Assert.That(editor.SetMaestroModel(""),Is.True); yield return Until(()=>editor.AvatarSelectionCompletion.IsCompleted);Assert.That(editor.AvatarSelectionCompletion.Result,Is.True,editor.Status); Assert.That(avatar.ActivityMotionId,Is.Null);
+            Assert.That(editor.SetMaestroModel(model),Is.True); yield return Until(() => !avatar.ModelBusy&&!editor.AvatarSelectionPending); yield return Until(() => avatar.ActivityMotionId == greeting.id);
             Assert.That(editor.ActivityProfiles.Find(model).roles[0].choices[0].motionId,Is.EqualTo(greeting.id));
             avatar.SendMessage("OnApplicationFocus",false); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
             avatar.SendMessage("OnApplicationFocus",true); yield return null; Assert.That(avatar.ActivityMotionId,Is.Null);
@@ -483,7 +483,7 @@ namespace Maestro.Quest.Tests
             try {
                 Assert.That(host.Start("replacement",call,out _,out error),Is.True,error);
                 Assert.That(host.State("replacement",out _),Is.EqualTo(RuleActionState.Preparing));
-                Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True);yield return Until(()=>!avatar.ModelBusy);
+                Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True);yield return Until(()=>!avatar.ModelBusy&&!editor.AvatarSelectionPending);
                 var probe=editor.Motions.AcquireAsync(gait.id,gait.rigHash);
                 yield return Until(()=>probe.IsCompleted);Assert.That(probe.Exception,Is.Null);probe.Result.Dispose();
                 yield return Until(()=>host.State("replacement",out _)!=RuleActionState.Preparing);
@@ -514,9 +514,9 @@ namespace Maestro.Quest.Tests
             yield return new WaitForSeconds(.35f); Assert.That(Quaternion.Angle(rotation,leg.rotation),Is.GreaterThan(10));
             Assert.That(Vector3.Distance(position,avatar.transform.position),Is.LessThan(.0001f)); authoring.Stop(); Assert.That(avatar.IsImportedClipPlaying,Is.False);
             var replacement = ModelLibrary.Inspect("compatible-export.glb",Clip(8,"Other export")); var save = editor.Models.SaveAsync(replacement); yield return Until(() => save.IsCompleted);
-            Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True); yield return Until(() => !avatar.ModelBusy); Assert.That(avatar.WalkMotionId,Is.EqualTo(gait.id));
+            Assert.That(editor.SetMaestroModel(replacement.Hash),Is.True); yield return Until(() => !avatar.ModelBusy&&!editor.AvatarSelectionPending); Assert.That(avatar.WalkMotionId,Is.EqualTo(gait.id));
             authoring.PreviewWalk(); yield return Until(() => avatar.LibraryMotionId == gait.id); authoring.Stop();
-            editor.Undo(); yield return Until(() => !avatar.ModelBusy); Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id));
+            editor.Undo(); yield return Until(() => !avatar.ModelBusy&&!editor.AvatarSelectionPending); Assert.That(editor.Read("maestro").walkMotionId,Is.EqualTo(gait.id));
             editor.Undo(); Assert.That(editor.Read("maestro").walkMotionId,Is.Null.Or.Empty); editor.Redo();
             editor.SaveNow(); editor.SendMessage("OnApplicationPause",true);
             yield return TestLifecycleDrain.Wait(editor.LifecycleCompletion);

@@ -23,43 +23,61 @@ namespace Maestro.Quest.Creation
             var avatar=Find("maestro").GetComponent<MaestroAvatar>();
             if(!avatar||avatar.ModelBusy){error="Wait for Maestro to finish loading";return false;}
             var authoring=GetComponent<AnimationWorkshop>();
-            if(authoring&&authoring.HasUnsavedPose){error="Save or discard the retained pose before changing avatars";return false;}
-            if(authoring&&(authoring.ControlsTarget("maestro")||authoring.HasUnsavedRecording||authoring.HasUnsavedFrameEdit)){error="Finish authoring and save or discard the retained take or keyframe edit first";return false;}
+            if(authoring&&authoring.HasUnfinishedAuthoring("maestro")){error="Finish authoring Maestro and save or discard its retained animation first";return false;}
             error=null;return true;
         }
-        internal bool BeginMaestroModel(string hash,int revision,CancellationToken cancellation,out Task<bool> completion,out string error)
+        internal Action<string> AvatarSelectionCheckpoint {get;set;}
+        PendingModelSelection avatarSelection;
+        internal bool AvatarSelectionPending=>avatarSelection!=null&&!avatarSelection.Drained||manualCreation?.Label=="Avatar selection";
+        internal Task<bool> AvatarSelectionCompletion=>ManualCreationCompletion;
+        internal bool StartMaestroModel(string hash,int revision,out CapabilityOperation operation,out string error)
         {
-            completion=null;if(!CanSelectMaestroModel(hash,revision,out error))return false;
-            var write=WriteGate.TryWrite(out error);if(write==null)return false;
-            var avatar=Find("maestro").GetComponent<MaestroAvatar>();string roomSession=TemporarySessionId;
-            var data=Read("maestro");hash=string.IsNullOrEmpty(hash)?IncludedAvatar?.Hash:hash;
-            if(data.modelHash!=hash)data.walkClip=IncludedAvatar!=null&&IncludedAvatar.Hash==hash?IncludedAvatar.WalkClipIndex+1:0;data.modelHash=hash;
-            bool CommitPrepared(){
-                if(!this||cancellation.IsCancellationRequested||RuntimeGate.Held||Ownership.Suspended||TemporarySessionId!=roomSession||ObjectRevision("maestro")!=revision||Find("maestro").Grab.isSelected){if(this)SetStatus("Maestro or the room changed while loading; selection was not saved");return false;}
-                bool saved=CommitPersisted(new[]{data},Array.Empty<string>(),hash==IncludedAvatar?.Hash?"Included Maestro selected":"Custom Maestro selected",false,out var reason);
-                if(!saved)SetStatus(reason);return saved;
+            operation=null;if(!CanSelectMaestroModel(hash,revision,out error))return false;
+            string captured=string.IsNullOrEmpty(hash)?IncludedAvatar?.Hash??"":hash;
+            var checkpoint=AvatarSelectionCheckpoint;PendingModelSelection selected=null;
+            bool Begin(out IPersistedRoomEdit pending,out string issue){
+                if(!BeginPersistedStateEdit(write=>avatarSelection=selected=new PendingModelSelection(this,captured,revision,write,checkpoint),out pending,out issue))return false;
+                selected.Start();return true;
             }
-            try {completion=ReleaseModelWrite(avatar.SelectModel(hash,Models,CommitPrepared,cancellation),write);return true;}
-            catch {write.Dispose();throw;}
+            return PersistedEditOperation.StartStateChange(this,Begin,
+                (out string issue)=>CanSelectMaestroModel(captured,revision,out issue),
+                ()=>selected?.Result??new JObject(),out operation,out error);
         }
-        static async Task<bool> ReleaseModelWrite(Task<bool> pending,IDisposable write){try{return await pending;}finally{write.Dispose();}}
+        internal async Task<JObject> SelectMaestroModelAsync(string hash,int revision,CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            if(!StartMaestroModel(hash,revision,out var operation,out var error))throw new ModelImportException(error);
+            try{
+                while(true){
+                    if(token.IsCancellationRequested){
+                        var accepted=operation.InterruptionStatus;operation.Stop(false);
+                        if(accepted!=null)throw new ModelImportException(accepted);
+                        token.ThrowIfCancellationRequested();
+                    }
+                    var state=operation.State(out error);
+                    if(state==Rules.RuleActionState.Failed)throw new ModelImportException(error);
+                    if(state==Rules.RuleActionState.Ready){
+                        if(!operation.Complete(out error))throw new ModelImportException(error);
+                        return operation.Result;
+                    }
+                    await Task.Yield();
+                }
+            }finally{operation.Stop(false);}
+        }
         public bool SetMaestroModel(string hash)
         {
-            if(RuntimeGate.Held||WriteGate.Frozen){SetStatus(RuntimeGate.Held?RuntimeGate.Reason:Persistence.WorkspaceWriteGate.FrozenReason);return false;}
-            // Trusted physical selection ends authoring before capturing its new revision.
-            Editing?.Invoke();if(Busy())return false;
-            if(!CanSelectMaestroModel(hash,ObjectRevision("maestro"),out var error)){SetStatus(error);return false;}
-            var cancel=new CancellationTokenSource();
-            if(!Ownership.TryAcquire("avatar-selection:"+Guid.NewGuid().ToString("N"),"Avatar selection",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim("maestro","wholeTarget")},_=>cancel.Cancel(),out var lease,out error,replaceControl:true)){cancel.Dispose();SetStatus(error);return false;}
-            if(!BeginMaestroModel(hash,ObjectRevision("maestro"),cancel.Token,out var completion,out error)){lease.Dispose();cancel.Dispose();SetStatus(error);return false;}
-            _=ReleaseModelOwner(completion,lease,cancel);return true;
+            if(hash!=null&&hash!=""&&!ModelLibrary.ValidHash(hash)){SetStatus("Choose an included or imported model identity");return false;}
+            string captured=string.IsNullOrEmpty(hash)?IncludedAvatar?.Hash??"":hash;
+            return StartManualCreation("maestro",true,
+                (out CapabilityOperation operation,out string error)=>StartMaestroModel(captured,ObjectRevision("maestro"),out operation,out error),
+                null,"Avatar selection");
         }
-        static async Task ReleaseModelOwner(Task<bool> pending,IDisposable lease,CancellationTokenSource cancel){try{await pending;}finally{lease.Dispose();cancel.Dispose();}}
         internal JObject ObserveMaestroModel()
         {
             var avatar=Find("maestro")?.GetComponent<MaestroAvatar>();if(!avatar)return null;
-            string saved=Read("maestro").modelHash??"",displayed=avatar.ModelHash??"",status=avatar.ModelStatus.Replace("\r"," ").Replace("\n"," ");
-            return new JObject {["revision"]=ObjectRevision("maestro"),["selectedHash"]=saved,["displayedHash"]=displayed,["busy"]=avatar.ModelBusy,["phase"]=avatar.ModelBusy?"loading":saved==displayed?"ready":"unavailable",["status"]=status.Length>128?status[..128]:status,["temporary"]=TemporaryRoom,["canPose"]=!avatar.ModelBusy&&avatar.PoseRig};
+            bool busy=avatar.ModelBusy||AvatarSelectionPending;
+            string saved=Read("maestro").modelHash??"",displayed=avatar.ModelHash??"",status=(storage.SelectionPublicationUnconfirmed?storage.UnavailableReason:avatar.ModelStatus).Replace("\r"," ").Replace("\n"," ");
+            return new JObject {["revision"]=ObjectRevision("maestro"),["selectedHash"]=saved,["displayedHash"]=displayed,["busy"]=busy,["phase"]=busy?"loading":!storage.SelectionPublicationUnconfirmed&&saved==displayed?"ready":"unavailable",["status"]=status.Length>128?status[..128]:status,["temporary"]=TemporaryRoom,["canPose"]=!busy&&avatar.PoseRig};
         }
     }
 }

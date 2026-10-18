@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Threading.Tasks;
 using Maestro.Quest.Interaction;
 using Maestro.Quest.Programs;
 using Maestro.Quest.Rules;
@@ -15,12 +16,14 @@ namespace Maestro.Quest.Creation
             internal CapabilityOperation Operation;
             internal RoomOwnership.Lease Lease;
             internal Action Completed;
-            internal string Context;
+            internal string Context,Label;
+            internal readonly TaskCompletionSource<bool> Finished=new(TaskCreationOptions.RunContinuationsAsynchronously);
             internal float Deadline;
         }
         delegate bool StartManualEdit(out CapabilityOperation operation,out string error);
         ManualCreation manualCreation;
         internal bool ManualCreationPending=>manualCreation!=null;
+        internal Task<bool> ManualCreationCompletion {get;private set;}=Task.FromResult(false);
         internal Action<string> ManualCreationCheckpoint {get;set;}
 
         void CreateManually(RoomObjectKind kind)
@@ -85,21 +88,29 @@ namespace Maestro.Quest.Creation
                     out operation,out error,(out string issue)=>CanDeleteObject(target,out issue)),
                 ()=>{if(selected==target){selected=null;selectionVersion++;UpdateSelection();}});
         }
+        internal Action CaptureCompletedSelection(string id)
+        {
+            string previous=selected;uint version=selectionVersion;
+            return ()=>{
+                if(!this||previous!=null&&previous!=id&&GetComponent<AnimationWorkshop>()?.HasUnfinishedAuthoring(previous)==true)return;
+                SelectCompletedCreation(id,previous,version);
+            };
+        }
         void SelectCompletedCreation(string id,string previous,uint version)
         {
             // A delayed save must not steal a newer hand/book selection.
             if(selected==previous&&selectionVersion==version&&Read(id)!=null)SelectSavedObject(id);
         }
-        void StartManualCreation(string target,bool replaceTargetControl,StartManualEdit start,Action completed,string label="Creation tools",string subject=null)
+        bool StartManualCreation(string target,bool replaceTargetControl,StartManualEdit start,Action completed,string label="Creation tools",string subject=null)
         {
-            if(manualCreation!=null){SetStatus("Wait for the pending object edit");return;}
-            if(!isActiveAndEnabled||journal==null||Ownership.Suspended){SetStatus("Room actions are not ready");return;}
-            if(WriteGate.Frozen){SetStatus(Persistence.WorkspaceWriteGate.FrozenReason);return;}
-            if(storage.ReadOnly){SetStatus(storage.UnavailableReason);return;}
+            if(manualCreation!=null){SetStatus("Wait for the pending object edit");return false;}
+            if(!isActiveAndEnabled||journal==null||Ownership.Suspended){SetStatus("Room actions are not ready");return false;}
+            if(WriteGate.Frozen){SetStatus(Persistence.WorkspaceWriteGate.FrozenReason);return false;}
+            if(storage.ReadOnly){SetStatus(storage.UnavailableReason);return false;}
             // Retain a short human-readable subject even if selection changes while saving.
             if(subject?.Length>48)subject=subject.Substring(0,45)+"...";
-            var request=new ManualCreation {Completed=completed,Deadline=Time.realtimeSinceStartup+30,Context=subject==null?null:label+": "+subject};
-            manualCreation=request;
+            var request=new ManualCreation {Completed=completed,Deadline=Time.realtimeSinceStartup+30,Label=label,Context=subject==null?null:label+": "+subject};
+            manualCreation=request;ManualCreationCompletion=request.Finished.Task;
             try {
                 // The physical tool may replace the exact target's controls,
                 // never broadcast an unrelated whole-room authoring stop.
@@ -107,18 +118,18 @@ namespace Maestro.Quest.Creation
                 if(!Ownership.TryAcquire("creation:"+Guid.NewGuid().ToString("N"),label,RoomActorRole.Control,claims,
                     notice=>{if(ReferenceEquals(manualCreation,request))CancelManualCreation(true,notice.Message);},
                     out request.Lease,out var error,preservePlacement:true,replaceControl:replaceTargetControl)){
-                    EndManualCreation(request);SetStatus(error);return;
+                    EndManualCreation(request);SetStatus(error);return false;
                 }
-                if(!ReferenceEquals(manualCreation,request)){EndManualCreation(request);return;}
+                if(!ReferenceEquals(manualCreation,request)){EndManualCreation(request);return false;}
                 // Taking over a recorder/poser can freeze a new save or retained
                 // draft. Keep its target intact until that session is resolved.
                 if(replaceTargetControl&&GetComponent<AnimationWorkshop>()?.HasUnfinishedAuthoring(target)==true){
-                    EndManualCreation(request);SetStatus("Finish saving or discard this object's unfinished animation before editing it");return;
+                    EndManualCreation(request);SetStatus("Finish saving or discard this object's unfinished animation (retained pose, take or keyframe edit) before editing it");return false;
                 }
-                if(!start(out request.Operation,out error)){EndManualCreation(request);SetStatus(error);return;}
-                if(!ReferenceEquals(manualCreation,request)){EndManualCreation(request);return;}
+                if(!start(out request.Operation,out error)){EndManualCreation(request);SetStatus(error);return false;}
+                if(!ReferenceEquals(manualCreation,request)){EndManualCreation(request);return false;}
                 SetStatus("Preparing and saving object edit");
-                PollManualCreation();
+                PollManualCreation();return !request.Finished.Task.IsCompleted||request.Finished.Task.Result;
             } catch {EndManualCreation(request);throw;}
         }
         void PollManualCreation()
@@ -138,16 +149,16 @@ namespace Maestro.Quest.Creation
                 CompleteSave();
                 if(!ReferenceEquals(manualCreation,request))return;
                 var completed=success?request.Completed:null;
-                EndManualCreation(request);
+                EndManualCreation(request,success);
                 if(success)completed?.Invoke();
                 else SetStatus((request.Context==null?"":request.Context+". ")+(error??"Object edit did not complete; inspect the room before retrying"));
             } catch {EndManualCreation(request);throw;}
         }
-        void EndManualCreation(ManualCreation request)
+        void EndManualCreation(ManualCreation request,bool success=false)
         {
             if(ReferenceEquals(manualCreation,request))manualCreation=null;
             try{request.Operation?.Stop(false);}
-            finally{request.Lease?.Dispose();}
+            finally{try{request.Lease?.Dispose();}finally{request.Finished.TrySetResult(success);}}
         }
         internal void CancelManualCreation(bool report,string reason="Object edit stopped")
         {

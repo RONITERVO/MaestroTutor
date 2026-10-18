@@ -671,6 +671,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool TryFlush(out string error)
         {
+            if(avatarSelection!=null&&!avatarSelection.Drained){error="Wait for the avatar selection before flushing the room";return false;}
             if(!FinishLiquidPour(out error))return false;
             if(saveDispatch.Frozen){error="Room saves are paused while recovery preserves original files.";return false;}
             if (journal == null || storage == null) { error="Room storage is not ready."; return false; }

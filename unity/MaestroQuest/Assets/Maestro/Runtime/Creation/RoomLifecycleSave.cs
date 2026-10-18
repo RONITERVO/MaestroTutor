@@ -22,13 +22,18 @@ namespace Maestro.Quest.Creation
                 CompleteTemporarySave();
                 return (Task)temporarySave??Task.CompletedTask;
             }
+            if(avatarSelection!=null&&!avatarSelection.Drained)return avatarSelection.QueueLifecycle();
             if(!FinishLiquidPour(out var issue)){if(issue!=null)SetStatus(issue);return (Task)saveTask??Task.CompletedTask;}
             if(saveDispatch.Frozen||journal==null||storage==null)return (Task)saveTask??Task.CompletedTask;
             GetComponent<WorkspaceViewpoint>()?.Capture();CapturePhysicsPlacements();CompleteSave();
             if(storage.ReadOnly||!dirty)return (Task)saveTask??Task.CompletedTask;
-            var snapshot=journal.Snapshot();var target=storage;
+            return QueueLifecycleSnapshot(journal.Snapshot(),saveTask);
+        }
+        Task QueueLifecycleSnapshot(RoomDocument snapshot,Task previous)
+        {
+            var target=storage;
             if(lifecycleSave==null||!ReferenceEquals(saveTask,lifecycleSave.Completion)||!lifecycleSave.TryQueue(snapshot))
-                lifecycleSave=new LatestCheckpoint<RoomDocument>(saveTask,snapshot,value=>SaveSnapshot(target,value));
+                lifecycleSave=new LatestCheckpoint<RoomDocument>(previous,snapshot,value=>SaveSnapshot(target,value));
             saveTask=lifecycleSave.Completion;dirty=false;
             return saveTask;
         }

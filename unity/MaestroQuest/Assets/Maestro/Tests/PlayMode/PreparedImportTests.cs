@@ -87,12 +87,23 @@ namespace Maestro.Quest.Tests
             }finally {barrier.Open();first.Dispose();}
             yield return new WaitUntil(()=>active.IsCompleted);Assert.IsNull(active.Exception);
         }
+        [UnityTest] public IEnumerator PreparedImportBriefPauseBeforePreparationCancelsTheAcceptedRequest()
+        {
+            ImportRuntime();yield return ChooseModel(ModelFixture.Create());int count=editor.Snapshot().objects.Length;
+            var accept=imports.AcceptAsync();
+            using(editor.RuntimeGate.Hold("Pause before import preparation")){}
+            yield return PhysicalCreationTestWait.Until(()=>accept.IsCompleted,"Paused import did not finish");
+            Assert.IsFalse(accept.Result,"An immediate pause must cancel the accepted request before it starts placement");
+            Assert.AreEqual(count,editor.Snapshot().objects.Length);
+            Assert.IsTrue(imports.HasPreview,"The user must retain the checked preview for an explicit retry");
+        }
         [UnityTest] public IEnumerator PreparedImportRuntimeHoldCancelsAndCannotRestartPlacementAfterRelease()
         {
             ImportRuntime();yield return ChooseModel(ModelFixture.Create());int count=editor.Snapshot().objects.Length;var barrier=new ImportAdmissionBarrier();var first=AdmissionModel();var active=first.LoadAsync(ModelLibrary.Inspect("blocker.glb",ModelFixture.Create()),barrier);Task<bool> accept=null;IDisposable hold=null;
             try {
-                yield return new WaitUntil(()=>barrier.Entered||active.IsCompleted);Assert.IsTrue(barrier.Entered);accept=imports.AcceptAsync();float deadline=Time.realtimeSinceStartup+5;while(ImportedModel.LiveBudget.Models<3&&!accept.IsCompleted&&Time.realtimeSinceStartup<deadline)yield return null;
-                hold=editor.RuntimeGate.Hold("Testing a brief room pause");hold.Dispose();hold=null;deadline=Time.realtimeSinceStartup+2;while(!accept.IsCompleted&&Time.realtimeSinceStartup<deadline)yield return null;Assert.IsTrue(accept.IsCompleted);Assert.IsFalse(accept.Result);Assert.AreEqual(count,editor.Snapshot().objects.Length);Assert.IsTrue(imports.HasPreview);
+                yield return new WaitUntil(()=>barrier.Entered||active.IsCompleted);Assert.IsTrue(barrier.Entered);Assert.AreEqual(2,ImportedModel.LiveBudget.Models,"Preview plus admission blocker must be the only live reservations");accept=imports.AcceptAsync();float deadline=Time.realtimeSinceStartup+5;while(ImportedModel.LiveBudget.Models<3&&!accept.IsCompleted&&Time.realtimeSinceStartup<deadline)yield return null;
+                Assert.IsFalse(accept.IsCompleted,"Placement must still be pending");Assert.AreEqual(3,ImportedModel.LiveBudget.Models,"Wait for the prepared candidate to join import admission before pausing: "+ImportFact());
+                hold=editor.RuntimeGate.Hold("Testing a brief room pause");hold.Dispose();hold=null;deadline=Time.realtimeSinceStartup+2;while(!accept.IsCompleted&&Time.realtimeSinceStartup<deadline)yield return null;Assert.IsTrue(accept.IsCompleted,"Runtime hold must finish the cancelled request without waiting for unrelated import admission");Assert.IsFalse(accept.Result);Assert.AreEqual(count,editor.Snapshot().objects.Length);Assert.IsTrue(imports.HasPreview,"Cancelled placement must retain the ready preview: "+imports.Status);
             }finally{hold?.Dispose();barrier.Open();first.Dispose();}
             yield return new WaitUntil(()=>active.IsCompleted&&(accept==null||accept.IsCompleted));yield return null;Assert.AreEqual(count,editor.Snapshot().objects.Length);Assert.IsNull(active.Exception);
         }

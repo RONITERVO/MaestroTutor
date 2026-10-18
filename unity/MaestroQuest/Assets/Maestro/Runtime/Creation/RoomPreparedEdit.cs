@@ -8,6 +8,9 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class RoomJournal
     {
+        PreparedEdit publicationOwner;
+        internal bool PublicationReserved=>publicationOwner!=null;
+        internal const string PublicationBusy="Wait for the prepared selection to finish publishing before another authored edit";
         // The candidate and history delta have one owner and never expose mutable
         // source references. Preparation neither advances revisions nor consumes
         // history. Save/admission callers accept this exact candidate once.
@@ -84,7 +87,8 @@ namespace Maestro.Quest.Creation
             bool RevisionCurrent(bool allowRuntimeProgress)=>owner.clock.Next==revision||allowRuntimeProgress&&
                 (long)owner.clock.Next-revision==owner.runtimePlacementAdvances-runtimePlacements&&
                 (PreservesPlacement||targetRevisions.All(x=>owner.ObjectRevision(x.Key)==x.Value));
-            internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&ReferenceEquals(owner,expected)&&RevisionCurrent(allowRuntimeProgress)&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
+            internal bool Current(RoomJournal expected,bool allowRuntimeProgress=false)=>!ended&&
+                (owner.publicationOwner==null||ReferenceEquals(owner.publicationOwner,this))&&ReferenceEquals(owner,expected)&&RevisionCurrent(allowRuntimeProgress)&&owner.undo.Count==undoCount&&owner.redo.Count==redoCount&&
                 (undoCount==0||ReferenceEquals(owner.undo[undoCount-1],undoTop))&&(redoCount==0||ReferenceEquals(owner.redo[redoCount-1],redoTop))&&
                 (allowRuntimeProgress||JsonUtility.ToJson(owner.viewpoint)==viewpointState)&&
                 (allowRuntimeProgress&&(change.TimeEdit!=WorldTimeEdit.Exact||change.AfterWorldTime==null&&change.BeforeWorldTime==null)||JsonUtility.ToJson(owner.worldTime)==timeState);
@@ -114,11 +118,19 @@ namespace Maestro.Quest.Creation
                 acceptedLightingRevision=owner.LightingRevision;
                 accepted=true;error=null;return true;
             }
-            public void Dispose()=>ended=true;
+            // Reserve only the final save-before-apply boundary. Runtime placement,
+            // viewer and clock checkpoints may advance; another authored edit may not.
+            internal bool ReservePublication(out string error) {
+                error=PublicationBusy;
+                if(owner.publicationOwner!=null||!Current(owner,allowRuntimeProgress:true))return false;
+                owner.publicationOwner=this;error=null;return true;
+            }
+            public void Dispose(){ended=true;if(ReferenceEquals(owner.publicationOwner,this))owner.publicationOwner=null;}
         }
         internal bool PrepareHistory(bool reverse,out PreparedEdit prepared,out string error)
         {
-            prepared=null;error=reverse?"Nothing to undo":"Nothing to redo";var history=reverse?undo:redo;if(history.Count==0)return false;
+            prepared=null;if(PublicationReserved){error=PublicationBusy;return false;}
+            error=reverse?"Nothing to undo":"Nothing to redo";var history=reverse?undo:redo;if(history.Count==0)return false;
             var change=history[history.Count-1];var candidate=HistoryCandidate(change,!reverse);if(!candidate.Validate(out error))return false;
             prepared=new PreparedEdit(this,change,candidate,reverse?"undo":"redo");error=null;return true;
         }

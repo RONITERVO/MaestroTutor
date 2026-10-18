@@ -38,6 +38,8 @@ physical object history and owned model previews preserve unrelated activity;
 see [editing continuity](#scoped-physical-editing-and-preview-continuity--2026-10-18).
 Physical item mode, mass and collision-shape controls now share completion;
 see [physics control completion](#physical-physics-preference-completion--2026-10-18).
+Avatar model selection now shares ordered completion across physical controls,
+import previews and catalog actions; see [avatar completion](#shared-avatar-selection-completion--2026-10-19).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -14762,3 +14764,73 @@ readability or comfort; the original-book and headless integrations exercise the
 actual native catalog with offline providers. Earlier Editor startup/shutdown
 stalls and separate native echo quality findings remain open. No device, paid
 provider, signing, deployment or Meta action was performed for this increment.
+
+
+## Shared avatar selection completion — 2026-10-19
+
+Physical Use Maestro/Default, imported model previews and catalog selection now
+share the existing ordered completion queue and background publication worker.
+The old avatar remains visible until the hidden candidate is validated and its
+save is confirmed. A short publication reservation protects authored history while
+allowing runtime progress. Captured identity and accepted revision remain stable
+even if a later observer edits Maestro. Imported selection preserves a newer hand
+or book selection, and unrelated recordings and programs continue.
+
+Stop before publication acceptance prevents a late commit. After acceptance the
+save drains despite Stop/pause, with lifecycle snapshots carrying the accepted
+identity rather than overwriting it with the old avatar. Destruction retains
+workspace ownership until the workers and checkpoint drain. Unconfirmed
+publication may leave disk different from the live avatar: observation reports
+unavailable, files remain available for inspection, saves are blocked, and nothing
+silently retries. See QUEST_AVATAR_SELECTION.md for the contract.
+
+Three regressions failed against `25e993ee`: physical selection stopped unrelated
+programs, stopped another target's recording, and returned a later observer's
+revision. The expanded tests also exercise delayed publication, cancellation on
+both sides of acceptance, pause/destruction, uncertainty, queued manual completion,
+no-op selection and imported-preview parity. The old save-failure fixture now
+awaits completion and recognizes the earlier storage admission refusal while
+preserving its unchanged-avatar/file and explicit-retry assertions. Legacy motion
+playback waits for Default completion before checking its original walk/rig rules.
+
+Import testing additionally reproduced an early-pause gap: a brief runtime hold
+before preparation could be missed and place an object after resume. Import
+acceptance now owns interruption from its first asynchronous yield through final
+cleanup. A deterministic regression failed before this correction; queued-loader
+cancellation and ready-preview retention remain separate checks.
+The wider suite exposed a hidden-avatar reservation leak after parent destruction:
+Unity's destroyed-object null semantics skipped explicit disposal of a candidate
+that had never been active. Cleanup now uses CLR identity until candidate
+ownership transfers; the destruction test verifies the budget returns to its
+prior value, and later import tests verify their own admission preconditions.
+
+Focused native verification passed 41 EditMode and 153 PlayMode cases, with
+only two expected private-model skips. The local wrapper initially rejected
+NUnit’s aggregate Skipped:Ignored result; case counts, named skip identities,
+zero native exits and clean log gates were reconciled explicitly. No failed test
+was omitted or rerun merely to replace this wrapper outcome.
+
+The first complete run identified two more legacy completion assumptions in
+bundled-avatar feedback and consecutive activity-profile switches. Their
+fixtures now wait for the physical selection completion as well as model
+loading, preserving the existing exact identity, pose, gait and Undo assertions.
+The failed initial run and its original input hashes are retained.
+
+Fresh full verification passed 1,498 EditMode and 2,113 PlayMode tests, with
+three explicitly allowed private-asset skips, reconciling all 3,614 discovered
+cases. All 3,208 web tests, application/probe TypeScript and final generated
+catalog provenance passed. Full offline Headless `1622573ced5548259b41fe0115771a6e`
+and original-book `ffac99e29d57439083c5e14e3d02bcc0` finished with clean
+client/Editor exits, sparse discovery and confirmed idle room/behaviour storage.
+
+The evidence reconciles 3,352 native inputs, 5,136 source hashes and
+14 unchanged protected files under
+`.quest-evidence/avatar-selection-completion-20261019/`. The thirteen avatar
+regressions and additional import pause regression use actual native operations;
+the app journeys exercise the real catalog with offline providers. Neither
+establishes headset interaction, model performance or real-provider acceptance.
+
+Device and paid-provider acceptance, separate
+native echo quality findings and earlier Editor startup/shutdown stalls remain
+open. No device, provider, signing, deployment or Meta action is part of this
+increment.

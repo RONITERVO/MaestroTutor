@@ -156,19 +156,19 @@ namespace Maestro.Quest.Avatar
         {
             hash ??= "";
             if (requestedModel == hash && (!retry || ModelBusy)) return ModelLoad;
-            return BeginModel(hash,library,null,CancellationToken.None);
+            return BeginModel(hash,library,null,CancellationToken.None,null);
         }
         // Selection prepares a hidden candidate, then commits the room before
         // replacing the visible model. Restore still falls back to the included rig.
-        internal Task<bool> SelectModel(string hash,ModelLibrary library,Func<bool> commit,CancellationToken cancellation)=>BeginModel(hash??"",library,commit,cancellation);
-        Task<bool> BeginModel(string hash,ModelLibrary library,Func<bool> commit,CancellationToken cancellation)
+        internal Task<bool> SelectModel(string hash,ModelLibrary library,Func<Task<bool>> commit,CancellationToken cancellation,Func<string> failure)=>BeginModel(hash??"",library,commit,cancellation,failure);
+        Task<bool> BeginModel(string hash,ModelLibrary library,Func<Task<bool>> commit,CancellationToken cancellation,Func<string> failure)
         {
             EndAmbient();walkMotion?.Stop();StopImportedClip();gestureLayer?.Stop();
             string previous=requestedModel;requestedModel=hash;int generation=++modelGeneration;
             ModelBusy=true;ModelStatus=hash.Length==0?"Selecting included Maestro…":"Loading custom Maestro…";ModelChanged?.Invoke();
-            return ModelLoad=LoadModel(hash,library,generation,previous,commit,cancellation);
+            return ModelLoad=LoadModel(hash,library,generation,previous,commit,cancellation,failure);
         }
-        async Task<bool> LoadModel(string hash,ModelLibrary library,int generation,string previous,Func<bool> commit,CancellationToken cancellation)
+        async Task<bool> LoadModel(string hash,ModelLibrary library,int generation,string previous,Func<Task<bool>> commit,CancellationToken cancellation,Func<string> failure)
         {
             GameObject candidateRoot=null;ImportedModel candidate=null;bool accepted=false;
             try
@@ -183,8 +183,10 @@ namespace Maestro.Quest.Avatar
                     candidate.FitAsMaestro();retargeter=candidateRoot.AddComponent<HumanoidRetargeter>();retargeter.Initialize(PoseRig,candidate.Humanoid);
                 }
                 cancellation.ThrowIfCancellationRequested();if(!this||disposed||generation!=modelGeneration)return false;
-                if(commit!=null&&!commit()){ModelStatus="Avatar selection was not saved; previous avatar kept.";return false;}
-                accepted=true;UseIncluded();
+                if(commit!=null&&!await commit()){if(this&&!disposed)ModelStatus=failure?.Invoke()??"Avatar selection was not saved; previous avatar kept.";return false;}
+                accepted=true;
+                if(!this||disposed||generation!=modelGeneration)return false;
+                UseIncluded();
                 if(candidate){
                     custom=candidate;candidateRoot=null;PoseRig.SetDisplayRig(retargeter);
                     foreach(var renderer in included.GetComponentsInChildren<Renderer>())renderer.enabled=false;
@@ -197,13 +199,15 @@ namespace Maestro.Quest.Avatar
                 if(this&&!disposed&&generation==modelGeneration){
                     if(commit==null)UseIncluded();
                     string reason=error is OperationCanceledException?"Avatar selection cancelled.":error is ModelImportException?error.Message:"The custom avatar could not load.";
-                    ModelStatus=reason+(commit==null?" Using included Maestro.":" Previous avatar kept.");
+                    ModelStatus=accepted&&commit!=null?"Avatar selection was saved, but display completion failed. Reopen the workspace.":reason+(commit==null?" Using included Maestro.":" Previous avatar kept.");
                 }
                 return false;
             }
             finally
             {
-                if(!accepted)candidate?.Dispose();
+                // A destroyed never-active candidate still owns its native reservation.
+                // Use CLR identity here; Unity false does not mean it was disposed.
+                if(!accepted||candidateRoot is not null)candidate?.Dispose();
                 if(candidateRoot)Destroy(candidateRoot);
                 if(this&&!disposed&&generation==modelGeneration){
                     if(commit!=null&&!accepted)requestedModel=previous;

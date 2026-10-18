@@ -53,8 +53,8 @@ namespace Maestro.Quest.Tests
             string file=Path.Combine(directory,RoomStorage.FileName+".pending");Directory.CreateDirectory(file);int revision=editor.ObjectRevision("maestro");
             Assert.That(authorActions.Execute(ModelRequest(asset.Hash),out var error),Is.True,error);yield return ModelFinished("failed");Assert.That(avatar.ModelHash,Is.Empty);Assert.That(avatar.CustomModel,Is.Null);Assert.That(editor.Read("maestro").modelHash,Is.Null);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Directory.Delete(file);
             Assert.That(authorActions.Execute(ModelRequest(asset.Hash),out error),Is.True,error);yield return ModelFinished();Assert.That(avatar.ModelHash,Is.EqualTo(asset.Hash));
-            Directory.CreateDirectory(file);var imports=root.AddComponent<ImportWorkshop>();imports.Initialize(editor,workshop);imports.DefaultMaestro();yield return null;
-            Assert.That(avatar.ModelHash,Is.EqualTo(asset.Hash));Assert.That(imports.Status,Does.Contain("not saved"));Assert.That(imports.Status,Does.Not.Contain("restored"));Directory.Delete(file);
+            Directory.CreateDirectory(file);var imports=root.AddComponent<ImportWorkshop>();imports.Initialize(editor,workshop);imports.DefaultMaestro();yield return PhysicalCreationTestWait.Until(()=>editor.AvatarSelectionCompletion.IsCompleted,"Default avatar failure did not complete");yield return null;
+            Assert.That(avatar.ModelHash,Is.EqualTo(asset.Hash));Assert.That(imports.Status,Does.Contain("unfinished room save"));Assert.That(editor.AvatarSelectionCompletion.Result,Is.False);Assert.That(new RoomStorage(directory).Load(out _).objects.Single(x=>x.id=="maestro").modelHash,Is.EqualTo(asset.Hash));Assert.That(imports.Status,Does.Not.Contain("restored"));Directory.Delete(file);
         }
         [UnityTest] public IEnumerator CancelledOrPausedSelectionNeverCommitsAfterItsWorkerDrains()
         {
