@@ -38,6 +38,12 @@ namespace Maestro.Quest.Creation
                 (out RoomObjectData data,out string issue)=>PrepareAnimation(target,revision,motion,joints,savePose,out data,out issue),
                 RoomEditScope.Content,"Recording saved",out pending,out error,checkpoint);
 
+        internal bool BeginAuthoredPose(string target,int revision,JointPose[] joints,Func<string> validate,
+            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)=>
+            BeginAttachedEdit(validate,
+                (out RoomObjectData data,out string issue)=>PrepareAnimation(target,revision,Read(target).motion,joints,true,out data,out issue),
+                RoomEditScope.Content,"Pose saved",out pending,out error,checkpoint);
+
         internal bool BeginAnimation(string target,int revision,RoomMotion motion,JointPose[] joints,bool savePose,
             out RoomObjectData prepared,out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
         {

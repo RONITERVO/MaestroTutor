@@ -571,6 +571,7 @@ it('shares native pose identities and versions through typed joint fields and a 
  await receive(undefined,false,{execution:nativePosing.rotate as RoomAgentState['execution']});fireEvent.change(screen.getByLabelText('Pose operation'),{target:{value:'3'}});fireEvent.change(screen.getByLabelText('Action inputs version'),{target:{value:nativePosing.edited.version}});
  expect(screen.queryByLabelText('Action inputs joints 1 joint')).toBeNull();fireEvent.click(screen.getByRole('button',{name:'Run action now'}));
  expect(client.snapshot().request?.commands[0]).toEqual({action:'execution',execution:{operation:'start',call:nativePosing.finish.selected.call,runId:nativePosing.finish.selected.id}});
+ await receive(undefined,false,{execution:nativePosing.preparing as RoomAgentState['execution']});expect(screen.getByText('preparing')).toBeDefined();expect(screen.queryByLabelText('Action result')).toBeNull();
  await receive(undefined,false,{execution:nativePosing.finish as RoomAgentState['execution']});expect(screen.getByLabelText('Action result').textContent).toContain('"phase": "saved"');expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
 });
 

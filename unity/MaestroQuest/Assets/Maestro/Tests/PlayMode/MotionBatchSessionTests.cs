@@ -85,7 +85,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator BatchManualControlsShareVersionsAndDoNotInterruptOtherActors()
         {
-            BatchRuntime();workshop.TogglePose();Assert.That(authorActions.Execute(BatchRequest(BatchArgs("select")),out _),Is.False);Assert.That(workshop.IsPosing,Is.True);workshop.Stop();
+            BatchRuntime();workshop.TogglePose();Assert.That(authorActions.Execute(BatchRequest(BatchArgs("select")),out _),Is.False);Assert.That(workshop.IsPosing,Is.True);workshop.Stop();Assert.That(batches.Prepare(new SelectedMotionSource(ModelFixture.Mixamo())),Is.False);yield return PoseSettled();
             Assert.That(batches.Prepare(new SelectedMotionSource(ModelFixture.Mixamo())),Is.True);var stale=BatchArgs("start");batches.NextCategory();Assert.That(authorActions.Execute(BatchRequest(stale),out _),Is.False);
             Assert.That(editor.Ownership.TryAcquire("other","Other actor",RoomActorRole.Program,new[]{new BehaviourCatalog.Claim("maestro","wholeTarget")},_=>{},out var lease,out var error),Is.True,error);
             var run=batches.SaveAsync();yield return new WaitUntil(()=>run.IsCompleted);Assert.That(run.Exception,Is.Null);Assert.That(lease.Held,Is.True);lease.Dispose();Assert.That((string)BatchFact()["phase"],Is.EqualTo("completed"));

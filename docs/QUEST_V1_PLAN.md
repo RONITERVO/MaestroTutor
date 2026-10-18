@@ -14243,3 +14243,58 @@ paths; this checkpoint does not claim all owner-thread storage waits are removed
 Device latency, the previous intermittent Meta audio SDK crash, full headset
 acceptance and Store release gates remain open. See
 [shared recording sessions](QUEST_ANIMATION_AUTHORING.md#shared-recording-sessions).
+
+## Versioned pose-session completion — 2026-10-18
+
+Live pose saves now use session-owned ordered completion. Physical handle release,
+Save pose, lifecycle Stop and agent/program save/finish freeze canonical versions
+through the shared edit queue. Saving keeps live posing open; finish freezes the
+latest preview and releases its controls. Each receipt identifies its captured
+session/version and accepted object revision, and completes only after native
+application and publication. Cancelling observation does not cancel the session.
+
+Newer joint edits remain visible while an earlier version publishes. Own accepted
+versions advance the queue's expected revision; unrelated authored changes never
+silently rebase it. Repeated requests for a queued version share its attempt.
+At most 32 pending versions are retained; capacity failure preserves the newest
+preview instead of dropping work. Preparation failure stops posing and retains
+the newest live/requested pose for exact retry. Applied/unconfirmed publication
+requires recovery rather than replay. Explicit discard cancels unaccepted
+versions; accepted publication must settle first and previous accepted edits stay.
+
+Pause retires unaccepted preparation/admissions and rejoins after native resume.
+Accepted publication remains observable. Disable retains outstanding work as a
+failure and drains accepted storage. Temporary saved versions remain in their fork
+until Keep. The posing fact adds saving phase and editing state, so human and
+agent can distinguish pending persistence from continuing live posing.
+Public action IDs, input/output fields and canonical joint limits remain unchanged.
+
+Verification: **75 EditMode, 129 PlayMode and
+3,198 web tests**, application/probe TypeScript and catalog checks.
+Ten new regressions exercise ordered versions and immutable receipts, observer
+cancellation, live preview during publication, discard/stale observers, latest-pose
+failure retention, applied failure without replay, suspension before/after
+acceptance, newer actors, disable/retry, bounded queue recovery and partial
+imported-rig visibility. Existing
+physical XRI posing/recording, imported rigs, temporary rooms, batch/model imports
+and bundled-avatar selection pass. Three initial import tests assumed synchronous
+Stop; each now explicitly checks the pending-save boundary before continuing.
+An intermediate run passed all its cases but exceeded the normal shutdown
+deadline and was retained as incomplete. The final current-source run passed
+all cases and exited cleanly within the unchanged deadline.
+
+Complete offline Book afa2bfbe85eb4fa1be7a8b424532e1dd passes with 3,726
+observations/1,187 requests. Headless 552fb0c69f7840f0ac6cc4d776b38e73 passes with
+2,382 observations/2,381 read sets. Its new pose leg
+uses public start/rotate/save/rotate/finish calls, checks native saved joint values
+and session turnover, then undoes each saved version. Chrome replays actual native
+preparation/completion through the production book fields and shows no saved
+result before completion. Browser acknowledgement is simulated; the full native
+journeys use real Unity state with synthetic media and no provider.
+
+Evidence: .quest-evidence/pose-completion-20261018; 3,302 native
+source hashes and 14 protected files checked. No device, paid
+provider, Android build, signing, deployment or Meta action ran. Physical keyframe
+saves and lifecycle Flush remain synchronous. Headset latency, the previously
+intermittent Meta audio SDK crash, full device acceptance and Store gates remain
+open. See [shared posing](QUEST_ANIMATION_AUTHORING.md#shared-live-posing).

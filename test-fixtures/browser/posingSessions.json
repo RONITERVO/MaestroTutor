@@ -1,17 +1,18 @@
 {
   "before": {
-    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
     "phase": "idle",
     "version": 0,
-    "revision": 2,
+    "revision": 5,
     "holding": false,
+    "editing": false,
     "temporary": false,
     "joints": [],
     "error": ""
   },
   "start": {
     "selected": {
-      "id": "2f684e2967e24d1691320a2900a8a289",
+      "id": "c00ccf21e598440bbc132dbd2fc89f24",
       "capability": "animation.pose",
       "version": 1,
       "resources": [
@@ -20,10 +21,10 @@
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+        "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
         "phase": "posing",
         "version": 1,
-        "revision": 2,
+        "revision": 5,
         "temporary": false
       },
       "call": {
@@ -32,15 +33,15 @@
         "arguments": {
           "operation": "start",
           "target": "maestro",
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
-          "revision": 2
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
+          "revision": 5
         }
       }
     },
     "running": [],
     "outcomes": [
       {
-        "id": "2f684e2967e24d1691320a2900a8a289",
+        "id": "c00ccf21e598440bbc132dbd2fc89f24",
         "capability": "animation.pose",
         "version": 1,
         "resources": [
@@ -49,24 +50,25 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "phase": "posing",
           "version": 1,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "96efa030b5984dd0b572cd452f5ec426",
+    "nextRunId": "93f2b857918b4d42b8648bde6ca26aa1",
     "storageError": null,
     "recovery": null
   },
   "active": {
-    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
     "phase": "posing",
     "version": 1,
-    "revision": 2,
+    "revision": 5,
     "holding": false,
+    "editing": true,
     "temporary": false,
     "joints": [
       "Hips",
@@ -91,7 +93,7 @@
   },
   "rotate": {
     "selected": {
-      "id": "96efa030b5984dd0b572cd452f5ec426",
+      "id": "93f2b857918b4d42b8648bde6ca26aa1",
       "capability": "animation.pose",
       "version": 1,
       "resources": [
@@ -100,10 +102,10 @@
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+        "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
         "phase": "posing",
         "version": 2,
-        "revision": 2,
+        "revision": 5,
         "temporary": false
       },
       "call": {
@@ -112,7 +114,7 @@
         "arguments": {
           "operation": "rotate",
           "target": "maestro",
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "version": 1,
           "joints": [
             {
@@ -131,7 +133,7 @@
     "running": [],
     "outcomes": [
       {
-        "id": "2f684e2967e24d1691320a2900a8a289",
+        "id": "c00ccf21e598440bbc132dbd2fc89f24",
         "capability": "animation.pose",
         "version": 1,
         "resources": [
@@ -140,15 +142,15 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "phase": "posing",
           "version": 1,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       },
       {
-        "id": "96efa030b5984dd0b572cd452f5ec426",
+        "id": "93f2b857918b4d42b8648bde6ca26aa1",
         "capability": "animation.pose",
         "version": 1,
         "resources": [
@@ -157,24 +159,25 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "phase": "posing",
           "version": 2,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "d8e397b980974561939d8546306d8154",
+    "nextRunId": "4a669fa5e0bb4a5887189f62728f5bea",
     "storageError": null,
     "recovery": null
   },
   "edited": {
-    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
     "phase": "posing",
     "version": 2,
-    "revision": 2,
+    "revision": 5,
     "holding": false,
+    "editing": true,
     "temporary": false,
     "joints": [
       "Hips",
@@ -198,7 +201,7 @@
     "error": ""
   },
   "jointQuery": {
-    "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+    "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
     "version": 2,
     "joint": "Head"
   },
@@ -208,9 +211,111 @@
     "z": 0.0,
     "w": 0.7933534
   },
+  "preparing": {
+    "selected": {
+      "id": "4a669fa5e0bb4a5887189f62728f5bea",
+      "capability": "animation.pose",
+      "version": 1,
+      "resources": [
+        "maestro"
+      ],
+      "phase": "preparing",
+      "status": "Waiting for action completion",
+      "call": {
+        "id": "animation.pose",
+        "version": 1,
+        "arguments": {
+          "operation": "finish",
+          "target": "maestro",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
+          "version": 2
+        }
+      }
+    },
+    "running": [
+      {
+        "id": "4a669fa5e0bb4a5887189f62728f5bea",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "preparing",
+        "status": "Waiting for action completion"
+      }
+    ],
+    "outcomes": [
+      {
+        "id": "c00ccf21e598440bbc132dbd2fc89f24",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
+          "phase": "posing",
+          "version": 1,
+          "revision": 5,
+          "temporary": false
+        }
+      },
+      {
+        "id": "93f2b857918b4d42b8648bde6ca26aa1",
+        "capability": "animation.pose",
+        "version": 1,
+        "resources": [
+          "maestro"
+        ],
+        "phase": "completed",
+        "status": "Action completed",
+        "output": {
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
+          "phase": "posing",
+          "version": 2,
+          "revision": 5,
+          "temporary": false
+        }
+      }
+    ],
+    "nextRunId": "4ffabf7dd0714f9d86d25ad2dd21b478",
+    "storageError": null,
+    "recovery": null
+  },
+  "saving": {
+    "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
+    "phase": "saving",
+    "version": 2,
+    "revision": 5,
+    "holding": false,
+    "editing": false,
+    "temporary": false,
+    "joints": [
+      "Hips",
+      "Spine",
+      "Chest",
+      "Neck",
+      "Head",
+      "LeftUpperArm",
+      "LeftLowerArm",
+      "LeftHand",
+      "RightUpperArm",
+      "RightLowerArm",
+      "RightHand",
+      "LeftUpperLeg",
+      "LeftLowerLeg",
+      "LeftFoot",
+      "RightUpperLeg",
+      "RightLowerLeg",
+      "RightFoot"
+    ],
+    "error": ""
+  },
   "finish": {
     "selected": {
-      "id": "d8e397b980974561939d8546306d8154",
+      "id": "4a669fa5e0bb4a5887189f62728f5bea",
       "capability": "animation.pose",
       "version": 1,
       "resources": [
@@ -219,10 +324,10 @@
       "phase": "completed",
       "status": "Action completed",
       "output": {
-        "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+        "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
         "phase": "saved",
-        "version": 3,
-        "revision": 6,
+        "version": 2,
+        "revision": 9,
         "temporary": false
       },
       "call": {
@@ -231,7 +336,7 @@
         "arguments": {
           "operation": "finish",
           "target": "maestro",
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "version": 2
         }
       }
@@ -239,7 +344,7 @@
     "running": [],
     "outcomes": [
       {
-        "id": "2f684e2967e24d1691320a2900a8a289",
+        "id": "c00ccf21e598440bbc132dbd2fc89f24",
         "capability": "animation.pose",
         "version": 1,
         "resources": [
@@ -248,15 +353,15 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "phase": "posing",
           "version": 1,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       },
       {
-        "id": "96efa030b5984dd0b572cd452f5ec426",
+        "id": "93f2b857918b4d42b8648bde6ca26aa1",
         "capability": "animation.pose",
         "version": 1,
         "resources": [
@@ -265,15 +370,15 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "phase": "posing",
           "version": 2,
-          "revision": 2,
+          "revision": 5,
           "temporary": false
         }
       },
       {
-        "id": "d8e397b980974561939d8546306d8154",
+        "id": "4a669fa5e0bb4a5887189f62728f5bea",
         "capability": "animation.pose",
         "version": 1,
         "resources": [
@@ -282,24 +387,25 @@
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "sessionId": "f2c8fd12489a4271bb30d375acf5df08",
+          "sessionId": "a9034c2ec4864026aceee5bbbf9ebe6f",
           "phase": "saved",
-          "version": 3,
-          "revision": 6,
+          "version": 2,
+          "revision": 9,
           "temporary": false
         }
       }
     ],
-    "nextRunId": "9f2d76b1a7744478ae1ca96e7a43aa48",
+    "nextRunId": "4ffabf7dd0714f9d86d25ad2dd21b478",
     "storageError": null,
     "recovery": null
   },
   "idle": {
-    "sessionId": "9922b5843469460fbf16374fba327b93",
+    "sessionId": "84078e9cab7743aeac54c7b214cd61e8",
     "phase": "idle",
     "version": 0,
-    "revision": 6,
+    "revision": 9,
     "holding": false,
+    "editing": false,
     "temporary": false,
     "joints": [],
     "error": ""

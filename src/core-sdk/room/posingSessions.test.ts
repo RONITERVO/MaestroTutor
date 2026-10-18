@@ -7,16 +7,19 @@ import {validExecutionView} from '../../../shared/roomExecutions';
 import {validFactValue} from '../../../shared/behaviourFacts';
 import {requireRoomCapabilities} from '../../../shared/roomControls';
 it('validates real native pose previews, clamped joint readback and final saved session turnover',()=>{
- for(const view of [native.start,native.rotate,native.finish])expect(validExecutionView(view)).toBe(true);
- for(const value of [native.before,native.active,native.edited,native.idle])expect(validFactValue('animation.posing',value)).toBe(true);
+ for(const view of [native.start,native.rotate,native.preparing,native.finish])expect(validExecutionView(view)).toBe(true);
+ for(const value of [native.before,native.active,native.edited,native.saving,native.idle])expect(validFactValue('animation.posing',value)).toBe(true);
  expect(validFactValue('animation.pose.joint',native.joint)).toBe(true);
  expect(native.start.selected.phase).toBe('completed');expect(native.active.phase).toBe('posing');
  expect(native.rotate.selected.call.arguments.version).toBe(native.active.version);expect(native.edited.version).toBeGreaterThan(native.active.version);
  expect(native.edited.revision).toBe(native.active.revision);expect(native.jointQuery.version).toBe(native.edited.version);
  expect(native.finish.selected.call.arguments.version).toBe(native.edited.version);expect(native.finish.selected.output.phase).toBe('saved');
+ expect(native.preparing.selected.phase).toBe('preparing');expect(native.preparing.selected.call).toEqual(native.finish.selected.call);
+ expect(native.preparing.selected.id).toBe(native.finish.selected.id);expect(native.saving.phase).toBe('saving');expect(native.saving.editing).toBe(false);
+ expect(native.finish.selected.output.version).toBe(native.edited.version);
  expect(native.idle.sessionId).not.toBe(native.active.sessionId);expect(native.idle.joints).toEqual([]);expect(native.idle.version).toBe(0);
  expect(2*Math.acos(Math.abs(native.joint.w))*180/Math.PI).toBeCloseTo(75,1);
- expect(capabilityDefinition('animation.pose')).toMatchObject({duration:'instant',ownership:'authoringSession',channels:[]});
+ expect(capabilityDefinition('animation.pose')).toMatchObject({duration:'completion',ownership:'authoringSession',channels:[]});
 });
 it('keeps pose session versions and feature requirements in the shared human/agent contract',()=>{
  for(const view of [native.start,native.rotate,native.finish]){

@@ -123,35 +123,51 @@ accepted publication drains under the editor's existing storage ownership. A ret
 room boundaries until saved or discarded. App/process termination loses any
 unsaved in-memory take; recording is never automatically restored on launch.
 
-## Failed manual pose saves
+## Pose save completion and recovery
 
-Releasing a joint or leaving Pose Maestro attempts to save the complete canonical
-pose. If that write fails, authoring stops and the displayed avatar returns to its
-saved state. The failed pose remains frozen in memory; the amber Pose Maestro
-control and tray status identify it. Save pose retries the retained pose even if
-another object is selected. Discard pose explicitly abandons only that failed
-pose, leaving the saved pose and animation unchanged.
+Releasing a joint or leaving Pose Maestro freezes the complete canonical pose
+and queues a save. Physical controls, lifecycle Stop and shared capability calls
+use the same ordered native edit queue. Preparation and publication run off the
+owner thread; completion confirms both native application and saving.
 
-Retry requires the original room session and exact Maestro revision, checks
-runtime/write holds and held objects, and cannot replace another manual owner.
-It rechecks the revision after interrupting a lower-priority actor. A successful
-retry saves one Undo entry and restores the pose through the normal imported or
-included rig. Repeated Stop, pause and focus notifications cannot silently retry
-or erase the retained pose. A stale retry stays retained until explicitly
-discarded; it never merges into newer edits.
+Each saved version has one immutable receipt and Undo entry. Live posing can
+continue while older versions are being saved: the saved pose and the displayed
+preview are separate. Saving an older version never replaces newer live joint
+edits. Up to 32 pending pose versions are allowed; reaching the bound stops
+authoring and retains the newest preview instead of dropping it.
 
-Pending poses block new animation authoring, avatar replacement, workspace
-switches and temporary-room Begin/Keep/Discard. A pose retained in a temporary
-room saves into that fork; Keep is still required for persistence. App/process
-termination loses unsaved in-memory poses. The shared live-pose capability below uses these same recovery controls and
-retained data; the physical tray can also save or discard a live pose.
+A preparation failure stops authoring and retains the newest live/requested pose
+in memory. The avatar returns to its saved state; the amber Pose Maestro control
+and status identify the retained buffer. Save pose retries it even after
+selecting another object. Retry requires the original room and exact authored
+revision, checks current actors/holds, and cannot silently rebase onto another
+edit. Own earlier accepted pose versions advance this expected revision; unrelated
+edits do not.
+
+A publication failure can leave an applied but unconfirmed pose. Old saved files
+remain intact and room saving is blocked. The retained buffer remains inspectable,
+but cannot be blindly replayed. Discard only releases that buffer; it does not
+undo an applied edit or repair storage. Recover room saving separately.
+
+Pause retires unaccepted preparation and queued admissions; the same frozen
+versions rejoin in order after native interaction resumes. Accepted publication
+remains observable while suspended. Disabling the workshop retains outstanding
+work as a failure; accepted storage publication drains under the editor's
+ownership. Repeated lifecycle notifications cannot erase or silently retry a
+failed buffer.
+
+Pending poses block other authoring modes, avatar replacement, workspace changes
+and temporary-room Begin/Keep/Discard. Joint editing in the existing live pose
+may continue while saving. Temporary completion stays in the fork until Keep.
+App/process termination loses unsaved in-memory poses.
 
 ## Shared live posing
 
 `animation.pose` (feature `animationPosing.v1`) shares the physical joint-handle
 session. Inspect `animation.posing`: it reports the native session ID, opaque
-pose version, phase (`idle`, `posing`, `unsaved`), object revision, held-joint
-state, temporary-room state, supported joint names and bounded error text. Idle
+pose version, phase (`idle`, `posing`, `saving`, `unsaved`), object revision, held-joint
+state, `editing` state, temporary-room state, supported joint names and bounded error
+text. `editing` indicates whether joint editing continues during saving. Idle
 has version zero and no live joint values. A completed action receipt does not
 mean the pose session has ended; stopping that receipt does not stop posing.
 
@@ -167,21 +183,27 @@ mean the pose session has ended; stopping that receipt does not stop posing.
   relative to rest: head 75 degrees, spine/chest 45, other joints 150. Read the
   actual clamped rotation with `animation.pose.joint {sessionId, version, joint}`.
   Joint reads/edits refuse a held physical handle. No save or playback occurs.
-- `save {target, sessionId, version}` saves one Undo and keeps the session open.
-  Physical Save pose does the same. Physical handle releases save automatically,
-  including any agent edits currently in the shared preview.
-- `finish {target, sessionId, version}` saves and closes posing. Physical Stop,
-  focus loss, pause and selection changes attempt the same save on exit.
-- `discard {target, sessionId, version}` drops the unsaved preview and closes the
-  session. It keeps previous explicit saves and physical handle-release saves;
-  Undo is separate. Physical Discard pose uses the same path.
+- `save {target, sessionId, version}` freezes that version and queues one Undo,
+  keeping the live pose open. Physical Save pose and handle releases use the same
+  path, including current agent edits. Completion confirms the captured version
+  and its accepted object revision; it never claims later preview edits are saved.
+- `finish {target, sessionId, version}` freezes the latest pose and closes the
+  physical controls. Earlier queued versions finish first. Physical Stop, focus
+  loss, pause and selection changes use the same path. Repeated save/finish of an
+  already queued version observes that attempt. Cancelling a receipt stops
+  observation only; the pose session continues saving.
+- `discard {target, sessionId, version}` cancels unaccepted queued saves and drops
+  the live/retained preview. While an accepted save publishes, wait for its
+  outcome first. Previously accepted edits remain; Undo is separate. Physical
+  Discard pose uses the same path.
 
 Inspect the session again before each mutation. Handle movement, applied frames
 and saved edits advance the pose version; do not assume the next value is +1.
 Finished sessions issue a fresh identity. Duplicate execution receipts do not
 repeat edits, and stale identities/versions cannot affect a newer session.
-Failed saves release authoring while preserving the frozen pose and identity;
-`save` or `finish` retries its exact room/object revision. Shared recovery cannot
+Preparation failures release authoring while preserving the latest unsaved pose
+and identity; `save` or `finish` retries its exact room/object revision.
+An applied/unconfirmed publication failure requires recovery instead of replay. Shared recovery cannot
 interrupt another live actor. `discard` explicitly removes only that retained
 pose. Both facts can inspect retained poses even after selecting another object.
 
@@ -206,7 +228,8 @@ temporary Keep/Discard. `test-fixtures/browser/animationAuthoring.json` is captu
 from native execution, including a three-frame, 17-joint nod and exact readback.
 The web verifies its receipt and fact types. `scripts/probe-animation-authoring.mjs`
 fills the nested book controls without entering JSON and checks that the generated
-request and completion match the captured native call, with a freshly loaded\nrevision and object-definition guard. The Chrome acknowledgement is a fixture;
+request and completion match the captured native call, with a freshly loaded
+revision and object-definition guard. The Chrome acknowledgement is a fixture;
 it is not a real-provider or headset test. Device comfort, authoring performance
 and real-provider journeys remain release gates.
 

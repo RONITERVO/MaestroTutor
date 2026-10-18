@@ -87,7 +87,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator SharedImportRespectsAuthoringAndOtherOwnersAndLibrarySaveDoesNotPlaceAnything()
         {
-            ImportRuntime();workshop.TogglePose();Assert.That(authorActions.Execute(ImportRequest(new JObject {["operation"]="select"}),out _),Is.False);Assert.That(workshop.IsPosing,Is.True);workshop.Stop();
+            ImportRuntime();workshop.TogglePose();Assert.That(authorActions.Execute(ImportRequest(new JObject {["operation"]="select"}),out _),Is.False);Assert.That(workshop.IsPosing,Is.True);workshop.Stop();Assert.That(authorActions.Execute(ImportRequest(new JObject {["operation"]="select"}),out _),Is.False);yield return PoseSettled();
             yield return ChooseModel(ModelFixture.Mixamo());Assert.That(editor.Ownership.TryAcquire("other","Other actor",RoomActorRole.Program,new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim("maestro","wholeTarget")},_=>Assert.Fail("Import cannot steal another actor"),out var lease,out var error),Is.True,error);
             Assert.That(authorActions.Execute(ImportRequest(ImportAccept("maestro")),out _),Is.False);Assert.That(lease.Held,Is.True);yield return ImportAction(ImportAccept("library"));Assert.That(lease.Held,Is.True);lease.Dispose();
             Assert.That(File.Exists(Path.Combine(directory,"models",(string)ImportFact()["preview"]["modelHash"]+".glb")),Is.True);Assert.That(editor.Read("maestro").modelHash,Is.Null);Assert.That(editor.Snapshot().objects.Count(x=>x.kind==RoomObjectKind.ImportedModel),Is.Zero);
@@ -95,7 +95,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator SharedAcceptanceCannotStopNewPhysicalPosingAndTemporaryPlacementWaitsForKeep()
         {
             ImportRuntime();yield return ChooseModel(ModelFixture.Create());Assert.That(authorActions.Execute(ImportRequest(ImportAccept("object")),out var error),Is.True,error);workshop.TogglePose();Assert.That(workshop.IsPosing,Is.True);
-            yield return ModelFinished("failed");Assert.That(workshop.IsPosing,Is.True);Assert.That(imports.HasPreview,Is.True);Assert.That(editor.Snapshot().objects.Count(x=>x.kind==RoomObjectKind.ImportedModel),Is.Zero);workshop.Stop();imports.Cancel();
+            yield return ModelFinished("failed");Assert.That(workshop.IsPosing,Is.True);Assert.That(imports.HasPreview,Is.True);Assert.That(editor.Snapshot().objects.Count(x=>x.kind==RoomObjectKind.ImportedModel),Is.Zero);workshop.Stop();imports.Cancel();Assert.That(editor.BeginTemporaryRoom(out _),Is.False);yield return PoseSettled();
             Assert.That(editor.BeginTemporaryRoom(out error),Is.True,error);yield return FinishAuthoringSave();yield return ChooseModel(ModelFixture.Create());yield return ImportAction(ImportAccept("object"));string id=(string)ImportFact()["accepted"]["objectId"];
             Assert.That((bool)ImportFact()["accepted"]["temporary"],Is.True);Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==id),Is.False);
             Assert.That(editor.KeepTemporaryRoom(out error),Is.True,error);yield return FinishAuthoringSave();Assert.That(new RoomStorage(directory).Load(out _).objects.Any(x=>x.id==id),Is.True);

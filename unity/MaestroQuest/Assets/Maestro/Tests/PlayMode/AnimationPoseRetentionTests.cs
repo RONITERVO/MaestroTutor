@@ -37,12 +37,12 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator FailedPoseCannotBeReplacedByStartingAnotherPoseSession()
         {
             editor.SaveNow();yield return null;workshop.TogglePose();string file=BlockPoseSave();
-            var expected=EditHead(25);avatar.PoseRig.FinishedHandle();
+            var expected=EditHead(25);avatar.PoseRig.FinishedHandle();yield return PoseSettled(false);
             workshop.Stop();Directory.Delete(file);workshop.TogglePose();
             Assert.That(workshop.IsPosing,Is.False,"A failed pose must be saved or explicitly discarded before another pose can replace it");
             Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(avatarItem.Grab.enabled,Is.True);Assert.That(workshop.ControlsTarget("maestro"),Is.False);
             var block=editor.Snapshot().objects.First(x=>x.kind==RoomObjectKind.Block);editor.Select(editor.Find(block.id));
-            Assert.That(workshop.Status,Does.Contain("Pose retained"));Assert.That(workshop.SaveRetainedPose(out var error),Is.True,error);
+            Assert.That(workshop.Status,Does.Contain("Pose retained"));Assert.That(workshop.SaveRetainedPose(out var error),Is.True,error);yield return PoseSettled();
             SamePose(expected,editor.Read("maestro").joints);SamePose(expected,avatar.PoseRig.Capture());
             SamePose(expected,new RoomStorage(directory).Load(out error).objects.Single(x=>x.id=="maestro").joints);
             Assert.That(editor.Read(block.id).joints,Is.Null);Assert.That(workshop.HasUnsavedPose,Is.False);Assert.That(workshop.IsPlaying,Is.False);
@@ -51,10 +51,10 @@ namespace Maestro.Quest.Tests
         {
             editor.Select(avatarItem);workshop.AddFrame();workshop.Stop();editor.SaveNow();yield return null;
             var before=editor.Read("maestro").joints;workshop.TogglePose();var expected=EditHead(35);string file=BlockPoseSave();int revision=editor.ObjectRevision("maestro");
-            workshop.Stop();Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(workshop.SaveRetainedPose(out _),Is.False);
+            workshop.Stop();yield return PoseSettled(false);Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(workshop.SaveRetainedPose(out _),Is.True);yield return PoseSettled(false);
             workshop.SendMessage("OnApplicationFocus",false);workshop.SendMessage("OnApplicationPause",true);workshop.SendMessage("OnApplicationFocus",true);workshop.SendMessage("OnApplicationPause",false);
             Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));Assert.That(workshop.HasUnsavedPose,Is.True);
-            Directory.Delete(file);Assert.That(workshop.SaveRetainedPose(out var error),Is.True,error);SamePose(expected,editor.Read("maestro").joints);
+            Directory.Delete(file);Assert.That(workshop.SaveRetainedPose(out var error),Is.True,error);yield return PoseSettled();SamePose(expected,editor.Read("maestro").joints);
             Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo(1));int savedRevision=editor.ObjectRevision("maestro");
             Assert.That(workshop.SaveRetainedPose(out _),Is.False);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(savedRevision));
             editor.Undo();SamePose(before,editor.Read("maestro").joints);Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo(1));editor.Redo();SamePose(expected,editor.Read("maestro").joints);
@@ -62,7 +62,7 @@ namespace Maestro.Quest.Tests
         [UnityTest] public IEnumerator RetainedPoseBlocksAvatarAndRoomReplacementAndOtherAuthoring()
         {
             editor.SaveNow();yield return null;workshop.TogglePose();EditHead(20);string file=BlockPoseSave();
-            workshop.Play();Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(workshop.IsPlaying,Is.False);
+            workshop.Play();yield return PoseSettled(false);Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(workshop.IsPlaying,Is.False);
             Assert.That(editor.BeginTemporaryRoom(out var error),Is.False);Assert.That(error,Does.Contain("retained pose"));
             Directory.Delete(file);Assert.That(editor.SetMaestroModel(null),Is.False);Assert.That(editor.Status,Does.Contain("retained pose"));
             workshop.ToggleRecord();workshop.AddFrame();workshop.ResetPose();workshop.Gesture();workshop.PreviewWalk();workshop.TogglePose();
@@ -73,7 +73,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator RetainedPoseNeverOverwritesANewerEditAndDiscardPreservesIt()
         {
-            editor.SaveNow();yield return null;workshop.TogglePose();EditHead(30);string file=BlockPoseSave();avatar.PoseRig.FinishedHandle();Directory.Delete(file);
+            editor.SaveNow();yield return null;workshop.TogglePose();EditHead(30);string file=BlockPoseSave();avatar.PoseRig.FinishedHandle();yield return PoseSettled(false);Directory.Delete(file);
             var newer=avatar.PoseRig.RestPose();newer.Single(x=>x.joint==PoseJoint.Head).rotation=Quaternion.Euler(-20,0,0);
             Assert.That(editor.SaveAnimation("maestro",null,newer,true),Is.True,editor.Status);int revision=editor.ObjectRevision("maestro");
             Assert.That(workshop.SaveRetainedPose(out var error),Is.False);Assert.That(error,Does.Contain("changed"));Assert.That(workshop.HasUnsavedPose,Is.True);Assert.That(editor.ObjectRevision("maestro"),Is.EqualTo(revision));
@@ -81,18 +81,18 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator RetainedPoseRetryHonoursHoldsAndOtherManualOwners()
         {
-            editor.SaveNow();yield return null;workshop.TogglePose();EditHead(20);string file=BlockPoseSave();workshop.Stop();Directory.Delete(file);
+            editor.SaveNow();yield return null;workshop.TogglePose();EditHead(20);string file=BlockPoseSave();workshop.Stop();yield return PoseSettled(false);Directory.Delete(file);
             using(editor.RuntimeGate.Hold("Workspace test hold")){Assert.That(workshop.SaveRetainedPose(out var error),Is.False);Assert.That(error,Is.EqualTo("Workspace test hold"));}
             using(editor.WriteGate.TryFreeze(out _)){Assert.That(workshop.SaveRetainedPose(out _),Is.False);}
             Assert.That(editor.Ownership.TryAcquire("other-controls","Other manual controls",RoomActorRole.Control,new[]{new BehaviourCatalog.Claim("maestro","wholeTarget")},_=>Assert.Fail("Retry must not replace other manual controls"),out var lease,out var issue),Is.True,issue);
-            Assert.That(workshop.SaveRetainedPose(out _),Is.False);Assert.That(lease.Held,Is.True);lease.Dispose();Assert.That(workshop.SaveRetainedPose(out issue),Is.True,issue);
+            Assert.That(workshop.SaveRetainedPose(out _),Is.False);Assert.That(lease.Held,Is.True);lease.Dispose();Assert.That(workshop.SaveRetainedPose(out issue),Is.True,issue);yield return PoseSettled();
         }
         [UnityTest] public IEnumerator FailedTemporaryPoseStaysInItsForkUntilKeep()
         {
             Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);yield return FinishAuthoringSave();workshop.TogglePose();var expected=EditHead(20);
-            using(editor.WriteGate.TryFreeze(out error)){workshop.Stop();Assert.That(workshop.HasUnsavedPose,Is.True);}
+            using(editor.WriteGate.TryFreeze(out error)){workshop.Stop();yield return PoseSettled(false);Assert.That(workshop.HasUnsavedPose,Is.True);}
             Assert.That(editor.KeepTemporaryRoom(out error),Is.False);Assert.That(error,Does.Contain("retained pose"));Assert.That(editor.DiscardTemporaryRoom(out error),Is.False);
-            Assert.That(workshop.SaveRetainedPose(out error),Is.True,error);SamePose(expected,editor.Read("maestro").joints);
+            Assert.That(workshop.SaveRetainedPose(out error),Is.True,error);yield return PoseSettled();SamePose(expected,editor.Read("maestro").joints);
             Assert.That(new RoomStorage(directory).Load(out error).objects.Single(x=>x.id=="maestro").joints,Is.Null);
             Assert.That(editor.KeepTemporaryRoom(out error),Is.True,error);yield return FinishAuthoringSave();SamePose(expected,new RoomStorage(directory).Load(out error).objects.Single(x=>x.id=="maestro").joints);
         }
@@ -100,8 +100,8 @@ namespace Maestro.Quest.Tests
         {
             var asset=ModelLibrary.Inspect("retained-pose.vrm",ModelFixture.Create(avatar:true));var save=editor.Models.SaveAsync(asset);yield return new WaitUntil(()=>save.IsCompleted);Assert.That(save.Exception,Is.Null);
             Assert.That(editor.SetMaestroModel(asset.Hash),Is.True);yield return new WaitUntil(()=>!avatar.ModelBusy);
-            workshop.TogglePose();var expected=EditHead(20);var displayed=avatar.PoseRig.Bone(PoseJoint.Head);var expectedDisplayed=displayed.localRotation;string file=BlockPoseSave();avatar.PoseRig.FinishedHandle();Directory.Delete(file);
-            Assert.That(workshop.SaveRetainedPose(out var error),Is.True,error);SamePose(expected,editor.Read("maestro").joints);Assert.That(Quaternion.Angle(expectedDisplayed,displayed.localRotation),Is.LessThan(.05f));
+            workshop.TogglePose();var expected=EditHead(20);var displayed=avatar.PoseRig.Bone(PoseJoint.Head);var expectedDisplayed=displayed.localRotation;string file=BlockPoseSave();avatar.PoseRig.FinishedHandle();yield return PoseSettled(false);Directory.Delete(file);
+            Assert.That(workshop.SaveRetainedPose(out var error),Is.True,error);yield return PoseSettled();SamePose(expected,editor.Read("maestro").joints);Assert.That(Quaternion.Angle(expectedDisplayed,displayed.localRotation),Is.LessThan(.05f));
             Assert.That(avatar.ModelHash,Is.EqualTo(asset.Hash));
         }
         [UnityTest] public IEnumerator SolidPoseRecoveryControlsSaveOrDiscardTheActualRetainedPose()
@@ -115,9 +115,9 @@ namespace Maestro.Quest.Tests
                 Assert.That(label.min.y,Is.GreaterThan(tray.transform.position.y-.20f),action.AccessibleName);
             }
             void Click(float x){var ray=new Ray(new Vector3(x,-.10f,0),Vector3.forward);Assert.That(router.Begin(0,ray),Is.True);router.End(0,ray);}
-            workshop.TogglePose();var expected=EditHead(25);string file=BlockPoseSave();avatar.PoseRig.FinishedHandle();Directory.Delete(file);
-            CapturePoseRecoveryControls(tray);Click(2.062f);Assert.That(workshop.HasUnsavedPose,Is.False);SamePose(expected,editor.Read("maestro").joints);
-            workshop.TogglePose();EditHead(-25);file=BlockPoseSave();workshop.Stop();Directory.Delete(file);Click(2.186f);
+            workshop.TogglePose();var expected=EditHead(25);string file=BlockPoseSave();avatar.PoseRig.FinishedHandle();yield return PoseSettled(false);Directory.Delete(file);
+            CapturePoseRecoveryControls(tray);Click(2.062f);yield return PoseSettled();Assert.That(workshop.HasUnsavedPose,Is.False);SamePose(expected,editor.Read("maestro").joints);
+            workshop.TogglePose();EditHead(-25);file=BlockPoseSave();workshop.Stop();yield return PoseSettled(false);Directory.Delete(file);Click(2.186f);
             Assert.That(workshop.HasUnsavedPose,Is.False);SamePose(expected,editor.Read("maestro").joints);
         }
         void CapturePoseRecoveryControls(GameObject tray)

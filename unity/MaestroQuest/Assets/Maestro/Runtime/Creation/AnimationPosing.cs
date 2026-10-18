@@ -23,16 +23,16 @@ namespace Maestro.Quest.Creation
         {
             var rig=editor?editor.Find("maestro")?.GetComponent<MaestroAvatar>()?.PoseRig:null;
             string error=(pendingPose?.Error??"").Replace("\r"," ").Replace("\n"," ");
-            var joints=HasUnsavedPose?pendingPose.Joints:posing&&rig?rig.Capture():Array.Empty<JointPose>();
-            return new JObject {["sessionId"]=poseSession,["phase"]=posing?"posing":HasUnsavedPose?"unsaved":"idle",["version"]=poseVersion,
-                ["revision"]=pendingPose?.Revision??(editor?editor.ObjectRevision("maestro"):0),["holding"]=posing&&rig&&rig.IsHolding,
-                ["temporary"]=editor&&editor.TemporaryRoom,["joints"]=new JArray(joints.Where(j=>HasUnsavedPose||rig&&rig.Bone(j.joint)).Select(j=>j.joint.ToString())),["error"]=error.Length>128?error[..128]:error};
+            var joints=posing&&rig?rig.Capture():pendingPose?.Joints??Array.Empty<JointPose>();
+            return new JObject {["sessionId"]=poseSession,["phase"]=IsSavingPose?"saving":posing?"posing":HasUnsavedPose?"unsaved":"idle",["version"]=poseVersion,
+                ["revision"]=pendingPose?.Revision??(editor?editor.ObjectRevision("maestro"):0),["holding"]=posing&&rig&&rig.IsHolding,["editing"]=posing,
+                ["temporary"]=editor&&editor.TemporaryRoom,["joints"]=new JArray(joints.Where(j=>!posing&&HasUnsavedPose||rig&&rig.Bone(j.joint)).Select(j=>j.joint.ToString())),["error"]=error.Length>128?error[..128]:error};
         }
         public JObject ReadPoseJoint(string session,int version,PoseJoint joint)
         {
             if(session!=poseSession||version!=poseVersion||!posing&&!HasUnsavedPose)return null;
             if(posing&&(!avatar||avatar.PoseRig.IsHolding||!avatar.PoseRig.Bone(joint)))return null;
-            var found=(pendingPose?.Joints??avatar.PoseRig.Capture()).FirstOrDefault(j=>j.joint==joint);if(found==null)return null;
+            var found=(posing?avatar.PoseRig.Capture():pendingPose.Joints).FirstOrDefault(j=>j.joint==joint);if(found==null)return null;
             var q=found.rotation;return new JObject {["x"]=q.x,["y"]=q.y,["z"]=q.z,["w"]=q.w};
         }
         internal bool CanStartPose(string session,int revision,out string error,bool manual=false)
@@ -59,12 +59,13 @@ namespace Maestro.Quest.Creation
             target.Grab.enabled=false;posing=true;saveError=null;PoseEdited();result=PoseResult("posing");
             Say("Pose with joint handles or chat; Stop saves; recording captures movement");return true;
         }
-        internal bool CanUsePose(string session,int version,string operation,out string error)
+        internal bool CanUsePose(string session,int version,string operation,out string error,bool manual=false)
         {
             error="The pose changed; inspect animation.posing before editing";
             if(session!=poseSession||version!=poseVersion||!posing&&!HasUnsavedPose)return false;
-            if(operation=="discard"&&HasUnsavedPose){error=null;return true;}
-            if(HasUnsavedPose&&operation!="rotate")return CanSaveRetainedPose(out error);
+            if(operation=="discard"&&IsSavingPose&&poseSaves.Exists(x=>x.Accepted)){error="An applied pose is still saving; wait for its outcome before discarding the preview";return false;}
+            if(operation=="discard"&&HasUnsavedPose&&!posing){error=null;return true;}
+            if(!posing&&HasUnsavedPose&&operation!="rotate")return CanSaveRetainedPose(out error,manual);
             if(!editor||editor.RuntimeGate.Held){error=editor?editor.RuntimeGate.Reason:"Room editor is unavailable";return false;}
             if(editor.Ownership.Suspended){error="Room actions are paused";return false;}
             if(editor.WriteGate.Frozen){error="The workspace is being preserved";return false;}
@@ -87,21 +88,5 @@ namespace Maestro.Quest.Creation
             result=PoseResult("posing");Say(IsRecording?"Pose adjusted — recording continues":"Pose adjusted — save or finish to keep it");return true;
         }
         void ReleasePoseControls(){bool previous=resolvingPose;resolvingPose=true;try{Stop();}finally{resolvingPose=previous;}}
-        internal bool ResolvePose(string session,int version,string operation,out JObject result,out string error)
-        {
-            result=null;if(!CanUsePose(session,version,operation,out error))return false;
-            if(operation=="discard"){
-                result=PoseResult("discarded");if(HasUnsavedPose)DiscardRetainedPose();else ReleasePoseControls();
-                Say("Pose preview discarded — last saved pose kept");return true;
-            }
-            if(HasUnsavedPose){
-                result=PoseResult("saved");if(!SaveRetainedPose(out error,manual:false)){result=null;return false;}
-                result["revision"]=editor.ObjectRevision("maestro");return true;
-            }
-            if(!SaveCurrentPose()){error=pendingPose?.Error??Status;ReleasePoseControls();return false;}
-            result=PoseResult(operation=="finish"?"saved":"posing");
-            if(operation=="finish")ReleasePoseControls();
-            Say(operation=="finish"?"Pose saved; editing finished":"Pose saved; editing continues");return true;
-        }
     }
 }

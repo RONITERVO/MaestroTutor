@@ -2003,7 +2003,7 @@
           }
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "authoringSession",
       "channels": [],
       "requirements": [
@@ -2012,7 +2012,7 @@
         "joint.unheld",
         "pose.control.available"
       ],
-      "description": "Share the same live Maestro pose as the physical joint handles. Inspect animation.posing first. start requires its idle sessionId and current Maestro revision. The start receipt completes immediately while the pose session owns Maestro independently; cancelling a completed receipt does not stop posing. rotate patches 1–8 distinct supported joints at the exact sessionId/version; rotations are normalized canonical local quaternions, never imported bone or world coordinates. It uses the physical limits relative to canonical rest: head 75 degrees, spine/chest 45, others 150. Read animation.pose.joint for the actual clamped result. Handle movement, saved edits and failed-save retention change the opaque pose version; inspect again before every mutation. Edits and reads refuse a held joint. rotate only changes the live preview; save commits one Undo and keeps posing, finish saves and ends it, discard abandons only the unsaved preview (previous handle releases/saves stay saved). Physical handle releases save automatically; physical Stop, focus/pause and selection changes attempt finish. Failed saves stop posing and retain the frozen pose in memory: save/finish retry only its original room and object revision; discard removes only that retained pose. No restart/replay after launch; process termination loses unsaved memory. Agent/program start and recovery cannot interrupt another live actor. During an active recording rotate remains available, but save/finish/discard require finishing the recording first; recording completion ends both authoring sessions. Temporary saved edits remain in the fork until Keep. No playback starts.",
+      "description": "Share Maestro's live pose with the physical joint handles. Read animation.posing first. start completes immediately and opens a persistent session; rotate immediately changes 1–8 supported joints at its exact sessionId/version using normalized canonical local quaternions and the same physical limits. Read animation.pose.joint for the actual clamped value. save freezes the current version, queues one Undo and keeps posing; finish freezes the latest version and ends physical posing. Completion confirms native application and saving of the captured version, not later live edits. Ordered saves share the recording/object edit queue, with at most 32 pending pose versions. Repeated save/finish of a queued version observes that same save. Stopping a receipt stops observation only. Physical handle releases queue saves; physical Stop, focus/pause and selection changes freeze the latest pose and finish. Later joint edits remain live while earlier saves publish; an older result cannot overwrite that preview. Inspect again after every mutation. discard cancels unaccepted queued saves and abandons the live/retained preview; previously accepted poses remain saved. While an accepted save publishes, wait for its outcome before discarding. Preparation failure stops posing and retains the newest live/requested pose for exact retry; failed publication leaves an applied unconfirmed edit and blocks saving, so it must not be replayed. Retried saves require the same room/object revision and cannot steal another actor. Suspended interaction defers acceptance; accepted publication continues. App termination loses unsaved memory. During recording only rotate is available; recording finishes both sessions. Temporary saves stay in the fork until Keep. Neither saving nor discarding starts playback.",
       "example": {
         "operation": "start",
         "target": "maestro",
@@ -42404,6 +42404,7 @@
           "version": "number",
           "revision": "number",
           "holding": "boolean",
+          "editing": "boolean",
           "temporary": "boolean",
           "joints": {
             "list": "text"
@@ -42412,7 +42413,7 @@
         }
       },
       "label": "Current live pose session",
-      "description": "Shared physical/agent pose session: idle issues the next start identity (version 0); posing identifies the current preview and supported displayed joint channels; unsaved identifies a retained failed pose and its original object revision. Read this before each mutation; version is an opaque change counter and can skip. Joint holds prevent shared mutations/readback until released. Idle has no live joint values. Retained data is memory-only, cannot overwrite a changed room/object, and is lost on process termination."
+      "description": "Shared physical/agent pose session: idle issues the next start identity (version 0); posing identifies the current preview and supported displayed joint channels; saving identifies queued or publishing versions; editing says whether live joint editing continues during that save; unsaved identifies a retained failed pose and its original object revision. Read this before each mutation; version is an opaque change counter and can skip. Joint holds prevent shared mutations/readback until released. Idle has no live joint values. Retained data is memory-only, cannot overwrite a changed room/object, and is lost on process termination."
     },
     {
       "id": "animation.pose.joint",
@@ -47228,7 +47229,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPosingCapability.cs",
-      "sha256": "8d1eb52a20d7d8aa0f3afe266fc91ccc4a21d049e420655586ec9e207667573e"
+      "sha256": "4095f31349a6bc4f9a996c2a07781db97c379cb5d808445a9a242186676f1f92"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationRecordingCapability.cs",
@@ -47784,11 +47785,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseRetention.cs",
-      "sha256": "be4c61d453fc35dc54f2e93d43679d00cb676bee01aefb0c4974a62494cbf0f0"
+      "sha256": "c79d16a34a694fb261ed519657a1dd72eb8ec17b7b5ce4148a3d04ea2367f7e9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPoseSave.cs",
+      "sha256": "b345c5eba3329bb2f7fc9137d5b961c8d5ed5286bae633d33872e713ee9b4aa4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationPosing.cs",
-      "sha256": "95d0bcff9c7abcb4e32bdbc9b55f26c16fea1febe6a72da36972569cb5ac7ea0"
+      "sha256": "3fa1f4324df6d570705a46d58a66d7df11ab4f8a0e865ef524e689ed9111f3f0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationRecording.cs",
@@ -47804,7 +47809,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AnimationWorkshop.cs",
-      "sha256": "c8789b2404960a7750f85222af8d9c08df3261ffb37599d4ab46452362419274"
+      "sha256": "2fc0c028356d2fadf785da668070810e1d30c91f0c4badb22c678635541dd16d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/AudioReservations.cs",
@@ -48052,7 +48057,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "cf30f74b8fe2c78a5d15c50986077df572138b9e89bb2961a6c9ec44e9581b87"
+      "sha256": "f07dcf18097bb7f1fb92004c51018a8a79c0a2dfa364db45cd3fa462ef8be7c2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48176,7 +48181,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAnimationEdits.cs",
-      "sha256": "43794cd132975bacdfa514aeafd5eab1b1089d0235e3bf1fbb9753e72d0821cc"
+      "sha256": "efcecca8e13f3f3589080ed2833ee171b10f5fbecb2fb36d655889b43dc1db48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
@@ -48288,7 +48293,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "c27f9b98ee7f46b4deb604c5957605609dc06fc1282e53ec7cd697c356f256ac"
+      "sha256": "2f2d67e8773b6e290a515ee676464f97029853a892968a9bda32296ebf73601a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",

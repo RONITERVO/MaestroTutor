@@ -59,12 +59,12 @@ namespace Maestro.Quest.Tests
             Assert.That(Vector3.Distance(handleBefore,handle.transform.position),Is.GreaterThan(.05f),"XRI moved the handle");
             Assert.That(Quaternion.Angle(before,head.localRotation),Is.GreaterThan(5));
             Assert.That(Quaternion.Angle(before,head.localRotation),Is.LessThanOrEqualTo(76));
-            handRoot.SetActive(false); yield return null;
+            handRoot.SetActive(false); yield return null;yield return PoseSettled();
             Assert.That(editor.Read("maestro").joints,Is.Not.Null);
             workshop.AddFrame();
-            avatar.PoseRig.Rotate(PoseJoint.Head,head.parent.rotation * before); avatar.PoseRig.FinishedHandle(); workshop.AddFrame();
+            avatar.PoseRig.Rotate(PoseJoint.Head,head.parent.rotation * before); avatar.PoseRig.FinishedHandle();yield return PoseSettled(); workshop.AddFrame();
             Assert.That(editor.Read("maestro").motion.frames.Length,Is.EqualTo(2));
-            workshop.Play(); Assert.That(workshop.IsPlaying,Is.True); yield return new WaitForSeconds(.2f);
+            workshop.Stop();yield return PoseSettled();workshop.Play(); Assert.That(workshop.IsPlaying,Is.True); yield return new WaitForSeconds(.2f);
             workshop.Stop(); Assert.That(avatarItem.Grab.enabled,Is.True); Assert.That(workshop.IsPosing,Is.False);
             workshop.ResetPose(); Assert.That(editor.Read("maestro").joints,Is.Null);
             editor.Undo(); Assert.That(editor.Read("maestro").joints,Is.Not.Null);
@@ -128,6 +128,8 @@ namespace Maestro.Quest.Tests
         [UnityTearDown] public IEnumerator TearDown()
         {
             workshop.DiscardTake();yield return RecordingDrained();
+            if(workshop.IsSavingPose){workshop.DiscardRetainedPose();float end=Time.realtimeSinceStartup+20;while(workshop.IsSavingPose&&Time.realtimeSinceStartup<end)yield return null;}
+            workshop.DiscardRetainedPose();yield return RecordingDrained();
             UnityEngine.Object.Destroy(root); yield return null;
             if (Directory.Exists(directory)) Directory.Delete(directory,true);
         }

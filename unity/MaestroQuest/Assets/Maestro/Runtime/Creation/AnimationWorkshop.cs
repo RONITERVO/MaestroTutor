@@ -93,6 +93,7 @@ namespace Maestro.Quest.Creation
         }
         public void TogglePose()
         {
+            if(posing){Stop();return;}
             if(HasUnsavedPose){Say(RetainedPosePrompt);return;}
             if(HasUnsavedRecording){Say("Save or discard the retained take first");return;}
             if (posing) { Stop(); return; }
@@ -104,9 +105,8 @@ namespace Maestro.Quest.Creation
 
         void SavePose()
         {
-            if (stopping || !posing || IsRecording || !avatar || HasUnsavedPose) return;
-            if (SaveCurrentPose()) Say("Pose saved — use Undo to restore the previous pose");
-            else Stop();
+            if (stopping || !posing || IsRecording || !avatar || HasUnsavedPose&&!IsSavingPose) return;
+            if (!SaveCurrentPose()) Stop();
         }
         public void AddFrame()
         {
@@ -237,7 +237,7 @@ namespace Maestro.Quest.Creation
             bool wasPosing=posing;stopping = true;
             try
             {
-                if (!resolvingPose && !resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && !HasUnsavedPose && avatar && avatar.PoseRig) SaveCurrentPose();
+                if (!resolvingPose && !resolvingRecording && posing && !IsRecording && !HasUnsavedRecording && (!HasUnsavedPose||IsSavingPose) && avatar && avatar.PoseRig) SaveCurrentPose(finish:true);
                 if(!resolvingRecording)FinishRecording(); StopPlayback();
                 if (avatar && avatar.PoseRig)
                 {
@@ -250,11 +250,11 @@ namespace Maestro.Quest.Creation
                 target?.GetComponent<RigidRoomItem>()?.SetAnimationOwner(this,false);
             }
             finally { ownershipLease?.Dispose();ownershipLease=null;stopping = false; }
-            Say(saveError ?? (IsSavingRecording?"Saving recording — frames frozen":"Stopped — saved animation is ready"));
+            Say(saveError ?? (IsSavingRecording?"Saving recording — frames frozen":IsSavingPose?"Saving pose — captured version queued":"Stopped — saved animation is ready"));
         }
         void Update()
         {
-            PollRecordingSave();
+            PollRecordingSave();PollPoseSaves();
             if(editor&&editor.RuntimeGate.Held){if(controlling||IsRecording||IsPlaying||IsPosing||IsImportedPreview)Stop();return;}
             if (walkPreview) { if (!avatar) { Stop(); return; } avatar.SpatialWalk(.65f*avatar.transform.lossyScale.y); }
             if (importedPreview && (!avatar || !avatar.IsImportedClipPlaying)) { Stop(); return; }
@@ -276,9 +276,9 @@ namespace Maestro.Quest.Creation
                 if (!preview.loop && time >= preview.Duration) Stop();
             }
         }
-        void OnApplicationPause(bool paused) { if (paused) { Stop();SuspendRecordingSave(); } }
-        void OnApplicationFocus(bool focused) { if (!focused) { Stop();SuspendRecordingSave(); } }
-        void OnDisable() { if (editor) Stop(); else if (graph.IsValid()) graph.Destroy(); recordingSave?.CancelBeforeAcceptance("Workshop disabled before saving"); }
-        void OnDestroy() { if (editor) { Stop(); editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; } recordingSave?.Retire(); if (graph.IsValid()) graph.Destroy(); }
+        void OnApplicationPause(bool paused) { if (paused) { Stop();SuspendAuthoringSave(); } }
+        void OnApplicationFocus(bool focused) { if (!focused) { Stop();SuspendAuthoringSave(); } }
+        void OnDisable() { if (editor) Stop(); else if (graph.IsValid()) graph.Destroy(); recordingSave?.CancelBeforeAcceptance("Workshop disabled before saving"); RetirePoseSaves("Workshop disabled before pose saving completed"); }
+        void OnDestroy() { if (editor) { Stop(); editor.Changed -= SelectionChanged; editor.Editing -= Stop; editor.ItemGrabbed -= Grabbed; } recordingSave?.Retire(); RetirePoseSaves("Workshop closed before pose saving completed"); if (graph.IsValid()) graph.Destroy(); }
     }
 }

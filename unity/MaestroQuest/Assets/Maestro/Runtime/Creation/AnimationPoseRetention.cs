@@ -6,26 +6,22 @@ namespace Maestro.Quest.Creation
 {
     public sealed partial class AnimationWorkshop
     {
-        sealed class PendingPose
+        internal sealed class PendingPose
         {
-            public string Target,RoomSession,Error;
-            public int Revision;
+            public string Target,RoomSession,Session,Error;
+            public int Revision,Version;
+            public bool Applied,Temporary;
             public JointPose[] Joints;
         }
         PendingPose pendingPose;
         public bool HasUnsavedPose=>pendingPose!=null;
         const string RetainedPosePrompt="Pose retained — Save pose retries; Discard pose removes it";
-        bool SaveCurrentPose()
-        {
-            var pose=new PendingPose {Target=targetId,RoomSession=editor.TemporarySessionId,
-                Revision=editor.ObjectRevision(targetId),Joints=avatar.PoseRig.Capture()};
-            if(Save(editor.Read(targetId).motion,true,pose.Joints))return true;
-            pose.Error=saveError;pendingPose=pose;PoseEdited();saveError=RetainedPosePrompt;
-            Say(saveError);return false;
-        }
+        bool SaveCurrentPose(bool finish=false)=>BeginPoseSave(poseSession,poseVersion,finish,out _,out _,manual:true,lifecycle:true);
         internal bool CanSaveRetainedPose(out string error,bool manual=false)
         {
             error="There is no retained pose";var pose=pendingPose;if(pose==null)return false;
+            if(IsSavingPose){error=null;return true;}
+            if(pose.Applied){error="This pose was applied but saving was unconfirmed. Inspect or recover the room; do not save it again.";return false;}
             if(!editor||editor.RuntimeGate.Held){error=editor?editor.RuntimeGate.Reason:"Room editor is unavailable";return false;}
             if(pose.RoomSession!=editor.TemporarySessionId||editor.ObjectRevision(pose.Target)!=pose.Revision){error="Maestro or the room changed; discard this retained pose";return false;}
             var item=editor.Find(pose.Target);var model=item?item.GetComponent<MaestroAvatar>():null;
@@ -33,32 +29,26 @@ namespace Maestro.Quest.Creation
             if(!editor.CanSaveRoom||editor.WriteGate.Frozen){error="Room saving is unavailable";return false;}
             return editor.Ownership.CanAcquire(ownershipId,manual?RoomActorRole.Control:RoomActorRole.Program,RecordingClaims(pose.Target),out error);
         }
-        public bool SaveRetainedPose(out string error,bool manual=true)
-        {
-            error="There is no retained pose";var pose=pendingPose;
-            if(pose==null){Say(error);return false;}
-            bool Fail(string message){pendingPose.Error=message;Say(RetainedPosePrompt+". "+message);return false;}
-            if(!CanSaveRetainedPose(out error,manual))return Fail(error);
-            // Only the physical retry may interrupt a program. Shared calls retain
-            // program priority and cannot replace another live actor.
-            if(!editor.Ownership.TryAcquire(ownershipId,"Save retained pose",manual?RoomActorRole.Control:RoomActorRole.Program,
-                RecordingClaims(pose.Target),null,out var lease,out error))return Fail(error);
-            using(lease){
-                saving=true;
-                try {
-                    // Recheck after interruption callbacks; they can persist edits.
-                    if(pose.RoomSession!=editor.TemporarySessionId||editor.ObjectRevision(pose.Target)!=pose.Revision){error="Maestro or the room changed; discard this retained pose";return Fail(error);}
-                    if(!editor.WriteAnimation(pose.Target,pose.Revision,editor.Read(pose.Target).motion,pose.Joints,true,out error))return Fail(error);
-                    pendingPose=null;saveError=null;EndPoseSession();editor.RestorePose(pose.Target);
-                } finally {saving=false;}
-            }
-            Say("Retained pose saved — Undo restores the previous pose");return true;
-        }
-        public void SaveRetainedPose(){if(posing){if(!ResolvePose(poseSession,poseVersion,"save",out _,out var error))Say(error);}else SaveRetainedPose(out _);}
+        // True means the session accepted a save request. Observe the completion
+        // or animation.posing; acceptance alone is not a durable result.
+        public bool SaveRetainedPose(out string error,bool manual=true)=>
+            BeginPoseSave(poseSession,poseVersion,!posing,out _,out error,manual);
+        public void SaveRetainedPose(){if(!SaveRetainedPose(out var error))Say(error);}
         public void DiscardRetainedPose()
         {
-            if(pendingPose==null){if(posing){if(!ResolvePose(poseSession,poseVersion,"discard",out _,out var error))Say(error);}else Say("There is no retained pose");return;}
-            pendingPose=null;saveError=null;EndPoseSession();Say("Retained pose discarded — saved pose and animation kept");
+            if(!DiscardPose(poseSession,poseVersion,out _,out var error))Say(error);
+        }
+        internal bool DiscardPose(string session,int version,out Newtonsoft.Json.Linq.JObject result,out string error)
+        {
+            result=null;if(!CanUsePose(session,version,"discard",out error))return false;
+            result=PoseResult("discarded");
+            bool applied=pendingPose?.Applied==true;
+            foreach(var save in poseSaves)save.Fail("Pose discarded before native acceptance");
+            poseSaves.Clear();pendingPose=null;saveError=null;
+            ReleasePoseControls();
+            if(poseSession==session)EndPoseSession();
+            Say(applied?"Pose buffer discarded — applied edits remain; recover saving before editing":"Unsaved pose discarded — previous saved poses remain");
+            return true;
         }
     }
 }

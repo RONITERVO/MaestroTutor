@@ -218,9 +218,9 @@ if(modelSelection){
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','modelImport.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
 }
 const poseSessions=new URLSearchParams(location.search).has('poseSessions');
-let poseObservation:typeof nativePosing.active=nativePosing.before;
+let poseObservation:typeof nativePosing.active=nativePosing.before,poseFinishTicks=0;
 if(poseSessions){
- if(![nativePosing.start,nativePosing.rotate,nativePosing.finish].every(validExecutionView))throw new Error('Invalid native posing fixture');
+ if(![nativePosing.start,nativePosing.rotate,nativePosing.preparing,nativePosing.finish].every(validExecutionView))throw new Error('Invalid native posing fixture');
  state=JSON.parse(JSON.stringify(nativeProgram));state.visible=true;state.workspaceView='rules';
  state.execution={...JSON.parse(JSON.stringify(nativePosing.start)),selected:null,running:[],outcomes:[],nextRunId:nativePosing.start.selected.id};
  state.capabilities=[...state.capabilities??[],'catalogVocabulary.v1','animationPosing.v1','execution.v1','executionReceipts.v1','actionResults.v1'];
@@ -313,6 +313,10 @@ createRoot(document.getElementById('root')!).render(<QuestBookSurface><div style
 const requestHistory:unknown[]=[];Object.assign(window,{maestroWorkspaceRequests:requestHistory});
 setInterval(()=>{
  const bridge=window.maestroBook;if(!bridge)return;
+ if(poseFinishTicks>0&&--poseFinishTicks===0){
+  state.execution=copy(nativePosing.finish) as RoomAgentState['execution'];poseObservation=nativePosing.idle;
+  state.status='Recorded native pose completion; browser acknowledgement is simulated';
+ }
  if(recordingFinishTicks>0&&--recordingFinishTicks===0){
   state.execution=copy(nativeRecording.finish) as RoomAgentState['execution'];recordingObservation=nativeRecording.idle;
   state.status='Recorded native completed save; browser acknowledgement is simulated';
@@ -408,7 +412,7 @@ setInterval(()=>{
     else if(poseSessions&&input.operation==='start'){
      const index=[nativePosing.start,nativePosing.rotate,nativePosing.finish].findIndex(view=>JSON.stringify(input.call)===JSON.stringify(view.selected.call));
      if(index<0){state.ok=false;state.status='Only the captured native pose requests can be replayed';}
-     else{state.execution=copy([nativePosing.start,nativePosing.rotate,nativePosing.finish][index]) as RoomAgentState['execution'];poseObservation=[nativePosing.active,nativePosing.edited,nativePosing.idle][index];state.status='Captured native pose result; browser acknowledgement is simulated';}
+     else{state.execution=copy([nativePosing.start,nativePosing.rotate,nativePosing.preparing][index]) as RoomAgentState['execution'];poseObservation=[nativePosing.active,nativePosing.edited,nativePosing.saving][index];if(index===2)poseFinishTicks=15;state.status='Captured native pose result; browser acknowledgement is simulated';}
     }
     else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.start.selected.call)){state.execution=copy(nativeRecording.start) as RoomAgentState['execution'];recordingObservation=nativeRecording.active;state.status='Recorded native start; browser acknowledgement is simulated';}
     else if(recordingSessions&&input.operation==='start'&&JSON.stringify(input.call)===JSON.stringify(nativeRecording.finish.selected.call)){state.execution=copy(nativeRecording.preparing) as RoomAgentState['execution'];recordingObservation=nativeRecording.saving;recordingFinishTicks=15;state.status='Recorded native preparation; browser acknowledgement is simulated';}
