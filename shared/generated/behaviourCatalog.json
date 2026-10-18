@@ -48228,7 +48228,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalCreationCompletion.cs",
-      "sha256": "07bc7454991d4c82cca8215b2cc5bde53ce750a13b76624e25a27b25d7f2fedf"
+      "sha256": "661f123494da2b591ec102eb2499df680904930fa5e99db2b2f771eae8f567cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PhysicalRoomAction.cs",
@@ -48456,7 +48456,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "24afb39df971d61b4b25d075382e0d355cafa33d84dc2b2e5f5f1ea9b0c7d7d3"
+      "sha256": "b445eba3d991b44bd410ad84dc99c421aa55d0e82b87c38da0dfc6436659ebfb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -49252,7 +49252,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PhysicsTools.cs",
-      "sha256": "78127102dae727ccd5f61b205b0642144a54054a1237f4ec9aba9ff3d563f93d"
+      "sha256": "068e3fdf17d61d5139007b85b64062e31685d48d7fa0e41781d1a11d338f43a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",

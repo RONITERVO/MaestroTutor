@@ -409,6 +409,7 @@ namespace Maestro.Quest.Creation
                 ReconcileEdit(edit,native,applyPose??!placement);MarkDirty();SetStatus(success);return true;
             }
         }
+        // Legacy immediate API. Physical buttons use the shared pending-completion path.
         public bool SetItemPhysics(string id,ObjectPhysicsSettings settings)
         {
             if(!RoomControls.SetPhysics(Read(id),settings,out var error)){SetStatus(error);return false;}
@@ -418,17 +419,17 @@ namespace Maestro.Quest.Creation
         public void CyclePhysics()
         {
             var data=journal.Read(selected);if(data==null || data.IsBuiltIn) {SetStatus("Select a creation to change its physics");return;}
-            var settings=RoomControls.Physics(data);settings.mode=((ItemPhysics)(((int)data.physics+1)%3)).ToString().ToLowerInvariant();SetItemPhysics(selected,settings);
+            var settings=RoomControls.Physics(data);settings.mode=((ItemPhysics)(((int)data.physics+1)%3)).ToString().ToLowerInvariant();ConfigurePhysicsManually(selected,settings);
         }
         public void CycleMass()
         {
             var data=journal.Read(selected);if(data==null || data.IsBuiltIn) {SetStatus("Select a creation to change its mass");return;}
-            var settings=RoomControls.Physics(data);float[] masses={.1f,.5f,1,2,5,10,20};settings.mass=masses.FirstOrDefault(value=>value>data.mass);if(settings.mass==0)settings.mass=.1f;SetItemPhysics(selected,settings);
+            var settings=RoomControls.Physics(data);float[] masses={.1f,.5f,1,2,5,10,20};settings.mass=masses.FirstOrDefault(value=>value>data.mass);if(settings.mass==0)settings.mass=.1f;ConfigurePhysicsManually(selected,settings);
         }
         public void CycleCollider()
         {
             var data=journal.Read(selected);if(data==null || data.IsBuiltIn) {SetStatus("Select a creation to change its collision shape");return;}
-            var settings=RoomControls.Physics(data);settings.shape=((ItemCollider)(((int)data.collisionShape+1)%3)).ToString().ToLowerInvariant();SetItemPhysics(selected,settings);
+            var settings=RoomControls.Physics(data);settings.shape=((ItemCollider)(((int)data.collisionShape+1)%3)).ToString().ToLowerInvariant();ConfigurePhysicsManually(selected,settings);
         }
         public bool PlaceSelected(Vector3 worldPosition)
         {

@@ -36,6 +36,8 @@ Explicit world relocation now shares ordered save completion with authoring; see
 Physical creation buttons now share persisted completion. Target-scoped edits,
 physical object history and owned model previews preserve unrelated activity;
 see [editing continuity](#scoped-physical-editing-and-preview-continuity--2026-10-18).
+Physical item mode, mass and collision-shape controls now share completion;
+see [physics control completion](#physical-physics-preference-completion--2026-10-18).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -14712,3 +14714,51 @@ The final evidence reconciles 3,346 native inputs, 5,127 source hashes and
 stalls, headset/provider acceptance and separate native echo quality failures
 remain open. No device, paid provider, signing, deployment or Meta action was
 performed for this increment.
+
+
+## Physical physics preference completion — 2026-10-18
+
+Object mode, Mass and Collision shape on the physical tray now enter the existing
+manual completion coordinator and shared physics-settings operation. Captured
+target/revision/values survive waiting and selection changes. Repeated pending
+taps cannot advance twice. Exact-target takeover preserves unrelated programs,
+higher-priority grips and retained target animation drafts. Native collider/body
+settings, one Undo, temporary rooms and the simulation start/pause state remain
+part of the shared contract.
+
+The physical tray now shows the source of feedback correctly: editor outcomes,
+physics state or scan status. Pending saves remain visible across unrelated
+room notifications. An unconfirmed accepted failure includes the clicked item's
+captured name, leaves its live settings intact, preserves files for inspection
+and requires recovery. Publication uncertainty must not be reported as proof
+that the old primary is unchanged. The immediate `SetItemPhysics` helper retains its legacy
+synchronous contract; surface placement and avatar publication remain separate
+completion work.
+
+Two new regressions failed against `163e3ffb`: physical settings completed
+synchronously, and changing mass stopped another object's motion. Both passed
+after routing the buttons through existing completion. An expanded run passed
+22 of 23 cases; its failed status assertion expected an ID not promised by the
+shared non-creation operation. The product now adds captured human-readable
+target context, and the test checks a specifically named item while retaining
+all live-setting, file-preservation, recovery and no-replay assertions.
+
+All 23 focused cases pass, including nine new physics cases, eleven previous
+editing-continuity cases and three adapted legacy fixtures. Those three fixtures
+now wait for physical setting completion before their original native physics,
+Undo, save and throw assertions.
+
+Fresh full verification passed 1,495 EditMode and 2,099 PlayMode tests, with three
+explicitly allowed private-asset skips, reconciling all 3,597 discovered cases.
+All 3,208 web tests, application/probe TypeScript and catalog provenance passed.
+Full offline Headless `19c8a4c0eb16443789744f15e5e1fc4f` and original-book
+`0e4ca1d21ad2451080add739584f50c5` finished with clean client/Editor exits,
+sparse discovery and confirmed idle room/behaviour storage.
+
+The evidence reconciles 3,348 native inputs, 5,129 source hashes and 14 unchanged
+protected files under `.quest-evidence/physical-physics-completion-20261018/`.
+Native physical button/body/feedback tests do not establish headset input,
+readability or comfort; the original-book and headless integrations exercise the
+actual native catalog with offline providers. Earlier Editor startup/shutdown
+stalls and separate native echo quality findings remain open. No device, paid
+provider, signing, deployment or Meta action was performed for this increment.

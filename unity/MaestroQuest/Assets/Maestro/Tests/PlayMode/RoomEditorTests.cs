@@ -58,7 +58,7 @@ namespace Maestro.Quest.Tests
                 new RoomAgentCommand {action="physicsSettings",target="ball",physics=new ObjectPhysicsSettings {mode="solid",shape="box",mass=2}}),Is.True);
             var data=editor.Snapshot().objects.Single(x=>x.name=="Agent test ball");var id=data.id;
             Assert.That(data.physics,Is.EqualTo(ItemPhysics.Solid));Assert.That(data.mass,Is.EqualTo(2));Assert.That(data.collisionShape,Is.EqualTo(ItemCollider.Box));
-            editor.Select(editor.Find(id));editor.CycleMass();Assert.That(editor.Read(id).mass,Is.EqualTo(5));
+            editor.Select(editor.Find(id));editor.CycleMass();yield return PhysicalCreationTestWait.Finish(editor);Assert.That(editor.Read(id).mass,Is.EqualTo(5));
             editor.Undo();Assert.That(editor.Read(id).mass,Is.EqualTo(2));
             var before=JsonUtility.ToJson(editor.Snapshot());
             Assert.That(Run(new RoomAgentCommand {action="paint",target=id,color=Color.red},new RoomAgentCommand {action="physicsSettings",target=id,physics=new ObjectPhysicsSettings {mode="solid",shape="box",mass=100}}),Is.False);
@@ -230,7 +230,7 @@ namespace Maestro.Quest.Tests
         public IEnumerator RecordedThrowReleasesIntoPhysicsAndUnrelatedEditsPreserveItsPosition()
         {
             var data = editor.Snapshot().objects.Single(x => x.kind == RoomObjectKind.Ball);
-            var item = editor.Find(data.id); editor.Select(item); editor.CyclePhysics();
+            var item = editor.Find(data.id); editor.Select(item); editor.CyclePhysics();yield return PhysicalCreationTestWait.Finish(editor);
             var frames = new[] { new MotionFrame { time = 0,position = new Vector3(0,1.3f,0) },new MotionFrame { time = .5f,position = new Vector3(.5f,1.5f,0) } };
             editor.SaveAnimation(data.id,new RoomMotion { frames = frames },null,false);
             physics.SetSurfaces(true,"Test room"); physics.StartPhysics();
@@ -261,7 +261,9 @@ namespace Maestro.Quest.Tests
         public IEnumerator ColliderAndMassEditsSurviveUndoAndSaveWithoutChangingTheBook()
         {
             editor.Create(RoomObjectKind.Block); yield return PhysicalCreationTestWait.Finish(editor); var id = editor.SelectedId; var item = editor.Find(id);
-            editor.CycleCollider(); editor.CycleCollider(); editor.CycleMass();
+            editor.CycleCollider();yield return PhysicalCreationTestWait.Finish(editor);
+            editor.CycleCollider();yield return PhysicalCreationTestWait.Finish(editor);
+            editor.CycleMass();yield return PhysicalCreationTestWait.Finish(editor);
             Assert.That(item.Grab.colliders.Single(),Is.TypeOf<SphereCollider>());
             Assert.That(item.GetComponent<Rigidbody>().mass,Is.EqualTo(1));
             editor.Undo(); Assert.That(item.GetComponent<Rigidbody>().mass,Is.EqualTo(.5f));

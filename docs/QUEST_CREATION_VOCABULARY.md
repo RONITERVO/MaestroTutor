@@ -87,11 +87,37 @@ Undo until Keep. Physical pencil modes and retained drawing/sculpt drafts keep
 their separate session controls.
 
 These changes do not replace synchronous legacy APIs or the grouped legacy wire
-contract. Model imports and other remaining physical settings/history paths need
+contract. Avatar publication, surface placement and remaining history paths need
 their own completion audit. Desktop delayed-storage and physical-button tests
 establish ordering and behavior. Native validation, baseline checks, snapshot
 capture and scene reconciliation still include owner-thread work; headset latency
 and comfort need measured acceptance.
+
+## Physical item physics
+
+The physics tray's Object mode, Mass and Collision shape buttons use the same
+manual completion coordinator as creation controls and the same
+`BeginConfigurePhysics` operation as the shared catalog action. The request
+copies its target, revision and settings before waiting. Repeated pending taps
+do not change that intent, and a changed target is refused rather than overwritten.
+Changing selection never redirects the original request.
+
+Only the affected target's control/program ownership can be replaced. Grips keep
+their higher priority, and unfinished target animation drafts require saving or
+explicit discard. Other programs keep moving. Settings preserve one Undo,
+temporary-room boundaries and the current physics start/pause state.
+
+The tray now displays editor and physics feedback as well as scan feedback.
+An active edit's preparation/saving status takes precedence over unrelated room
+notifications. A failed accepted save identifies the captured item by a bounded
+human-readable name, retains the live settings as unconfirmed, and blocks unsafe
+saving/replay through shared recovery.
+
+The legacy immediate `SetItemPhysics` API retains its synchronous contract.
+These buttons do not imply that surface placement, avatar publication or every
+legacy caller has adopted asynchronous completion. Native button/text and
+storage-failure tests are desktop evidence; headset readability, latency and
+interaction still require acceptance.
 
 ## Imported model preview continuity
 

@@ -42,7 +42,7 @@ namespace Maestro.Quest.Interaction
             }
             selection = Label(transform,new Vector3(0,.23f,-.023f),"",.005f);
             status = Label(transform,new Vector3(0,-.235f,-.023f),"",.0047f);
-            world.Changed += Refresh; scan.Changed += Refresh; editor.Changed += Refresh; Refresh();
+            world.Changed += PhysicsChanged; scan.Changed += Refresh; editor.Changed += EditorChanged; Refresh();
         }
         internal bool RequestPhysicsStart(out string run,out string error)
         {
@@ -79,14 +79,17 @@ namespace Maestro.Quest.Interaction
             if(!scan.PlaceObject(editor,id,placementRevision,placementSetup,ray,out _,out var error))status.text=error;
         }
         void OnEnable()=>Refresh();
-        void Refresh()
+        void Refresh()=>RefreshStatus(scan?scan.Status:"");
+        void PhysicsChanged()=>RefreshStatus(world?world.Status:"");
+        void EditorChanged()=>RefreshStatus(editor?editor.Status:"");
+        void RefreshStatus(string message)
         {
             if(!isActiveAndEnabled||!status||!editor)return;
             if (!status || !editor) return;
             var data = editor.Read(editor.SelectedId);
             selection.text = data == null ? "Select a creation to set physics" : data.kind + " · " + data.physics + " · " + data.mass.ToString("0.##") + " kg\nCollision: " + data.collisionShape;
             if(scanLabel){scanLabel.text=scan.Busy?(scan.CanCancel?"Cancel setup":"Wait for system"):"Scan room";scanAction.AccessibleName=scanLabel.text;scanAction.GetComponent<Collider>().enabled=!scan.Busy||scan.CanCancel;}
-            if (!Placing) status.text = string.Join("\n",ModelText.Wrap(scan.Status,62).Take(3));
+            if (!Placing) status.text = string.Join("\n",ModelText.Wrap(editor.ManualCreationPending?editor.Status:message,62).Take(3));
         }
         Material Paint(string color) { var material = IllustratedMaterials.CreateControl(IllustratedMaterials.Hex(color)); materials.Add(material); return material; }
         static void Part(Transform parent,Vector3 position,Vector3 scale,Material material)
@@ -104,6 +107,6 @@ namespace Maestro.Quest.Interaction
         void OnApplicationPause(bool paused) { if (paused) CancelPlacement(); }
         void OnApplicationFocus(bool focused) { if(!focused)CancelPlacement(); }
         void OnDisable() { if (editor) CancelPlacement(); }
-        void OnDestroy() { if (world) world.Changed -= Refresh; if(scan)scan.Changed-=Refresh; if (editor) editor.Changed -= Refresh; foreach (var material in materials) ArtResources.Release(material); }
+        void OnDestroy() { if (world) world.Changed -= PhysicsChanged; if(scan)scan.Changed-=Refresh; if (editor) editor.Changed -= EditorChanged; foreach (var material in materials) ArtResources.Release(material); }
     }
 }
