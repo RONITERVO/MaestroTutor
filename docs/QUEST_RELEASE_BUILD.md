@@ -779,3 +779,58 @@ paint/deletion evidence remains in .quest-evidence/component-save-20261017/andro
 This is unsigned development compilation only. No APK/AAB, signing, installation,
 paid-provider request, deployment or Meta action occurred. Installed/package
 versions, physical/acoustic acceptance and Store gates remain unchanged.
+
+## Current Android compile checkpoint — 2026-10-19
+
+Source `6b7374b8bc686638d377454a8c36e2cdadb7727f` passes a fresh Unity
+6000.3.24f1 Android export and guarded Java/IL2CPP compilation. This includes the
+subsequent settings, terrain/physical authoring, keyframe, lifecycle, world-location,
+scoped editing, avatar-selection and surface-placement completion work. The export
+reports zero errors/five build warnings. The production web build passes.
+
+All 41 compilation/merge tasks execute. The generated C++ explicitly contains the
+shared scan/detected-surface placement entry points, Maestro model selection and
+its asynchronous operation, ordered edit admission, accepted-primary validation,
+persisted completion and lifecycle checkpoint code. The compiled libil2cpp.so
+differs from the October 17 checkpoint.
+
+The preflight reuses the complete desktop verification on exactly unchanged
+inputs: **1,498 EditMode / 2,125 PlayMode passes**, with the same three named
+optional private-asset skips, and both final full offline Headless/Book journeys.
+It checks native report hashes, actual terminal journey results, all **3,356 native
+inputs / 5,140 source hashes**, and the owned tested mirror before synchronization.
+Those desktop tests were not rerun for this compile. The first local reuse guard
+incorrectly required a Passed root label for the suite containing the three skips;
+it stopped before building. The corrected guard verifies exact totals and the
+exact names of all non-passing cases. Both the failed preflight and correction
+are retained; no production code or test threshold changed.
+
+The Android browser build succeeds with **128 passes/two skips/zero failures**
+and **zero lint errors/six warnings**. Its unit-test results are Gradle-cached
+against **106 verified unchanged browser inputs**; compilation/export are fresh.
+All source inputs and **14 protected files** remain byte-identical through the
+audit. Warnings are retained, and normalized warning signatures match the prior
+Android checkpoint. The Meta GameActivity warning remains, while merged-manifest
+inspection confirms the required activity.
+
+Readback confirms:
+
+- com.maestro.quest.development, exactly one UnityPlayerGameActivity, the quest3
+  device declaration and no broad storage permission.
+- All **22 selected ARM64 libraries** have 16 KiB-compatible ELF LOAD segments.
+  Five unselected ARMv7 dependency libraries remain in the intermediate; final
+  APK ABI filtering and ZIP alignment have not been exercised.
+- No APK/AAB, signing, installation, device access, paid-provider request,
+  deployment or Meta operation.
+
+Evidence is in .quest-evidence/android-completion-20261019/: verified.json,
+reused-verification.json, generated-source-evidence.json, maestro-compile.json,
+manifest/lint readback, source inventories, warning comparisons and complete logs.
+The export is Android-compile-20261019-061527-fd5fd1ae under the owned build mirror.
+
+This closes the current Android compilation gap only. The installed development
+checkpoint remains D85F3CB7 / f58dab48, the packaged development APK remains
+5899972E / 5100f612, and private Alpha remains 1767008267909255. Physical behavior,
+provider access, audio quality, final packaging and Store acceptance are still
+open. The [requirement checklist](QUEST_V1_PLAN.md#release-evidence-still-required)
+records these separate gates.

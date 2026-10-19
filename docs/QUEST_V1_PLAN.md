@@ -19,7 +19,10 @@ implementation and verification status are recorded at the end of this document.
 Current desktop and unsigned Android checks cover all five shared creation kinds,
 placement, paint/delete completion, ordered admission and accepted saved-room
 identity. See [shared creation completion](#shared-creation-completion--2026-10-17)
-and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-17).
+and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-19).
+The October 19 compile now also covers the later saved settings, lifecycle,
+world-location, avatar-selection and surface-placement changes on source
+`6b7374b8`. It is unsigned development compilation; installation is unchanged.
 Later desktop checks cover saved physics, movement, gait and water preferences;
 see [shared settings completion](#shared-settings-completion--2026-10-17).
 Shared container and terrain actions now also await native application and durable
@@ -1527,25 +1530,37 @@ hardware checks. A scaffold or editor demonstration does not complete the goal.
 
 ## Release evidence still required
 
-- User connected and authorized Quest 3 for development. The development APK
-  installs and launches; see QUEST_DEVICE_QA.md for evidence and remaining checks.
-- The owner created Meta app 1763835394893209. Release package com.maestro.quest
-  is selected subject to availability; signing, dashboard configuration and store
-  setup remain required external release gates.
-- Meta application identity, signing configuration, organization access and
-  production authentication/attestation must be validated before submission.
-- Unity 6000.3.24f1 and its Android build support are installed. Licensing works.
-  The original deeply nested installation omitted long-path package metadata;
-  reinstalling at `D:/Tools/Unity/6000.3.24f1` repaired it. A physical short-path
-  build mirror avoids a separate package-cache rename failure in the worktree.
-- Browser texture transport now displays the real bundled Maestro onboarding on
-  Quest 3. Live sessions, interactive artifacts and long-session recovery remain.
-- The server's existing Stripe-only purchase route must not be exposed in a Quest
-  purchase flow without reviewing the current Meta platform policy and selecting
-  the supported store approach. Backend credit authority remains shared.
-- Imported models/animations and default artwork need license/provenance records.
-- Current chat storage is local IndexedDB; cross-device chat sync is not implied
-  by using the same backend and must not be advertised without implementation.
+The table below is the current release checklist. Historical checkpoints later
+in this file establish only their recorded source/device versions. An implemented
+path or a passing desktop suite does not complete a release row. The goal stays
+open until every required row has matching release-candidate evidence.
+
+| Requirement | Current evidence | Remaining work and acceptance limits |
+| --- | --- | --- |
+| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; full offline Headless and visible Book journeys against current desktop Unity. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
+| Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
+| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
+| Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Calibrated foot planting and general crowd/interior planning remain unfinished; do not present the current grounded root motion as those features. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
+| One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
+| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, water quantities/traversal and observation-driven residency/scheduling. | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, swimming, aquatic actors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
+| Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
+| Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
+| Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
+| Identity, managed access, signing and Store review | Meta app 1763835394893209 / package com.maestro.quest; dedicated signing-key USB/paper recovery verified; private Alpha build 1767008267909255 passed malware/security checks. Two Quest bootstrap endpoints are deployed but disabled. | Enable and verify only through the approved rollout process; production account/entitlement/provider access, current signed candidate, privacy/audience/listing/purchase requirements, VRC review and submission evidence remain separate gates. See [release build](QUEST_RELEASE_BUILD.md), [managed access](QUEST_MANAGED_ACCESS.md) and [privacy](QUEST_PRIVACY.md). |
+
+Device and paid-provider work, signing, deployments and Meta changes remain on
+hold. Continue unblocked implementation and offline verification; do not request
+those held actions simply to turn a checklist row green. Preserve the chosen
+18+ audience and the original backend's credit authority. Chat storage remains
+local IndexedDB; a shared backend does not by itself provide cross-device chat
+sync. Hair/cloth interaction physics and arbitrary executable user scripts remain
+outside the accepted v1 scope.
+
+The supported build toolchain remains Unity 6000.3.24f1 with Android support.
+The owned short-path mirror avoids the documented nested-path package failures.
+New Android compile evidence must identify exact source inputs, distinguish
+reused tests from freshly executed compilation, and retain its warnings. Final
+APK filtering, signing, installation and physical acceptance are separate results.
 
 ## Verified development milestone, 2026-09-25
 
