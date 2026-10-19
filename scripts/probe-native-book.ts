@@ -1069,6 +1069,32 @@ try{
  }
  const walkingCreated=await createWalkingRobot('Book walking robot',-3),walkingTarget=walkingCreated.output!.objectId as string;
  const walkingObstacle=await createWalkingRobot('Book walking obstacle',-2),walkingObstacleId=walkingObstacle.output!.objectId as string;
+ const attentionResults=[];
+ for(const actor of [{target:walkingTarget,part:'Head'},...(gait?[{target:gait.target,part:''}]:[])]){
+  const before=(await book.observation(actor.target)).position;
+  await openNamedAction("Turn a character's attention",'object.look');
+  await page.getByLabel('Joint',{exact:true}).selectOption(actor.part?'1':'0');
+  await chooseObject('Action inputs target',actor.target);
+  if(actor.part)await page.getByLabel('Action inputs joint part',{exact:true}).fill(actor.part);
+  await page.getByLabel('Attention',{exact:true}).selectOption('1');
+  await chooseObject('Action inputs focus objectId','book');
+  await page.getByLabel('Action inputs seconds',{exact:true}).fill('1');
+  const receipt=await runNamedAction('object.look');assert.equal(receipt.output!.applied,true);assert.equal(receipt.output!.objectId,'book');
+  await page.getByRole('heading',{name:"Turn a character's attention",exact:true}).scrollIntoViewIfNeeded();
+  await page.screenshot({path:join(directory,'book-native-object-attention-'+(actor.part?'recipe':'humanoid')+'.png')});
+  assert.deepEqual((await book.observation(actor.target)).position,before);
+  const stopped=await book.fact('object.attention','Character attention',{target:actor.target},true);
+  let retired:Record<string,unknown>|undefined;
+  if(stopped.available)assert.equal((stopped.value as {active:boolean}).active,false);
+  else{
+   retired=await readResourceFact('object.presence','Object saved and native presence',{target:actor.target});
+   assert.equal(retired.saved,true);
+   assert.ok(retired.nativeInstance===false||retired.active===false,'Unavailable attention must match a retired native instance');
+  }
+  attentionResults.push({actor,receipt,stopped,retired});
+ }
+ await writeFile(join(directory,'book-native-object-attention.json'),JSON.stringify({boundary:'Original generated book controls aim both a recipe joint and synthetic imported humanoid through the shared action and fact. No provider or physical-headset proof.',results:attentionResults},null,2));
+
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
  await openNamedAction('Walk to a place','object.navigate');
  await chooseObject('Action inputs target',walkingTarget);

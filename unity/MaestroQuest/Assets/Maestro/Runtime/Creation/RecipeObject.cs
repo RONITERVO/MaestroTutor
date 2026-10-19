@@ -12,6 +12,8 @@ namespace Maestro.Quest.Creation
     {
         Dictionary<string,Transform> nodes = new();
         Dictionary<string,Quaternion> rest = new();
+        readonly Dictionary<string,Maestro.Quest.Avatar.JointAttentionFrame> attentionFrames=new();
+        internal Maestro.Quest.Avatar.JointAttentionFrame AttentionFrame(string part)=>attentionFrames.TryGetValue(part,out var value)?value:null;
         List<RecipeMaterials.Lease> materials = new();
         List<Renderer> renderers = new();
         Color appliedTint=Color.white;
@@ -57,7 +59,10 @@ namespace Maestro.Quest.Creation
             CancelParts();suppressedParts.Clear();var old=visual;old?.SetActive(false);
             visual=candidate;encoded=json;recipe=candidate.Source;time=0;interrupted=runtimeGate?.Held==true;runtimeLoop=null;
             nodes=candidate.Nodes;rest=candidate.Rest;materials=candidate.Materials;renderers=candidate.Renderers;appliedTint=Color.white;
-            candidate.Attach(transform);LocalBounds=candidate.LocalBounds;old?.Dispose();Highlight(highlightedPart);return true;
+            candidate.Attach(transform);
+            attentionFrames.Clear();
+            foreach(var pair in nodes)if(pair.Value.parent)attentionFrames[pair.Key]=new Maestro.Quest.Avatar.JointAttentionFrame(transform,pair.Value);
+            LocalBounds=candidate.LocalBounds;old?.Dispose();Highlight(highlightedPart);return true;
         }
         public void Highlight(string partId)
         {

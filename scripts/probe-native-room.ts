@@ -7,6 +7,7 @@ import {probeNativeSparsePrograms} from './probe-native-sparse-programs';
 import {probeNativeMotion} from './probe-native-motion';
 import {readNativeObjects} from './native-probe-read-set';
 import {probeAvatarAttention} from './probe-avatar-attention';
+import {probeObjectAttention} from './probe-object-attention';
 import {probeGroundedTravel,probeGroundedFollowing} from './probe-grounded-travel';
 import {prepareObjectWalk,probeObjectWalk} from './probe-object-walk';
 import {prepareAgentModelGeometry,runAgentModelGeometryProof} from './probe-agent-model-geometry';
@@ -1301,6 +1302,7 @@ try{
   const walkingTargets=await probeGroundedTravel(execute,directory);
   await probeGroundedFollowing(execute,directory,walkingTargets);
   await probeObjectWalk(execute,directory,gait);
+  await probeObjectAttention(execute,directory,[{target:walkingTargets.target,part:'Head'},...(gait?[{target:gait.target}]:[])]);
   // Let ordinary gravity finish before preparing a direct throw. Physics autosave
   // advances object revisions too; a still-falling ball is not a stable fixture.
   // Observe over a full placement-capture interval; never retry a refused launch.

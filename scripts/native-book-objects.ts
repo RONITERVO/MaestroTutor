@@ -38,7 +38,7 @@ export function nativeBookObjects(page:Page){
   await scope.getByLabel('Find '+label+' objects',{exact:true}).fill(target);await scope.getByRole('button',{name:'Search objects',exact:true}).click();
   await pick(scope,target);await scope.locator('code').filter({hasText:target}).waitFor({state:'attached'});
  };
- const fact=async(id:string,label:string,args:Record<string,string>={})=>{
+ const fact=async(id:string,label:string,args:Record<string,string>={},allowUnavailable=false)=>{
   await workshop();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
   await page.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page.getByLabel('Search facts',{exact:true}).fill(id);await page.getByRole('button',{name:'Search',exact:true}).click();
   await page.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();await page.getByRole('heading',{name:label,exact:true}).waitFor();
@@ -50,8 +50,8 @@ export function nativeBookObjects(page:Page){
   }
   await page.getByLabel('Current fact value',{exact:true}).waitFor();
   const submit=page.getByRole('button',{name:'Read fact',exact:true});if(await submit.count())await submit.click();
-  await page.waitForFunction(({id,args})=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&c.available===true&&Object.entries(args).every(([k,v])=>String(c.arguments?.[k])===v);},{id,args});
-  const view=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);assert.ok(validCatalogView(view)&&view.operation==='inspect'&&view.category==='facts'&&view.available&&view.capability===id&&validFactValue(id,view.value));return view as Extract<CatalogView,{operation:'inspect';category:'facts'}>;
+  await page.waitForFunction(({id,args,allowUnavailable})=>{const c=window.nativeBookEvidence!().state!.catalog;return c?.operation==='inspect'&&c.category==='facts'&&c.capability===id&&(c.available===true||allowUnavailable&&c.available===false)&&Object.entries(args).every(([k,v])=>String(c.arguments?.[k])===v);},{id,args,allowUnavailable});
+  const view=await page.evaluate(()=>window.nativeBookEvidence!().state!.catalog);assert.ok(validCatalogView(view)&&view.operation==='inspect'&&view.category==='facts'&&view.capability===id&&(view.available?validFactValue(id,view.value):allowUnavailable));return view as Extract<CatalogView,{operation:'inspect';category:'facts'}>;
  };
  const observation=async(target:string)=>{const value=readRoomObjectObservation(await fact('object.observation','Observe one saved object',{target}),target);assert.ok(value&&value.objectRevision);return value;};
  const directory=async(cursor='',query='')=>{const view=await fact('world.objects','Find saved objects',{query,kind:'all',cursor}),value=readObjectSearchPage(view,objectSearchRequest(query,'all',cursor));assert.ok(value,'Saved directory unavailable or changed');return value;};

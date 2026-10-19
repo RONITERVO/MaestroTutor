@@ -17,12 +17,14 @@ namespace Maestro.Quest.Programs {
         public override IReadOnlyList<string> Requirements=>new[]{"target.exists","target.unheld","authoring.inactive","avatar.spatialReady"};
         public override string Description=>"Direct Maestro's existing head-gaze layer toward the tracked user, the live collision-bounds centre of one exact object, or an authored room point. This supports the included and selected compatible Maestro avatar, not arbitrary created character rigs. Object focus follows normal motion and may stay held by the user; it never claims or moves that object. Missing/replaced objects or unavailable bounds end the action. Points follow the authored world when its view moves. Head yaw is limited to 60 degrees and pitch to 30 degrees, with smooth approach; the body never turns or walks for this action. Reduced motion leaves the head unchanged and reports applied=false. The result and avatar.attention report the latest sampled focus and bounded angles, not eye contact, visual recognition, visibility through walls or guaranteed alignment. Gaze coexists with the existing upper-body gesture channel; walking and whole-body animation retain their existing conflicts. Stop, editing, grabbing Maestro, tracking/focus loss and room/model changes end attention. No saved pose, program, automatic restart or new provider request is created.";
         static JObject Point(bool bounded)=>Object(new JObject{["x"]=bounded?Number(-25,25):Number(-float.MaxValue,float.MaxValue),["y"]=bounded?Number(-25,25):Number(-float.MaxValue,float.MaxValue),["z"]=bounded?Number(-25,25):Number(-float.MaxValue,float.MaxValue)});
-        public override JObject InputSchema {get{
+        internal static JObject FocusSchema(){
             var user=Object(new JObject{["kind"]=Choice("user")});user["title"]="The user";
             var entity=Object(new JObject{["kind"]=Choice("object"),["objectId"]=AnimationTargets.TargetSchema()});entity["title"]="An object";
             var point=Object(new JObject{["kind"]=Choice("point"),["point"]=Point(true)});point["title"]="A place in the world";
-            var focus=new JObject{["oneOf"]=new JArray(user,entity,point),["x-discriminators"]=new JArray("kind"),["title"]="Attention"};
-            var schema=Object(new JObject{["target"]=AnimationTargets.AvatarSchema(),["focus"]=focus,["seconds"]=Number(.1,30)});schema["x-features"]=new JArray(Feature);return schema;
+            return new JObject{["oneOf"]=new JArray(user,entity,point),["x-discriminators"]=new JArray("kind"),["title"]="Attention"};
+        }
+        public override JObject InputSchema {get{
+            var schema=Object(new JObject{["target"]=AnimationTargets.AvatarSchema(),["focus"]=FocusSchema(),["seconds"]=Number(.1,30)});schema["x-features"]=new JArray(Feature);return schema;
         }}
         internal static JObject SampleSchema()=>Object(new JObject{["active"]=new JObject{["type"]="boolean"},["focus"]=Choice("none","user","object","point"),["objectId"]=Text(null,32),["point"]=Point(false),["yaw"]=Number(-60,60),["pitch"]=Number(-30,30),["limited"]=new JObject{["type"]="boolean"},["applied"]=new JObject{["type"]="boolean"}});
         public override JObject OutputSchema=>SampleSchema();

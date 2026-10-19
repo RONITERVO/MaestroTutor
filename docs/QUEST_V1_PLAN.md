@@ -14975,3 +14975,62 @@ Evidence is in `.quest-evidence/foot-placement-20261019/` and its `android/`
 subdirectory. No APK, signing, device, paid-provider, deployment or Meta operation
 occurred. The broader release checklist and existing audio-quality findings
 remain open.
+
+
+## 2026-10-19 — shared character attention
+
+The current implementation adds `object.look` and passive
+`object.attention` for imported humanoid heads and exact recipe parts, while
+delegating Maestro to its existing gaze layer. Users, agents and programs share
+one catalog action. Native joint calibration uses the rest frame; root navigation
+and independent recipe-part animation retain their owners. Explicit whole-body
+clips, duplicate gaze and the selected part's animation remain conflicts.
+
+The transient presenter restores source joints before capture, Stop and authoring.
+It terminates on identity/lifecycle changes without restarting and respects
+reduced motion. Facts and readiness do not load or mutate an object; the explicit
+action uses the existing native-dependency acquisition. See
+[character attention](QUEST_WORLD_AUTHORING.md#attention-for-imported-characters-and-recipe-parts--2026-10-19).
+
+Verification under `.quest-evidence/object-attention-20261019/` passed:
+**1,519 EditMode, 2,146 PlayMode and
+3,218 web tests**, with three named optional private-asset skips
+reconciling the complete 3,668-case native inventory. The 39 focused checks passed;
+all eleven new native attention cases also passed in the full run. App/probe
+TypeScript and generated-catalog provenance passed. The frozen source contains
+3,392 native inputs and 5,179 source hashes; all
+14 protected files remain unchanged.
+
+Full sparse offline original-book `74d70245025b4e19b9d8663284e3ad02` and
+headless `b527a3b8992947c586fc5b41aca68d5b` journeys completed with clean
+client/Editor exits and confirmed idle, nonpending, clean room/behaviour stores.
+Both used real Unity actions for a recipe Head and an imported humanoid head.
+Book screenshots verify the generated action form and completion. Fresh Unity
+renders show the robot head turning while another part animates, with the full
+actor framed; numeric evidence checks unchanged source/root and applied yaw.
+Generated advanced form labels remain functional but technical.
+
+The first build exposed a missing test namespace. Focused checks corrected a
+mistaken current-input count and sampling twice during an arm track's held pose.
+The first full Book run completed attention, then its passive-fact assertion
+incorrectly expected the actor to remain resident. The driver now permits an
+explicit unavailable observation only with saved/native-presence proof that the
+actor retired; all ordinary fact reads still require availability. Runtime
+readiness and passive no-load semantics were preserved. A stale test-camera mirror
+was refused before launch and synchronized within the receipt-owned mirror.
+Failed runs remain recorded separately.
+
+Fresh unsigned Android development export and all 41 Java/IL2CPP
+compilation/merge tasks passed. Generated native code contains the attention
+presenter, rest calibration and shared capability. All 22 selected ARM64 libraries
+passed 16 KiB ELF alignment. Browser checks retain 128 passes/two skips against
+106 unchanged inputs; lint has zero errors/6 warnings. This
+produced no APK/AAB and performed no installation or release signing.
+
+Attention uses the existing capability, event-program, native-dependency and
+ownership system; there is no separate NPC scripting engine or saved schema
+migration. It is bounded joint aiming, not visibility, eye contact, collision
+articulation or general IK. Per-model appearance and physical Quest performance
+remain unaccepted. Device/provider holds, the 31 previously measured open audio
+quality failures and all broader v1 release limits remain open. No paid-provider,
+headset, deployment or Meta operation was performed.

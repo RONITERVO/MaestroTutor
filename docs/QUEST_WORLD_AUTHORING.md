@@ -1464,8 +1464,8 @@ make echo cancellation ready.
 Use **Look toward something** (`avatar.look`) to choose the user, an exact object,
 or a place in authored room coordinates, for 0.1–30 seconds. The book, agent and
 programs use the same action. It reuses Maestro's existing head layer and supports
-the included avatar and compatible selected Maestro models; it does not yet add
-gaze joints to arbitrary created robots or imported NPCs.
+the included avatar and compatible selected Maestro models. The shared
+character action below extends this to imported NPCs and named recipe parts.
 
 An object focus follows the centre of its available collision bounds, including
 while that object is held or independently moved. Attention owns Maestro's gaze
@@ -1489,6 +1489,48 @@ visual occlusion and passthrough opacity. For example, Maestro may look toward a
 robot on lower virtual terrain even when the robot ignores the scanned floor.
 Whether Maestro can walk there is a separate navigation/clearance decision.
 
+
+## Attention for imported characters and recipe parts — 2026-10-19
+
+**Turn a character's attention** (`object.look`) exposes the same focus
+choices to the book, agent and programs. Select **Humanoid head** for an imported
+humanoid or Maestro, or **Recipe part** plus an exact part ID for a procedural
+robot, eye or turret, for 0.1–30 seconds. A named recipe part does not need an
+animation track.
+
+The native rest frame defines forward (+Z) and up (+Y), with the model's actual
+bone axes calibrated into that frame. A moving parent carries this frame. The
+chosen joint approaches the target smoothly within 60 degrees yaw and 30 degrees
+pitch. It overrides only the selected joint's rotation, preserving root navigation,
+other joints' authored local poses, the collision proxy and saved recipe/pose.
+An imported character can keep its selected walking gait while turning its head.
+Other recipe parts can animate independently. Maestro retains its existing head
+layer and its existing movement conflicts.
+
+There is one attention owner per actor. It owns gaze and, for a recipe, the exact
+part channel. Full-body clips and a second owner of that part conflict. Existing
+autoplay on the chosen recipe part must be stopped explicitly; a refused request
+does not stop it. Users can combine attention with other behaviour using the
+ordinary event/parallel program system, without another scripting engine.
+For example, a recipe dog can keep its Tail animation running while its Head
+looks toward a ball; these remain independent parts of one program.
+
+`object.attention` exposes the last native sample and the same result shape
+as `avatar.attention`. Passive reads do not load or animate anything. If an actor
+is saved but its native instance is unloaded, this fact is unavailable rather than
+false; `object.presence` distinguishes those states. A resident actor with no
+attention owner reports inactive. Only an explicit action acquires required native
+objects. Object focus follows the exact object's available bounds, including
+when held. Point focus stays in authored
+world coordinates. The focus is observed, never claimed or moved.
+
+Stop, authoring, grabbing the actor, a replaced joint/model, lost tracking or focus,
+pause and workspace changes end the action. The underlying source joint is
+restored before capture and on Stop, unless a newer explicit pose has replaced it.
+Nothing resumes automatically. Reduced motion leaves the joint unchanged and
+reports `applied=false`. This is joint aiming, not eye contact, visibility
+through walls, collision-driven articulation, crowd behaviour or general IK.
+The existing terrain/collision and visual-occlusion policies remain independent.
 
 ## Retiring unused areas
 

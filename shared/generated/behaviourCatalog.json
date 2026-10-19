@@ -35449,6 +35449,271 @@
       }
     },
     {
+      "id": "object.look",
+      "version": 1,
+      "label": "Turn a character's attention",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "joint": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "head"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "Humanoid head"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "part"
+                    ]
+                  },
+                  "part": {
+                    "type": "string",
+                    "pattern": "^[a-zA-Z0-9_]{1,32}$",
+                    "maxLength": 32
+                  }
+                },
+                "required": [
+                  "kind",
+                  "part"
+                ],
+                "additionalProperties": false,
+                "title": "Recipe part"
+              }
+            ],
+            "x-discriminators": [
+              "kind"
+            ],
+            "title": "Joint"
+          },
+          "focus": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "user"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false,
+                "title": "The user"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "object"
+                    ]
+                  },
+                  "objectId": {
+                    "type": "string",
+                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                    "maxLength": 32,
+                    "x-resource": "object"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "objectId"
+                ],
+                "additionalProperties": false,
+                "title": "An object"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "point"
+                    ]
+                  },
+                  "point": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "kind",
+                  "point"
+                ],
+                "additionalProperties": false,
+                "title": "A place in the world"
+              }
+            ],
+            "x-discriminators": [
+              "kind"
+            ],
+            "title": "Attention"
+          },
+          "seconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 30.0
+          }
+        },
+        "required": [
+          "target",
+          "joint",
+          "focus",
+          "seconds"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "objectAttention.v1"
+        ]
+      },
+      "duration": "timed",
+      "ownership": "exclusiveChannels",
+      "channels": [
+        "gaze",
+        "recipePart"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "attention.jointReady"
+      ],
+      "description": "Aim Maestro, an imported humanoid head, or one named recipe part toward the user, an exact object's live collision-bounds centre, or an authored point. Choose head for humanoids; choose part for a recipe robot, eye, turret or other rotating joint. The construction/rest frame defines forward (+Z) and up (+Y); imported bone axes are calibrated from that frame. Yaw is bounded to 60 degrees and pitch to 30 relative to the moving parent. Only the chosen joint rotates; no root movement, collision movement, eye recognition or visibility inference is implied. One attention owner per actor can coexist with its root navigation and other recipe-part animations. A whole-target clip, another gaze action, or animation on the chosen recipe part conflicts; stop that part's autoplay before aiming it. Maestro uses its existing gaze implementation and movement conflicts. Capturing/authoring restores source poses; Stop restores the underlying joint and never changes the saved pose or restarts itself. Missing/replaced actors, joints or focus, lost tracking, editing, grabbing the actor, pause and room changes end attention. Reduced motion reports applied=false. The focus object is read, never owned or moved. Inspect object.attention for the sampled direction; completion means elapsed time, not perception or eye contact.",
+      "example": {
+        "target": "maestro",
+        "joint": {
+          "kind": "head"
+        },
+        "focus": {
+          "kind": "user"
+        },
+        "seconds": 5
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "focus": {
+            "type": "string",
+            "enum": [
+              "none",
+              "user",
+              "object",
+              "point"
+            ]
+          },
+          "objectId": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 32
+          },
+          "point": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -3.4028234663852886E+38,
+                "maximum": 3.4028234663852886E+38
+              },
+              "y": {
+                "type": "number",
+                "minimum": -3.4028234663852886E+38,
+                "maximum": 3.4028234663852886E+38
+              },
+              "z": {
+                "type": "number",
+                "minimum": -3.4028234663852886E+38,
+                "maximum": 3.4028234663852886E+38
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "yaw": {
+            "type": "number",
+            "minimum": -60.0,
+            "maximum": 60.0
+          },
+          "pitch": {
+            "type": "number",
+            "minimum": -30.0,
+            "maximum": 30.0
+          },
+          "limited": {
+            "type": "boolean"
+          },
+          "applied": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "focus",
+          "objectId",
+          "point",
+          "yaw",
+          "pitch",
+          "limited",
+          "applied"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "avatar.follow.user",
       "version": 1,
       "label": "Follow user",
@@ -46305,6 +46570,52 @@
       ]
     },
     {
+      "id": "object.attention",
+      "version": 1,
+      "type": {
+        "record": {
+          "active": "boolean",
+          "focus": "text",
+          "objectId": "text",
+          "point": {
+            "record": {
+              "x": "number",
+              "y": "number",
+              "z": "number"
+            }
+          },
+          "yaw": "number",
+          "pitch": "number",
+          "limited": "boolean",
+          "applied": "boolean"
+        }
+      },
+      "label": "Character attention",
+      "description": "Passive last sample of object.look or Maestro's existing gaze layer. Reading never loads or starts attention. active/applied describe native joint presentation, not eye contact or sight through walls. The focus point is in authored room metres. Stop leaves inactive neutral fields; the completion receipt retains its last sample.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "objectAttention.v1"
+      ]
+    },
+    {
       "id": "physics.environment",
       "version": 1,
       "type": {
@@ -47397,8 +47708,20 @@
       "sha256": "ff2c91bb234d228a4699841b0da91dbb832a108e47a561785286b1449929fe44"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/JointAttentionFrame.cs",
+      "sha256": "2850c61dbcf1c6aa1f7c10f0e39f267e4508888b2c3287f6b790c090458902c1"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/MaestroAvatar.cs",
       "sha256": "52f202ede01ff9fb8013b2ee05343de88cac4b22a83199cb635fc33ed349c12a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/ObjectAttentionPresentation.cs",
+      "sha256": "8a28a9380cee9114f9b464ffc6772e28418d4babed317070a4751ea5abc9cc07"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/ObjectJointAttention.cs",
+      "sha256": "3e078fe8bd4b7c8a8c58384c368a47ffa2c32f20fb40019dfac708d70f3f7dce"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/PropAttachment.cs",
@@ -47634,7 +47957,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarAttentionCapability.cs",
-      "sha256": "4789cc903ee013aec413a828f250d08da63ef5070aba98effa0855e6fe84190f"
+      "sha256": "6e7feade4b222fbf390d8c98802de2d58463880c9aad6d91cc84234e935b99e9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AvatarModelCapabilities.cs",
@@ -47650,7 +47973,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "bfbab801446d4ac4d1cb1c797824d4c2193be255017f98cddd50f4dd858ff1ee"
+      "sha256": "5475d7da16a8ed78a5fc273df26a13da2b340479454fc2cf8af6b00e418976c4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -47899,6 +48222,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
       "sha256": "c198d84ebf50e5d98a1a8e7de6404c6daac57cd232b500ad75bd5e7b4423b44f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttentionCapability.cs",
+      "sha256": "d925871b7c0de243495e9f0d299b4e67243c4353f5cffd3f25f8c81aca4f2529"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
@@ -48530,7 +48857,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObject.cs",
-      "sha256": "fdf72446b287f3fca5864540dc6b8e5b1a45becdc69c645a65f31275ba0f8534"
+      "sha256": "7b27e35c22e68e21f56eb77c863f28c0596fba94d6327b9dfca4729e0007f041"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RecipeObjectResidency.cs",
@@ -48654,7 +48981,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "66fce350cf4dce7d89ab7ae2637f3a4d928a9e0ccc1ed2012bb3383ea2d77f28"
+      "sha256": "9a5eddb18e58c45337826f664cdfefd6a560722e461f1df7d9d524d738524b78"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -49302,11 +49629,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "3331cc21b9e7aebcf599fb22ffdd6e62acc7cc636021c8ca1957438c00aab8ad"
+      "sha256": "dc25434d7cce8e638b4a5952199116552b9f152494f37d6f57434d1e83aaeb70"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
-      "sha256": "03822903e93304241087ddf425da698fbd4209374da61ce00d3b25f723d667fc"
+      "sha256": "cd2e1e427f5bc0fa16fcddc2024ae2377e285aad38f0666d5c48a9334380cb2a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelPreview.cs",
@@ -49314,7 +49641,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedMotionPose.cs",
-      "sha256": "9bcafb691c0966f9d6de15bcc5880335480181c10b6161642116d13785989474"
+      "sha256": "713564cbd0410b2035d36bce4eaffb5abb3410eaaac01f2f2da19eb213c2bf7f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedMotionTimeline.cs",
@@ -49890,7 +50217,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "13fc67456db7f2b8d0c57a0b60b872648ca2c9a83068f922e9a5621cd1fa2b2e"
+      "sha256": "c507b1a803de1eb3f16b9d20d7ed4475708efa285f8f34a05a5e12523e5b2f1f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

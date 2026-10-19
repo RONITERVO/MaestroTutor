@@ -44,7 +44,12 @@ namespace Maestro.Quest.Imports
         public bool IsPlaying => animationPlayer && animationPlayer.isPlaying;
         public Bounds LocalBounds { get; private set; }
         internal Maestro.Quest.Avatar.HumanoidFootRig FootRig {get;private set;}
-        void MeasureFeet()=>FootRig=Maestro.Quest.Avatar.HumanoidFootRig.Measure(transform,Humanoid,LocalBounds.min.y);
+        internal Maestro.Quest.Avatar.JointAttentionFrame HeadAttention {get;private set;}
+        void MeasurePresentationRig(){
+            FootRig=Maestro.Quest.Avatar.HumanoidFootRig.Measure(transform,Humanoid,LocalBounds.min.y);
+            var head=IsHumanoid?Humanoid.GetBoneTransform(HumanBodyBones.Head):null;
+            HeadAttention=head&&head.parent?new Maestro.Quest.Avatar.JointAttentionFrame(transform,head):null;
+        }
         public RuntimeGltfInstance Instance => instance;
         public Animator Humanoid => instance ? instance.GetComponent<Animator>() : null;
         public bool IsHumanoid => Humanoid && Humanoid.avatar && Humanoid.avatar.isHuman && Humanoid.avatar.isValid;
@@ -134,7 +139,7 @@ namespace Maestro.Quest.Imports
                 instance.transform.SetParent(transform, false); instance.transform.localScale = Vector3.one * layout.Factor;
                 instance.transform.localRotation = objectRotation;
                 instance.transform.localPosition = layout.Position;
-                LocalBounds = layout.Bounds;MeasureFeet();
+                LocalBounds = layout.Bounds;MeasurePresentationRig();
                 instance.gameObject.AddComponent<PencilModelStyle>().Apply();
                 foreach(var skin in instance.SkinnedMeshRenderers)skin.gameObject.AddComponent<ImportedSkinBounds>().Initialize(skin,instance.transform);
                 instance.ShowMeshes();reservation.Mark("ready");
@@ -191,7 +196,7 @@ namespace Maestro.Quest.Imports
             var size = rawBounds.size;
             var x = rotation * (Vector3.right * size.x); var z = rotation * (Vector3.forward * size.z);
             LocalBounds = new Bounds(Vector3.up * height * .5f,new Vector3(Mathf.Abs(x.x)+Mathf.Abs(z.x),size.y,Mathf.Abs(x.z)+Mathf.Abs(z.z)) * scale);
-            MeasureFeet();
+            MeasurePresentationRig();
         }
         public void Play(int index, bool loop)
         {
@@ -205,6 +210,7 @@ namespace Maestro.Quest.Imports
         public void Stop()
         {
             Maestro.Quest.Avatar.HumanoidFootPlacement.RestoreFor(this);
+            Maestro.Quest.Avatar.ObjectJointAttention.RestoreFor(this);
             ReleasePreviewOwner();
             if (animationPlayer) animationPlayer.Stop(); if (!instance) return;
             foreach (var pair in instance.InitialTransformStates)
