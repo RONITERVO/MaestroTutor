@@ -59,11 +59,11 @@ namespace Maestro.Quest.Creation
         // Synchronous API callers retain their existing completion contract.
         internal bool BeginRotation(string id,Quaternion rotation,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
             BeginPlacement(id,data=>data.rotation=rotation,"Object rotated",out pending,out error,publicationCheckpoint);
-        internal bool BeginMove(string id,Vector3 position,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
-            BeginPlacement(id,data=>data.position=position,"Object moved",out pending,out error,publicationCheckpoint);
+        internal bool BeginMove(string id,Vector3 position,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null,Func<string> validatePlacement=null)=>
+            BeginPlacement(id,data=>data.position=position,"Object moved",out pending,out error,publicationCheckpoint,validatePlacement);
         internal bool BeginResize(string id,float scale,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint=null)=>
             BeginPlacement(id,data=>data.scale=scale,"Object resized",out pending,out error,publicationCheckpoint);
-        bool BeginPlacement(string id,Action<RoomObjectData> change,string message,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
+        bool BeginPlacement(string id,Action<RoomObjectData> change,string message,out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePlacement=null)
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
@@ -77,7 +77,7 @@ namespace Maestro.Quest.Creation
                 if(!journal.Prepare(new[]{data},Array.Empty<string>(),out edit,out error))return false;
                 pose=Find(id).GetComponent<RigidRoomItem>()?.HoldForEdit(poseOwner);
                 pendingEdit=pending=new PendingPersistedEdit(this,edit,write,pose,
-                    ()=>CanChangeObject(id,false,true,false,out var issue,poseOwner)?null:issue,message,true,publicationCheckpoint);
+                    ()=>CanChangeObject(id,false,true,false,out var issue,poseOwner)?validatePlacement?.Invoke():issue,message,true,publicationCheckpoint);
                 edit=null;write=null;pose=null;return true;
             } finally {pose?.Dispose();edit?.Dispose();write?.Dispose();}
         }

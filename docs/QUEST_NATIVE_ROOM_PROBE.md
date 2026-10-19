@@ -229,7 +229,12 @@ request discovers trajectory readiness and launches toward the specified point.
 The driver samples the existing native observation channel, whose positions are
 actual live transforms. It does not animate, move or apply physics during flight.
 It requires observed rise/fall, approach to the requested destination, floor
-non-penetration, wall contact without penetration and settling. The native launch
+non-penetration, wall contact without penetration and settling. The read-only fixture program retains four recent actual observations with native
+UTC capture timestamps. The client consumes their serials in order, recovering
+snapshots skipped by transport instead of interpolating or guessing positions.
+Buffer overrun, mutated history, non-monotonic timestamps and stale transport
+fail explicitly. UTC is a capture timestamp, not a monotonic-clock guarantee.
+The native launch
 receipt alone cannot pass those checks. Exact target/settings, unrelated objects and one launch are verified.
 Reusing the original run receipt must return the same outcome without another
 throw. A third conversational request pauses physics; the ball must stay still.

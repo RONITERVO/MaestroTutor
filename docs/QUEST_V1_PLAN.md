@@ -40,6 +40,8 @@ Physical item mode, mass and collision-shape controls now share completion;
 see [physics control completion](#physical-physics-preference-completion--2026-10-18).
 Avatar model selection now shares ordered completion across physical controls,
 import previews and catalog actions; see [avatar completion](#shared-avatar-selection-completion--2026-10-19).
+Detected-surface and exact scanned-plane placement now share that completion;
+see [surface placement](#shared-surface-placement-completion--2026-10-19).
 The installed and packaged checkpoints above are unchanged.
 
 Current desktop source supports saved per-object real-room participation and
@@ -14833,4 +14835,60 @@ establishes headset interaction, model performance or real-provider acceptance.
 Device and paid-provider acceptance, separate
 native echo quality findings and earlier Editor startup/shutdown stalls remain
 open. No device, provider, signing, deployment or Meta action is part of this
+increment.
+
+
+## Shared surface placement completion — 2026-10-19
+
+Detected-surface and exact scanned-plane placement now use the existing ordered
+edit queue, native placement operation and background save worker. Exact scan
+placement is a completion capability. The ray or anchor coordinates stay fixed
+while waiting; accepted output retains the placement and revision even after
+another edit. Frame and scan dependencies are checked until native acceptance,
+and accepted saves drain after Stop or later scan changes.
+
+The physical Place surface control takes over only its target through the shared
+manual coordinator. Unrelated programs continue, newer selections remain selected,
+and failed accepted publication retains the live item as unconfirmed with captured
+item feedback and shared recovery. Existing bounds, support gap, velocity reset,
+temporary-room and Undo semantics remain in place. Numerical noise from repeated
+collision-bound projection is stabilized within 10 micrometres; intentional small
+moves remain edits.
+
+Three regressions failed against `ae05e15d`: scanned placement bypassed an earlier
+pending edit, physical placement stopped an unrelated program, and physical saving
+had no pending completion. All three passed after routing through shared completion.
+The expanded run identified an old immediate-completion fixture, missing feedback
+context for unnamed items, and sub-micrometre projection drift creating extra Undo.
+The fixture now awaits completion before its original geometry assertions; captured
+feedback has a kind/name fallback, and exact pose diagnostics retain the drift
+evidence. See QUEST_SURFACE_PLACEMENT.md for the final contract.
+
+All 26 focused placement/acquisition checks passed, including twelve new
+completion regressions. Fresh full verification passed 1,498 EditMode and
+2,125 PlayMode tests, with three explicitly allowed private-asset skips,
+reconciling all 3,626 discovered cases. All 3,210 web tests, application/probe
+TypeScript and final generated-catalog provenance passed. The first web run
+identified one old `instant` expectation; it now asserts `completion` while
+retaining the exact-anchor, geometry and argument-validation assertions.
+
+The first full Headless attempt failed the ball-proximity check with one native
+observation missing from the client recording. Its evidence is retained. The
+probe-only observer now retains four actual native samples with capture times,
+recovers transport skips and refuses unrecorded gaps or non-monotonic timestamps.
+No trajectory tolerance or runtime physics changed. Nine observer/physics unit
+checks passed; the focused Unity run recovered seven samples from shared
+snapshots with a continuous sequence and passed the original flight checks.
+
+Full offline Headless `3c749f9fd2e3406d986a183ee3d6f923`
+and original-book `6e02e2f3a9784ecb9658f553209a9f51` finished with clean
+client/Editor exits and sparse discovery. Both include confirmed idle
+room/behaviour storage checkpoints.
+Verification reconciles 3,356 native inputs, 5,140 source hashes and
+14 unchanged protected files. Evidence is retained under
+`.quest-evidence/surface-placement-completion-20261019/`. These app journeys
+exercise actual Unity catalog operations with offline providers; the physical
+tray is exercised in PlayMode, not on the headset. Device/provider acceptance,
+separate audio-quality findings and earlier Editor startup/shutdown stalls remain
+open. No device, paid-provider, signing, deployment or Meta action is part of this
 increment.

@@ -11,8 +11,11 @@ Read `room.environment` for `stateId`, select an exact target, and choose:
 - `below`: a downward ray from just above the object's collision bounds.
 - `gaze`: the user's head ray, captured when the action begins.
 
-Both rays are sampled once. Preparation does not continuously follow the user's
-head or object. Live detection reaches four metres and accepts upward-facing
+Native target loading finishes before the placement action begins. The action
+captures its ray once, then prepares the surface provider and enters the shared
+ordered edit queue. It queries that captured ray once when admitted. Waiting
+never continuously follows the user's head or object. Live detection reaches
+four metres and accepts upward-facing
 surfaces with world normal y at least 0.7. No hit, steep surfaces, low-confidence
 normals or missing collision bounds fail without guessed placement or retries.
 
@@ -22,10 +25,13 @@ point, not full surface coverage, wall clearance, visual fit or room alignment.
 Large objects can overhang a table. Imported collider quality affects the result.
 Existing rigid physics can settle the object afterward.
 
-The action returns the actual saved target revision, origin position, contact point,
-normal and temporary-room flag. Vectors use room axes; positions use room metres.
-A changed placement has one normal room Undo entry. Outside temporary play, saving
-precedes completion; in a temporary room, it changes only the fork until Keep.
+The action returns the immutable accepted target revision, origin position,
+contact point, normal and temporary-room flag. A later edit or runtime movement
+does not change this receipt. Vectors use room axes; positions use room metres.
+A changed placement has one normal room Undo entry. Outside temporary play,
+completion waits for background save publication; in a temporary room, it changes
+only the fork until Keep. The live placement is applied at native acceptance and
+can be visible while its save is still pending.
 Velocity resets through the existing object-placement path. Selection and other
 actors remain unchanged. Replaying an existing receipt returns history, including
 after Undo, and cannot raycast or move again.
@@ -34,9 +40,17 @@ after Undo, and cannot raycast or move again.
 
 The action reserves only its target while preparing. It refuses another actor's
 ownership, active authoring and held objects. A physical interruption can cancel
-it. Stop, changed room identity, changed authored target revision, disabled service,
-lost focus/tracking, virtual view or workspace holds prevent a late placement.
-The sampled ray cannot apply after cancellation. Failures do not create Undo edits.
+it. Before acceptance, Stop, changed room identity, changed authored target
+revision, relocated room coordinates, disabled service, lost focus/tracking,
+virtual view or workspace holds prevent a late placement. The prepared candidate
+revalidates its surface dependencies while saving is prepared. A miss never
+starts another raycast. Pre-acceptance failure leaves the placement unapplied.
+
+After acceptance, Stop or a later scan change cannot retract the live edit or its
+pending publication. Accepted work drains through the shared lifecycle and storage
+ownership. Failed publication retains the live placement as unconfirmed, preserves
+files for inspection and blocks further saves until recovery; it cannot promise
+that the old primary still exists. Recovery never blindly repeats the placement.
 
 Preparation may request room permission. The system focus handoff cancels this
 placement; finish access through the system screen (or Load room), then make an
@@ -44,9 +58,20 @@ explicit fresh request. A pending permission result cannot move the object after
 return. Permission requests are coalesced by the existing native permission path.
 No automatic retry or replay is introduced.
 
-The physical tray still accepts the controller's ray and retains human interruption
-priority, then calls the same placement service. Cancel/Recall/focus loss invalidate
-pending arming so a delayed permission result cannot arm the tray again.
+The physical tray accepts the controller's ray and uses the same manual completion
+coordinator and placement operation. Human interruption takes over only the selected
+target; unrelated programs, recordings and held objects continue. Target grips and
+unfinished target animation drafts remain protected. Pending clicks cannot submit
+the placement twice, and completion cannot steal a newer selection. Feedback keeps
+the captured item name, including when publication is unconfirmed.
+Cancel/Recall/focus loss invalidate pending arming so a delayed permission result
+cannot arm the tray again.
+
+Repeated surface projection can produce float rounding noise. When the calculated,
+live and saved origins agree pairwise within 10 micrometres, placement keeps the
+canonical saved origin. An unchanged placement retains its revision and
+does not add an Undo entry. This is numerical stabilization, not a placement grid;
+intentional moves outside that tolerance still create normal edits.
 
 ## Evidence and release gates
 
@@ -54,7 +79,11 @@ Native tests use a controlled surface-provider boundary and real colliders,
 placement calculation, room journal, action scheduler and persistent receipts.
 They check actual support height, gaze sampling, offset bounds, Undo and replay,
 late cancellation, stale identities, failures, temporary-room storage, competing
-ownership and the physical tray adapter. Web tests validate captured native
+ownership and the physical tray adapter. Completion tests additionally cover
+ordered admission, immutable receipts after newer edits, delayed/failed publication,
+accepted Stop and scan changes, frame/layout invalidation before acceptance, newer
+selection retention, repeat-placement stability and small intentional moves.
+Web tests validate captured native
 requests/results against the generated catalog. Browser replay checks the same
 book action controls; it cannot prove live Meta surface detection.
 

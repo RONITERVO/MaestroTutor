@@ -13,8 +13,7 @@ namespace Maestro.Quest.Interaction
         {
             position=point=normal=default;error="The scanned placement service is unavailable";
             if(!editor||!editor.CanEditObject(target,false,out error))return false;
-            if(!ReadLayout(editor.transform)){error=layoutReason;return false;}
-            if(expected!=layoutId){error="The scanned room changed; inspect room.scan again";return false;}
+            if(!CanUsePlacementLayout(editor.transform,expected,out error))return false;
             var surface=layout.FirstOrDefault(s=>s.Id==anchorId);
             if(surface==null||!surface.Plane.HasValue){error="The exact scanned plane is unavailable; inspect room.scan.surfaces";return false;}
             normal=editor.transform.TransformDirection(surface.Rotation*Vector3.forward).normalized;
@@ -32,13 +31,20 @@ namespace Maestro.Quest.Interaction
             point=editor.transform.TransformPoint(surface.Position+surface.Rotation*new Vector3(x,y,0));
             position=editor.transform.InverseTransformPoint(point+normal*(Support(normal)+.01f)-(bounds.center-item.transform.position));
             if(!Finite(position)||Mathf.Abs(position.x)>25||Mathf.Abs(position.y)>25||Mathf.Abs(position.z)>25){error="Placement is outside the room's authoring range";return false;}
+            position=StableSurfacePosition(editor,target,item,position);
             error=null;return true;
         }
-        internal bool PlaceObjectOnScan(RoomEditor editor,string target,string expected,string anchorId,float x,float y,out JObject result,out string error)
+        internal bool CanUsePlacementLayout(Transform frame,string expected,out string error)
         {
-            result=null;if(!PrepareObjectOnScan(editor,target,expected,anchorId,x,y,out var position,out var point,out var normal,out error))return false;
-            if(!editor.MoveObject(target,position,out error))return false;
-            result=new JObject{["target"]=target,["revision"]=editor.ObjectRevision(target),["roomId"]=layoutRoom,["anchorId"]=anchorId,
+            error=null;
+            if(!ReadLayout(frame)){error=layoutReason;return false;}
+            if(expected!=layoutId){error="The scanned room changed; inspect room.scan again";return false;}
+            return true;
+        }
+        internal bool PrepareScanPlacement(RoomEditor editor,string target,string expected,string anchorId,float x,float y,out Vector3 position,out JObject result,out string error)
+        {
+            result=null;if(!PrepareObjectOnScan(editor,target,expected,anchorId,x,y,out position,out var point,out var normal,out error))return false;
+            result=new JObject{["target"]=target,["roomId"]=layoutRoom,["anchorId"]=anchorId,
                 ["position"]=Triple(position),["point"]=Triple(editor.transform.InverseTransformPoint(point)),
                 ["normal"]=Triple(editor.transform.InverseTransformDirection(normal).normalized),["temporary"]=editor.TemporaryRoom};return true;
         }

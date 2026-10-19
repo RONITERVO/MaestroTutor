@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests
         {
             var scan=PlacementRoom(out var source,out var target);var tray=new GameObject("Surface controls");tray.transform.SetParent(root.transform,false);var tools=tray.AddComponent<PhysicsTools>();tools.Build(editor,world,scan,room);editor.Select(editor.Find(target));source.Pending=new();
             var button=tray.GetComponentsInChildren<Maestro.Quest.Rules.RuleToolAction>().Single(x=>x.AccessibleName=="Place surface");button.Command();tools.CancelPlacement();source.Pending.SetResult(true);yield return null;Assert.That(tools.Placing,Is.False);
-            source.Pending=null;button.Command();yield return Until(()=>tools.Placing);tools.Place(new Ray(new Vector3(2,1.5f,2),Vector3.down));Physics.SyncTransforms();ScannedRoom.Bounds(editor.Find(target),out var bounds);Assert.That(bounds.min.y,Is.EqualTo(.01f).Within(.001f));Assert.That(bounds.center.x,Is.EqualTo(2).Within(.001f));Assert.That(source.Rays,Is.EqualTo(1));
+            source.Pending=null;button.Command();yield return Until(()=>tools.Placing);tools.Place(new Ray(new Vector3(2,1.5f,2),Vector3.down));yield return PhysicalCreationTestWait.Finish(editor);Physics.SyncTransforms();ScannedRoom.Bounds(editor.Find(target),out var bounds);Assert.That(bounds.min.y,Is.EqualTo(.01f).Within(.001f));Assert.That(bounds.center.x,Is.EqualTo(2).Within(.001f));Assert.That(source.Rays,Is.EqualTo(1));
         }
         [UnityTest] public IEnumerator TemporarySurfacePlacementDoesNotOverwriteSavedRoomAndCannotStealOwnedTarget()
         {

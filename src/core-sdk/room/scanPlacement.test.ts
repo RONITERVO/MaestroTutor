@@ -12,7 +12,7 @@ it('accepts the real native scanned-floor receipt and preserves exact anchor ide
  expect(validateCapabilityArguments(call.id,1,call.arguments)).toBeNull();expect(validExecutionView(native.receipt)).toBe(true);expect(validateCapabilityOutput(call.id,1,result)).toBeNull();
  expect(native.receipt.selected.phase).toBe('completed');expect(result.target).toBe(call.arguments.target);expect(result.anchorId).toBe(call.arguments.anchorId);expect(result.roomId).toBe(native.scan.roomId);
  expect(result.revision).toBeGreaterThan(native.beforeRevision);expect(result.position).not.toEqual(native.before);expect(result.point.y).toBeCloseTo(.35);expect(result.normal.y).toBeCloseTo(1);expect(result.temporary).toBe(false);
- expect(capabilityDefinition(call.id)).toMatchObject({duration:'instant',channels:['wholeTarget']});
+ expect(capabilityDefinition(call.id)).toMatchObject({duration:'completion',channels:['wholeTarget']});
 });
 it('refreshes only the scan guard while retaining the user-selected plane and coordinates',()=>{
  const call=native.request.call,definition=capabilityDefinition(call.id)!;const commands=[{action:'execution',execution:{operation:'start',call}}];

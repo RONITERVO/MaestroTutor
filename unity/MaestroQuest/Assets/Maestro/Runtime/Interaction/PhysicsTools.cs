@@ -55,9 +55,10 @@ namespace Maestro.Quest.Interaction
         async void ArmPlacement()
         {
             if (preparingPlacement) return;
+            if(editor.ManualCreationPending){RefreshStatus(editor.Status);return;}
             if (Placing) { CancelPlacement(); return; }
             var item = editor.Find(editor.SelectedId);
-            if (!item || editor.AnyHeld) { status.text = "Select and release an item first"; return; }
+            if (!item || item.Grab.isSelected) { status.text = "Select and release an item first"; return; }
             string id = editor.SelectedId;int generation=++placementGeneration;preparingPlacement = true;
             int revision=editor.ObjectRevision(id);string setup=scan.SetupIdentity;
             bool ready;
@@ -73,10 +74,9 @@ namespace Maestro.Quest.Interaction
         public void Place(Ray ray)
         {
             string id=placementId;placementId=null;if(id==null)return;
-            if(editor.AnyHeld){status.text="Release held objects before placing";return;}
-            // Preserve the physical tool's explicit human interruption priority.
-            editor.PrepareAgentEdit();
-            if(!scan.PlaceObject(editor,id,placementRevision,placementSetup,ray,out _,out var error))status.text=error;
+            // The shared physical coordinator takes over only this target and
+            // retains its saved completion after the pointing gesture has ended.
+            editor.PlaceOnSurfaceManually(scan,id,placementRevision,placementSetup,ray);
         }
         void OnEnable()=>Refresh();
         void Refresh()=>RefreshStatus(scan?scan.Status:"");

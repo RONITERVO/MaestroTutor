@@ -33241,7 +33241,7 @@
           "scanPlacement.v1"
         ]
       },
-      "duration": "instant",
+      "duration": "completion",
       "ownership": "exclusiveTargetAndProp",
       "channels": [
         "wholeTarget"
@@ -33254,7 +33254,7 @@
         "room.scan.current",
         "room.active"
       ],
-      "description": "Move an existing object onto an exact loaded upward scanned plane (floor or tabletop). Read room.scan for stateId, then room.scan.surfaces and room.scan.surface for the requested anchor's actual ID, label and bounds. x/y locate the collision-bounds centre in that plane's local axes, not room/world axes. Choose an inspected FLOOR for a floor request; never substitute a tabletop or guessed height. If scan data is unavailable, inspect room.environment; loading an available saved scan is a prerequisite, not proof of alignment. This action never loads, scans, requests permission or starts physics. The complete projected collision AABB must fit the stored rectangle/polygon; unknown or stale anchors and steep surfaces fail without edits. Rotation/scale stay unchanged, support uses actual collision bounds with a 1 cm gap. This is one placement, not an attachment, collision-free path, free-space check, dynamic depth query or proof of real alignment. Geometry absent from the scan and other objects may obstruct the chosen location. Success saves one Undo (temporary during trial play) and resets velocity; already-running gravity may continue. Output identifies the exact anchor and actual room-local placement. Use object.surface.place instead when the user wants the first live surface below the object or at gaze.",
+      "description": "Move an existing object onto an exact loaded upward scanned plane (floor or tabletop). Read room.scan for stateId, then room.scan.surfaces and room.scan.surface for the requested anchor's actual ID, label and bounds. x/y locate the collision-bounds centre in that plane's local axes, not room/world axes. Choose an inspected FLOOR for a floor request; never substitute a tabletop or guessed height. If scan data is unavailable, inspect room.environment; loading an available saved scan is a prerequisite, not proof of alignment. This action never loads, scans, requests permission or starts physics. The complete projected collision AABB must fit the stored rectangle/polygon; unknown or stale anchors and steep surfaces fail without edits. Rotation/scale stay unchanged, support uses actual collision bounds with a 1 cm gap. This is one placement, not an attachment, collision-free path, free-space check, dynamic depth query or proof of real alignment. Geometry absent from the scan and other objects may obstruct the chosen location. Success saves one Undo (temporary during trial play) and resets velocity; already-running gravity may continue. Output identifies the exact anchor and actual room-local placement. Use object.surface.place instead when the user wants the first live surface below the object or at gaze. Changing scan identity or relocating room coordinates before acceptance cancels the placement; the accepted anchor, position and revision remain fixed in the result. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Only the target body is held during placement preparation; it resumes after application. Placement resets velocity, then normal gravity resumes.",
       "example": {
         "target": "book",
         "stateId": "00000000000000000000000000000000",
@@ -33442,7 +33442,7 @@
         "room.setup.current",
         "surface.supported"
       ],
-      "description": "Use the physical Place surface service to move one object onto a live detected floor/table. Read room.environment for stateId. below casts downward from just above the target's collision bounds; gaze captures the user's current head ray. The ray is sampled once at invocation, not continuously steered. Detection is limited to four metres and upward surfaces (normal.y >= 0.7). The same collision-bounds support offset leaves a 1 cm gap and preserves rotation/scale; this does not prove the whole object fits or avoids other geometry. Preparation may request room permission; a system focus handoff cancels this action, so finish permission or Load room first and explicitly request placement again. Stop, lifecycle interruption, changed room identity or changed target revision prevent a late placement. A missed ray never substitutes guessed coordinates or retries. Completion means the native placement was saved with one Undo (local only in temporary play), not settled physics. Velocity resets; existing gravity may continue, but this never starts physics. Result position/point/normal use room axes. Other objects keep running; an agent cannot steal another actor's target.",
+      "description": "Use the physical Place surface service to move one object onto a live detected floor/table. Read room.environment for stateId. below casts downward from just above the target's collision bounds; gaze captures the user's current head ray. The ray is sampled once at invocation, not continuously steered. Detection is limited to four metres and upward surfaces (normal.y >= 0.7). The same collision-bounds support offset leaves a 1 cm gap and preserves rotation/scale; this does not prove the whole object fits or avoids other geometry. Preparation may request room permission; a system focus handoff cancels this action, so finish permission or Load room first and explicitly request placement again. Before native acceptance, Stop, lifecycle interruption, changed room identity, relocated room coordinates or changed target revision prevent a late placement. A missed ray never substitutes guessed coordinates or retries. Completion means the native placement was saved with one Undo (local only in temporary play), not settled physics. Velocity resets; existing gravity may continue, but this never starts physics. Result position/point/normal use room axes. Other objects keep running; an agent cannot steal another actor's target. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Only the target body is held during placement preparation; it resumes after application. Placement resets velocity, then normal gravity resumes.",
       "example": {
         "target": "book",
         "stateId": "00000000000000000000000000000000",
@@ -47804,7 +47804,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ScanPlacementCapability.cs",
-      "sha256": "586f9cf34bcdabab2345369191d0dce4124026b449423d9942ad30db0f12e05a"
+      "sha256": "df465c4c3da619cd5825c6e7c85d465eb1306104cd6a1c92ce2eeb011bff5982"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SculptTipCapability.cs",
@@ -47840,7 +47840,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SurfacePlacementCapability.cs",
-      "sha256": "6a8937d93e4f13c17c6826df25f0c538bc0d42fc9f12e0568846d1d6cc374492"
+      "sha256": "621cb295fa59680e006726132d2aa69c4222c426d15105be142790940657bd0a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SweepPathFact.cs",
@@ -48216,7 +48216,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "28f88031467ea18a862162e0c9bada25c67e31804ec793415a2363e446d078fe"
+      "sha256": "6bc1b18bbc48e60659a1e8edb9082028dc71088683c60008e068601af46fb197"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -48787,6 +48787,10 @@
       "sha256": "a8641c653d45da7a461bdc12024af7927a6ce9b07caefc8ed6a1f758f85faee4"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSurfacePlacement.cs",
+      "sha256": "ae5772efa0e216ec822559812243d8c02d28eb3a8aef22eecee14e3e05418c21"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomTerrainReservoir.cs",
       "sha256": "9306d155cbe2fdfd866cadcb4a078bec617f65f855aa0b83e96af9cc7cb74721"
     },
@@ -49256,7 +49260,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/PhysicsTools.cs",
-      "sha256": "068e3fdf17d61d5139007b85b64062e31685d48d7fa0e41781d1a11d338f43a0"
+      "sha256": "21cea9cbd88ea0ad0fa81f39797c98e379b52fb6490195211f809c6466b3d86c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
@@ -49444,11 +49448,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomObjectPlacement.cs",
-      "sha256": "ba256d2f1b21f236847d1012f79d0b8b4aee1939b734525353190650c8f2955e"
+      "sha256": "63e27d10a2bc12fe32a5413cdc36371530062a961ce14bc446e309c20e0f759b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomPlacement.cs",
-      "sha256": "7b52fd703d9d9e4ec504155ce97ed41577040000703e759c4a1d8ac586fa8a55"
+      "sha256": "8b2f89b8e0eda82b8853bb79d47b5f7dd369c3ba423679d04b4ae4ae25b2e659"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ScannedRoomRequests.cs",

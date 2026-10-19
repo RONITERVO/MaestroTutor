@@ -51,17 +51,30 @@ namespace Maestro.Quest.Interaction
             bounds=colliders[0].bounds;foreach(var collider in colliders.Skip(1))bounds.Encapsulate(collider.bounds);
             return Finite(bounds.center)&&Finite(bounds.extents)&&bounds.extents.sqrMagnitude>0;
         }
-        internal bool PlaceObject(RoomEditor editor,string target,int revision,string expected,Ray ray,out JObject result,out string error)
+        internal static Vector3 StableSurfacePosition(RoomEditor editor,string target,RoomItem item,Vector3 requested)
         {
-            result=null;if(!CanPlace(expected,out error)||!editor||!editor.CanEditObject(target,false,out error))return false;
+            // Re-projecting Unity collision AABBs can perturb an identical origin
+            // by a few float ULPs. Preserve the canonical value only when both
+            // the live and requested origins already agree within 10 micrometres.
+            const float samePositionSquared=1e-10f;
+            var saved=editor.Read(target);
+            if(saved!=null&&editor.Frame.Read(item.transform,out var live,out _,out _)&&
+                (requested-live).sqrMagnitude<=samePositionSquared&&(live-saved.position).sqrMagnitude<=samePositionSquared&&
+                (requested-saved.position).sqrMagnitude<=samePositionSquared)
+                return saved.position;
+            return requested;
+        }
+        internal bool PrepareObjectSurface(RoomEditor editor,string target,int revision,string expected,Ray ray,out Vector3 position,out JObject result,out string error)
+        {
+            position=default;result=null;if(!CanPlace(expected,out error)||!editor||!editor.CanEditObject(target,false,out error))return false;
             if(editor.ObjectRevision(target)!=revision){error="This object changed while placement was preparing";return false;}
             var item=editor.Find(target);Physics.SyncTransforms();
             if(!Bounds(item,out var bounds)){error="This object has no usable collision bounds";return false;}
             if(!TrySurface(ray,out var point,out var normal)||normal.y<.7f){error="No clear level surface detected within four metres; inspect and explicitly try again";return false;}
             float support=Vector3.Dot(new Vector3(Mathf.Abs(normal.x),Mathf.Abs(normal.y),Mathf.Abs(normal.z)),bounds.extents);
-            var position=editor.transform.InverseTransformPoint(point+normal*(support+.01f)-(bounds.center-item.transform.position));
-            if(!editor.MoveObject(target,position,out error))return false;
-            result=new JObject {["target"]=target,["revision"]=editor.ObjectRevision(target),["position"]=Triple(position),["point"]=Triple(editor.transform.InverseTransformPoint(point)),["normal"]=Triple(editor.transform.InverseTransformDirection(normal).normalized),["temporary"]=editor.TemporaryRoom};return true;
+            position=editor.transform.InverseTransformPoint(point+normal*(support+.01f)-(bounds.center-item.transform.position));
+            position=StableSurfacePosition(editor,target,item,position);
+            result=new JObject {["target"]=target,["position"]=Triple(position),["point"]=Triple(editor.transform.InverseTransformPoint(point)),["normal"]=Triple(editor.transform.InverseTransformDirection(normal).normalized),["temporary"]=editor.TemporaryRoom};return true;
         }
         internal static JObject Triple(Vector3 value)=>new() {["x"]=value.x,["y"]=value.y,["z"]=value.z};
         sealed class DeviceSurfaceSource:IRoomSurfaceSource
