@@ -116,7 +116,7 @@ namespace Maestro.Quest.Creation
 
         RoomDocument StarterDocument(RoomItem book, RoomItem maestro, BundledAvatar includedAvatar)
         {
-            var items = new List<RoomObjectData> { Pose(new RoomObjectData { id = "book", kind = RoomObjectKind.Book }, book.transform), Pose(new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro, modelHash = includedAvatar?.Hash, walkClip = (includedAvatar?.WalkClipIndex??-1)+1 }, maestro.transform) };
+            var items = new List<RoomObjectData> { Pose(new RoomObjectData { id = "book", kind = RoomObjectKind.Book }, book.transform), Pose(new RoomObjectData { id = "maestro", kind = RoomObjectKind.Maestro, modelHash = includedAvatar?.Hash, footPlacement = includedAvatar==null?new():new(){enabled=true,modelHash=includedAvatar.Hash}, walkClip = (includedAvatar?.WalkClipIndex??-1)+1 }, maestro.transform) };
             var kinds = new[] { RoomObjectKind.Block, RoomObjectKind.Ball, RoomObjectKind.Cylinder };
             var colors = new[] { IllustratedMaterials.Cover, IllustratedMaterials.Ribbon, IllustratedMaterials.Hex("2B8D88") };
             for (int i = 0; i < kinds.Length; i++) items.Add(new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = kinds[i], color = colors[i], position = new Vector3(.52f + i * .17f,1.45f,.8f) });

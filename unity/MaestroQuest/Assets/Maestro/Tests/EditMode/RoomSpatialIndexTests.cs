@@ -113,8 +113,10 @@ namespace Maestro.Quest.Tests
         [Test] public void SpatialIndexGeometryCoverageRequiresReviewForNewCanonicalFields()
         {
             // New components must classify their geometry and add native parity
-            // coverage before the broad-phase can safely reject them.
-            var expected="id name recipe environmentProfile visibilityLayer waterTraversal modelGeometry appearanceBindings scanAnchors collision lights windows surfaces drawingTips connections snapPoints containers heightFields sculptTips materialStores audioEmitters kind position rotation scale color points radius joints motion modelHash physics collisionShape mass followDistance walkSpeed walkClip walkMotionId".Split(' ');
+            // coverage before the broad-phase can safely reject them. Foot placement
+            // is loaded presentation only: cold imports start in their rest pose;
+            // native skin bounds capture the correction before retirement.
+            var expected="id name recipe environmentProfile visibilityLayer footPlacement waterTraversal modelGeometry appearanceBindings scanAnchors collision lights windows surfaces drawingTips connections snapPoints containers heightFields sculptTips materialStores audioEmitters kind position rotation scale color points radius joints motion modelHash physics collisionShape mass followDistance walkSpeed walkClip walkMotionId".Split(' ');
             CollectionAssert.AreEquivalent(expected,typeof(RoomObjectData).GetFields(System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public).Select(f=>f.Name));
         }
     }

@@ -3918,3 +3918,37 @@ while saving and confirm that the later bookmark survives completion and reload.
 Test suspend/retirement and failed-save recovery separately. A completed old
 receipt must be inspectable without another relocation. These physical checks
 have not yet been performed for the new completion path.
+
+## Humanoid feet on chosen ground — headset acceptance pending
+
+Use a future candidate containing `object.feet.configure`. This section is a
+checklist for that candidate, not evidence from an older installed build.
+Headset and paid-provider work remain on hold.
+
+- Observe the included Maestro standing and following on a flat surface and a
+  modest virtual slope. Check both shoes, knees, hips and transitions at normal
+  viewing distance. A contact-point calculation cannot establish visual shoe
+  contact, and a synthetic walking fixture cannot establish Meshy motion quality.
+- Repeat with representative user humanoids. Load the current foot settings in
+  the book, adjust left/right clearances, save, Undo/Redo and restart. Compare
+  authored and grounded modes. A model with a decorative base or unsupported
+  skeleton must not receive a stretched or invented leg pose.
+- Assign one actor virtual-only collisions and put it on terrain below the real
+  floor. Keep another actor participating in real-room collisions. Translate/yaw
+  the virtual world and verify both choices. Collision policy must not change
+  passthrough opacity or real-world occlusion; inspect those independently.
+- Play full-body imported clips and saved poses, then record and pose joints.
+  Confirm foot fitting does not alter the source take or persist presentation
+  offsets. Check transition back to idle/navigation and upper-body combinations.
+  Include automatic imported idle/listening/speaking choices: they currently keep
+  their authored feet too. Canonical-idle renders do not prove contact fitting
+  during those imported clips; broader contact-aware support remains open.
+- Hold an actor, switch a prop to dynamic physics, remove/retire its support,
+  replace its model, and suspend/resume. Verify clean authored-pose restoration,
+  truthful availability, no spontaneous asset loading from a settings read,
+  and no hidden fallback floor.
+- Repeat through ordinary learner requests with the in-app agent when provider
+  testing resumes. Confirm it discovers the same action, respects exact-model
+  availability and reports actual save completion. Finally measure sustained
+  frame time and allocations with multiple visible characters and mixed audio,
+  water and physics activity; desktop correctness does not establish Quest cost.

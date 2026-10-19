@@ -45,7 +45,7 @@ namespace Maestro.Quest.Imports
             if(!ModelGeometryLayout.TryCreate(rawBounds,objectRotation,settings,out var layout,out error))return false;
             Stop();instance.transform.localRotation=objectRotation;instance.transform.localScale=Vector3.one*layout.Factor;
             instance.transform.localPosition=layout.Position;
-            LocalBounds=bounds;geometryFrozen=settings.meshCollision;return true;
+            LocalBounds=bounds;MeasureFeet();geometryFrozen=settings.meshCollision;return true;
         }
     }
 }

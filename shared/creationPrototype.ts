@@ -10,6 +10,7 @@ type Q=V&{w:number};
 interface Frame {time:number;position:V;rotation:Q;scale:number}
 interface Surface extends SurfaceGeometry {version:number;id:string;part:string;position:V;width:number;height:number;strokes:{id:string;radius:number;points:V[]}[]}
 export interface CreationPrototype extends PrototypeResources {
+ footPlacement?:{version:number;enabled:boolean;modelHash:string;leftClearance:number;rightClearance:number};
  walking?:{source:'embedded';clipIndex:number}|{source:'library';motionId:string};
  physics:{mode:string;shape?:string};collision?:{shapes:unknown[]};modelGeometry?:{version:number;scaleMode:string;metresPerUnit:number;pivot:string;meshCollision:boolean;walkable:boolean};heightFields?:ReservoirBed[];containers?:ReservoirContainer[];sculptTips?:{part:string;enabled:boolean}[];
  geometry:{kind:string;recipe?:{playing:boolean;parts:{id:string;color?:{r:number;g:number;b:number;a:number}}[]};points?:V[];radius?:number};
@@ -24,6 +25,12 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
  if(g.kind==='drawing'&&(!hasLength(g.points!)||g.points!.some(v=>length2(v)>100)))return false;
  if(p.containers?.some(c=>c.version===3)&&(p.version??0)<6||!validTerrainReservoirs(p.physics,p.heightFields??[],p.containers??[]))return false;
  if(p.walking&&((p.version??0)<7||g.kind!=='model'))return false;
+ const feet=p.footPlacement;
+ if(feet){
+  const defaults=feet.version===1&&!feet.enabled&&feet.modelHash===''&&feet.leftClearance===0&&feet.rightClearance===0;
+  if(feet.version!==1||typeof feet.enabled!=='boolean'||typeof feet.modelHash!=='string'||![feet.leftClearance,feet.rightClearance].every(n=>Number.isFinite(n)&&Math.abs(n)<=.1))return false;
+  if(!defaults&&((p.version??0)<9||g.kind!=='model'||!feet.enabled||! /^[a-f0-9]{64}$/.test(feet.modelHash)))return false;
+ }
  const model=p.modelGeometry;
  if(model){
   const defaults=model.version===1&&model.scaleMode==='fitted'&&model.metresPerUnit===1&&model.pivot==='center'&&!model.meshCollision&&!model.walkable;

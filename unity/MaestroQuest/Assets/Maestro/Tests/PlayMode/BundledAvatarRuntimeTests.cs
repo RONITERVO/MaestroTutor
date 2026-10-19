@@ -36,6 +36,7 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator IncludedAvatarLoadsOfflineAndSavedSelectionSurvivesAnAppArtworkUpdate()
         {
             var included=BundledAvatarFixture.Write(Path.Combine(directory,"package1"),ModelFixture.Mixamo());Open(included);yield return Loaded();
+            Assert.That(editor.Read("maestro").footPlacement.enabled,Is.True);Assert.That(editor.Read("maestro").footPlacement.modelHash,Is.EqualTo(included.Hash));
             Assert.That(avatar.ModelHash,Is.EqualTo(included.Hash),avatar.ModelStatus);Assert.That(avatar.CustomModel.IsHumanoid,Is.True);Assert.That(avatar.IsImportedClipPlaying,Is.False);Assert.That(avatar.CustomModel.IsPlaying,Is.False);Assert.That(avatar.PoseRig.Capture(),Has.Length.EqualTo(17));Assert.That((string)Fact("avatar.included")["modelHash"],Is.EqualTo(included.Hash));Assert.That((string)Fact("avatar.model")["phase"],Is.EqualTo("ready"));
             editor.SaveNow();yield return TestLifecycleDrain.Destroy(root);
             var changed=BundledAvatarFixture.Write(Path.Combine(directory,"package2"),ModelFixture.Mixamo(j=>j["animations"][0]["name"]="A later default"));File.Delete(Path.Combine(directory,"package1",BundledAvatar.RelativePath));Open(changed);yield return Loaded();

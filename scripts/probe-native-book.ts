@@ -1048,6 +1048,24 @@ try{
   const selected=await runNamedAction('object.walk.select');
   await page.getByRole('heading',{name:'Choose character walking animation',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-object-walk.png')});
   await writeFile(join(directory,'book-native-object-walk-selection.json'),JSON.stringify({boundary:'Original generated book forms choose an exact synthetic imported gait through native facts and guarded save; no provider/headset claim.',gait,before,clips,selected},null,2));
+  const feetBefore=await readResourceFact('object.feet.settings','Character foot placement',{target:gait.target});
+  // Passive facts may describe retired geometry; the action acquires its native target.
+  assert.equal(feetBefore.modelHash,gait.hash);
+  await openNamedAction('Fit character feet to ground','object.feet.configure');await chooseObject('Action inputs target',gait.target);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  assert.equal(await page.getByLabel('Action inputs modelHash',{exact:true}).inputValue(),gait.hash);
+  assert.equal(Number(await page.getByLabel('Action inputs revision',{exact:true}).inputValue()),feetBefore.revision);
+  await page.getByLabel('Action inputs mode',{exact:true}).selectOption('grounded');
+  await page.getByLabel('Action inputs leftClearance',{exact:true}).fill('0.01');await page.getByLabel('Action inputs rightClearance',{exact:true}).fill('0.005');
+  const feetReceipt=await runNamedAction('object.feet.configure');
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  assert.equal(Number(await page.getByLabel('Action inputs leftClearance',{exact:true}).inputValue()),.01);
+  assert.equal(Number(await page.getByLabel('Action inputs rightClearance',{exact:true}).inputValue()),.005);
+  await page.getByRole('heading',{name:'Fit character feet to ground',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-object-feet.png')});
+  const feetAfter=await readResourceFact('object.feet.settings','Character foot placement',{target:gait.target});
+  assert.equal(feetAfter.mode,'grounded');assert.equal(feetAfter.modelHash,gait.hash);assert.equal(feetAfter.revision,feetReceipt.output!.revision);
+  await writeFile(join(directory,'book-native-object-feet.json'),JSON.stringify({boundary:'Original generated book controls, current native model/revision and both trims, real ordered completion and fact readback. No provider or headset proof.',gait,before:feetBefore,receipt:feetReceipt,after:feetAfter},null,2));
+
  }
  const walkingCreated=await createWalkingRobot('Book walking robot',-3),walkingTarget=walkingCreated.output!.objectId as string;
  const walkingObstacle=await createWalkingRobot('Book walking obstacle',-2),walkingObstacleId=walkingObstacle.output!.objectId as string;

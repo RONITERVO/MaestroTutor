@@ -23,6 +23,14 @@ export async function prepareObjectWalk(execute:Execute,directory:string){
  const before=await fact('object.walk.settings',{target}),clips=await fact('object.walk.clips',{target,modelHash:hash,offset:0});assert.equal(clips.total,1);
  const saved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.walk.select',version:1,arguments:{target,revision:before.revision,modelHash:hash,source:'embedded',clipIndex:0}}}}]));assert.equal(saved.execution?.selected?.phase,'completed');
  const after=await fact('object.walk.settings',{target});assert.equal((after.selection as {source:string}).source,'embedded');assert.equal((after.selection as {playbackStatus:string}).playbackStatus,'inactive');
+ const feetBefore=await fact('object.feet.settings',{target});assert.equal(feetBefore.modelHash,hash);
+ const footArgs={target,revision:feetBefore.revision,mode:'grounded',modelHash:hash,leftClearance:.01,rightClearance:.005};
+ const feetSaved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'object.feet.configure',version:1,arguments:footArgs}}}]));
+ const feetAfter=await fact('object.feet.settings',{target});
+ assert.equal(feetAfter.mode,'grounded');assert.equal(feetAfter.modelHash,hash);
+ assert.equal(feetAfter.leftClearance,.01);assert.equal(feetAfter.rightClearance,.005);
+ assert.equal(feetSaved.execution?.selected?.output?.revision,feetAfter.revision);
+ await writeFile(join(directory,'native-object-feet.json'),JSON.stringify({boundary:'Actual native shared catalog, exact model, ordered save completion and passive readback. Full solver/authoring and deformation checks are in PlayMode. No provider or headset proof.',fixture,before:feetBefore,arguments:footArgs,receipt:feetSaved.execution?.selected,after:feetAfter},null,2));
  await writeFile(join(directory,'native-object-walk-selection.json'),JSON.stringify({boundary:'Explicit synthetic skinned character, real shared settings/clip-list/action/save path; selection alone does not move or play.',fixture,before,clips,receipt:saved.execution?.selected,after},null,2));return fixture;
 }
 export async function probeObjectWalk(execute:Execute,directory:string,fixture:GaitFixture|null){

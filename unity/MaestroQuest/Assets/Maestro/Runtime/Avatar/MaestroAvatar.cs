@@ -116,6 +116,10 @@ namespace Maestro.Quest.Avatar
         public bool ModelBusy { get; private set; }
         public Task<bool> ModelLoad { get; private set; } = Task.FromResult(true);
         public ImportedModel CustomModel => custom;
+        internal bool FootWalking=>spatialWalking;
+        internal bool FootPresentationAllowed => !paused&&focused&&!ModelBusy&&playbackPauseOwner==null&&
+            !activityPlayback&&(savedPose==null||savedPose.Length==0)&&
+            (activity=="spatial"||!editing&&!IsImportedClipPlaying&&(activity==null||activity is "Idle" or "Listening" or "Speaking"));
         public bool IsImportedClipPlaying => importedClip >= 0 || libraryMotion != null;
         public int WalkClip => walkClip;
         public string WalkMotionId => walkMotion?.Id;

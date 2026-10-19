@@ -309,3 +309,48 @@ replays the captured acknowledgement and never shows saved output during
 preparation. The complete offline Headless journey additionally discovers the
 native pending fact and resolution contract. Physical-save mutation is covered
 by native PlayMode integration; the browser replay is not headset evidence.
+
+## Optional feet on real or virtual ground
+
+Users and agents use `object.feet.settings` and `object.feet.configure` through
+the shared capability catalog. The generated book controls load the current
+revision, exact model hash and both shoe clearances before editing. A saved
+event program can use the same action; completion means the normal ordered save
+finished, and Undo restores the previous setting.
+
+Choose `grounded` for the included Maestro or a loaded, supported humanoid import.
+The fresh starter room enables it for the shipped Maestro's exact model hash.
+Existing rooms and new user imports retain authored feet until explicitly
+configured. Choose `authored` to remove the correction. Replacing a model keeps
+the old choice observable but unavailable until it is configured for the new
+exact model; it never silently calibrates another character.
+
+The current calibration estimates the shoe plane from the fitted rest mesh's
+lowest bound. Left and right clearance values, in world metres, provide explicit
+visual adjustment. This is not per-shoe mesh fitting: decorative bases, unusual
+rest poses, nonuniform scales and unsupported skeletons can be refused or need
+another model. Check the actual rendered shoes before treating calibration as
+accepted. Small numerical solver residuals alone do not prove visual contact.
+
+Presentation runs after source animation, corrects the six leg rotations and a
+bounded hips offset, and restores those source values before the next animation
+or authoring sample. It never stretches bones or changes the object's root,
+colliders, saved pose, animation ID or recorded channels. Imported full-body clips, including automatic state-profile choices, saved
+poses, authoring, held objects and physics-driven bodies retain their authored
+pose. Ground fitting currently covers canonical idle and supported navigation;
+it does not infer whether an arbitrary imported idle is standing, sitting or
+dancing. Contact-aware support for those clips remains unfinished. Supported
+navigation gait can use foot fitting while preserving every
+other imported node and blend shape.
+
+Ground comes from the actor's existing environment policy. A virtual-only actor
+can stand on accepted terrain below the scanned floor; an actor participating in
+real-room collisions can use that floor. Visibility, real-room participation and
+foot fitting remain separate choices. Retained foot contacts move with their
+accepted support; missing or incomplete ground, pause, retirement and changed
+models release the correction. The passive settings fact does not load assets or
+activate an area to answer.
+
+This is bounded idle/walking presentation, not a stair planner, swimming system,
+ragdoll or general crowd/interior navigation. Headset appearance, motion comfort
+and sustained performance remain release acceptance work.

@@ -15671,7 +15671,46 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 8.0
+                                  "maximum": 9.0
+                                },
+                                "footPlacement": {
+                                  "type": "object",
+                                  "properties": {
+                                    "version": {
+                                      "type": "integer",
+                                      "minimum": 1.0,
+                                      "maximum": 1.0
+                                    },
+                                    "enabled": {
+                                      "type": "boolean"
+                                    },
+                                    "modelHash": {
+                                      "type": "string",
+                                      "pattern": "^(|[a-f0-9]{64})$",
+                                      "maxLength": 64
+                                    },
+                                    "leftClearance": {
+                                      "type": "number",
+                                      "minimum": -0.1,
+                                      "maximum": 0.1
+                                    },
+                                    "rightClearance": {
+                                      "type": "number",
+                                      "minimum": -0.1,
+                                      "maximum": 0.1
+                                    }
+                                  },
+                                  "required": [
+                                    "version",
+                                    "enabled",
+                                    "modelHash",
+                                    "leftClearance",
+                                    "rightClearance"
+                                  ],
+                                  "additionalProperties": false,
+                                  "x-features": [
+                                    "humanoidFootPlacement.v1"
+                                  ]
                                 },
                                 "lights": {
                                   "type": "array",
@@ -32883,6 +32922,134 @@
       }
     },
     {
+      "id": "object.feet.configure",
+      "version": 1,
+      "label": "Fit character feet to ground",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "authored",
+              "grounded"
+            ]
+          },
+          "modelHash": {
+            "type": "string",
+            "pattern": "^(|[a-f0-9]{64})$",
+            "maxLength": 64
+          },
+          "leftClearance": {
+            "type": "number",
+            "minimum": -0.1,
+            "maximum": 0.1
+          },
+          "rightClearance": {
+            "type": "number",
+            "minimum": -0.1,
+            "maximum": 0.1
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "mode",
+          "modelHash",
+          "leftClearance",
+          "rightClearance"
+        ],
+        "additionalProperties": false,
+        "x-current": {
+          "fact": "object.feet.settings",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "revision": [
+              "revision"
+            ],
+            "mode": [
+              "mode"
+            ],
+            "modelHash": [
+              "modelHash"
+            ],
+            "leftClearance": [
+              "leftClearance"
+            ],
+            "rightClearance": [
+              "rightClearance"
+            ]
+          },
+          "guards": [
+            "revision"
+          ]
+        },
+        "x-features": [
+          "humanoidFootPlacement.v1"
+        ]
+      },
+      "duration": "completion",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "object.revision.current",
+        "storage.writable"
+      ],
+      "description": "Optional, bounded foot placement for Maestro and loaded imported humanoids. Read object.feet.settings first. grounded binds calibration to the exact current modelHash; authored removes it. The rest mesh lower bound estimates shoe contact; leftClearance and rightClearance trim it in world metres. Uses accepted ground and this actor's real-room collision policy. Only idle and supported navigation gait receive a removable leg/hips correction. Explicit clips, saved poses, authoring, held or dynamic bodies retain their authored pose. Missing ground, unsupported rigs or model changes never invent a floor or stretch legs. This does not provide arbitrary stair gait, swimming, crowd routing or physically simulated ragdolls. Visibility and room collision settings stay independent. Read the matching fact and pass the exact object revision. Changed settings save before success with one Undo outside temporary play; already identical settings add no Undo; temporary changes stay in the fork until Keep. Unrequested settings, poses and recorded animations are preserved. Refuses held targets, active authoring and competing motion instead of stopping them; physical tools keep manual interruption priority. Does not start playback, following or physics. Duplicate receipts do not save twice. Stop cannot undo an already completed save; use Undo or explicit settings with a fresh revision. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "mode": "grounded",
+        "modelHash": "",
+        "leftClearance": 0,
+        "rightClearance": 0
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "temporary": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "temporary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "drawing.layer.edit",
       "version": 1,
       "label": "Create or rebind scanned ink",
@@ -42108,6 +42275,49 @@
       ]
     },
     {
+      "id": "object.feet.settings",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "temporary": "boolean",
+          "mode": "text",
+          "modelHash": "text",
+          "leftClearance": "number",
+          "rightClearance": "number",
+          "available": "boolean",
+          "status": "text",
+          "calibration": "text",
+          "presentation": "text"
+        }
+      },
+      "label": "Character foot placement",
+      "description": "Saved exact-model calibration, current availability and passive presentation status. Calibration uses estimated rest-mesh bounds; verify visually and trim shoe clearances. Does not load a missing model, activate areas or certify a route.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "humanoidFootPlacement.v1"
+      ]
+    },
+    {
       "id": "object.walk.clips",
       "version": 1,
       "type": {
@@ -47148,7 +47358,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarPoseRig.cs",
-      "sha256": "be347164ab428f13cf8c265993e7fe2d44eafae9a94e692410f33eb855bb4744"
+      "sha256": "7b2829adc0f03994db6e6c98250700fb0cf70d09c503c7134aa6fe0981961078"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.Attention.cs",
@@ -47167,16 +47377,36 @@
       "sha256": "9ce7bca299931147aa7026f620a001584e27bd09fa8ee36d845a6bf70cd25b95"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidFootPlacement.cs",
+      "sha256": "766ed2623d5fc17e80f6647946f7d3b2632dccedb943a1a5646d734f5c1a79b2"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidFootPresentation.cs",
+      "sha256": "888b14b9822dffdd8050f29f080bf9fd9ab1708577c406888cc91926a7b4d1ba"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidFootRig.cs",
+      "sha256": "1bcb88d995f398ded451804d3e05b6be9348edbe0726f3e2d994a64494d109b8"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidGroundPose.cs",
+      "sha256": "749075bf39567fe665ec829b7e4f19b8eabb80296802268f38fce5b8c778df51"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidRetargeter.cs",
       "sha256": "ff2c91bb234d228a4699841b0da91dbb832a108e47a561785286b1449929fe44"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/MaestroAvatar.cs",
-      "sha256": "41618b4307c4804633fbda628946d5d91fdb2f02c7bc07f1dd16deb072cbd588"
+      "sha256": "52f202ede01ff9fb8013b2ee05343de88cac4b22a83199cb635fc33ed349c12a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/PropAttachment.cs",
       "sha256": "e5fcea0287890d08e4e096d68b9c7f786be6fd365f43189514bf0bfea432ae24"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/TwoBoneFootSolver.cs",
+      "sha256": "5d678742d591f0d642daacf3d2c0ba99e518376c13abeaa298f84171ae9306f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Book/AcousticGeometry.cs",
@@ -47420,7 +47650,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "23f9d7d82dbd4b719b0f8d546be6e4e618f1978eaadf11d384344bc50ef8074e"
+      "sha256": "bfbab801446d4ac4d1cb1c797824d4c2193be255017f98cddd50f4dd858ff1ee"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -47500,7 +47730,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "b2c824340cc092d6d476e29e216157ec001c98932ab25bdbe9567925bc4fad2c"
+      "sha256": "ce3708f6f9e834a0e0dbedb4dad45cceb131d6224c7c32e85c92b6bb483e2d71"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -47673,6 +47903,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
       "sha256": "1a916bb0ff75d2666f2a164206f34eaf557d5fa5ac6f318005dfc9aa3b24c1c3"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectFeetCapability.cs",
+      "sha256": "fcbd0f4ae972e18a4fa5c2bfbe958a0721c8a375ae49c953c971c479c0f997b0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectLightCapability.cs",
@@ -48044,7 +48278,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "cdb7ce95629f3e019a97b7b9b8b27de481ea6b2eea448f2ed41fb3ef8273de35"
+      "sha256": "8fa87fe15292855305705d84902ac2c7568c229864193188bf19dabade1d5ea9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -48420,7 +48654,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "7e5974ab95f0715a14252b95f88290800d9cea58188eca6bec8e685c20acbd57"
+      "sha256": "66fce350cf4dce7d89ab7ae2637f3a4d928a9e0ccc1ed2012bb3383ea2d77f28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -48432,7 +48666,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "21dbcc6753c0c6dd717aac49a681d6686b2ecbb148bfbab0c88e69c041665d3d"
+      "sha256": "c71f8db0460f954308670f2727692ea63ac6526d92d23f34151765cc33d11a8a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -48460,7 +48694,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "73323180554a51b81568c00105b48dff65d52990570d1680ebe8a9b7d2f9cdfe"
+      "sha256": "1784216d00ef620a472864559b99b0d2646ce16e311f4e67d1b05febfe837c23"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -48479,12 +48713,20 @@
       "sha256": "79d70c0daab86e9f412242ec752b9fed089976a460fe93dc85fa1133786b9c2f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFootGround.cs",
+      "sha256": "7dfb48107616315593da97f4bcb44445f45f472b8b0650cc9976fbfc05b1165a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFootPlacement.cs",
+      "sha256": "4a06a4dd3a03ec54507569d230f4ad5e616affe5bef8597582b29b8538567cab"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomFrame.cs",
       "sha256": "b0dac44d699fbb7d0a0d75eec358e8aa1e7a8e1a2df9c006482bc0cac7c2ff43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroundAvailability.cs",
-      "sha256": "37674cb7fe2eb480141374e970cf46e6a382521a76fa0d15a7b8cbdc28c745ec"
+      "sha256": "3d5b327f895aaf2a6392eabc1f5b9d1fdf40636265082c0d547eaae48d8aa8ca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomGroupTransform.cs",
@@ -48616,7 +48858,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeObject.cs",
-      "sha256": "3c1038fe94fa9bb411628a7c74c7060ff4a667feddd658bb4a39b00dfd60aae5"
+      "sha256": "be481697e2999dea9cd5e3cd2f28214fc96fe96169bf8172ac72ba65adf41b59"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
@@ -48633,6 +48875,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectCopy.cs",
       "sha256": "839626575c2a2ff722de15b373f91190ce1baa219646825f1436e9ce77f47dab"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectFeet.cs",
+      "sha256": "09b0c8a79c90f40a09bcf5ccd40f6e9bf304be071bd8f06d6e91deb1a69feb91"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObjectObservation.cs",
@@ -48772,7 +49018,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "c1f609174b08fbbf16babafea6048db3ce655bc5d27123e62ed024d5619ceaf2"
+      "sha256": "274c8c4997d3105607ec1738eeb17c10e666df17ee0e287e24a88af4f75b4a4c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -49056,11 +49302,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
-      "sha256": "6289fce06e30c8bdd9220cffde36e7016830703ff7c3aa4e203dbd2b1238c4d8"
+      "sha256": "3331cc21b9e7aebcf599fb22ffdd6e62acc7cc636021c8ca1957438c00aab8ad"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelGeometry.cs",
-      "sha256": "d933d53bca7e57494f93031a856d987f9b1ed173dd7fd3e55c77fbd07148dc38"
+      "sha256": "03822903e93304241087ddf425da698fbd4209374da61ce00d3b25f723d667fc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModelPreview.cs",
@@ -49068,7 +49314,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedMotionPose.cs",
-      "sha256": "ccd2173880ed7129691bb103edff9516ceff63b385352b4f11e8f1e0d37d235d"
+      "sha256": "9bcafb691c0966f9d6de15bcc5880335480181c10b6161642116d13785989474"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedMotionTimeline.cs",
@@ -49216,7 +49462,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ImportedObjectWalk.cs",
-      "sha256": "e35728352d1b5e32db96754b3e0254eca8843b2ad24c8873f3422ce69c33ead9"
+      "sha256": "2e1a89a9d570f2230d2adb239e5c4fce33eaa031b65399de6009801ca0099018"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/MetaTrackingRig.cs",
@@ -49512,7 +49758,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "69a0cd6cc3a3066bf50ddf1f4dc5228a1d777f5482443f57dfe21b9991a0d4e1"
+      "sha256": "b708a3297819237a3c99ed4124612690869dc65a98ad365308a20ce210a9c7a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -49644,7 +49890,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "1dd66fe701c6463278360a720fc4dbf8cbb15eb90aac7b0e57e8294a678df3ba"
+      "sha256": "13fc67456db7f2b8d0c57a0b60b872648ca2c9a83068f922e9a5621cd1fa2b2e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

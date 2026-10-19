@@ -834,3 +834,52 @@ checkpoint remains D85F3CB7 / f58dab48, the packaged development APK remains
 provider access, audio quality, final packaging and Store acceptance are still
 open. The [requirement checklist](QUEST_V1_PLAN.md#release-evidence-still-required)
 records these separate gates.
+
+## 2026-10-19 — shared foot-placement Android compilation
+
+Fresh full verification passed **1,516 EditMode and
+2,138 PlayMode tests**, with three explicitly allowed
+private-asset skips, reconciling all 3,657 discovered native cases. The final
+web run passed **3,215 tests**; app/probe TypeScript and generated-catalog
+provenance passed. All 79 focused checks passed. The v40 loading regression failed
+before its one-condition correction and passed afterward; interrupted and failed
+attempts are retained separately. The complete Headless journey also exposed a
+missing feature announcement; the corrected handshake has a native regression
+and is exercised by both full app journeys. A second book-run failure exposed
+a probe assumption that passive facts keep imported geometry resident; the test
+now reads saved identity without loading, and the native regression verifies
+that only the explicit action reacquires the model and saves its settings.
+
+Full offline Headless `c16258eb4e4e48729a5091030c390071` and original-book
+`367ed6830f1f40b9b84417e73a1ea315` finish with clean client and Editor exits. Both now configure
+exact-model feet through their ordinary paths and confirm native save completion
+and both trims. The book uses the actual generated controls and current-value
+loading. Existing navigation, world, physics, imported content and storage
+checkpoints remain covered. These journeys use actual desktop Unity with offline
+providers, not physical Quest input or model reliability evidence.
+
+Verification reconciles **3,380 native inputs / 5,165
+source hashes**, with all **14 protected files** unchanged. The source remained
+frozen during the final complete run. Actual shipped-model renders show intact
+leg/shoe silhouettes, but the plain ground lacks contact shadows; measured
+calibrated-point residual is not proof of per-shoe mesh fit. Imported ambient
+clips keep their authored pose, and physical appearance/performance remain open.
+
+Fresh compile-only Android verification exports successfully with zero errors
+and 5 recorded warnings. All 41 compilation/merge
+tasks execute; generated IL2CPP contains the foot presentation, solver, calibration,
+ground sampling and shared saved action. All 22 selected ARM64 libraries retain
+16 KiB-compatible ELF LOAD alignment. Browser unit checks pass 128 cases with two
+skips, reused by Gradle against 106 unchanged inputs; lint has zero errors and six
+warnings. Final APK filtering/ZIP alignment are not exercised.
+
+Evidence is in `.quest-evidence/foot-placement-20261019/` and its `android/`
+subdirectory. No APK, signing, device, paid-provider, deployment or Meta operation
+occurred. The broader release checklist and existing audio-quality findings
+remain open.
+Installed development D85F3CB7 / f58dab48, packaged development 5899972E /
+5100f612 and private Alpha 1767008267909255 remain unchanged. The compiled source
+includes the final working changes over parent 5876055c; its source inventory
+identifies those bytes, and the delivery record maps them to the resulting
+commit. This is an unsigned compilation check, not a release APK or physical
+acceptance.

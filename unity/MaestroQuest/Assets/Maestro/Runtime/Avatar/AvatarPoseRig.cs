@@ -22,6 +22,7 @@ namespace Maestro.Quest.Avatar
         HumanoidRetargeter displayRig;
         Animator animator;
         Material paint;
+        internal HumanoidFootRig FootRig {get;private set;}
         public bool IsPosing { get; private set; }
         public bool IsHolding => handles.Any(x => x && x.Item.Grab.isSelected);
         public event Action PoseChanged;
@@ -38,11 +39,13 @@ namespace Maestro.Quest.Avatar
                 bindRotations.Add(joint,Quaternion.Inverse(transform.rotation)*bone.rotation);
                 bindPositions.Add(joint,transform.InverseTransformPoint(bone.position));
             }
+            FootRig=HumanoidFootRig.Measure(transform,CanonicalBone(PoseJoint.Hips),CanonicalBone(PoseJoint.LeftUpperLeg),CanonicalBone(PoseJoint.LeftLowerLeg),CanonicalBone(PoseJoint.LeftFoot),CanonicalBone(PoseJoint.RightUpperLeg),CanonicalBone(PoseJoint.RightLowerLeg),CanonicalBone(PoseJoint.RightFoot),0);
         }
         public JointPose[] RestPose()=>rest.Select(x=>new JointPose {joint=x.Key,rotation=x.Value.normalized}).ToArray();
-        public JointPose[] Capture() => bones.Select(x => new JointPose { joint = x.Key, rotation = x.Value.localRotation.normalized }).ToArray();
+        public JointPose[] Capture() { HumanoidFootPlacement.RestoreFor(this);return bones.Select(x => new JointPose { joint = x.Key, rotation = x.Value.localRotation.normalized }).ToArray(); }
         public void Apply(JointPose[] pose)
         {
+            HumanoidFootPlacement.RestoreFor(this);
             if (pose == null) return;
             bool changed=false;
             foreach (var value in pose) if (bones.TryGetValue(value.joint,out var bone)) {changed|=Quaternion.Angle(bone.localRotation,value.rotation)>.001f;bone.localRotation=value.rotation;}
@@ -53,6 +56,7 @@ namespace Maestro.Quest.Avatar
         public void ResetPose() { Apply(RestPose()); PoseChanged?.Invoke(); }
         public void SetPosing(bool enabled)
         {
+            HumanoidFootPlacement.RestoreFor(this);
             IsPosing = enabled;
             if (enabled && handles.Count == 0) BuildHandles();
             foreach (var handle in handles) handle.gameObject.SetActive(enabled);
@@ -90,6 +94,7 @@ namespace Maestro.Quest.Avatar
         }
         public void RotateCanonical(PoseJoint joint,Quaternion local)
         {
+            HumanoidFootPlacement.RestoreFor(this);
             if(!bones.TryGetValue(joint,out var bone))return;
             float limit=joint==PoseJoint.Head?75:joint==PoseJoint.Spine||joint==PoseJoint.Chest?45:150;
             var rotation=Quaternion.RotateTowards(rest[joint],local,limit).normalized;
@@ -103,9 +108,10 @@ namespace Maestro.Quest.Avatar
         public Quaternion BindRotation(PoseJoint joint) => bindRotations[joint];
         public Vector3 BindPosition(PoseJoint joint) => bindPositions[joint];
         internal Vector3 ImportedHipOffset=>displayRig?displayRig.ImportedHipOffset:Vector3.zero;
-        public void CaptureImportedPose() { if (displayRig) displayRig.CaptureImportedPose(); }
+        public void CaptureImportedPose() { HumanoidFootPlacement.RestoreFor(this);if (displayRig) displayRig.CaptureImportedPose(); }
         public void SetDisplayRig(HumanoidRetargeter value)
         {
+            HumanoidFootPlacement.RestoreFor(this);
             SetPosing(false);
             foreach (var handle in handles) if (handle) { handle.gameObject.SetActive(false); ArtResources.Release(handle.gameObject); }
             handles.Clear(); ArtResources.Release(paint); paint = null; displayRig = value;

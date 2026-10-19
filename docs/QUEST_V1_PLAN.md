@@ -1540,7 +1540,7 @@ open until every required row has matching release-candidate evidence.
 | Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; full offline Headless and visible Book journeys against current desktop Unity. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
 | Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
-| Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Calibrated foot planting and general crowd/interior planning remain unfinished; do not present the current grounded root motion as those features. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
+| Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
 | One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
 | Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, water quantities/traversal and observation-driven residency/scheduling. | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, swimming, aquatic actors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
 | Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
@@ -14907,3 +14907,71 @@ tray is exercised in PlayMode, not on the headset. Device/provider acceptance,
 separate audio-quality findings and earlier Editor startup/shutdown stalls remain
 open. No device, paid-provider, signing, deployment or Meta action is part of this
 increment.
+
+## 2026-10-19 — shared humanoid foot presentation
+
+`object.feet.configure` and passive `object.feet.settings` add one shared user,
+agent and program route for optional grounded feet. Room storage v41 and reusable
+prototype v9 carry the same strict, exact-model definition; earlier saved rooms
+retain authored presentation. The fresh starter enables it only for the shipped
+Maestro. Existing original-book controls derive from the common catalog, including
+current values, availability, revision checks, completion and Undo.
+
+The solver runs after source animation and restores before authoring/capture.
+Only leg rotations and a bounded hips correction change. Imported non-leg nodes,
+blend shapes, root placement and colliders retain their owners. Imported full-body clips (including automatic state-profile choices),
+saved poses, authoring, held/dynamic bodies and missing support do not receive a
+fabricated standing pose. Foot contacts use accepted ground and each actor's
+real-room collision policy; a virtual-only character can use terrain below the
+real floor, also after the virtual world is translated or yawed.
+
+Calibration is an estimate from rest bounds, not per-shoe mesh fitting. Trims are
+explicit world-metre offsets bound to the exact model. Unsupported rigs or changed
+models report unavailable. This addresses one immersion gap; arbitrary stair
+gaits, crowd/interior planning, swimming, physical clothing and headset acceptance
+are not established by this work. Source review caught the previous storage version
+being omitted from the supported-version list. A real v39/v40 file regression
+reproduced the v40 rejection before correction and also checks authored defaults,
+a new-version save and preservation of the original bytes. Contact-aware fitting
+of imported ambient clips is still open; these can contain sitting/dancing or
+other deliberate non-standing poses and must not be treated as ordinary gait.
+Fresh full verification passed **1,516 EditMode and
+2,138 PlayMode tests**, with three explicitly allowed
+private-asset skips, reconciling all 3,657 discovered native cases. The final
+web run passed **3,215 tests**; app/probe TypeScript and generated-catalog
+provenance passed. All 79 focused checks passed. The v40 loading regression failed
+before its one-condition correction and passed afterward; interrupted and failed
+attempts are retained separately. The complete Headless journey also exposed a
+missing feature announcement; the corrected handshake has a native regression
+and is exercised by both full app journeys. A second book-run failure exposed
+a probe assumption that passive facts keep imported geometry resident; the test
+now reads saved identity without loading, and the native regression verifies
+that only the explicit action reacquires the model and saves its settings.
+
+Full offline Headless `c16258eb4e4e48729a5091030c390071` and original-book
+`367ed6830f1f40b9b84417e73a1ea315` finish with clean client and Editor exits. Both now configure
+exact-model feet through their ordinary paths and confirm native save completion
+and both trims. The book uses the actual generated controls and current-value
+loading. Existing navigation, world, physics, imported content and storage
+checkpoints remain covered. These journeys use actual desktop Unity with offline
+providers, not physical Quest input or model reliability evidence.
+
+Verification reconciles **3,380 native inputs / 5,165
+source hashes**, with all **14 protected files** unchanged. The source remained
+frozen during the final complete run. Actual shipped-model renders show intact
+leg/shoe silhouettes, but the plain ground lacks contact shadows; measured
+calibrated-point residual is not proof of per-shoe mesh fit. Imported ambient
+clips keep their authored pose, and physical appearance/performance remain open.
+
+Fresh compile-only Android verification exports successfully with zero errors
+and 5 recorded warnings. All 41 compilation/merge
+tasks execute; generated IL2CPP contains the foot presentation, solver, calibration,
+ground sampling and shared saved action. All 22 selected ARM64 libraries retain
+16 KiB-compatible ELF LOAD alignment. Browser unit checks pass 128 cases with two
+skips, reused by Gradle against 106 unchanged inputs; lint has zero errors and six
+warnings. Final APK filtering/ZIP alignment are not exercised.
+
+Evidence is in `.quest-evidence/foot-placement-20261019/` and its `android/`
+subdirectory. No APK, signing, device, paid-provider, deployment or Meta operation
+occurred. The broader release checklist and existing audio-quality findings
+remain open.

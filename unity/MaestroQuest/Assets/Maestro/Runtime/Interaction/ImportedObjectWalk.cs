@@ -18,8 +18,10 @@ namespace Maestro.Quest.Interaction {
         MotionLibrary.Lease motion;Task loading;bool disposed;float time;string error;
         internal static int ActiveOwners=>active.Count;
         internal string Status {get;private set;}="inactive";
+        internal static bool Owns(RoomItem item)=>item&&active.ContainsKey(item);
         internal static string StatusFor(RoomItem item)=>item&&active.TryGetValue(item,out var value)?value.Status:"inactive";
         internal ImportedObjectWalk(RoomEditor editor,RoomItem item){
+            Maestro.Quest.Avatar.HumanoidFootPlacement.RestoreFor(item);
             this.editor=editor;this.item=item;data=editor.Read(editor.Identity(item));model=AvatarWalkSelection.Model(editor,data);
             if(data?.kind!=RoomObjectKind.ImportedModel||data.walkClip==0&&string.IsNullOrEmpty(data.walkMotionId))return;
             active[item]=this;
@@ -47,6 +49,7 @@ namespace Maestro.Quest.Interaction {
         }
         internal bool Apply(float speed,float dt){
             if(disposed||initial==null)return error==null;
+            Maestro.Quest.Avatar.HumanoidFootPlacement.RestoreFor(item);
             initial.Restore();
             if(error!=null){Status="unavailable";return false;}
             if(speed<=.025f||dt<=0){Status=loading!=null&&!loading.IsCompleted?"loading":"idle";return true;}
@@ -61,7 +64,7 @@ namespace Maestro.Quest.Interaction {
             Status="walking";return true;
         }
         public void Dispose(){
-            if(disposed)return;disposed=true;initial?.Restore();motion?.Dispose();motion=null;
+            if(disposed)return;Maestro.Quest.Avatar.HumanoidFootPlacement.RestoreFor(item);disposed=true;initial?.Restore();motion?.Dispose();motion=null;
             if(!ReferenceEquals(item,null)&&active.TryGetValue(item,out var value)&&ReferenceEquals(value,this))active.Remove(item);
             Status="inactive";
         }
