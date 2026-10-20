@@ -73,10 +73,7 @@ namespace Maestro.Quest.Interaction {
             if(!avatar)gait=new ImportedObjectWalk(editor,item);
             return true;
         }
-        bool Obstacle(Collider c){
-            if(c.transform.IsChildOf(item.transform))return false;
-            var held=c.GetComponentInParent<HeldRoomProp>();return !held||!held.Holding||held.HolderId!=target;
-        }
+        bool Obstacle(Collider c)=>RoomWalkingObstacle.Blocks(c,item.transform,target);
         void IdlePose(){if(avatar)avatar.SpatialWalk(0);gait?.Apply(0,0);}
         internal void Fail(string message){failure=message??"Walking became unavailable";Status="failed";IdlePose();}
         void Block(string message){blocked=message??"No accepted walking route is available";Status="blocked";IdlePose();}
@@ -123,7 +120,7 @@ namespace Maestro.Quest.Interaction {
                 corner=1;surfaceRevision=navigation.SurfaceRevision;
                 if(route.Length<2){Block("The route has no accepted destination");return;}
             }
-            while(corner<route.Length&&Vector3.Distance(from,route[corner])<.005f)corner++;
+            corner=navigation.AdvanceCorner(from,route,corner,.005f);
             if(corner==route.Length){arrived=true;Status="arrived";IdlePose();return;}
             float dt=Mathf.Clamp(Time.deltaTime,0,.05f);if(dt==0)return;
             var next=Vector3.MoveTowards(from,route[corner],speed*dt);

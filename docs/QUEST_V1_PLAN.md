@@ -19,10 +19,10 @@ implementation and verification status are recorded at the end of this document.
 Current desktop and unsigned Android checks cover all five shared creation kinds,
 placement, paint/delete completion, ordered admission and accepted saved-room
 identity. See [shared creation completion](#shared-creation-completion--2026-10-17)
-and [current compile evidence](QUEST_RELEASE_BUILD.md#current-android-compile-checkpoint--2026-10-19).
-The October 19 compile now also covers the later saved settings, lifecycle,
-world-location, avatar-selection and surface-placement changes on source
-`6b7374b8`. It is unsigned development compilation; installation is unchanged.
+and [current compile evidence](QUEST_RELEASE_BUILD.md#structural-navigation-compile-checkpoint--2026-10-20).
+The October 20 compile includes shared character attention and the later
+structural-navigation/corner-lifecycle changes. It is unsigned development
+compilation; installation is unchanged.
 Later desktop checks cover saved physics, movement, gait and water preferences;
 see [shared settings completion](#shared-settings-completion--2026-10-17).
 Shared container and terrain actions now also await native application and durable
@@ -15034,3 +15034,60 @@ articulation or general IK. Per-model appearance and physical Quest performance
 remain unaccepted. Device/provider holds, the 31 previously measured open audio
 quality failures and all broader v1 release limits remain open. No paid-provider,
 headset, deployment or Meta operation was performed.
+
+
+## 2026-10-20 — accepted structural geometry and interior turns
+
+Accepted fixed imported mesh collision now contributes exact structural geometry
+to the existing asynchronous navigation map. Non-walkable imported walls remain
+obstacles rather than becoming ground. Their interior openings no longer depend
+solely on outer-bound detour candidates. Walkable imported structures retain the
+existing accepted-ground path; ordinary movable props retain live detours.
+
+The same actor/carried-prop predicate is used by Maestro movement, generic object
+movement and structural capture. Per-actor room participation, actual ground
+support, water checks, native input ownership and bounded asynchronous map
+construction remain authoritative. Published structural identity/revision and
+transform participate in map invalidation and canonical retention. Stopping
+Maestro walking/following now releases its matching map; stopping gaze does not
+retire another movement owner's inputs.
+
+A real GLB regression reproduced the old failure at an off-centre doorway. Native
+walking then exposed a second failure: skipping a near corner could cut outside
+the map. Both movement owners now validate the shortcut or finish approaching the
+actual corner. Added coverage exercises the imported opening, actual swept
+walking, following, a shared object.navigate action for a created actor, clearance,
+structural movement, ownership/ground distinction, actor exclusion and an
+independently configured virtual actor below the real floor.
+
+Final verification on frozen current source:
+
+- 1,519 EditMode tests passed; 2,155 PlayMode tests passed, with 3 named
+  optional private-model/motion skips. The discovered inventory is reconciled
+  without omissions or duplicate coverage. All nine new interior cases passed.
+- 3,218 web tests, application/probe TypeScript and catalog provenance
+  passed. Capability definitions are unchanged; native provenance is regenerated.
+- Full sparse offline Book `d6ff794a6d6f42258e6a68b23b57389e` and Headless
+  `21d5a2e8a6404b59b6c198f661df9b95` passed with 4,089 and
+  2,421 observations, clean client/editor exits and confirmed
+  idle, non-dirty room/behaviour stores. These are existing integration journeys
+  on current source; the new doorway scenarios run through actual native shared
+  movement in PlayMode, not a claimed new Book doorway scenario.
+- Unsigned Android development compilation passed: 41 executed
+  Gradle tasks, zero Unity errors and 5 Unity warnings.
+  All 22 selected ARM64 libraries satisfy 16 KiB ELF load alignment. Generated
+  IL2CPP output includes structural publication, shared actor filtering, corner
+  progression and actor-map release.
+- 3,398 native inputs, 5,213 source files and all
+  14 protected pre-existing files were checked against the frozen evidence.
+
+Evidence: `.quest-evidence/interior-navigation-20261020/`, including the reproduced
+old doorway failure, intermediate movement failure, final native reports,
+integration receipts and unsigned compilation checks. A test-setup compile error
+and unsupported terrain fixture were corrected before final verification. The
+broader Stop test now explicitly prepares a new owner after the old owner ends.
+
+This checkpoint does not claim general multi-level
+interior planning, crowd prediction, physical Quest performance or provider/device
+acceptance. The installed and packaged checkpoints, device/provider holds and
+broader v1 release gaps remain unchanged.

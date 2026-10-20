@@ -92,7 +92,7 @@ namespace Maestro.Quest.Avatar
         public void Stop()
         {
             if (!Active) return;
-            owner = null; ResetAttention(); avoidRouteSolids=false; corners = Array.Empty<Vector3>();if(navigation)navigation.ReleaseMovementInputs();ownershipLease?.Dispose();ownershipLease=null;
+            owner = null; ResetAttention(); avoidRouteSolids=false; corners = Array.Empty<Vector3>();if(navigation&&mode!=AvatarSpatialMode.Look)navigation.ReleaseActor(item);ownershipLease?.Dispose();ownershipLease=null;
             if (avatar) { avatar.SpatialWalk(0); avatar.SetEditing(false,preserveUpperBody:true); }
             if (editor) editor.RememberPlacement("maestro");
             Say("Maestro stopped — placement saved");
@@ -145,7 +145,7 @@ namespace Maestro.Quest.Avatar
                     if(!navigation.FollowRoutePending||Vector3.Distance(goal,pathGoal)>.2f){pathGoal=goal;followDestination=goal-delta.normalized*Mathf.Max(0,Distance-.02f);}
                     corners=navigation.FollowRoute(transform.position,followDestination,walkingObstacle??=BodyObstacle,out var planned,avoidRouteSolids)?planned:Array.Empty<Vector3>();corner=1;
                 }
-                while (corner < corners.Length && Vector3.Distance(transform.position,corners[corner]) < .06f) corner++;
+                corner=navigation.AdvanceCorner(transform.position,corners,corner,.06f);
                 if (corner < corners.Length)
                 {
                     var direction = corners[corner]-transform.position;
@@ -226,14 +226,7 @@ namespace Maestro.Quest.Avatar
             bool clear=navigation.ClearAuthoredStep(origin,next,extraHeight,walkingObstacle??=BodyObstacle);
             if(!clear)blocked=navigation.TraversalBlocker?Blocker(navigation.TraversalBlocker):navigation.WaterBlocker??blocked;return clear;
         }
-        bool BodyObstacle(Collider collider)
-        {
-            if(collider.transform.IsChildOf(transform))return false;
-            // Carried props have their own swept trajectory checks. Their colliders
-            // return to ordinary obstacles immediately on release or ownership change.
-            var prop=collider.GetComponentInParent<HeldRoomProp>();
-            return !prop||!prop.Holding||prop.HolderId!="maestro";
-        }
+        bool BodyObstacle(Collider collider)=>RoomWalkingObstacle.Blocks(collider,transform,"maestro");
         string Blocker(Collider collider)
         {
             string obstacle = collider.gameObject.layer == RoomPhysicsLayers.Scanned ? "scanned room surface" :

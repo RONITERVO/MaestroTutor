@@ -9,15 +9,17 @@ namespace Maestro.Quest.Tests
 {
     public static class BuildingModelFixture
     {
-        public static byte[] Create()
+        public static byte[] Create(bool includeFloorAndRoof=true,float doorway=0)
         {
             var vertices=new List<Vector3>();
             void Box(Vector3 centre,Vector3 size) {
                 var signs=new[]{new Vector3(-1,-1,-1),new Vector3(1,-1,-1),new Vector3(1,1,-1),new Vector3(-1,1,-1),new Vector3(-1,-1,1),new Vector3(1,-1,1),new Vector3(1,1,1),new Vector3(-1,1,1)};
                 foreach(int i in new[]{0,2,1,0,3,2,4,5,6,4,6,7,0,4,7,0,7,3,1,2,6,1,6,5,0,1,5,0,5,4,3,7,6,3,6,2})vertices.Add(centre+Vector3.Scale(signs[i],size*.5f));
             }
-            Box(new Vector3(0,-.05f,0),new Vector3(6,.1f,6));Box(new Vector3(0,2.95f,0),new Vector3(6,.1f,6));
-            foreach(float x in new[]{-1.8f,1.8f})Box(new Vector3(x,1.1f,0),new Vector3(2.4f,2.2f,.15f));
+            if(includeFloorAndRoof){Box(new Vector3(0,-.05f,0),new Vector3(6,.1f,6));Box(new Vector3(0,2.95f,0),new Vector3(6,.1f,6));}
+            float left=doorway-.6f,right=doorway+.6f;
+            Box(new Vector3((-3+left)/2,1.1f,0),new Vector3(left+3,2.2f,.15f));
+            Box(new Vector3((3+right)/2,1.1f,0),new Vector3(3-right,2.2f,.15f));
             Box(new Vector3(0,2.6f,0),new Vector3(6,.8f,.15f));
             using var stream=new MemoryStream();using var writer=new BinaryWriter(stream);
             foreach(var v in vertices){writer.Write(v.x);writer.Write(v.y);writer.Write(v.z);}

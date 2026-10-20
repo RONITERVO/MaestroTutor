@@ -47677,7 +47677,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialMotion.cs",
-      "sha256": "c4bde0cab0a492b5e8b2750c3ccf1bfa26864dc123488314c4866aadc75aa89e"
+      "sha256": "22e9fbdc3f571959a01ccdf3caf4600a9b2dcb5ce73260afb826ee90196241af"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/AvatarSpatialTools.cs",
@@ -49625,7 +49625,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedCollisionGeometry.cs",
-      "sha256": "99a5161969cb9798e58f80d3a9324b22d348142522162e7f0302006a1c889e40"
+      "sha256": "51307353a0e51e80d9fae3e815cf474738547f9732e2af1d4ee08da3ac8b1e89"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Imports/ImportedModel.cs",
@@ -49777,7 +49777,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
-      "sha256": "5e634dc19be1484a0441aa4239e62d58f3fb18ed782bdad4848eb007f59e2c99"
+      "sha256": "46943bf0efee6a4b78ef095b52032b9830c838497ebc3a6016f8d03abc4f9ba3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
@@ -49905,7 +49905,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "bb222e3a065f72ebde731dd9fe5e1c2135c1a17ffd319351d5369f6dde013899"
+      "sha256": "d201bc5ae4a5f4d334c2ebfcf0d8f006b7113b85333d71fcb19c2acca5c30617"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationBuild.cs",
@@ -49913,11 +49913,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationGeometry.cs",
-      "sha256": "aa0c23c8a9b92515a1fa5aaf306e31deab6faf85c02d15122ecd4eb07c09b2ad"
+      "sha256": "412bb9c8bc3698b9b1c3d4bef247843593ea0c667a376bc77abc0613c265a3d2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationInputs.cs",
       "sha256": "e2064804409d2640cdb624c13fc3dbfd6c716bb4b51638fdce11e7e0d4800e4e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationObstacle.cs",
+      "sha256": "75ec5edd4fbed2b03e065435b1a30288fb13ed5bb004b7dfbb7081d7bb2e83fa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationRetention.cs",
@@ -49986,6 +49990,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
       "sha256": "7c353736d317c71ba5ecbe1360298f6d50d70eece83fbf3689ec839867f1ed77"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkingObstacle.cs",
+      "sha256": "a47efba46a0a78ad666ea7063daebbb5a708c1d4d91a138c36c52e09c43b8ec9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkingPreparation.cs",

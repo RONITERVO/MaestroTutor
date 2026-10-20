@@ -1,5 +1,6 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -20,7 +21,7 @@ namespace Maestro.Quest.Interaction
             { collider=value; revision=version; Source=source; }
             internal bool Same(Entry other) => collider==other.collider && revision==other.revision &&
                 SameMatrix(Source.transform,other.Source.transform) && Source.shape==other.Source.shape &&
-                Source.size.Equals(other.Source.size) && Source.sourceObject==other.Source.sourceObject;
+                Source.size.Equals(other.Source.size) && Source.sourceObject==other.Source.sourceObject && Source.area==other.Source.area;
             static bool SameMatrix(Matrix4x4 a,Matrix4x4 b) {
                 for(int i=0;i<16;i++)if(Mathf.Abs(a[i]-b[i])>.00001f)return false;return true;
             }
@@ -37,7 +38,7 @@ namespace Maestro.Quest.Interaction
         {
             dependencies.Clear();colliders.Clear();entries.Clear();sources.Clear();Ground.Clear();Bounds=default;Position=default;Rotation=Quaternion.identity;
         }
-        internal bool Capture(Transform owner,bool includeScan=true,Transform coordinates=null)
+        internal bool Capture(Transform owner,bool includeScan=true,Transform coordinates=null,Func<Collider,bool> obstacle=null)
         {
             Clear();
             if(!owner)return false;
@@ -47,11 +48,12 @@ namespace Maestro.Quest.Interaction
             // the world's metre or gravity convention needs a separate explicit policy.
             if(!frame.Valid||Mathf.Abs(frame.MetresPerUnit-1)>.00001f||Vector3.Dot(coordinates.up,Vector3.up)<.99999f)return false;
             Position=coordinates.position;Rotation=coordinates.rotation;
-            owner.GetComponentsInChildren(false,colliders);
+            owner.GetComponentsInChildren(false,colliders);int grounds=0;
             foreach(var collider in colliders) {
-                if(!RoomGroundQuery.Accepted(collider,includeScan,out var surface))continue;
-                bool authored=surface;
-                var source=new NavMeshBuildSource { transform=coordinates.worldToLocalMatrix*collider.transform.localToWorldMatrix,component=collider,area=0 };
+                bool ground=RoomGroundQuery.Accepted(collider,includeScan,out var surface);
+                var structure=ground?null:collider.GetComponent<RoomNavigationObstacle>();
+                if(!ground&&(!structure||!structure.Available||structure.Collision!=collider||obstacle?.Invoke(collider)!=true))continue;
+                var source=new NavMeshBuildSource { transform=coordinates.worldToLocalMatrix*collider.transform.localToWorldMatrix,component=collider,area=ground?0:1 };
                 Bounds localBounds;
                 if(collider is MeshCollider mesh&&mesh.sharedMesh) { source.shape=NavMeshBuildSourceShape.Mesh;source.sourceObject=mesh.sharedMesh;localBounds=mesh.sharedMesh.bounds; }
                 else if(collider is BoxCollider box) { source.shape=NavMeshBuildSourceShape.Box;source.size=box.size;source.transform*=Matrix4x4.Translate(box.center);localBounds=new Bounds(Vector3.zero,box.size); }
@@ -62,7 +64,8 @@ namespace Maestro.Quest.Interaction
                 var boundsInFrame=new Bounds(source.transform.MultiplyPoint3x4(localBounds.center),2*new Vector3(
                     Mathf.Abs(x.x)+Mathf.Abs(y.x)+Mathf.Abs(z.x),Mathf.Abs(x.y)+Mathf.Abs(y.y)+Mathf.Abs(z.y),Mathf.Abs(x.z)+Mathf.Abs(y.z)+Mathf.Abs(z.z)));
                 if(sources.Count==0)Bounds=boundsInFrame;else {var bounds=Bounds;bounds.Encapsulate(boundsInFrame);Bounds=bounds;}
-                Ground.Add(collider);sources.Add(source);entries.Add(new Entry(collider,authored?surface.Revision:0,source));
+                if(ground){Ground.Add(collider);grounds++;}
+                sources.Add(source);entries.Add(new Entry(collider,ground?(surface?surface.Revision:0):structure.Revision,source));
                 // Capture identity with the geometry. A destroyed/replaced collider
                 // cannot silently release an existing map's canonical dependency.
                 var item=collider.GetComponentInParent<RoomItem>(true);
@@ -70,7 +73,7 @@ namespace Maestro.Quest.Interaction
                 var id=authority?authority.Identity(item):null;
                 if(id!=null)dependencies.Add((authority,id));
             }
-            return entries.Count>0;
+            return grounds>0;
         }
         internal bool Same(RoomNavigationGeometry other)
         {

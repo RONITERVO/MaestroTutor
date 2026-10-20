@@ -31,6 +31,13 @@ namespace Maestro.Quest.Interaction
         internal bool PathsPending {get;private set;}
         RoomGroundQuery CurrentGround => PathsPending?candidate.Ground:accepted.Ground;
         static readonly Func<Collider,bool> IgnoreObstacle=_=>false;
+        Func<Collider,bool> structuralObstacle;
+        bool StructuralObstacle(Collider collision){
+            int mask=world.CollisionMask((1<<RoomPhysicsLayers.Scanned)|(1<<RoomPhysicsLayers.Item)|(1<<RoomPhysicsLayers.Environment),actor);
+            if((mask&(1<<collision.gameObject.layer))==0)return false;
+            var editor=InputEditor;
+            return RoomWalkingObstacle.Blocks(collision,actor?actor.transform:null,editor?editor.Identity(actor):null);
+        }
         readonly RoomGroundMotor groundMotor=new();
         Func<Vector3,bool> groundPosition;
         internal Collider TraversalBlocker {get;private set;}
@@ -87,7 +94,7 @@ namespace Maestro.Quest.Interaction
                 lastFrame=frame;observedFrame=true;
             }
             Physics.SyncTransforms();
-            if(!candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
+            if(!candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform,structuralObstacle??=StructuralObstacle)) { Clear();error="No accepted scanned or authored floor is available for walking";return false; }
             StartingGeometryAccepted();
             if(data&&installed.valid&&candidate.Same(accepted)){
                 Install(candidate.Position,candidate.Rotation);candidate.Clear();error=null;return installed.valid;
@@ -110,7 +117,7 @@ namespace Maestro.Quest.Interaction
             try{
                 if(RoomNavigationBuild.TryStart(candidate,radius,height,out pendingBuild)){
                     (building,candidate)=(candidate,building);
-                    candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform);
+                    candidate.Capture(world.transform,world.IncludesRealRoom(actor),!world.IncludesRealRoom(actor)&&virtualFrame?virtualFrame:world.transform,structuralObstacle??=StructuralObstacle);
                 }
             }catch(Exception failure){Clear();error="The walking map could not be prepared: "+failure.Message;return false;}
             error=null;return true;
@@ -154,6 +161,15 @@ namespace Maestro.Quest.Interaction
             return Sample(from,.1f,out var start) && Sample(to,.08f,out floor) &&
                 Vector3.Distance(new Vector3(to.x,floor.y,to.z),floor) < .025f && !NavMesh.Raycast(start,floor,out _,Filter);
         }
+        // A proximity tolerance may skip a corner only when the resulting
+        // segment remains on the map. Otherwise approach the actual corner first.
+        internal int AdvanceCorner(Vector3 from,Vector3[] points,int next,float tolerance){
+            while(next<points.Length&&Vector3.Distance(from,points[next])<tolerance){
+                if(next+1<points.Length&&(from-points[next]).sqrMagnitude>1e-10f&&!DirectStep(from,points[next+1],out _))break;
+                next++;
+            }
+            return next;
+        }
         bool GroundPosition(Vector3 value)=>world&&world.ContainsSimulation(value+Vector3.up*.1f,actor);
         internal bool Traverse(Vector3 from,Vector3 to,Func<Collider,bool> obstacle,out Vector3 floor,out string error)
         {
@@ -195,6 +211,7 @@ namespace Maestro.Quest.Interaction
             if(agentType!=-1)NavMesh.RemoveSettings(agentType);agentType=-1;
         }
         void Clear(){ReleaseMovementInputs();ReleaseMap();candidate.Clear();observedFrame=false;frameChangedOn=-1;}
+        internal void ReleaseActor(RoomItem target){if(actorBound&&ReferenceEquals(actor,target))ResetBinding();}
         void ResetBinding(){Clear();configured=false;actor=null;actorBound=false;}
         void LateUpdate(){
             if(!(data||PathsPending))return;

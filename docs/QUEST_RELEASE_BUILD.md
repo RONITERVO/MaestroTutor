@@ -883,3 +883,31 @@ includes the final working changes over parent 5876055c; its source inventory
 identifies those bytes, and the delivery record maps them to the resulting
 commit. This is an unsigned compilation check, not a release APK or physical
 acceptance.
+
+
+## Structural navigation compile checkpoint — 2026-10-20
+
+Current source was verified with 1,519 EditMode and 2,155 PlayMode passes
+(3 named optional private-input skips), 3,218 web passes and full
+offline original-book/headless journeys before compilation. Nine new native
+interior scenarios cover accepted imported structures, real swept movement,
+shared created-actor actions, clearance, changing geometry, source ownership and
+per-actor real-room participation. They do not establish physical headset
+performance or general interior/crowd reachability.
+
+Unsigned development export and compilation passed with 41
+executed Gradle tasks, zero Unity errors and 5 Unity warnings.
+The merged manifest declares `com.maestro.quest.development`, one Unity
+GameActivity and Quest 3 only. All 22 selected ARM64 native libraries satisfy
+16 KiB ELF load alignment; generated IL2CPP contains the structural navigation
+and movement changes. Native browser results remain 128 passed
+and 2 skipped against 106 unchanged inputs, with zero lint
+errors and 6 warnings. Evidence records whether those browser
+results came from Gradle's cache.
+
+Evidence: `.quest-evidence/interior-navigation-20261020/android/verified.json` and
+its exact-source verification, manifest, generated-source and compile records.
+No APK/AAB, signing, installation, provider use, deployment or Meta operation is
+part of this checkpoint. Installed **D85F3CB7 / f58dab48** and packaged
+**5899972E / 5100f612** remain unchanged. Device/provider holds and all release
+acceptance gaps remain open.

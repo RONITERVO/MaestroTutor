@@ -14,6 +14,7 @@ namespace Maestro.Quest.Imports
     {
         internal Collider[] Colliders {get;}
         readonly List<RoomWalkableSurface> surfaces=new();
+        readonly List<RoomNavigationObstacle> obstacles=new();
         readonly CollisionResources.Lease resource;
         internal ImportedCollisionGeometry(ImportedModel model,bool walkable,RoomResourceOwner owner=null)
         {
@@ -28,12 +29,13 @@ namespace Maestro.Quest.Imports
                     var collider=child.AddComponent<MeshCollider>();collider.enabled=false;created.Add(collider);
                     collider.convex=false;collider.sharedMesh=filter.sharedMesh;
                     if(walkable){var surface=collider.gameObject.AddComponent<RoomWalkableSurface>();surface.enabled=false;surface.Publish(collider);surfaces.Add(surface);}
+                    else {var obstacle=collider.gameObject.AddComponent<RoomNavigationObstacle>();obstacle.enabled=false;obstacle.Publish(collider);obstacles.Add(obstacle);}
                 }
                 Colliders=created.ToArray();resource.Ready(Colliders);
             }
             catch {foreach(var collider in created)ArtResources.Release(collider.gameObject);resource.Retire(created);throw;}
         }
-        internal void SetActive(bool active){foreach(var surface in surfaces)if(surface)surface.enabled=active;foreach(var collider in Colliders)if(collider){collider.gameObject.SetActive(active);collider.enabled=active;}}
-        public void Dispose(){SetActive(false);foreach(var surface in surfaces)if(surface)surface.Publish(null);foreach(var collider in Colliders)if(collider)ArtResources.Release(collider.gameObject);resource.Retire(Colliders);}
+        internal void SetActive(bool active){foreach(var obstacle in obstacles)if(obstacle)obstacle.enabled=active;foreach(var surface in surfaces)if(surface)surface.enabled=active;foreach(var collider in Colliders)if(collider){collider.gameObject.SetActive(active);collider.enabled=active;}}
+        public void Dispose(){SetActive(false);foreach(var obstacle in obstacles)if(obstacle)obstacle.Publish(null);foreach(var surface in surfaces)if(surface)surface.Publish(null);foreach(var collider in Colliders)if(collider)ArtResources.Release(collider.gameObject);resource.Retire(Colliders);}
     }
 }

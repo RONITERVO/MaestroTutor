@@ -113,6 +113,8 @@ namespace Maestro.Quest.Tests {
             motion.ManualDirection("manual",Vector3.zero);Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.False);
             for(int i=0;i<3;i++){motion.ManualDirection("manual",Vector3.right);yield return null;}Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.True,motion.Status);
             motion.Stop();Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.False);
+            Assert.That(navigation.Ready,Is.False,"A stopped owner must not leave a configured map");
+            Assert.That(navigation.Prepare(.25f,1.7f,out error,editor.Find("maestro")),Is.True,error);
             Assert.That(navigation.Traverse(avatar.transform.position,avatar.transform.position+Vector3.right*.02f,_=>false,out _,out error),Is.True,error);
             Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.True,motion.Status);navigation.enabled=false;Assert.That(NavigationRetained(id,RoomRetentionReason.Ownership),Is.False);
         }

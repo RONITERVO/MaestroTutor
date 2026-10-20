@@ -1191,9 +1191,31 @@ transient collider keys are never saved identities. Cancellation and world chang
 release those references through the existing navigation owner. No saved format,
 new user control, second planner or automatic region unloading is added.
 
-This is conservative local routing. A non-walkable concave collider's outer
-bounds may not yield useful interior waypoints; packed crowds and moving-obstacle
-prediction need further work. The actor can report no route even when a more
+Accepted fixed imported mesh collision also contributes its actual geometry to
+the same asynchronous map, even when its surfaces are not designated walkable.
+This lets the map use interior openings, including off-centre doorways that the
+outer-bound detour candidates miss. Non-walkable geometry contributes obstacles,
+not ground: a building with its own usable floor must explicitly enable walkable
+surfaces. Visual-only imports and unpublished previews do not participate.
+
+The map snapshots include structural identity, publication revision and transform.
+Changing or removing a structure invalidates the old map before another route
+query. Pending builds keep their existing copied-mesh ownership and two-build
+limit. The map retains canonical structural owners until its consumer releases it;
+stopping Maestro walking/following releases that actor's map. Gaze alone does not
+retire another movement owner's inputs. Movable primitive/compound props keep the
+existing live detour path rather than requiring every movement to rebuild a map.
+
+Both walking owners check a proposed shortcut before skipping a nearby route
+corner. A proximity tolerance cannot cut a turn across the map boundary. Actual
+steps still use accepted support, swept body collision and water checks. The
+actor's real-room participation remains independent of the backdrop: an actor
+assigned virtual ground can use an imported doorway below the real floor.
+
+This is bounded local routing, not general crowd simulation or guaranteed
+interior reachability. Door clearance still depends on the actor's body and map
+resolution; packed crowds, moving-obstacle prediction and complex multi-level
+circulation need further work. The actor can report no route even when a more
 sophisticated planner could find one. It must never report arrival from an elapsed
 timer or use that limitation to bypass the selected real-room collision policy.
 Current verification and physical acceptance status are in the delivery record.
