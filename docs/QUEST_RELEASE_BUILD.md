@@ -960,3 +960,27 @@ deployment or Meta action occurred. This is compile evidence, not physical
 acceptance, calibrated crowd performance or Store readiness. Installed
 **D85F3CB7 / f58dab48**, packaged **5899972E / 5100f612**, device/provider holds and
 the broader release gates remain unchanged.
+
+
+## Water habitat query compile checkpoint — 2026-10-21
+
+Whole-body water containment passed 1,529 EditMode and 2,168 PlayMode cases
+(three named optional private-input skips), 3,222 web tests, both TypeScript
+checks and the full sparse offline original-book/headless journeys. Book selects
+named objects through generated controls; Headless verifies containment against
+live transferred quantities and unchanged numeric actor positions. The initial
+Headless failure and the two test-driver corrections are documented in the plan.
+
+Fresh unsigned development Android export and 41 compilation/merge tasks
+passed with zero Unity errors and 5 warnings. Generated IL2CPP includes the
+whole-box containment, continuous terrain SAT and shared habitat fact paths.
+The manifest remains Quest 3-only with one GameActivity and
+`com.maestro.quest.development`. All 22 selected ARM64 libraries retain 16 KiB
+ELF alignment. Browser results reuse 128 passes/two skips against 106 unchanged
+inputs; lint has zero errors and 6 warnings.
+
+Evidence: `.quest-evidence/aquatic-containment-20261021/android/verified.json`
+and exact-source desktop receipts. This geometric query does not implement
+swimming or prove populated-world performance. No APK/AAB, signing, installation,
+provider, deployment or Meta action occurred. Installed **D85F3CB7 / f58dab48**,
+packaged **5899972E / 5100f612**, holds and broader release gates remain unchanged.

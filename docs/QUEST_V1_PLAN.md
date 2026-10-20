@@ -15199,3 +15199,82 @@ with 3,398 native inputs, 5,213 source hashes and
 **5899972E / 5100f612** remain unchanged. This increment adds no general crowd
 simulation, path prediction or destination reservation. V1 remains incomplete;
 device/provider holds and the 31 open measured audio-quality findings remain.
+
+
+## Whole-body water habitat admission — 2026-10-21
+
+The shared `object.water.habitat.path` fact checks one explicitly named liquid
+habitat against an actor's entire conservative native collision envelope.
+It reads the same live quantity, free surface and cavity/terrain geometry used
+by the existing liquid system. A second overlapping pool never replaces the
+chosen identity. A wet centre or two wet endpoints cannot establish passage.
+
+For fixed-orientation translation, every envelope corner must remain inside the
+cavity and below its current surface. Terrain-backed habitats additionally test
+the complete swept envelope against the solid below each actual bed triangle.
+This preserves clear routes within a sloped cell while refusing ridges, islands
+and bodies already intersecting the bed. Tilted/scaled cavity frames use the same
+geometry. Boundary contact is permitted; visual limbs are not collision bodies.
+
+Missing relevant liquid geometry remains pending/unavailable with the existing
+bounded dependency list. The explicitly selected habitat is required even when
+distant. An accepted empty vessel is a known negative. The query neither moves
+an actor nor starts physics, loads content or reserves a future movement result.
+The ordinary generated book controls and agent/program fact expressions share
+this schema. Fact-value requests now enforce declared native feature support;
+catalog discovery remains available for inspecting unsupported vocabulary.
+
+This is a geometric prerequisite, not swimming. The next movement increment must
+consume current containment before each accepted step, alongside the actor's
+real/virtual collision policy, obstacle clearance, dependency lifetime and normal
+locomotion ownership. A virtual-only aquatic actor must be able to use water below
+the scanned floor while a physical-room participant still respects that floor.
+Visual opacity must not change either policy.
+
+Actual aquatic travel still needs a compatible authored gait, explicit dry/wet
+transitions, shared bounded movement admission, cancellation and save/replay
+identity, and a defined response when water drains or the habitat changes.
+Programs must see a truthful refusal or interruption rather than fabricated
+arrival, a silently substituted habitat, or a teleport to water. General aquatic
+route finding and autonomous water life remain required work; this query does
+not satisfy them. Existing walking, avoidance and wading remain unchanged.
+
+Frozen-source verification passed 1,529 EditMode and 2,168 PlayMode cases, with
+three named optional private-model/motion skips; all 3,700 discovered cases
+reconcile. Fourteen new native cases cover whole-body cavity/surface boundaries,
+tilted/scaled frames, current liquid quantities, actual terrain triangles and
+missing selected habitats. All 3,222 web tests, both TypeScript checks and catalog
+provenance pass.
+
+Full sparse offline original-book `7edd13392ebe4855a6b57ec130299db4` and headless
+`69b159ad613845f1a217a065545bfd09` journeys completed with clean client/Editor exits and
+confirmed idle, non-dirty room/behaviour stores. Book selects both named objects
+through visible generated controls and confirms no scene revision change.
+Headless checks contained, above-surface and outside-cavity paths against actual
+transferred quantities, with numeric actor positions unchanged before/after.
+These are shared-interface desktop checks, not aquatic movement or device/provider
+acceptance.
+
+The first Headless run exposed two test-driver problems. Its new position check
+requested the obsolete fact version and compared unavailable values; it now
+resolves the shared catalog version, requires availability and checks actual
+coordinates. The existing walking-wait scenario sometimes let the leader clear
+before observation; a real slower walk now keeps the obstruction observable
+within the existing bounded wait. The repeated full journey records waiting,
+both completed arrivals and terminal replay. Runtime locomotion was unchanged.
+The initial failed evidence is retained, and unchanged native/web/Book results
+are reused against the same source bytes.
+
+Fresh unsigned development Android export and 41 compilation/merge
+tasks passed, with zero Unity errors and 5 warnings. IL2CPP contains
+the new containment, swept-terrain and shared-query methods. All 22 selected ARM64
+libraries retain 16 KiB ELF alignment. Browser checks reuse 128 passes/two skips
+against 106 unchanged inputs; lint has zero errors and 6 warnings.
+No APK/AAB, signing, installation, device, paid-provider, deployment or Meta action
+occurred.
+
+Evidence: `.quest-evidence/aquatic-containment-20261021` and `android/verified.json`,
+with 3,410 native inputs, 5,226 source hashes and 14 unchanged protected
+files. Installed **D85F3CB7 / f58dab48** and packaged **5899972E / 5100f612**
+remain unchanged. Device/provider holds and the 31 measured open audio-quality
+findings remain. V1, actual swimming and Store release are incomplete.

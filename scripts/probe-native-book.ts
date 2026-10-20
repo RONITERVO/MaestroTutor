@@ -477,6 +477,16 @@ try{
  const terrainCapacity=Number(await page.getByLabel('Action inputs definition capacityMl',{exact:true}).inputValue());assert.ok(terrainCapacity>50000);
  await page.getByRole('heading',{name:'Configure or fill a liquid container',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-terrain-water.png')});
  await writeFile(join(directory,'book-native-terrain-water.json'),JSON.stringify({boundary:'Original book generated controls create a terrain owner and configure its reservoir; native readback derives capacity and keeps the requested amount. No hidden fixture mutation, provider or headset acceptance.',terrainCreated,terrainConfigured,capacityMl:terrainCapacity},null,2));
+ // The user selects both exact objects in the generated habitat fact form.
+ const habitatRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ const habitatView=await book.fact('object.water.habitat.path','Inspect a water habitat path',{target:ball.id,habitat:terrainTarget});
+ const habitatValue=habitatView.value as {bodyId:string;contained:boolean;availability:string;reason:string};
+ assert.equal(habitatValue.bodyId,terrainTarget);assert.equal(habitatValue.contained,false);
+ assert.equal(habitatValue.availability,'ready');assert.ok(habitatValue.reason.includes('cavity'));
+ assert.equal(await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision),habitatRevision);
+ await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();
+ await page.screenshot({path:join(directory,'book-native-water-habitat.png')});
+ await writeFile(join(directory,'book-native-water-habitat.json'),JSON.stringify({boundary:'Visible original-book object choices and shared native whole-body habitat fact. The actor starts outside this exact terrain reservoir, so containment correctly refuses without editing or moving it. No swimming/provider/headset acceptance.',view:habitatView,sceneRevision:habitatRevision},null,2));
  // Sculpt through the same visible controls, preserving the reservoir's water.
  await openNamedAction('Sculpt a surface path','object.field.sculpt');
  await chooseObject('Action inputs target',terrainTarget);

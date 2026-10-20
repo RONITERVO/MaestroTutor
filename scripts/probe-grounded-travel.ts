@@ -58,7 +58,11 @@ export async function probeGroundedFollowing(execute:(commands:RoomCommand[])=>P
 export async function probeWalkingActorClearance(execute:(commands:RoomCommand[])=>Promise<RoomAgentState>,directory:string,targets:{target:string;obstacle:string}){
  const objects=nativeProbeObjects(execute),target=targets.target,leader=targets.obstacle;
  const destination=(await objects.observation(leader)).position;
- const leadCall={id:'object.navigate',version:1,arguments:{target:leader,mode:'walk',destination:{x:destination.x,y:destination.y,z:destination.z+2},speed:.65}};
+ // At normal walking speed the leader can clear this footprint during the
+ // shared client's revision reads, before a waiting state can be observed.
+ // Keep a real slow walk: the body remains in the way long enough to observe
+ // the wait, then clears within the runtime's three-second allowance.
+ const leadCall={id:'object.navigate',version:1,arguments:{target:leader,mode:'walk',destination:{x:destination.x,y:destination.y,z:destination.z+2},speed:.2}};
  const leading=await execute([{action:'execution',execution:{operation:'start',call:leadCall}}]);
  const leadRun=leading.execution?.selected?.id;assert.ok(leadRun);assert.equal(leading.execution?.selected?.phase,'preparing');
  const call={id:'object.navigate',version:1,arguments:{target,mode:'walk',destination,speed:.65}};

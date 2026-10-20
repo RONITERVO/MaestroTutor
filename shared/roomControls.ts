@@ -6,6 +6,7 @@ export interface AvatarWalkObservation {source:'included'|'embedded'|'library';m
 export interface PhysicsObservation { ready:boolean; running:boolean; status:string }
 export interface AvatarMovementObservation { active:boolean; mode:'look'|'follow'|'manual'|'stopped'; status:string; canLook:boolean; canFollow:boolean; lookReason:string; followReason:string; distance:number; speed:number }
 import {programFeatureRequirements,invocationFeatureRequirements} from './programFeatures';
+import {behaviourFact} from './behaviourCatalog';
 import type {BehaviourProgram} from './programSyntax';
 import {roomControlFields} from './prompts/roomcontrols';
 export {roomControlFields} from './prompts/roomcontrols';
@@ -49,6 +50,10 @@ export function requireRoomCapabilities(commands:{action:string;rule?:unknown;ex
     if(programs.length>0&&!scene.capabilities?.includes('behaviourPrograms.v3'))
       throw new Error('This room does not support behaviour programs. Update or connect a compatible native app.');
     const features=new Set(programFeatures);
+    // Browsing the vocabulary remains possible on an older native app. Reading
+    // a fact's value requires the feature that actually supplies that value.
+    if(command.action==='catalog'&&record(command.catalog)&&command.catalog.operation==='inspect'&&command.catalog.category==='facts'&&command.catalog.arguments!==undefined&&typeof command.catalog.capability==='string')
+      for(const feature of behaviourFact(command.catalog.capability)?.features??[])features.add(feature);
     if(command.action==='rules'&&record(command.rule)&&command.rule.action==='memory')features.add('rememberedVariables.v1');
     if(command.action==='execution'&&record(command.execution)&&command.execution.operation==='start'&&record(command.execution.call)){
       const call=command.execution.call;

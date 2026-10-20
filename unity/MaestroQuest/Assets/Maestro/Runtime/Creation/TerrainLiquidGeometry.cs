@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Maestro.Quest.Creation {
     // Immutable geometry over the SAME triangles as HeightFieldGeometry. There is
     // no liquid inventory here: callers supply the authoritative fill fraction.
-    internal sealed class TerrainLiquidGeometry {
+    internal sealed partial class TerrainLiquidGeometry {
         readonly struct Tetrahedron {
             internal readonly int A,B,C,D;internal readonly double Volume;
             internal Tetrahedron(int a,int b,int c,int d,Vector3[] points){A=a;B=b;C=c;D=d;Volume=VolumeOf(points[a],points[b],points[c],points[d]);}

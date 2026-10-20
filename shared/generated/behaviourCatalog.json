@@ -42393,6 +42393,92 @@
       ]
     },
     {
+      "id": "object.water.habitat.path",
+      "version": 1,
+      "type": {
+        "record": {
+          "bodyId": "text",
+          "contained": "boolean",
+          "reason": "text",
+          "availability": "text",
+          "dependencyCount": "number",
+          "dependencies": {
+            "list": {
+              "record": {
+                "target": "text",
+                "state": "text",
+                "boundsKnown": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "label": "Inspect a water habitat path",
+      "description": "Check whether the target's entire conservative native collision envelope remains inside one exact liquid habitat while translating its root to destination in authored room coordinates. The current orientation is held; the envelope is world-axis-aligned and includes accepted root colliders, not animated visual limbs. Every corner must fit below the live free surface and within the cylindrical or rectangular cavity. The complete swept body also checks the actual terrain bed, so wet endpoints cannot skip a dry ridge or island. bodyId always names the requested habitat; overlapping water never substitutes for it. Empty liquid is a known contained=false result. This reads the same current pouring/rain quantities and terrain geometry used by rendering and water contact. contained proves water-volume containment only: it does not check other solid objects, real-room readiness, ownership, swimming gait or a connected route. It neither moves nor swims, starts physics, changes an actor's water policy, loads geometry nor reserves an answer for later movement. Recheck when the body, water or terrain changes. Invalid, missing or unready geometry is unavailable, never permission to cross it.  availability is ready when potentially relevant liquid cavities have native placements and current contents. A dormant, inactive or missing vessel is pending while activation is queued/running, otherwise unavailable. Unknown cavity bounds remain dependencies; known distant cavities and accepted empty vessels are excluded. dependencyCount counts all missing relevant cavities; dependencies lists the first four stable IDs, not necessarily the whole set. This passive query never loads or retries an object. Native collider readiness, physics, ownership and each participant's real-room policy are separate requirements. The explicitly chosen habitat is also a required dependency even when its known bounds are distant.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "habitat": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "destination": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "y": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              },
+              "z": {
+                "type": "number",
+                "minimum": -25.0,
+                "maximum": 25.0
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "target",
+          "habitat",
+          "destination"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "habitat": "00000000000000000000000000000000",
+        "destination": {
+          "x": 1,
+          "y": 0,
+          "z": 1
+        }
+      },
+      "features": [
+        "factQueries.v1",
+        "waterHabitat.v1"
+      ]
+    },
+    {
       "id": "avatar.movement.settings",
       "version": 1,
       "type": {
@@ -48412,6 +48498,10 @@
       "sha256": "452bf8cc8e55f0bc412e9ddb48db5cc60f75beacbc89708b25b28224680576d0"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterHabitatFacts.cs",
+      "sha256": "23b08e1bcb654aecd4e824dc08e99689b93035683c97d72ca7f6a2923a27582f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
       "sha256": "721373009acdd87df3b6d0efd101f34db33822098b1af05d3e3071174d05bb67"
     },
@@ -48712,8 +48802,12 @@
       "sha256": "89e7e877a84c21fb814bfcf546c0da9aed9d56b0f4c1338cd1c87b56a3f30382"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidHabitatGeometry.cs",
+      "sha256": "2eec2c42e9c2c90c3e3b2d98dfe90119661603c64b56d73c65e361fb947f299c"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumGeometry.cs",
-      "sha256": "4a1dd16af6afce0cf8208c68a36658a6af8815e87b7f05ab21e1eb6f230b5b27"
+      "sha256": "47bbf07d687e9df74550685a626a83eb133db67dda2a0359f3502db39f0c9736"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidMediumPhysics.cs",
@@ -48981,7 +49075,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "9a5eddb18e58c45337826f664cdfefd6a560722e461f1df7d9d524d738524b78"
+      "sha256": "52f2302366422f3289bc91b354594b378cbe84c7c6f30471e72618e5879aa770"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -49064,6 +49158,10 @@
       "sha256": "74b735a11df8b238d0b2c3e13b3c9a7128ce6a10a9693fad6383a320764bd12e"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHabitatQueries.cs",
+      "sha256": "c72f524208f293c563624f8d68fde63f233563c82fc6bde90759acc9a5a1d22f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
       "sha256": "6d3301d026e3567679efca1fb3d7356663bd6be8eabcf3a107e5e4766cc92f03"
     },
@@ -49141,7 +49239,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomMediumAvailability.cs",
-      "sha256": "36412598817a1c79ae3c36b00087e727610b89a41b68f528737af153b2ec191c"
+      "sha256": "dc8fd97e0622b48b0fba6bfe1a093a39cfcb8c3edaa0d5d69120beb317a69f67"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomModelCreation.cs",
@@ -49492,8 +49590,12 @@
       "sha256": "10a07c2f57067c1d066ae649d76dbd08ac80a9a1ea75860893812d1c3d0a4fe7"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidContainment.cs",
+      "sha256": "c0c90f6e60bdac8da7be2767006002df9c2d4221328230a4028c2c992e4e73ce"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidGeometry.cs",
-      "sha256": "363f94d257110d3dcf1dfb2066917b010c40e71ec4e5b2e7e47503bb8ff76cc4"
+      "sha256": "a66f8f58d59d83e4bbfdef590ceb78e2c65a0717e55c804c419cb76fda8d261a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
@@ -50225,7 +50327,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "c507b1a803de1eb3f16b9d20d7ed4475708efa285f8f34a05a5e12523e5b2f1f"
+      "sha256": "d18ffa7576d3076459d7195d15f20c004e7929cd010d73025f331b877f1a4c90"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

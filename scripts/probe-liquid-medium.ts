@@ -4,11 +4,17 @@ import assert from 'node:assert/strict';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {capabilityDefinition} from '../shared/capabilities';
+import {behaviourFact} from '../shared/behaviourCatalog';
 import type {RoomCommand} from '../src/core-sdk/room/roomAgent';
 import {completeProbeAction,factReply,type NativeProbeState} from './native-probe-contract';
 type Execute=<const C extends RoomCommand[]>(commands:C)=>Promise<NativeProbeState<C>>;
 export async function probeLiquidMedium(execute:Execute,directory:string){
- const fact=async(capability:string,args:Record<string,unknown>)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version:1,arguments:args}}])).value;
+ const fact=async(capability:string,args:Record<string,unknown>)=>{
+  const version=behaviourFact(capability)?.version;assert.ok(version,'Known shared fact '+capability);
+  const view=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability,version,arguments:args}}]));
+  assert.equal(view.capability,capability);assert.equal(view.version,version);assert.equal(view.available,true,view.status);
+  return view.value;
+ };
  const invoke=async(id:string,args:Record<string,unknown>)=>{const s=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]));assert.equal(s.execution?.selected?.phase,'completed',JSON.stringify(s.execution?.selected));return s.execution!.selected!;};
  const create=async(name:string,x:number)=>(await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name,x,y:1,z:2})).output!.objectId as string;
  // Live medium queries need visible native cavities, not an implicit all-home loading group.
@@ -26,6 +32,18 @@ export async function probeLiquidMedium(execute:Execute,directory:string){
  const response=await fact('object.medium',{target:cup}) as {applied:boolean};assert.equal(response.applied,false);
  const contact=await fact('object.medium.contactState',{target:cup}) as {known:boolean;immersed:boolean};assert.equal(contact.known,false);assert.equal(contact.immersed,false);
  const inputContact=await fact('input.medium.contactState',{side:'left'}) as {known:boolean;immersed:boolean};assert.equal(inputContact.known,false);assert.equal(inputContact.immersed,false);
+ // Read-only whole-body admission uses the same public catalog as agent programs.
+ const actor=(await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name:'Aquatic envelope probe',x:-.5,y:1.35,z:2,scale:.1})).output!.objectId as string;
+ const positionBefore=await fact('object.position',{target:actor}) as {x:number;y:number;z:number};
+ for(const key of ['x','y','z'] as const)assert.ok(Number.isFinite(positionBefore[key]));
+ assert.ok(Math.abs(positionBefore.x+.5)<1e-4&&Math.abs(positionBefore.y-1.35)<1e-4&&Math.abs(positionBefore.z-2)<1e-4);
+ const habitat=async(destination:{x:number;y:number;z:number})=>await fact('object.water.habitat.path',{target:actor,habitat:pool,destination}) as {bodyId:string;contained:boolean;availability:string};
+ const inside=await habitat({x:-.5,y:1.35,z:2}),above=await habitat({x:-.5,y:1.51,z:2}),outside=await habitat({x:1,y:1.35,z:2});
+ assert.equal(inside.bodyId,pool);assert.equal(inside.contained,true);assert.equal(inside.availability,'ready');
+ assert.equal(above.contained,false);assert.equal(outside.contained,false);
+ const positionAfter=await fact('object.position',{target:actor});assert.deepEqual(positionAfter,positionBefore);
+ await writeFile(join(directory,'water-habitat.json'),JSON.stringify({boundary:'Shared native whole-collision-envelope query against the actual transferred liquid quantity. Read-only geometry proof, not swimming, obstacle clearance, provider or headset acceptance.',pool,actor,inside,above,outside,positionBefore,positionAfter},null,2));
+ await execute([{action:'undo'}]);
  for(let i=0;i<5;i++)await execute([{action:'undo'}]);
  await writeFile(join(directory,'liquid-medium.json'),JSON.stringify({boundary:'Full desktop native transport, finite-medium depth, explicit fluid transfer and Undo. Physics forces have separate PlayMode acceptance; no headset or terrain-water claim.',before,after,destination,response,contact,inputContact},null,2));
 }

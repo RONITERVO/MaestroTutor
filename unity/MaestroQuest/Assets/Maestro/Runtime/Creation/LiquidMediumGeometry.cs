@@ -4,7 +4,7 @@ using Maestro.Quest.Interaction;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
     // One geometric interpretation of the live measured quantity; no extra inventory.
-    internal readonly struct LiquidMediumGeometry {
+    internal readonly partial struct LiquidMediumGeometry {
         internal readonly string Id;internal readonly RoomItem Item;internal readonly RoomContainer Contents;
         internal readonly Rigidbody Body;
         readonly TerrainLiquidGeometry terrain;readonly Vector3 terrainNormal;readonly float terrainLevel;

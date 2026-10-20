@@ -55,7 +55,7 @@ it('keeps a manually selected saved identity literal in reusable programs even i
 it('chooses a named lookup first, requires its own current read and invalidates that read on switching away and back',async()=>{
  const {client,receive}=setup(),insert=vi.fn(()=>null),d=capabilityDefinition('visibility.layer.present')!;
  const screen=render(<CapabilityBrowser client={client} onClose={()=>{}} onInsert={insert} initialCall={{id:d.id,version:1,arguments:d.example!}}/>);
- await receive({operation:'inspect',capability:d.id,version:1,definition:d,status:'Available'}, {capabilities:[...new Set([...native.capabilities,'catalog.v1','catalogVocabulary.v1','factQueries.v1','structuredValues.v1','layerPresentation.v1'])]});
+ await receive({operation:'inspect',capability:d.id,version:1,definition:d,status:'Available'}, {capabilities:[...new Set([...native.capabilities,'catalog.v1','catalogVocabulary.v1','factQueries.v1','structuredValues.v1','layerPresentation.v1','visibilityLayers.v1'])]});
  expect((screen.getByRole('button',{name:'Load saved visual layer'}) as HTMLButtonElement).disabled).toBe(false);
  expect((screen.getByRole('button',{name:'Check availability'}) as HTMLButtonElement).disabled).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:'Load saved visual layer'}));await receive(list());

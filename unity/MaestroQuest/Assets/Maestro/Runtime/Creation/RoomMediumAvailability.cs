@@ -79,19 +79,19 @@ namespace Maestro.Quest.Creation
             var body=new Bounds(from+Vector3.up*(height*.5f),new Vector3(radius*2,height,radius*2));
             body.Encapsulate(new Bounds(to+Vector3.up*(height*.5f),body.size));return body;
         }
-        internal MediumAvailability CapturedMediumAvailability(Bounds body,string ignore=null)
+        internal MediumAvailability CapturedMediumAvailability(Bounds body,string ignore=null,string required=null)
         {
             int count=0;string state="ready";
-            foreach(var value in missingMedia)if(value.Relevant(body,ignore)){
+            foreach(var value in missingMedia)if(value.Id==required||value.Relevant(body,ignore)){
                 count++;if(value.State=="unavailable"||state=="ready")state=value.State;
             }
             if(mediumQueryIssue!=null)return new("unavailable",mediumQueryIssue,count);
             return new(state,state=="pending"?"Liquid is still loading; inspect dependencies before moving":state=="unavailable"?"Liquid geometry is unavailable; inspect dependencies before moving":null,count);
         }
-        internal JObject DescribeMediumAvailability(Bounds body,string ignore=null)
+        internal JObject DescribeMediumAvailability(Bounds body,string ignore=null,string required=null)
         {
-            var availability=CapturedMediumAvailability(body,ignore);
-            var dependencies=new JArray();foreach(var value in missingMedia)if(value.Relevant(body,ignore)&&dependencies.Count<4)
+            var availability=CapturedMediumAvailability(body,ignore,required);
+            var dependencies=new JArray();foreach(var value in missingMedia)if((value.Id==required||value.Relevant(body,ignore))&&dependencies.Count<4)
                 dependencies.Add(new JObject{["target"]=value.Id,["state"]=value.State,["boundsKnown"]=value.Extent.Known&&value.Extent.HasBounds});
             return new JObject{["availability"]=availability.State??"ready",["dependencyCount"]=availability.Count,["dependencies"]=dependencies};
         }
