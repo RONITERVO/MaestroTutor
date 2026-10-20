@@ -935,3 +935,28 @@ book/headless journeys do not add a new book-UI handoff scenario. No APK/AAB,
 signing, installation, provider use, deployment or Meta operation occurred.
 Installed **D85F3CB7 / f58dab48**, packaged **5899972E / 5100f612**, device/provider
 holds and all broader release acceptance gaps are unchanged.
+
+
+## Walking actor wait compile checkpoint — 2026-10-20
+
+The finite-walking wait passed 1,519 EditMode and 2,164 PlayMode cases (three
+optional private-input skips), 3,218 web tests, both TypeScript checks and the
+full offline original-book/headless journeys. Five new native cases cover actual
+recovery, bounded failure, cancellation and independent virtual ground below
+the scanned floor. Headless adds concurrent walking through the agent's shared
+action/fact APIs and verifies waiting, arrival and terminal replay. Book retains
+the existing full generated-form scenarios.
+
+Unsigned development export and compilation passed with 41 tasks,
+zero Unity errors and 5 warnings. The new wait and walking-owner
+paths are present in IL2CPP. The manifest remains Quest 3-only, with one GameActivity
+and `com.maestro.quest.development`. All 22 selected ARM64 libraries retain
+16 KiB ELF alignment. Browser checks are reused against 106 unchanged inputs
+(128 passes/two skips; lint zero errors, 6 warnings).
+
+Evidence: `.quest-evidence/actor-clearance-20261020/android/verified.json` and
+the exact-source desktop receipts. No APK/AAB, signing, installation, provider,
+deployment or Meta action occurred. This is compile evidence, not physical
+acceptance, calibrated crowd performance or Store readiness. Installed
+**D85F3CB7 / f58dab48**, packaged **5899972E / 5100f612**, device/provider holds and
+the broader release gates remain unchanged.

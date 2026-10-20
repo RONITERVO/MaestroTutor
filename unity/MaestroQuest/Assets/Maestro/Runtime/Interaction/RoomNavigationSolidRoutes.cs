@@ -16,6 +16,16 @@ namespace Maestro.Quest.Interaction {
         const int MaximumSolidRouteBodies=64;
         readonly Dictionary<string,RouteSolid> solidRouteBodies=new();
         internal bool CanDetourTraversalBlocker=>TraversalBlocker&&!CurrentGround.Contains(TraversalBlocker);
+        bool WalkingActor(Collider collision){
+            if(!collision||!collision.enabled||collision.isTrigger||!collision.gameObject.activeInHierarchy)return false;
+            var other=collision.GetComponentInParent<RoomItem>();
+            return other&&other!=actor&&other.GetComponentInParent<RoomEditor>()==InputEditor&&GroundedMovement.HasWalkingOwner(other);
+        }
+        internal bool HasWalkingActorBlocker {get{
+            if(WalkingActor(TraversalBlocker))return true;
+            foreach(var body in solidRouteBodies.Values)if(WalkingActor(body.Collision))return true;
+            return false;
+        }}
         string RememberRouteSolid(Collider collision){
             string key="solid:"+collision.GetInstanceID();
             if(solidRouteBodies.ContainsKey(key))return key;

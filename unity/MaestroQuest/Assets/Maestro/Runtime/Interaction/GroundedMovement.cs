@@ -19,9 +19,13 @@ namespace Maestro.Quest.Interaction {
         RoomNavigation navigation;ImportedObjectWalk gait;MaestroAvatar avatar;RigidRoomItem rigid;
         float radius,height,started,rememberAt,distance;Vector3 localFoot,acceptedPosition,acceptedScale;Quaternion acceptedRotation;
         Vector3[] route=Array.Empty<Vector3>();int corner,lastFrame=-1,revision;uint surfaceRevision;
-        bool owned,stopped,arrived;string failure,blocked;
+        bool owned,stopped,arrived;string failure,blocked,waitingReason;
+        // A transient actor is not a permanent destination failure. This is a
+        // bounded retry, not a reservation, priority override or predicted path.
+        internal const float ActorWaitSeconds=3,ActorRetrySeconds=.35f;
+        float actorWaitStarted=-1,actorRetryAt,actorWaitDistance;
         internal string Status {get;private set;}="planning";
-        internal string Reason=>failure??blocked??navigation?.FollowRouteStatus??"";
+        internal string Reason=>failure??blocked??waitingReason??navigation?.FollowRouteStatus??"";
         internal bool Failed=>failure!=null;
         internal bool Blocked=>blocked!=null;
         internal bool Arrived=>arrived;
@@ -74,13 +78,33 @@ namespace Maestro.Quest.Interaction {
             return true;
         }
         bool Obstacle(Collider c)=>RoomWalkingObstacle.Blocks(c,item.transform,target);
+        internal static bool HasWalkingOwner(RoomItem target){
+            if(!target||!target.isActiveAndEnabled)return false;
+            foreach(var value in active)
+                if(value.item==target&&value.owned&&!value.stopped&&!value.Failed&&!value.Blocked&&!value.Arrived)return true;
+            var direct=target.GetComponent<AvatarSpatialMotion>();
+            return direct&&direct.Active&&direct.Mode!=AvatarSpatialMode.Look;
+        }
+        bool WaitForWalkingActor(){
+            if(mode!="walk"||!navigation.HasWalkingActorBlocker)return false;
+            float now=Time.realtimeSinceStartup;
+            if(actorWaitStarted<0){actorWaitStarted=now;actorWaitDistance=distance;}
+            if(now-actorWaitStarted>=ActorWaitSeconds){
+                Block("Walking stopped after waiting three seconds for another walking actor to clear the route");
+                return true;
+            }
+            waitingReason="Waiting briefly for another walking actor to clear the route";
+            Status="waitingForActor";actorRetryAt=now+ActorRetrySeconds;IdlePose();
+            route=Array.Empty<Vector3>();corner=0;navigation.CancelFollowRoute();return true;
+        }
+        void ClearActorWait(){actorWaitStarted=-1;actorRetryAt=0;waitingReason=null;}
         void IdlePose(){if(avatar)avatar.SpatialWalk(0);gait?.Apply(0,0);}
         internal void Fail(string message){failure=message??"Walking became unavailable";Status="failed";IdlePose();}
-        void Block(string message){blocked=message??"No accepted walking route is available";Status="blocked";IdlePose();}
+        void Block(string message){blocked=message??"No accepted walking route is available";Status="blocked";waitingReason=null;IdlePose();}
         internal void Retarget(Vector3 point){
             if(stopped||failure!=null)return;
             if(!RoomRecipe.Finite(point)||point.sqrMagnitude>625){Block("Following destination is outside the authored world bounds");return;}
-            destination=point;route=Array.Empty<Vector3>();corner=0;arrived=false;blocked=null;Status="planning";navigation?.CancelFollowRoute();
+            ClearActorWait();destination=point;route=Array.Empty<Vector3>();corner=0;arrived=false;blocked=null;Status="planning";navigation?.CancelFollowRoute();
         }
         internal void KeepDistance(){if(!stopped&&!Failed&&!Blocked&&arrived)Status="keepingDistance";}
         internal static bool LeaderFoot(RoomItem value,out Vector3 foot){
@@ -106,6 +130,10 @@ namespace Maestro.Quest.Interaction {
             if(!navigation.Ready){Fail("The selected ground or physics is unavailable");return;}
             if(gait!=null){var readiness=gait.State(out var gaitError);if(readiness==RuleActionState.Failed){Fail(gaitError);return;}if(readiness==RuleActionState.Preparing){Status="preparingAnimation";IdlePose();return;}}
             if(blocked!=null)return;
+            if(waitingReason!=null){
+                if(Time.realtimeSinceStartup<actorRetryAt){IdlePose();return;}
+                waitingReason=null;
+            }
             var from=Foot;var goal=editor.Frame.PointToWorld(destination);
             if(arrived||Vector3.Distance(from,goal)<.005f){
                 arrived=false;Status="planning";IdlePose();
@@ -115,7 +143,9 @@ namespace Maestro.Quest.Interaction {
             if(route.Length==0||surfaceRevision!=navigation.SurfaceRevision){
                 if(!navigation.FollowRoute(from,goal,obstacle,out route,avoidSolids:true)){
                     IdlePose();
-                    Status="planning";if(!navigation.FollowRoutePending&&!navigation.PathsPending)Block(navigation.FollowRouteStatus);return;
+                    Status="planning";
+                    if(!navigation.FollowRoutePending&&!navigation.PathsPending&&!WaitForWalkingActor())Block(navigation.FollowRouteStatus);
+                    return;
                 }
                 corner=1;surfaceRevision=navigation.SurfaceRevision;
                 if(route.Length<2){Block("The route has no accepted destination");return;}
@@ -139,6 +169,9 @@ namespace Maestro.Quest.Interaction {
             if(!RoomRecipe.Finite(position)||editor.Frame.PointToRoom(position).sqrMagnitude>625){Block("Walking would leave the authored world bounds");return;}
             Status="moving";float moved=Vector3.Distance(from,floor);item.transform.SetPositionAndRotation(position,rotation);distance+=moved;
             acceptedPosition=item.transform.localPosition;acceptedRotation=item.transform.localRotation;
+            // Retry/detour work alone cannot replenish the wait. Only meaningful
+            // accepted movement earns a new allowance for a later obstruction.
+            if(actorWaitStarted>=0&&distance-actorWaitDistance>=.1f)ClearActorWait();
             if(avatar)avatar.SpatialWalk(moved/dt);else if(gait?.Apply(moved/dt,dt)==false){Fail("The assigned walking animation became unavailable");return;}
             if(Time.unscaledTime>=rememberAt){rememberAt=Time.unscaledTime+1;Remember();}
         }

@@ -1220,6 +1220,37 @@ sophisticated planner could find one. It must never report arrival from an elaps
 timer or use that limitation to bypass the selected real-room collision policy.
 Current verification and physical acceptance status are in the delivery record.
 
+## Waiting for another walking actor — 2026-10-20
+
+Finite `object.navigate` journeys now distinguish an obstruction with an active
+walking owner from a stationary prop. If an occupied destination or exhausted
+route includes such an actor, the existing movement engine holds its last accepted
+pose and retries no faster than every 0.35 real-time seconds, for up to three
+seconds. `object.navigation` exposes `waitingForActor` and its reason through the
+same passive fact used by book forms, programs and the agent. Waiting keeps the
+journey pending; it does not claim arrival or stop the other actor.
+
+Only at least 0.1 metre of accepted travel renews this allowance for a later
+obstruction. Replanning and retries alone cannot reset it. A persistent obstruction
+fails at the last accepted place; a cleared route resumes through the ordinary
+ground, body sweep and water checks without accumulating missed movement.
+Stationary props retain ordinary detour/refusal behaviour. Following retains its
+existing timed retry policy. Direct stick movement retains its literal direction.
+
+This wait respects both actors' independent environment profiles: an underground
+virtual actor need not acquire the real room floor to wait or continue. Grabs,
+Stop, lost tracking or physics, and target/workspace changes still cancel through
+the existing movement lifecycle. The wait does not transfer movement ownership,
+reserve a destination, predict another actor's path or resolve crowded corridors.
+Those broader steering decisions remain separate work with bounded, observable
+completion requirements.
+
+Native checks cover recovery, expiry, cancellation through the shared capability,
+and continued below-room movement. The full headless journey additionally starts
+two real walking actors through public action calls and observes waiting, arrival,
+independent completion and replay. Execution results and remaining physical
+acceptance limits are recorded in the v1 delivery plan.
+
 ## Maestro movement handoffs — 2026-10-20
 
 Replacing an active Maestro walk must prepare the replacement's navigation after
@@ -1268,7 +1299,7 @@ loops and events express longer behavior without a second scheduler. A bounded
 retry observes changed destinations and obstacles, never accumulates movement
 while waiting, and never treats elapsed time as arrival. Completion reports the
 actual `state`, `reason`, root position and accepted travelled metres.
-`object.navigation` passively exposes planning, moving, keepingDistance, arrived,
+`object.navigation` passively exposes planning, waitingForActor, moving, keepingDistance, arrived,
 blocked or failed for the current shared walking owner. Inactive means no shared
 walking owner, not proof that all other motion stopped. Missing objects remain
 unavailable; observation never loads them or starts physics.

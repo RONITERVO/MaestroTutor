@@ -19,10 +19,10 @@ implementation and verification status are recorded at the end of this document.
 Current desktop and unsigned Android checks cover all five shared creation kinds,
 placement, paint/delete completion, ordered admission and accepted saved-room
 identity. See [shared creation completion](#shared-creation-completion--2026-10-17)
-and [current compile evidence](QUEST_RELEASE_BUILD.md#walking-handoff-compile-checkpoint--2026-10-20).
+and [current compile evidence](QUEST_RELEASE_BUILD.md#walking-actor-wait-compile-checkpoint--2026-10-20).
 The October 20 compile includes shared character attention and the later
 structural-navigation/corner-lifecycle changes and the walking ownership handoff
-fix. It is unsigned development
+fix, followed by bounded waiting for another walking actor. It is unsigned development
 compilation; installation is unchanged.
 Later desktop checks cover saved physics, movement, gait and water preferences;
 see [shared settings completion](#shared-settings-completion--2026-10-17).
@@ -15144,3 +15144,58 @@ remain open; no physical acceptance or release readiness is claimed.
 The broader living-world work remains active. Predictive avoidance, crowded
 doorways and general multi-level circulation are still open; this fix establishes
 a reliable command transition, not cooperative crowd behavior.
+
+## 2026-10-20 — finite walking waits for another actor
+
+A finite shared walking action previously failed immediately when another active
+walker occupied its destination. Two focused regressions reproduced that refusal;
+a third red case was blocked by leftover admissions after the earlier failing
+coroutines, so that third failure is not independent evidence of the same defect.
+
+The existing grounded movement engine now retries that transient obstruction for
+up to three real-time seconds, no faster than every 0.35 seconds. Its passive
+shared status is `waitingForActor`. Only 0.1 metre of accepted movement renews
+the allowance; an expired wait fails without claiming arrival. No other actor is
+stopped or reprioritized. Stationary obstacles, timed following and direct stick
+movement retain their existing contracts. Environment profiles still choose each
+actor's actual ground and scanned-room participation independently of appearance.
+
+Five new PlayMode cases cover recovery without a jump, bounded expiry, Stop,
+shared-capability cancellation/ownership and virtual travel below the physical
+floor. All five and the complete 269-case AvatarSpatialTests group passed.
+The complete headless journey now additionally exercises real concurrent walkers
+through the public action/fact APIs and records waiting, accepted arrival,
+independent completion and idempotent replay. The original-book journey continues
+to cover its existing generated walking/following forms; it does not add a separate
+UI scenario for this wait.
+
+Frozen-source verification passed 1,519 EditMode and 2,164 PlayMode cases,
+with three named optional private-model/motion skips. All 3,686 discovered native
+cases are reconciled. All 3,218 web tests, application/probe TypeScript and catalog
+provenance pass. The actual native catalog export updates the two relevant
+descriptions and source fingerprints without adding another interface or schema.
+
+Full sparse offline original-book `b7d8875429e14fdfb0445054e539fc52` and headless
+`89f7d7b742224ccab795d99ec776424c` journeys completed with clean client/Editor exits and
+confirmed idle, non-dirty room and behaviour stores. Headless additionally
+observes two actual walking actors through public action/fact calls: the occupied
+destination exposes waiting, then reaches accepted arrival; the independent
+actor completes and replay does not repeat either action. Book retains its full
+existing generated walking/following form checks, without a new wait-specific UI
+scenario. These are desktop synthetic-ground checks, not physical or provider
+acceptance.
+
+Unsigned development Android export and compilation passed with
+41 executed tasks, 0 Unity errors and
+5 warnings. IL2CPP contains the actor ownership and wait
+paths. The 22 selected ARM64 libraries retain 16 KiB ELF alignment; native browser
+checks are reused against 106 unchanged inputs (128 passes/two skips, lint zero
+errors and 6 warnings). No APK/AAB, signing, installation,
+device, paid-provider, deployment or Meta operation occurred.
+
+Evidence: `.quest-evidence/actor-clearance-20261020` and `android/verified.json`,
+with 3,398 native inputs, 5,213 source hashes and
+14 unchanged protected files. Installed **D85F3CB7 / f58dab48** and packaged
+**5899972E / 5100f612** remain unchanged. This increment adds no general crowd
+simulation, path prediction or destination reservation. V1 remains incomplete;
+device/provider holds and the 31 open measured audio-quality findings remain.

@@ -24,6 +24,109 @@ namespace Maestro.Quest.Tests {
             for(int i=0;i<frames;i++){var state=travel.State(out var error);if(state!=RuleActionState.Preparing){Assert.That(state,Is.EqualTo(RuleActionState.Ready),error);Assert.That(travel.Complete(out error),Is.True,error);yield break;}yield return null;}
             Assert.Fail("Walking did not reach an accepted destination");
         }
+        IEnumerator WaitingForWalkingActor(GroundedTravel travel,string target){
+            for(int i=0;i<120;i++){
+                Assert.That(travel.State(out var error),Is.EqualTo(RuleActionState.Preparing),error);
+                if((string)WalkingStatus(target)["state"]=="waitingForActor")yield break;
+                yield return null;
+            }
+            Assert.Fail("The occupied destination did not expose its walking-actor wait");
+        }
+        [UnityTest]public IEnumerator GroundedTravelWaitsForWalkingActorThenArrivesWithoutJumping(){
+            WalkingScene();var actor=editor.Find("maestro");var crossing=WalkingBlock(new(1.5f,0,0));
+            var walk=new GroundedTravel(editor,actor,new(1.5f,0,0),1.2f);
+            var other=new GroundedTravel(editor,crossing,new(1.5f,0,2),1.2f);
+            try{
+                Assert.That(other.Begin(out var error),Is.True,error);Assert.That(walk.Begin(out error),Is.True,error);
+                yield return WaitingForWalkingActor(walk,"maestro");Assert.That(walk.Complete(out _),Is.False);
+                var held=actor.transform.position;for(int i=0;i<8;i++){walk.Tick();yield return null;}
+                Assert.That(actor.transform.position,Is.EqualTo(held));
+                var state=RuleActionState.Preparing;var previous=actor.transform.position;
+                for(int i=0;i<450&&state==RuleActionState.Preparing;i++){
+                    Assert.That(other.State(out error),Is.Not.EqualTo(RuleActionState.Failed),error);
+                    state=walk.State(out error);Assert.That(Vector3.Distance(previous,actor.transform.position),Is.LessThan(.061f));
+                    previous=actor.transform.position;yield return null;
+                }
+                Assert.That(state,Is.EqualTo(RuleActionState.Ready),error);Assert.That(walk.Complete(out error),Is.True,error);
+                Assert.That(actor.transform.position.x,Is.EqualTo(1.5f).Within(.015f));
+                Assert.That((string)WalkingStatus("maestro")["state"],Is.EqualTo("arrived"));
+            }finally{walk.Stop(false);other.Stop(false);}
+        }
+        [UnityTest]public IEnumerator GroundedTravelWalkingActorWaitExpiresWithoutClaimingArrival(){
+            WalkingScene();var crossing=WalkingBlock(new(1.5f,0,0));
+            var walk=new GroundedTravel(editor,editor.Find("maestro"),new(1.5f,0,0),1.2f);
+            var other=new GroundedTravel(editor,crossing,new(1.5f,0,2),1.2f);
+            try{
+                Assert.That(other.Begin(out var error),Is.True,error);Assert.That(walk.Begin(out error),Is.True,error);
+                yield return WaitingForWalkingActor(walk,"maestro");var held=avatar.transform.position;
+                yield return new WaitForSecondsRealtime(3.1f);
+                Assert.That(walk.State(out error),Is.EqualTo(RuleActionState.Failed));Assert.That(error,Does.Contain("waiting"));
+                Assert.That(walk.Complete(out _),Is.False);Assert.That(avatar.transform.position,Is.EqualTo(held));
+                other.Stop(false);crossing.gameObject.SetActive(false);yield return null;
+                Assert.That(walk.State(out _),Is.EqualTo(RuleActionState.Failed));Assert.That(avatar.transform.position,Is.EqualTo(held));
+            }finally{walk.Stop(false);other.Stop(false);}
+        }
+        [UnityTest]public IEnumerator GroundedTravelStopDuringWalkingActorWaitCannotResume(){
+            WalkingScene();var crossing=WalkingBlock(new(1.5f,0,0));
+            var walk=new GroundedTravel(editor,editor.Find("maestro"),new(1.5f,0,0),1.2f);
+            var other=new GroundedTravel(editor,crossing,new(1.5f,0,2),1.2f);
+            try{
+                Assert.That(other.Begin(out var error),Is.True,error);Assert.That(walk.Begin(out error),Is.True,error);
+                yield return WaitingForWalkingActor(walk,"maestro");var held=avatar.transform.position;
+                walk.Stop(false);other.Stop(false);crossing.gameObject.SetActive(false);
+                yield return new WaitForSecondsRealtime(.4f);
+                for(int i=0;i<8;i++){walk.Tick();yield return null;}
+                Assert.That((bool)WalkingStatus("maestro")["active"],Is.False);
+                Assert.That(avatar.transform.position,Is.EqualTo(held));Assert.That(walk.Complete(out _),Is.False);
+            }finally{walk.Stop(false);other.Stop(false);}
+        }
+        [UnityTest]public IEnumerator GroundedTravelWalkingActorWaitPreservesVirtualGroundBelowRealFloor(){
+            WalkingScene();world.PausePhysics();Terrain(new(0,-2.2f,0),.2f,out _);
+            var actor=WalkingBlock(new(-1,-2,0));var crossing=WalkingBlock(new(1,-2,0));
+            var profile=new RoomEnvironmentProfile{id=Guid.NewGuid().ToString("N"),name="Independent underground actors",realCollisions=false};
+            Assert.That(editor.EditEnvironment(profile,profile.id,0,Array.Empty<string>(),out var error),Is.True,error);
+            foreach(var value in new[]{actor,crossing}){
+                string id=editor.Identity(value);Assert.That(editor.BindEnvironment(id,editor.ObjectRevision(id),profile.id,editor.EnvironmentRevision(profile.id),out error),Is.True,error);
+            }
+            Physics.SyncTransforms();world.StartPhysics();
+            var walk=new GroundedTravel(editor,actor,new(1,-2,0),1.2f);
+            var other=new GroundedTravel(editor,crossing,new(1,-2,2),1.2f);
+            try{
+                Assert.That(other.Begin(out error),Is.True,error);Assert.That(walk.Begin(out error),Is.True,error);
+                yield return WaitingForWalkingActor(walk,editor.Identity(actor));
+                var state=RuleActionState.Preparing;
+                for(int i=0;i<450&&state==RuleActionState.Preparing;i++){
+                    Assert.That(other.State(out error),Is.Not.EqualTo(RuleActionState.Failed),error);
+                    state=walk.State(out error);Assert.That(actor.transform.position.y,Is.LessThan(-1.8f));yield return null;
+                }
+                Assert.That(state,Is.EqualTo(RuleActionState.Ready),error);Assert.That(walk.Complete(out error),Is.True,error);
+                Assert.That(actor.transform.position.x,Is.EqualTo(1).Within(.015f));
+            }finally{walk.Stop(false);other.Stop(false);}
+        }
+        [UnityTest]public IEnumerator GroundedTravelWalkingActorWaitIsVisibleAndCancellableThroughSharedCapability(){
+            WalkingScene();var crossing=WalkingBlock(new(1.5f,0,0));
+            var other=new GroundedTravel(editor,crossing,new(1.5f,0,2),1.2f);
+            var actions=new RoomRuleActions(editor,authoring);var scheduler=new RuleScheduler(actions);string run=null;
+            try{
+                Assert.That(other.Begin(out var error),Is.True,error);
+                var call=new JObject{["id"]="object.navigate",["version"]=1,["arguments"]=new JObject{["target"]="maestro",["mode"]="walk",["destination"]=new JObject{["x"]=1.5,["y"]=0,["z"]=0},["speed"]=1.2}};
+                Assert.That(scheduler.Invoke(call,Time.unscaledTime,out run,out error),Is.True,error);
+                for(int i=0;i<120;i++){
+                    actions.Tick();scheduler.Tick(Time.unscaledTime);
+                    Assert.That((string)scheduler.Invocation(run)["phase"],Is.Not.EqualTo("failed"),scheduler.Invocation(run).ToString());
+                    if((string)WalkingStatus("maestro")["state"]=="waitingForActor")break;
+                    yield return null;
+                }
+                Assert.That((string)WalkingStatus("maestro")["state"],Is.EqualTo("waitingForActor"));
+                Assert.That(editor.Ownership.Covers(run,new[]{new BehaviourCatalog.Claim("maestro","locomotion")}),Is.True);
+                var before=avatar.transform.position;scheduler.GrabTarget("maestro");
+                Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("cancelled"));
+                Assert.That((bool)WalkingStatus("maestro")["active"],Is.False);
+                other.Stop(false);crossing.gameObject.SetActive(false);yield return new WaitForSecondsRealtime(.4f);
+                actions.Tick();scheduler.Tick(Time.unscaledTime);
+                Assert.That(avatar.transform.position,Is.EqualTo(before));
+            }finally{scheduler.Suspend(true);if(run!=null)actions.Stop(run,false);other.Stop(false);}
+        }
         [UnityTest]public IEnumerator GroundedTravelCreatedObjectArrivesAndRetainsItsRootOffset(){
             WalkingScene();var item=WalkingBlock(new(1,0,0));float offset=item.transform.position.y;
             var travel=new GroundedTravel(editor,item,new(1.6f,0,0),1.2f);

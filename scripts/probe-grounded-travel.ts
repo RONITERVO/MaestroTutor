@@ -52,3 +52,42 @@ export async function probeGroundedFollowing(execute:(commands:RoomCommand[])=>P
  const replay=await execute([{action:'execution',execution:{operation:'start',runId,call}}]);assert.deepEqual(replay.execution?.selected,receipt);
  await writeFile(join(directory,'native-grounded-following.json'),JSON.stringify({boundary:'Shared headless readiness, timed follow, independent native leader walking, passive status and terminal replay on synthetic ground. The moving leader is not owned by following. No provider or headset acceptance.',check,started:started.execution?.selected,observed:observed.catalog,samples,receipt,leaderReceipt,gap,inactive:inactive.catalog,replay:replay.execution?.selected},null,2));
 }
+
+// The same public action/fact calls used by an agent. Both actors execute real
+// walking; no fixture pauses a planner or injects an arrival.
+export async function probeWalkingActorClearance(execute:(commands:RoomCommand[])=>Promise<RoomAgentState>,directory:string,targets:{target:string;obstacle:string}){
+ const objects=nativeProbeObjects(execute),target=targets.target,leader=targets.obstacle;
+ const destination=(await objects.observation(leader)).position;
+ const leadCall={id:'object.navigate',version:1,arguments:{target:leader,mode:'walk',destination:{x:destination.x,y:destination.y,z:destination.z+2},speed:.65}};
+ const leading=await execute([{action:'execution',execution:{operation:'start',call:leadCall}}]);
+ const leadRun=leading.execution?.selected?.id;assert.ok(leadRun);assert.equal(leading.execution?.selected?.phase,'preparing');
+ const call={id:'object.navigate',version:1,arguments:{target,mode:'walk',destination,speed:.65}};
+ let state=await execute([{action:'execution',execution:{operation:'start',call}}]);
+ const runId=state.execution?.selected?.id;assert.ok(runId);assert.equal(state.execution?.selected?.phase,'preparing');
+ let waited=false;const samples:unknown[]=[],deadline=Date.now()+30000;
+ while(Date.now()<deadline){
+  state=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);
+  if(state.execution?.selected?.phase==='completed')break;
+  assert.equal(state.execution?.selected?.phase,'preparing',JSON.stringify(state.execution?.selected));
+  const observation=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.navigation',version:1,arguments:{target}}}]);
+  assert.ok(observation.catalog?.operation==='inspect'&&observation.catalog.category==='facts');
+  const navigation=observation.catalog.value as {active:boolean;state:string;reason:string}|undefined;
+  // Completion releases native demand. A separate fact read may observe the
+  // retired actor; only its terminal completed receipt makes that acceptable.
+  if(!navigation){
+   state=await execute([{action:'execution',execution:{operation:'inspect',runId}}]);
+   assert.equal(state.execution?.selected?.phase,'completed',JSON.stringify(state.execution?.selected));break;
+  }
+  if(navigation.state==='waitingForActor'){waited=true;assert.equal(navigation.active,true);assert.ok(navigation.reason.includes('walking actor'));}
+  samples.push({navigation,phase:state.execution?.selected?.phase,position:(await objects.observation(target)).position});
+  await new Promise(r=>setTimeout(r,80));
+ }
+ assert.equal(waited,true,'The occupied destination never exposed a walking-actor wait');
+ const receipt=state.execution?.selected;assert.equal(receipt?.phase,'completed',JSON.stringify(receipt));
+ const position=(await objects.observation(target)).position;
+ assert.ok(Math.hypot(position.x-destination.x,position.y-destination.y,position.z-destination.z)<.025);
+ const leaderCompleted=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'inspect',runId:leadRun}}]));
+ assert.equal(leaderCompleted.execution?.selected?.phase,'completed');
+ const replay=await execute([{action:'execution',execution:{operation:'start',runId,call}}]);assert.deepEqual(replay.execution?.selected,receipt);
+ await writeFile(join(directory,'native-walking-actor-clearance.json'),JSON.stringify({boundary:'Shared agent action and passive fact APIs with two actual Unity walking actors on synthetic ground. Observes waitingForActor, subsequent accepted arrival, independent leader completion and idempotent replay. No provider or headset acceptance.',destination,leadCall,call,samples,receipt,leaderReceipt:leaderCompleted.execution?.selected,replay:replay.execution?.selected},null,2));
+}
