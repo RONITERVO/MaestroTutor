@@ -19,9 +19,10 @@ implementation and verification status are recorded at the end of this document.
 Current desktop and unsigned Android checks cover all five shared creation kinds,
 placement, paint/delete completion, ordered admission and accepted saved-room
 identity. See [shared creation completion](#shared-creation-completion--2026-10-17)
-and [current compile evidence](QUEST_RELEASE_BUILD.md#structural-navigation-compile-checkpoint--2026-10-20).
+and [current compile evidence](QUEST_RELEASE_BUILD.md#walking-handoff-compile-checkpoint--2026-10-20).
 The October 20 compile includes shared character attention and the later
-structural-navigation/corner-lifecycle changes. It is unsigned development
+structural-navigation/corner-lifecycle changes and the walking ownership handoff
+fix. It is unsigned development
 compilation; installation is unchanged.
 Later desktop checks cover saved physics, movement, gait and water preferences;
 see [shared settings completion](#shared-settings-completion--2026-10-17).
@@ -15091,3 +15092,55 @@ This checkpoint does not claim general multi-level
 interior planning, crowd prediction, physical Quest performance or provider/device
 acceptance. The installed and packaged checkpoints, device/provider holds and
 broader v1 release gaps remain unchanged.
+
+
+## 2026-10-20 — walking ownership handoffs
+
+While inspecting shared-space movement, direct walking replacement exposed a
+regression in the preceding structural-navigation cleanup: Begin prepared a
+route, then Stop (directly or through the ownership arbiter) released that route.
+The replacement reported success but stopped on its first update with unavailable
+ground. Same-owner restarts, different direct owners and program-to-control
+takeover all reproduced the problem.
+
+Begin now performs the accepted replacement's ground preparation after prior
+ownership cleanup. Failure releases the new reservation and navigation binding.
+An unrelated upper-body gesture remains active; an old owner's End cannot stop
+the replacement. Stop still releases retained navigation geometry. The actual
+Unity catalog export changes only the movement source provenance hash; capability
+definitions and storage are unchanged.
+
+Four native regressions measure real movement during Follow restart, transitions
+to/from Manual, different-owner takeover, program takeover preserving a gesture,
+and ground loss during cleanup. The first three failed before the fix; all four
+pass with it. The wider focused run passed 289 PlayMode tests.
+
+Frozen-source verification passed 1,519 EditMode and 2,159 PlayMode tests, with
+three named optional private-model/motion skips. The 3,681 discovered native
+cases are fully reconciled. All 3,218 web tests, both TypeScript checks and catalog
+provenance pass. The catalog check initially rejected the stale fingerprint;
+the actual Unity export changed only that source hash, with unchanged definitions.
+
+Full sparse offline original-book `ef822d8f915147a5bf6654009de685ef` and headless
+`70ff73d0e4f8432e9e7cd1cf602a8801` journeys completed with clean client/Editor exits and
+confirmed idle, non-dirty room and behaviour stores. These are existing full
+integration journeys on the current source; the new handoff scenarios execute
+actual movement in native PlayMode, not a new book-UI scenario.
+
+Unsigned Android export and compilation passed: 41 tasks executed,
+0 Unity errors and 5 warnings. Generated
+IL2CPP contains both admission and replacement preparation in Begin. All 22
+selected ARM64 libraries retain 16 KiB ELF load alignment. The native browser
+checks remain 128 passed/two skipped against 106 unchanged inputs; lint has zero
+errors and 6 warnings. Final APK filtering is not exercised.
+
+Evidence: `.quest-evidence/movement-handoff-20261020/` and its `android/`
+subdirectory, with 3,398 native inputs, 5,213 source hashes and 14 unchanged
+protected files. No APK/AAB, signing, installation, device, paid-provider,
+deployment or Meta operation occurred. Installed D85F3CB7 / f58dab48 and packaged
+5899972E / 5100f612 remain unchanged. Device/provider holds and release gates
+remain open; no physical acceptance or release readiness is claimed.
+
+The broader living-world work remains active. Predictive avoidance, crowded
+doorways and general multi-level circulation are still open; this fix establishes
+a reliable command transition, not cooperative crowd behavior.

@@ -165,6 +165,72 @@ namespace Maestro.Quest.Tests
             var evidence=Environment.GetEnvironmentVariable("MAESTRO_OWNERSHIP_EVIDENCE");
             if(!string.IsNullOrEmpty(evidence)){Directory.CreateDirectory(evidence);File.WriteAllText(Path.Combine(evidence,"native-ownership.json"),JsonUtility.ToJson(editor.Ownership.Observe()));}
         }
+        IEnumerator HandoffMoves(string identity,AvatarSpatialMode mode)
+        {
+            var start=avatar.transform.position;
+            for(int i=0;i<90&&Vector3.Distance(start,avatar.transform.position)<.15f;i++){
+                if(mode==AvatarSpatialMode.Manual)motion.ManualDirection(identity,Vector3.right);
+                yield return null;
+                Assert.That(motion.OwnedBy(identity),Is.True,motion.Status);
+            }
+            Assert.That(Vector3.Distance(start,avatar.transform.position),Is.GreaterThanOrEqualTo(.15f),motion.Status);
+        }
+        [UnityTest] public IEnumerator WalkingHandoffSameOwnerRestartsFollowAndChangesToAndFromManual()
+        {
+            Surface(new(0,-.1f,0),new(12,.2f,12));Tutor();Ready();
+            viewer.transform.position=new(0,1.6f,5);
+            foreach(var mode in new[]{AvatarSpatialMode.Follow,AvatarSpatialMode.Follow,AvatarSpatialMode.Manual,AvatarSpatialMode.Follow}){
+                Assert.That(motion.Begin("direct",mode,out var error),Is.True,error);
+                yield return HandoffMoves("direct",mode);
+                Assert.That(editor.Ownership.Covers("direct",new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim("maestro","locomotion")}),Is.True);
+            }
+            motion.Stop();Assert.That(navigation.Ready,Is.False);
+            Assert.That(System.Linq.Enumerable.Any(editor.Ownership.Observe().owners,x=>x.id=="direct"),Is.False);
+        }
+        [UnityTest] public IEnumerator WalkingHandoffBetweenDirectOwnersKeepsMovingAndOldOwnerCannotStopIt()
+        {
+            Surface(new(0,-.1f,0),new(12,.2f,12));Tutor();Ready();
+            viewer.transform.position=new(0,1.6f,5);
+            Assert.That(motion.Begin("first",AvatarSpatialMode.Follow,out var error),Is.True,error);
+            yield return HandoffMoves("first",AvatarSpatialMode.Follow);
+            Assert.That(motion.Begin("second",AvatarSpatialMode.Manual,out error),Is.True,error);
+            motion.End("first");yield return HandoffMoves("second",AvatarSpatialMode.Manual);
+            Assert.That(System.Linq.Enumerable.Any(editor.Ownership.Observe().owners,x=>x.id=="first"),Is.False);
+            motion.End("second");Assert.That(motion.Active,Is.False);Assert.That(navigation.Ready,Is.False);
+        }
+        [UnityTest] public IEnumerator WalkingHandoffFromProgramPreservesGestureAndMovesUnderDirectControl()
+        {
+            Surface(new(0,-.1f,0),new(12,.2f,12));Tutor();Ready();
+            viewer.transform.position=new(0,1.6f,5);
+            var scheduler=new RuleScheduler(new RoomRuleActions(editor,authoring));
+            Newtonsoft.Json.Linq.JObject Call(string id)=>new(){["id"]=id,["version"]=1,["arguments"]=new Newtonsoft.Json.Linq.JObject{["target"]="maestro",["seconds"]=10}};
+            Assert.That(scheduler.Invoke(Call("avatar.follow.user"),0,out var following,out var error),Is.True,error);
+            var wave=Call("animation.play");wave["arguments"]["source"]=Newtonsoft.Json.Linq.JObject.Parse("{\"kind\":\"gesture\",\"gesture\":\"greeting\"}");wave["arguments"]["channel"]="upperBody";
+            Assert.That(scheduler.Invoke(wave,0,out var waving,out error),Is.True,error);
+            yield return HandoffMoves(following,AvatarSpatialMode.Follow);
+            tracked=false;
+            Assert.That(motion.Begin("direct",AvatarSpatialMode.Follow,out _),Is.False);
+            Assert.That(motion.OwnedBy(following),Is.True);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
+            tracked=true;
+            Assert.That(motion.Begin("direct",AvatarSpatialMode.Follow,out error),Is.True,error);
+            yield return HandoffMoves("direct",AvatarSpatialMode.Follow);
+            Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
+            Assert.That(scheduler.RunningCount,Is.EqualTo(1),"Only the independent upper-body gesture remains");
+            motion.Stop();Assert.That(navigation.Ready,Is.False);Assert.That(avatar.UpperBodyOwnedBy(waving),Is.True);
+            scheduler.StopAll();
+        }
+        [UnityTest] public IEnumerator WalkingHandoffLosingGroundDuringCleanupRefusesReplacementAndReleasesItsOwner()
+        {
+            var ground=Surface(new(0,-.1f,0),new(12,.2f,12));Tutor();Ready();
+            var claims=new[]{new Maestro.Quest.Programs.BehaviourCatalog.Claim("maestro","locomotion")};
+            Assert.That(editor.Ownership.TryAcquire("old","Old movement",RoomActorRole.Program,claims,
+                _=>ground.SetActive(false),out var old,out var error),Is.True,error);
+            Assert.That(motion.Begin("direct",AvatarSpatialMode.Follow,out error),Is.False,"Handoff must recheck ground after cleanup");
+            Assert.That(error,Is.Not.Null.And.Not.Empty);Assert.That(old.Held,Is.False);Assert.That(motion.Active,Is.False);
+            Assert.That(navigation.Ready,Is.False);
+            Assert.That(System.Linq.Enumerable.Any(editor.Ownership.Observe().owners,x=>x.id=="direct"),Is.False);
+            yield return null;Assert.That(motion.Active,Is.False);
+        }
         [UnityTest] public IEnumerator SuccessfulDirectTakeoverRetiresQueuedMovementButRefusedInputLeavesItIntact()
         {
             Surface(new Vector3(0,-.1f,0),new Vector3(12,.2f,12));Tutor();Ready();

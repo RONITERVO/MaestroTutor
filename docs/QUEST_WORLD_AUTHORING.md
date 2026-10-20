@@ -1220,6 +1220,26 @@ sophisticated planner could find one. It must never report arrival from an elaps
 timer or use that limitation to bypass the selected real-room collision policy.
 Current verification and physical acceptance status are in the delivery record.
 
+## Maestro movement handoffs — 2026-10-20
+
+Replacing an active Maestro walk must prepare the replacement's navigation after
+the previous owner has stopped. This applies to repeating Follow, switching
+between Follow and the avatar movement stick, and taking over a program through
+direct controls. A readiness check before takeover is not the replacement's
+navigation lifetime: ownership callbacks can release the old route or change its
+ground.
+
+The new owner rechecks accepted ground before reporting that it started. If that
+ground disappears during cleanup, the replacement is refused and its reservation
+and map are released; the interrupted instruction does not resume automatically.
+An unrelated upper-body gesture retains its own ownership. Stop continues to
+release the walking owner's native references, and an old owner's later End
+cannot stop the replacement.
+
+This uses the existing controls, catalog and saved actor environment settings.
+It adds no alternate navigation system, saved-data migration or crowd simulation.
+Current desktop evidence and device acceptance limits are in the delivery record.
+
 ## Shared grounded following — 2026-10-13
 
 `object.follow` exposes “Follow someone” through the same catalog, book forms,

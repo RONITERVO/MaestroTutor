@@ -62,12 +62,7 @@ namespace Maestro.Quest.Avatar
         {
             if (string.IsNullOrEmpty(identity)) { error = "Movement needs an action owner"; return false; }
             if (!CanBegin(value,out error,allowAuthoringTakeover:role==RoomActorRole.Control)) { Say(error); return false; }
-            if (value != AvatarSpatialMode.Look)
-            {
-                float scale = transform.lossyScale.y;
-                if (!navigation || !navigation.Prepare(.25f*scale,1.7f*scale,out error,item)) { Say(error ?? "Room navigation is unavailable"); return false; }
-                if (!navigation.Sample(transform.position,.25f,out _)&&!navigation.InitialInputsNeeded(out _)) { error = "Place Maestro's feet near a supported walking surface, then try walking"; Say(error); return false; }
-            }
+            if(value!=AvatarSpatialMode.Look&&!PrepareWalking(out error)){Say(error);return false;}
             var claims=value==AvatarSpatialMode.Look?new[]{new BehaviourCatalog.Claim("maestro","gaze")}:
                 new[]{new BehaviourCatalog.Claim("maestro","locomotion"),new BehaviourCatalog.Claim("maestro","gaze")};
             // Restarting our own direct command is not a borrowed scheduler lease.
@@ -83,10 +78,24 @@ namespace Maestro.Quest.Avatar
             if(role==RoomActorRole.Control)editor.GetComponent<Maestro.Quest.Rules.RoomRules>()?.Scheduler.CancelQueuedConflicting(claims);
             // An acquired takeover already stopped an older actor via the arbiter.
             // A delegated module borrows its scheduler's reservation.
-            Stop();ownershipLease=acquired;
+            Stop();
+            // Stop retires the previous actor's map and input demands, including
+            // when called by an ownership callback. Readiness checked before
+            // that handoff cannot stand in for the replacement's preparation.
+            if(value!=AvatarSpatialMode.Look&&!PrepareWalking(out error)){
+                acquired?.Dispose();if(navigation)navigation.ReleaseActor(item);Say(error);return false;
+            }
+            ownershipLease=acquired;
             manualDirection=Vector3.zero; manualAt=Time.unscaledTime; owner = identity; avoidRouteSolids=false; mode = value; ResetAttention(); yaw = pitch = 0; corners = Array.Empty<Vector3>(); corner = 0; nextPath = 0;
             avatar.SetEditing(true,preserveUpperBody:true); avatar.SpatialWalk(0);
             Say(value == AvatarSpatialMode.Manual ? "Maestro stick active — center it to stop" : value == AvatarSpatialMode.Follow ? "Following you — Stop or grip Maestro to end" : "Looking at you — Stop or pose Maestro to end"); return true;
+        }
+        bool PrepareWalking(out string error)
+        {
+            error="Room navigation is unavailable";float scale=transform.lossyScale.y;
+            if(!navigation||!navigation.Prepare(.25f*scale,1.7f*scale,out error,item))return false;
+            if(navigation.Sample(transform.position,.25f,out _)||navigation.InitialInputsNeeded(out _))return true;
+            error="Place Maestro's feet near a supported walking surface, then try walking";return false;
         }
         public void End(string identity) { if (owner == identity) Stop(); }
         public void Stop()

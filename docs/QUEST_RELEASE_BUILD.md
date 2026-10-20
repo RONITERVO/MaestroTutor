@@ -911,3 +911,27 @@ No APK/AAB, signing, installation, provider use, deployment or Meta operation is
 part of this checkpoint. Installed **D85F3CB7 / f58dab48** and packaged
 **5899972E / 5100f612** remain unchanged. Device/provider holds and all release
 acceptance gaps remain open.
+
+
+## Walking handoff compile checkpoint — 2026-10-20
+
+The walking replacement fix passed 1,519 EditMode and 2,159 PlayMode tests
+(three optional private-input skips), 3,218 web tests and the full existing
+offline original-book/headless journeys before compilation. Four native cases
+exercise repeated Follow, Follow/Manual transitions, direct/program ownership
+handoffs and ground disappearing during cleanup. They check actual movement,
+independent upper-body ownership and release of the replacement on refusal.
+
+Unsigned development export and compilation passed with 41 executed tasks,
+zero Unity errors and 5 warnings. Generated Begin includes
+both preparation calls. The manifest remains Quest 3-only with one GameActivity
+and `com.maestro.quest.development`. All 22 selected ARM64 libraries pass
+16 KiB ELF alignment. Native browser results are 128 passed/two skipped against
+106 unchanged inputs; lint reports zero errors and 6 warnings.
+
+Evidence: `.quest-evidence/movement-handoff-20261020/android/verified.json`,
+`movement-handoff-il2cpp.json` and the exact-source desktop receipts. Existing
+book/headless journeys do not add a new book-UI handoff scenario. No APK/AAB,
+signing, installation, provider use, deployment or Meta operation occurred.
+Installed **D85F3CB7 / f58dab48**, packaged **5899972E / 5100f612**, device/provider
+holds and all broader release acceptance gaps are unchanged.
