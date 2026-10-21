@@ -47,7 +47,7 @@ namespace Maestro.Quest.Interaction {
             movement.Tick();if(keeping)movement.KeepDistance();
         }
         public override RuleActionState State(out string error){Tick();error=failure??(movement.Failed?movement.Reason:null);return error==null?RuleActionState.Ready:RuleActionState.Failed;}
-        public override bool Complete(out string error){if(State(out error)!=RuleActionState.Ready)return false;movement.Remember();return true;}
+        public override bool Complete(out string error){if(State(out error)!=RuleActionState.Ready)return false;return movement.Remember(out error);}
         public override JObject Result {get {var result=movement.Result;result["state"]=movement.Status;result["reason"]=movement.Reason.Length>256?movement.Reason[..256]:movement.Reason;return result;}}
         public override void Stop(bool preservePlacement){if(stopped)return;stopped=true;movement.Stop(preservePlacement);}
     }

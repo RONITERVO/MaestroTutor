@@ -15,7 +15,7 @@ namespace Maestro.Quest.Interaction {
         public override float Seconds=>0;
         public override void Tick()=>movement.Tick();
         public override RuleActionState State(out string error){Tick();error=movement.Failed||movement.Blocked?movement.Reason:null;return error!=null?RuleActionState.Failed:movement.Arrived?RuleActionState.Ready:RuleActionState.Preparing;}
-        public override bool Complete(out string error){if(State(out error)!=RuleActionState.Ready){error??="The actor has not arrived";return false;}movement.Remember();return true;}
+        public override bool Complete(out string error){if(State(out error)!=RuleActionState.Ready){error??="The actor has not arrived";return false;}return movement.Remember(out error,requireArrival:true);}
         public override JObject Result=>movement.Result;
         public override void Stop(bool preservePlacement)=>movement.Stop(preservePlacement);
     }

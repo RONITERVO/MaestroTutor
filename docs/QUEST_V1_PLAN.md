@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[surface swimming checkpoint](#surface-swimming) records this increment's
+[shared movement checkpoint](#shared-locomotion-lifetime) records this increment's
 implementation, verification progress and remaining work. The
 [world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
 contract; dated entries below retain the development evidence.
@@ -15456,3 +15456,74 @@ This is compilation evidence, not an installed package or physical acceptance.
 No APK/AAB, signing, installation, paid provider, deployment or Meta action was
 performed. Shore transitions, continuous aquatic behavior, larger-world capacity,
 audio quality and the remaining device/provider/release gates remain unfinished.
+
+
+<a id="shared-locomotion-lifetime"></a>
+
+## Shared locomotion lifetime — 2026-10-21
+
+Grounded walking/following and aquatic travel now use one native root-control
+lifetime. A movement phase can retire its route and gait resources while retaining
+the actor's physics owner, shared capacity slot, original five-minute deadline,
+accepted pose/revision and interruption history. The next phase must use the same
+actor and workspace; it cannot escalate from locomotion to full-pose ownership.
+The outer capability remains responsible for its scheduler claims and final Stop.
+
+An external edit at handoff is checked before remembering placement, so that
+checkpoint cannot erase the interruption. Disposing the lifetime synchronously
+stops its attached solver before admitting a replacement. Each attachment
+reasserts pose control before the next gait captures the skeleton.
+
+Focused verification in `.quest-evidence/locomotion-lifetime-20261021/`
+previously passed 108 PlayMode cases, including nine new lifetime/pose cases.
+They cover a dynamic actor held through ground-to-water preparation while all
+four capacity slots are occupied, submerged-to-surface travel through one owner,
+Maestro walking phases, edit/pause interruption, early disposal, actor/pose-scope
+isolation and replacement pose protection. A retained red regression reproduced
+the previous idle animator changing a water-phase joint by about 146 degrees;
+the corrected handoff preserves that pose across animation frames.
+
+The pre-amendment full run was intentionally stopped after 1,541 EditMode passes;
+its partial PlayMode log is retained and is not a complete-suite result. Its web
+run passed 3,224 tests, both TypeScript checks and catalog provenance. No journey
+or Android compile started on that source.
+
+Five further regressions reproduced false completion: walking, following and
+swimming accepted an actor edit made after Ready in the same frame, and walking
+and surface swimming accepted a removed floor or changed waterline. Completion
+now freshly validates ownership; finite travel re-proves the current stance or
+habitat/goal without an extra root-motion step. Pending inputs invalidate cached
+arrival, and a rising surface must be reached gradually before completion.
+The corrected focused suite passed all 113 cases (14 new), with clean Unity
+exits. The complete current-source verification then passed:
+
+- 1,541 EditMode and 2,202 PlayMode tests, with 3 named private-model/motion
+  skips and the discovered inventory reconciled.
+- 3,224 web tests, both TypeScript checks and generated-catalog provenance.
+  Catalog actions, events, facts, adapters and limits remain unchanged; only
+  source provenance changes for this internal refactor.
+- Full sparse offline original-book and Headless journeys, both with clean
+  client/Editor exits: book `7cb71280f8414b109656d3a0638f1e10`
+  (4,250 observations) and Headless `549c657334e746ef9c15dd512c60a964`
+  (2,498 observations). They retain original save/Undo
+  checks and exercise actual submerged/surface travel through the shared API.
+  Current save checkpoints are not final post-travel disk reload or Android
+  suspend/process-loss acceptance.
+- Fresh unsigned development Android compilation: 0 Unity errors,
+  5 warnings, 41 Gradle tasks and 22 selected ARM64 libraries
+  with 16 KiB ELF load alignment. Generated IL2CPP includes the shared owner and
+  fresh completion checks. Browser evidence has 128 passes/2 skips
+  against 106 unchanged inputs; lint has no errors and 6 warnings.
+- 3,444 native inputs and 5,369 source hashes checked against the frozen
+  source; all 14 protected files remain unchanged. Evidence is under
+  `.quest-evidence/locomotion-lifetime-20261021/`.
+
+No APK/AAB, signing, installation, paid-provider call, deployment or Meta action
+was performed. These are desktop/native integration and compilation results, not
+new physical Quest acceptance.
+
+This is the ownership foundation for shore transitions. It does not yet expose a
+combined dry-to-water or water-to-ground action: support, slope, continuous wet
+volume and solid clearance still need a shared boundary proof. Continuous aquatic
+behavior, larger-world capacity, audio quality and remaining provider/device and
+Store acceptance remain required work.
