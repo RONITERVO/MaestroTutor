@@ -73,7 +73,7 @@ namespace Maestro.Quest.Avatar
             if(!editor||!editor.isActiveAndEnabled||!item||!item.isActiveAndEnabled||editor.RuntimeGate.Held||paused||!focused)return false;
             reason="authored pose";
             var avatar=item.GetComponent<MaestroAvatar>();
-            if(item.Grab?.isSelected==true||item.PoseLocked||workshop&&workshop.ControlsTarget(target)||
+            if(AquaticMovement.HasOwner(item)||item.Grab?.isSelected==true||item.PoseLocked||workshop&&workshop.ControlsTarget(target)||
                 avatar&&(avatar.PoseRig&&avatar.PoseRig.IsPosing||avatar.PoseRig&&avatar.PoseRig.IsHolding||!avatar.FootPresentationAllowed))return false;
             var body=item.GetComponent<Rigidbody>();var rigid=item.GetComponent<RigidRoomItem>();
             if(body&&!body.isKinematic||rigid&&(rigid.Dynamic||rigid.AnimationOwned)&&!ImportedObjectWalk.Owns(item)||

@@ -1419,7 +1419,7 @@ receipt without a new movement owner. Two ordinary Undo actions remove the two
 test creations after physics is paused and placement has settled.
 
 The Book journey independently creates both Box robots through the existing
-Create object form, starts physics, fills the generated Walk to a place form and
+Create object form, starts physics, fills the generated Move to a place form and
 checks the completed native receipt, longer travelled distance and actual position. It captures
 `book-native-grounded-travel.json` and its rendered form, then pauses physics and
 removes the fixture using Undo. Both paths use an explicitly synthetic floor.
@@ -1434,7 +1434,7 @@ on one robot and independently walks its exact leader. It reads active
 the requested separation, then checks inactive status and terminal receipt replay.
 `native-grounded-following.json` preserves those observations and both receipts.
 
-The Original Book journey repositions the leader using “Walk to a place”, opens
+The Original Book journey repositions the leader using “Move to a place”, opens
 the generated “Follow someone” form, selects an object leader, and starts the
 timed action. It verifies actual movement, keeping-distance completion and the
 same passive fact. `book-native-grounded-following.json` and the rendered
@@ -1812,3 +1812,30 @@ reacquires an idle area. Runtime/assets/packages are identical across those runs
 and the corrected native suite; all application and Unity processes exited
 successfully. Evidence and explicit test-rerun accounting are in
 `.quest-evidence/component-save-20261017/`.
+
+
+## Shared submerged movement coverage
+
+The current Book journey creates a fixed liquid vessel and actor through visible
+shared controls, starts physics, chooses **Move to a place → Swim inside one
+habitat**, and selects exact actor/habitat identities. It checks travelled distance
+and the final native root position. `book-native-aquatic-travel.json` records the
+receipt and coordinates; its screenshot is captured before navigating away from
+the completed action panel to inspect the actor.
+
+The Headless journey uses the same catalog/action path, pauses physics while
+creating the fixed fixture, and starts it again before travel. It samples active
+`object.navigation` status and intermediate positions, verifies actual arrival,
+and replays the terminal run ID without creating a second movement owner.
+`native-aquatic-travel.json` contains these checks. The fixture is wholly
+submerged in a synthetic authored volume; this is not a claim about shore entry,
+surface swimming, real-provider action selection or physical Quest behavior.
+
+Native regression coverage includes continuity across accepted liquid checkpoints,
+stopping after drains or newly blocking solids, and no revival after an actor
+edit. The original Book screenshot-locator failure and the reproduced checkpoint
+failure are retained alongside corrected-source evidence. Require the complete
+journeys' verified receipts, matching source hashes and clean client/editor exits;
+a successful individual movement receipt is not a completed integration run.
+See [the current delivery evidence](QUEST_V1_PLAN.md#owned-submerged-movement)
+for the latest results and remaining release boundaries.

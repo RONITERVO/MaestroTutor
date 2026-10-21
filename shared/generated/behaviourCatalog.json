@@ -35758,64 +35758,251 @@
     {
       "id": "object.navigate",
       "version": 1,
-      "label": "Walk to a place",
+      "label": "Move to a place",
       "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32,
-            "x-resource": "object"
-          },
-          "mode": {
-            "type": "string",
-            "enum": [
-              "walk"
-            ]
-          },
-          "destination": {
+        "oneOf": [
+          {
             "type": "object",
             "properties": {
-              "x": {
-                "type": "number",
-                "minimum": -25.0,
-                "maximum": 25.0
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
               },
-              "y": {
-                "type": "number",
-                "minimum": -25.0,
-                "maximum": 25.0
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "walk"
+                ]
               },
-              "z": {
+              "destination": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -25.0,
+                    "maximum": 25.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -25.0,
+                    "maximum": 25.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -25.0,
+                    "maximum": 25.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "speed": {
                 "type": "number",
-                "minimum": -25.0,
-                "maximum": 25.0
+                "minimum": 0.2,
+                "maximum": 1.2
               }
             },
             "required": [
-              "x",
-              "y",
-              "z"
+              "target",
+              "mode",
+              "destination",
+              "speed"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "x-features": [
+              "groundedTravel.v1"
+            ],
+            "title": "Walk on accepted ground"
           },
-          "speed": {
-            "type": "number",
-            "minimum": 0.2,
-            "maximum": 1.2
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "swim"
+                ]
+              },
+              "habitat": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "destination": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -25.0,
+                    "maximum": 25.0
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -25.0,
+                    "maximum": 25.0
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -25.0,
+                    "maximum": 25.0
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              },
+              "facing": {
+                "type": "string",
+                "enum": [
+                  "travel",
+                  "keep"
+                ]
+              },
+              "gait": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Keep independent part animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embedded"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "clip": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 63.0
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "clip"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Embedded animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "library"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "motionId": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{32}$",
+                        "maxLength": 32
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "motionId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Exact library motion"
+                  }
+                ],
+                "x-discriminators": [
+                  "source"
+                ],
+                "description": "Optional full imported gait. Exact modelHash plus anchorNode from object.animation.nodes fixes the translation anchor while sampling every source node and blend shape. clip is zero-based; library keeps the exact motionId and rig. rate scales animation time, not travel speed. Omitted/none preserves independent recipe-part animation and does not select a walk clip."
+              }
+            },
+            "required": [
+              "target",
+              "mode",
+              "habitat",
+              "destination",
+              "speed",
+              "facing"
+            ],
+            "additionalProperties": false,
+            "x-features": [
+              "aquaticTravel.v1"
+            ],
+            "title": "Swim inside one habitat"
           }
-        },
-        "required": [
-          "target",
-          "mode",
-          "destination",
-          "speed"
         ],
-        "additionalProperties": false,
-        "x-features": [
-          "groundedTravel.v1"
-        ]
+        "x-discriminators": [
+          "mode"
+        ],
+        "title": "Movement"
       },
       "duration": "completion",
       "ownership": "exclusiveChannels",
@@ -35827,9 +36014,9 @@
         "target.unheld",
         "authoring.inactive",
         "physics.running",
-        "navigation.floorReady"
+        "navigation.environmentReady"
       ],
-      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking/following actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches normally fail at the last accepted place. If a blocking object still has an active walking owner, wait up to three real-time seconds with retries no faster than every 0.35 seconds; object.navigation reports waitingForActor. A new allowance requires at least 0.1 metre of accepted travel. Waiting never claims arrival, moves the other actor, or overrides either actor’s ownership or collision policy. A persistent obstruction fails after the wait. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting, swimming or collision checks for animated limbs.",
+      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking, following and swimming actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches normally fail at the last accepted place. If a blocking object still has an active walking owner, wait up to three real-time seconds with retries no faster than every 0.35 seconds; object.navigation reports waitingForActor. A new allowance requires at least 0.1 metre of accepted travel. Waiting never claims arrival, moves the other actor, or overrides either actor’s ownership or collision policy. A persistent obstruction fails after the wait. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting or collision checks for animated limbs. For mode=swim, destination is the object's root in authored room coordinates, not its walking foot. Choose one exact habitat; the complete accepted root-collision envelope must already fit below its current liquid surface. This is submerged travel, not automatic entry, surfacing, walking on water or teleporting to a nearby pool. A bounded three-dimensional search attempts a route within two metres of the direct corridor. Every actual translation and shortest-arc turn rechecks current live liquid, terrain and solid geometry, with the same real-room participation as this actor. Missing native inputs prepare under an owned deadline. Accepted world or quantity changes refresh prepared inputs and replan from the current body; every next step must still fit. Drained or unavailable habitat, saturated queries and blocked routes cannot report arrival. facing=travel turns before each segment; keep preserves orientation. Optional gait samples an exact imported source and translation anchor; no gait leaves recipe parts independently animatable. A selected full imported gait owns the complete target; no gait owns locomotion (and Maestro gaze). Ground and water actions share four slots. A route lasts at most five minutes and never resumes from saved data. Query envelopes are conservative boxes, not animated skin/limb collisions.",
       "example": {
         "target": "maestro",
         "mode": "walk",
@@ -35982,7 +36169,7 @@
         "physics.running",
         "navigation.floorReady"
       ],
-      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported characters currently move their root without an automatic gait, and a separate whole-target imported animation conflicts. Maestro uses its selected gait. This does not invent foot planting, swimming, crowd steering or head/limb posing. Four concurrent walking/following actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data.",
+      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported characters currently move their root without an automatic gait, and a separate whole-target imported animation conflicts. Maestro uses its selected gait. This does not invent foot planting, swimming, crowd steering or head/limb posing. Four concurrent walking, following and swimming actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data.",
       "example": {
         "target": "maestro",
         "leader": {
@@ -46583,8 +46770,8 @@
           "distance": "number"
         }
       },
-      "label": "Walking action status",
-      "description": "Passive state of the current shared object.navigate or object.follow owner, including planning, waitingForActor, moving, keepingDistance, arrived, blocked or failed. position is the native root in authored room metres; distance is accepted travel in this operation. Inactive means no shared walking owner (not proof that every other kind of motion has stopped). Legacy Maestro controls and animation use their existing facts. Missing native objects are unavailable. Reading does not load, move, start physics or retry an action.",
+      "label": "Movement action status",
+      "description": "Passive state of the current shared object.navigate or object.follow owner, including preparingWorld, preparingAnimation, turning, planning, waitingForActor, moving, keepingDistance, arrived, blocked or failed. position is the native root in authored room metres; distance is accepted travel in this operation. Inactive means no shared movement owner (not proof that every other kind of motion has stopped). Legacy Maestro controls and animation use their existing facts. Missing native objects are unavailable. Reading does not load, move, start physics or retry an action.",
       "input": {
         "type": "object",
         "properties": {
@@ -46606,6 +46793,57 @@
       "features": [
         "factQueries.v1",
         "groundedFollowing.v1"
+      ]
+    },
+    {
+      "id": "object.animation.nodes",
+      "version": 1,
+      "type": {
+        "record": {
+          "modelHash": "text",
+          "total": "number",
+          "next": "number",
+          "nodes": {
+            "list": {
+              "record": {
+                "index": "number",
+                "parent": "number",
+                "name": "text"
+              }
+            }
+          }
+        }
+      },
+      "label": "Imported animation nodes",
+      "description": "Inspect eight source nodes of the exact loaded model for an explicit gait anchor. Parent -1 means no parent in the imported node list. Indices belong to modelHash; do not reuse them on another model. Read the next offset until next=-1. This includes non-humanoid nodes and does not choose an anchor or animation, load a model or move the object.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0.0,
+            "maximum": 512.0
+          }
+        },
+        "required": [
+          "target",
+          "offset"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro",
+        "offset": 0
+      },
+      "features": [
+        "factQueries.v1",
+        "aquaticTravel.v1"
       ]
     },
     {
@@ -47775,7 +48013,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidFootPlacement.cs",
-      "sha256": "766ed2623d5fc17e80f6647946f7d3b2632dccedb943a1a5646d734f5c1a79b2"
+      "sha256": "974c32db16c8f6779adf054b1ba73d8db998abfa780bd63757e850bddbe08b5f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Avatar/HumanoidFootPresentation.cs",
@@ -48006,6 +48244,10 @@
       "sha256": "9bd2ed856d0b59795fde2c95e571362f3caff541fae2c35de05d0148b128ebdb"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationNodeFacts.cs",
+      "sha256": "706b9d0416bc303e70bd62b1720bf453f2e91a3550728a550acbee493750a8a8"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AnimationPlayCapability.cs",
       "sha256": "92d9678de3662d15d9522feabd1a6f339bef46cecafaceba902b224ab2549a34"
     },
@@ -48020,6 +48262,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
       "sha256": "bfb78682b6f94157552ae3aa023bb2aebac6469c5bd0abd66a9912f367e63fcf"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AquaticNavigationSchema.cs",
+      "sha256": "bb93329e31c1e22a733130a99873508b711af75f372315d0feb32eae3051a652"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AudioCapabilities.cs",
@@ -48187,7 +48433,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
-      "sha256": "d4788d6977245a7f4816d37555bd61db25184dda5adec62f1fed9b0fc9537ab5"
+      "sha256": "d9389673a1ff749c3b5a9b3e0997b5dfde4d3a4d7962bdce199cef0218d395a3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
@@ -48303,7 +48549,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
-      "sha256": "b83b6ea39f5f5c6af0093d7ea2675235928c19fa49b8fb7b5de0689698243ab5"
+      "sha256": "9df4e9329fe98575b3945cc8804246a35fc8619439a829b81de718b48020e9dd"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
@@ -49075,7 +49321,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "52f2302366422f3289bc91b354594b378cbe84c7c6f30471e72618e5879aa770"
+      "sha256": "aaeb35eaed1515e94786cb51f9a1ea5cad5a36306c54fb41147223bfe8d0f7bb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -49159,7 +49405,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHabitatQueries.cs",
-      "sha256": "c72f524208f293c563624f8d68fde63f233563c82fc6bde90759acc9a5a1d22f"
+      "sha256": "6aaccdea958abb720cdf7e5471b5f101e2de6df973eb50ba645db281207de31a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightField.cs",
@@ -49854,6 +50100,10 @@
       "sha256": "8772b3866bc5f44e56c3548e73bbf086e62343911edcd4130d3a34370a9678ff"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/AquaticMovement.cs",
+      "sha256": "84b46ce2387af0e9b118abfac2d71004bd25361a5024102daa003c596ecb123f"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
       "sha256": "d96ea7e3d167dd7d0abafe88251b95085b7d0667f7ebeb725306df202c9aae67"
     },
@@ -49879,7 +50129,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
-      "sha256": "4887ca8331a84dfddb2279a481bdc4aa4fa18eb72d3b6277f7701566efa80a47"
+      "sha256": "ce193fc927ea308f68020ad847e09753d451463124f7311e9dd42bb3ce3ef46f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
@@ -49888,6 +50138,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/HeldRoomProp.cs",
       "sha256": "fffa849a6992ad924ead5b95b50772b7887648307b10c4791d6679087d9fea3c"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ImportedLocomotionPose.cs",
+      "sha256": "0c7922543c3e6f708851a4a0d4744bd7d798168a71ac48ee1cb1e91d1940b9c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ImportedObjectWalk.cs",
@@ -49950,8 +50204,20 @@
       "sha256": "3f1c79540671baeb9012a80bf90585e8f8521e1376753b1d512f1af938435ab1"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAquaticClearance.cs",
+      "sha256": "37f7ba561acb8bb09d395f8f396d10e56ea2ded0fa37932cb59b86a3750918e3"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAquaticRoute.cs",
+      "sha256": "8a184033f3108037772024e37ebbc24e4b9198fd9d8e7cf69f948b91dd5dd298"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBallistics.cs",
       "sha256": "cf7330a5c7c2d9ae61fe969cf38b2fd7b39c04728d8f1505d2e1ae83f85818d9"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomBoxMotor.cs",
+      "sha256": "0836e10d686d72181c796857c6721c8cdfde3771714c79b462b0d415507a297c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomCatch.cs",
@@ -50004,6 +50270,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomItem.cs",
       "sha256": "cd3f630923aaa2968462486953f1e268e1c2686a9a896c054db81925346dac4f"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomLocomotionBudget.cs",
+      "sha256": "cfb296eb117e2949b725f30d6434ea370ca815b4ce0979b20f03ee7dba40fc33"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
@@ -50084,6 +50354,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSpatialInputs.cs",
       "sha256": "e0d16cc64dc1c940ec3e6e26510e312b6a4c0987d04c1a333a42add52ab3d39d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSweptBody.cs",
+      "sha256": "b452c46b7833cafaf513b31007f03f5975d337a09136ba29891dee90fd6e0ec6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",
@@ -50327,7 +50601,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "d18ffa7576d3076459d7195d15f20c004e7929cd010d73025f331b877f1a4c90"
+      "sha256": "b19c6963c21589aec5285b2058c71b73b1cb8d205bf30fbc80dbbdfcab42a44a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

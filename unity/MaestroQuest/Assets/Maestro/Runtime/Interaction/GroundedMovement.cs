@@ -12,7 +12,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction {
     /// <summary>One owned walking body and planner, shared by fixed journeys and following.</summary>
     internal sealed class GroundedMovement {
-        internal const int MaximumActive=4;
+        internal const int MaximumActive=RoomLocomotionBudget.MaximumActive;
         static readonly List<GroundedMovement> active=new();
         readonly RoomEditor editor;readonly RoomItem item;readonly string target,session;
         Vector3 destination;readonly float speed;readonly string mode;readonly Func<Collider,bool> obstacle;
@@ -35,7 +35,7 @@ namespace Maestro.Quest.Interaction {
             error="Grounded movement needs an active target and room";
             if(!editor||!item||!item.isActiveAndEnabled||!editor.isActiveAndEnabled||editor.RuntimeGate.Held)return false;
             error="Start physics with accepted ground before walking";if(!editor.PhysicsWorld||!editor.PhysicsWorld.SimulationActive||editor.PhysicsWorld.IncludesRealRoom(item)&&!editor.PhysicsWorld.EnvironmentReady(item))return false;
-            error="Wait for another walking/following action to finish (four active actions maximum)";if(active.Count>=MaximumActive)return false;
+            if(!RoomLocomotionBudget.Available(out error))return false;
             error="Walking needs a tracked viewer and an upright metre-scale world";
             var viewer=editor.Viewer;if(!viewer||!viewer.gameObject.activeInHierarchy||!editor.ViewerTrackingReady||!editor.Frame.Valid||Mathf.Abs(editor.Frame.MetresPerUnit-1)>.0001f||Vector3.Dot(editor.transform.up,Vector3.up)<.99999f)return false;
             error="Release this object and stop authoring before walking";
@@ -71,6 +71,7 @@ namespace Maestro.Quest.Interaction {
             localFoot=item.transform.InverseTransformPoint(foot);
             var host=new GameObject("Owned walking query");host.transform.SetParent(editor.transform,false);navigation=host.AddComponent<RoomNavigation>();navigation.Initialize(editor.PhysicsWorld);navigation.SetVirtualFrame(editor.transform);
             if(!navigation.Prepare(radius,height,out error,item)){navigation.enabled=false;ArtResources.Release(host);navigation=null;return false;}
+            if(!RoomLocomotionBudget.Acquire(this,out error)){navigation.enabled=false;ArtResources.Release(host);navigation=null;return false;}
             owned=true;active.Add(this);started=Time.realtimeSinceStartup;rememberAt=Time.unscaledTime+1;revision=editor.ObjectRevision(target);
             acceptedPosition=item.transform.localPosition;acceptedRotation=item.transform.localRotation;acceptedScale=item.transform.localScale;
             if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,true);}if(avatar){avatar.SetEditing(true,preserveUpperBody:true);avatar.SpatialWalk(0);}
@@ -180,7 +181,7 @@ namespace Maestro.Quest.Interaction {
         internal void Stop(bool preservePlacement){
             if(stopped)return;stopped=true;if(!arrived)failure??="Walking was stopped";
             if(navigation){navigation.enabled=false;ArtResources.Release(navigation.gameObject);navigation=null;}
-            gait?.Dispose();gait=null;if(!owned)return;owned=false;active.Remove(this);if(avatar){avatar.SpatialWalk(0);avatar.SetEditing(false,preserveUpperBody:true);}Remember();if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,false);}
+            gait?.Dispose();gait=null;if(!owned)return;owned=false;active.Remove(this);RoomLocomotionBudget.Release(this);if(avatar){avatar.SpatialWalk(0);avatar.SetEditing(false,preserveUpperBody:true);}Remember();if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,false);}
         }
     }
 }

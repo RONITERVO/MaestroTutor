@@ -1077,6 +1077,27 @@ try{
   await writeFile(join(directory,'book-native-object-feet.json'),JSON.stringify({boundary:'Original generated book controls, current native model/revision and both trims, real ordered completion and fact readback. No provider or headset proof.',gait,before:feetBefore,receipt:feetReceipt,after:feetAfter},null,2));
 
  }
+ // Build aquatic fixtures before the walking fixtures: the later one-shot
+ // Undo checks must still address the two newest authored creations.
+ // Movement itself does not push an Undo entry.
+ const aquaticObjects:string[]=[];
+ for(const [name,y,scale] of [['Book aquatic pool',1,1],['Book aquatic actor',1.4,.5]] as const){
+  await openNamedAction('Create object','object.create');
+  await page.getByLabel('Creation kind',{exact:true}).selectOption('0');
+  await page.getByLabel('Action inputs shape',{exact:true}).selectOption('block');
+  await page.getByLabel('Action inputs name',{exact:true}).fill(name);
+  for(const [key,value] of Object.entries({x:-1.5,y,z:2,scale}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+  const created=await runNamedAction('object.create'),id=created.output!.objectId as string;aquaticObjects.push(id);
+  await openNamedAction('Configure object physics','object.physics.configure');await chooseObject('Action inputs target',id);
+  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+  await page.getByLabel('Action inputs mode',{exact:true}).selectOption('fixed');await page.getByLabel('Action inputs shape',{exact:true}).selectOption('box');await runNamedAction('object.physics.configure');
+ }
+ const [aquaticPool,aquaticActor]=aquaticObjects;
+ await openNamedAction('Configure or fill a liquid container','object.container.edit');await chooseObject('Action inputs target',aquaticPool);
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ for(const [key,value] of Object.entries({'frame position y':.2,radius:.5,height:.6,capacityMl:600000,amountMl:400000}))await page.getByLabel('Action inputs definition '+key,{exact:true}).fill(String(value));
+ const aquaticContainer=await runNamedAction('object.container.edit');
+
  const walkingCreated=await createWalkingRobot('Book walking robot',-3),walkingTarget=walkingCreated.output!.objectId as string;
  const walkingObstacle=await createWalkingRobot('Book walking obstacle',-2),walkingObstacleId=walkingObstacle.output!.objectId as string;
  const attentionResults=[];
@@ -1106,18 +1127,18 @@ try{
  await writeFile(join(directory,'book-native-object-attention.json'),JSON.stringify({boundary:'Original generated book controls aim both a recipe joint and synthetic imported humanoid through the shared action and fact. No provider or physical-headset proof.',results:attentionResults},null,2));
 
  const physicsStarted=await changePhysics('start');assert.equal(physicsStarted.output!.running,true);
- await openNamedAction('Walk to a place','object.navigate');
+ await openNamedAction('Move to a place','object.navigate');
  await chooseObject('Action inputs target',walkingTarget);
  for(const [axis,value] of Object.entries({x:-1,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
  await page.getByLabel('Action inputs speed',{exact:true}).fill('0.65');
  const walkingReceipt=await runNamedAction('object.navigate');
- await page.getByRole('heading',{name:'Walk to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-travel.png')});
+ await page.getByRole('heading',{name:'Move to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-grounded-travel.png')});
  const walkingPosition=(await book.observation(walkingTarget)).position;
  assert.ok(Math.abs(walkingPosition.x+1)<.02&&Math.abs(walkingPosition.y)<.02&&Math.abs(walkingPosition.z+3)<.02);assert.ok(Number(walkingReceipt.output!.distance)>2);
 
  await writeFile(join(directory,'book-native-grounded-travel.json'),JSON.stringify({boundary:'Original book generated create and walk forms around a solid robot obstacle, with real native arrival, travelled distance and position. Explicit synthetic floor; no provider or headset acceptance.',created:walkingCreated,obstacle:walkingObstacle,receipt:walkingReceipt,position:walkingPosition},null,2));
  // Put the independent leader farther away with the existing walking form.
- await openNamedAction('Walk to a place','object.navigate');
+ await openNamedAction('Move to a place','object.navigate');
  await chooseObject('Action inputs target',walkingTarget);
  for(const [axis,value] of Object.entries({x:1,y:0,z:-3}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
  await page.getByLabel('Action inputs speed',{exact:true}).fill('1.2');await runNamedAction('object.navigate');
@@ -1131,16 +1152,26 @@ try{
  const followingPositions={actor:(await book.observation(walkingObstacleId)).position,leader:(await book.observation(walkingTarget)).position};
  const followingGap=Math.hypot(followingPositions.actor.x-followingPositions.leader.x,followingPositions.actor.z-followingPositions.leader.z);assert.ok(followingGap>=.95&&followingGap<=1.12);
 
- const followingStatus=await readResourceFact('object.navigation','Walking action status',{target:walkingObstacleId});assert.equal(followingStatus.active,false);
+ const followingStatus=await readResourceFact('object.navigation','Movement action status',{target:walkingObstacleId});assert.equal(followingStatus.active,false);
  await writeFile(join(directory,'book-native-grounded-following.json'),JSON.stringify({boundary:'Original book generated follow form, live native following, accepted distance and passive status. Explicit synthetic ground, no provider or headset acceptance.',receipt:followingReceipt,positions:followingPositions,gap:followingGap,status:followingStatus},null,2));
  if(gait){
-  await openNamedAction('Walk to a place','object.navigate');await chooseObject('Action inputs target',gait.target);
+  await openNamedAction('Move to a place','object.navigate');await chooseObject('Action inputs target',gait.target);
   for(const [axis,value] of Object.entries({x:-1,y:0,z:-4}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));await page.getByLabel('Action inputs speed',{exact:true}).fill('0.5');
   const receipt=await runNamedAction('object.navigate');assert.ok(Number(receipt.output!.distance)>1.9);
   const after=await readResourceFact('object.walk.settings','Character walking animation',{target:gait.target});
   assert.equal((after.selection as unknown as {playbackStatus:string}).playbackStatus,'inactive');
   await writeFile(join(directory,'book-native-object-walk.json'),JSON.stringify({boundary:'The book starts actual native grounded movement with its saved imported gait; completion releases pose ownership. No headset/provider or calibrated gait claim.',gait,receipt,after},null,2));
  }
+ await openNamedAction('Move to a place','object.navigate');await page.getByLabel('Movement',{exact:true}).selectOption({label:'Swim inside one habitat'});
+ await chooseObject('Action inputs target',aquaticActor);await chooseObject('Action inputs habitat',aquaticPool);
+ for(const [axis,value] of Object.entries({x:-1.2,y:1.45,z:2}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs facing',{exact:true}).selectOption('travel');await page.getByLabel('Action inputs speed',{exact:true}).fill('.3');
+ const aquaticReceipt=await runNamedAction('object.navigate');
+ assert.ok(Number(aquaticReceipt.output!.distance)>.29);
+ await page.getByRole('heading',{name:'Move to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-aquatic-travel.png')});
+ const aquaticPosition=(await book.observation(aquaticActor)).position;
+ assert.ok(Math.abs(aquaticPosition.x+1.2)<.006&&Math.abs(aquaticPosition.y-1.45)<.006&&Math.abs(aquaticPosition.z-2)<.006);
+ await writeFile(join(directory,'book-native-aquatic-travel.json'),JSON.stringify({boundary:'Visible original-book create, physics, liquid and shared movement controls. Actual native turning, submerged movement and receipt. No provider or headset acceptance.',pool:aquaticPool,actor:aquaticActor,container:aquaticContainer,receipt:aquaticReceipt,position:aquaticPosition},null,2));
  await openNamedAction('Look toward something','avatar.look');
  await page.getByLabel('Attention',{exact:true}).selectOption('2');
  for(const [axis,value] of Object.entries({x:2,y:1.6,z:2}))await page.getByLabel('Action inputs focus point '+axis,{exact:true}).fill(String(value));

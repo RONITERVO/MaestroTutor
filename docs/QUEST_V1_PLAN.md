@@ -2,6 +2,13 @@
 
 Status: active implementation. Nothing in this document claims store readiness.
 
+Start with the [accepted product scope](#accepted-product-scope) and
+[release evidence checklist](#release-evidence-still-required). The current
+[owned submerged movement checkpoint](#owned-submerged-movement) records this
+increment's exact implementation, test results and remaining work. The
+[world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
+contract; dated entries below retain the development evidence.
+
 The installed development checkpoint remains **D85F3CB7 / f58dab48**. The latest
 packaged development APK is **5899972E / 5100f612**, not installed. Current desktop
 source is later than both. Device and paid-provider testing remain on hold; no
@@ -103,7 +110,9 @@ existing head layer; see [the attention contract](QUEST_WORLD_AUTHORING.md#direc
 Grounded shallow-water egress now uses that same saved policy; see [shallow exits](QUEST_WORLD_AUTHORING.md#shallow-water-exits).
 Terrain-backed finite reservoirs now share the same liquid inventory and editing
 path; see [terrain water](QUEST_WORLD_AUTHORING.md#terrain-backed-measured-water).
-Swimming and general escape planning remain open.
+Wholly submerged movement now uses the shared movement action; see the
+[current implementation and verification](#owned-submerged-movement).
+Surface swimming, shore transitions and general escape planning remain open.
 Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
@@ -1543,7 +1552,7 @@ open until every required row has matching release-candidate evidence.
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
 | One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
-| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, water quantities/traversal and observation-driven residency/scheduling. | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, swimming, aquatic actors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
+| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned wholly submerged travel; observation-driven residency/scheduling. See the [current movement evidence](#owned-submerged-movement). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, surface swimming, dry/wet transitions, continuous aquatic behaviors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
 | Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
 | Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
 | Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
@@ -15278,3 +15287,88 @@ with 3,410 native inputs, 5,226 source hashes and 14 unchanged protected
 files. Installed **D85F3CB7 / f58dab48** and packaged **5899972E / 5100f612**
 remain unchanged. Device/provider holds and the 31 measured open audio-quality
 findings remain. V1, actual swimming and Store release are incomplete.
+
+<a id="owned-submerged-movement"></a>
+
+## Owned submerged movement — 2026-10-21 (desktop and Android compile verified)
+
+The native implementation extends the existing `object.navigate` action
+with `mode=swim`. The original walk call remains valid. Book controls, program
+blocks and agent calls consume the same catalog; `object.navigation` reports
+the actual movement owner and accepted position.
+
+One exact live liquid habitat bounds the whole root-collision envelope.
+A conservative envelope covers both translation and the complete rotation arc.
+The bounded three-dimensional planner attempts a route around obstacles, and
+every actual turn/step repeats containment and solid clearance. It neither
+teleports into water nor uses a second pool as a substitute. Native dependencies
+must be prepared before movement. Accepted world or liquid-quantity changes
+renew those inputs and discard the old route; the current body and every later
+step still need a fresh containment/collision proof. A drained or unavailable
+habitat ends the journey at its last accepted pose. Actor edits, cancelled or
+failed acquisition, tracking loss and physics pause do not resume old travel.
+Walking, following and swimming share four
+capability-action slots. Physics must already be running.
+
+Real-room participation is per actor. A virtual-only swimmer uses its selected
+accepted liquid habitat as its bounded simulation volume, so the scanned floor
+does not trap it above a virtual lake. A participating actor still respects
+scanned solids and room bounds. All actors respect authored solid geometry.
+Presentation opacity does not choose physics policy.
+
+Root movement and character style remain separate. With no imported gait,
+programs may continue independent recipe-part animations. An explicit imported
+gait samples all source nodes and blend shapes using its exact model/motion
+identity and a user-selected translation anchor. `object.animation.nodes`
+provides bounded source-node discovery. No humanoid rig or automatic walk clip
+is required. A selected full-source gait owns the whole target; stopping restores
+its prior pose and releases its motion lease. Maestro's canonical retargeter and
+foot fitting must not overwrite that full-source aquatic pose.
+
+Verification is recorded in `.quest-evidence/aquatic-continuity-20261021`.
+The corrected full native suite passed **1,536 EditMode and 2,182 PlayMode** tests,
+with three expected private-asset skips and the complete 3,721-case inventory
+reconciled. All **3,223 web tests**, application/probe TypeScript and catalog
+provenance checks passed. Source receipts cover 3,434 native inputs, 5,359 source
+files and 14 unchanged protected files.
+
+Both complete sparse offline journeys passed with clean client/Editor exits:
+
+- Book `f9d649519f8d467cb9260735bbf47d53`: 4,229 observations, shared visible
+  controls, actual submerged travel and the original Undo checks.
+- Headless `8a86c1bbfc754930a982d3ddadde30d6`: 2,495 observations, intermediate
+  movement/status samples, arrival, idempotent terminal replay, paused physics
+  restored after the swim, and the original walking/catch/history checks.
+
+Their save-state samples establish only the recorded checkpoints; they are not
+final post-travel disk reload, forced termination or Android suspend evidence.
+Fresh unsigned development Android export/compilation passed: zero Unity errors,
+five build-report warnings and all 41 Gradle tasks executed. All 22 selected ARM64
+libraries meet 16 KiB ELF load alignment; generated IL2CPP includes the aquatic
+preparation, motor and imported-pose paths. Browser results reuse 128 passes and
+two skips against 106 unchanged inputs; lint has zero errors and six warnings.
+Compiler, shader, mobile-lighting, manifest and Gradle diagnostic signatures match
+the prior compile; they are retained in `android/warning-comparison.json`, not
+reported as warning-free. This created no APK/AAB and did not sign or install.
+No physical-headset or paid-provider acceptance is claimed.
+
+A regression reproduced a real continuity failure: ordinary accepted liquid
+checkpoints changed a vessel revision and stopped an otherwise valid swim.
+The movement owner now renews completed native inputs and replans from its actual
+position. Thirty-five focused cases pass (17 EditMode, 18 PlayMode), including
+continued arrival after a quantity increase, refusal after draining or a newly
+blocking solid, and no revival after an actor edit.
+
+Earlier partial Book runs and the first Headless attempt are retained, not counted
+as passes. Driver corrections captured the action panel before switching views,
+kept new fixtures outside the original Undo sequence, and omitted arguments for
+the parameterless physics fact. The complete corrected journeys above supersede
+those attempts. The native/web suites were reused only after proving unchanged
+application inputs; the driver amendments and catalog argument checks are saved
+alongside the failed evidence.
+
+Remaining v1 work includes surface swimming, explicit dry/wet transitions,
+continuous aquatic behaviours, larger-world admission and measured headset
+performance/immersion. This bounded submerged journey does not complete those
+requirements or the release. Existing device, paid-provider, signing and
+deployment holds remain in force.

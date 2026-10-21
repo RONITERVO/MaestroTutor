@@ -3813,7 +3813,7 @@ or headset test is implied. Resume this acceptance only after the existing devic
 hold is lifted and an appropriate development build is installed.
 
 1. In a checked aligned room with physics explicitly running, create a Box robot
-   and use the book's Walk to a place form. Confirm gradual movement, visible
+   and use the book's Move to a place form. Confirm gradual movement, visible
    arrival and the matching native result. Repeat with Maestro and the selected
    walking animation; a creation needs its own authored animation for a gait.
 2. Put a solid obstacle on a route. The body must stop and report failure rather
@@ -3952,3 +3952,42 @@ Headset and paid-provider work remain on hold.
   availability and reports actual save completion. Finally measure sustained
   frame time and allocations with multiple visible characters and mixed audio,
   water and physics activity; desktop correctness does not establish Quest cost.
+
+
+## Submerged movement — pending device and provider acceptance
+
+This source is newer than the installed development build. Do not infer headset
+acceptance from the synthetic desktop fixtures. Resume these checks after the
+existing device/provider holds are lifted and the appropriate build is installed.
+
+1. In an authored virtual vessel or lake, place a small actor wholly inside the
+   liquid. Start physics, choose **Move to a place → Swim inside one habitat**,
+   and select the actor, exact habitat and an underwater root destination.
+   Confirm gradual turning/travel, the completed receipt and matching position.
+2. Repeat with one virtual-only actor below the scanned floor and one actor that
+   participates in real-room collisions. Confirm their individual policies and
+   authored solid obstacles remain effective at different passthrough opacities.
+   In a mixed view, independently disable real-depth occlusion on the actor's
+   visibility layer to reveal it through the physical floor. Check that this
+   changes visibility without changing collisions; repeat with an opaque backdrop.
+3. Change water quantity while the actor moves but leave enough depth for its
+   complete body. It should continue from its current position. Drain the water
+   or place a blocking solid and verify that it cannot cross an invalid step or
+   falsely report arrival.
+4. Grip or edit the actor, pause physics, stop the action, or lose tracking.
+   Confirm movement stops without a delayed jump and stays stopped after
+   readiness returns. Check save/reload preserves placement without restarting it.
+5. For an imported character, choose the exact model/clip or library motion and
+   source-node translation anchor. Check the full pose against its source preview,
+   including non-humanoid nodes and blend shapes, and restoration after Stop.
+   Separately confirm a recipe creature can animate its parts without an imported
+   gait. Root-box clearance is not evidence for animated-limb contact.
+6. Measure route preparation, repeated water/solid queries, memory and frame time
+   with mixed walking/following/swimming owners up to the shared four-action bound.
+   Check hands/controllers and moving users in the scene; their full contact and
+   comfort acceptance remains open.
+7. Through normal beginner chat and Live, in managed and BYOK modes when available,
+   ask for an underwater creature to move through its habitat without naming APIs.
+   Verify actual scene results, truthful explanations of unsupported shore/surface
+   requests, the same visible receipts, and preservation of unrelated chat tools
+   and artifacts. No synthetic provider run proves this language-selection check.

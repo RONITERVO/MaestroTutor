@@ -1122,9 +1122,59 @@ retire through the [shared policy](#retiring-unused-areas);
 the current 64-object, 25-metre and four-height-field limits are unchanged. Dense rain-driven level
 updates still require Quest performance acceptance before release.
 
+## Submerged travel through the shared movement action
+
+The current desktop source adds a “Swim inside one habitat” option to **Move to a
+place** (`object.navigate`). Existing walk calls still work. The book's generated
+form, visual programs and the agent use the same arguments, readiness checks,
+execution receipt and `object.navigation` status.
+
+Choose the actor, one exact liquid habitat and an authored **root position** as
+the destination. Walking uses a foot destination instead. The accepted collision
+body must already fit wholly below the chosen habitat's current surface; this
+action does not place an actor in water, walk it off a shore, or keep it at the
+surface. Physics must already be running. Inspect `object.water.habitat.path` for
+containment before choosing a route. That passive fact does not prove clearance
+from other solids or reserve a route; the movement action checks those itself.
+
+The route covers translation and turning, checks the terrain bed and solid
+objects, and uses the actor's saved real-room collision profile. A virtual-only
+actor can swim below the scanned floor in an authored lake. Another actor can
+continue to obey real-room walls/floors in the same world. Visibility, passthrough
+opacity and water appearance do not change that physics choice. In a mixed view,
+use the actor's visibility layer to disable real-depth occlusion if it should
+remain visible through the scanned floor; ignoring that floor for physics alone
+does not change occlusion. A fully opaque virtual backdrop disables global
+real-depth occlusion while retaining the chosen collision policies.
+
+Movement prepares native dependencies and searches a bounded three-dimensional
+corridor. Each accepted step rechecks the body against current water and solids.
+An ordinary accepted quantity update refreshes those inputs and replans; it does
+not cancel an otherwise contained journey. A drain or newly blocking object
+cannot produce a false arrival. Actor edits, grabs, lost tracking, paused physics,
+failed loading and workspace changes stop the owner. Restoring readiness or
+reloading a room does not restart a stopped journey.
+
+The optional gait is an exact embedded animation or exact library motion for the
+loaded model. Use `object.animation.nodes` to inspect its source-node indices,
+choose the translation anchor explicitly, and keep the exact model/motion
+identity. Playback samples all source nodes and blend shapes and anchors root
+translation to the movement owner. It does not require a humanoid rig or infer a
+walk clip. Full-source playback owns the whole target and restores its prior pose
+when stopped; omitted/none leaves independent recipe-part animation available.
+
+Walking, following and swimming share four active action slots. Submerged travel
+is limited to five minutes, 0.2–1.2 metres/second, the current authored world bounds,
+a five-metre collision-envelope diagonal and a bounded route search. Collision
+uses a conservative root box throughout the turn, not animated limb/skin
+collision. Surface swimming, dry/wet transitions, continuous aquatic steering and
+measured Quest capacity remain v1 work. The latest desktop, Android and physical-device evidence is recorded in
+[the delivery plan](QUEST_V1_PLAN.md#owned-submerged-movement). A passing desktop
+journey does not establish headset acceptance.
+
 ## Finite grounded travel — 2026-10-13
 
-`object.navigate` adds one shared “Walk to a place” action for Maestro and eligible
+`object.navigate` exposes walking through the shared “Move to a place” action for Maestro and eligible
 creations. The original book generates its form from the same native catalog the
 agent inspects and programs call. Its destination is an authored foot position;
 its output is the actual root position and travelled distance. It owns locomotion

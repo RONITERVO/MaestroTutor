@@ -5,6 +5,16 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
+        internal bool MovementBody(string target,out Bounds local){
+            local=default;var item=Find(target);
+            if(!item||!item.isActiveAndEnabled||journal==null||!journal.NativeCollisionMetadata(target,out var kind,out _))return false;
+            bool solid=false;
+            foreach(var c in item.Grab.colliders)if(c&&c.enabled&&!c.isTrigger&&c.gameObject.activeInHierarchy&&c.gameObject.layer!=RoomPhysicsLayers.Pending){solid=true;break;}
+            if(!solid)return false;
+            var shape=RoomSpatialBounds.CaptureCollision(item,kind);
+            if(!shape.Known||!shape.HasBounds||!RoomRecipe.Finite(shape.Bounds.center)||!RoomRecipe.Finite(shape.Bounds.extents))return false;
+            local=shape.Bounds;return local.extents.x>0&&local.extents.y>0&&local.extents.z>0;
+        }
         internal JObject ObserveHabitatPath(string target,string habitat,Vector3 destination){
             var item=Find(target);
             if(!item||!item.isActiveAndEnabled||!Frame.Valid||!RoomViewpoint.ValidPosition(destination)||!Liquids)return null;
@@ -23,24 +33,40 @@ namespace Maestro.Quest.Creation {
             ["dependencyCount"]=0,["dependencies"]=new JArray()
         };
         internal JObject ObserveHabitatPath(RoomItem actor,string habitat,Vector3 from,Vector3 to,Vector3 extents){
+            var admission=CheckHabitatPath(actor,habitat,from,to,extents);
+            if(!admission.Captured)return HabitatUnavailable(habitat,admission.Reason);
+            var bounds=new Bounds(from,extents*2);bounds.Encapsulate(new Bounds(to,extents*2));
+            var result=DescribeMediumAvailability(bounds,editor.Identity(actor),habitat);
+            result["bodyId"]=habitat;result["contained"]=admission.Contained;result["reason"]=admission.Reason??"";
+            result["availability"]=admission.Availability.State??"ready";
+            return result;
+        }
+        internal LiquidHabitatAdmission CheckHabitatPath(RoomItem actor,string habitat,Vector3 from,Vector3 to,Vector3 extents){
             if(!editor||!actor||!editor.Frame.Valid||publishing||blocked||editor.RuntimeGate.Held||editor.WriteGate.Frozen||editor.Ownership.Suspended)
-                return HabitatUnavailable(habitat,"The actor or liquid workspace is unavailable");
-            if(habitat==editor.Identity(actor))return HabitatUnavailable(habitat,"An actor cannot use itself as its habitat");
+                return LiquidHabitatAdmission.Unavailable("The actor or liquid workspace is unavailable");
+            if(habitat==editor.Identity(actor))return LiquidHabitatAdmission.Unavailable("An actor cannot use itself as its habitat");
             var bounds=new Bounds(from,extents*2);bounds.Encapsulate(new Bounds(to,extents*2));
             CaptureMedia(false);
             var available=CapturedMediumAvailability(bounds,editor.Identity(actor),habitat);
-            var result=DescribeMediumAvailability(bounds,editor.Identity(actor),habitat);
-            result["bodyId"]=habitat;result["contained"]=false;result["reason"]=available.Reason??"";
-            if(!available.Ready)return result;
+            if(!available.Ready)return new(available,false,available.Reason,true);
             for(int i=0;i<mediaCount;i++)if(media[i].Id==habitat){
-                result["contained"]=media[i].ContainsBoxSweep(from,to,extents,out var reason);result["reason"]=reason??"";return result;
+                bool contained=media[i].ContainsBoxSweep(from,to,extents,out var reason);
+                return new(available,contained,reason,true);
             }
-            // Empty is a known negative, including an accepted dormant empty
-            // vessel. Never substitute another overlapping or larger water body.
+            // Empty is a known negative; another overlapping body never substitutes.
             vessels.TryGetValue(habitat,out var chosen);
             editor.MissingLiquidExtent(habitat,chosen?.Live,out var contents);
-            if(contents!=null&&contents.amountMl<=0){result["reason"]="The chosen habitat contains no liquid";return result;}
-            return HabitatUnavailable(habitat,"The chosen habitat has no available liquid geometry");
+            if(contents!=null&&contents.amountMl<=0)return new(available,false,"The chosen habitat contains no liquid",true);
+            return LiquidHabitatAdmission.Unavailable("The chosen habitat has no available liquid geometry");
         }
+    }
+    internal readonly struct LiquidHabitatAdmission {
+        internal readonly MediumAvailability Availability;
+        internal readonly bool Contained,Captured;
+        internal readonly string Reason;
+        internal LiquidHabitatAdmission(MediumAvailability availability,bool contained,string reason,bool captured){
+            Availability=availability;Contained=contained;Reason=reason;Captured=captured;
+        }
+        internal static LiquidHabitatAdmission Unavailable(string reason)=>new(new("unavailable",reason,0),false,reason,false);
     }
 }
