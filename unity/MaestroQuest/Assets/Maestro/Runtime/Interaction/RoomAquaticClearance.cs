@@ -7,13 +7,13 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction {
     internal sealed class RoomAquaticClearance:IDisposable {
         readonly RoomEditor editor;readonly RoomItem item;readonly string target,habitat;
-        readonly Func<bool> owned;RoomSpatialInputs inputs;readonly RoomBoxMotor motor=new();
+        readonly Func<bool> owned;readonly bool surface;RoomSpatialInputs inputs;readonly RoomBoxMotor motor=new();
         readonly Func<Collider,bool> obstacle;
         Bounds local;Vector3 scale;
         internal bool Pending=>inputs.Pending;
         internal int Generation {get;private set;}
-        internal RoomAquaticClearance(RoomEditor editor,RoomItem item,string habitat,Func<bool> owned){
-            this.editor=editor;this.item=item;this.habitat=habitat;this.owned=owned;target=editor.Identity(item);
+        internal RoomAquaticClearance(RoomEditor editor,RoomItem item,string habitat,Func<bool> owned,bool surface=false){
+            this.editor=editor;this.item=item;this.habitat=habitat;this.owned=owned;this.surface=surface;target=editor.Identity(item);
             inputs=NewInputs();
             obstacle=c=>RoomWalkingObstacle.Blocks(c,item.transform,target);
         }
@@ -42,6 +42,11 @@ namespace Maestro.Quest.Interaction {
             if(!targets.SequenceEqual(inputs.Targets))Generation++;
             return inputs.Require(targets,(string[] ids,out string issue)=>editor.SpatialMovementReady(ids,null,out issue),out error);
         }
+        internal bool SurfaceDestination(Vector3 hint,float immersion,out Vector3 goal,out string error){
+            goal=default;if(!Body(out _,out error))return false;
+            var body=new RoomSweptBody(local,scale,Vector3.zero,item.transform.rotation,Vector3.zero,item.transform.rotation);
+            return editor.Liquids.SurfaceDestination(item,habitat,hint,body.From,body.Extents,immersion,out goal,out error);
+        }
         internal bool Clear(Pose from,Pose to,out string error){
             error="The aquatic world or physics is unavailable";
             var world=editor?editor.PhysicsWorld:null;
@@ -49,7 +54,7 @@ namespace Maestro.Quest.Interaction {
             error="Aquatic movement would leave the authored world bounds";
             if(!RoomViewpoint.ValidPosition(editor.Frame.PointToRoom(from.position))||!RoomViewpoint.ValidPosition(editor.Frame.PointToRoom(to.position)))return false;
             var body=new RoomSweptBody(local,scale,from.position,from.rotation,to.position,to.rotation);
-            var admission=editor.Liquids.CheckHabitatPath(item,habitat,body.From,body.To,body.Extents);
+            var admission=editor.Liquids.CheckHabitatPath(item,habitat,body.From,body.To,body.Extents,surface);
             if(!admission.Availability.Ready||!admission.Contained){error=admission.Reason??"The selected habitat is unavailable";return false;}
             if(world.IncludesRealRoom(item)){
                 error="The swimming body leaves the accepted physical room";

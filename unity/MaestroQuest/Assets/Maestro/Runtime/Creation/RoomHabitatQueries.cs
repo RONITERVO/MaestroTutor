@@ -41,7 +41,16 @@ namespace Maestro.Quest.Creation {
             result["availability"]=admission.Availability.State??"ready";
             return result;
         }
-        internal LiquidHabitatAdmission CheckHabitatPath(RoomItem actor,string habitat,Vector3 from,Vector3 to,Vector3 extents){
+        internal bool SurfaceDestination(RoomItem actor,string habitat,Vector3 hint,Vector3 centreOffset,Vector3 extents,float immersion,out Vector3 position,out string reason){
+            position=default;reason="The actor or liquid workspace is unavailable";
+            if(!editor||!actor||!editor.Frame.Valid||publishing||blocked||editor.RuntimeGate.Held||editor.WriteGate.Frozen||editor.Ownership.Suspended)return false;
+            CaptureMedia(false);
+            var available=CapturedMediumAvailability(new Bounds(actor.transform.position+centreOffset,extents*2),editor.Identity(actor),habitat);
+            if(!available.Ready){reason=available.Reason;return false;}
+            for(int i=0;i<mediaCount;i++)if(media[i].Id==habitat)return media[i].SurfacePosition(hint,centreOffset,extents,immersion,out position,out reason);
+            reason="The chosen habitat has no available liquid surface";return false;
+        }
+        internal LiquidHabitatAdmission CheckHabitatPath(RoomItem actor,string habitat,Vector3 from,Vector3 to,Vector3 extents,bool surface=false){
             if(!editor||!actor||!editor.Frame.Valid||publishing||blocked||editor.RuntimeGate.Held||editor.WriteGate.Frozen||editor.Ownership.Suspended)
                 return LiquidHabitatAdmission.Unavailable("The actor or liquid workspace is unavailable");
             if(habitat==editor.Identity(actor))return LiquidHabitatAdmission.Unavailable("An actor cannot use itself as its habitat");
@@ -50,7 +59,7 @@ namespace Maestro.Quest.Creation {
             var available=CapturedMediumAvailability(bounds,editor.Identity(actor),habitat);
             if(!available.Ready)return new(available,false,available.Reason,true);
             for(int i=0;i<mediaCount;i++)if(media[i].Id==habitat){
-                bool contained=media[i].ContainsBoxSweep(from,to,extents,out var reason);
+                string reason;bool contained=surface?media[i].ContainsSurfaceBoxSweep(from,to,extents,out reason):media[i].ContainsBoxSweep(from,to,extents,out reason);
                 return new(available,contained,reason,true);
             }
             // Empty is a known negative; another overlapping body never substitutes.

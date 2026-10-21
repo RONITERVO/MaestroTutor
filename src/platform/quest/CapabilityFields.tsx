@@ -40,11 +40,25 @@ export function initialCapabilityValue(schema:CapabilitySchema, objects:readonly
   return '';
 }
 
+function retainCompatibleFields(schema:CapabilitySchema,value:unknown,objects:readonly EditorObject[]):{value:Record<string,unknown>;retained:boolean} {
+ const next=initialCapabilityValue(schema,objects) as Record<string,unknown>;
+ const old=value&&typeof value==='object'&&!Array.isArray(value)?value as Record<string,unknown>:{};
+ let retained=false;
+ for(const [key,field] of Object.entries(schema.properties??{})){
+  if(field['x-static']||!Object.prototype.hasOwnProperty.call(old,key))continue;
+  if(validateCapabilityValue(old[key],field)===null){next[key]=old[key];retained=true;}
+  // A changed nested record can retain compatible fields, such as destination
+  // x/z when its y is no longer an input. Opaque formats, arrays and variant
+  // identities still require a complete valid value; never guess a new branch.
+  else if(field.type==='object'&&!field.oneOf&&!field.format&&old[key]&&typeof old[key]==='object'&&!Array.isArray(old[key])){
+   const child=retainCompatibleFields(field,old[key],objects);
+   if(child.retained){next[key]=child.value;retained=true;}
+  }
+ }
+ return {value:next,retained};
+}
 export function changeCapabilityVariant(schema:CapabilitySchema,index:number,value:unknown,objects:readonly EditorObject[]):Record<string,unknown> {
- const selected=schema.oneOf![index],next=initialCapabilityValue(selected,objects) as Record<string,unknown>;
- const old=value&&typeof value==='object'?value as Record<string,unknown>:{};
- for(const [key,field] of Object.entries(selected.properties??{}))if(!field['x-static']&&Object.prototype.hasOwnProperty.call(old,key)&&validateCapabilityValue(old[key],field)===null)next[key]=old[key];
- return next;
+ return retainCompatibleFields(schema.oneOf![index],value,objects).value;
 }
 export function CapabilityVariant({schema,value,onChange,objects,label=schema.title??'Variant'}:{schema:CapabilitySchema;value:unknown;onChange:(value:Record<string,unknown>)=>void;objects:readonly EditorObject[];label?:string}) {
  const selected=resolveCapabilitySchema(schema,value),index=schema.oneOf!.indexOf(selected!);

@@ -1839,3 +1839,22 @@ journeys' verified receipts, matching source hashes and clean client/editor exit
 a successful individual movement receipt is not a completed integration run.
 See [the current delivery evidence](QUEST_V1_PLAN.md#owned-submerged-movement)
 for the latest results and remaining release boundaries.
+
+
+## Shared surface movement coverage (verification in progress)
+
+Both full journeys now continue the authored aquatic fixture through
+`object.navigate` with `mode=surface`. Book uses its generated variant, exact
+actor/habitat selectors, `x`/`z` and immersion controls; no `y` field is shown.
+It captures the completed form before reading the native root. Headless samples
+active surface status and intermediate horizontal movement, checks the final
+height/position, and replays the terminal run without starting another owner.
+Evidence is `book-native-surface-travel.json`/`.png` and
+`native-surface-travel.json`. These new journey steps are not verified merely by
+the earlier submerged journey results; require their new complete-run receipts.
+
+Focused native checks cover the clipped wet body, surface route geometry, gradual
+rise, a changing live level, above-water obstruction, a receded nonempty habitat
+and pause without revival. Book variant tests preserve compatible nested fields
+while dropping inactive values. Neither focused tests nor desktop captures prove
+physical Quest performance, provider behavior or shore transitions.

@@ -4,8 +4,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[owned submerged movement checkpoint](#owned-submerged-movement) records this
-increment's exact implementation, test results and remaining work. The
+[surface swimming checkpoint](#surface-swimming) records this increment's
+implementation, verification progress and remaining work. The
 [world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
 contract; dated entries below retain the development evidence.
 
@@ -14,6 +14,151 @@ packaged development APK is **5899972E / 5100f612**, not installed. Current desk
 source is later than both. Device and paid-provider testing remain on hold; no
 new physical or acoustic acceptance is claimed. Historical packaging diagnostics
 and their stricter successor gates remain recorded below.
+
+## Accepted product scope
+
+- Native Unity mixed-reality app for a long-term Meta Quest Store release.
+- Current priority: actual Unity interaction and Quest mixed reality. Keep the
+  current draft artwork; further visual iterations can follow functional work.
+- The same Maestro tutor implementation and managed services, with a versioned
+  native bridge. Preserve the familiar language, chat, suggestions, audio and
+  artifact behavior; do not fork prompts or implement a second tutor in C#.
+- Pencil contours and opaque watercolor based on the user's Scetch-War project.
+  All included models and user creations share this Penzil-inspired spatial
+  drawing style; see QUEST_ART_DIRECTION.md (user steering 2026-09-25).
+- Animated physical book with two selectable layouts using the same components
+  and session. Default conversation layout: familiar phone chat on the right,
+  preceding chat on the left, artifacts inline, older history on earlier pages.
+  Optional practice layout: chat left, selected/latest artifact right, clickable
+  artifact previews in chat. Retain the message-identity bookmark as a ribbon.
+- Both page surfaces are filled with content. Add no book headers, counters,
+  toolbars or layout menus to the page image. New interactions outside the pages
+  must be physical 3D objects, not floating flat panels (user steering 2026-09-25).
+- Included full-body animated Maestro, based on the existing Maestro persona.
+  Support idle, attentive listening, speaking, greeting and pointing; page turns
+  and appearance animations respect reduced-motion settings.
+  On 2026-09-26 the user selected their forthcoming Meshy character as the future
+  included default and expects a library of several hundred animations. Keep the
+  current included draft until the final model/motions are supplied and verified.
+  Add separate animation packs, bounded on-demand loading and per-avatar clip
+  assignments for locomotion, tutor states and visual rules. The current 32-clip
+  per-model importer and common retargeted gestures do not fulfill that library.
+- User-created room items: in-app editor and GLB/VRM imports first, as selected
+  by the user on 2026-09-25. Include playback of compatible imported animations.
+  External AI mesh-generation services and public content sharing remain outside
+  this first release. The newer agent-first scope includes native procedural
+  creation from validated recipes, including simple animated characters.
+- In-app animation authoring: record object movement, save/edit keyframes, choose
+  avatar gestures, and pose arms, legs and head with 3D handles. Joint posing is
+  explicitly included by the user (2026-09-25). Playables supplies playback;
+  authoring, validation, persistence and physical controls belong to this app.
+- Custom Maestro avatars and visual event/condition/action rules. Support tutor
+  activity gestures, gaze/head turn and following/walking for compatible rigs.
+  User locomotion and avatar movement have independent editable bindings; user
+  locomotion is opt-in. Solid user-created action buttons can attach to a
+  controller and be operated by the opposite controller. Preserve system input
+  reservations and an accessible recovery path. User chose both movement modes
+  and visual rules first (2026-09-25); arbitrary user code is outside v1.
+  Reusable action sequences may have multiple triggers: a controller-mounted
+  button, a web tutor state transition or a VR interaction. Recorded animations
+  are actions in the same system. Define once/loop and interruption behaviour;
+  future event sources join the same catalog without duplicating user sequences.
+- Default book and avatar are included and usable without downloading assets.
+- MR physics: loose rigid items obey gravity, react to grabs/throws and collide
+  with scanned floors, walls and furniture. Include animation-to-physics release
+  actions and scan/permission/tracking lifecycle handling. The user explicitly
+  excluded hair and cloth interaction physics in their later steering on
+  2026-09-25. See QUEST_MODEL_IMPORTS.md for the implementation boundaries.
+- Hand/controller interaction, comfortable seated/standing placement, save/load,
+  recovery, bounded content/resource use, import validation, and accessible text.
+
+## Repository and development ownership
+
+Worktree: `C:/Users/ronit/.codex/worktrees/maestro-quest-v1/MaestroTutor`.
+Branch: `codex/maestro-quest-v1`.
+Unity project: `unity/MaestroQuest`. Shared web integration belongs in
+`src/platform/quest` and minimal feature presentation adapters.
+The existing web/Capacitor application remains supported.
+
+## Delivery sequence
+
+1. Establish supported Unity/Android toolchain, pinned package provenance and
+   batch compile/test/build commands; evaluate a maintained browser texture path.
+2. Build the physical book, illustrated materials and desktop simulation scene.
+   Prove an actual Maestro page and interactive artifact on the book.
+3. Add the shared-runtime bridge, page layout, artifact routing and bookmark
+   behavior with semantic parity tests and app lifecycle coordination.
+4. Ship the included rigged avatar and animations; bind actual tutor activity and
+   playback to its visual state without opening extra model/audio sessions.
+5. Implement scene object creation, validated import, animation control, editing,
+   persistence, undo and recovery. Reject executable content in model packages.
+6. Integrate Quest passthrough, placement, hands/controllers, native capabilities,
+   authentication/attestation and managed access. Verify physical device behavior.
+7. Complete release gates, long sessions, performance, store metadata and policy
+   evidence, reproducible signed release candidate and submission preparation.
+
+Every stage must record implemented behavior, automated evidence and remaining
+hardware checks. A scaffold or editor demonstration does not complete the goal.
+
+## Release evidence still required
+
+The table below is the current release checklist. Historical checkpoints later
+in this file establish only their recorded source/device versions. An implemented
+path or a passing desktop suite does not complete a release row. The goal stays
+open until every required row has matching release-candidate evidence.
+
+| Requirement | Current evidence | Remaining work and acceptance limits |
+| --- | --- | --- |
+| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; full offline Headless and visible Book journeys against current desktop Unity. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
+| Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
+| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
+| Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
+| One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
+| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming has complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, dry/wet transitions, continuous aquatic behaviors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
+| Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
+| Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
+| Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
+| Identity, managed access, signing and Store review | Meta app 1763835394893209 / package com.maestro.quest; dedicated signing-key USB/paper recovery verified; private Alpha build 1767008267909255 passed malware/security checks. Two Quest bootstrap endpoints are deployed but disabled. | Enable and verify only through the approved rollout process; production account/entitlement/provider access, current signed candidate, privacy/audience/listing/purchase requirements, VRC review and submission evidence remain separate gates. See [release build](QUEST_RELEASE_BUILD.md), [managed access](QUEST_MANAGED_ACCESS.md) and [privacy](QUEST_PRIVACY.md). |
+
+Device and paid-provider work, signing, deployments and Meta changes remain on
+hold. Continue unblocked implementation and offline verification; do not request
+those held actions simply to turn a checklist row green. Preserve the chosen
+18+ audience and the original backend's credit authority. Chat storage remains
+local IndexedDB; a shared backend does not by itself provide cross-device chat
+sync. Hair/cloth interaction physics and arbitrary executable user scripts remain
+outside the accepted v1 scope.
+
+The supported build toolchain remains Unity 6000.3.24f1 with Android support.
+The owned short-path mirror avoids the documented nested-path package failures.
+New Android compile evidence must identify exact source inputs, distinguish
+reused tests from freshly executed compilation, and retain its warnings. Final
+APK filtering, signing, installation and physical acceptance are separate results.
+
+### Larger-world capacity implementation gate
+
+Saved existence and native simulation capacity must become separate contracts
+before expanding the current 64-creation quota. The October 21 source audit found
+that liquid discovery derives its object limit from the saved-room limit, and its
+logical allowance includes an objects-squared term. Substituting 1,000 creations
+into that existing formula would exceed its 524,288-unit allowance even for one
+vessel; this is arithmetic evidence, not a performance measurement.
+
+The current spatial index prepares detached bounds by identity; it does not yet
+provide a spatial broad-phase. View demand still scans dormant members, and named
+area membership connects all members into one residency dependency group.
+Larger logical towns therefore need bounded spatial candidate queries and a
+distinction between logical areas and explicitly coupled loading/physics groups.
+Preserve exact identities, unknown-input blocking, active-operation retention,
+per-actor real-room policy and shared user/agent discovery while making that
+change. Independent native geometry reservations already exist and should remain
+separate from saved quotas.
+
+Increasing constants alone does not satisfy this scope. Acceptance needs
+cold-load and travel-between-area cases, bounded observed work/allocation,
+shared editing and discovery, interrupted save/recovery and later measured Quest
+capacity. The audit and source references are retained in
+`.quest-evidence/surface-travel-20261021/world-capacity-audit.json`.
+No capacity limit or runtime behavior changed in this audit.
 
 Physics and liquid work now receive coordinated complete-group opportunities;
 see [the current execution checkpoint](#coordinated-physics-and-liquid-execution-2026-10-16).
@@ -112,7 +257,8 @@ Terrain-backed finite reservoirs now share the same liquid inventory and editing
 path; see [terrain water](QUEST_WORLD_AUTHORING.md#terrain-backed-measured-water).
 Wholly submerged movement now uses the shared movement action; see the
 [current implementation and verification](#owned-submerged-movement).
-Surface swimming, shore transitions and general escape planning remain open.
+Surface swimming has complete desktop and unsigned Android compilation evidence;
+shore transitions, continuous aquatic behavior and physical acceptance remain open.
 Saved visual layers now use the same native catalog and named resource forms for
 users and agents. Transient viewing controls extend that foundation; see
 [saved layers](#saved-visual-layers-and-shared-authoring--2026-10-08) and
@@ -1452,125 +1598,6 @@ Conversational Stop/revision/continuation now uses the same verified handoff,
 with durable task links and no saved-command replay. Database v11 preserves
 compact task scope and hidden state. Real-provider intent/latency, explicit server
 cancellation and provider/headset acceptance (including audible results) remain open. See QUEST_UNIFIED_AGENT.md.
-
-## Accepted product scope
-
-- Native Unity mixed-reality app for a long-term Meta Quest Store release.
-- Current priority: actual Unity interaction and Quest mixed reality. Keep the
-  current draft artwork; further visual iterations can follow functional work.
-- The same Maestro tutor implementation and managed services, with a versioned
-  native bridge. Preserve the familiar language, chat, suggestions, audio and
-  artifact behavior; do not fork prompts or implement a second tutor in C#.
-- Pencil contours and opaque watercolor based on the user's Scetch-War project.
-  All included models and user creations share this Penzil-inspired spatial
-  drawing style; see QUEST_ART_DIRECTION.md (user steering 2026-09-25).
-- Animated physical book with two selectable layouts using the same components
-  and session. Default conversation layout: familiar phone chat on the right,
-  preceding chat on the left, artifacts inline, older history on earlier pages.
-  Optional practice layout: chat left, selected/latest artifact right, clickable
-  artifact previews in chat. Retain the message-identity bookmark as a ribbon.
-- Both page surfaces are filled with content. Add no book headers, counters,
-  toolbars or layout menus to the page image. New interactions outside the pages
-  must be physical 3D objects, not floating flat panels (user steering 2026-09-25).
-- Included full-body animated Maestro, based on the existing Maestro persona.
-  Support idle, attentive listening, speaking, greeting and pointing; page turns
-  and appearance animations respect reduced-motion settings.
-  On 2026-09-26 the user selected their forthcoming Meshy character as the future
-  included default and expects a library of several hundred animations. Keep the
-  current included draft until the final model/motions are supplied and verified.
-  Add separate animation packs, bounded on-demand loading and per-avatar clip
-  assignments for locomotion, tutor states and visual rules. The current 32-clip
-  per-model importer and common retargeted gestures do not fulfill that library.
-- User-created room items: in-app editor and GLB/VRM imports first, as selected
-  by the user on 2026-09-25. Include playback of compatible imported animations.
-  External AI mesh-generation services and public content sharing remain outside
-  this first release. The newer agent-first scope includes native procedural
-  creation from validated recipes, including simple animated characters.
-- In-app animation authoring: record object movement, save/edit keyframes, choose
-  avatar gestures, and pose arms, legs and head with 3D handles. Joint posing is
-  explicitly included by the user (2026-09-25). Playables supplies playback;
-  authoring, validation, persistence and physical controls belong to this app.
-- Custom Maestro avatars and visual event/condition/action rules. Support tutor
-  activity gestures, gaze/head turn and following/walking for compatible rigs.
-  User locomotion and avatar movement have independent editable bindings; user
-  locomotion is opt-in. Solid user-created action buttons can attach to a
-  controller and be operated by the opposite controller. Preserve system input
-  reservations and an accessible recovery path. User chose both movement modes
-  and visual rules first (2026-09-25); arbitrary user code is outside v1.
-  Reusable action sequences may have multiple triggers: a controller-mounted
-  button, a web tutor state transition or a VR interaction. Recorded animations
-  are actions in the same system. Define once/loop and interruption behaviour;
-  future event sources join the same catalog without duplicating user sequences.
-- Default book and avatar are included and usable without downloading assets.
-- MR physics: loose rigid items obey gravity, react to grabs/throws and collide
-  with scanned floors, walls and furniture. Include animation-to-physics release
-  actions and scan/permission/tracking lifecycle handling. The user explicitly
-  excluded hair and cloth interaction physics in their later steering on
-  2026-09-25. See QUEST_MODEL_IMPORTS.md for the implementation boundaries.
-- Hand/controller interaction, comfortable seated/standing placement, save/load,
-  recovery, bounded content/resource use, import validation, and accessible text.
-
-## Repository and development ownership
-
-Worktree: `C:/Users/ronit/.codex/worktrees/maestro-quest-v1/MaestroTutor`.
-Branch: `codex/maestro-quest-v1`.
-Unity project: `unity/MaestroQuest`. Shared web integration belongs in
-`src/platform/quest` and minimal feature presentation adapters.
-The existing web/Capacitor application remains supported.
-
-## Delivery sequence
-
-1. Establish supported Unity/Android toolchain, pinned package provenance and
-   batch compile/test/build commands; evaluate a maintained browser texture path.
-2. Build the physical book, illustrated materials and desktop simulation scene.
-   Prove an actual Maestro page and interactive artifact on the book.
-3. Add the shared-runtime bridge, page layout, artifact routing and bookmark
-   behavior with semantic parity tests and app lifecycle coordination.
-4. Ship the included rigged avatar and animations; bind actual tutor activity and
-   playback to its visual state without opening extra model/audio sessions.
-5. Implement scene object creation, validated import, animation control, editing,
-   persistence, undo and recovery. Reject executable content in model packages.
-6. Integrate Quest passthrough, placement, hands/controllers, native capabilities,
-   authentication/attestation and managed access. Verify physical device behavior.
-7. Complete release gates, long sessions, performance, store metadata and policy
-   evidence, reproducible signed release candidate and submission preparation.
-
-Every stage must record implemented behavior, automated evidence and remaining
-hardware checks. A scaffold or editor demonstration does not complete the goal.
-
-## Release evidence still required
-
-The table below is the current release checklist. Historical checkpoints later
-in this file establish only their recorded source/device versions. An implemented
-path or a passing desktop suite does not complete a release row. The goal stays
-open until every required row has matching release-candidate evidence.
-
-| Requirement | Current evidence | Remaining work and acceptance limits |
-| --- | --- | --- |
-| Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; full offline Headless and visible Book journeys against current desktop Unity. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
-| Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
-| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
-| Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
-| One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
-| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned wholly submerged travel; observation-driven residency/scheduling. See the [current movement evidence](#owned-submerged-movement). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, surface swimming, dry/wet transitions, continuous aquatic behaviors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
-| Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
-| Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
-| Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
-| Identity, managed access, signing and Store review | Meta app 1763835394893209 / package com.maestro.quest; dedicated signing-key USB/paper recovery verified; private Alpha build 1767008267909255 passed malware/security checks. Two Quest bootstrap endpoints are deployed but disabled. | Enable and verify only through the approved rollout process; production account/entitlement/provider access, current signed candidate, privacy/audience/listing/purchase requirements, VRC review and submission evidence remain separate gates. See [release build](QUEST_RELEASE_BUILD.md), [managed access](QUEST_MANAGED_ACCESS.md) and [privacy](QUEST_PRIVACY.md). |
-
-Device and paid-provider work, signing, deployments and Meta changes remain on
-hold. Continue unblocked implementation and offline verification; do not request
-those held actions simply to turn a checklist row green. Preserve the chosen
-18+ audience and the original backend's credit authority. Chat storage remains
-local IndexedDB; a shared backend does not by itself provide cross-device chat
-sync. Hair/cloth interaction physics and arbitrary executable user scripts remain
-outside the accepted v1 scope.
-
-The supported build toolchain remains Unity 6000.3.24f1 with Android support.
-The owned short-path mirror avoids the documented nested-path package failures.
-New Android compile evidence must identify exact source inputs, distinguish
-reused tests from freshly executed compilation, and retain its warnings. Final
-APK filtering, signing, installation and physical acceptance are separate results.
 
 ## Verified development milestone, 2026-09-25
 
@@ -15372,3 +15399,60 @@ continuous aquatic behaviours, larger-world admission and measured headset
 performance/immersion. This bounded submerged journey does not complete those
 requirements or the release. Existing device, paid-provider, signing and
 deployment holds remain in force.
+
+
+<a id="surface-swimming"></a>
+
+## Surface swimming — 2026-10-21
+
+The same shared `object.navigate` action now has a `surface` variant. It uses an
+exact live habitat, horizontal destination and collision-envelope immersion.
+The current liquid quantity chooses height. An already wet actor adjusts height
+gradually, then takes a bounded planar route; the immersed convex swept volume
+must fit the cavity and the full body must clear solids and actual terrain.
+Per-actor real-room participation, resource ownership, gait selection, Stop,
+source refresh and the four-action budget remain shared with submerged travel.
+Dry starts, shore exit, inter-habitat gaps and continuous aquatic behavior remain
+unfinished rather than implicitly handled by this mode.
+
+Focused evidence is in `.quest-evidence/surface-travel-20261021`: 22 EditMode
+checks and 24 unique PlayMode checks pass across retained source-equivalent runs,
+including six surface lifecycle cases. Two initial positive tests ended too early
+because they counted batch-mode frames; a wall-clock deadline with per-step
+motion checks passes on unchanged runtime code. The failed runs are retained.
+
+A book regression reproduced losing horizontal coordinates when switching
+between the walking and surface variants. Shared form editing now retains valid
+nested fields, removes inactive fields and preserves opaque/variant validation.
+All 107 focused browser tests and the complete 3,224-test web suite pass.
+Application/probe TypeScript and catalog provenance also pass. The complete
+native inventory now reconciles 1,541 EditMode and 2,188 PlayMode passes, with
+three named private-model/motion skips. All 46 focused cases also pass within
+that full run. Both complete sparse offline journeys passed with clean client
+and Unity exits on the same frozen source:
+
+- Book `d9ab5d9866504ebf9b07a4d4ccd39273`: 4,271 observations, visible
+  generated controls, actual submerged/surface travel and the original history checks.
+- Headless `9ccd5c573f0647bda051a862630db229`: 2,500 observations,
+  gradual height adjustment and intermediate surface positions, native arrival
+  and terminal replay through the shared APIs.
+
+The surface Book screenshot was inspected: named actor/habitat, x/z controls and
+completed action are readable; the immersion value lies below that captured scroll
+position and is verified by the form interaction and receipt. This is a browser
+control capture, not a 3D render or physical headset evidence. The save-state
+samples are checkpoints within each journey, not post-travel disk reload or
+Android suspend acceptance.
+
+Unsigned development Android export and compilation also passed on that source:
+zero Unity errors, five warnings, 41 Gradle tasks, and all 22 selected ARM64
+libraries retain 16 KiB ELF load alignment. Generated IL2CPP includes wet-volume
+clipping, live surface height, preparation, routing, movement and source-pose
+paths. Browser evidence reuses 128 passes and two skips against 106 unchanged
+inputs; lint has zero errors and six unchanged warnings. Exact-source receipts
+cover 3,440 native inputs, 5,365 source hashes and 14 protected files.
+
+This is compilation evidence, not an installed package or physical acceptance.
+No APK/AAB, signing, installation, paid provider, deployment or Meta action was
+performed. Shore transitions, continuous aquatic behavior, larger-world capacity,
+audio quality and the remaining device/provider/release gates remain unfinished.

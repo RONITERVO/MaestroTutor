@@ -1172,6 +1172,16 @@ try{
  const aquaticPosition=(await book.observation(aquaticActor)).position;
  assert.ok(Math.abs(aquaticPosition.x+1.2)<.006&&Math.abs(aquaticPosition.y-1.45)<.006&&Math.abs(aquaticPosition.z-2)<.006);
  await writeFile(join(directory,'book-native-aquatic-travel.json'),JSON.stringify({boundary:'Visible original-book create, physics, liquid and shared movement controls. Actual native turning, submerged movement and receipt. No provider or headset acceptance.',pool:aquaticPool,actor:aquaticActor,container:aquaticContainer,receipt:aquaticReceipt,position:aquaticPosition},null,2));
+ await openNamedAction('Move to a place','object.navigate');await page.getByLabel('Movement',{exact:true}).selectOption({label:'Swim at the live surface'});
+ await chooseObject('Action inputs target',aquaticActor);await chooseObject('Action inputs habitat',aquaticPool);
+ assert.equal(await page.getByLabel('Action inputs destination y',{exact:true}).count(),0);
+ for(const [axis,value] of Object.entries({x:-1.45,z:2}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs immersion',{exact:true}).fill('.6');await page.getByLabel('Action inputs facing',{exact:true}).selectOption('keep');await page.getByLabel('Action inputs speed',{exact:true}).fill('.3');
+ const surfaceReceipt=await runNamedAction('object.navigate');assert.ok(Number(surfaceReceipt.output!.distance)>.3);
+ await page.getByRole('heading',{name:'Move to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-surface-travel.png')});
+ const surfacePosition=(await book.observation(aquaticActor)).position;
+ assert.ok(Math.abs(surfacePosition.x+1.45)<.006&&Math.abs(surfacePosition.z-2)<.006&&surfacePosition.y>1.5&&surfacePosition.y<1.7);
+ await writeFile(join(directory,'book-native-surface-travel.json'),JSON.stringify({boundary:'Visible original-book movement variant, exact actor/habitat, immersion and x/z controls; actual native gradual rise and surface travel. No provider or headset acceptance.',pool:aquaticPool,actor:aquaticActor,receipt:surfaceReceipt,position:surfacePosition},null,2));
  await openNamedAction('Look toward something','avatar.look');
  await page.getByLabel('Attention',{exact:true}).selectOption('2');
  for(const [axis,value] of Object.entries({x:2,y:1.6,z:2}))await page.getByLabel('Action inputs focus point '+axis,{exact:true}).fill(String(value));

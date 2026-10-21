@@ -1172,6 +1172,33 @@ measured Quest capacity remain v1 work. The latest desktop, Android and physical
 [the delivery plan](QUEST_V1_PLAN.md#owned-submerged-movement). A passing desktop
 journey does not establish headset acceptance.
 
+## Surface swimming through the same movement action
+
+Choose **Move to a place → Swim at the live surface** (`object.navigate`,
+`mode=surface`). Select an exact actor and liquid habitat, destination `x`/`z`,
+speed, facing and an immersion fraction from 0.1 to 0.95. Height comes from the
+current measured liquid level and the actor's accepted collision envelope; it is
+not an extra authored `y`. Changing the book movement variant retains compatible
+horizontal coordinates and drops the inactive height field.
+
+The actor must already intersect the chosen liquid. A submerged actor first rises
+gradually to the requested waterline. Planar travel then stays at that level;
+yaw preserves the actor's existing tilt. Both movement and surface adjustment use
+the chosen speed, current native dependencies and the same ownership/Stop rules.
+A selected exact imported gait remains optional. Vertical gravity is required.
+
+The immersed portion of the swept body must fit the chosen cavity. The complete
+body, including its above-water portion, still clears terrain and solid objects.
+The route cannot dive under an obstacle as a substitute for surface travel. Live
+fill changes update the requested height; if the water recedes completely away
+from the actor, movement stops at its last accepted pose instead of teleporting
+downward. A different overlapping pool never substitutes for the selected one.
+
+This mode shares per-actor real-room participation, independent visual opacity,
+four locomotion action slots, native status and final receipts. It does not yet
+provide dry-ground entry, shore exit or a continuous aquatic steering controller.
+Current verification is in [the delivery plan](QUEST_V1_PLAN.md#surface-swimming).
+
 ## Finite grounded travel — 2026-10-13
 
 `object.navigate` exposes walking through the shared “Move to a place” action for Maestro and eligible

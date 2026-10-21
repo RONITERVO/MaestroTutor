@@ -50,6 +50,22 @@ export async function probeAquaticTravel(execute:Execute,directory:string){
  assert.ok(samples.some(s=>s.mode==='swim'&&s.active===true));
  assert.ok(samples.some(s=>{const p=s.position as {x:number};return p.x>-1.49&&p.x<-1.21;}),'No observed intermediate aquatic position');
  const replay=await execute([{action:'execution',execution:{operation:'start',runId,call}}]);assert.deepEqual(replay.execution?.selected,receipt);
+ const surfaceCall={id:'object.navigate',version:1,arguments:{target:actor,mode:'surface',habitat:pool,destination:{x:-1.45,z:2},immersion:.6,speed:.3,facing:'keep'}};
+ const surfaceCheck=await execute([{action:'catalog',catalog:{operation:'check',call:surfaceCall}}]);
+ assert.ok(surfaceCheck.catalog?.operation==='check');assert.equal(surfaceCheck.catalog.available,true,JSON.stringify(surfaceCheck.catalog));
+ let surfaceState=await execute([{action:'execution',execution:{operation:'start',call:surfaceCall}}]);const surfaceRunId=surfaceState.execution?.selected?.id;assert.ok(surfaceRunId);
+ const surfaceSamples:Record<string,unknown>[]=[];const surfaceDeadline=Date.now()+30000;
+ while(surfaceState.execution?.selected?.phase==='preparing'&&Date.now()<surfaceDeadline){
+  surfaceSamples.push(await read('object.navigation',{target:actor}));
+  await new Promise(r=>setTimeout(r,80));surfaceState=await execute([{action:'execution',execution:{operation:'inspect',runId:surfaceRunId}}]);
+ }
+ const surfaceReceipt=surfaceState.execution?.selected;assert.equal(surfaceReceipt?.phase,'completed',JSON.stringify(surfaceReceipt));
+ const surfaceAfter=await read('object.position',{target:actor});
+ assert.ok(Math.abs(Number(surfaceAfter.x)+1.45)<.006&&Math.abs(Number(surfaceAfter.z)-2)<.006&&Number(surfaceAfter.y)>1.5&&Number(surfaceAfter.y)<1.7);
+ assert.ok(surfaceSamples.some(x=>x.mode==='surface'&&x.active===true));
+ assert.ok(surfaceSamples.some(x=>{const p=x.position as {x:number};return p.x<-1.21&&p.x>-1.44;}),'No intermediate surface position');
+ const surfaceReplay=await execute([{action:'execution',execution:{operation:'start',runId:surfaceRunId,call:surfaceCall}}]);assert.deepEqual(surfaceReplay.execution?.selected,surfaceReceipt);
+ await writeFile(join(directory,'native-surface-travel.json'),JSON.stringify({boundary:'Same shared action, actual gradual rise and planar travel at the measured liquid surface. Whole-body and immersed-volume regressions also run natively; no provider or headset acceptance.',pool,actor,check:surfaceCheck.catalog,samples:surfaceSamples,receipt:surfaceReceipt,after:surfaceAfter},null,2));
  const finalPhysics=await read('physics.simulation');
  const paused=await invoke('physics.simulation.set',{operation:'pause',stateId:finalPhysics.stateId});assert.equal(paused.output!.running,false);
  await writeFile(join(directory,'native-aquatic-travel.json'),JSON.stringify({boundary:'Shared native action/readiness/status/receipt and replay against an authored finite liquid volume. Real gradual submerged movement; no provider or headset acceptance.',pool,actor,check:check.catalog,samples,receipt,after,physicsBefore:initialPhysics,paused},null,2));

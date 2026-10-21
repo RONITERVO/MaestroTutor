@@ -74,3 +74,23 @@ it('preserves an explicitly chosen off-view target when changing compatible acti
  expect(changeCapabilityVariant(schema,1,{kind:'object',objectId},[])).toEqual({kind:'object',objectId});
  expect(changeCapabilityVariant(schema,1,{kind:'user'},[{id:'book'}])).toEqual({kind:'object',objectId:''});
 });
+
+
+it('keeps horizontal destination when switching between ground and surface movement, and removes inactive height',()=>{
+ const action=capabilityDefinition('object.navigate')!,pool='a'.repeat(32);
+ const walk={target:'maestro',mode:'walk',destination:{x:2,y:-1,z:3},speed:.6};
+ const surfaceIndex=action.input.oneOf!.findIndex(branch=>branch.properties?.mode.enum?.includes('surface'));
+ const surface=changeCapabilityVariant(action.input,surfaceIndex,walk,[]);
+ expect(surface.mode).toBe('surface');expect(surface.target).toBe('maestro');expect(surface.destination).toEqual({x:2,z:3});
+ surface.habitat=pool;surface.immersion=.6;
+ expect(validateCapabilityArguments(action.id,action.version,surface)).toBeNull();
+ expect(validateCapabilityArguments(action.id,action.version,{...surface,destination:{x:2,y:-1,z:3}})).not.toBeNull();
+ const onChange=vi.fn(),screen=render(<CapabilityFields label="Movement fields" schema={action.input} value={surface} objects={[]} onChange={onChange}/>);
+ expect(screen.getByLabelText('Movement fields destination x')).toBeTruthy();
+ expect(screen.queryByLabelText('Movement fields destination y')).toBeNull();
+ fireEvent.change(screen.getByLabelText('Movement fields immersion'),{target:{value:'0.7'}});
+ expect(onChange).toHaveBeenCalledWith({...surface,immersion:.7});
+ const walkAgain=changeCapabilityVariant(action.input,0,surface,[]);
+ expect(walkAgain.destination).toEqual({x:2,y:0,z:3});expect(walkAgain).not.toHaveProperty('habitat');expect(walkAgain).not.toHaveProperty('immersion');
+ expect(validateCapabilityArguments(action.id,action.version,walkAgain)).toBeNull();
+});

@@ -13,13 +13,13 @@ namespace Maestro.Quest.Interaction {
         internal const float SearchMargin=2,Spacing=.35f;
         static readonly Vector3Int[] Directions={Vector3Int.right,Vector3Int.left,Vector3Int.up,Vector3Int.down,new(0,0,1),new(0,0,-1)};
         readonly List<Node> open=new();readonly HashSet<(Vector3Int,int)> seen=new();
-        readonly Vector3 origin,goal;readonly Bounds area;readonly bool facing;readonly Clear clear;
+        readonly Vector3 origin,goal;readonly Bounds area;readonly bool facing;readonly float? surfaceHeight;readonly Clear clear;
         Node current;int nodes=1;bool capacityReached;
         internal Pose[] Path {get;private set;}
         internal bool Done {get;private set;}
         internal string Error {get;private set;}
-        internal RoomAquaticRoute(Pose start,Vector3 destination,bool face,Clear check){
-            origin=start.position;goal=destination;facing=face;clear=check;
+        internal RoomAquaticRoute(Pose start,Vector3 destination,bool face,Clear check,float? surfaceHeight=null){
+            origin=start.position;goal=destination;facing=face;clear=check;this.surfaceHeight=surfaceHeight;
             var corridor=new Bounds(origin,Vector3.zero);corridor.Encapsulate(goal);corridor.Expand(SearchMargin*2);area=corridor;
             open.Add(new Node{Pose=start});seen.Add((Vector3Int.zero,-1));
         }
@@ -28,8 +28,13 @@ namespace Maestro.Quest.Interaction {
             var up=Mathf.Abs(Vector3.Dot(direction.normalized,Vector3.up))>.99f?Vector3.forward:Vector3.up;
             return Quaternion.LookRotation(direction,up);
         }
+        internal static Quaternion SurfaceFacing(Vector3 direction,Quaternion previous){
+            var forward=Vector3.ProjectOnPlane(previous*Vector3.forward,Vector3.up);direction.y=0;
+            if(forward.sqrMagnitude<1e-8f||direction.sqrMagnitude<1e-8f)return previous;
+            return Quaternion.AngleAxis(Vector3.SignedAngle(forward,direction,Vector3.up),Vector3.up)*previous;
+        }
         bool Edge(Node from,Vector3 point,out Pose result){
-            result=new(point,facing?Facing(point-from.Pose.position,from.Pose.rotation):from.Pose.rotation);
+            result=new(point,facing?(surfaceHeight.HasValue?SurfaceFacing(point-from.Pose.position,from.Pose.rotation):Facing(point-from.Pose.position,from.Pose.rotation)):from.Pose.rotation);
             var turned=new Pose(from.Pose.position,result.rotation);
             return clear(from.Pose,turned,out _)&&clear(turned,result,out _);
         }
@@ -50,6 +55,10 @@ namespace Maestro.Quest.Interaction {
                     }
                 }else{
                     int direction=current.Edge-2;var cell=current.Cell+Directions[direction];var point=origin+(Vector3)cell*Spacing;
+                    if(surfaceHeight.HasValue){
+                        point.y=surfaceHeight.Value;
+                        if(Directions[direction].y!=0){if(current.Edge>Directions.Length)current=null;continue;}
+                    }
                     if(area.Contains(point)&&!seen.Contains((cell,facing?direction:-1))){
                         if(nodes>=MaximumNodes)capacityReached=true;
                         else if(Edge(current,point,out var pose)){

@@ -3988,6 +3988,19 @@ existing device/provider holds are lifted and the appropriate build is installed
    comfort acceptance remains open.
 7. Through normal beginner chat and Live, in managed and BYOK modes when available,
    ask for an underwater creature to move through its habitat without naming APIs.
-   Verify actual scene results, truthful explanations of unsupported shore/surface
+   Verify actual scene results, truthful explanations of unsupported shore
    requests, the same visible receipts, and preservation of unrelated chat tools
    and artifacts. No synthetic provider run proves this language-selection check.
+
+
+### Surface swimming acceptance (pending)
+
+Repeat the shared movement flow with **Swim at the live surface**. An already wet
+actor must adjust height gradually, keep the requested collision-body immersion,
+and travel along the measured surface. Raise/lower the liquid during travel;
+check smooth adjustment while still wet and a truthful stop if water recedes away.
+An obstacle above water must block the visible part of the actor. Confirm no
+implicit dry entry, shore exit, switch to another pool or dive beneath obstacles.
+Repeat with per-actor real-room collision choices and independent visual opacity,
+Stop/pause/reload, imported gait and a normal novice request through each provider.
+This is a pending physical acceptance procedure, not recorded device evidence.
