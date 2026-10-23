@@ -50422,7 +50422,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
-      "sha256": "b17ebf695b15a80fbd866612bfb88f9ec3b87964af03e6547e33f186da0670aa"
+      "sha256": "c1b835ce6585f79b1e5239218f321f9efc58ecfaa3f778ef500ea7c8fef16d9a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayDemand.cs",
@@ -50450,11 +50450,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "8b111d9000a860ae9e5ff4e12d5f855b8a744d776ca0856a3805f53ab093e620"
+      "sha256": "fb225f7efeaa69acac4a314abb1b94b59cd767c7788358ab5ff6b485f950104d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "f9137d4c69480884cab3ca703abd5a710583a206f08ffd268c8a744369e6b0f6"
+      "sha256": "f769ac51e5f29cedf73eab7e9ddd9ecd309df8b78e6a7efd821d725c2ce5b99d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
@@ -50643,6 +50643,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
       "sha256": "898c609f8d7e0d3da9ba26b98ca93e596ac3b912668ecca2d8cecddb49c52a43"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRestoration.cs",
+      "sha256": "2c842241cc17127cec1f9fbfabdb74076f4af6405f960d6fd222f7c436578809"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",

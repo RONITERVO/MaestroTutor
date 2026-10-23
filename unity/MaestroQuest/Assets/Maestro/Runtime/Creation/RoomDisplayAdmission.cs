@@ -28,10 +28,11 @@ namespace Maestro.Quest.Creation
                 if(!job.Closed&&!job.Cancellation.IsCancellationRequested&&job.Closure.Contains(id))return true;
             return false;
         }
-        void InitializeNativeStartup(RoomDocument document)
+        void InitializeNativeStartup(RoomDocument document)=>InitializeDormantNative(document.objects.Where(data=>!data.IsBuiltIn));
+        void InitializeDormantNative(IEnumerable<RoomObjectData> values)
         {
             nativeJournal=journal;displayJournal=journal;
-            foreach(var data in document.objects.Where(data=>!data.IsBuiltIn)){
+            foreach(var data in values){
                 dormantNative.Add(data.id,new DormantEntity{
                     SavedPosition=data.position,SavedRotation=data.rotation,SavedScale=data.scale,
                     Position=data.position,Rotation=data.rotation,Scale=data.scale,Phase=NativeEntityPhase.Dormant,

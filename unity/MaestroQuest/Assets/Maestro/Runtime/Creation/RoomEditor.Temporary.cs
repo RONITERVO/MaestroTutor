@@ -99,7 +99,9 @@ namespace Maestro.Quest.Creation
         }
         void DispatchTemporarySave(RoomDocument snapshot,bool baseline,Task<string> previous=null)
         {
-            savingSnapshot=snapshot;TemporarySaveError=null;TemporarySaveId=Guid.NewGuid().ToString("N");
+            savingSnapshot=snapshot;savingDormantTargets=CaptureSavedDormancy(snapshot);
+            if(baseline)savedDormantTargets=new(savingDormantTargets,StringComparer.Ordinal);
+            TemporarySaveError=null;TemporarySaveId=Guid.NewGuid().ToString("N");
             LastTemporarySave=new TemporarySaveReceipt(TemporarySaveId,TemporarySessionId,baseline);
             var target=storage; // The worker owns detached data, never scene/journal objects.
             try{savingMemory=TemporaryMemory is ProgramMemoryStore memory?new TemporaryMemorySave(memory,savedPair,snapshot,WriteGate,target):null;}
@@ -139,7 +141,8 @@ namespace Maestro.Quest.Creation
         {
             if(temporarySave==null || !wait&&!temporarySave.IsCompleted)return;
             var error=temporarySave.GetAwaiter().GetResult();temporarySave=null;
-            var snapshot=savingSnapshot;savingSnapshot=null;var memorySave=savingMemory;savingMemory=null;
+            var snapshot=savingSnapshot;savingSnapshot=null;var dormant=savingDormantTargets;savingDormantTargets=null;
+            var memorySave=savingMemory;savingMemory=null;
             if(memorySave!=null){
                 TemporaryStorageUncertain=memorySave.Uncertain;
                 if(error==null){
@@ -153,7 +156,7 @@ namespace Maestro.Quest.Creation
             }
             // Only the exact successfully written snapshot enters saved Undo.
             // No scene reconciliation or action replay occurs at completion.
-            savedBaseDurable=true;
+            savedBaseDurable=true;savedDormantTargets=dormant;
             if(LastTemporarySave.IsBaseline) {
                 Revision++;SetStatus("Temporary room ready: its starting state is saved; later changes stay temporary");return;
             }
@@ -170,7 +173,8 @@ namespace Maestro.Quest.Creation
             if(!CanChangeTemporaryBoundary(out error,changingMemory:true))return false;
             if(stopAuthoring)Editing?.Invoke();
             if(!CanChangeTemporaryBoundary(out error,changingMemory:true))return false;
-            using var native=RoomEditPreparation.TryCreateRestoration(this,savedJournal.Snapshot(),out error);if(native==null)return false;
+            var destination=savedJournal.Snapshot();var dormant=RestorationDormancy(destination);
+            using var native=RoomEditPreparation.TryCreateRestoration(this,destination,dormant,out error);if(native==null)return false;
             // Discard restores document state, never historical velocity or a
             // running action. Leave physics paused after replacing colliders.
             try{TemporaryMemory?.EndTemporary();}catch(Exception e){error=e.Message;return false;}
@@ -178,6 +182,7 @@ namespace Maestro.Quest.Creation
             savedJournal.InvalidateChangedObservations(journal);
             bool viewpointChanged=savedJournal.UpdateViewpoint(journal.Viewpoint);
             journal=savedJournal;savedJournal=null;TemporarySessionId=Guid.NewGuid().ToString("N");TemporarySaveId="";TemporarySaveRevision=0;dirty=!savedBaseDurable||viewpointChanged;saveAt=UnityEngine.Time.unscaledTime+.5f;Revision++;ClearConstructionSelection();
+            RestoreNativeResidency(destination,dormant);
             if(journal.Read(selected)==null)selected=null;
             ResetLightControls();ResetAudioMix();ResetLayerPresentation(true);Reconcile(preparation:native);TemporarySaveError=null;
             SetStatus(savedBaseDurable?"Temporary changes discarded: returned to the last saved room":"Temporary changes discarded: returned to the starting room; saving its pending edits");return true;

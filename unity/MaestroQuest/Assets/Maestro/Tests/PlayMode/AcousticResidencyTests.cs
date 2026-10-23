@@ -89,7 +89,13 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.RetireNativeArea(area, out error), Is.True, error); yield return null;
             Assert.That(editor.DiscardTemporaryRoom(out error), Is.True, error);
             for (int i = 0; i < 16; i++) audio.Synchronize();
-            Assert.That(audio.RetainedGeometryCount, Is.Zero); Assert.That(audio.GeometryCount, Is.EqualTo(count));
+            Assert.That(audio.RetainedGeometryCount, Is.Zero); Assert.That(editor.NativeEntityDormant(id), Is.True); Assert.That(editor.Find(id), Is.Null);
+            Assert.That(audio.GeometryCount, Is.LessThan(count), "Restoration must release the temporary acoustic cache");
+            yield return ColdAcousticSettled(audio);
+            Assert.That(editor.Find(id), Is.Null); Assert.That(audio.RetainedGeometryCount, Is.GreaterThan(0)); Assert.That(audio.GeometryCount, Is.EqualTo(count));
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));
+            for (int i = 0; i < 16; i++) audio.Synchronize();
+            Assert.That(audio.GeometryCount, Is.EqualTo(count)); Assert.That(audio.OmittedCount, Is.Zero);
             Assert.That(editor.RetireNativeArea(area, out error), Is.True, error); yield return null;
             Assert.That(audio.RetainedGeometryCount, Is.GreaterThan(0));
             UnityEngine.Object.Destroy(editor); yield return null; Assert.That(audio.RetainedGeometryCount, Is.Zero);

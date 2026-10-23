@@ -105,6 +105,9 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out error),Is.True,error);
             var fork=editor.ReadCollisionBounds(id).Bounds;Assert.That(editor.SpatialMovementTargets(CollisionPoint(fork.center),null),Does.Contain(id));
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;
+            Assert.That(editor.NativeEntityDormant(id),Is.True);Assert.That(editor.ReadCollisionBounds(id).Known,Is.False,"Temporary bounds cannot survive journal replacement");
+            Assert.That(editor.SpatialMovementTargets(CollisionPoint(fork.center),null),Does.Contain(id),"Unknown cold geometry remains a conservative candidate until prepared");
+            yield return NativeAreaCompletion(editor.AcquireNativeEntities(new[]{id},()=>true,CancellationToken.None));
             var restored=editor.CaptureMovementCandidates(false);Assert.That(restored.Targets(CollisionPoint(original.center),null),Does.Contain(id));
             Assert.That(restored.Targets(CollisionPoint(fork.center),null),Does.Not.Contain(id));
         }

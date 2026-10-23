@@ -127,7 +127,8 @@ namespace Maestro.Quest.Tests
             yield return WaitForModuleLibrary();string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;
-            editor.ReadSpatialBounds(id,out var source);Assert.That(source,Is.EqualTo("native"));
+            editor.ReadSpatialBounds(id,out var source);Assert.That(source,Is.Not.EqualTo("native"));Assert.That(editor.NativeEntityDormant(id),Is.True);
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));editor.ReadSpatialBounds(id,out source);Assert.That(source,Is.EqualTo("native"));
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{id},out error),Is.True,error);
             Assert.That((string)editor.ObserveSpatialBounds(id)["source"],Is.EqualTo("missing"));Assert.That(editor.NativeEntityDormant(id),Is.False);

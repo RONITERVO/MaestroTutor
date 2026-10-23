@@ -4,8 +4,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[physical discovery checkpoint](#linear-physical-discovery--2026-10-23) records this
+[restoration checkpoint](#restoring-unloaded-objects--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
+[physical discovery](#linear-physical-discovery--2026-10-23),
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
 [world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
@@ -16276,3 +16277,36 @@ or complete city/river/underwater scope. No fresh full Headless/Book journey,
 Android compilation, headset, paid provider, signing, deployment or Meta operation
 was performed in this increment. The preceding full Headless result at `db9eeb2e`
 and rendered Book result at `0eed618d` remain separately identified evidence.
+
+## Restoring unloaded objects — 2026-10-23
+
+Discarding temporary edits now preserves unloaded saved objects without reserving
+native roots for them. The exact accepted checkpoint retains its cold identities,
+including an object deleted in the temporary fork. A later successful Keep replaces
+that checkpoint; a failed save cannot. A currently live view stays live even if
+its saved checkpoint was cold. Resident geometry still passes the existing
+preparation checks before temporary memory or the room journal changes.
+
+After acceptance, the destination rebuilds dormant state from its saved poses.
+Old temporary bounds, broken-joint caches, acoustic geometry and pending display
+guards cannot transfer to the restored journal. Old display work drains without
+suppressing a new observed load. Collision queries conservatively retain unknown
+geometry until preparation; acoustic geometry can rebuild without a visible root.
+Explicit demand later materializes the same saved identity and placement.
+
+The pre-fix reproduction filled all 128 live-object reservations and showed
+Discard failing for one unloaded edit. With this change the same discard succeeds,
+ends the paired temporary room/memory scope and leaves the reservation count at
+128; the saved object remains unloaded. Releasing pressure and activating it
+restores its saved placement. Additional checks cover temporary deletion, the
+latest confirmed Keep, a failed Keep, later activation and cancelled display work.
+
+Verification: **1,635 EditMode + 424 selected PlayMode tests passed**, with no skips and clean native exits. The 57-file PlayMode selection matches fresh Unity discovery. The passing EditMode report is reused after the final assertion-only change in `DormantCollisionTests`; all production and EditMode inputs are identical, with source hashes and the reuse receipt recorded. Focused verification passed 39 PlayMode cases. All **1,508 web room tests** and the generated catalog check passed; only catalog source provenance changed. Source reconciliation covers 3,532 frozen native inputs, 1,205 unchanged shared inputs and 14 unchanged protected files. Evidence is in `.quest-evidence/dormant-restore-20261023/`.
+
+This separates one restoration path from native capacity; it does not raise the
+64-creation saved quota or the 128-root native budget. Creating a new saved object
+still requires native preparation. Larger saved/resident/simulation capacity,
+river/spill and underwater scope and measured Quest limits remain unfinished.
+No fresh full Headless/Book journey, Android compilation, headset, paid provider,
+signing, deployment or Meta operation was performed for this increment. Prior
+Headless at `db9eeb2e` and rendered Book at `0eed618d` remain separate evidence.

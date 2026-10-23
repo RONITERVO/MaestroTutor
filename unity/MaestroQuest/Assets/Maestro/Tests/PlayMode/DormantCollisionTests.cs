@@ -87,7 +87,10 @@ namespace Maestro.Quest.Tests {
             yield return WaitForModuleLibrary();string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;var guard=editor.DormantCollisionGuard(id);var shape=guard.Shape;
             Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);while(editor.TemporarySavePending)yield return null;
-            Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.DormantCollisionGuard(id),Is.Null);Assert.That(guard.Shape,Is.Null);Assert.That(!shape||!shape.enabled,Is.True);yield return null;Assert.That((bool)shape,Is.False);
+            Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);
+            var restored=editor.DormantCollisionGuard(id);Assert.That(restored,Is.Not.Null);Assert.That(restored,Is.Not.SameAs(guard));Assert.That(restored.Known,Is.False);Assert.That(restored.Shape,Is.Null);
+            Assert.That(guard.Shape,Is.Null);Assert.That(!shape||!shape.enabled,Is.True);yield return null;Assert.That((bool)shape,Is.False);
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.DormantCollisionGuard(id),Is.Null);
         }
         [UnityTest]public IEnumerator DormantCollisionAllowsOwnedLocalPreparationButCannotSurviveItsOwner(){
             string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);var guard=editor.DormantCollisionGuard(id);var shape=guard.Shape;

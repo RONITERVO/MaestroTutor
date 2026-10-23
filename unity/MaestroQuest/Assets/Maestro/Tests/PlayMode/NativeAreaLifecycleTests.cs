@@ -127,11 +127,12 @@ namespace Maestro.Quest.Tests
             var changed=editor.Read(id);changed.name="Changed while preparing";Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out error),Is.True,error);
             yield return NativeAreaCompletion(activation,false);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.Read(id).name,Is.EqualTo(changed.name));yield return NativeAreaCompletion(editor.ActivateNativeArea(area));
         }
-        [UnityTest] public IEnumerator NativeAreaTemporaryDiscardClearsResidencyFromTheReplacedJournal()
+        [UnityTest] public IEnumerator NativeAreaTemporaryDiscardRestoresColdResidencyFromTheSavedJournal()
         {
             yield return WaitForModuleLibrary();string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.BeginTemporaryRoom(out var error),Is.True,error);while(editor.TemporarySavePending)yield return null;
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;Assert.That(editor.DiscardTemporaryRoom(out error),Is.True,error);
-            Assert.That(editor.NativeEntityDormant(id),Is.False);Assert.That((bool)editor.Find(id),Is.True);Assert.That(editor.RegionFor(id),Is.EqualTo(area));
+            Assert.That(editor.NativeEntityDormant(id),Is.True);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.RegionFor(id),Is.EqualTo(area));
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.NativeEntityDormant(id),Is.False);Assert.That(editor.Find(id),Is.Not.Null);
         }
         [UnityTest] public IEnumerator NativeAreaNeverActiveCandidatesReleaseDrawingAndImportedResources()
         {

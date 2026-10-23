@@ -67,12 +67,12 @@ namespace Maestro.Quest.Creation
             try{foreach(var data in document.objects)if(!data.IsBuiltIn&&!editor.NativeEntityDormant(data.id)&&!editor.Find(data.id))foreach(var step in prepared.PrepareGeometry(editor,data,null)){}return prepared;}
             catch(Exception failure){prepared.Dispose();error=failure is ModelImportException or RoomResourceLimitException?failure.Message:"The initial room geometry could not be prepared; saved objects remain available";return null;}
         }
-        // Discard changes journals and resets dormant membership. Prepare the
-        // saved destination, including missing roots, before ending temporary memory.
-        internal static RoomEditPreparation TryCreateRestoration(RoomEditor editor,RoomDocument document,out string error)
+        // Prepare the destination's live objects before ending temporary memory.
+        // Restoring cold saved existence must not reserve native geometry.
+        internal static RoomEditPreparation TryCreateRestoration(RoomEditor editor,RoomDocument document,ISet<string> dormant,out string error)
         {
             var prepared=new RoomEditPreparation();error=null;
-            try{foreach(var data in document.objects)foreach(var step in prepared.PrepareGeometry(editor,data,editor.Find(data.id)?editor.Read(data.id):null)){}return prepared;}
+            try{foreach(var data in document.objects)if(!dormant.Contains(data.id))foreach(var step in prepared.PrepareGeometry(editor,data,editor.Find(data.id)?editor.Read(data.id):null)){}return prepared;}
             catch(Exception failure){prepared.Dispose();error=failure is ModelImportException or RoomResourceLimitException?failure.Message:"The saved room could not be prepared; temporary changes remain available";return null;}
         }
         internal PreparedRoomWindows TakeWindows(RoomObjectData data){
