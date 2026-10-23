@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[visual lookup checkpoint](#persistent-visual-candidate-lookup--2026-10-23) records this
+[ground readiness checkpoint](#persistent-ground-readiness-and-relocated-foot-probes--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -16122,3 +16122,57 @@ and can rebuild a partition after an unrelated authored change. Allocation and
 whole-frame Quest measurements, finer metadata invalidation and separate saved,
 resident, simulation and query budgets remain capacity work before quota changes.
 No larger-world capacity or new provider/physical-device acceptance is claimed.
+
+## Persistent ground readiness and relocated foot probes — 2026-10-23
+
+Ground completeness and shared ground-dependency facts now use the same retained
+lookup for stable unloaded surfaces. The lookup preserves authored versus
+retained/native collision-bound semantics and the previous ordinal identity
+order. Unknown or empty geometry remains a dependency. Current native availability,
+poses and exact scan anchors are evaluated afresh; a cached bound cannot change
+an unavailable surface into support. Accepted edits, Undo, deletion, world
+replacement, residency and metadata changes invalidate the partition. Moving the
+virtual-world root does not invalidate room-local bounds or rewrite saved objects.
+
+A separate reproduced regression affected humanoid foot placement after relocating
+the virtual world: world-space foot support envelopes were being compared with
+room-space ground bounds. The probe could report support while an upper required
+surface was unloaded. It now transforms the envelope into room coordinates before
+checking readiness, while retaining world-space raycasts and the actor's existing
+real-room collision policy. The test includes both translation and yaw, a lower
+resident surface, and a retired upper surface. The initial fixture incorrectly
+attempted retirement during active physics and hit the valid retention guard;
+the corrected fixture pauses, retires and resumes before reproducing the bug.
+
+Four unloaded surfaces over 30 frames require zero repeated bounds reads or index
+rebuild work; the near probe selects one candidate. Another 256 warmed boolean
+queries allocate zero managed bytes in the measured Editor path. World relocation
+preserves saved state and does not load those surfaces. JSON result construction,
+live geometry, pending capture paths, whole-frame costs and Quest performance are
+outside that measurement. A separate 1,024-entry synthetic comparison checks the
+index against exhaustive support queries; it is not a capacity claim or quota
+increase. The shared pending-content check also avoids its captured callback.
+
+Verification passed all 1,624 discovered EditMode tests and all 155 selected
+PlayMode cases from 19 affected source files, including the four new runtime
+regressions. Selection was reconciled against a fresh Unity test inventory; there
+were no skips and every native process exited cleanly. The focused run also passed
+24 EditMode and 20 PlayMode cases. All 256 shared catalog tests and generated
+catalog verification passed. Capability definitions are unchanged. Evidence
+reconciles 3,516 frozen native inputs, 1,205 unchanged shared client inputs and
+14 unchanged protected files, plus the four known Configure differences and
+12 generated mirror inputs.
+
+Evidence is retained in `.quest-evidence/ground-lookup-20261023/`. The first wider
+runner expected the inventory in its own evidence directory; Unity correctly
+exported it to the owned mirror's Logs directory. That harness failure occurred
+before tests and is preserved separately from the corrected run. Native sources
+remained frozen during verification. No headset, provider, Android packaging,
+signing, deployment or Meta action was performed for this increment.
+
+The complete fresh native inventory, web suite and rendered Book/Headless journeys
+at `0eed618d` remain separate preceding checkpoints. This targeted internal
+increment does not establish new physical, provider or audio-quality acceptance.
+Broader cache invalidation can still rebuild unrelated partitions; live geometry,
+query scheduling and separate saved/resident/simulation budgets remain capacity
+work before increasing limits. The full v1 release goal remains active.

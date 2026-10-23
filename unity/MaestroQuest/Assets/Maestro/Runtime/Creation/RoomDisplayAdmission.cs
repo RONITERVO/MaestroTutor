@@ -21,7 +21,13 @@ namespace Maestro.Quest.Creation
         internal bool NativeDisplayPending=>displayAdmission!=null||spatialIndex?.Pending==true||dormantNative.Keys.Any(id=>NativeDisplayRequested(id,Time.unscaledTimeAsDouble));
         bool NativeDisplayRequested(string id,double now)=>DisplayReady&&Frame.Valid&&NativeEntityDormant(id)&&!suppressedDisplayTargets.Contains(id)&&NativePhase(id)!=NativeEntityPhase.Failed&&NativeDisplayPriority(id,now)<4;
         // Used by ground, water and acoustics: dormant is not a queued request.
-        internal bool NativeContentPending(string id)=>NativeEntityDormant(id)&&(NativePhase(id)==NativeEntityPhase.Preparing||NativeDisplayRequested(id,Time.unscaledTimeAsDouble)||nativeAcquisitions.Any(job=>!job.Closed&&!job.Cancellation.IsCancellationRequested&&job.Closure.Contains(id)));
+        internal bool NativeContentPending(string id){
+            if(!NativeEntityDormant(id))return false;
+            if(NativePhase(id)==NativeEntityPhase.Preparing||NativeDisplayRequested(id,Time.unscaledTimeAsDouble))return true;
+            foreach(var job in nativeAcquisitions)
+                if(!job.Closed&&!job.Cancellation.IsCancellationRequested&&job.Closure.Contains(id))return true;
+            return false;
+        }
         void InitializeNativeStartup(RoomDocument document)
         {
             nativeJournal=journal;displayJournal=journal;

@@ -33,9 +33,12 @@ namespace Maestro.Quest.Creation
         internal JArray GroundDependencies(Bounds envelope)
         {
             var result=new JArray();if(journal==null)return result;
-            foreach(var candidate in journal.GroundCandidates())
+            SelectGroundCandidates(envelope);
+            foreach(var index in groundMatches){
+                var candidate=groundEntries[index];
                 if(MissingGround(candidate,envelope,out var state,out var known))
-                    result.Add(new JObject{["target"]=candidate.target,["state"]=state,["boundsKnown"]=known});
+                    result.Add(new JObject{["target"]=candidate.Definition.target,["state"]=state,["boundsKnown"]=known});
+            }
             return result;
         }
         // The presentation path uses the same completeness rule without building
@@ -44,13 +47,14 @@ namespace Maestro.Quest.Creation
         internal bool GroundComplete(Bounds envelope)
         {
             if(journal==null)return false;
-            foreach(var candidate in journal.GroundCandidates())
-                if(MissingGround(candidate,envelope,out _,out _))return false;
+            SelectGroundCandidates(envelope);
+            foreach(var index in groundMatches)
+                if(MissingGround(groundEntries[index],envelope,out _,out _))return false;
             return true;
         }
-        bool MissingGround((string target,bool terrain,bool imported) candidate,Bounds envelope,out string state,out bool known)
+        bool MissingGround(GroundCandidate selected,Bounds envelope,out string state,out bool known)
         {
-            state=null;known=false;
+            var candidate=selected.Definition;state=null;known=false;
             if(dormantNative.ContainsKey(candidate.target))state=NativeContentPending(candidate.target)?"pending":"unavailable";
             else{
                 var item=Find(candidate.target);
@@ -65,11 +69,7 @@ namespace Maestro.Quest.Creation
                 }
             }
             if(state==null)return false;
-            var spatial=ReadSpatialBounds(candidate.target,out var source);var extent=spatial.Visual;
-            if(source!="authored"){
-                if(!spatial.Collision.Known)extent.Known=false;
-                else if(spatial.Collision.HasBounds)extent.Include(spatial.Collision.Bounds,Matrix4x4.identity);
-            }
+            var extent=selected.Cached?selected.Extent:ReadGroundExtent(candidate.target);
             known=extent.Known&&extent.HasBounds;
             return !known||extent.Bounds.Intersects(envelope);
         }

@@ -13,7 +13,11 @@ namespace Maestro.Quest.Creation
             hit=default;
             if(!actor||!PhysicsWorld||!PhysicsWorld.SimulationActive||RuntimeGate.Held||
                 !Frame.Valid||Mathf.Abs(Frame.MetresPerUnit-1)>.0001f||Vector3.Dot(transform.up,Vector3.up)<.99999f||
-                !PhysicsWorld.EnvironmentReady(actor)||!GroundComplete(RoomGroundQuery.SupportEnvelope(expected,.025f,band,band)))return false;
+                !PhysicsWorld.EnvironmentReady(actor))return false;
+            // Rig contacts and the raycast are in world space; authored ground
+            // dependencies live in room coordinates, including after locomotion.
+            var support=new RoomSpatialExtent{Known=true,HasBounds=true,Bounds=RoomGroundQuery.SupportEnvelope(expected,.025f,band,band)}.Transform(transform.worldToLocalMatrix);
+            if(!support.Known||!support.HasBounds||!GroundComplete(support.Bounds))return false;
             if(footGroundFrame!=Time.frameCount||footGroundRevision!=Revision){
                 footGroundFrame=Time.frameCount;footGroundRevision=Revision;Physics.SyncTransforms();
                 physicalFootGround.Capture(PhysicsWorld.transform,true);virtualFootGround.Capture(PhysicsWorld.transform,false);
