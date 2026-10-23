@@ -24,7 +24,10 @@ positive dimensions, opaque RGB colors and unit quaternions. Native and web
 validation also check unique IDs, local reach, matching track targets and time
 ordering. There may be up to 17 tracks and 2–16 keys per track; keys begin at zero
 and end at the recipe duration (0.1–30 seconds). A room permits at most 256 recipe
-parts across its objects and the existing 64-creation capacity.
+parts across its objects. This component limit is independent of the 256 saved
+creations admitted by room format 42 and the 128-root native budget. Deferred
+creation does not enlarge the recipe-part allowance; see the
+[creation contract](QUEST_CREATION_VOCABULARY.md#saved-existence-and-native-loading).
 
 The catalog exports a detached native example: a 19-part box robot with two
 waving tracks. It defaults to `playing=false`. An agent can change that example

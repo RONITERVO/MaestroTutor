@@ -47,10 +47,15 @@ guessed/foreign IDs. Result destinations must match the catalog's type and canno
 overlap within a call. The book's function blocks expose result-variable creation
 and scalar argument-variable selection; source and blocks still edit one program.
 
-A run may create at most 16 objects, with the existing room limit of 64 creations.
-The limit is checked before the next native effect. Creation remains an instant
-action: one effect per run per tick, no budget renewal and no recursive catch-up.
-A new run has new locals and can create new objects; saving alone creates nothing.
+A run may create at most 16 objects. Room format 42 independently permits 256
+saved creations plus the book and Maestro; native roots and component budgets
+remain separate. Admission is checked before the next effect. Creation is a
+completion action: result bindings are available only after the accepted save,
+not when preparation begins. The default loading mode prepares native content;
+`loading: onDemand` saves cold definitions without claiming native readiness.
+See the [creation contract](QUEST_CREATION_VOCABULARY.md#saved-existence-and-native-loading).
+A new run has new locals and a new creation allowance; saving a program alone
+creates nothing.
 Result bindings are not flattened through the simple sequence editor.
 
 ## Recovery and evidence

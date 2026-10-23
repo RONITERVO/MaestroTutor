@@ -4,6 +4,10 @@ Design decision, 2026-10-02, based on the owner's notebook and PR #248 review.
 This is the implementation direction and acceptance plan, not a claim that the
 listed new components or assets are already shipped. Existing contracts linked
 below remain authoritative until an increment implements and verifies a change.
+Current saved/native admission is documented in the
+[creation contract](QUEST_CREATION_VOCABULARY.md#saved-existence-and-native-loading):
+format 42 allows 256 saved creations independently of the 128-root native budget.
+Older dated checkpoints below describe their limits at that time.
 
 ## Product decision
 
@@ -2137,9 +2141,10 @@ preserve these distinctions.
 
 This projection is passive. It never loads geometry, changes selection, stops a
 program, changes collision participation or defines which regions stay simulated.
-The saved quota remains 64 creations plus book/Maestro, with existing spatial and
-height-field limits. Capacity growth, resource admission and device performance
-acceptance remain separate work.
+At this checkpoint the saved quota was 64 creations plus book/Maestro, with
+existing spatial and height-field limits. The later format-42 increment raises
+saved capacity independently of native admission; device performance acceptance
+remains separate work.
 
 
 ## Procedural native resource admission
@@ -2262,7 +2267,8 @@ connections need no replacement slot.
 Independent process-wide ceilings are **128 authored bodies/materials** and
 **32 potential connection joints**, across workspaces. These are logical native
 ownership limits, not measurements of PhysX memory, solver cost or Quest frame
-time. Saved quotas remain 64 creations and 16 connections per room. Built-in
+time. This checkpoint retained 64 creations and 16 connections per room; the
+later format-42 change raises saved creations to 256, not connection capacity. Built-in
 book/avatar/tools, tracked pushers and other system bodies are outside this
 ledger; broadphase/contact data and simulation/query work also need separate
 bounds before saved capacity increases.
@@ -2780,7 +2786,8 @@ unavailable dependencies.
 The shared runtime.flowDiscoveryBudget fact requires runtimeDiagnostics.v1:
 step is the shared opportunity; reservations include waiting claims; executions
 count booked grants; units is their conservative logical charge; unitLimit is
-524,288; objectLimit follows the existing 64 creations plus book and Maestro.
+524,288. This checkpoint tied objectLimit to 64 creations plus book and Maestro;
+the later physical-discovery increment separates it as a 4,096-entry query limit.
 A booking does not certify discovery, loading or simulation completed. Passive
 reads cannot acquire geometry, change quantities or start physics. User and agent
 programs use the same typed record.
@@ -2796,7 +2803,7 @@ group scheduling, broader cost accounting and real-device evidence.
 ### Saved and native container limits
 
 The current saved format permits **16 liquid containers per room**, within the
-separate limit of 64 creations plus book and Maestro. The process-wide native
+separate format-42 limit of 256 saved creations plus book and Maestro. The process-wide native
 liquid limit is **32**. A dormant container still belongs to the saved inventory
 and discovery; it does not own a live surface or stream. None of these counts is
 a frame-time or memory guarantee.

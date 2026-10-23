@@ -479,13 +479,19 @@ State/event declaration controls no longer require Source; coordinated incompati
 changes and shared libraries remain separate work.
 
 
-## Complete-room resource declarations (2026-10-08)
+## Program and one-off resource declarations (updated 2026-10-23)
 
-The native catalog publishes `limits.programResources` (currently 66: the book,
-Maestro and 64 creations). Native programs and receipts, web validation, module
-linking and catalog/execution observations use that same ceiling. Individual
-actions retain their own smaller budgets where applicable; this does not raise
-creation, layout, physics or concurrent-run limits. Only resource-ID arrays gain
-this transport allowance. General arrays and structured program values retain
-their existing bounds. Shared appearance edits require exact complete membership
-and current observations before claiming all affected objects.
+The native catalog publishes `limits.programResources` (66). Saved programs,
+imported modules and their web validation retain this declaration bound; it is
+independent of the 256-creation saved-world limit. One-off capability invocations,
+their revision guards, receipts and catalog/execution observations use the separate
+`limits.invocationResources` bound (258, including book and Maestro).
+`limits.ownershipClaims` has the same current value, while active-owner count and
+other action budgets remain unchanged. Only validated single-action wrappers use
+the larger invocation bound; arbitrary saved programs cannot opt into it.
+
+General arrays and structured program values retain their existing bounds.
+Shared appearance and visibility saves still require exact complete membership,
+current observations and native readiness, with a per-action 66-member limit.
+Editing a shared definition across larger cold groups remains unfinished; the
+larger one-off envelope alone does not implement that feature.
