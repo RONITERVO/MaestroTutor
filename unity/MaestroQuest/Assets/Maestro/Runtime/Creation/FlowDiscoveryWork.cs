@@ -5,22 +5,24 @@ namespace Maestro.Quest.Creation {
  // Logical discovery allowance, independently admitted before flow execution.
  // No geometry is needed to price it; preparing inputs cannot need an execution grant.
  internal static class FlowDiscoveryWork {
-  internal const int MaximumUnits=524288,MaximumObjects=RoomDocument.MaximumObjects+2;
+  internal const int MaximumUnits=524288,MaximumObjects=RoomSpatialLookup.MaximumEntries;
   internal static int Demand(int vessels,int objects){
-   if(vessels<0||objects<0||vessels>objects||objects>MaximumObjects)return int.MaxValue;
+   if(vessels<0||objects<0||vessels>objects||vessels>RoomContainer.MaximumPerRoom||objects>MaximumObjects)return int.MaxValue;
    if(vessels==0)return 0;
    long n=vessels,m=objects;
-   // Snapshot/ground metadata, one index construction, at most three spatial
-   // probes per vessel, tree-node and candidate visits, cavity probes,
-   // trajectory/rain points, transitive quantity edges/targets,
-   // and worst-case physical-island visits. The accepted format has at most
-   // one physical connection per object. Geometry/sort/PhysX internals excluded.
-   return (int)Math.Min(int.MaxValue,3*m+RoomSpatialLookup.MaximumBuildWork(objects)+n*(m*m+12*m+4*n+40));
+   // Query capacity is independent of the saved-room quota. One collision
+   // capture and one physical adjacency build, then at most three spatial
+   // probes per vessel plus cavity/trajectory/quantity-graph visits. There is
+   // at most one physical edge per object, so adjacency construction and each
+   // island traversal are linear (including missing referenced identities).
+   // Geometry/sort/PhysX internals excluded. Exceeding the work allowance still
+   // refuses admission; this bound does not promise capacity for every count.
+   return (int)Math.Min(int.MaxValue,9*m+RoomSpatialLookup.MaximumBuildWork(objects)+n*(18*m+4*n+44));
   }
  }
  public sealed partial class LiquidPouring {
   internal struct DiscoveryWorkSample {
-   internal int Captures,CollisionReads,CollisionCandidates,CollisionIndexBuild,CollisionNodes,CavityReads,CavityCandidates,Probes,PathSegments,IslandQueries,IslandMembers,GraphEdges;
+   internal int Captures,CollisionReads,CollisionCandidates,CollisionIndexBuild,CollisionNodes,CavityReads,CavityCandidates,Probes,PathSegments,IslandQueries,IslandMembers,IslandBuild,IslandVisits,GraphEdges;
   }
   DiscoveryWorkSample discoveryWork;
   internal DiscoveryWorkSample LastFlowDiscovery=>discoveryWork;

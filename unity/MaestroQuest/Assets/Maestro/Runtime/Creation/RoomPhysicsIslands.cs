@@ -28,18 +28,12 @@ namespace Maestro.Quest.Creation {
             if(view)return view.Broken;
             return dormantNative.TryGetValue(owner,out var entry)&&entry.ConnectionBroken&&entry.ConnectionSource==JsonUtility.ToJson(link);
         }
+        internal RoomPhysicsGraph CapturePhysicsGraph()=>new(
+            journal.PhysicalLinks().Where(x=>!PhysicsLinkBroken(x.owner,x.link)).Select(x=>(x.owner,x.link.connected)),
+            journal.PhysicalDynamic,journal.SavedObjectCount);
         internal string[] PhysicsIslandMembers(RoomItem item){
             string id=Identity(item);if(id==null||journal==null)return Array.Empty<string>();
-            var links=journal.PhysicalLinks().Where(x=>!PhysicsLinkBroken(x.owner,x.link)).Select(x=>(x.owner,other:x.link.connected)).ToArray();
-            var found=new HashSet<string>(StringComparer.Ordinal){id};var pending=new Queue<string>();pending.Enqueue(id);
-            while(pending.Count>0){
-                var next=pending.Dequeue();
-                // A fixed anchor is shared geometry, not a force path between its
-                // separate moving children. Interrupting the anchor reaches both.
-                if(next!=id&&!journal.PhysicalDynamic(next))continue;
-                foreach(var edge in links){string peer=edge.owner==next?edge.other:edge.other==next?edge.owner:null;if(peer!=null&&found.Add(peer))pending.Enqueue(peer);}
-            }
-            return found.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
+            return CapturePhysicsGraph().Members(id,out _);
         }
         internal void InterruptPhysicsIsland(RoomItem item,bool discardAcceptedPose=true){
             foreach(var id in PhysicsIslandMembers(item)){

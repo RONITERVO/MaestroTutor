@@ -30,6 +30,7 @@ namespace Maestro.Quest.Creation {
    // Never reuse collision placement across physics, loading or another tick.
    discoveryWork.Captures++;var spatial=editor.CaptureMovementCandidates(true);
    discoveryWork.CollisionReads+=spatial.BoundsReads;discoveryWork.CollisionIndexBuild+=spatial.IndexBuildWork;
+   var islands=editor.CapturePhysicsGraph();discoveryWork.IslandBuild+=islands.BuildWork;
    var cavities=new Dictionary<string,RoomSpatialExtent>(StringComparer.Ordinal);var poses=new Dictionary<string,(Matrix4x4 matrix,Quaternion rotation)>(StringComparer.Ordinal);
    foreach(var vessel in vessels.Values){discoveryWork.CavityReads++;cavities[vessel.Id]=editor.MissingLiquidExtent(vessel.Id,vessel.Live,out _,out var matrix,out var rotation);poses[vessel.Id]=vessel.Item?(vessel.Item.transform.localToWorldMatrix,vessel.Item.transform.rotation):(matrix,rotation);}
    var seeds=vessels.ToDictionary(pair=>pair.Key,_=>new FlowSeed(),StringComparer.Ordinal);var weather=editor.CurrentWeather;var rainVelocity=WeatherCover.Velocity(editor);
@@ -38,7 +39,10 @@ namespace Maestro.Quest.Creation {
     if(!extent.Known||!extent.HasBounds){seed.Unknown=true;seed.Members.UnionWith(vessels.Keys);seed.Targets.UnionWith(vessels.Keys);continue;}
     FlowProbeAt(seed,extent.Bounds,vessel.Id,true,cavities,spatial);
     var pose=poses[vessel.Id];var terrain=vessel.Item?RoomTerrainReservoir.Native(vessel.Live,vessel.Item.transform):null;
-    if(vessel.Item&&vessel.Rigid&&vessel.Rigid.Dynamic){discoveryWork.IslandQueries++;foreach(var id in editor.PhysicsIslandMembers(vessel.Item)){discoveryWork.IslandMembers++;if(vessels.ContainsKey(id))seed.Members.Add(id);}}
+    if(vessel.Item&&vessel.Rigid&&vessel.Rigid.Dynamic){
+     discoveryWork.IslandQueries++;var members=islands.Members(vessel.Id,out int visits);discoveryWork.IslandVisits+=visits;
+     foreach(var id in members){discoveryWork.IslandMembers++;if(vessels.ContainsKey(id))seed.Members.Add(id);}
+    }
     // Missing ordinary cavities still have a retained/anchored pose. Use the same
     // lip geometry as live pouring, so nearby independent circuits stay separate.
     // An unavailable terrain bed cannot prove retained volume or a precise lip.

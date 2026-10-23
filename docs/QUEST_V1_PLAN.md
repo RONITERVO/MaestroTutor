@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[spatial invalidation checkpoint](#identity-scoped-spatial-invalidation--2026-10-23) records this
+[physical discovery checkpoint](#linear-physical-discovery--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -140,10 +140,14 @@ APK filtering, signing, installation and physical acceptance are separate result
 
 Saved existence and native simulation capacity must become separate contracts
 before expanding the current 64-creation quota. The October 21 source audit found
-that liquid discovery derives its object limit from the saved-room limit, and its
-logical allowance includes an objects-squared term. Substituting 1,000 creations
-into that existing formula would exceed its 524,288-unit allowance even for one
-vessel; this is arithmetic evidence, not a performance measurement.
+that liquid discovery derived its object limit from the saved-room limit and
+reserved quadratic physical-connection work. The October 23 physical discovery
+increment replaces the repeated full-edge traversal with an adjacency snapshot,
+shared within each liquid discovery. Its object limit now follows the independent
+4,096-entry spatial-query capacity. The unchanged 524,288-unit allowance still
+rejects combinations that cannot fit; an index capacity is not a promise that
+every simulation fits. Arithmetic now admits 1,002 objects with 16 vessels, but
+this does not raise the saved quota or establish Quest performance.
 
 The existing metadata index prepares detached bounds by identity. A separate
 immutable lookup rejects distant collision branches inside a coherent query.
@@ -177,7 +181,8 @@ cold-load and travel-between-area cases, bounded observed work/allocation,
 shared editing and discovery, interrupted save/recovery and later measured Quest
 capacity. The audit and source references are retained in
 `.quest-evidence/surface-travel-20261021/world-capacity-audit.json`.
-No capacity limit or runtime behavior changed in this audit.
+The original audit changed no runtime behavior; subsequent implementation and
+its separately verified limits are recorded in the dated checkpoints below.
 
 Physics and liquid work now receive coordinated complete-group opportunities;
 see [the current execution checkpoint](#coordinated-physics-and-liquid-execution-2026-10-16).
@@ -16231,3 +16236,43 @@ accepted reconciliation still visit objects. Native/live work and visual query
 allocations remain separate costs. Independent saved, resident, simulation and
 query budgets and measured headset capacity remain required before raising
 limits. The full v1 release goal remains active.
+
+## Linear physical discovery — 2026-10-23
+
+Physical-island membership now uses a detached adjacency snapshot of accepted,
+unbroken connections. Each traversal visits only reachable nodes and edges;
+liquid dependency discovery shares one snapshot across all vessels in its admitted
+synchronous pass. Subsequent captures reread native/dormant broken-joint state.
+Fixed anchors still provide shared support without connecting separate moving
+children; starting an interruption at the anchor still reaches all its children.
+Missing referenced identities remain part of the closure and cannot become false
+readiness. This does not cache joint state across frames.
+
+Discovery admission now uses the spatial lookup's independent 4,096-entry limit,
+separate from the unchanged 64-creation saved format. Its conservative work
+formula covers one graph build and linear per-vessel traversal, with the same
+524,288-unit process allowance and complete-group scheduling. Counts that exceed
+the allowance remain refused. The shared `runtime.flowDiscoveryBudget` description
+explains query capacity versus saved/resident capacity; its record shape is
+unchanged, and both user and agent programs read the same fact.
+
+The pure graph oracle compares membership with the preceding exhaustive traversal
+across fixed anchors, missing identities, isolated components and cyclic inputs.
+For a synthetic 1,024-node chain it records 1,047,552 exhaustive edge scans versus
+5,117 graph-build operations and 3,070 query visits. Querying a separate two-node
+component alongside that chain visits four entries. These are logical counters,
+not elapsed time, whole-frame allocation or a supported 1,024-object room.
+Native checks include accepted edit/Undo, actual joint break, detached earlier
+captures and three connected vessels sharing one graph (21 traversal visits).
+
+Verification: **1,635 EditMode + 849 selected PlayMode tests passed**, with no skips and clean native exits; the selection spans 116 source files and matches fresh Unity discovery. Focused verification passed 15 EditMode + 26 PlayMode cases. All **1,508 web room tests** and the generated catalog check passed. Source reconciliation covers 3,528 frozen native inputs, 1,203 unchanged shared inputs and 14 unchanged protected files. Evidence and exact native/shared hashes are
+in `.quest-evidence/flow-topology-20261023/`.
+
+This increment leaves saved/native/physics/liquid quotas unchanged. Other physics
+callers capture fresh graphs per synchronous query; the temporary adjacency
+allocation and source scan still need measured Quest assessment. It does not
+remove all discovery costs, widen world bounds, enable region-scale simulation,
+or complete city/river/underwater scope. No fresh full Headless/Book journey,
+Android compilation, headset, paid provider, signing, deployment or Meta operation
+was performed in this increment. The preceding full Headless result at `db9eeb2e`
+and rendered Book result at `0eed618d` remain separately identified evidence.

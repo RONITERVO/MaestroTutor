@@ -24,7 +24,9 @@ it('preserves fresh native discovery across moved obstacles with one collision c
   expect(sample.probes).toBeGreaterThan(1);
   expect(sample.collisionReads).toBeGreaterThan(0);
   expect(sample.collisionReads).toBeLessThanOrEqual(sample.objects);
-  expect(sample.collisionCandidates).toBeGreaterThan(sample.collisionReads);
+  expect(sample.collisionCandidates).toBeGreaterThan(0);
+  expect(sample.collisionCandidates).toBeLessThanOrEqual(sample.objects*sample.probes);
+  expect(sample.collisionNodes).toBeGreaterThan(0);
  }
  const fact=behaviourFact('runtime.flowDiscoveryBudget');
  expect(fact?.features).toEqual(['runtimeDiagnostics.v1']);
@@ -32,6 +34,15 @@ it('preserves fresh native discovery across moved obstacles with one collision c
  expect(fact?.description).toContain('not measured CPU time');
  expect(validFactValue('runtime.flowDiscoveryBudget',{...native.waiting.budget,units:'unknown'})).toBe(false);
  expect(validFactValue('runtime.flowDiscoveryBudget',{...native.waiting.budget,startPhysics:true})).toBe(false);
+});
+it('exposes independent query capacity and reuses one native graph for connected vessels',()=>{
+ expect(native.sharedGraph.budget.objectLimit).toBe(4096);
+ expect(native.sharedGraph.captures).toBe(1);
+ expect(native.sharedGraph.islandQueries).toBe(3);
+ expect(native.sharedGraph.islandBuild).toBeLessThanOrEqual(6*native.sharedGraph.objects);
+ expect(native.sharedGraph.islandVisits).toBe(21);
+ expect(native.sharedGraph.islandMembers).toBe(9);
+ expect(behaviourFact('runtime.flowDiscoveryBudget')?.description).toContain('not a saved-room or resident-object quota');
 });
 it('uses the same discovery diagnostic type in user and agent programs',()=>{
  const program:BehaviourProgram={version:3,dataVersion:1,entry:'main',resources:[],state:[],events:[],functions:[{name:'main',returns:'void',parameters:[],locals:[{name:'budget',initial:native.waiting.budget}],body:[{id:'read',op:'set',variable:'budget',value:{fact:'runtime.flowDiscoveryBudget'}}]}]};

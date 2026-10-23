@@ -103,13 +103,24 @@ namespace Maestro.Quest.Tests {
             Physics.SyncTransforms();yield return NavigationLoadingDone();yield return IslandActive(ids);
             foreach(var id in ids)Assert.That(editor.Frame.VectorToRoom(editor.Find(id).GetComponent<Rigidbody>().linearVelocity).x,Is.EqualTo(3).Within(.15f));
         }
+        [UnityTest]public IEnumerator PhysicsIslandGraphSnapshotsStayDetachedAcrossAcceptedLinkEditsAndUndo(){
+            var ids=PhysicsIslandChain(true,true);var before=editor.CapturePhysicsGraph();
+            Assert.That(before.Members(ids[0],out _),Is.EquivalentTo(ids.Take(2)));
+            Assert.That(before.Members(ids[1],out _),Is.EquivalentTo(ids));
+            var link=editor.Read(ids[0]).connections.Single();link.enabled=false;
+            Assert.That(editor.EditConnection(ids[0],editor.ObjectRevision(ids[0]),"configure",ids[1],link,0,out var error),Is.True,error);
+            Assert.That(editor.PhysicsIslandMembers(editor.Find(ids[0])),Is.EquivalentTo(new[]{ids[0]}));
+            Assert.That(before.Members(ids[0],out _),Is.EquivalentTo(ids.Take(2)),"An earlier capture owns detached values");
+            editor.Undo();Assert.That(editor.PhysicsIslandMembers(editor.Find(ids[0])),Is.EquivalentTo(ids.Take(2)));
+            yield return null;
+        }
         [UnityTest]public IEnumerator PhysicsIslandActualJointBreakSeparatesItsFormerMember(){
             var ids=PhysicsIslandChain(true);var link=editor.Read(ids[0]).connections.Single();link.breakForce=.1f;
             Assert.That(editor.EditConnection(ids[0],editor.ObjectRevision(ids[0]),"configure",ids[1],link,0,out var error),Is.True,error);
-            StartIsland();yield return IslandActive(ids);var item=editor.Find(ids[0]);var view=item.GetComponent<RoomConnectionView>();
+            StartIsland();yield return IslandActive(ids);var item=editor.Find(ids[0]);var view=item.GetComponent<RoomConnectionView>();var beforeBreak=editor.CapturePhysicsGraph();
             Assert.That(item.GetComponent<RigidRoomItem>().ApplyImpulse(Vector3.up*3,out error),Is.True,error);
             for(int i=0;i<30&&!view.Broken;i++)yield return new WaitForFixedUpdate();Assert.That(view.Broken,Is.True);
-            Assert.That(editor.PhysicsIslandMembers(item),Is.EquivalentTo(new[]{ids[0]}));item.gameObject.SetActive(false);
+            Assert.That(editor.PhysicsIslandMembers(item),Is.EquivalentTo(new[]{ids[0]}));Assert.That(beforeBreak.Members(ids[0],out _),Is.EquivalentTo(ids));item.gameObject.SetActive(false);
             yield return IslandActive(ids.Skip(1).ToArray());
         }
         [UnityTest]public IEnumerator PhysicsIslandGripInterruptsPendingMomentumForEveryConnectedMember(){

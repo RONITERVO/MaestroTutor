@@ -16,7 +16,7 @@ namespace Maestro.Quest.Tests {
   void CaptureFlowDiscovery(string name){
    string folder=Environment.GetEnvironmentVariable("MAESTRO_FLOW_DISCOVERY_EVIDENCE");if(string.IsNullOrEmpty(folder))return;
    Directory.CreateDirectory(folder);if(!root.GetComponent<RuntimeDiagnostics>())root.AddComponent<RuntimeDiagnostics>();var s=editor.Liquids.LastFlowDiscovery;
-   File.WriteAllText(Path.Combine(folder,name+".json"),new JObject{["budget"]=CollisionFact("runtime.flowDiscoveryBudget"),["captures"]=s.Captures,["collisionReads"]=s.CollisionReads,["collisionCandidates"]=s.CollisionCandidates,["collisionIndexBuild"]=s.CollisionIndexBuild,["collisionNodes"]=s.CollisionNodes,["cavityReads"]=s.CavityReads,["cavityCandidates"]=s.CavityCandidates,["probes"]=s.Probes,["pathSegments"]=s.PathSegments,["islandQueries"]=s.IslandQueries,["islandMembers"]=s.IslandMembers,["graphEdges"]=s.GraphEdges,["objects"]=editor.SpatialObjectCount,["nativePending"]=editor.NativeActivationPending}.ToString());
+   File.WriteAllText(Path.Combine(folder,name+".json"),new JObject{["budget"]=CollisionFact("runtime.flowDiscoveryBudget"),["captures"]=s.Captures,["collisionReads"]=s.CollisionReads,["collisionCandidates"]=s.CollisionCandidates,["collisionIndexBuild"]=s.CollisionIndexBuild,["collisionNodes"]=s.CollisionNodes,["cavityReads"]=s.CavityReads,["cavityCandidates"]=s.CavityCandidates,["probes"]=s.Probes,["pathSegments"]=s.PathSegments,["islandQueries"]=s.IslandQueries,["islandMembers"]=s.IslandMembers,["islandBuild"]=s.IslandBuild,["islandVisits"]=s.IslandVisits,["graphEdges"]=s.GraphEdges,["objects"]=editor.SpatialObjectCount,["nativePending"]=editor.NativeActivationPending}.ToString());
   }
   [UnityTest]public IEnumerator FlowDiscoveryPressureDefersGeometryAndServesColdRoomUnderContinuingDemand(){
    var(a,b)=FixedFlowCups();Assert.That(editor.RetireNativeArea(NativeAreaFor(b),out var error),Is.True,error);
@@ -73,6 +73,16 @@ namespace Maestro.Quest.Tests {
     Assert.That(FlowWorkResources.TryAdmit(host,out error),Is.True,error);Assert.That(claim.DiscoveryUnits,Is.GreaterThan(previous));Assert.That(FlowWorkResources.Ready(host,out _),Is.True);
    }finally{if(pressure!=null)SimulationWorkSchedule.Remove(pressure);UnityEngine.Object.DestroyImmediate(go);physics.PausePhysics();}
    yield return null;
+  }
+  [UnityTest]public IEnumerator FlowDiscoverySharesOnePhysicalGraphAcrossMultipleMovingVessels(){
+   editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);
+   foreach(var id in ids)yield return ContainerAction(ex,ContainerCall(id,new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));
+   StartIsland();FlowWorkResources.Advance(.05f);editor.Liquids.Tick(.05f);CaptureFlowDiscovery("shared-graph");
+   var sample=editor.Liquids.LastFlowDiscovery;
+   Assert.That(sample.Captures,Is.EqualTo(1));Assert.That(sample.IslandQueries,Is.EqualTo(ids.Length));
+   Assert.That(sample.IslandBuild,Is.GreaterThan(0).And.LessThanOrEqualTo(6*editor.SpatialObjectCount));
+   Assert.That(sample.IslandVisits,Is.EqualTo(ids.Length*(3+2*2)),"Each three-member island visits its two edges in both directions");
+   Assert.That(sample.IslandMembers,Is.EqualTo(ids.Length*ids.Length));physics.PausePhysics();
   }
   [UnityTest]public IEnumerator FlowDiscoveryPhysicsCanPrepareBeforeLiquidCaptureWithoutHalfAdmission(){
    editor.Liquids.enabled=false;var ids=PhysicsIslandChain();var ex=new RoomAgentExecutor(editor);yield return ContainerAction(ex,ContainerCall(ids[0],new RoomContainer{capacityMl=500,radius=.05f,height=.1f}));

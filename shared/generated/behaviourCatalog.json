@@ -46531,7 +46531,7 @@
         }
       },
       "label": "Liquid dependency discovery budget",
-      "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery is independently admitted before its collision/cavity capture, candidate queries and native input preparation. Native inputs may load while liquid execution waits. Discovery grants are selected first on the shared clock; dependent physics and liquid execution remain queued until the discovery prerequisite is ready, then receive both execution allowances together. A preparation wait preserves service age and does not refund already booked execution within its opportunity. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot is reused only inside the synchronous discovery pass; later passes read current placements. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Saved/native limits are unchanged. Execution is independently admitted per complete quantity group.",
+      "description": "Process-wide booked discovery allowances on the shared simulation clock. Liquid discovery is independently admitted before its collision/cavity capture, candidate queries and native input preparation. Native inputs may load while liquid execution waits. Discovery grants are selected first on the shared clock; dependent physics and liquid execution remain queued until the discovery prerequisite is ready, then receive both execution allowances together. A preparation wait preserves service age and does not refund already booked execution within its opportunity. Demand uses canonical object and vessel counts, including dormant objects and empty containers. A changed count or world owner invalidates readiness until refreshed. One fresh collision snapshot and one physical adjacency graph are reused only inside the synchronous discovery pass; later passes read current placements and broken-joint state. Physical connectivity traversal is linear in reached members and edges. objectLimit is the independent spatial-query capacity, not a saved-room or resident-object quota; the unit allowance can refuse a larger combination of object and vessel counts. Units conservatively cover bounded metadata/candidate/trajectory and connection-graph visits, not measured CPU time, geometry/proof internals, allocation, sorting, native loading, PhysX or device frame time. Reservations include waiting claims and executions count booked grants, which can be stale until refreshed; neither proves native readiness or completed discovery. Passive reads cannot admit work, capture geometry, load native objects, advance the clock or change quantities. Saved/native limits are unchanged. Execution is independently admitted per complete quantity group.",
       "features": [
         "runtimeDiagnostics.v1"
       ]
@@ -49510,7 +49510,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowWorkFacts.cs",
-      "sha256": "00c4daaa761a81e25c44a159102551aa5e15916a6b1e92adb78a47fbfd20914f"
+      "sha256": "04a1c8c47004612461e47b74fef2619db86941da1b266be900cb586ba4c840ba"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
@@ -50066,7 +50066,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowDiscoveryWork.cs",
-      "sha256": "255baf619405c7c898be90550a50533fa9c23a57a69d136da42f9f0008aee9e5"
+      "sha256": "d26ae6d570cb46eb7f2ab3872dd194b83e654591549834e04ad1aa71715efefa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkClock.cs",
@@ -50122,7 +50122,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowGroups.cs",
-      "sha256": "04ef30bed015ba71829846d96c637cf94d9216da06c8d1d4fdaa0368f4dd6b28"
+      "sha256": "be2f9509973f82668c32cf63fc87f711c8ddde54fcce65b5e47f50b713ca05e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
@@ -50693,8 +50693,12 @@
       "sha256": "4eca81d2bd5c5b04f3af098e8aa11e10498ed1956d3774e36877713760c1c725"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsGraph.cs",
+      "sha256": "76659bec469864f4b974ce339b46d4671cc9498e183a9b7103ee8cadffe0c37c"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsIslands.cs",
-      "sha256": "1cb2d8cd4c1b12a1c26ad3478f5854ffde2892498246f9b7410df4e07de4b933"
+      "sha256": "919b91abe75369cc2f1f2f5d6f2403d68b1ec5f80c25a8ab67cd22ddd48a1880"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPhysicsStep.cs",

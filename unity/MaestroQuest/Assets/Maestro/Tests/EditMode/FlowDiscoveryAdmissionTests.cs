@@ -6,8 +6,8 @@ namespace Maestro.Quest.Tests {
  public sealed class FlowDiscoveryAdmissionTests {
   [Test]public void FlowDiscoveryBoundsEveryCurrentlyAcceptedInventoryWithoutOverflow(){
    Assert.That(FlowDiscoveryWork.Demand(0,2),Is.Zero);
-   for(int objects=1;objects<=FlowDiscoveryWork.MaximumObjects;objects++)
-    for(int vessels=1;vessels<=objects;vessels++){
+   for(int objects=1;objects<=RoomDocument.MaximumObjects+2;objects++)
+    for(int vessels=1;vessels<=System.Math.Min(objects,RoomContainer.MaximumPerRoom);vessels++){
      int cost=FlowDiscoveryWork.Demand(vessels,objects);
      Assert.That(cost,Is.GreaterThan(0).And.LessThanOrEqualTo(FlowDiscoveryWork.MaximumUnits));
      if(vessels>1)Assert.That(cost,Is.GreaterThan(FlowDiscoveryWork.Demand(vessels-1,objects)));
@@ -15,6 +15,16 @@ namespace Maestro.Quest.Tests {
     }
    Assert.That(FlowDiscoveryWork.Demand(-1,2),Is.EqualTo(int.MaxValue));Assert.That(FlowDiscoveryWork.Demand(2,1),Is.EqualTo(int.MaxValue));
    Assert.That(FlowDiscoveryWork.Demand(1,int.MaxValue),Is.EqualTo(int.MaxValue));Assert.That(FlowDiscoveryWork.Demand(int.MaxValue,int.MaxValue),Is.EqualTo(int.MaxValue));
+  }
+  [Test]public void FlowDiscoveryCapacityIsIndependentOfSavedInventoryAndRefusesExcessWork(){
+   Assert.That(FlowDiscoveryWork.MaximumObjects,Is.EqualTo(RoomSpatialLookup.MaximumEntries));
+   Assert.That(FlowDiscoveryWork.MaximumObjects,Is.GreaterThan(RoomDocument.MaximumObjects+2));
+   Assert.That(FlowDiscoveryWork.Demand(1,1002),Is.LessThan(FlowDiscoveryWork.MaximumUnits));
+   Assert.That(FlowDiscoveryWork.Demand(RoomContainer.MaximumPerRoom,1002),Is.LessThan(FlowDiscoveryWork.MaximumUnits));
+   Assert.That(FlowDiscoveryWork.Demand(RoomContainer.MaximumPerRoom,FlowDiscoveryWork.MaximumObjects),Is.GreaterThan(FlowDiscoveryWork.MaximumUnits));
+   Assert.That(FlowDiscoveryWork.Demand(1,FlowDiscoveryWork.MaximumObjects+1),Is.EqualTo(int.MaxValue));
+   Assert.That(FlowDiscoveryWork.Demand(RoomContainer.MaximumPerRoom+1,1002),Is.EqualTo(int.MaxValue));
+   Assert.That(FlowDiscoveryWork.Demand(0,FlowDiscoveryWork.MaximumObjects),Is.Zero);
   }
   [Test]public void FlowDiscoveryPreparationGateLeavesExecutionQueuedUntilReady() {
    var discovery=SimulationWorkSchedule.Register(()=>true,0,0);discovery.DiscoveryUnits=1;
