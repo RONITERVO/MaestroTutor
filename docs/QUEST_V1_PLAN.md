@@ -154,10 +154,11 @@ Stable unanchored collision guards now update on accepted changes and retirement
 only exact scan anchors refresh each frame. Visual retention, display admission,
 prepared captures and shadow preparation now share a persistent lookup for
 unloaded unanchored visual bounds. Current renderers, skins and lamps remain fresh.
-Display scheduling still visits demand identities, ground discovery scans its
-candidates, and accepted reconciliation visits dormant members. Broad cache
-invalidation and query allocations remain capacity work; this is not a fully
-incremental index of every world consumer. Named areas explicitly
+Ground readiness also retains stable unloaded surface bounds, while live surfaces
+and exact scan anchors remain fresh. Display scheduling still visits demand
+identities, and accepted reconciliation visits dormant members. Broad cache
+invalidation and query allocations outside the warmed ground-completeness path
+remain capacity work; this is not a fully incremental index of every world consumer. Named areas explicitly
 choose independent or together loading; enabled physical connections remain
 coupled across either type of area. This removes the implicit
 all-members residency requirement without increasing any quota. Larger logical
