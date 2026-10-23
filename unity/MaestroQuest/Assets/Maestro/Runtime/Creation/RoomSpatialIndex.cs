@@ -24,6 +24,7 @@ namespace Maestro.Quest.Creation
         readonly CancellationTokenSource lifetime=new();
         Task<ModelAssetBounds> reading;string readingHash;bool ended;
         internal int Count=>entries.Count;
+        internal int Generation {get;private set;}
         internal bool Pending=>!ended&&(pending.Count>0||reading!=null);
         internal RoomSpatialIndex(ModelLibrary library):this(library.PrepareRestBoundsAsync,hash=>library.TryReadBounds(hash,out var value,true)?value:null){}
         internal RoomSpatialIndex(Func<string,CancellationToken,Task<ModelAssetBounds>> inspect,Func<string,ModelAssetBounds?> cached=null)
@@ -31,6 +32,7 @@ namespace Maestro.Quest.Creation
         internal void Synchronize(RoomDocument document)
         {
             if(ended)throw new ObjectDisposedException(nameof(RoomSpatialIndex));
+            Generation++;
             var active=new HashSet<string>();var hashes=new HashSet<string>();pending.Clear();
             foreach(var data in document.objects){
                 active.Add(data.id);if(data.kind==RoomObjectKind.ImportedModel)hashes.Add(data.modelHash);
@@ -73,7 +75,7 @@ namespace Maestro.Quest.Creation
                     }
                 }
                 try{entry.Bounds=RoomAuthoredBounds.Derive(entry.Data,asset);}catch(Exception){entry.Bounds=RoomSpatialBounds.Unknown;}
-                entry.Ready=true;entry.Data=null;
+                entry.Ready=true;entry.Data=null;Generation++;
             }
         }
         public void Dispose()

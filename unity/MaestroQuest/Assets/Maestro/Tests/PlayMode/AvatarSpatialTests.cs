@@ -328,11 +328,19 @@ namespace Maestro.Quest.Tests
             book.transform.position = new Vector3(0,1,.6f); book.GetComponent<BoxCollider>().size = new Vector3(.8f,.4f,.15f);
             Physics.SyncTransforms();
             Assert.That(motion.Begin("large",AvatarSpatialMode.Manual,out var error),Is.True,error);
-            for(int i=0;i<72;i++){motion.ManualDirection("large",Vector3.forward);yield return null;}
+            // Feed current input before motion, as MovementControls does. A
+            // coroutine resumes after Update and can expire the 150 ms input
+            // watchdog during a slow loading frame despite a held thumbstick.
+            var input=physicalRoot.AddComponent<NavigationManualInputProbe>();
+            input.Sample=()=>motion.ManualDirection("large",Vector3.forward);
+            for(int i=0;i<72;i++)yield return null;
+            Assert.That(motion.Active,Is.True,motion.Status);
             Assert.That(motion.Status,Does.Contain("blocked by book")); var stoppedAt = avatar.transform.position.z;
             Assert.That(editor.SetAvatarSize(.35f),Is.True); Assert.That(motion.Active,Is.False);
             Assert.That(motion.Begin("small",AvatarSpatialMode.Manual,out error),Is.True,error);
-            for(int i=0;i<108;i++){motion.ManualDirection("small",Vector3.forward);yield return null;}
+            input.Sample=()=>motion.ManualDirection("small",Vector3.forward);
+            for(int i=0;i<108;i++)yield return null;
+            Assert.That(motion.Active,Is.True,motion.Status);input.Sample=null;
             Assert.That(avatar.transform.position.z,Is.GreaterThan(stoppedAt+.4f),"A smaller avatar must use its own body clearance"); motion.Stop();
             var board = new GameObject("Movement tray"); board.transform.SetParent(root.transform,false);
             board.AddComponent<AvatarSpatialTools>().Build(motion,editor,authoring,null,room);

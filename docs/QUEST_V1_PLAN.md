@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[spatial lookup checkpoint](#coherent-local-collision-lookup--2026-10-23) records this
+[persistent collision checkpoint](#persistent-dormant-collision-lookup--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -146,11 +146,14 @@ into that existing formula would exceed its 524,288-unit allowance even for one
 vessel; this is arithmetic evidence, not a performance measurement.
 
 The existing metadata index prepares detached bounds by identity. A separate
-immutable lookup now rejects distant collision branches inside a coherent query
-snapshot. Capturing that snapshot still visits saved objects; it is not a
-persistent index of the entire world. View demand still scans dormant members. Named
-areas now explicitly choose independent or together loading; enabled physical
-connections remain coupled across either type of area. This removes the implicit
+immutable lookup rejects distant collision branches inside a coherent query.
+Stable dormant collision geometry now survives between captures; current native
+objects and exact scan anchors are read afresh. Accepted journal edits, membership
+changes and metadata publication conservatively rebuild the dormant partition.
+View demand and dormant collision-guard refresh still scan dormant members; this
+is not a fully incremental index of every world consumer. Named areas explicitly
+choose independent or together loading; enabled physical connections remain
+coupled across either type of area. This removes the implicit
 all-members residency requirement without increasing any quota. Larger logical
 towns still need bounded spatial candidate queries and separately observable
 saved, resident, simulation and query budgets.
@@ -15933,3 +15936,67 @@ or Android compilation. The preceding full `ed286f6d` checkpoint above remains
 separate evidence. Installed and packaged builds, provider coverage and all release
 gates remain as recorded above. No headset, paid-provider, signing, deployment or
 Meta operation occurred.
+
+
+## Persistent dormant collision lookup — 2026-10-23
+
+Repeated movement and liquid-discovery captures reuse an immutable partition for
+intentionally unloaded, unanchored collision geometry. Each capture still reads
+native objects, unexpectedly missing objects and exact scan anchors afresh. A
+known-empty anchored drawing cannot remain falsely clear after its room anchor
+becomes unavailable. Unknown collision remains a dependency; visual bounds alone
+do not prove clearance.
+
+The partition is keyed by the journal's shared revision clock and membership,
+native residency membership and authored-metadata generation. That catches
+accepted edits, deletion, Undo, temporary-room discard, loading and metadata
+completion, including publication before the editor's ordinary dirty notification.
+Each old synchronous capture owns its immutable values and query accounting;
+rebuilding the cache does not rewrite an earlier capture. Room-local bounds remain
+valid when the whole virtual world is moved, rotated or uniformly scaled.
+
+One-off movement queries use the retained dormant tree and a direct pass over the
+current partition. Repeated flow queries may index the current partition too.
+Complete-group discovery admission still charges its conservative full-scene
+price; cache reuse cannot create an unaccounted execution opportunity. There is
+no saved quota, public capability, permission or collision-policy change.
+
+This is conservative invalidation, not per-entity incremental maintenance. Even
+an unrelated journal revision can rebuild the dormant partition. View-demand and
+collision-guard refresh also retain full dormant scans. Those costs, separate
+saved/resident/simulation limits and measured Quest capacity remain required work.
+
+Evidence is retained under `.quest-evidence/dormant-lookup-20261023/`. The first
+native run passed 24 EditMode and 42 PlayMode cases. Broader verification passed
+1,610 EditMode tests and 526 of 527 selected runtime cases across 66 fixtures.
+The remaining existing small-avatar fixture fed held manual input from a coroutine
+after movement Update, which can expire the 150 ms stale-input watchdog on a slow
+frame. The fixture now uses the existing before-motion input probe, as production
+controls do, and also asserts active ownership. The corrected case and three
+related control cases passed. Runtime source was unchanged by that correction;
+the initial failed report and all 526 unchanged runtime passes are retained.
+
+The shared room/catalog and Quest UI suite passed 1,861 tests. Catalog definitions
+are unchanged and generated source provenance is verified. All 3,498 native inputs
+are frozen; the only difference between initial and corrected freezes is the one
+test fixture. The 1,205 shared client/source inputs and 14 protected files remain
+unchanged.
+
+A 23-object fixture with 18 dormant objects needed only five fresh bounds reads
+and no dormant tree construction on a later capture, including after moving a
+live object and repositioning the whole world. These are logical-work observations,
+not a measured frame-time improvement.
+
+Fresh full sparse Headless `ebf7d9e5970b416bbb968cf40a4bba67` and rendered Book
+`b0294ab00bab4fa59b6265f14e0d5f6f` journeys passed with 2,613 and 4,510
+observations respectively. Native and client processes exited cleanly; final room,
+behaviour and workspace persistence samples were idle, clean and confirmed. The
+book area controls were visually reviewed. These are offline fixtures using the
+shared operations, not a new provider or physical-device acceptance pass.
+
+`verified-increment.json` reconciles the frozen sources, original failure, isolated
+test correction, exact selected runtime coverage, both journeys and the rendered
+book image. The full PlayMode inventory and Android compilation remain the prior
+checkpoint's evidence. Installed and packaged builds are unchanged. No headset,
+paid-provider, signing, deployment or Meta action occurred. The larger-world and
+other release gates remain open; v1 is incomplete.

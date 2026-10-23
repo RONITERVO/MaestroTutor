@@ -18,7 +18,7 @@ namespace Maestro.Quest.Creation
             if(spatialIndex==null||!ReferenceEquals(spatialJournal,journal))SynchronizeSpatialIndex(journal.Snapshot());
             spatialIndex.Tick();RefreshDormantCollisions();RefreshRegionCollision();
         }
-        void StopSpatialPreparation(){spatialIndex?.Dispose();spatialIndex=null;spatialJournal=null;}
+        void StopSpatialPreparation(){ClearMovementDirectory();spatialIndex?.Dispose();spatialIndex=null;spatialJournal=null;}
         internal JObject ObserveAuthoredBounds(string target)
         {
             var data=Read(target);if(data==null)return null;

@@ -81,5 +81,30 @@ namespace Maestro.Quest.Tests
             Assert.Throws<ArgumentOutOfRangeException>(()=>new RoomSpatialLookup(new RoomSpatialExtent[RoomSpatialLookup.MaximumEntries+1]));
             Assert.Throws<ArgumentOutOfRangeException>(()=>new RoomEditor.MovementCandidates(new RoomEditor.MovementCandidates.Candidate[RoomSpatialLookup.MaximumEntries+1]));
         }
+        [TestCase(true)][TestCase(false)]
+        public void SpatialLookupSharedDormantPartitionKeepsSnapshotAccountingAndCanonicalAnswers(bool indexedLive)
+        {
+            var cold=new[]{Item(2,default),Item(4,Box(Vector3.zero,Vector3.one)),Item(6,RoomSpatialExtent.Empty,true)};
+            var live=new[]{Item(1,Box(Vector3.zero,Vector3.one)),Item(3,Box(new(20,0,0),Vector3.one))};
+            var expected=live.Concat(cold).OrderBy(v=>v.Id,StringComparer.Ordinal).ToArray();
+            var shared=new RoomEditor.MovementCandidates.Set(cold,true);cold[0]=Item(99,RoomSpatialExtent.Empty);
+            var first=new RoomEditor.MovementCandidates(new(live,indexedLive),shared,0,0,true);
+            var other=new RoomEditor.MovementCandidates(new(live,indexedLive),shared,0,0,true);
+            var body=new Bounds(Vector3.zero,Vector3.one*.1f);
+            CollectionAssert.AreEqual(Exhaustive(expected,body,body,null),first.Targets(body,body));
+            int visits=first.Visits,nodes=first.NodeVisits;
+            CollectionAssert.AreEqual(Exhaustive(expected,body,body,"00004"),other.Targets(body,body,"00004"));
+            Assert.That(first.Visits,Is.EqualTo(visits));Assert.That(first.NodeVisits,Is.EqualTo(nodes));
+            CollectionAssert.AreEqual(Exhaustive(expected,body,body,null),first.Targets(body,body));
+            Assert.That(first.Visits,Is.EqualTo(2*visits));Assert.That(first.NodeVisits,Is.EqualTo(2*nodes));
+            var withoutGround=new RoomEditor.MovementCandidates(new(live,indexedLive),shared,0,0,false);
+            CollectionAssert.AreEqual(Exhaustive(expected,body,null,null),withoutGround.Targets(body,body));
+        }
+        [Test] public void SpatialLookupCombinedPartitionsCannotExceedTheCompleteQueryCapacity()
+        {
+            var cold=new RoomEditor.MovementCandidates.Set(new RoomEditor.MovementCandidates.Candidate[RoomSpatialLookup.MaximumEntries],true);
+            var live=new RoomEditor.MovementCandidates.Set(new[]{Item(1,default)},false);
+            Assert.Throws<ArgumentOutOfRangeException>(()=>new RoomEditor.MovementCandidates(live,cold,0,0,true));
+        }
     }
 }
