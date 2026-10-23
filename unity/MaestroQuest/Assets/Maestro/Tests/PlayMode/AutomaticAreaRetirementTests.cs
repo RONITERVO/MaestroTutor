@@ -131,6 +131,41 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Distant home object",new Vector3(0,0,-4),1,Color.blue,out var far,out var error),Is.True,error);
             var camera=NativeObservationCamera();return(near,far,camera);
         }
+        [UnityTest]public IEnumerator AutomaticNamedIndependentAreaRetiresOneMemberAndTogetherEditRestoresItsGroup(){
+            var(near,far,camera)=AutomaticHomeScene();string area=NewRegion();
+            Assert.That(AssignRegion(near,area,out var error),Is.True,error);Assert.That(AssignRegion(far,area,out error),Is.True,error);
+            var value=editor.ReadRegion(area);value.loading="independent";Assert.That(editor.EditRegion(value,area,editor.RegionRevision(area),value.members,out error),Is.True,error);
+            string saved=JsonUtility.ToJson(editor.Snapshot());editor.ConfigureNativeRetirement();
+            yield return AutomaticAreaUntil(()=>!editor.Find(far),"Independent named area kept an unobserved peer resident");
+            Assert.That(editor.Find(near),Is.SameAs(block));var state=editor.ObserveRegionRetention(area);
+            Assert.That((int)state["memberCount"],Is.EqualTo(2));Assert.That((int)state["residentCount"],Is.EqualTo(1));Assert.That((int)state["retainedCount"],Is.EqualTo(1));
+            Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
+            value=editor.ReadRegion(area);value.loading="together";Assert.That(editor.EditRegion(value,area,editor.RegionRevision(area),value.members,out error),Is.True,error);
+            yield return AutomaticAreaUntil(()=>editor.Find(far),"A newly coupled dormant peer was not restored for its observed group");
+            camera.transform.rotation=Quaternion.Euler(0,90,0);
+            yield return AutomaticAreaUntil(()=>!editor.Find(near)&&!editor.Find(far),"Together area did not retire atomically");
+            camera.transform.rotation=Quaternion.identity;
+            yield return AutomaticAreaUntil(()=>editor.Find(near)&&editor.Find(far),"Viewing one together member did not restore both");
+        }
+        [UnityTest]public IEnumerator AutomaticIndependentAreasStillLoadPhysicalPeersAcrossTheirBoundary(){
+            var(near,far,camera)=AutomaticHomeScene();string a=NewRegion(),b=NewRegion();
+            Assert.That(AssignRegion(near,a,out var error),Is.True,error);Assert.That(AssignRegion(far,b,out error),Is.True,error);
+            foreach(var id in new[]{a,b}){var area=editor.ReadRegion(id);area.loading="independent";Assert.That(editor.EditRegion(area,id,editor.RegionRevision(id),area.members,out error),Is.True,error);}
+            Assert.That(editor.SetItemPhysics(near,new(){mode="fixed",shape="box",mass=1}),Is.True);
+            Assert.That(editor.SetItemPhysics(far,new(){mode="solid",shape="box",mass=1}),Is.True);
+            Assert.That(Connect(AttachCall(far,near),out error),Is.True,error);yield return SpatialSettingsCompletion.Wait(connectionExecutions);
+            Assert.That(editor.CreatePrimitive(RoomObjectKind.Block,"Unrelated garden piece",new Vector3(4,0,-4),1,Color.red,out var loose,out error),Is.True,error);
+            Assert.That(AssignRegion(loose,a,out error),Is.True,error);string saved=JsonUtility.ToJson(editor.Snapshot());editor.ConfigureNativeRetirement();
+            yield return AutomaticAreaUntil(()=>!editor.Find(loose),"Independent member was pinned by an unrelated physical assembly");
+            Assert.That(editor.Find(near),Is.Not.Null);Assert.That(editor.Find(far),Is.Not.Null);
+            camera.transform.rotation=Quaternion.Euler(0,90,0);
+            yield return AutomaticAreaUntil(()=>!editor.Find(near)&&!editor.Find(far),"Cross-area assembly did not retire together");
+            camera.transform.rotation=Quaternion.identity;
+            yield return AutomaticAreaUntil(()=>editor.Find(near)&&editor.Find(far),"Cross-area physical peer did not restore with its observed endpoint");
+            Assert.That(editor.Find(far).GetComponent<RoomConnectionView>(),Is.Not.Null);
+            yield return AutomaticAreaUntil(()=>!editor.Find(loose),"Recent-view grace expired but an independent member stayed pinned to the physical assembly");
+            Assert.That(JsonUtility.ToJson(editor.Snapshot()),Is.EqualTo(saved));
+        }
         [UnityTest]public IEnumerator AutomaticHomeIndependentViewsRetireAndRestoreOnlyObservedObjects(){
             var(near,far,camera)=AutomaticHomeScene();string saved=JsonUtility.ToJson(editor.Snapshot());int revision=editor.Revision;
             editor.ConfigureNativeRetirement();

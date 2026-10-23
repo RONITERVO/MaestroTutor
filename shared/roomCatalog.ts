@@ -32,7 +32,11 @@ export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
   if(schema?.format==='programModule'){try{return validModuleRecord(v,moduleHash(v));}catch{return false;}}
   if(++count>4096||depth>12)return false;
   if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1,schema?.properties?.[key]));
-  if(Array.isArray(v))return v.length<=(schema?.items?.['x-resource']==='object'?programResourceLimit:64)&&v.every(x=>bounded(x,depth+1,schema?.items));
+  if(Array.isArray(v)) {
+   // Declared geometry arrays can exceed generic arrays; the total budget still applies.
+   const limit=Math.min(4096,Math.max(schema?.items?.['x-resource']==='object'?programResourceLimit:64,schema?.maxItems??0));
+   return v.length<=limit&&v.every(x=>bounded(x,depth+1,schema?.items));
+  }
   return v===null||typeof v==='boolean'||validProgramNumber(v)||text(v,128);
  };return bounded(v.arguments,0,capabilityDefinition(v.id as string)?.input);
 };

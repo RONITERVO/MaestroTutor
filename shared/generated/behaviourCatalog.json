@@ -5748,6 +5748,13 @@
             },
             "minItems": 0,
             "maxItems": 64
+          },
+          "loading": {
+            "type": "string",
+            "enum": [
+              "independent",
+              "together"
+            ]
           }
         },
         "required": [
@@ -5771,12 +5778,13 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Create or rename one of up to 32 authored areas. Empty id, revision 0 and empty members create. To rename, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Create or update one of up to 32 authored areas. Empty id, revision 0 and empty members create. Choose independent loading for places whose objects may load separately, or together for a whole assembly. Omitted loading preserves the existing choice; older create calls keep together behavior. To update, read world.region and every world.region.members page at its revision and supply the complete existing member set. Saving does not assign objects; use object.region.assign. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Independent areas organize objects without coupling their native lifetimes. Together areas keep their members in one loading group. Enabled physical connections always couple their endpoints, even across areas. Idle unobserved groups can retire and restore when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
         "name": "Café garden",
-        "members": []
+        "members": [],
+        "loading": "independent"
       },
       "output": {
         "type": "object",
@@ -5840,7 +5848,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Remove an empty authored area using its exact ID/revision. Move creations to another area or home first. Removing an area never deletes its objects implicitly. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Independent areas organize objects without coupling their native lifetimes. Together areas keep their members in one loading group. Enabled physical connections always couple their endpoints, even across areas. Idle unobserved groups can retire and restore when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "revision": 1
@@ -5951,7 +5959,7 @@
         "region.revision.current",
         "storage.writable"
       ],
-      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. The runtime can retire idle unobserved connected areas and restore them when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Move a creation's saved membership to one area atomically. Read object.region for its current object revision and world.region for the destination revision. Empty regionId with regionRevision 0 returns it to the home region. Deleting an object removes its membership in the same Undo operation; copying a creation or importing a portable blueprint places the new IDs in home. Areas partition saved creation ownership within one world. Definitions and membership share Undo, temporary Keep/Discard, save and workspace export/restore. Assignment does not move objects, change their components or make a copy. The book and Maestro remain world-owned. Independent areas organize objects without coupling their native lifetimes. Together areas keep their members in one loading group. Enabled physical connections always couple their endpoints, even across areas. Idle unobserved groups can retire and restore when viewed or needed by actions. Membership edits do not explicitly request loading/unloading, expand capacity or promise offscreen simulation; all existing world limits and whole-world collision admission remain. Physics, visibility and sound policies remain separate. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "target": "00000000000000000000000000000000",
         "revision": 1,
@@ -36176,6 +36184,234 @@
               "surfaceTravel.v1"
             ],
             "title": "Swim at the live surface"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "shore"
+                ]
+              },
+              "habitat": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "destination": {
+                "title": "Shore destination",
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "ground"
+                        ]
+                      },
+                      "x": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "y": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "x",
+                      "y",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Supported ground foot"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "surface"
+                        ]
+                      },
+                      "x": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      },
+                      "z": {
+                        "type": "number",
+                        "minimum": -25.0,
+                        "maximum": 25.0
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "x",
+                      "z"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Live water surface"
+                  }
+                ],
+                "x-discriminators": [
+                  "kind"
+                ]
+              },
+              "immersion": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 0.95
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              },
+              "facing": {
+                "type": "string",
+                "enum": [
+                  "travel",
+                  "keep"
+                ]
+              },
+              "gait": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Keep independent part animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embedded"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "clip": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 63.0
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "clip"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Embedded animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "library"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "motionId": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{32}$",
+                        "maxLength": 32
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "motionId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Exact library motion"
+                  }
+                ],
+                "x-discriminators": [
+                  "source"
+                ],
+                "description": "Optional full imported gait. Exact modelHash plus anchorNode from object.animation.nodes fixes the translation anchor while sampling every source node and blend shape. clip is zero-based; library keeps the exact motionId and rig. rate scales animation time, not travel speed. Omitted/none preserves independent recipe-part animation and does not select a walk clip."
+              }
+            },
+            "required": [
+              "target",
+              "mode",
+              "habitat",
+              "destination",
+              "immersion",
+              "speed",
+              "facing"
+            ],
+            "additionalProperties": false,
+            "title": "Walk and swim across a shore",
+            "x-features": [
+              "shoreTravel.v1"
+            ]
           }
         ],
         "x-discriminators": [
@@ -36195,7 +36431,7 @@
         "physics.running",
         "navigation.environmentReady"
       ],
-      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking, following and swimming actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches normally fail at the last accepted place. If a blocking object still has an active walking owner, wait up to three real-time seconds with retries no faster than every 0.35 seconds; object.navigation reports waitingForActor. A new allowance requires at least 0.1 metre of accepted travel. Waiting never claims arrival, moves the other actor, or overrides either actor’s ownership or collision policy. A persistent obstruction fails after the wait. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting or collision checks for animated limbs. For mode=swim, destination is the object's root in authored room coordinates, not its walking foot. Choose one exact habitat; the complete accepted root-collision envelope must already fit below its current liquid surface. This is submerged travel, not automatic entry, surfacing, walking on water or teleporting to a nearby pool. A bounded three-dimensional search attempts a route within two metres of the direct corridor. Every actual translation and shortest-arc turn rechecks current live liquid, terrain and solid geometry, with the same real-room participation as this actor. Missing native inputs prepare under an owned deadline. Accepted world or quantity changes refresh prepared inputs and replan from the current body; every next step must still fit. Drained or unavailable habitat, saturated queries and blocked routes cannot report arrival. facing=travel turns before each segment; keep preserves orientation. Optional gait samples an exact imported source and translation anchor; no gait leaves recipe parts independently animatable. A selected full imported gait owns the complete target; no gait owns locomotion (and Maestro gaze). Ground and water actions share four slots. A route lasts at most five minutes and never resumes from saved data. Query envelopes are conservative boxes, not animated skin/limb collisions. For mode=surface, choose destination x/z in authored room metres and immersion (0.1–0.95 of the accepted collision envelope height below water). The current measured liquid chooses root height, not an authored y. The actor must already intersect that exact liquid; a submerged actor rises gradually before planar travel. This never enters from dry ground, leaves onto a shore, crosses a dry gap or switches habitats. Current vertical gravity is required. The immersed convex swept body must fit its chosen cavity; the full body still clears terrain and solids. The bounded route searches in the surface plane instead of diving around obstacles. A changed water level is followed at the chosen speed while the actor remains wet; a drained or receded-away surface stops travel. Yaw preserves existing tilt. Arrival is checked against the current surface height, and the result remains the actual root position.",
+      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Walk Maestro or a created object to a supported foot position in authored room coordinates. mode=walk follows the same accepted floor, slope/step, water and per-object real-room policies as Maestro following; no room scan or physics starts implicitly. The destination is fixed in the authored world, so moving the viewed world does not move the requested place. Speed is metres per second. Four concurrent walking, following and swimming actions share this budget. An upright body proxy is derived from root colliders (Maestro uses its existing body proxy); missing/oversized bodies, physical anchors, terrain owners and connected assemblies refuse. Sweeps check the body proxy, not each visual limb. Root placement changes gradually; created characters keep their own part animations, while Maestro uses its selected walk. Whole-root animation conflicts. Arrival requires accepted movement to the sampled destination, never just elapsed time. The shared bounded route search tries detours around solid objects and finite water; actual steps still check current collisions. Occupied destinations or exhausted searches normally fail at the last accepted place. If a blocking object still has an active walking owner, wait up to three real-time seconds with retries no faster than every 0.35 seconds; object.navigation reports waitingForActor. A new allowance requires at least 0.1 metre of accepted travel. Waiting never claims arrival, moves the other actor, or overrides either actor’s ownership or collision policy. A persistent obstruction fails after the wait. Conservative obstacle footprints do not guarantee a route through every interior or crowd. Preparation holds the last accepted pose and never replays elapsed movement. Stop, grab, authoring, edits, lost physics or workspace replacement stop at the last accepted position. Runtime placement is remembered without an Undo per step; movement never restarts from saved data. A route has a five-minute lifetime and a bounded native-input wait. The result reports actual root position and travelled world metres. It does not promise foot planting or collision checks for animated limbs. For mode=swim, destination is the object's root in authored room coordinates, not its walking foot. Choose one exact habitat; the complete accepted root-collision envelope must already fit below its current liquid surface. This is submerged travel, not automatic entry, surfacing, walking on water or teleporting to a nearby pool. A bounded three-dimensional search attempts a route within two metres of the direct corridor. Every actual translation and shortest-arc turn rechecks current live liquid, terrain and solid geometry, with the same real-room participation as this actor. Missing native inputs prepare under an owned deadline. Accepted world or quantity changes refresh prepared inputs and replan from the current body; every next step must still fit. Drained or unavailable habitat, saturated queries and blocked routes cannot report arrival. facing=travel turns before each segment; keep preserves orientation. Optional gait samples an exact imported source and translation anchor; no gait leaves recipe parts independently animatable. A selected full imported gait owns the complete target; no gait owns locomotion (and Maestro gaze). Ground and water actions share four slots. A route lasts at most five minutes and never resumes from saved data. Query envelopes are conservative boxes, not animated skin/limb collisions. For mode=surface, choose destination x/z in authored room metres and immersion (0.1–0.95 of the accepted collision envelope height below water). The current measured liquid chooses root height, not an authored y. The actor must already intersect that exact liquid; a submerged actor rises gradually before planar travel. This never enters from dry ground, leaves onto a shore, crosses a dry gap or switches habitats. Current vertical gravity is required. The immersed convex swept body must fit its chosen cavity; the full body still clears terrain and solids. The bounded route searches in the surface plane instead of diving around obstacles. A changed water level is followed at the chosen speed while the actor remains wet; a drained or receded-away surface stops travel. Yaw preserves existing tilt. Arrival is checked against the current surface height, and the result remains the actual root position. For mode=shore, one upright capsule follows accepted ground into or out of one exact upright liquid cavity. Choose a typed destination: kind=ground uses a supported foot x/y/z; kind=surface uses x/z and the live immersion-derived foot height. This is a continuous supported/wading/buoyant journey, not teleportation, jumping off a cliff, flying across a dry gap or swapping habitats. It retains one movement owner, collision policy and capacity slot. Immersion is the fraction of the capsule's actual collision height below water. The native ground capsule, with its existing foot skin, is used throughout. Saved water avoidance remains unchanged: this action explicitly permits its selected liquid, while other water policies still apply. Supported shores retain existing slope/step limits; tilted or nonuniform liquid frames refuse. Solid sweeps include the body above water. A changed waterline adjusts gradually before horizontal motion. The bounded route search preserves support height and current native geometry; exhausted or blocked routes fail without moving to a guessed position. Ground gait uses the assigned walk; optional gait selects the exact imported swimming pose. Stop, edits, lost physics/tracking and workspace interruption are terminal. The same actual root position/distance result and object.navigation fact apply.",
       "example": {
         "target": "maestro",
         "mode": "walk",
@@ -36253,87 +36489,750 @@
       "version": 1,
       "label": "Follow someone",
       "input": {
-        "type": "object",
-        "properties": {
-          "target": {
-            "type": "string",
-            "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-            "maxLength": 32,
-            "x-resource": "object"
-          },
-          "leader": {
-            "oneOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "user"
-                    ]
+        "title": "Following movement",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "leader": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false,
+                    "title": "The user"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "object"
+                        ]
+                      },
+                      "objectId": {
+                        "type": "string",
+                        "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                        "maxLength": 32,
+                        "x-resource": "object"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "objectId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Another object"
                   }
-                },
-                "required": [
+                ],
+                "x-discriminators": [
                   "kind"
                 ],
-                "additionalProperties": false,
-                "title": "The user"
+                "title": "Leader"
               },
-              {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "type": "string",
-                    "enum": [
-                      "object"
-                    ]
-                  },
-                  "objectId": {
-                    "type": "string",
-                    "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
-                    "maxLength": 32,
-                    "x-resource": "object"
-                  }
-                },
-                "required": [
-                  "kind",
-                  "objectId"
+              "distance": {
+                "type": "number",
+                "minimum": 0.8,
+                "maximum": 5.0
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "walk"
                 ],
-                "additionalProperties": false,
-                "title": "Another object"
+                "x-features": [
+                  "waterFollowing.v1"
+                ]
               }
+            },
+            "required": [
+              "target",
+              "leader",
+              "distance",
+              "speed",
+              "seconds"
             ],
-            "x-discriminators": [
-              "kind"
+            "additionalProperties": false,
+            "x-features": [
+              "groundedFollowing.v1"
             ],
-            "title": "Leader"
+            "title": "Follow on accepted ground"
           },
-          "distance": {
-            "type": "number",
-            "minimum": 0.8,
-            "maximum": 5.0
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "leader": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false,
+                    "title": "The user"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "object"
+                        ]
+                      },
+                      "objectId": {
+                        "type": "string",
+                        "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                        "maxLength": 32,
+                        "x-resource": "object"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "objectId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Another object"
+                  }
+                ],
+                "x-discriminators": [
+                  "kind"
+                ],
+                "title": "Leader"
+              },
+              "distance": {
+                "type": "number",
+                "minimum": 0.8,
+                "maximum": 5.0
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "swim"
+                ]
+              },
+              "habitat": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "facing": {
+                "type": "string",
+                "enum": [
+                  "travel",
+                  "keep"
+                ]
+              },
+              "gait": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Keep independent part animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embedded"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "clip": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 63.0
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "clip"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Embedded animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "library"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "motionId": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{32}$",
+                        "maxLength": 32
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "motionId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Exact library motion"
+                  }
+                ],
+                "x-discriminators": [
+                  "source"
+                ],
+                "description": "Optional full imported gait. Exact modelHash plus anchorNode from object.animation.nodes fixes the translation anchor while sampling every source node and blend shape. clip is zero-based; library keeps the exact motionId and rig. rate scales animation time, not travel speed. Omitted/none preserves independent recipe-part animation and does not select a walk clip."
+              }
+            },
+            "required": [
+              "target",
+              "leader",
+              "distance",
+              "speed",
+              "seconds",
+              "mode",
+              "habitat",
+              "facing"
+            ],
+            "additionalProperties": false,
+            "title": "Follow underwater",
+            "x-features": [
+              "waterFollowing.v1"
+            ]
           },
-          "speed": {
-            "type": "number",
-            "minimum": 0.2,
-            "maximum": 1.2
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "leader": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false,
+                    "title": "The user"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "object"
+                        ]
+                      },
+                      "objectId": {
+                        "type": "string",
+                        "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                        "maxLength": 32,
+                        "x-resource": "object"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "objectId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Another object"
+                  }
+                ],
+                "x-discriminators": [
+                  "kind"
+                ],
+                "title": "Leader"
+              },
+              "distance": {
+                "type": "number",
+                "minimum": 0.8,
+                "maximum": 5.0
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "surface"
+                ]
+              },
+              "habitat": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "facing": {
+                "type": "string",
+                "enum": [
+                  "travel",
+                  "keep"
+                ]
+              },
+              "gait": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Keep independent part animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embedded"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "clip": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 63.0
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "clip"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Embedded animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "library"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "motionId": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{32}$",
+                        "maxLength": 32
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "motionId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Exact library motion"
+                  }
+                ],
+                "x-discriminators": [
+                  "source"
+                ],
+                "description": "Optional full imported gait. Exact modelHash plus anchorNode from object.animation.nodes fixes the translation anchor while sampling every source node and blend shape. clip is zero-based; library keeps the exact motionId and rig. rate scales animation time, not travel speed. Omitted/none preserves independent recipe-part animation and does not select a walk clip."
+              },
+              "immersion": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 0.95
+              }
+            },
+            "required": [
+              "target",
+              "leader",
+              "distance",
+              "speed",
+              "seconds",
+              "mode",
+              "habitat",
+              "facing",
+              "immersion"
+            ],
+            "additionalProperties": false,
+            "title": "Follow at the water surface",
+            "x-features": [
+              "waterFollowing.v1"
+            ]
           },
-          "seconds": {
-            "type": "number",
-            "minimum": 0.1,
-            "maximum": 30.0
+          {
+            "type": "object",
+            "properties": {
+              "target": {
+                "type": "string",
+                "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "leader": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "user"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false,
+                    "title": "The user"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "object"
+                        ]
+                      },
+                      "objectId": {
+                        "type": "string",
+                        "pattern": "^(maestro|book|[a-fA-F0-9]{32})$",
+                        "maxLength": 32,
+                        "x-resource": "object"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "objectId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Another object"
+                  }
+                ],
+                "x-discriminators": [
+                  "kind"
+                ],
+                "title": "Leader"
+              },
+              "distance": {
+                "type": "number",
+                "minimum": 0.8,
+                "maximum": 5.0
+              },
+              "speed": {
+                "type": "number",
+                "minimum": 0.2,
+                "maximum": 1.2
+              },
+              "seconds": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 30.0
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "shore"
+                ]
+              },
+              "habitat": {
+                "type": "string",
+                "pattern": "^[a-fA-F0-9]{32}$",
+                "maxLength": 32,
+                "x-resource": "object"
+              },
+              "facing": {
+                "type": "string",
+                "enum": [
+                  "travel",
+                  "keep"
+                ]
+              },
+              "gait": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "none"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Keep independent part animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "embedded"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "clip": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 63.0
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "clip"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Embedded animation"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "library"
+                        ]
+                      },
+                      "modelHash": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{64}$",
+                        "maxLength": 64
+                      },
+                      "anchorNode": {
+                        "type": "integer",
+                        "minimum": 0.0,
+                        "maximum": 511.0
+                      },
+                      "rate": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 3.0
+                      },
+                      "motionId": {
+                        "type": "string",
+                        "pattern": "^[a-fA-F0-9]{32}$",
+                        "maxLength": 32
+                      }
+                    },
+                    "required": [
+                      "source",
+                      "modelHash",
+                      "anchorNode",
+                      "rate",
+                      "motionId"
+                    ],
+                    "additionalProperties": false,
+                    "title": "Exact library motion"
+                  }
+                ],
+                "x-discriminators": [
+                  "source"
+                ],
+                "description": "Optional full imported gait. Exact modelHash plus anchorNode from object.animation.nodes fixes the translation anchor while sampling every source node and blend shape. clip is zero-based; library keeps the exact motionId and rig. rate scales animation time, not travel speed. Omitted/none preserves independent recipe-part animation and does not select a walk clip."
+              },
+              "immersion": {
+                "type": "number",
+                "minimum": 0.1,
+                "maximum": 0.95
+              }
+            },
+            "required": [
+              "target",
+              "leader",
+              "distance",
+              "speed",
+              "seconds",
+              "mode",
+              "habitat",
+              "facing",
+              "immersion"
+            ],
+            "additionalProperties": false,
+            "title": "Follow across ground and water",
+            "x-features": [
+              "waterFollowing.v1"
+            ]
           }
-        },
-        "required": [
-          "target",
-          "leader",
-          "distance",
-          "speed",
-          "seconds"
         ],
-        "additionalProperties": false,
-        "x-features": [
-          "groundedFollowing.v1"
+        "x-discriminators": [
+          "mode"
         ]
       },
       "duration": "timed",
@@ -36346,9 +37245,9 @@
         "target.unheld",
         "authoring.inactive",
         "physics.running",
-        "navigation.floorReady"
+        "navigation.environmentReady"
       ],
-      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported characters currently move their root without an automatic gait, and a separate whole-target imported animation conflicts. Maestro uses its selected gait. This does not invent foot planting, swimming, crowd steering or head/limb posing. Four concurrent walking, following and swimming actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data.",
+      "description": "Starting near dormant virtual ground prepares the actor’s local native inputs before displacement; admission itself performs no loading. Physics must already be started, and virtual-only actors never borrow the scanned physical floor. Follow the tracked user or one exact native object for the requested seconds using the same walking engine as object.navigate. target is the follower; leader chooses the user or an object. Only the follower's movement is owned. A held or independently moving leader can be observed; missing/replaced leaders end the action. Distance is horizontal foot-to-foot metres: following approaches when farther away and holds position inside that distance, without pushing either party apart. The user's horizontal position is projected at the follower's current ground height; an object leader's foot comes from its live root collision bounds. Only connected accepted ground is used; a hovering leader or a different floor may be unreachable. Physics, user tracking, native geometry and the follower's saved real-room/water rules are required. Solid/water detours and every actual step use shared clearance checks. A blocked path holds the last accepted pose and retries at a bounded cadence; elapsed following time includes that wait, never a later jump. Completion means the requested time ended, not arrival. Inspect object.navigation and the result state/reason. Stop, grabbing the follower, editing, tracking loss, workspace changes or lost physics end movement without restarting. Other programs can animate recipe parts while the root follows; imported humanoids use an explicitly assigned exact walking motion when configured, and a separate whole-target imported animation conflicts. Unconfigured models do not receive an invented gait. Maestro uses its selected gait. Ground mode does not enter water; no mode invents foot planting, crowd steering or head/limb posing. Four concurrent walking, following and swimming actions share one budget. Use ordinary program loops/events for a longer behaviour; no activity resumes from saved data. Omitted mode or mode=walk keeps grounded following. mode=swim, surface or shore uses the corresponding object.navigate body and movement engine, with one exact habitat and the same owned lifetime. Submerged following measures root-to-root distance in three dimensions (the tracked head for a user leader); surface and shore measure horizontal distance. Surface follows the live waterline. Shore samples accepted ground near the leader's height within the configured distance and supported slope, or the selected live surface; its continuous route must prove the connection. A leader may be outside the chosen habitat: an unreachable following goal waits at the last accepted place and retries at most once each 0.35 seconds, without changing habitats or entering water through an invalid body. Current body, physics, tracking and habitat readiness remain required even while waiting. Drainage, leader loss or replacement, editing and interruption end the action. Optional exact imported swimming gait retains its clock across retargeting; shore keeps the assigned walk on ground. mode=shore explicitly permits only its chosen water for this action, preserving saved water avoidance. Timed completion reports actual state, distance and position; it never claims that a blocked or moving leader was reached. object.navigation exposes mode=follow and movement=walk/swim/surface/shore.",
       "example": {
         "target": "maestro",
         "leader": {
@@ -42655,7 +43554,7 @@
         }
       },
       "label": "Water traversal settings",
-      "description": "Accepted actor policy and exact revision. default resolves to avoid for Maestro and ignore for creations. The saved wading/avoid-egress depth is additionally limited by actual body height. This read does not move, swim or alter physics.",
+      "description": "Accepted saved actor policy and exact revision, readable even when its native instance is inactive or retired. Reading never loads an object. default resolves to avoid for Maestro and ignore for creations. The saved wading/avoid-egress depth is additionally limited by actual body height. This read does not move, swim or alter physics.",
       "input": {
         "type": "object",
         "properties": {
@@ -46192,12 +47091,13 @@
           "id": "text",
           "revision": "number",
           "name": "text",
+          "loading": "text",
           "memberCount": "number",
           "temporary": "boolean"
         }
       },
       "label": "World area",
-      "description": "Saved area definition and current revision. Read every world.region.members page at this revision before renaming. This is authored membership, not a regional runtime readiness report.",
+      "description": "Saved area definition and current revision. Loading explicitly distinguishes independent members from together assemblies; physical connections always remain coupled. Read every world.region.members page at this revision before updating. This is authored membership, not a regional runtime readiness report.",
       "input": {
         "type": "object",
         "properties": {
@@ -46328,7 +47228,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics retains each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and resident imported-geometry failures with accepted collision bounds stop dependent actors locally. Unknown bounds or placement retain the global stop; repairing geometry does not silently resume failed motion. This does not expand the 64-object or spatial limits, promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through together-area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics retains each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and resident imported-geometry failures with accepted collision bounds stop dependent actors locally. Unknown bounds or placement retain the global stop; repairing geometry does not silently resume failed motion. This does not expand the 64-object or spatial limits, promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -46937,6 +47837,7 @@
         "record": {
           "active": "boolean",
           "mode": "text",
+          "movement": "text",
           "state": "text",
           "reason": "text",
           "position": {
@@ -46950,7 +47851,7 @@
         }
       },
       "label": "Movement action status",
-      "description": "Passive state of the current shared object.navigate or object.follow owner, including preparingWorld, preparingAnimation, surfaceAdjusting, turning, planning, waitingForActor, moving, keepingDistance, arrived, blocked or failed. position is the native root in authored room metres; distance is accepted travel in this operation. Inactive means no shared movement owner (not proof that every other kind of motion has stopped). Legacy Maestro controls and animation use their existing facts. Missing native objects are unavailable. Reading does not load, move, start physics or retry an action.",
+      "description": "Passive state of the current shared object.navigate or object.follow owner, including the movement medium, preparingWorld, preparingAnimation, surfaceAdjusting, turning, planning, waitingForActor, moving, keepingDistance, arrived, blocked or failed. position is the native root in authored room metres; distance is accepted travel in this operation. Inactive means no shared movement owner (not proof that every other kind of motion has stopped). Legacy Maestro controls and animation use their existing facts. Missing native objects are unavailable. Reading does not load, move, start physics or retry an action.",
       "input": {
         "type": "object",
         "properties": {
@@ -46971,7 +47872,8 @@
       },
       "features": [
         "factQueries.v1",
-        "groundedFollowing.v1"
+        "groundedFollowing.v1",
+        "waterFollowing.v1"
       ]
     },
     {
@@ -48488,7 +49390,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
-      "sha256": "226b314b85c2c3fd542fbec64718e2e6803f8b56320831a3ec5835f650a25343"
+      "sha256": "23e0ba0bbeb4b6cd316a56b5cc0ddf8613a0345368c1217c0d463b1c2a7b0de5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityStepAdapter.cs",
@@ -48612,7 +49514,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowObjectCapability.cs",
-      "sha256": "eb6d4bb6d4c3371088ed1110a4e034551e9f2ea4a81744ef0ae0ca4c06b478a7"
+      "sha256": "710430eed8f5176926c4e121fb14d6b8a34593bcfed286cf86d8f932116d8a7e"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FollowingNavigationSchema.cs",
+      "sha256": "00621ac2ad16d53589da15bf4fb78276e8248390206f6bbe0a49619d7dd92696"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/GestureCapabilities.cs",
@@ -48728,7 +49634,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NavigateObjectCapability.cs",
-      "sha256": "4f18288f349b78a491256d157f6ec5ad0afc4bff0919feb8da8d933b2d84029c"
+      "sha256": "455ad826bb9242c04c29c8a078833abdf0c72afe36f58045ef5acb8a3f83ecc3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectAttachmentFacts.cs",
@@ -48828,7 +49734,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "d4e2236eb2efd0874386419700a42a952b9440ed14d3c6ff880ade1c8c83bab1"
+      "sha256": "0c2bd718a6aa93d45d86b805e0c29c66a1a15ed451b7c82fefb8c905e1caaa55"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -48883,6 +49789,10 @@
       "sha256": "0c9d64a0927d04842d4a6d9bebddb1a1b10f2d5007738dc2f0b3762260855e4f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ShoreNavigationSchema.cs",
+      "sha256": "bed527acb246109a0a5b83d40cf9ff01fc9efba4508b1f04275cfa4fb1730e0d"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/SimulationWorkFacts.cs",
       "sha256": "5c8cb959c8e7200f8f5bd168606506eee7e66aa84ce4bfdaf80a8e788640275a"
     },
@@ -48928,7 +49838,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterTraversalCapability.cs",
-      "sha256": "394ad9007e10293197405e0293684a77e4a924411e8ccf9879b397640e01b875"
+      "sha256": "b1b281a0ffc2312806541d5272155282e6b54d60339f6bf15d51443d8aeb1129"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WindowCapability.cs",
@@ -49189,6 +50099,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LightResources.cs",
       "sha256": "56a434d698990d4df76192d886c82d8a338c61e4b1d44b2c77872ea1405e6a5d"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidCapsuleCavity.cs",
+      "sha256": "6d82fb4b171422c13b7aa5569129db87fb9fddc5896b3359bc888a7f254b3a93"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidContactValidity.cs",
@@ -49468,7 +50382,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "c36b498ab920e02102e4e05f8cab82dd2c7e89a89ceea7fb3fec3d4eeda9684b"
+      "sha256": "ab2a621598a5b795d0e3598706ccfe3c268f6f499e0fe9651955df655da08040"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCheckpointSave.cs",
@@ -49504,7 +50418,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "8aef3221315c2f7773c6fd61f4e0e84d83231768abbd474b7e17b2654a77ea72"
+      "sha256": "92a55444bb81a26187191243abc2ba8cabc00ad9b6ddafa469871889acefbf4f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
@@ -49512,7 +50426,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayDemand.cs",
-      "sha256": "0fa0bba8dd3168e8b1811d83927ffc368de06888e8c92713b1220951acd3f867"
+      "sha256": "5b4890dfab679c6ad791833a61d0c866da4e734898422208a8f649a25e6b0b20"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
@@ -49756,7 +50670,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservation.cs",
-      "sha256": "aba3fdd6b26238e38093e09ad70652b74f27ea6b0dc0917df9093c3fb752d040"
+      "sha256": "e5d958f54e494c4ef095ac18de9c612a0b932791af3dde3fb69abe862bf9d206"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomObservationPrediction.cs",
@@ -49800,7 +50714,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegion.cs",
-      "sha256": "7f629e637de61085d90f894b1b6bb70f394a81d1aabb3f4c2a603be0948594ac"
+      "sha256": "147b0d01d6de21f9d06a0c465dd9c515175b882719e410f57538ca9287fba6a9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
@@ -49808,7 +50722,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionEdits.cs",
-      "sha256": "4a2a45a873a966d0e72227a38fb4c9187c3dd6a9e64287e4b58004df03d9292e"
+      "sha256": "f5c7d678a0d2dbe5ad071dfa63eabaf8a30493ade725e368decb65e8995b443a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionRetention.cs",
@@ -49828,7 +50742,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRetentionGraph.cs",
-      "sha256": "73280a83999e74509676c562ed225a783a723c1260539bd6a09157ab2941db0e"
+      "sha256": "7e350fc1ea11a820bbe11b3b3ceddf499b152b3584b378be91195f3612d0e9e6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomScannedDrawing.cs",
@@ -49837,6 +50751,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSculptGesture.cs",
       "sha256": "296969387382832b606f51d370ca3a63c17fbc6ffd6fc14dad939609c660a12a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomShoreAdmission.cs",
+      "sha256": "6677d1cd5109dda68caa1d79894d8816c3db913d6fff63d10a864eab2cfb0173"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSnapEdits.cs",
@@ -49872,7 +50790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "274c8c4997d3105607ec1738eeb17c10e666df17ee0e287e24a88af4f75b4a4c"
+      "sha256": "620c1f4a7cba43464d38c1ac2285b03fa5221a10b22f7241fe29f86c15c1f7a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -49932,7 +50850,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWaterTraversalEdits.cs",
-      "sha256": "43e869e37b43c73a10d809b34e1c2d40d1670657fc57bf82c090f76a3b9e0cca"
+      "sha256": "456dc46e069f0680e81ce774b739ab1b54e21c3ee6fc4badc7aee4ca7bc1b25f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomWeather.cs",
@@ -50284,7 +51202,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/AquaticMovement.cs",
-      "sha256": "8943978a8d81f03626487419c8a5b8fe19c596b30d5e32df2495e8bb78475b61"
+      "sha256": "6418390abcbfa0d092935f3e070366ca386a927e68d3b0692f8e8dc86915a370"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/CatchClearance.cs",
@@ -50303,16 +51221,24 @@
       "sha256": "6b5abe653739548b3febec60a1e8b5cc0792260450403222840dc9623b8b90f4"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/FollowingMotion.cs",
+      "sha256": "7ac9f1721b94bc49e0dcb449eff70ffd88720945c07483bb4a0a54636ef60b8a"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/FollowingOperation.cs",
+      "sha256": "ca310f80e689e66904df38206e6c0fc69573c425c65c4bdb67bfa301ce409b62"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GestureOwnership.cs",
       "sha256": "d810195dabed86101f1ec66e2ea13070d6e563beec81c4910372752f4e0fd150"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedFollowing.cs",
-      "sha256": "92c5a90ff2134ef550f933552acda1bf7ddaccb26d408ad275d83b4af6e0a83b"
+      "sha256": "23771e3f42a7755958a8da99fadcbd8ec58b52b362846e92b9846ba117967d81"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedMovement.cs",
-      "sha256": "618b6d87adb993845f32bc5abed2ff9952641cd78d0a376c8e733ee9325e3f35"
+      "sha256": "54fe56d9fc41ec59912ef2b1353332d8f7222807b5848e66f04ba9259a310d8f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/GroundedTravel.cs",
@@ -50440,7 +51366,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundMotor.cs",
-      "sha256": "22f0d5f683e0904391b38f7374bfac89570812349634e323b0f36044a75e3ddd"
+      "sha256": "99a96498967458c296e99d6463f1a1b902682a6f7de0a81821ea2c86fa35f05c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomGroundQuery.cs",
@@ -50460,7 +51386,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomLocomotionOwner.cs",
-      "sha256": "d32a8ed0b4b551d0606d8851e153748f99136780dc338bc28d4e84bc0a07ac96"
+      "sha256": "0e773f7089d898d7228aab574dc49073eb602df7b6cedf5010f1fcaaa0a191a6"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
@@ -50535,6 +51461,18 @@
       "sha256": "cae43abea1c83c91389de8eaaecb63d982c52a5200fd0e9f7de67a4b7accae9f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomShoreClearance.cs",
+      "sha256": "dfd95a72f5bd788c53591c554ddb85604a189cdededd4e774bc0fa5840e71ea6"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomShoreMotor.cs",
+      "sha256": "93664eca9da814df3519c17a2907faca3bd4a6db0ff19a6c6c8a48aa81d5cb42"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomShoreRoute.cs",
+      "sha256": "af9dbbb6465d2a8b9eb9c1dee2066134bda5d3bec8eaa7eb6ec9e27959ff1c4b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
       "sha256": "8456169554e7754917e93cd09c1af5785bcb056f8df70a40d8d278d784d3bfd7"
     },
@@ -50549,6 +51487,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomToolVisibility.cs",
       "sha256": "23f0df8e3bb19ea9bd44f9ef7393a316946eeff83a7efb932dbd167ce8f46ded"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomUprightBody.cs",
+      "sha256": "5e266fb584e25c4902ff3db7925ead0c287a872842796489a49fb724bb27685b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomWalkableSurface.cs",
@@ -50603,6 +51545,10 @@
       "sha256": "3c482d3b1f71aefc87146d1e16871ae8c35ee538e2c03cbcda358243b3074b4c"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/ShoreMovement.cs",
+      "sha256": "6d33fd82f0916086b5850dd388ff68074f1f98b284ed07e714ec57877ecfe2dd"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/TrackedPusher.cs",
       "sha256": "261ed141814d39679e9e5cda845e26c5831ccf753d298f89412bf8a6830428ec"
     },
@@ -50617,6 +51563,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/VirtualRoomView.cs",
       "sha256": "749b1819f9599b3df4d7f2d7585ccf274b52691fc10526a116d22eb3d118cd11"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WaterFollowing.cs",
+      "sha256": "4b76944fc695af871dd657d45b7c3b3a59202fd7223b1a4492da5d5f83ad866e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/WorkspaceViewpoint.Placement.cs",

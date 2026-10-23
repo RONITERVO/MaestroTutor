@@ -302,10 +302,13 @@ try{
   await page!.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();
  };
  const runNamedAction=async(id:string,timeout=30000)=>{
-  const previous=await page!.evaluate(()=>window.nativeBookEvidence!().state!.execution?.selected?.id);
+  const previous=await page!.evaluate(()=>{const s=window.nativeBookEvidence!().state!;return {id:s.execution?.selected?.id,ack:s.ack};});
   await page!.getByRole('button',{name:'Run action now',exact:true}).click();
-  await page!.waitForFunction(({id,previous})=>{const r=window.nativeBookEvidence!().state!.execution?.selected;return r?.id!==previous&&r?.capability===id&&r.phase==='completed';},{id,previous},{timeout});
-  return page!.evaluate(()=>window.nativeBookEvidence!().state!.execution!.selected!);
+  await page!.waitForFunction(({id,previous})=>{const s=window.nativeBookEvidence!().state!,r=s.execution?.selected;return s.ack!==previous.ack&&s.ok===false||r?.id!==previous.id&&r?.capability===id&&['completed','failed','cancelled'].includes(r.phase);},{id,previous},{timeout});
+  const state=await page!.evaluate(()=>window.nativeBookEvidence!().state!);
+  assert.equal(state.ok,true,state.status);assert.notEqual(state.execution?.selected?.id,previous.id);
+  assert.equal(state.execution?.selected?.capability,id);assert.equal(state.execution?.selected?.phase,'completed',state.execution?.selected?.status);
+  return state.execution!.selected!;
  };
  // Navigate through visible generated forms, then return to the starting location.
  const locationBefore=await readResourceFact('world.viewpoint','Your world location') as unknown as WorldLocation;
@@ -601,7 +604,13 @@ try{
  // Shared area authoring uses the same generated controls as every other catalog action.
  await openNamedAction('Save world area','world.region.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Café garden');
- const region=await runNamedAction('world.region.save');
+ assert.equal(await page.getByLabel('Action inputs loading',{exact:true}).inputValue(),'independent');
+ await page.getByLabel('Action inputs loading',{exact:true}).selectOption('together');
+ const region=await runNamedAction('world.region.save');assert.equal(region.call.arguments.loading,'together');
+ await page.getByRole('heading',{name:'Save world area',exact:true}).scrollIntoViewIfNeeded();
+ await page.screenshot({path:join(directory,'book-native-area-loading.png')});
+ const regionDefinition=await readResourceFact('world.region','World area',{id:String(region.output!.id)});
+ assert.equal(regionDefinition.loading,'together');
  await openNamedAction('Choose creation area','object.region.assign');
  await chooseObject('Action inputs target',ball.id);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
@@ -611,7 +620,7 @@ try{
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  assert.equal(await page.getByLabel('Action inputs regionId',{exact:true}).inputValue(),region.output!.id);
  await page.getByRole('region',{name:'Area choice',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-region.png')});
- await writeFile(join(directory,'book-native-region.json'),JSON.stringify({boundary:'Actual original-book generated controls, named area choice and native saved membership readback. No regional streaming, provider or headset claim.',region,regionBinding},null,2));
+ await writeFile(join(directory,'book-native-region.json'),JSON.stringify({boundary:'Actual original-book generated controls, named area choice and native saved membership readback. No regional streaming, provider or headset claim.',region,regionDefinition,regionBinding},null,2));
  await openNamedAction('Save environment profile','environment.profile.save');
  await page.getByLabel('Action inputs name',{exact:true}).fill('Virtual terrain only');
  await page.getByLabel('Action inputs realCollisions',{exact:true}).selectOption('false');
@@ -1081,18 +1090,18 @@ try{
  // Undo checks must still address the two newest authored creations.
  // Movement itself does not push an Undo entry.
  const aquaticObjects:string[]=[];
- for(const [name,y,scale] of [['Book aquatic pool',1,1],['Book aquatic actor',1.4,.5]] as const){
+ for(const [name,x,y,scale,z] of [['Book aquatic pool',-1.5,1,1,2],['Book aquatic actor',-1.5,1.4,.5,2],['Book shore actor',-1.5,1.5,.5,2.25],['Book water guide',-.3,1.6,.5,2]] as const){
   await openNamedAction('Create object','object.create');
   await page.getByLabel('Creation kind',{exact:true}).selectOption('0');
   await page.getByLabel('Action inputs shape',{exact:true}).selectOption('block');
   await page.getByLabel('Action inputs name',{exact:true}).fill(name);
-  for(const [key,value] of Object.entries({x:-1.5,y,z:2,scale}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+  for(const [key,value] of Object.entries({x,y,z,scale}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
   const created=await runNamedAction('object.create'),id=created.output!.objectId as string;aquaticObjects.push(id);
   await openNamedAction('Configure object physics','object.physics.configure');await chooseObject('Action inputs target',id);
   await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
   await page.getByLabel('Action inputs mode',{exact:true}).selectOption('fixed');await page.getByLabel('Action inputs shape',{exact:true}).selectOption('box');await runNamedAction('object.physics.configure');
  }
- const [aquaticPool,aquaticActor]=aquaticObjects;
+ const [aquaticPool,aquaticActor,shoreActor,waterGuide]=aquaticObjects;
  await openNamedAction('Configure or fill a liquid container','object.container.edit');await chooseObject('Action inputs target',aquaticPool);
  await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
  for(const [key,value] of Object.entries({'frame position y':.2,radius:.5,height:.6,capacityMl:600000,amountMl:400000}))await page.getByLabel('Action inputs definition '+key,{exact:true}).fill(String(value));
@@ -1182,6 +1191,31 @@ try{
  const surfacePosition=(await book.observation(aquaticActor)).position;
  assert.ok(Math.abs(surfacePosition.x+1.45)<.006&&Math.abs(surfacePosition.z-2)<.006&&surfacePosition.y>1.5&&surfacePosition.y<1.7);
  await writeFile(join(directory,'book-native-surface-travel.json'),JSON.stringify({boundary:'Visible original-book movement variant, exact actor/habitat, immersion and x/z controls; actual native gradual rise and surface travel. No provider or headset acceptance.',pool:aquaticPool,actor:aquaticActor,receipt:surfaceReceipt,position:surfacePosition},null,2));
+ // Preserve the earlier 3D swim's tilted actor; shore travel requires its own upright walking body.
+ // Its 0.065 m cube starts wet; the walking capsule and 0.04 m foot skin put its root at 1.5313457 m for 60% immersion.
+ await openNamedAction('Move to a place','object.navigate');await page.getByLabel('Movement',{exact:true}).selectOption({label:'Walk and swim across a shore'});
+ await chooseObject('Action inputs target',shoreActor);await chooseObject('Action inputs habitat',aquaticPool);
+ await page.getByLabel('Shore destination',{exact:true}).selectOption({label:'Supported ground foot'});
+ assert.equal(await page.getByLabel('Action inputs destination y',{exact:true}).count(),1);
+ await page.getByLabel('Shore destination',{exact:true}).selectOption({label:'Live water surface'});
+ assert.equal(await page.getByLabel('Action inputs destination y',{exact:true}).count(),0);
+ for(const [axis,value] of Object.entries({x:-1.2,z:2.25}))await page.getByLabel('Action inputs destination '+axis,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs immersion',{exact:true}).fill('.6');await page.getByLabel('Action inputs facing',{exact:true}).selectOption('keep');await page.getByLabel('Action inputs speed',{exact:true}).fill('.3');
+ const shoreReceipt=await runNamedAction('object.navigate');assert.ok(Number(shoreReceipt.output!.distance)>.24);
+ await page.getByRole('heading',{name:'Move to a place',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-shore-travel.png')});
+ const shorePosition=(await book.observation(shoreActor)).position;
+ assert.ok(Math.abs(shorePosition.x+1.2)<.006&&Math.abs(shorePosition.z-2.25)<.006&&Math.abs(shorePosition.y-1.5313457)<.006);
+ await writeFile(join(directory,'book-native-shore-travel.json'),JSON.stringify({boundary:'Visible original-book shore variant, typed ground/surface destination controls and a real native buoyant segment using the shared capsule. Full dry/wet transitions run in native and headless tests; no provider or headset acceptance.',pool:aquaticPool,actor:shoreActor,receipt:shoreReceipt,position:shorePosition},null,2));
+ await openNamedAction('Follow someone','object.follow');await page.getByLabel('Following movement',{exact:true}).selectOption({label:'Follow at the water surface'});
+ await chooseObject('Action inputs target',aquaticActor);await chooseObject('Action inputs habitat',aquaticPool);
+ await page.getByLabel('Leader',{exact:true}).selectOption({label:'Another object'});await chooseObject('Action inputs leader objectId',waterGuide);
+ for(const [key,value] of Object.entries({distance:.8,speed:.3,seconds:4,immersion:.6}))await page.getByLabel('Action inputs '+key,{exact:true}).fill(String(value));
+ await page.getByLabel('Action inputs facing',{exact:true}).selectOption('keep');
+ const waterFollowingReceipt=await runNamedAction('object.follow');assert.equal(waterFollowingReceipt.output!.state,'keepingDistance');assert.ok(Number(waterFollowingReceipt.output!.distance)>.2);
+ await page.getByRole('heading',{name:'Follow someone',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-water-following.png')});
+ const waterFollowingPosition=(await book.observation(aquaticActor)).position;
+ assert.ok(Math.abs(waterFollowingPosition.x+1.1)<.04&&Math.abs(waterFollowingPosition.z-2)<.01);
+ await writeFile(join(directory,'book-native-water-following.json'),JSON.stringify({boundary:'Original book generated following-mode, leader, habitat and immersion controls, real native surface following and completed receipt. No provider/headset or moving-leader claim.',pool:aquaticPool,actor:aquaticActor,leader:waterGuide,receipt:waterFollowingReceipt,position:waterFollowingPosition},null,2));
  await openNamedAction('Look toward something','avatar.look');
  await page.getByLabel('Attention',{exact:true}).selectOption('2');
  for(const [axis,value] of Object.entries({x:2,y:1.6,z:2}))await page.getByLabel('Action inputs focus point '+axis,{exact:true}).fill(String(value));

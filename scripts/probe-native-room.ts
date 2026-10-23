@@ -20,6 +20,7 @@ import {prepareAgentLiquidContacts,runAgentLiquidContactsProof} from './probe-ag
 import {runAgentWorldWeatherProof} from './probe-agent-world-weather';
 import {probeWorldWeather} from './probe-world-weather';
 import {probeAquaticTravel} from './probe-aquatic-travel';
+import {probeShoreTravel} from './probe-shore-travel';
 import {probeLiquidMedium} from './probe-liquid-medium';
 import {probeWaterTraversal} from './probe-water-traversal';
 import {probeTerrainWater} from './probe-terrain-water';
@@ -1369,6 +1370,7 @@ try{
   await execute([{action:'undo'}]);if(await nativeObjects.any(activeButtonIds))throw new Error('Active button did not retain single-Undo construction');
   // Keep the complete original history sequence intact before adding aquatic fixtures.
   await probeAquaticTravel(execute,directory);
+  await probeShoreTravel(execute,directory);
   outcome={walkingActorClearance:{waitArrivalAndReplayVerified:true},groundedFollowing:{movingLeaderStatusDistanceAndReplayVerified:true},groundedTravel:{gradualMotionArrivalAndReplayVerified:true,solidObstacleDetourObserved:true},connectedPhysicsInputs:{runningSliderAndFixedMountVerified:true},portableResources,physicalCatching:{syntheticFloor:true,sharedLaunchCatchDropAndReplayVerified:true},constructionMovement:{sharedHandleTransformAndOneUndoVerified:true},constructionSelection:{sharedStateFactLocateCaptureAndPruneVerified:true},currentMembers:{visibleReadsAndIndexedGuardsVerified:true,program:currentCaptureId},constructionCapture:{hash:capturedHash,survivedOriginalRemovalAndInternalHingeAndUndoVerified:true},connectedBlueprint:{identitiesInternalHingeAndSingleUndoVerified:true},leverModule:{hash:leverHash,program:leverId,includedSourceAndNativeCreationVerified:true},drawingTip:{tipHash,configurationReadbackAndUndoVerified:true},surface:{chalkHash,stroke,toolAndInkReadEraseUndoVerified:true},watch:{moduleHash,program:watcherId,includedSourceAndNativeRearmVerified:true},composition:{program:compositionId,outcome:compositionOutcome,buildCaptureMoveResetAndUndoVerified:true},structures:{captureReceipt:structureAfter.execution?.selected,liveDisplacementResetAndUndoVerified:true},batch:{createReceipt:batchAfter.execution?.selected,identitiesAndSingleUndoVerified:true},layout:{applyReceipt:layoutAfter.execution?.selected,liveReadAndSingleUndoVerified:true},template:{hash:templateArgs.templateHash,createReceipt:templateAfter.execution?.selected,componentsAndSingleUndoVerified:true},createdId:target,createReceipt:selected,paintVerified:true,undoPaintVerified:true,undoCreateVerified:true,diagnostics:diagnostic.catalog.value,lathe:{createReceipt:lathe.execution?.selected,profile:value,editAndUndoVerified:true},collision:{summary:summaryValue,editAndUndoVerified:true},latheCycles:cycle+1};
   }
  }

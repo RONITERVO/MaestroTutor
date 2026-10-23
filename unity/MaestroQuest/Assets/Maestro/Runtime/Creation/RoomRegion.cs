@@ -12,13 +12,15 @@ namespace Maestro.Quest.Creation
     [Serializable] public sealed class RoomRegion
     {
         public const int MaximumRegions=32;
-        public int version=1;
+        public int version=2;
         public string id,name;
+        public string loading="together";
+        internal string Loading=>version==1?"together":loading;
         public string[] members=Array.Empty<string>();
-        public RoomRegion Copy()=>new(){version=version,id=id,name=name,members=members==null?null:members.OrderBy(x=>x,StringComparer.Ordinal).ToArray()};
+        public RoomRegion Copy()=>new(){version=version==1?2:version,id=id,name=name,loading=Loading,members=members==null?null:members.OrderBy(x=>x,StringComparer.Ordinal).ToArray()};
         public bool Validate(out string error) {
-            error="A region needs version 1, a stable ID, a readable name and distinct creation IDs";
-            if(version!=1||!RoomWorldIdentity.Id(id)||string.IsNullOrWhiteSpace(name)||name.Length>80||name.Any(char.IsControl)||members==null||members.Length>RoomDocument.MaximumObjects)return false;
+            error="A region needs a supported version, independent or together loading, a stable ID, a readable name and distinct creation IDs";
+            if((version!=1&&version!=2)||(version==2&&loading is not ("independent" or "together"))||!RoomWorldIdentity.Id(id)||string.IsNullOrWhiteSpace(name)||name.Length>80||name.Any(char.IsControl)||members==null||members.Length>RoomDocument.MaximumObjects)return false;
             if(members.Any(x=>x?.Length!=32||!Guid.TryParseExact(x,"N",out _))||members.Distinct(StringComparer.Ordinal).Count()!=members.Length)return false;
             error=null;return true;
         }
@@ -41,8 +43,9 @@ namespace Maestro.Quest.Creation
             if((int)room["version"]<36&&!room.ContainsKey("regions"))return true;
             if(room["regions"] is not JArray regions||regions.Count>MaximumRegions)return false;
             foreach(var token in regions) {
-                if(token is not JObject value||value.Count!=4||value["version"]?.Type!=JTokenType.Integer||value["id"]?.Type!=JTokenType.String||value["name"]?.Type!=JTokenType.String||value["members"] is not JArray members||members.Any(x=>x.Type!=JTokenType.String))return false;
-                if(!new RoomRegion{version=(int)value["version"],id=(string)value["id"],name=(string)value["name"],members=members.Values<string>().ToArray()}.Validate(out _))return false;
+                if(token is not JObject value||value["version"]?.Type!=JTokenType.Integer||value.Count!=((int)value["version"]==1?4:5)||value["id"]?.Type!=JTokenType.String||value["name"]?.Type!=JTokenType.String||value["members"] is not JArray members||members.Any(x=>x.Type!=JTokenType.String))return false;
+                if((int)value["version"]!=1&&value["loading"]?.Type!=JTokenType.String)return false;
+                if(!new RoomRegion{loading=(string)value["loading"],version=(int)value["version"],id=(string)value["id"],name=(string)value["name"],members=members.Values<string>().ToArray()}.Validate(out _))return false;
             }
             return true;
         }

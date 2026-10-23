@@ -9,6 +9,29 @@ using UnityEngine;
 using UnityEngine.TestTools;
 namespace Maestro.Quest.Tests {
     public sealed partial class RoomRulesTests {
+        [UnityTest]public IEnumerator LocomotionLifetimeOrdinaryPhysicsRefreshKeepsTheAcceptedOwner(){
+            var(pool,id)=AquaticFixture();var actor=editor.Find(id);using var owner=new RoomLocomotionOwner(editor,actor);
+            var args=SwimArgs(id,pool,new(4.2f,1.45f,0));var first=new AquaticMovement(editor,actor,args,owner);
+            var next=new AquaticMovement(editor,actor,args,owner);
+            try{
+                Assert.That(first.Begin(args,out var error),Is.True,error);yield return SwimmingStarted(first,actor);
+                first.Stop(false);physics.StartPhysics();physics.SetSurfaces(true,"Still aligned");
+                Assert.That(owner.Validate(out error),Is.True,error);Assert.That(next.Begin(args,out error),Is.True,error);
+                yield return FinishSwimming(next,actor);
+            }finally{first.Stop(false);next.Stop(false);}
+        }
+        [UnityTest]public IEnumerator LocomotionLifetimePauseAndResumeInOneFrameCannotReviveBetweenPhases(){
+            var(pool,id)=AquaticFixture();var actor=editor.Find(id);using var owner=new RoomLocomotionOwner(editor,actor);
+            var args=SwimArgs(id,pool,new(4.2f,1.45f,0));var first=new AquaticMovement(editor,actor,args,owner);
+            var next=new AquaticMovement(editor,actor,args,owner);
+            try{
+                Assert.That(first.Begin(args,out var error),Is.True,error);yield return SwimmingStarted(first,actor);
+                first.Stop(false);var held=actor.transform.position;
+                physics.PausePhysics();physics.StartPhysics();
+                Assert.That(next.Begin(args,out error),Is.False,"An interruption between ticks must not disappear when physics resumes");
+                Assert.That(error,Does.Contain("physics"));Assert.That(actor.transform.position,Is.EqualTo(held));
+            }finally{first.Stop(false);next.Stop(false);}
+        }
         [UnityTest]public IEnumerator LocomotionLifetimeSurfaceCompletionRechecksWaterInTheArrivalFrame(){
             var(pool,id)=AquaticFixture();var actor=editor.Find(id);var args=SurfaceArgs(id,pool,4);
             var swim=new AquaticMovement(editor,actor,args);

@@ -10,7 +10,10 @@ namespace Maestro.Quest.Interaction
     {
         enum Clearance { Clear, Ground, Blocked }
         internal Collider Blocker {get;private set;}
-        internal void Clear(){Blocker=null;Array.Clear(hits,0,hits.Length);Array.Clear(overlaps,0,overlaps.Length);}
+        // Successful Travel exposes actual sampled ground separately from the
+        // clearance-adjusted body foot. A zero step preserves the body's pose.
+        internal Vector3 SupportPoint {get;private set;}
+        internal void Clear(){Blocker=null;SupportPoint=default;Array.Clear(hits,0,hits.Length);Array.Clear(overlaps,0,overlaps.Length);}
         readonly RaycastHit[] hits=new RaycastHit[64];
         readonly Collider[] overlaps=new Collider[64];
         Clearance Include(Collider collider,RoomGroundQuery ground,Func<Collider,bool> obstacle,Clearance state)
@@ -21,7 +24,8 @@ namespace Maestro.Quest.Interaction
         }
         Clearance At(Vector3 foot,float radius,float height,int mask,RoomGroundQuery ground,Func<Collider,bool> obstacle)
         {
-            int count=Physics.OverlapCapsuleNonAlloc(foot+Vector3.up*(radius+RoomGroundQuery.Skin),foot+Vector3.up*(height-radius),radius,overlaps,mask,QueryTriggerInteraction.Ignore);
+            var body=new RoomUprightBody(radius,height);body.Points(foot,out var lower,out var upper);
+            int count=Physics.OverlapCapsuleNonAlloc(lower,upper,radius,overlaps,mask,QueryTriggerInteraction.Ignore);
             if(count==overlaps.Length)return Clearance.Blocked;
             var result=Clearance.Clear;
             for(int i=0;i<count;i++)result=Include(overlaps[i],ground,obstacle,result);
@@ -31,7 +35,8 @@ namespace Maestro.Quest.Interaction
         {
             var step=to-from;var result=Clearance.Clear;
             if(step.sqrMagnitude>.00000001f){
-                int count=Physics.CapsuleCastNonAlloc(from+Vector3.up*(radius+RoomGroundQuery.Skin),from+Vector3.up*(height-radius),radius,step.normalized,hits,step.magnitude+.001f,mask,QueryTriggerInteraction.Ignore);
+                var body=new RoomUprightBody(radius,height);body.Points(from,out var lower,out var upper);
+                int count=Physics.CapsuleCastNonAlloc(lower,upper,radius,step.normalized,hits,step.magnitude+.001f,mask,QueryTriggerInteraction.Ignore);
                 if(count==hits.Length)return Clearance.Blocked;
                 for(int i=0;i<count;i++)result=Include(hits[i].collider,ground,obstacle,result);
             }
@@ -39,18 +44,20 @@ namespace Maestro.Quest.Interaction
             return (Clearance)Math.Max((int)result,(int)end);
         }
         internal bool ClearExact(Vector3 from,Vector3 to,float radius,float height,int mask,Func<Collider,bool> obstacle)
-            {Blocker=null;return At(from,radius,height,mask,null,obstacle)==Clearance.Clear&&Sweep(from,to,radius,height,mask,null,obstacle)==Clearance.Clear;}
+            {Blocker=null;return new RoomUprightBody(radius,height).Valid&&Creation.RoomRecipe.Finite(from)&&Creation.RoomRecipe.Finite(to)&&obstacle!=null&&
+                At(from,radius,height,mask,null,obstacle)==Clearance.Clear&&Sweep(from,to,radius,height,mask,null,obstacle)==Clearance.Clear;}
         internal bool Travel(RoomGroundQuery ground,Vector3 from,Vector3 planar,float radius,float height,int mask,
             Func<Collider,bool> obstacle,Func<Vector3,bool> permitted,out Vector3 destination,out string error)
         {
-            Blocker=null;destination=from;error="The walking path is blocked or exceeds supported traversal";
+            Blocker=null;SupportPoint=default;destination=from;error="The walking path is blocked or exceeds supported traversal";
             if(ground==null||!Creation.RoomRecipe.Finite(from)||!Creation.RoomRecipe.Finite(planar)||!float.IsFinite(radius)||radius<=0||
                 !float.IsFinite(height)||height<radius*2+RoomGroundQuery.Skin||obstacle==null)return false;
             planar.y=0;float distance=planar.magnitude;
             // Bound query work for malformed or discontinuous requests.
             if(!float.IsFinite(distance)||distance>2.56f)return false;
             int count=Mathf.CeilToInt(distance/.04f);if(count>64)return false;
-            if(!ground.Support(from,radius,RoomGroundQuery.MaximumStep+.001f,RoomGroundQuery.MaximumStep+.001f,out _,out _,out error))return false;
+            if(!ground.Support(from,radius,RoomGroundQuery.MaximumStep+.001f,RoomGroundQuery.MaximumStep+.001f,out var startSupport,out _,out error))return false;
+            SupportPoint=startSupport;
             if(At(from,radius,height,mask,ground,obstacle)!=Clearance.Clear){error="Your starting body space is occupied; choose a clear supported location";return false;}
             var current=from;
             for(int i=1;i<=count;i++){
@@ -99,7 +106,7 @@ namespace Maestro.Quest.Interaction
                         if(permitted!=null&&!permitted(target)){error="Movement would leave the supported world coordinates";return false;}
                     }
                 }
-                current=target;
+                current=target;SupportPoint=floor;
             }
             destination=current;error=null;return true;
         }

@@ -41,10 +41,10 @@ namespace Maestro.Quest.Creation
             foreach(var lease in observationCameras)if(lease.Camera&&lease.Camera.gameObject.activeInHierarchy){
                 var view=new RoomObservationView(lease.Camera,lease.SourceLayers);if(view.Reliable)captures.Add((lease,view));
             }
-            var directLights=direct!=null?LightViewDependencies(new[]{direct}):new HashSet<string>();
-            var predictedLights=predicted!=null?LightViewDependencies(new[]{predicted}):new HashSet<string>();
+            var directLights=direct!=null?NativeDisplayDependencies(direct):new HashSet<string>();
+            var predictedLights=predicted!=null?NativeDisplayDependencies(predicted):new HashSet<string>();
             var captureLights=new Dictionary<ObservationCamera,HashSet<string>>();
-            foreach(var capture in captures)captureLights[capture.owner]=LightViewDependencies(new[]{capture.view});
+            foreach(var capture in captures)captureLights[capture.owner]=NativeDisplayDependencies(capture.view);
             foreach(var pair in dormantNative){
                 if(pair.Value.Phase==NativeEntityPhase.Failed)continue;
                 var spatial=ReadDormantSpatial(pair.Key,pair.Value,out _,out var prepared,out var placed);
@@ -64,6 +64,15 @@ namespace Maestro.Quest.Creation
             }
             foreach(var id in viewerDisplayDemand.Keys.Where(id=>!NativeEntityDormant(id)||!HasSavedObject(id)||viewerDisplayDemand[id].Revision!=ObjectRevision(id)||viewerDisplayDemand[id].Until<=now).ToArray())viewerDisplayDemand.Remove(id);
             foreach(var id in captureDisplayDemand.Keys.Where(id=>captureDisplayDemand[id].Captures.Count==0).ToArray())captureDisplayDemand.Remove(id);
+        }
+        HashSet<string> NativeDisplayDependencies(RoomObservationView view)
+        {
+            // An accepted membership/connection edit can couple an already visible
+            // resident to a dormant peer. The same authored closure used for action
+            // acquisition must also reach that peer through ordinary viewing.
+            var required=LightViewDependencies(new[]{view});
+            VisitObservedNative(new[]{view},id=>required.Add(id),includeDormant:false);
+            return journal.RetentionTopology.Closure(required).ToHashSet(StringComparer.Ordinal);
         }
         int NativeDisplayPriority(string id,double now)
         {

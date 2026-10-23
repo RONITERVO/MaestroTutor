@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation {
             return EditObject(id,false,data=>data.waterTraversal=settings.Copy(),"Water traversal settings saved",false,out error);
         }
         internal JObject ObserveWaterTraversal(string id){
-            var data=Read(id);if(data==null||id=="book"||!Find(id))return null;
+            var data=Read(id);if(data==null||id=="book")return null;
             return new JObject{["target"]=id,["revision"]=ObjectRevision(id),["mode"]=data.waterTraversal.mode,["effectiveMode"]=RoomWaterTraversal.Effective(data).mode,["maxDepthMetres"]=System.Math.Round(data.waterTraversal.maxDepthMetres,6),["temporary"]=TemporaryRoom};
         }
         // Recorded prop movement is opt-in. The upright collision envelope is
@@ -57,12 +57,12 @@ namespace Maestro.Quest.Creation {
             result.Clear();CaptureMedia(false);
             for(int i=0;i<mediaCount;i++)if(media[i].Id==id){LiquidRouteFootprint.Build(in media[i],padding,height,footHeight,result);return;}
         }
-        internal bool CheckTraversal(RoomItem actor,Vector3 from,Vector3 to,float radius,float height,out WaterTraversalResult result){
+        internal bool CheckTraversal(RoomItem actor,Vector3 from,Vector3 to,float radius,float height,out WaterTraversalResult result,string swimmingHabitat=null){
             result=default;var policy=actor?actor.WaterTraversal:null;
             if(policy==null||!policy.Valid||!RoomRecipe.Finite(from)||!RoomRecipe.Finite(to)||!float.IsFinite(radius)||!float.IsFinite(height)||radius<=0||height<=0){
                 result=WaterTraversalResult.Refused("Water traversal needs a valid actor and walking body");return false;
             }
-            if(policy.mode=="ignore")return true;
+            if(policy.mode=="ignore"&&swimmingHabitat==null)return true;
             if(!editor||!editor.Frame.Valid||blocked||publishing||editor.RuntimeGate.Held||editor.Ownership.Suspended||editor.WriteGate.Frozen){
                 result=WaterTraversalResult.Refused("Water traversal is unavailable while the room is changing");return false;
             }
@@ -70,13 +70,14 @@ namespace Maestro.Quest.Creation {
                 result=WaterTraversalResult.Refused("Water traversal requires a known gravity direction");return false;
             }
             CaptureMedia(false);
-            var availability=CapturedMediumAvailability(MediumSweep(from,to,radius,height),editor.Identity(actor));
+            var availability=CapturedMediumAvailability(MediumSweep(from,to,radius,height),editor.Identity(actor),swimmingHabitat);
             if(!availability.Ready){result=new("",0,availability.Reason,availability:availability,dependencies:(JArray)DescribeMediumAvailability(MediumSweep(from,to,radius,height),editor.Identity(actor))["dependencies"]);return false;}
             using var environment=mediumEnvironment.Begin(world);
             float allowedDepth=Mathf.Min(policy.maxDepthMetres*editor.Frame.MetresPerUnit,height*.6f);
             for(int i=0;i<mediaCount;i++){
                 var medium=media[i];if(medium.Item==actor||!medium.Sweep(from,to,radius,height,out float depth,out var point,out var foot))continue;
                 string reason=!medium.Item.GetComponent<RigidRoomItem>().GeometryReady||!environment.CanOccupy(point,actor,medium.Item)?"The water or actor environment is unavailable":
+                    medium.Id==swimmingHabitat||policy.mode=="ignore"?null:
                     policy.mode!="wade"&&!medium.ShallowExit(from,to,radius,height,allowedDepth,depth)?"This actor avoids water; shallow exits must approach an edge or shallower ground":depth>allowedDepth+.001f?"This water is too deep for grounded wading; use an explicit swimming action with its own habitat and body checks":null;
                 if(reason!=null){result=new(medium.Id,depth,reason,foot);return false;}
                 if(depth>result.Depth)result=new(medium.Id,depth,null,foot);

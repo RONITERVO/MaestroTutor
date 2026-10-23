@@ -1841,7 +1841,7 @@ See [the current delivery evidence](QUEST_V1_PLAN.md#owned-submerged-movement)
 for the latest results and remaining release boundaries.
 
 
-## Shared surface movement coverage (verification in progress)
+## Shared surface movement coverage
 
 Both full journeys now continue the authored aquatic fixture through
 `object.navigate` with `mode=surface`. Book uses its generated variant, exact
@@ -1858,3 +1858,51 @@ rise, a changing live level, above-water obstruction, a receded nonempty habitat
 and pause without revival. Book variant tests preserve compatible nested fields
 while dropping inactive values. Neither focused tests nor desktop captures prove
 physical Quest performance, provider behavior or shore transitions.
+
+
+## Shared shore movement coverage
+
+The Book journey continues its aquatic fixture through **Walk and swim across
+a shore**. It switches between supported-ground and live-surface destinations,
+checks the visible height field appears only for ground, and executes a buoyant
+segment through the generated controls. `book-native-shore-travel.json` and its
+screenshot capture that narrower UI/integration boundary; the Book fixture does
+not itself cross a bank.
+
+The complete Headless journey creates a sloped native terrain reservoir and robot
+using ordinary shared creation actions, configures the selected habitat, and
+traverses into the water and back to dry ground. `native-shore-travel.json` retains
+both receipts, observed intermediate positions, the unchanged saved avoidance
+policy and terminal replay. It needs no privileged scene setup or provider call.
+This new step requires its own successful complete-run receipt and source hashes.
+
+Native PlayMode cases additionally cover both banks in one call, a solid detour,
+virtual-only travel below the scanned floor, refusal for room-bound actors,
+another avoided overlapping liquid, draining and same-frame physics interruption.
+These are capsule/root movement proofs, not animated-limb contact, aquatic NPC
+steering, measured Quest performance or real-provider action-selection acceptance.
+See [the delivery evidence](QUEST_V1_PLAN.md#continuous-shore-traversal).
+
+
+### Following across water and shore
+
+The full Headless journey continues the created shore fixture with an independent
+fixed leader and a timed `object.follow mode=shore` action. It records active
+`mode=follow` / `movement=shore` observations, actual ground-to-water progress,
+unchanged saved avoidance and exact receipt replay in
+`native-water-following.json`. The Book journey selects surface following through
+the generated mode, leader, habitat and immersion controls and records actual
+native movement in `book-native-water-following.json` and its screenshot.
+These journeys cover a fixed leader; moving leaders, live water levels,
+interruption and per-actor below-floor policy are native PlayMode coverage.
+Successful run receipts must be checked in the v1 plan before treating the
+expanded journeys as verified. No provider or physical-headset proof is implied.
+
+
+The area journey also checks explicit loading policy through the shared catalog:
+an independent named area may contain one visible resident and one dormant peer;
+changing it to together restores the peer through camera demand. The generated
+book form selects the same policy and reads its saved value. The probe records
+`independent-area-loading.json`, `book-native-area-loading.png` and the area
+receipt/fact evidence. These are desktop native and book checks, not headset
+capacity or performance acceptance.

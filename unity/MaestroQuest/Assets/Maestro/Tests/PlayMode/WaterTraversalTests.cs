@@ -48,6 +48,23 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.Liquids.CheckTraversal(actor,from,to,.1f,1.7f,out hit),Is.True);
             Assert.That(editor.Read(pool).containers[0].amountMl,Is.EqualTo(400000));yield return null;
         }
+        [UnityTest]public IEnumerator WaterTraversalSavedSettingsRemainReadableAfterNativeRetirementWithoutLoading(){
+            string id=editor.Identity(block);
+            Assert.That(editor.ConfigureWaterTraversal(id,editor.ObjectRevision(id),new(){mode="wade",maxDepthMetres=.18f},out var error),Is.True,error);
+            string area=NativeAreaFor(id);var catalog=new RoomCapabilityCatalog(editor);
+            var query=new JObject{["operation"]="inspect",["category"]="facts",["capability"]="object.water.traversal.settings",["version"]=1,["arguments"]=new JObject{["target"]=id}};
+            Assert.That(catalog.Execute(query,out error),Is.True,error);var before=catalog.Observe();
+            Assert.That((bool)before["available"],Is.True);var saved=JsonUtility.ToJson(editor.Read(id));int revision=editor.ObjectRevision(id);
+            Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
+            Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativePhase(id),Is.EqualTo(NativeEntityPhase.Dormant));
+            Assert.That(catalog.Execute(query,out error),Is.True,error);var after=catalog.Observe();
+            Assert.That((bool)after["available"],Is.True,"Saved settings must not require a loaded native object");
+            Assert.That(JToken.DeepEquals(after["value"],before["value"]),Is.True);
+            Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeActivationPending,Is.False);
+            Assert.That(editor.NativePhase(id),Is.EqualTo(NativeEntityPhase.Dormant));
+            Assert.That(JsonUtility.ToJson(editor.Read(id)),Is.EqualTo(saved));Assert.That(editor.ObjectRevision(id),Is.EqualTo(revision));
+            foreach(string absent in new[]{System.Guid.NewGuid().ToString("N"),"book"})Assert.That(editor.ObserveWaterTraversal(absent),Is.Null);
+        }
         [UnityTest]public IEnumerator WaterTraversalSettingsUseSharedReceiptsUndoAndStaleGuards(){
             var(pool,prop)=MediumFixture(.05f);physics.PausePhysics();var ex=new RoomAgentExecutor(editor);
             var call=new JObject{["id"]="object.water.traversal.configure",["version"]=1,["arguments"]=new JObject{["target"]=prop,["revision"]=editor.ObjectRevision(prop),["mode"]="wade",["maxDepthMetres"]=.18}};

@@ -22,6 +22,30 @@ namespace Maestro.Quest.Tests
             Assert.That(recorder.Count,Is.GreaterThan(0),"Unsupported allocation counters must not pass silently");
             long count=recorder.GetSample(0).Count;Assert.That(count,Is.GreaterThan(0));return count;
         }
+        [Test] public void IndependentAreasKeepPhysicalConnectionsButNotUnrelatedMembers()
+        {
+            var a=Area('a','1','2');a.loading="independent";var b=Area('b','3','4');b.loading="independent";
+            var graph=new RoomRetentionGraph(new[]{Item('1',Id('3')),Item('2'),Item('3'),Item('4')},new[]{a,b});
+            graph.Retain(Id('1'),RoomRetentionReason.Held);
+            Assert.That(graph.Closure(new[]{Id('1')}),Is.EqualTo(new[]{Id('1'),Id('3')}));
+            Assert.That(graph.Reasons(Id('3')),Is.EqualTo(RoomRetentionReason.Held));
+            foreach(char id in "24")Assert.That(graph.Reasons(Id(id)),Is.EqualTo(RoomRetentionReason.None));
+            Assert.That(graph.Members(a.id),Is.EqualTo(new[]{Id('1'),Id('2')}));
+            Assert.That(graph.Closure(graph.Members(a.id)),Is.EqualTo(new[]{Id('1'),Id('2'),Id('3')}),"Explicit whole-area requests still include every member and physical peer");
+        }
+        [Test] public void LoadingPolicyEditsInvalidateTopologyAndUndoWithoutRewritingOlderObservations()
+        {
+            var journal=new RoomJournal(Document(Item('1'),Item('2')));var area=Area('a','1','2');Regions(journal,area);
+            var old=journal.RetentionTopology;int revision=journal.RegionRevision(area.id);var fork=journal.Fork();
+            area.loading="independent";Regions(fork,area);
+            Assert.That(journal.RetentionTopology,Is.SameAs(old));Assert.That(Closure(fork,'1'),Is.EqualTo(new[]{Id('1')}));
+            Assert.That(journal.ApplySnapshot(fork.Snapshot(),out var error),Is.True,error);
+            Assert.That(journal.RegionRevision(area.id),Is.GreaterThan(revision));Assert.That(journal.RetentionTopology,Is.Not.SameAs(old));
+            Assert.That(Closure(journal,'1'),Is.EqualTo(new[]{Id('1')}));Assert.That(old.Closure(new[]{Id('1')}),Is.EqualTo(new[]{Id('1'),Id('2')}));
+            Assert.That(journal.Undo(),Is.True);Assert.That(Closure(journal,'1'),Is.EqualTo(new[]{Id('1'),Id('2')}));
+            Assert.That(journal.Redo(),Is.True);Assert.That(Closure(journal,'1'),Is.EqualTo(new[]{Id('1')}));
+            Assert.That(new RoomJournal(journal.Snapshot()).ReadRegion(area.id).Loading,Is.EqualTo("independent"));
+        }
         [Test] public void WarmJournalRetentionQueriesAvoidRebuildingAuthoredTopology()
         {
             var data=Document(Enumerable.Range(1,RoomDocument.MaximumObjects).Select(i=>new RoomObjectData{id=i.ToString("x32"),kind=RoomObjectKind.Block}).ToArray());

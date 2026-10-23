@@ -10,18 +10,23 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction {
     /// <summary>One finite, owned submerged or surface journey. The accepted body, habitat
     /// and solid sweeps authorize every root change; elapsed time never authorizes travel.</summary>
-    internal sealed class AquaticMovement:CapabilityOperation {
+    internal sealed class AquaticMovement:CapabilityOperation,IFollowingMotion {
         static readonly List<AquaticMovement> active=new();
         readonly RoomEditor editor;readonly RoomItem item;readonly string target,habitat;
         readonly RoomLocomotionOwner owner;readonly bool ownsLifetime;
-        readonly Vector3 destination;readonly float speed,immersion;readonly bool facing,fullPose,surface;readonly JObject gaitSelection;
+        Vector3 destination;readonly float speed,immersion;readonly bool facing,fullPose,surface,following;readonly JObject gaitSelection,arguments;
         RoomAquaticClearance clearance;RoomAquaticRoute planner;Pose[] route;int corner,lastFrame=-1,inputGeneration=-1;
         ImportedLocomotionPose gait;
-        bool owned,stopped,arrived,surfaceGoalKnown;string failure;float distance,surfaceHintY;
+        bool owned,stopped,arrived,surfaceGoalKnown;string failure,blocked;float distance,surfaceHintY;
         Vector3 framePosition,plannedGoal;Quaternion frameRotation;
-        internal string Status {get;private set;}="planning";
-        internal AquaticMovement(RoomEditor editor,RoomItem item,JObject args,RoomLocomotionOwner owner=null){
-            this.editor=editor;this.item=item;target=editor.Identity(item);
+        public string Status {get;private set;}="planning";
+        public Vector3 FollowPoint=>item.transform.position;
+        public bool Failed=>failure!=null;
+        public bool Blocked=>blocked!=null;
+        public bool Arrived=>arrived;
+        public string Reason=>failure??blocked??"";
+        internal AquaticMovement(RoomEditor editor,RoomItem item,JObject args,RoomLocomotionOwner owner=null,bool following=false){
+            this.editor=editor;this.item=item;this.following=following;arguments=(JObject)args.DeepClone();target=editor.Identity(item);
             habitat=(string)args["habitat"];destination=NavigateObjectCapability.Destination(args);speed=(float)args["speed"];surface=AquaticNavigationSchema.Surface(args);immersion=surface?(float)args["immersion"]:1;
             facing=(string)args["facing"]=="travel";gaitSelection=args["gait"] is JObject g?(JObject)g.DeepClone():null;
             fullPose=ImportedLocomotionPose.Selected(gaitSelection);
@@ -35,6 +40,7 @@ namespace Maestro.Quest.Interaction {
             if(id==editor.Identity(item)||!editor.Find(id))return false;
             return ImportedLocomotionPose.Valid(editor,item,args["gait"] as JObject,out error);
         }
+        public bool Begin(out string error)=>Begin(arguments,out error);
         internal bool Begin(JObject args,out string error){
             error="This swimming action has already started or stopped";
             if(owned||stopped)return false;
@@ -47,7 +53,25 @@ namespace Maestro.Quest.Interaction {
             gait=new(editor,item,gaitSelection);
             return true;
         }
-        void Fail(string error){failure=error??"Swimming became unavailable";owner.Invalidate(failure);Status="failed";}
+        public void Fail(string error){failure=error??"Swimming became unavailable";owner.Invalidate(failure);Status="failed";}
+        void Block(string error){
+            if(!following){Fail(error);return;}
+            blocked=error??"The aquatic following destination is blocked";Status="blocked";planner=null;route=null;arrived=false;
+        }
+        public void Retarget(Vector3 point){
+            if(!following||stopped||failure!=null)return;
+            if(!RoomRecipe.Finite(point)||!RoomViewpoint.ValidPosition(point)){Block("Following destination is outside the authored world bounds");return;}
+            destination=point;planner=null;route=null;arrived=false;blocked=null;Status="planning";
+        }
+        public void KeepDistance(){if(!stopped&&!Failed&&!Blocked&&arrived)Status="keepingDistance";}
+        public bool Remember(out string error){
+            if(!owner.Validate(this,out error)){Fail(error);return false;}
+            var current=new Pose(item.transform.position,item.transform.rotation);
+            if(!clearance.Prepare(current.position,out error)||!clearance.Clear(current,current,out error)){
+                error??="The aquatic body is still preparing";return false;
+            }
+            return owner.TryRemember(this,out error);
+        }
         public override float Seconds=>0;
         public override RuleActionState State(out string error){Tick();error=failure;return failure!=null?RuleActionState.Failed:arrived?RuleActionState.Ready:RuleActionState.Preparing;}
         public override void Tick(){
@@ -72,11 +96,12 @@ namespace Maestro.Quest.Interaction {
                 adjusted.position.y=Mathf.MoveTowards(current.position.y,goal.y,speed*dt);
                 ApplyStep(current,adjusted,dt);return;
             }
+            if(blocked!=null)return;
             if(Vector3.Distance(current.position,goal)<.005f){arrived=true;Status="arrived";return;}
             if(route==null){
                 Status="planning";planner??=new(current,goal,facing,clearance.Clear,surface?goal.y:null);planner.Tick();
                 if(!planner.Done)return;
-                if(planner.Path==null){Fail(planner.Error);return;}
+                if(planner.Path==null){Block(planner.Error);return;}
                 route=planner.Path;corner=1;
             }
             while(corner<route.Length&&Vector3.Distance(current.position,route[corner].position)<.0001f&&Quaternion.Angle(current.rotation,route[corner].rotation)<.01f)corner++;
@@ -93,8 +118,12 @@ namespace Maestro.Quest.Interaction {
                 if(clearance.Pending){Status="preparingWorld";return false;}
                 Fail(error);return false;
             }
+            if(following){
+                Physics.SyncTransforms();var current=new Pose(item.transform.position,item.transform.rotation);
+                if(!clearance.Clear(current,current,out error)){Fail(error);return false;}
+            }
             if(surface){
-                if(!clearance.SurfaceDestination(goal,immersion,out goal,out error)){Fail(error);return false;}
+                if(!clearance.SurfaceDestination(goal,immersion,out goal,out error)){Block(error);return false;}
                 surfaceGoalKnown=true;surfaceHintY=goal.y;
                 // The surface may be above/below the actor's initial corridor. Its
                 // resolved height participates in the same native input admission.
@@ -105,7 +134,7 @@ namespace Maestro.Quest.Interaction {
             error=null;return true;
         }
         void ApplyStep(Pose current,Pose next,float dt){
-            if(!clearance.Clear(current,next,out var error)){Fail(error);return;}
+            if(!clearance.Clear(current,next,out var error)){Block(error);return;}
             item.transform.SetPositionAndRotation(next.position,next.rotation);
             distance+=Vector3.Distance(current.position,next.position);owner.AcceptPose();
             if(!gait.Apply(dt,out error)){Fail(error);return;}
@@ -128,8 +157,8 @@ namespace Maestro.Quest.Interaction {
         public override JObject Result {get{var p=editor&&item?editor.Frame.PointToRoom(item.transform.position):Vector3.zero;return new(){["position"]=new JObject{["x"]=p.x,["y"]=p.y,["z"]=p.z},["distance"]=distance};}}
         internal static JObject Observe(RoomEditor editor,RoomItem item){
             foreach(var value in active)if(value.editor==editor&&value.item==item){
-                var result=value.Result;result["active"]=true;result["mode"]=value.surface?"surface":"swim";result["state"]=value.Status;
-                string reason=value.failure??"";result["reason"]=reason.Length>256?reason[..256]:reason;return result;
+                var result=value.Result;result["active"]=true;result["mode"]=value.following?"follow":value.surface?"surface":"swim";result["movement"]=value.surface?"surface":"swim";result["state"]=value.Status;
+                string reason=value.Reason;result["reason"]=reason.Length>256?reason[..256]:reason;return result;
             }
             return null;
         }

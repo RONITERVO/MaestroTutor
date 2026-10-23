@@ -49,3 +49,14 @@ it('waits for persisted area changes and preserves exact receipt identities',()=
  const assigned={target,revision:15,temporary:true};expect(validateCapabilityOutput('object.region.assign',1,assigned)).toBeNull();
  for(const change of [{target:'book'},{revision:0},{revision:'15'},{temporary:'false'}])expect(validateCapabilityOutput('object.region.assign',1,{...assigned,...change})).not.toBeNull();
 });
+
+it('shares explicit independent or together loading while accepting older omitted calls',()=>{
+ const legacy={id:'',revision:0,name:'Garden',members:[]};
+ expect(validateCapabilityArguments('world.region.save',1,legacy)).toBeNull();
+ for(const loading of ['independent','together']){
+  expect(validateCapabilityArguments('world.region.save',1,{...legacy,loading})).toBeNull();
+  expect(validFactValue('world.region',{id:area,revision:1,name:'Garden',loading,memberCount:0,temporary:false})).toBe(true);
+ }
+ for(const loading of [null,true,'automatic'])expect(validateCapabilityArguments('world.region.save',1,{...legacy,loading})).not.toBeNull();
+ expect(capabilityDefinition('world.region.save')!.example!.loading).toBe('independent');
+});

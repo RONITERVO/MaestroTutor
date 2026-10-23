@@ -11,7 +11,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Interaction {
     /// <summary>One owned walking body and planner, shared by fixed journeys and following.</summary>
-    internal sealed class GroundedMovement {
+    internal sealed class GroundedMovement:IFollowingMotion {
         internal const int MaximumActive=RoomLocomotionBudget.MaximumActive;
         static readonly List<GroundedMovement> active=new();
         readonly RoomEditor editor;readonly RoomItem item;readonly string target;
@@ -25,11 +25,12 @@ namespace Maestro.Quest.Interaction {
         // bounded retry, not a reservation, priority override or predicted path.
         internal const float ActorWaitSeconds=3,ActorRetrySeconds=.35f;
         float actorWaitStarted=-1,actorRetryAt,actorWaitDistance;
-        internal string Status {get;private set;}="planning";
-        internal string Reason=>failure??blocked??waitingReason??navigation?.FollowRouteStatus??"";
-        internal bool Failed=>failure!=null;
-        internal bool Blocked=>blocked!=null;
-        internal bool Arrived=>arrived;
+        public string Status {get;private set;}="planning";
+        public string Reason=>failure??blocked??waitingReason??navigation?.FollowRouteStatus??"";
+        public bool Failed=>failure!=null;
+        public bool Blocked=>blocked!=null;
+        public bool Arrived=>arrived;
+        public Vector3 FollowPoint=>Foot;
         internal Vector3 Foot=>item?item.transform.TransformPoint(localFoot):Vector3.zero;
         internal GroundedMovement(RoomEditor editor,RoomItem item,Vector3 destination,float speed,string mode="walk",RoomLocomotionOwner owner=null){this.mode=mode;this.editor=editor;this.item=item;target=editor.Identity(item);this.owner=owner??new(editor,item);ownsLifetime=owner==null;this.destination=destination;this.speed=speed;obstacle=Obstacle;}
         internal static bool CanBegin(RoomEditor editor,RoomItem item,out string error,RoomLocomotionOwner owner=null){
@@ -56,7 +57,7 @@ namespace Maestro.Quest.Interaction {
             if(!float.IsFinite(radius)||!float.IsFinite(height)||radius<.02f||radius>1.5f||height>5)return false;
             error=null;return true;
         }
-        internal bool Begin(out string error){
+        public bool Begin(out string error){
             error="This walking operation has already started or stopped";if(owned||stopped)return false;
             if(!CanBegin(editor,item,out error,owner)||!Body(item,out radius,out height,out var foot,out error))return false;
             avatar=item.GetComponent<MaestroAvatar>();
@@ -91,14 +92,14 @@ namespace Maestro.Quest.Interaction {
         }
         void ClearActorWait(){actorWaitStarted=-1;actorRetryAt=0;waitingReason=null;}
         void IdlePose(){if(avatar)avatar.SpatialWalk(0);gait?.Apply(0,0);}
-        internal void Fail(string message){failure=message??"Walking became unavailable";owner.Invalidate(failure);Status="failed";IdlePose();}
+        public void Fail(string message){failure=message??"Walking became unavailable";owner.Invalidate(failure);Status="failed";IdlePose();}
         void Block(string message){blocked=message??"No accepted walking route is available";Status="blocked";waitingReason=null;IdlePose();}
-        internal void Retarget(Vector3 point){
+        public void Retarget(Vector3 point){
             if(stopped||failure!=null)return;
             if(!RoomRecipe.Finite(point)||point.sqrMagnitude>625){Block("Following destination is outside the authored world bounds");return;}
             ClearActorWait();destination=point;route=Array.Empty<Vector3>();corner=0;arrived=false;blocked=null;Status="planning";navigation?.CancelFollowRoute();
         }
-        internal void KeepDistance(){if(!stopped&&!Failed&&!Blocked&&arrived)Status="keepingDistance";}
+        public void KeepDistance(){if(!stopped&&!Failed&&!Blocked&&arrived)Status="keepingDistance";}
         internal static bool LeaderFoot(RoomItem value,out Vector3 foot){
             foot=default;if(!value||!value.isActiveAndEnabled)return false;
             if(value.GetComponent<MaestroAvatar>()){foot=value.transform.position;return RoomRecipe.Finite(foot);}
@@ -107,10 +108,10 @@ namespace Maestro.Quest.Interaction {
             foot=new(bounds.center.x,bounds.min.y,bounds.center.z);return found&&RoomRecipe.Finite(foot);
         }
         internal static JObject Observe(RoomEditor editor,RoomItem item){
-            foreach(var value in active)if(value.editor==editor&&value.item==item){var result=value.Result;result["active"]=true;result["mode"]=value.mode;result["state"]=value.Status;result["reason"]=value.Reason.Length>256?value.Reason[..256]:value.Reason;return result;}
-            var p=editor.Frame.PointToRoom(item.transform.position);return new(){["active"]=false,["mode"]="none",["state"]="inactive",["reason"]="",["position"]=new JObject{["x"]=p.x,["y"]=p.y,["z"]=p.z},["distance"]=0};
+            foreach(var value in active)if(value.editor==editor&&value.item==item){var result=value.Result;result["active"]=true;result["mode"]=value.mode;result["movement"]="walk";result["state"]=value.Status;result["reason"]=value.Reason.Length>256?value.Reason[..256]:value.Reason;return result;}
+            var p=editor.Frame.PointToRoom(item.transform.position);return new(){["active"]=false,["mode"]="none",["movement"]="none",["state"]="inactive",["reason"]="",["position"]=new JObject{["x"]=p.x,["y"]=p.y,["z"]=p.z},["distance"]=0};
         }
-        internal void Tick(){
+        public void Tick(){
             if(stopped||failure!=null||lastFrame==Time.frameCount)return;lastFrame=Time.frameCount;
             if(!owned||!navigation){Fail("The walking actor or physics became unavailable");return;}
             if(!owner.Validate(this,out var ownershipError)){Fail(ownershipError);return;}
@@ -166,7 +167,8 @@ namespace Maestro.Quest.Interaction {
             if(avatar)avatar.SpatialWalk(moved/dt);else if(gait?.Apply(moved/dt,dt)==false){Fail("The assigned walking animation became unavailable");return;}
             owner.Checkpoint();
         }
-        internal bool Remember(out string error,bool requireArrival=false){
+        public bool Remember(out string error)=>Remember(out error,false);
+        internal bool Remember(out string error,bool requireArrival){
             if(!owner.Validate(this,out error)){Fail(error);return false;}
             if(requireArrival){
                 // Re-prove the accepted stance without taking a second movement
@@ -187,8 +189,8 @@ namespace Maestro.Quest.Interaction {
             if(owner.TryRemember(this,out error))return true;
             Fail(error);return false;
         }
-        internal JObject Result {get {var p=editor&&item?editor.Frame.PointToRoom(item.transform.position):Vector3.zero;return new(){["position"]=new JObject{["x"]=p.x,["y"]=p.y,["z"]=p.z},["distance"]=distance};}}
-        internal void Stop(bool preservePlacement){
+        public JObject Result {get {var p=editor&&item?editor.Frame.PointToRoom(item.transform.position):Vector3.zero;return new(){["position"]=new JObject{["x"]=p.x,["y"]=p.y,["z"]=p.z},["distance"]=distance};}}
+        public void Stop(bool preservePlacement){
             if(stopped)return;stopped=true;if(!arrived)failure??="Walking was stopped";
             if(navigation){navigation.enabled=false;ArtResources.Release(navigation.gameObject);navigation=null;}
             gait?.Dispose();gait=null;if(owned){owned=false;active.Remove(this);if(avatar)avatar.SpatialWalk(0);owner.Detach(this);}if(ownsLifetime)owner.Dispose();

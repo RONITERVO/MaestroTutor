@@ -104,7 +104,7 @@ namespace Maestro.Quest.Creation
             foreach(var target in LightViewDependencies(views))graph.Retain(target,RoomRetentionReason.Lighting);
             RetainViewerDemand(graph);
         }
-        void VisitObservedNative(IReadOnlyList<RoomObservationView> views,Action<string> retain,bool includePreparedEnvelope=false)
+        void VisitObservedNative(IReadOnlyList<RoomObservationView> views,Action<string> retain,bool includePreparedEnvelope=false,bool includeDormant=true)
         {
             foreach(var pair in objects){
                 var item=pair.Value;if(!item||!item.isActiveAndEnabled)continue;
@@ -128,6 +128,7 @@ namespace Maestro.Quest.Creation
                 }
             }
             observationRenderers.Clear();
+            if(!includeDormant)return;
             foreach(var pair in dormantNative){
                 var spatial=Frame.Valid?ReadDormantSpatial(pair.Key,pair.Value,out _).Transform(transform.localToWorldMatrix):RoomSpatialBounds.Unknown;
                 foreach(var view in views)if(view.Includes(spatial)){retain(pair.Key);break;}

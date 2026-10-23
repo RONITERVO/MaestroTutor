@@ -39,9 +39,10 @@ export function nativeBookObjects(page:Page){
   await pick(scope,target);await scope.locator('code').filter({hasText:target}).waitFor({state:'attached'});
  };
  const fact=async(id:string,label:string,args:Record<string,string>={},allowUnavailable=false)=>{
+  const definition=behaviourFact(id);assert.ok(definition,'Unknown book fact: '+id);
   await workshop();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
   await page.getByLabel('Catalog category',{exact:true}).selectOption('facts');await page.getByLabel('Search facts',{exact:true}).fill(id);await page.getByRole('button',{name:'Search',exact:true}).click();
-  await page.getByRole('button',{name:new RegExp(label+'.*'+id.replaceAll('.','\\.'))}).click();await page.getByRole('heading',{name:label,exact:true}).waitFor();
+  await page.getByRole('button',{name:label+' '+id+' · v'+definition.version,exact:true}).click();await page.getByRole('heading',{name:label,exact:true}).waitFor();
   for(const [name,value] of Object.entries(args)){
    const fieldLabel='Fact inputs '+name,choice=page.getByRole('region',{name:fieldLabel+' object choice',exact:true}),field=page.getByLabel(fieldLabel,{exact:true});
    await choice.or(field).first().waitFor();

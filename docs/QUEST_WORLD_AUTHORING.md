@@ -852,8 +852,23 @@ This does not enable automatic area streaming or expand current world limits.
 
 Opening a saved room prepares demanded areas in stages while the book remains
 available. Observation, capture or an explicit action supplies demand; independent
-unseen areas remain dormant. Named areas and enabled physical connections load
-together. Unassigned home creations load independently unless connected. A broken import in one area
+unseen areas remain dormant. Each named area chooses `independent` or `together`
+loading through **Save world area**, shared by book controls, agent calls and
+programs. Independent areas organize places without pinning every member in
+memory. Together areas keep assemblies in one loading group. Enabled physical
+connections always couple their endpoints, including across independent areas.
+Unassigned home creations load independently unless connected.
+
+The current area fact exposes the accepted loading choice. Editing it requires
+that area's current revision and complete membership, participates in Undo and
+save/restore, and leaves poses, collision policies and running actions unchanged.
+Omitting the field on an older call preserves the existing choice; older create
+calls and version-1 saved areas keep their together behavior. New book examples
+choose independent loading explicitly. Reading an older save does not rewrite it.
+Changing to together while one member is visible also requests its dormant peers
+through the normal bounded preparation path; completion can wait or fail for
+unavailable assets. An explicit whole-area request still includes every member.
+This choice does not increase the current saved-object or native-resource limits. A broken import in one area
 does not prevent independent areas from opening. Loading preserves saved positions and
 animation settings and does not switch gravity on. Failed objects stay in the
 saved room so they can be inspected and retried after their asset is repaired.
@@ -1109,10 +1124,10 @@ This is a bounded equalized reservoir. Its rectangular perimeter and opening are
 explicit authored cavity boundaries; it does not infer containment from an
 imported landscape or generate surrounding solid walls. Separate disconnected
 basins need separate owners. It does not simulate river flow, pressure, spilling
-across low terrain edges, swimming, aquatic NPCs or water displacement. Follow
-routing conservatively avoids the reservoir's outer footprint; actual movement
-segments still test its wet triangles. General shoreline route planning remains
-open. Missing native bed geometry is unavailable, never silently treated as an
+across low terrain edges, aquatic NPCs or water displacement. Explicit submerged,
+surface and shore navigation use the movement actions below. Ordinary grounded
+following conservatively avoids the reservoir's outer footprint; actual movement
+segments still test its wet triangles. Missing native bed geometry is unavailable, never silently treated as an
 ordinary rectangular pool; observation does not load it.
 
 The explicit physics Start prepares resident free actors and their required inputs.
@@ -1167,8 +1182,8 @@ Walking, following and swimming share four active action slots. Submerged travel
 is limited to five minutes, 0.2–1.2 metres/second, the current authored world bounds,
 a five-metre collision-envelope diagonal and a bounded route search. Collision
 uses a conservative root box throughout the turn, not animated limb/skin
-collision. Surface swimming, dry/wet transitions, continuous aquatic steering and
-measured Quest capacity remain v1 work. The latest desktop, Android and physical-device evidence is recorded in
+collision. Surface travel and bounded dry/wet crossings use the variants below;
+continuous aquatic steering and measured Quest capacity remain v1 work. The latest desktop, Android and physical-device evidence is recorded in
 [the delivery plan](QUEST_V1_PLAN.md#owned-submerged-movement). A passing desktop
 journey does not establish headset acceptance.
 
@@ -1195,9 +1210,44 @@ from the actor, movement stops at its last accepted pose instead of teleporting
 downward. A different overlapping pool never substitutes for the selected one.
 
 This mode shares per-actor real-room participation, independent visual opacity,
-four locomotion action slots, native status and final receipts. It does not yet
-provide dry-ground entry, shore exit or a continuous aquatic steering controller.
+four locomotion action slots, native status and final receipts. Use the shore
+variant below for dry-ground entry or shore exit. Continuous aquatic steering
+remains separate unfinished work.
 Current verification is in [the delivery plan](QUEST_V1_PLAN.md#surface-swimming).
+
+## Crossing between land and water
+
+Choose **Move to a place → Walk and swim across a shore** (`object.navigate`,
+`mode=shore`). Select one exact liquid habitat and either **Supported ground
+foot** with x/y/z, or **Live water surface** with x/z. The latter derives height
+from current water and the chosen immersion. Users, programs and agents share
+these generated arguments and the same native outcome.
+
+The actor can start on supported dry ground, wade along a gentle bed, float where
+the water is deep enough, and return to supported ground in one journey. One
+upright capsule and movement owner remain authoritative throughout. The ground
+phase uses the assigned walk; an optional exact imported gait applies while
+afloat. The capsule clears solids above and below water. It does not model
+animated limbs or promise planted feet.
+
+Choosing this lake permits it for this journey without changing saved water
+avoidance. Other liquids retain their existing rules. Each actor's real-room
+collision profile still applies: virtual-only actors can use accepted terrain
+below the scanned floor, while room-bound actors retain the real boundaries.
+Visual occlusion, opacity and acoustics remain independent.
+
+Physics must already be running. Both ground and liquid need current native
+inputs, an upright metre-scale frame and a supported actor body. Supported steps
+retain the ground solver's slope/height limits. Routes are bounded to 512 search
+nodes and four shared movement slots, with one five-minute action lifetime.
+Blocked routes, unavailable inputs, drains and interruption fail at the last
+accepted pose. The action does not jump cliffs, fly across dry gaps, choose
+another habitat, scan a room or start physics implicitly. Continuous aquatic
+following and measured Quest capacity remain unfinished.
+
+See [the delivery evidence](QUEST_V1_PLAN.md#continuous-shore-traversal) for the
+exact verified source and remaining acceptance; implementation is not by itself
+a headset or real-provider pass.
 
 ## Finite grounded travel — 2026-10-13
 
@@ -3393,3 +3443,41 @@ rooms keep local navigation until Keep, with existing discard behaviour.
 This is asynchronous persistence, not asynchronous geometry or a measured
 frame-time guarantee. Native frame transfer and snapshot capture remain
 owner-thread operations. Headset acceptance remains separate.
+
+
+## Following across movement media
+
+`object.follow` uses one leader controller over the existing walking, submerged,
+surface and shore engines. Omitted `mode` preserves existing ground calls;
+explicit `walk`, `swim`, `surface` and `shore` are selectable in the same generated
+book form and agent catalog. Water variants require one exact `habitat`, plus
+`facing`; surface and shore also require `immersion`. `waterFollowing.v1` marks
+these additions. Changing variants retains compatible actor/leader choices and
+removes arguments that no longer apply. It never guesses an off-view object.
+
+A moving goal retargets the current solver. It does not reacquire the root,
+restart its gait, release a capacity slot or reset the five-minute lifetime.
+The user or exact loaded object is observed as leader; only the follower is
+owned. Ground, surface and shore use horizontal distance. Submerged following
+uses root-to-root distance, or the tracked head for a user leader. Shore chooses
+supported ground near the leader height or the selected live surface, then
+proves a continuous connection. It cannot jump between disconnected floors.
+
+All actual steps use current geometry and the follower's environment profile.
+A virtual-world actor can follow below the physical room floor; that permission
+never disables the physical room for other actors. The chosen shore habitat is
+permitted for that action while saved avoidance remains unchanged. Following
+never selects another habitat, starts physics or scans implicitly.
+
+An unreachable moving goal waits at the last accepted position and retries no
+faster than every 0.35 seconds. Observation may alternate between `blocked` and
+`planning`; waiting time cannot become extra movement. Current-body validity is
+still required while waiting. Drainage, missing/replaced leaders, tracking loss,
+edits, Stop and even a pause/resume in the same frame terminate the owner.
+`object.navigation` identifies `mode=follow` and its `movement` medium (or `none`
+when inactive). Timed completion reports actual state, reason, distance and
+position; it does not claim a blocked or moving leader was reached.
+
+These are bounded root/body movements using the same four-owner budget as
+navigation. They do not establish crowd capacity, animated-limb collision,
+foot planting, unrestricted world size or Quest performance acceptance.

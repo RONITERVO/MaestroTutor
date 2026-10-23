@@ -1,6 +1,7 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict';
+import {capabilityDefinition} from '../shared/capabilities';
 import {nativeProbeObjects} from './native-probe-objects';
 import {writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
@@ -34,19 +35,19 @@ export async function probeWorldRegions(execute:Execute,directory:string){
 
  const absentSpatial=await fact('object.spatialBounds',{target:'0'.repeat(32)});assert.equal(absentSpatial.source,'missing');assert.equal((absentSpatial.visual as {known:boolean}).known,false);
 
- const saved=await invoke('world.region.save',{id:'',revision:0,name:'Learner garden',members:[]});const id=String(saved.output!.id);
+ const saved=await invoke('world.region.save',{id:'',revision:0,name:'Learner garden',members:[],loading:'independent'});const id=String(saved.output!.id);
  const assigned=await invoke('object.region.assign',{target,revision:before.revision,regionId:id,regionRevision:saved.output!.revision});
  const bound=await fact('object.region',{target}),members=await fact('world.region.members',{id,offset:0});
  assert.equal(bound.regionId,id);assert.deepEqual(members.members,[target]);assert.equal(bound.homeRegionId,before.homeRegionId);
  const retention=await fact('world.region.retention',{id});assert.equal(retention.memberCount,1);assert.equal(retention.residentCount,1);assert.equal(retention.unloadingSupported,true);assert.ok(Array.isArray(retention.reasons));
  const sameDefinition=await fact('object.definition',{target});delete definition.revision;delete sameDefinition.revision;assert.deepEqual(sameDefinition,definition,'Region assignment moved or rebuilt authored content');
  const renamed=await invoke('world.region.save',{id,revision:members.revision,name:'Café garden',members:[target]});
- const named=await fact('world.region',{id});assert.equal(named.name,'Café garden');assert.equal(named.memberCount,1);
+ const named=await fact('world.region',{id});assert.equal(named.name,'Café garden');assert.equal(named.memberCount,1);assert.equal(named.loading,'independent','Omitted loading on rename changed the accepted choice');
  await execute([{action:'undo'}]);assert.equal((await fact('world.region',{id})).name,'Learner garden');
  await execute([{action:'undo'}]);assert.equal((await fact('object.region',{target})).regionId,before.regionId);
  const empty=await fact('world.region',{id});const removed=await invoke('world.region.remove',{id,revision:empty.revision});
  await invoke('object.position.set',{target,...nearView});
- const viewArea=await invoke('world.region.save',{id:'',revision:0,name:'Viewer demand check',members:[]});
+ const viewArea=await invoke('world.region.save',{id:'',revision:0,name:'Viewer demand check',members:[],loading:'independent'});
  const viewBinding=await fact('object.region',{target});
  await invoke('object.region.assign',{target,revision:viewBinding.revision,regionId:viewArea.output!.id,regionRevision:viewArea.output!.revision});
  const viewerDemand=await fact('world.region.retention',{id:viewArea.output!.id});
@@ -62,6 +63,24 @@ export async function probeWorldRegions(execute:Execute,directory:string){
  assert.deepEqual(await fact('object.definition',{target}),dormantDefinition,'Automatic retirement changed authored content');
  const restored=await invoke('object.position.set',{target,...nearView});const restoredPresence=await fact('object.presence',{target});assert.equal(restoredPresence.active,true);
  await writeFile(join(directory,'automatic-area-retirement.json'),JSON.stringify({boundary:'Real Unity workspace automatically retires an idle out-of-view area; passive facts preserve exact saved content; the ordinary agent action acquires it and restores it to view. Physics remains paused. No increased capacity, physical headset, provider or per-area physics claim.',target,area:viewArea.output!.id,viewerDemand,behindView,dormantDefinition,dormant,dormantPresence,restored,restoredPresence},null,2));
+ // Independent area membership must not keep a distant peer alive. Changing
+ // the policy while one member is visible must restore the newly coupled peer.
+ const peerCreated=await invoke('object.create',{...capabilityDefinition('object.create')!.example!,shape:'block',name:'Independent area peer',...behindView,scale:.2});
+ const peer=String(peerCreated.output!.objectId),peerBinding=await fact('object.region',{target:peer});
+ const areaBeforePeer=await fact('world.region',{id:viewArea.output!.id});
+ await invoke('object.region.assign',{target:peer,revision:peerBinding.revision,regionId:viewArea.output!.id,regionRevision:areaBeforePeer.revision});
+ let partial=await fact('world.region.retention',{id:viewArea.output!.id});const partialDeadline=Date.now()+18000;
+ while(partial.residentCount!==1&&Date.now()<partialDeadline){await new Promise(r=>setTimeout(r,150));partial=await fact('world.region.retention',{id:viewArea.output!.id});}
+ assert.equal(partial.memberCount,2);assert.equal(partial.residentCount,1,JSON.stringify(partial));
+ assert.equal((await fact('object.presence',{target:peer})).nativeInstance,false);
+ assert.equal((await fact('object.presence',{target})).active,true);
+ const independent=await fact('world.region',{id:viewArea.output!.id}),completeMembers=await fact('world.region.members',{id:viewArea.output!.id,offset:0});
+ const together=await invoke('world.region.save',{id:viewArea.output!.id,revision:independent.revision,name:independent.name,members:completeMembers.members,loading:'together'});
+ let peerRestored=await fact('object.presence',{target:peer});const restoreDeadline=Date.now()+18000;
+ while(!peerRestored.active&&Date.now()<restoreDeadline){await new Promise(r=>setTimeout(r,150));peerRestored=await fact('object.presence',{target:peer});}
+ assert.equal(peerRestored.active,true,JSON.stringify(peerRestored));
+ await writeFile(join(directory,'independent-area-loading.json'),JSON.stringify({boundary:'Shared native agent actions and passive facts with real desktop camera demand. Independent named members load separately; an accepted together edit restores the distant peer of a visible resident. No larger capacity, headset or provider claim.',target,peer,independent,partial,together,peerRestored},null,2));
+ await invoke('object.delete',{target:peer});
  await invoke('object.position.set',{target,...originalPosition});
  const restoredBinding=await fact('object.region',{target});
  await invoke('object.region.assign',{target,revision:restoredBinding.revision,regionId:'',regionRevision:0});

@@ -25,6 +25,26 @@ namespace Maestro.Quest.Tests
         }
         JObject RegionCall(string target,string id)=>new(){["id"]="object.region.assign",["version"]=1,["arguments"]=new JObject{["target"]=target,["revision"]=editor.ObjectRevision(target),["regionId"]=id,["regionRevision"]=editor.RegionRevision(id)}};
         bool AssignRegion(string target,string id,out string error)=>editor.BindRegion(target,editor.ObjectRevision(target),id,editor.RegionRevision(id),out error);
+        [UnityTest] public IEnumerator RegionLoadingUsesSharedPersistedActionsAndOmittedEditsPreserveTheChoice()
+        {
+            string id=NewRegion(),target=editor.Identity(block);Assert.That(AssignRegion(target,id,out var error),Is.True,error);
+            var executor=new RoomAgentExecutor(editor);int old=editor.RegionRevision(id);
+            var args=new JObject{["id"]=id,["revision"]=old,["name"]="Independent garden",["members"]=new JArray(target),["loading"]="independent"};
+            var request=TemplateRequest(new JObject{["id"]="world.region.save",["version"]=1,["arguments"]=args});request.conditions=new[]{new RoomObjectCondition{id=target,revision=editor.ObjectRevision(target)}};
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
+            Assert.That(editor.ReadRegion(id).Loading,Is.EqualTo("independent"));int accepted=editor.RegionRevision(id);
+            Assert.That(executor.Execute(request,out error,out _),Is.True,error);Assert.That(editor.RegionRevision(id),Is.EqualTo(accepted));
+            Assert.That(new RoomStorage(directory).Load(out error).regions.Single(x=>x.id==id).Loading,Is.EqualTo("independent"),error);
+            Assert.That(RegionFacts.Region().TryRead(new BehaviourCatalog.FactContext(editor:editor),1,new JObject{["id"]=id},out var fact),Is.True);
+            Assert.That((string)((JObject)fact.Value)["loading"],Is.EqualTo("independent"));
+            args["revision"]=accepted;args["name"]="Renamed garden";args.Remove("loading");
+            var rename=TemplateRequest(new JObject{["id"]="world.region.save",["version"]=1,["arguments"]=args});rename.conditions=new[]{new RoomObjectCondition{id=target,revision=editor.ObjectRevision(target)}};
+            Assert.That(executor.Execute(rename,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
+            Assert.That(editor.ReadRegion(id).Loading,Is.EqualTo("independent"));editor.Undo();Assert.That(editor.ReadRegion(id).Loading,Is.EqualTo("independent"));editor.Undo();Assert.That(editor.ReadRegion(id).Loading,Is.EqualTo("together"));
+            editor.Redo();Assert.That(editor.ReadRegion(id).Loading,Is.EqualTo("independent"));
+            var value=editor.ReadRegion(id);value.loading="together";Assert.That(editor.EditRegion(value,id,old,new[]{target},out _),Is.False);
+            Assert.That(editor.EditRegion(value,id,editor.RegionRevision(id),Array.Empty<string>(),out _),Is.False);
+        }
         [UnityTest] public IEnumerator RegionMembershipPreservesMovingNativeObjectsAndSharedReceiptReplaysOnce() {
             Assert.That(RoomControls.Capabilities(editor),Does.Contain(RegionCapability.Feature));string id=NewRegion(),target=editor.Identity(block);var item=editor.Find(target);int instance=item.GetInstanceID();var position=item.transform.position;
             // Isolate the admitted trajectory from external contacts and damping while

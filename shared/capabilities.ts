@@ -56,7 +56,13 @@ export function schemaField(schema:CapabilitySchema|undefined,path:string,value?
 export function argumentValue(value:unknown,path:string):unknown {for(const key of path.split('.'))value=argumentChild(value,key);return value;}
 export function resolveCapabilitySchema(schema:CapabilitySchema|undefined,value:unknown):CapabilitySchema|undefined {
  if(!schema?.oneOf)return schema;
- const matches=schema.oneOf.filter(branch=>(schema['x-discriminators']??[]).every(path=>schemaField(branch,path)?.enum?.includes(argumentValue(value,path) as string)));
+ const matches=schema.oneOf.filter(branch=>(schema['x-discriminators']??[]).every(path=>{
+  const field=schemaField(branch,path),actual=argumentValue(value,path);
+  // Only one explicitly optional top-level selector may resolve omission.
+  // Null, unknown values and ambiguous matches never choose a default.
+  if(actual===undefined)return !path.includes('.')&&!!field?.enum&&Array.isArray(branch.required)&&!branch.required.includes(path);
+  return typeof actual==='string'&&field?.enum?.includes(actual);
+ }));
  return matches.length===1?matches[0]:undefined;
 }
 export function capabilityInput(id:string,args:Record<string,unknown>):CapabilitySchema|undefined {return resolveCapabilitySchema(definitions.get(id)?.input,args);}

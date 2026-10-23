@@ -37,7 +37,7 @@ namespace Maestro.Quest.Creation
             foreach(var region in regions){
                 var members=region.members.OrderBy(x=>x,StringComparer.Ordinal).ToArray();
                 areas.Add(region.id,members);assigned.UnionWith(members);
-                for(int i=1;i<members.Length;i++)Connect(members[0],members[i]);
+                if(region.Loading=="together")for(int i=1;i<members.Length;i++)Connect(members[0],members[i]);
             }
             areas.Add("",values.Where(x=>!x.IsBuiltIn&&!assigned.Contains(x.id)).Select(x=>x.id).OrderBy(x=>x,StringComparer.Ordinal).ToArray());
             foreach(var value in values)foreach(var link in value.connections??Array.Empty<RoomConnection>())if(link.enabled){
@@ -109,7 +109,7 @@ namespace Maestro.Quest.Creation
         }
         void InvalidateRetentionRegions(RoomRegion[] before,RoomRegion[] after)
         {
-            if(retentionTopology!=null&&!SameRetentionEntries(before,after,x=>x.id,(a,b)=>new HashSet<string>(a.members,StringComparer.Ordinal).SetEquals(b.members)))retentionTopology=null;
+            if(retentionTopology!=null&&!SameRetentionEntries(before,after,x=>x.id,(a,b)=>a.Loading==b.Loading&&new HashSet<string>(a.members,StringComparer.Ordinal).SetEquals(b.members)))retentionTopology=null;
         }
     }
 }

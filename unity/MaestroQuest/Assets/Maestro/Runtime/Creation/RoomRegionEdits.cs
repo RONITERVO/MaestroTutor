@@ -68,7 +68,7 @@ namespace Maestro.Quest.Creation
                 "Creation area assigned",out pending,out error,checkpoint);
         internal JObject ObserveRegion(string id) {
             if(!WorldIdentityReady)return null;
-            var value=ReadRegion(id);return value==null?null:new JObject{["id"]=id,["revision"]=RegionRevision(id),["name"]=value.name,["memberCount"]=value.members.Length,["temporary"]=TemporaryRoom};
+            var value=ReadRegion(id);return value==null?null:new JObject{["id"]=id,["revision"]=RegionRevision(id),["name"]=value.name,["loading"]=value.Loading,["memberCount"]=value.members.Length,["temporary"]=TemporaryRoom};
         }
         internal JObject ObserveRegionMembers(string id,int offset) {
             if(!WorldIdentityReady)return null;

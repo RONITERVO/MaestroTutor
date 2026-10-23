@@ -13,7 +13,7 @@ namespace Maestro.Quest.Interaction {
         static readonly Dictionary<RoomItem,RoomLocomotionOwner> active=new();
         readonly RoomEditor editor;readonly RoomItem item;readonly string target,session;
         readonly bool fullPose;
-        RigidRoomItem rigid;MaestroAvatar avatar;object phase;Action stopPhase;
+        RigidRoomItem rigid;MaestroAvatar avatar;RoomPhysicsWorld physics;RoomRuntimeGate gate;object phase;Action stopPhase;
         bool owned,disposed,disposing;int revision;string failure;
         float started,rememberAt;
         Vector3 acceptedPosition,acceptedScale;Quaternion acceptedRotation;
@@ -30,7 +30,7 @@ namespace Maestro.Quest.Interaction {
                 if(owner.editor!=editor||owner.item!=item||owner.session!=editor.TemporarySessionId||owner.disposed||owner.disposing||owner.phase!=null||
                     needsFullPose&&!owner.fullPose)return false;
                 if(owner.failure!=null){error=owner.failure;return false;}
-                if(owner.owned&&!owner.Check(out error))return false;
+                if(owner.owned&&!owner.Validate(out error))return false;
             }
             if((owner==null||!owner.owned)&&!RoomLocomotionBudget.Available(out error))return false;
             error="This actor already has a movement owner";
@@ -55,6 +55,8 @@ namespace Maestro.Quest.Interaction {
                 if(!RoomLocomotionBudget.Acquire(this,out error))return false;
                 owned=true;active.Add(item,this);started=Time.realtimeSinceStartup;rememberAt=Time.unscaledTime+1;
                 revision=editor.ObjectRevision(target);AcceptPose();
+                physics=editor.PhysicsWorld;gate=editor.RuntimeGate;
+                physics.Changed+=PhysicsChanged;gate.Changed+=WorkspaceChanged;
                 rigid=item.GetComponent<RigidRoomItem>();avatar=item.GetComponent<MaestroAvatar>();
                 if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,true);}
             }
@@ -62,6 +64,15 @@ namespace Maestro.Quest.Interaction {
             // animator. Reassert pose control before the next gait captures it.
             if(avatar)avatar.SetEditing(true,preserveUpperBody:!fullPose);
             phase=value;stopPhase=stop;error=null;return true;
+        }
+        // The gap between phases may contain no solver Tick. Observe real
+        // interruption events immediately, even if the user resumes this frame.
+        void PhysicsChanged(){
+            if(owned&&(!editor||!physics||editor.PhysicsWorld!=physics||!physics.SimulationActive))
+                Invalidate("The movement physics was interrupted; start a new journey");
+        }
+        void WorkspaceChanged(){
+            if(owned&&gate.Held)Invalidate("The movement workspace was interrupted; start a new journey");
         }
         bool Check(out string error){
             error=failure;if(error!=null)return false;
@@ -75,7 +86,7 @@ namespace Maestro.Quest.Interaction {
                 Quaternion.Angle(item.transform.localRotation,acceptedRotation)>.1f||Vector3.Distance(item.transform.localScale,acceptedScale)>.0001f||
                 avatar&&avatar.ModelBusy)return false;
             error="The movement physics or world frame became unavailable";
-            if(!editor.PhysicsWorld||!editor.PhysicsWorld.SimulationActive||!editor.Frame.Valid||
+            if(!physics||editor.PhysicsWorld!=physics||!physics.SimulationActive||!editor.Frame.Valid||
                 Mathf.Abs(editor.Frame.MetresPerUnit-1)>.0001f||Vector3.Dot(editor.transform.up,Vector3.up)<.99999f)return false;
             error="Movement exceeded its five-minute lifetime";
             if(Time.realtimeSinceStartup-started>300)return false;
@@ -126,6 +137,8 @@ namespace Maestro.Quest.Interaction {
                 Remember();disposed=true;phase=null;stopPhase=null;disposing=false;
                 if(owned){
                     owned=false;active.Remove(item);RoomLocomotionBudget.Release(this);
+                    if(physics)physics.Changed-=PhysicsChanged;
+                    if(gate!=null)gate.Changed-=WorkspaceChanged;physics=null;gate=null;
                     if(avatar)avatar.SetEditing(false,preserveUpperBody:!fullPose);
                     if(rigid){rigid.StopVelocity();rigid.SetAnimationOwner(this,false);}
                 }

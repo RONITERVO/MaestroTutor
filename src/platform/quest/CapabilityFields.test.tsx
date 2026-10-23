@@ -94,3 +94,27 @@ it('keeps horizontal destination when switching between ground and surface movem
  expect(walkAgain.destination).toEqual({x:2,y:0,z:3});expect(walkAgain).not.toHaveProperty('habitat');expect(walkAgain).not.toHaveProperty('immersion');
  expect(validateCapabilityArguments(action.id,action.version,walkAgain)).toBeNull();
 });
+
+it('opens legacy following and preserves the chosen leader while switching water modes',()=>{
+ const action=capabilityDefinition('object.follow')!,leader={kind:'object',objectId:'b'.repeat(32)};
+ const legacy={target:'maestro',leader,distance:1.3,speed:.6,seconds:10};
+ expect(resolveCapabilitySchema(action.input,legacy)?.title).toBe('Follow on accepted ground');
+ const shore=changeCapabilityVariant(action.input,3,legacy,[]);
+ expect(shore.leader).toEqual(leader);expect(shore.target).toBe('maestro');expect(shore.distance).toBe(1.3);
+ expect(shore.habitat).toBe('');shore.habitat='c'.repeat(32);shore.immersion=.6;
+ expect(validateCapabilityArguments(action.id,1,shore)).toBeNull();
+ const swim=changeCapabilityVariant(action.input,1,shore,[]);
+ expect(swim.leader).toEqual(leader);expect(swim.habitat).toBe(shore.habitat);expect(swim).not.toHaveProperty('immersion');
+ expect(validateCapabilityArguments(action.id,1,swim)).toBeNull();
+ const ground=changeCapabilityVariant(action.input,0,swim,[]);
+ expect(ground.leader).toEqual(leader);expect(ground).not.toHaveProperty('habitat');expect(ground).not.toHaveProperty('gait');
+ expect(validateCapabilityArguments(action.id,1,ground)).toBeNull();
+});
+
+it('lets users choose area loading through the same catalog schema as agents',()=>{
+ const action=capabilityDefinition('world.region.save')!,call=action.example!,onChange=vi.fn();
+ const screen=render(<CapabilityFields label="Area" schema={action.input} value={call} objects={[]} onChange={onChange}/>);
+ expect((screen.getByLabelText('Area loading') as HTMLSelectElement).value).toBe('independent');
+ fireEvent.change(screen.getByLabelText('Area loading'),{target:{value:'together'}});
+ expect(onChange).toHaveBeenCalledWith({...call,loading:'together'});
+});

@@ -16,6 +16,33 @@ namespace Maestro.Quest.Tests
         static readonly string Target=new string('1',32),Other=new string('2',32);
         static RoomDocument Room()=>new(){version=RoomDocument.CurrentVersion,objects=new[]{new RoomObjectData{id="book",kind=RoomObjectKind.Book},new RoomObjectData{id="maestro",kind=RoomObjectKind.Maestro},new RoomObjectData{id=Target,kind=RoomObjectKind.Block},new RoomObjectData{id=Other,kind=RoomObjectKind.Block}}};
         static RoomRegion Region(char id,params string[] members)=>new(){id=new string(id,32),name="Garden",members=members};
+        [Test] public void LegacyAreasKeepTogetherLoadingWithoutRewritingTheSourceOnRead()
+        {
+            string path=Path.Combine(Path.GetTempPath(),"MaestroLegacyRegion-"+Guid.NewGuid().ToString("N"));
+            try {
+                Directory.CreateDirectory(path);var doc=Room();doc.regions=new[]{Region('a',Target,Other)};
+                var wire=JObject.Parse(JsonUtility.ToJson(doc));var area=(JObject)wire["regions"][0];area["version"]=1;area.Remove("loading");
+                Assert.That(RoomRegion.ValidWire(wire),Is.True);string raw=wire.ToString(),file=Path.Combine(path,RoomStorage.FileName);File.WriteAllText(file,raw);
+                var storage=new RoomStorage(path);var loaded=storage.Load(out var error);Assert.That(loaded,Is.Not.Null,error);
+                Assert.That(loaded.regions.Single().Loading,Is.EqualTo("together"));Assert.That(File.ReadAllText(file),Is.EqualTo(raw));
+                var journal=new RoomJournal(loaded);Assert.That(journal.RetentionTopology.Closure(new[]{Target}),Is.EqualTo(new[]{Target,Other}));
+                var current=journal.Snapshot();Assert.That(current.regions.Single().version,Is.EqualTo(2));
+                Assert.That(storage.Save(current,out error),Is.True,error);Assert.That(RoomRegion.ValidWire(JObject.Parse(File.ReadAllText(file))),Is.True);
+            }finally{if(Directory.Exists(path))Directory.Delete(path,true);}
+        }
+        [Test] public void ExplicitLoadingRoundTripsAndMalformedModesNeverBecomeImplicitDefaults()
+        {
+            foreach(string loading in new[]{"independent","together"}){
+                var doc=Room();doc.regions=new[]{Region('a',Target)};doc.regions[0].loading=loading;
+                var wire=JObject.Parse(JsonUtility.ToJson(doc));Assert.That(RoomRegion.ValidWire(wire),Is.True);
+                Assert.That(JsonUtility.FromJson<RoomDocument>(wire.ToString()).Copy().regions[0].Loading,Is.EqualTo(loading));
+                foreach(var invalid in new JToken[]{JValue.CreateNull(),new JValue(true),new JValue("automatic"),new JArray()}){
+                    var bad=(JObject)wire.DeepClone();bad["regions"][0]["loading"]=invalid;Assert.That(RoomRegion.ValidWire(bad),Is.False);
+                }
+                ((JObject)wire["regions"][0]).Remove("loading");Assert.That(RoomRegion.ValidWire(wire),Is.False);
+                doc.regions[0].loading=null;Assert.That(doc.Validate(out _),Is.False);
+            }
+        }
         [Test] public void RegionMembershipRejectsDanglingDuplicateAndWorldOwnedTargets() {
             var room=Room();room.regions=new[]{Region('a',Target)};Assert.That(room.Validate(out var error),Is.True,error);
             foreach(var member in new[]{"book","maestro",new string('3',32),Target}) {
@@ -23,7 +50,7 @@ namespace Maestro.Quest.Tests
             }
             foreach(var id in new[]{room.world.worldId,room.world.regionId}) {room.regions=new[]{new RoomRegion{id=id,name="Conflict"}};Assert.That(room.Validate(out _),Is.False);}
             room.regions=new[]{Region('a',Target,Target)};Assert.That(room.Validate(out _),Is.False);
-            room.regions=new[]{Region('a')};room.regions[0].version=2;Assert.That(room.Validate(out _),Is.False);
+            room.regions=new[]{Region('a')};room.regions[0].version=3;Assert.That(room.Validate(out _),Is.False);
             var edit=new RegionEdits{Replacements=new[]{Region('a')},Removals=new[]{new string('a',32)}};Assert.That(edit.Validate(out error),Is.False);Assert.That(error,Is.Not.Null.And.Not.Empty);
         }
         [Test] public void TransferDeletionUndoAndRedoPreserveIdentityAndInvalidateEarlierObservations() {
@@ -61,7 +88,7 @@ namespace Maestro.Quest.Tests
             try {
                 Directory.CreateDirectory(path);var doc=Room();doc.version=35;var wire=JObject.Parse(JsonUtility.ToJson(doc));wire.Remove("regions");string raw=wire.ToString(),legacy=Path.Combine(path,"room.v35.json");File.WriteAllText(legacy,raw);
                 var storage=new RoomStorage(path);var loaded=storage.Load(out var error);Assert.That(loaded,Is.Not.Null,error);Assert.That(loaded.regions,Is.Empty);Assert.That(File.ReadAllText(legacy),Is.EqualTo(raw));Assert.That(File.Exists(Path.Combine(path,RoomStorage.FileName)),Is.False);
-                Assert.That(storage.Save(loaded,out error),Is.True,error);doc.version=RoomDocument.CurrentVersion;doc.regions=new[]{Region('a',Target)};doc.regions[0].version=2;raw=JsonUtility.ToJson(doc);string current=Path.Combine(path,RoomStorage.FileName);File.WriteAllText(current,raw);
+                Assert.That(storage.Save(loaded,out error),Is.True,error);doc.version=RoomDocument.CurrentVersion;doc.regions=new[]{Region('a',Target)};doc.regions[0].version=3;raw=JsonUtility.ToJson(doc);string current=Path.Combine(path,RoomStorage.FileName);File.WriteAllText(current,raw);
                 storage=new RoomStorage(path);Assert.That(storage.Load(out _),Is.Null);Assert.That(storage.ReadOnly,Is.True);Assert.That(File.ReadAllText(current),Is.EqualTo(raw));
             }finally{if(Directory.Exists(path))Directory.Delete(path,true);}
         }

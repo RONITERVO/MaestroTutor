@@ -4,8 +4,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[shared movement checkpoint](#shared-locomotion-lifetime) records this increment's
-implementation, verification progress and remaining work. The
+[area loading checkpoint](#independent-area-loading) records this increment's
+implementation, verification progress and remaining work. The preceding
+[shared movement checkpoint](#shared-locomotion-lifetime) remains separately verified. The
 [world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
 contract; dated entries below retain the development evidence.
 
@@ -114,7 +115,7 @@ open until every required row has matching release-candidate evidence.
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
 | One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
-| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming has complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Broader region streaming, river/spill behavior, dry/wet transitions, continuous aquatic behaviors and underwater interaction remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
+| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming, shore transitions and continuous following have complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Named areas support independent or together loading. Broader region streaming, river/spill behavior, underwater interaction and candidate headset acceptance remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
 | Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
 | Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
 | Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
@@ -144,10 +145,12 @@ into that existing formula would exceed its 524,288-unit allowance even for one
 vessel; this is arithmetic evidence, not a performance measurement.
 
 The current spatial index prepares detached bounds by identity; it does not yet
-provide a spatial broad-phase. View demand still scans dormant members, and named
-area membership connects all members into one residency dependency group.
-Larger logical towns therefore need bounded spatial candidate queries and a
-distinction between logical areas and explicitly coupled loading/physics groups.
+provide a spatial broad-phase. View demand still scans dormant members. Named
+areas now explicitly choose independent or together loading; enabled physical
+connections remain coupled across either type of area. This removes the implicit
+all-members residency requirement without increasing any quota. Larger logical
+towns still need bounded spatial candidate queries and separately observable
+saved, resident, simulation and query budgets.
 Preserve exact identities, unknown-input blocking, active-operation retention,
 per-actor real-room policy and shared user/agent discovery while making that
 change. Independent native geometry reservations already exist and should remain
@@ -15527,3 +15530,349 @@ combined dry-to-water or water-to-ground action: support, slope, continuous wet
 volume and solid clearance still need a shared boundary proof. Continuous aquatic
 behavior, larger-world capacity, audio quality and remaining provider/device and
 Store acceptance remain required work.
+
+
+<a id="continuous-shore-traversal"></a>
+
+## Continuous shore traversal — 2026-10-23
+
+The shared `object.navigate` action now has `mode=shore`, advertised as
+`shoreTravel.v1`. It accepts one exact liquid habitat, immersion, speed, facing and
+a typed destination: a supported ground foot, or x/z at the current liquid surface.
+The book renders these choices from the same catalog used by the agent and
+programs. `object.navigation` reports the active shore journey through the same
+status, actual root position and distance contract.
+
+One upright capsule, root owner, capacity slot and original five-minute deadline
+remain in force across supported, wading and buoyant steps. The accepted ground
+solver retains its slope and step limits. The immersed capsule must fit the chosen
+upright cavity, and the complete capsule still sweeps native solid geometry above
+and below water. Endpoint bed checks reject an actor entirely below a one-sided
+terrain mesh; actual solid sweeps prevent two wet endpoints from authorizing a
+path through an intervening raised lake bed. Cavity admission alone is never
+collision clearance.
+
+The selected lake is explicit permission for this journey, not a saved water
+policy edit. Other liquids retain the actor's existing water rules. Native
+readiness, room bounds and scanned colliders use that actor's collision profile;
+a virtual-only actor can traverse its accepted terrain below the physical floor
+while other actors remain constrained by the real room. Visibility and acoustics
+remain separate settings. The route never disables the global room switch.
+
+The bounded search uses supported/buoyant 3D feet, up to 512 nodes and eight edge
+evaluations per tick. Every actual step rechecks current native inputs; route
+proposals never move the actor. A changing waterline adjusts gradually before
+horizontal movement. Ground uses the assigned walk and the water phase may use
+an exact imported animation/anchor. One pose is disposed before the next captures
+the skeleton. This remains proxy collision, not animated-limb collision or
+calibrated foot planting. There is no dry-gap flight, cliff jump, implicit room
+scan, automatic physics start, habitat substitution or unbounded NPC routine.
+
+An additional retained red regression reproduced physics Pause/Start in a
+single frame between locomotion phases reviving an old lifetime. The common
+owner now latches physics/workspace interruption events immediately. Ordinary
+ready-state notifications preserve an accepted owner.
+
+Focused native evidence under `.quest-evidence/shore-traversal-20261022/` includes
+21 geometry cases, the 23-case motor/lifetime rerun, the 35-case integration
+regression run and eight new production-operation cases. The latter cover actual
+public dry-to-water/return travel, both banks in one invocation, a solid detour,
+below-room collision profiles, per-actor refusal, other-water avoidance, drainage
+and same-frame pause. Initial fixture failures (undersized robot and an immediate
+negative receipt) are retained separately; they are not production regressions.
+
+The extended offline headless journey creates a sloped terrain reservoir through
+ordinary shared capabilities, travels into and back out of it, observes
+intermediate poses and replays exact receipts. The book journey exercises the
+generated shore/typed-destination controls and an actual buoyant segment. Their
+current-source broad verification is in progress; no new headset, paid-provider,
+Android runtime, signing or Store acceptance is claimed by this section yet.
+
+### Verification throughput follow-up
+
+The PR's October 22 comment asks for parallel Unity verification on the available
+7950X / 64 GB machine. Current runners share the receipt-owned mirror, Logs,
+application paths and `QuestBuildProcesses.ps1` helper port 5041. Concurrent copies
+of those scripts would race or stop another worker's helper. Keep the current
+verification sequential until worker isolation is implemented and proved.
+
+A maintainable parallel runner should allocate independent receipt-owned mirrors,
+output and application-data roots and helper ownership; reconcile every
+discovered test exactly once; preserve clean process exits and named skips; and
+measure bounded worker counts against memory/GPU pressure. Inventory- or
+duration-based shards should share one source freeze and manifest. Never trade
+missing tests, reused stale output or cross-worker state for a faster green run.
+Device and real-provider work remain separate from offline workers.
+
+The preceding verified native XML reports account for about 1,965 seconds across
+EditMode (122 s) and the three PlayMode partitions (541, 620 and 682 s), excluding
+journeys/build/startup overhead. RoomRulesTests alone accounts for about 1,300
+seconds across 1,292 cases. Splitting only by class/assembly would leave that
+dominant group on one worker; use measured case durations with inventory
+reconciliation. These are elapsed-test measurements, not CPU-utilization data or
+a promised parallel speedup. The duration audit is retained with this increment.
+
+
+A ten-second sample during the current sequential PlayMode run measured the
+Unity process at about 5.85% of the 32-logical-processor machine and 2.35 GB working
+set. That is consistent with the reviewer's observation of spare CPU capacity,
+but excludes child processes and other system load and does not predict parallel
+speedup. The current RoomRules fixture already uses unique temporary storage;
+the shared runner/mirror/helper and remaining process-global paths still need
+isolation before concurrent runs.
+
+The first full Book run (`49520b05f699497ab0cffbb7e58beafc`) reached the new
+shore form but correctly rejected its reused actor: the preceding 3D swim had
+pitched that actor, and surface travel intentionally preserved that tilt. The
+fixture now creates a separate upright shore actor through visible shared
+controls, before the original walking/Undo fixtures. Earlier tilted swimming
+coverage stays intact. The test helper now reports explicit native rejection or
+failed/cancelled receipts instead of waiting for a completion that cannot occur.
+No runtime source changed; corrected probe TypeScript passed and both full
+interface journeys are rerunning against the already verified native suite.
+
+The second Book run (`e16cc6e5ba3647ee90b3e367e9bea983`) reported a direct
+native refusal as intended by the diagnostic change. Its new fixed actor started
+at root y=1.6 m: the 0.065 m primitive's foot plus 0.04 m capsule skin was at
+1.6075 m, above the fixture's 1.6 m waterline, with no supporting ground. The
+fixture now starts at y=1.5 m and asserts the derived buoyant root y=1.5313457 m
+at 60% immersion. This corrects unsupported test setup; no runtime admission,
+collision or water rule was relaxed. The failed evidence is retained.
+
+
+The full Headless journey then exposed a shared transport mismatch before any
+shore setup mutation: the declared 8-cell terrain grid has 81 height samples,
+but both catalog request validators imposed the generic 64-element array limit.
+The native and TypeScript validators now honor trusted schema array bounds,
+subject to the existing aggregate-value, depth and serialized-argument limits.
+Unknown arrays retain their original bound. A shared ten-case fixture reproduced
+the two valid-grid failures on both sides (81 and 289 samples) and now passes
+on both; malformed grids and over-budget requests remain refused. The complete
+native/web suites and full journeys are rerunning against this corrected source.
+
+
+A subsequent complete Headless run reached native batch creation and saved the
+sloped lake and robot, then reproduced a second discovery gap: the robot's saved
+water policy was unavailable because its native instance was absent. The policy
+fact now reads canonical saved content, matching other saved-settings facts; it
+does not load native content or claim collision readiness. A real retirement
+regression fails before the fix and passes afterward, asserting exact values,
+unchanged revision/state, no pending activation and an absent native object. All
+ten focused PlayMode water-traversal tests pass after that fix. Full verification
+is being repeated against the final combined source.
+
+### Desktop stereo verification gate
+
+The final combined-source Headless and Book journeys passed, as did all 1,557
+EditMode tests. The first PlayMode partition then reported 905 passes, three
+named private-asset skips and 12 failures in actual stereo listener/audio tests.
+A read-only Windows endpoint query found the default render endpoint was
+`PlayStation VR2 Sense Controller (L)`, supplying one channel at 48 kHz. Unity's
+configuration still reported Stereo, but its actual listener callback delivered
+one channel with zero measured left/right energy. The preceding passing run
+received two channels; all 194 audio-related native inputs are unchanged.
+
+The failed output is retained under
+`.quest-evidence/shore-traversal-20261022/mono-output-failure/`. Android compilation
+was gated off. The user has been asked to select stereo PC output. The next rule group also
+contained measured-acoustic tests and reproduced the mono-output problem. That
+run was stopped, with its partial log retained, to avoid accumulating invalid
+stereo evidence. Full native verification will rerun after a two-channel output
+is selected; all current Unity test processes are stopped. This remains an
+environment-cause hypothesis until the rerun; no audio assertion or production
+code was weakened.
+
+
+### Continuous following across ground, water and shore
+
+The next increment shares one moving-leader controller across the existing
+movement engines. It extends `object.follow` with explicit walk/swim/surface/shore
+modes, while omitted mode keeps old ground invocations. Book forms and agent calls
+use the same native-exported catalog; there is no separate per-character or
+per-medium scripting tool. Retargeting retains the root owner, gait, capacity
+slot and deadline. Collision participation remains the follower's profile,
+independent of what the user sees or hears. A virtual-world follower may move
+below the physical floor without disabling the room for everyone else.
+
+Evidence is under `.quest-evidence/aquatic-follow-20261023/`. Initial focused
+verification exposed an optional discriminator regression: old calls without
+`mode` no longer resolved. Native and web now permit omission only when exactly
+one branch declares that top-level selector optional. Null, unknown and ambiguous
+selectors refuse. A shared 28-case fixture covers all modes and malformed calls,
+with a separate ambiguity regression on each side. Self-following remains a
+native domain refusal; schema acceptance is not readiness or permission.
+
+The new native fixture initially exceeded the existing rectangular-container
+width bound; it was corrected without expanding production bounds. Its first
+elapsed-travel checks incorrectly assumed a fixed headless frame rate. They now
+use elapsed time and retain per-step speed/slope bounds. An unreachable follow
+goal publishes `blocked` between bounded `planning` retries; the test observes
+that sequence instead of asserting one arbitrary end-frame phase. Those failed
+runs remain available. A further real regression reproduced Stop reporting Ready
+when the actor had already reached its following distance. The shared controller
+now makes post-Stop State/Complete terminal; completed receipts are collected
+before Stop and retain their actual outcome.
+
+The full web suite passes **3,264 tests**, with app/probe TypeScript passing.
+After the endpoint correction below, all **1,586 EditMode tests** and **87 selected
+movement PlayMode tests** pass with clean Unity exits. A further **47 ground
+navigation PlayMode tests** passed. The complete Headless journey
+`0ba2713f33a549349245019418a776bf` passed with 2,602 observations and clean
+client/editor exits. Its formerly failing follower travelled 1.4026 m and ended
+in `keepingDistance`, preserving saved avoidance and exact receipt replay. The
+complete Book journey `9e4d6372d35541319cf0c0e83cd456f3` passed with
+4,526 observations, no browser errors and clean client/editor exits.
+Its surface follower completed in `keepingDistance`; the captured following
+controls were visually inspected. Both journeys ended with quiet, saved stores. No full PlayMode, Android, provider, headset or release acceptance is
+claimed for this increment yet. The updated source freeze covers 5,416 code
+files, 3,488 native inputs and 70 owned paths; all 14 unrelated protected files
+retain their original hashes. Catalog provenance was rechecked after native
+export. The separate full stereo/acoustic verification gate remains open. No
+signing, deployment, device work, paid provider call, commit or push occurred
+during this increment.
+
+The first full Headless journey `7c9de1d172c044db897a3e04cf9f2e41` failed shore
+following of its small recipe-built character after both fixed shore navigation
+legs completed. The preceding 85 selected movement tests had passed. The Book
+journey was not started. That failure and its source freeze are preserved;
+probe journals now retain completed shore legs and following failure samples
+before a terminal assertion.
+
+`WaterFollowingRecipeShoreEndpointAfterPublicRoundTrip` reproduces the exact
+public blueprint and failure. A stationary ground motor preserves the current
+body foot, which the shore motor incorrectly used as the actual bed height
+within its support band. Diagnostic evidence showed endpoints less than 5 mm
+apart at the same height, with `wet=False` and `goalWet=True`. The fix exposes
+the successful ground motor's sampled support point for shore medium
+classification. Movement destinations, query limits and collision rules are
+unchanged. Both that public round-trip/follow regression and the direct
+stationary shallow-water regression now pass. The earlier red and diagnostic
+runs remain under `recipe-red-runtime/` and `recipe-diagnostic/`; the initial
+test-fixture compile mistake is retained separately under `recipe-red/`.
+
+The first Book run `7f65d62a7b3545778240cc2dfc107f6c` completed surface
+following in `keepingDistance` after 0.3311 m, but the harness then timed out
+looking for its action heading: `book.observation()` had correctly navigated to
+the object fact page before the screenshot. The screenshot now precedes that
+fact read, matching adjacent checks. The full failed run is retained, probe
+TypeScript passes, and the complete Book journey rerun passed. Native
+sources and the passing Headless runner are unchanged by this harness correction;
+`book-only-recheck-scope.json` records the evidence boundary.
+
+Final evidence validation: `verified-increment.json` checks the 1,586 EditMode
+passes, 134 distinct focused PlayMode passes (87 movement + 47 ground), the
+3,264-test web result, both complete native journeys, persistence, exact
+following receipts and the reviewed screenshot hash. The native mirror matches
+all 3,488 source inputs with four known Configure differences and 12 expected
+generated inputs. The endpoint fix changed only two source hashes in the
+exported catalog, not its definitions; subsequent changes affected only Book
+screenshot order and documentation. Current frozen source and all 14 protected
+files were rechecked. Both failed integration runs are retained separately.
+
+At that checkpoint the read-only endpoint check reported one audio channel. Full
+PlayMode/stereo/acoustic verification and Android compilation remain pending;
+the prepared native-only runner expects 1,586 EditMode and 2,232 PlayMode passes
+plus the three existing named private-asset skips. This increment remains local
+and uncommitted while that gate is open. The installed/packaged APKs, deployment,
+private Alpha build and production acoustic configuration were not changed.
+
+
+## Independent area loading
+
+2026-10-23: continuing the user's long-term shared-world direction. Area ownership
+now has an explicit independent/together loading policy. The same
+`world.region.save` action, `world.region` fact, generated book field and saved
+revision contract serve users, agents and programs. Existing calls that omit
+loading preserve the current choice; older creates and version-1 areas retain
+together behavior. New examples explicitly choose independent. Version-2 region
+records persist the choice; unsupported future data stays protected. Reading an
+older save leaves its bytes unchanged; accepted snapshots/save use the current
+record. Policy changes participate in history and topology-cache invalidation.
+Enabled physical connections always keep their endpoints together, even across
+independent areas. Whole-area requests still include all members and their peers.
+No object quota, native budget, pose or real-room collision policy changed.
+
+The first regression run reproduced a real partial-residency gap: switching to
+together did not request an offscreen dormant member when its peer was already
+visible. Display admission now takes the same dependency closure of observed
+resident objects and lighting inputs, including scoped capture cameras. It uses
+the existing bounded native acquisition path, cancellation and failure handling.
+The focused rerun passed 25 EditMode and two PlayMode tests. An initial test
+fixture used a stale object precondition, and the book probe initially passed an
+unknown-typed receipt ID to a string field; those harness mistakes were corrected
+and their first-failure evidence retained.
+
+Current verification is recorded under
+`.quest-evidence/region-loading-20261023/`. The full 1,590-test EditMode suite passed. The expanded runtime selection
+passed 100 tests initially; its remaining assertion incorrectly expected an
+independent object to disappear immediately after the camera had briefly seen it.
+The corrected test waits for existing recent-view grace and passed on rerun,
+covering all 101 selected runtime cases without changing production code. Both
+reports and the test-only source difference are retained. The full web suite
+passed 3,266 tests, plus app/probe TypeScript and catalog provenance. The full Headless journey `c95d84222b3842ed9c8563901eee6ee7`
+passed with 2,621 observations, clean native/client exits and both saved stores
+idle. It proves independent mixed residency and restoring a newly coupled peer
+through ordinary agent calls. The initial Book run
+`b3373339dacf475e97c43b71f4803ed7` saved the choice and captured a readable form,
+then its broad test-helper selector matched both World area and World areas.
+The helper now selects the exact visible fact button name and obtains its
+version from the shared catalog. The first exact-name repair incorrectly assumed
+version 1; run `6a025a2b42c246f88ed88c65896551fd` passed the area readback and
+binding, then timed out on the existing version-2 position fact. Both failed
+runs remain preserved. Probe TypeScript passed after the catalog-version repair.
+The full Book rerun `0b3002bfce7040b49543cb64edec0412` passed with
+4,561 observations, no browser errors, clean client/native exits and both
+saved stores idle. Its area form screenshot was visually reviewed as readable.
+No native or Headless source changed during either Book-helper correction.
+`verified-increment.json` checks the exact source freeze, protected files,
+selected-test coverage, both complete journeys, completed area receipts, quiet
+persistence and screenshot hash. The final mirror check matched all 3,488 native
+inputs with four established Configure differences and twelve expected generated
+inputs. The complete verification continuation below supersedes the stereo and
+Android gates recorded at this earlier checkpoint. Prior failed runs and movement
+evidence remain retained. This is a prerequisite for larger worlds, not measured
+city-scale capacity.
+
+
+### Complete native and Android verification
+
+2026-10-23: the read-only Windows endpoint probe now reports stereo at 48 kHz.
+No system audio settings were changed by this verification. The frozen current
+source completed **1,590 EditMode and 2,235 PlayMode tests**, with the three
+existing named private-model/motion skips and exact discovered-inventory
+coverage. All native processes exited cleanly. Both real two-channel HRTF probes
+passed and reversed the left/right energy relationship after a 180-degree
+listener turn. This clears the local mono-output blocker; it does not resolve
+the 31 separately retained audio-quality failures or enable reflections.
+
+The complete offline Headless/Book journeys and 3,266 web passes recorded above
+remain valid against identical runtime and web source. Fresh full native evidence
+is in `full-native/`, with launcher exit and mirror verification recorded under
+`.quest-evidence/region-loading-20261023/`. Failed earlier runs remain separate.
+
+Fresh development-only Android export and compilation also passed: Unity reports
+0 errors and 5 warnings. The selected Gradle graph ran
+41 actionable tasks (41 executed). All 22 selected ARM64 libraries
+have ELF load alignment of at least 16 KiB. The merged manifest retains
+`com.maestro.quest.development`, `UnityPlayerGameActivity`, Quest 3 targeting and
+no broad storage permissions. Generated IL2CPP contains the new area-loading
+policy, display dependency closure and actual-support-height shore correction,
+alongside the earlier shared movement paths. Browser evidence has 128 passes and
+two named skips against 106 unchanged source inputs; lint has
+6 warnings and no errors. Whether Gradle reused browser test results is explicitly
+recorded in `android/verified.json`; warnings and exact report hashes are retained.
+
+The Android runner reused the just-completed full native suites and full offline
+journeys only after checking their source hashes, terminal results and the exact
+owned mirror inventory. It ran the shared web build, browser checks, Android
+export, compilation and manifest/ELF checks through the ordinary build path.
+It produced no APK/AAB and performed no signing, installation, provider calls,
+deployment or Meta action. Installed D85F3CB7/f58dab48 and packaged
+5899972E/5100f612 remain unchanged. Final packaging/filtering, current physical
+acceptance and all release checklist gaps remain open.
+
+The follow-on spatial-index audit preserves accepted-pose revisions, dormant
+runtime poses, native moving objects, exact scan-anchor projection, separate
+visual/collision bounds and unknown-geometry handling. A bounded broad-phase and
+complete/pending query contract must precede larger saved quotas; the current
+metadata cache and exhaustive discovery scans do not establish city capacity.

@@ -13,7 +13,10 @@ namespace Maestro.Quest.Programs
             var keys=((JArray)schema["x-discriminators"]).Values<string>().ToArray();
             var matches=variants.OfType<JObject>().Where(branch=>keys.All(path=> {
                 var field=Field(branch,path);var actual=Value(value,path);
-                return actual?.Type==JTokenType.String&&field?["enum"] is JArray choices&&choices.Any(x=>JToken.DeepEquals(x,actual));
+                // A missing top-level selector can use the one branch that declares it
+                // optional. Null/unknown selectors and ambiguous branches still refuse.
+                if(actual==null)return !path.Contains(".")&&field?["enum"] is JArray&&branch["required"] is JArray required&&!required.Any(x=>(string)x==path);
+                return actual.Type==JTokenType.String&&field?["enum"] is JArray choices&&choices.Any(x=>JToken.DeepEquals(x,actual));
             })).Take(2).ToArray();return matches.Length==1?matches[0]:null;
         }
         static bool Index(JToken value,string key,out int index) {
