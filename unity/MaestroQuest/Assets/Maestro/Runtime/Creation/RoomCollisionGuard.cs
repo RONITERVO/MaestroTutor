@@ -1,6 +1,8 @@
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Maestro.Quest.Interaction;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
@@ -15,9 +17,10 @@ namespace Maestro.Quest.Creation {
         internal bool HasBounds {get;private set;}
         internal BoxCollider Shape=>shape;
         internal uint Generation=>generation;
+        internal long Synchronizations {get;private set;}
         internal RoomCollisionGuard(RoomEditor owner,string target){this.owner=owner;this.target=target;}
         internal void Synchronize(RoomSpatialExtent value){
-            if(disposed)return;
+            if(disposed)return;Synchronizations++;
             Known=value.Known&&(!value.HasBounds||RoomRecipe.Finite(value.Bounds.center)&&RoomRecipe.Finite(value.Bounds.size)&&value.Bounds.size.x>=0&&value.Bounds.size.y>=0&&value.Bounds.size.z>=0);
             HasBounds=Known&&value.HasBounds;
             if(!owner||!HasBounds){if(shape&&shape.enabled){shape.enabled=false;shape.GetComponent<RoomCollisionProxy>().Generation=++generation;}return;}
@@ -39,12 +42,35 @@ namespace Maestro.Quest.Creation {
         }
     }
     public sealed partial class RoomEditor {
+        // Only physical anchors need fresh projection every frame. Accepted edits
+        // and retirement synchronously publish all other guard changes before
+        // native geometry is detached or the edited state becomes usable.
+        readonly HashSet<string> anchoredCollisionTargets=new(StringComparer.Ordinal);
+        string[] anchoredCollisionSnapshot=Array.Empty<string>();bool anchoredCollisionChanged;
         internal RoomCollisionGuard DormantCollisionGuard(string target)=>target!=null&&dormantNative.TryGetValue(target,out var entry)?entry.CollisionGuard:null;
         void SynchronizeDormantCollision(string target,DormantEntity entry){
+            int revision=ObjectRevision(target);
+            if(entry.CollisionGuard!=null&&entry.CollisionRevision==revision&&entry.ScanPlacement==null)return;
+            var collision=ReadDormantSpatial(target,entry,out _).Collision;
             entry.CollisionGuard??=new RoomCollisionGuard(this,target);
-            entry.CollisionGuard.Synchronize(ReadDormantSpatial(target,entry,out _).Collision);
+            entry.CollisionGuard.Synchronize(collision);entry.CollisionRevision=revision;
+            bool changed=entry.ScanPlacement!=null?anchoredCollisionTargets.Add(target):anchoredCollisionTargets.Remove(target);
+            anchoredCollisionChanged|=changed;
         }
-        void RefreshDormantCollisions(){foreach(var pair in dormantNative)SynchronizeDormantCollision(pair.Key,pair.Value);}
-        void ReleaseDormantCollisions(){foreach(var entry in dormantNative.Values)entry.CollisionGuard?.Dispose();}
+        internal void RefreshAnchoredDormantCollisions(){
+            if(anchoredCollisionChanged){anchoredCollisionSnapshot=anchoredCollisionTargets.ToArray();anchoredCollisionChanged=false;}
+            foreach(var target in anchoredCollisionSnapshot)
+                if(dormantNative.TryGetValue(target,out var entry))SynchronizeDormantCollision(target,entry);
+            // Authored metadata is visual-only. Completing its preparation cannot
+            // make unknown collision geometry known or create a physical barrier.
+        }
+        void ReleaseDormantCollision(string target,DormantEntity entry){
+            anchoredCollisionChanged|=anchoredCollisionTargets.Remove(target);
+            entry.CollisionGuard?.Dispose();entry.CollisionGuard=null;entry.CollisionRevision=-1;
+        }
+        void ReleaseDormantCollisions(){
+            foreach(var entry in dormantNative.Values){entry.CollisionGuard?.Dispose();entry.CollisionGuard=null;entry.CollisionRevision=-1;}
+            anchoredCollisionTargets.Clear();anchoredCollisionSnapshot=Array.Empty<string>();anchoredCollisionChanged=false;
+        }
     }
 }

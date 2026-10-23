@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[persistent collision checkpoint](#persistent-dormant-collision-lookup--2026-10-23) records this
+[dormant guard checkpoint](#change-driven-dormant-collision-guards--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -150,7 +150,9 @@ immutable lookup rejects distant collision branches inside a coherent query.
 Stable dormant collision geometry now survives between captures; current native
 objects and exact scan anchors are read afresh. Accepted journal edits, membership
 changes and metadata publication conservatively rebuild the dormant partition.
-View demand and dormant collision-guard refresh still scan dormant members; this
+Stable unanchored collision guards now update on accepted changes and retirement;
+only exact scan anchors refresh each frame. View demand and ground discovery still
+scan candidates, and accepted reconciliation still visits dormant members. This
 is not a fully incremental index of every world consumer. Named areas explicitly
 choose independent or together loading; enabled physical connections remain
 coupled across either type of area. This removes the implicit
@@ -16000,3 +16002,52 @@ book image. The full PlayMode inventory and Android compilation remain the prior
 checkpoint's evidence. Installed and packaged builds are unchanged. No headset,
 paid-provider, signing, deployment or Meta action occurred. The larger-world and
 other release gates remain open; v1 is incomplete.
+
+## Change-driven dormant collision guards — 2026-10-23
+
+Stable unloaded objects retain their conservative native barriers without reading
+or synchronizing every guard during each spatial-preparation tick. Retirement
+publishes each new guard before detaching actual geometry. Accepted edits refresh
+the changed object's guard synchronously; unchanged guards are skipped during
+unrelated edits. Loading, deletion and workspace replacement release the guard
+and its tracking membership through one path.
+
+Exact scan anchors remain a separately tracked set and resolve afresh every frame.
+Loss or restoration of an anchor therefore updates availability without an authored
+edit. Disabling and resuming the editor preserves that requirement. Moving,
+rotating or uniformly scaling the virtual-world root carries its existing barriers
+with it. Authored visual metadata cannot turn unknown collision into clearance.
+No capability, saved quota, physics policy or collision-proxy identity contract
+changes in this increment.
+
+In an 18-object unloaded fixture, 60 actual frames performed zero repeated guard
+synchronizations. A further 512 direct empty-anchor refreshes recorded zero
+current-thread managed-allocation events. Moving the world retained the same
+barrier and a real Physics ray hit, without changing the saved document. These
+measurements cover this guard-refresh path in the Editor; other room consumers
+and Quest frame time remain unmeasured.
+
+Evidence: `.quest-evidence/dormant-guards-20261023/`. The focused run passed
+24 EditMode and 40 PlayMode tests. Broader verification passed 1,610 EditMode and
+542 selected PlayMode tests across 68 fixtures, including all four new scheduling
+cases and eleven native contact-recovery cases. Coverage includes accepted edits,
+Undo, loading, deletion, exact-anchor loss/restoration, disable/resume and a virtual
+actor moving below the real floor. All native processes exited cleanly.
+
+The shared catalog suite passed 256 tests. Generated capability definitions are
+unchanged and native source provenance matches. `verified-increment.json` checks
+all 3,500 frozen native inputs, 1,205 unchanged shared client inputs and 14 unchanged
+protected files against the exact reports and allocation/work evidence.
+
+The full PlayMode inventory, Android compilation and full book/headless journeys
+were not rerun for this internal scheduling increment. The full offline journeys
+at `9749f68d` and broader integration/compile evidence at `ed286f6d` remain separate
+checkpoints; no new provider or physical-device acceptance is claimed.
+
+This removes the full dormant scan from guard refresh only. Accepted reconciliation
+still visits saved dormant members, and scan-anchor work remains proportional to
+the anchored subset. Native guard geometry still consumes capacity. View demand,
+ground discovery, conservative whole-partition invalidation and independent
+saved/resident/simulation/query budgets remain larger-world work before any quota
+increase. Device, paid-provider, signing, deployment and Meta work remain on hold.
+The complete v1 release goal is still active.

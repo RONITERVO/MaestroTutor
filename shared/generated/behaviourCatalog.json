@@ -50394,7 +50394,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCollisionGuard.cs",
-      "sha256": "0e0bdba9abedd4c9f3d3899b2c5b1e312d34a164a9088344f8c4ba06a87f8e5b"
+      "sha256": "a3ac7ec7a11b95ef60e3baecc5759284970bb23090759bcd980142b0dce13b54"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomComponentEdits.cs",
@@ -50634,7 +50634,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "21846f28e7f2ecf22c2bcb771001093f98fc77d1bc7258c30dc0eefeaee55129"
+      "sha256": "898c609f8d7e0d3da9ba26b98ca93e596ac3b912668ecca2d8cecddb49c52a43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRetirement.cs",
@@ -50786,7 +50786,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialPreparation.cs",
-      "sha256": "f5cc0abb15ec5b00a511b4ce25154bc8206786ba6d39c13ce81adccc7d2af0c8"
+      "sha256": "adbb271d7483bffbb8c4b7151d19bcc484c619810641a9d0863b756b6a993374"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialReadiness.cs",
