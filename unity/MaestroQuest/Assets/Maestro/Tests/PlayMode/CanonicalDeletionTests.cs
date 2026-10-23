@@ -53,7 +53,9 @@ namespace Maestro.Quest.Tests {
             Assert.That(runtime.Scheduler.Invoke(ObjectEditCall("object.delete",target),Time.unscaledTime,out var run,out error),Is.True,error);
             Assert.That(editor.NativeActivationPending,Is.False);yield return NativeActionDone(run);
             Assert.That(editor.HasSavedObject(target),Is.False);Assert.That(editor.NativeEntityDormant(target),Is.False);
-            editor.Undo();Assert.That(editor.RegionFor(target),Is.EqualTo(area));Assert.That(editor.Find(target),Is.Not.Null);
+            editor.Undo();Assert.That(editor.HasSavedObject(target),Is.True);Assert.That(editor.RegionFor(target),Is.EqualTo(area));
+            Assert.That(editor.Find(target),Is.Null);Assert.That(editor.NativeEntityDormant(target),Is.True);Assert.That(editor.NativeActivationPending,Is.False);
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(target),Is.Not.Null);
         }
         [UnityTest] public IEnumerator CanonicalDeletionDoesNotRecreateMissingPeersAcrossEditUndoAndRedo(){
             string lost=editor.Identity(block);Assert.That(editor.CreatePrimitive(RoomObjectKind.Ball,"Remove me",new(1,1,1),1,Color.white,out var target,out var error),Is.True,error);

@@ -86,7 +86,7 @@ namespace Maestro.Quest.Creation
         {
             error="The target changed; inspect its latest state before retrying.";
             if(request.version==1) return editor&&request.sceneRevision==editor.Revision;
-            if(request.conditions==null || request.conditions.Length>Maestro.Quest.Programs.BehaviourProgram.MaximumResources || request.conditions.Any(x=>x==null || x.id==null) || request.conditions.Select(x=>x.id).Distinct().Count()!=request.conditions.Length) return false;
+            if(request.conditions==null || request.conditions.Length>RoomCapabilityCatalog.MaximumInvocationResources || request.conditions.Any(x=>x==null || x.id==null) || request.conditions.Select(x=>x.id).Distinct().Count()!=request.conditions.Length) return false;
             var aliases=new HashSet<string>();
             foreach(var command in request.commands)
             {

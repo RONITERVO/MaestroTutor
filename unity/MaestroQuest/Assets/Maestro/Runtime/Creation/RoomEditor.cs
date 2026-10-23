@@ -282,11 +282,11 @@ namespace Maestro.Quest.Creation
             var data=Pose(Read(id),Find(id).transform);change(data);
             return CommitPersisted(new[]{data},Array.Empty<string>(),message,applyPose,out error);
         }
-        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomEditScope scope=RoomEditScope.Full,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,PreparedImportedModel modelPreparation=null,RegionEdits regionEdits=null,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false) {
+        bool CommitPersisted(RoomObjectData[] replacements,string[] removals,string message,bool applyPose,out string error,RoomLayout observedBefore=null,StructureEdits structureEdits=null,AudioDefinitionEdits audioEdits=null,EnvironmentProfileEdits environmentEdits=null,AppearanceEdits appearanceEdits=null,VisibilityLayerEdits visibilityEdits=null,RoomEditScope scope=RoomEditScope.Full,RoomLighting lighting=null,RoomWorldTime worldTime=null,RoomWeather weather=null,PreparedImportedModel modelPreparation=null,RegionEdits regionEdits=null,WorldTimeEdit timeEdit=WorldTimeEdit.Exact,bool weatherTransition=false,bool deferCreations=false) {
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             if(!journal.Prepare(replacements,removals,out var edit,out error,observedBefore,structureEdits,audioEdits,environmentEdits,appearanceEdits,visibilityEdits,lighting,worldTime,weather,regionEdits,scope,timeEdit,weatherTransition))return false;
             using(edit) {
-                using var native=RoomEditPreparation.TryCreate(this,edit,out error);if(native==null)return false;
+                using var native=RoomEditPreparation.TryCreate(this,edit,out error,deferCreations);if(native==null)return false;
                 if(modelPreparation!=null)native.EnlistModel(modelPreparation,edit);
                 if(!TemporaryRoom) {
                     CompleteSave(wait:true);
@@ -477,7 +477,9 @@ namespace Maestro.Quest.Creation
             applying = true;
             try {
             var document = journal.Snapshot(); var ids = document.objects.Select(item => item.id).ToHashSet();
-            SynchronizeNativeResidency(ids);SynchronizeSpatialIndex(document);
+            SynchronizeNativeResidency(ids);
+            if(preparation!=null)InitializeDormantNative(document.objects.Where(data=>preparation.Defers(data.id)));
+            SynchronizeSpatialIndex(document);
             foreach (var id in objects.Keys.Where(id => !ids.Contains(id)).ToArray())
             {
                 var item = objects[id];DetachNativeIdentity(id,item);

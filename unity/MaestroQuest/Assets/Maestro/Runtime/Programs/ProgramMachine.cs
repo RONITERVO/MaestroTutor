@@ -20,6 +20,7 @@ namespace Maestro.Quest.Programs
         sealed class Frame {public JArray Body;public int Index,Remaining=1;public bool Forever;public Scope Scope;public bool Function;public Scope Caller;public string Result;}
         public const int MaximumInstructions=65536;
         readonly BehaviourProgram program;
+        internal bool Reactive=>program.Version==3;
         readonly IProgramFacts facts;
         readonly Stack<Frame> frames=new();
         readonly HashSet<Scope> memoryScopes=new();

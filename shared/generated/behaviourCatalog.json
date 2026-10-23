@@ -2,6 +2,8 @@
   "version": 1,
   "limits": {
     "programResources": 66,
+    "invocationResources": 258,
+    "ownershipClaims": 258,
     "programRecordFields": 16
   },
   "actions": [
@@ -5747,7 +5749,7 @@
               "x-resource": "object"
             },
             "minItems": 0,
-            "maxItems": 64
+            "maxItems": 256
           },
           "loading": {
             "type": "string",
@@ -9823,6 +9825,22 @@
                 "minimum": 0.0,
                 "maximum": 1.0
               },
+              "loading": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "onDemand"
+                ],
+                "title": "Load objects",
+                "description": "Now, or when nearby observation or a later action needs them",
+                "x-enum-labels": {
+                  "now": "Now",
+                  "onDemand": "When needed"
+                },
+                "x-features": [
+                  "deferredCreation.v1"
+                ]
+              },
               "kind": {
                 "type": "string",
                 "enum": [
@@ -9845,7 +9863,7 @@
             ],
             "additionalProperties": false,
             "title": "Create shape",
-            "description": "Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+            "description": "Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "shape": "ball",
@@ -12017,6 +12035,22 @@
                   "creationComponents.v1"
                 ]
               },
+              "loading": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "onDemand"
+                ],
+                "title": "Load objects",
+                "description": "Now, or when nearby observation or a later action needs them",
+                "x-enum-labels": {
+                  "now": "Now",
+                  "onDemand": "When needed"
+                },
+                "x-features": [
+                  "deferredCreation.v1"
+                ]
+              },
               "kind": {
                 "type": "string",
                 "enum": [
@@ -12036,7 +12070,7 @@
             ],
             "additionalProperties": false,
             "title": "Create recipe object",
-            "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+            "description": "Create editable geometry and optional animation tracks from a bounded recipe. Returns objectId after saving; one room Undo edit. Set recipe.playing=false to create it idle and use animation.play with source.kind recipe on the returned ID for program-controlled playback. Setting playing=true explicitly starts the saved recipe animation. Geometry uses metres in room axes; scale is 0.1–4. Optional collision and physics components are validated and saved with the geometry as one creation/Undo. Omitted physics keeps the existing fixed default. Collision proxies stay root-local and do not follow animated parts; creating a dynamic object does not start room physics. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "name": "Box robot",
@@ -12914,6 +12948,22 @@
                 "minimum": -25.0,
                 "maximum": 25.0
               },
+              "loading": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "onDemand"
+                ],
+                "title": "Load objects",
+                "description": "Now, or when nearby observation or a later action needs them",
+                "x-enum-labels": {
+                  "now": "Now",
+                  "onDemand": "When needed"
+                },
+                "x-features": [
+                  "deferredCreation.v1"
+                ]
+              },
               "kind": {
                 "type": "string",
                 "enum": [
@@ -12948,7 +12998,7 @@
               ]
             },
             "title": "Copy an existing creation",
-            "description": "Copy one user-created object's canonical data, using object.definition for its exact revision. The included book and Maestro cannot be copied. Choose the new origin x/y/z in room metres; preserve current rotation/scale, colour, physics settings, drawing points, recipe parts/tracks and exact model reference. Empty name keeps the source name. Recorded frame positions receive the same translation as the copied origin; their times, rotations, scales and loop remain unchanged. Copying never starts playback: recipe tracks are retained with playing=false, and live playback, velocities, grabs, program/button bindings and unsaved authoring are not copied. A copied recording may still begin away from the object's current pose, exactly as the source's timeline does. The source remains unchanged and unrelated actors continue. The exact new objectId is returned only after a normal saved creation with one Undo (local in a temporary room until Keep). This acknowledges the saved object, not completed asynchronous model loading; imported assets retain their bounded loader and unavailable placeholder behavior. No model or motion bytes are duplicated. Source ownership, stale revisions and aggregate room/model/point/frame budgets are checked before acceptance. Preparation failure leaves no partial copy. Stop after completion does not erase it; replaying a receipt cannot create another object. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+            "description": "Copy one user-created object's canonical data, using object.definition for its exact revision. The included book and Maestro cannot be copied. Choose the new origin x/y/z in room metres; preserve current rotation/scale, colour, physics settings, drawing points, recipe parts/tracks and exact model reference. Empty name keeps the source name. Recorded frame positions receive the same translation as the copied origin; their times, rotations, scales and loop remain unchanged. Copying never starts playback: recipe tracks are retained with playing=false, and live playback, velocities, grabs, program/button bindings and unsaved authoring are not copied. A copied recording may still begin away from the object's current pose, exactly as the source's timeline does. The source remains unchanged and unrelated actors continue. The exact new objectId is returned only after a normal saved creation with one Undo (local in a temporary room until Keep). This acknowledges the saved object, not completed asynchronous model loading; imported assets retain their bounded loader and unavailable placeholder behavior. No model or motion bytes are duplicated. Source ownership, stale revisions and aggregate room/model/point/frame budgets are checked before acceptance. Preparation failure leaves no partial copy. Stop after completion does not erase it; replaying a receipt cannot create another object. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "target": "00000000000000000000000000000000",
@@ -13055,6 +13105,22 @@
                 "minItems": 2,
                 "maxItems": 64
               },
+              "loading": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "onDemand"
+                ],
+                "title": "Load objects",
+                "description": "Now, or when nearby observation or a later action needs them",
+                "x-enum-labels": {
+                  "now": "Now",
+                  "onDemand": "When needed"
+                },
+                "x-features": [
+                  "deferredCreation.v1"
+                ]
+              },
               "kind": {
                 "type": "string",
                 "enum": [
@@ -13078,7 +13144,7 @@
             ],
             "additionalProperties": false,
             "title": "Draw a 3D stroke",
-            "description": "Create one editable 3D pencil stroke through the physical pencil's saved creation path. points are ordered object-local metres, within 10 metres of its origin; x/y/z place that origin in room metres, and scale uniformly scales the stroke and radius. Supply 2–64 points per call, radius .001–.02 metres, and RGB colour. Use object.drawing.edit to grow or reshape it up to the native 2048-point stroke limit; all saved strokes together stay within 32768 points. Every intermediate shape must remain visible and valid. Return the exact new objectId only after saving with one Undo, or locally in a temporary room until Keep. Selection, pencil mode and other actors are unchanged. No automatic animation or physics start. Drawings are fixed initially; existing physics controls can change them. Collision uses the existing bounded approximate shape, not a flexible rope or a per-segment surface. Replay cannot create another stroke. No numeric action adapter is required. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+            "description": "Create one editable 3D pencil stroke through the physical pencil's saved creation path. points are ordered object-local metres, within 10 metres of its origin; x/y/z place that origin in room metres, and scale uniformly scales the stroke and radius. Supply 2–64 points per call, radius .001–.02 metres, and RGB colour. Use object.drawing.edit to grow or reshape it up to the native 2048-point stroke limit; all saved strokes together stay within 32768 points. Every intermediate shape must remain visible and valid. Return the exact new objectId only after saving with one Undo, or locally in a temporary room until Keep. Selection, pencil mode and other actors are unchanged. No automatic animation or physics start. Drawings are fixed initially; existing physics controls can change them. Collision uses the existing bounded approximate shape, not a flexible rope or a per-segment surface. Replay cannot create another stroke. No numeric action adapter is required. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "name": "Pencil arch",
@@ -13236,6 +13302,22 @@
                 "minimum": 0.1,
                 "maximum": 4.0
               },
+              "loading": {
+                "type": "string",
+                "enum": [
+                  "now",
+                  "onDemand"
+                ],
+                "title": "Load objects",
+                "description": "Now, or when nearby observation or a later action needs them",
+                "x-enum-labels": {
+                  "now": "Now",
+                  "onDemand": "When needed"
+                },
+                "x-features": [
+                  "deferredCreation.v1"
+                ]
+              },
               "kind": {
                 "type": "string",
                 "enum": [
@@ -13255,7 +13337,7 @@
             ],
             "additionalProperties": false,
             "title": "Create starter object",
-            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip, snap-point and logical liquid-container data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+            "description": "Expand an exact bundled template hash into ordinary editable recipe, collision, physics and optional flat drawing-surface, drawing-tip, snap-point and logical liquid-container data. Read creation.template for descriptions and cost counts; names and tags are display metadata, never executable instructions. Empty name keeps its template name. Creates one object and one Undo through the same recipe creation path; later template changes cannot alter existing objects. Templates start idle, do not start physics, install behaviours, snap bricks or simulate liquids. Robot tracks can be played explicitly with animation.play source.kind recipe. The hash is an exact choice: missing versions fail, never substitute by name. Optional user template publishing is not part of this bundled library. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
             "examples": [
               {
                 "templateHash": "835aa751b583dc6b888b0f48f77ef2db154553d1b9a5bdc984508d10ee432278",
@@ -13293,7 +13375,7 @@
         "storage.writable",
         "kind.valid"
       ],
-      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, an editable pencil stroke, or a bundled starter template. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Imported models still use the existing asset import workflow. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+      "description": "Choose a creation kind: a physical shape, an editable recipe with optional animation tracks, a copy of an existing creation, an editable pencil stroke, or a bundled starter template. Inspect the selected kind's example, fields and requirements. All kinds return the exact new objectId. Outside temporary play it is saved with one Undo; inside temporary play it stays unsaved until room.session keep completes. Imported models still use the existing asset import workflow. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
       "example": {
         "shape": "ball",
         "name": "Ball",
@@ -20982,6 +21064,22 @@
             "type": "number",
             "minimum": 0.1,
             "maximum": 4.0
+          },
+          "loading": {
+            "type": "string",
+            "enum": [
+              "now",
+              "onDemand"
+            ],
+            "title": "Load objects",
+            "description": "Now, or when nearby observation or a later action needs them",
+            "x-enum-labels": {
+              "now": "Now",
+              "onDemand": "When needed"
+            },
+            "x-features": [
+              "deferredCreation.v1"
+            ]
           }
         },
         "required": [
@@ -21005,7 +21103,7 @@
         "storage.writable",
         "blueprint.valid"
       ],
-      "description": "Instantiate an editable version-1 independent version-3 physically connected, or version-4 resource-bundled blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash, inline recipe/collision/physics source, or version-1/2 prototype preserving created geometry, paint, surfaces/ink, drawing tips and recorded root motion and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 3 includes 1–15 slot-to-slot connection links, each using the ordinary connection definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-connection room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Prototype motion is relative to each piece pose and transforms with it; every resulting frame must satisfy room bounds. Model prototypes keep exact local model hashes: bytes are verified before any member is committed; missing/damaged files fail without partial creation. Model rendering still loads asynchronously through the usual importer. No external file or replacement model is fetched. Version 4 bundles exactly the referenced appearances, tone sound definitions and environment collision profiles, including dormant appearance bindings. Version-2 prototypes carry these local references. All definition IDs are module-local symbols, remapped to fresh IDs on every instantiation; sharing within the construction survives, but existing room definitions are never reused or overwritten. Version 4 permits zero to fifteen links. Room resource budgets are checked before the single atomic save; Undo removes the new definitions with the pieces. Emitters are saved idle. Collision profiles remain subject to the global real-room collision switch. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names.",
+      "description": "Instantiate an editable version-1 independent version-3 physically connected, or version-4 resource-bundled blueprint of 1–16 independently grabbable physical pieces. Each named slot contains an exact bundled template hash, inline recipe/collision/physics source, or version-1/2 prototype preserving created geometry, paint, surfaces/ink, drawing tips and recorded root motion and a local pose/scale. The outer pose/scale transforms the entire arrangement in room axes. All final positions must be within 25 metres and all final scales 0.1–4; recipe, vertex, collision and room-object budgets apply to the whole candidate. Reserves every creation before a program starts the call, then saves once with one Undo; failure creates no partial structure. Returns objectIds and slots in matching blueprint order. Version 3 includes 1–15 slot-to-slot connection links, each using the ordinary connection definition. One outgoing connection per piece, no cycles or external IDs; authored frames must already align at the transformed pose. Links become exact new object IDs only after all pieces are prepared, within the shared 16-connection room budget. Objects retain editable source and no longer depend on the blueprint. Save this definition in ordinary reusable programs/modules; this does not install a separate blueprint library or persistent group, create snap joints, replace missing pieces, avoid overlaps, or start physics/animations. Pieces must start idle. Prototype motion is relative to each piece pose and transforms with it; every resulting frame must satisfy room bounds. Model prototypes keep exact local model hashes: bytes are verified before any member is committed; missing/damaged files fail without partial creation. Model rendering still loads asynchronously through the usual importer. No external file or replacement model is fetched. Version 4 bundles exactly the referenced appearances, tone sound definitions and environment collision profiles, including dormant appearance bindings. Version-2 prototypes carry these local references. All definition IDs are module-local symbols, remapped to fresh IDs on every instantiation; sharing within the construction survives, but existing room definitions are never reused or overwritten. Version 4 permits zero to fifteen links. Room resource budgets are checked before the single atomic save; Undo removes the new definitions with the pieces. Emitters are saved idle. Collision profiles remain subject to the global real-room collision switch. Temporary creation stays in the fork; Stop leaves accepted pieces and duplicate receipts do not create again. Use explicit returned IDs for later actions/reset; never identify pieces by display names. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
       "example": {
         "blueprint": {
           "version": 1,
@@ -23366,7 +23464,7 @@
         "storage.writable",
         "room.capacity"
       ],
-      "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; refusal before acceptance leaves neither partial removal nor a partial object. An accepted save failure preserves both live changes and requires recovery. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+      "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; refusal before acceptance leaves neither partial removal nor a partial object. An accepted save failure preserves both live changes and requires recovery. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
       "example": {
         "source": {
           "target": "00000000000000000000000000000000",
@@ -30871,7 +30969,7 @@
         "appearance.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and every page of appearance.members, supplying the exact revision and complete member list (up to the room's 66 objects). Every affected object must be available. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. image uses the exact imageHash from image.import or image.library and replaces procedural patterning. Other modes require imageHash empty. Missing/loading images show a neutral checker; inspect object.appearances and image.library for readiness. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. Images are explicitly imported through image.import; no emission, PBR or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and every page of appearance.members, supplying the exact revision and complete member list (up to the per-action member limit). Every affected object must be available. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. image uses the exact imageHash from image.import or image.library and replaces procedural patterning. Other modes require imageHash empty. Missing/loading images show a neutral checker; inspect object.appearances and image.library for readiness. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. Images are explicitly imported through image.import; no emission, PBR or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -31253,7 +31351,7 @@
         "visibility.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to 66). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to the per-action member limit). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -45860,6 +45958,22 @@
       ]
     },
     {
+      "id": "world.creationBudget",
+      "version": 1,
+      "type": {
+        "record": {
+          "saved": "number",
+          "savedLimit": "number",
+          "remaining": "number"
+        }
+      },
+      "label": "Saved creation capacity",
+      "description": "Saved creations in the active world, including unloaded objects; excludes the included book and Maestro. Remaining counts creation identities only. Native roots, geometry, physics, components and file-size admission retain independent limits, so this is not a guarantee that any requested creation fits. Reading never loads objects or edits the world. Native object reservations are separately reported by runtime.objectBudget when diagnostic observations are available.",
+      "features": [
+        "deferredCreation.v1"
+      ]
+    },
+    {
       "id": "runtime.objectBudget",
       "version": 1,
       "type": {
@@ -47191,7 +47305,7 @@
           "offset": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 64.0
+            "maximum": 256.0
           }
         },
         "required": [
@@ -47228,7 +47342,7 @@
         }
       },
       "label": "Area runtime dependencies",
-      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through together-area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics retains each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and resident imported-geometry failures with accepted collision bounds stop dependent actors locally. Unknown bounds or placement retain the global stop; repairing geometry does not silently resume failed motion. This does not expand the 64-object or spatial limits, promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
+      "description": "Current native dependencies for one authored area; empty id selects home creations. Counts distinguish saved members, active native objects and objects retained by current work. Reasons include dependencies inherited through together-area membership and enabled physical connections, in both directions. Pending or paused audio retains its emitter. Navigation retains the authored ground sources held by its accepted or pending map; pending detours retain discovered liquid sources and canonical solid-object owners until completion or cancellation. Owned headset and scoped capture cameras retain native renderer bounds intersecting their views; stereo uses both eyes. Camera culling layers and disabled renderers are respected. The frame-sampled primary viewer adds approachingView for a 0.35-second speed-based translation/rotation margin (minimum 0.15 metres and 12 degrees), and recentObservation for two seconds after demand. Tracking jumps or stale motion samples conservatively include geometry until fresh samples resume. Scoped one-off capture leases do not gain persistent demand. These are conservative loading hints, not proof of future visibility or a guaranteed loading deadline. Retained spatial envelopes also contribute dormant observation demand, without loading; unknown dormant geometry is conservatively included for owned views. Lighting retains effective local lamps whose conservative range envelope intersects an owned view, plus potential shadow casters overlapping hard-shadow lamp envelopes. This includes off-screen inputs, uses the same predictive/grace and capture loading paths, and does not inflate occupied geometry bounds. Disabled or zero-intensity lamps create no lighting demand. Unknown imported shadow geometry is retained until prepared; captures wait or fail rather than return incomplete lighting. Spot cones and animated recipe attachments use conservative enclosing envelopes. These are dependency hints, not proof of rendered shadows or reflections. Reading does not rebuild navigation or change saved state. Sleeping physics still needs its collision environment. Unavailable includes model geometry that is loading or failed. Saved structure arrangements alone do not connect objects. This is a passive transient diagnostic, not a saved revision or a request to unload. unloadingSupported reports whether the workspace enables automatic retirement. retirementState distinguishes disabled, waiting for reliable viewing, retained by dependencies, ready, preparing, dormant and failed; retirementIssue explains a failed attempt within the shared 128-character text bound. Idle connected areas can retire only with fresh reliable viewer tracking, after predictive/recent-view grace and every existing ownership, sound, animation, lighting, navigation, editing and collision guard releases them. One preparation runs at a time and is cancelled when viewing or inputs change. Failed preparation leaves native objects intact and does not retry every frame; changed inputs or renewed demand allow a later attempt. Viewing a dormant area or invoking an action restores it through the existing loading path. Running physics retains each active dynamic actor and its local collision, ground, water and physical-connection dependencies, including sleeping and pending bodies. Unknown actor bounds conservatively retain the environment; unrelated static areas may retire. Explicit Start prepares resident free dynamic actors and their local dependencies; unused dormant content stays unloaded, and resident imported-geometry failures with accepted collision bounds stop dependent actors locally. Unknown bounds or placement retain the global stop; repairing geometry does not silently resume failed motion. Saved capacity, spatial-query limits and native budgets remain separate; this does not promise offscreen simulation or establish physical loading performance. Missing objects are never treated as deleted by this report.",
       "input": {
         "type": "object",
         "properties": {
@@ -48307,7 +48421,7 @@
           "offset": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 66.0
+            "maximum": 258.0
           }
         },
         "required": [
@@ -48548,7 +48662,7 @@
           "offset": {
             "type": "integer",
             "minimum": 0.0,
-            "maximum": 66.0
+            "maximum": 258.0
           }
         },
         "required": [
@@ -48759,7 +48873,8 @@
             "scale": "scale",
             "red": "red",
             "green": "green",
-            "blue": "blue"
+            "blue": "blue",
+            "loading": "loading"
           }
         },
         {
@@ -48776,7 +48891,8 @@
             "scale": "scale",
             "recipe": "recipe",
             "collision": "collision",
-            "physics": "physics"
+            "physics": "physics",
+            "loading": "loading"
           }
         }
       ],
@@ -49342,7 +49458,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
-      "sha256": "bfb78682b6f94157552ae3aa023bb2aebac6469c5bd0abd66a9912f367e63fcf"
+      "sha256": "9619659cee98d5af82656d2e20e3e4194a89de7b61299f34ce2b1724a037c7a5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AquaticNavigationSchema.cs",
@@ -49378,7 +49494,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/BatchCreationCapability.cs",
-      "sha256": "bfac3581d150e25ce044749113bcfa13fa90a50fe417cd2ac577316b52047ce7"
+      "sha256": "5f07150ab74b0349ad9c6c73c7a78c5f6cd0d15276f31668ced73cb26e3120d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModule.cs",
@@ -49426,7 +49542,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactInputFacts.cs",
-      "sha256": "93f3553f7464c133a7ac76f2d1c3fb4e095d33824685239807964cf39dc5d797"
+      "sha256": "aa8546f578da99193d34e48e8a11e48ecc2f4d71341248306dd4ed2cc44b2ac8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContactWorkFacts.cs",
@@ -49454,7 +49570,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CopyObjectCapability.cs",
-      "sha256": "cec855f7a35739f3d1d3d4783dc778d090ab43981b3de330f3ccd76b586db641"
+      "sha256": "b21eb92bc549aa1f8858475f958bc65cedc5a942a8f12aa9d117f9cea2f5367b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateObjectCapability.cs",
@@ -49462,7 +49578,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreateTemplateCapability.cs",
-      "sha256": "bf8f6ecf22b1ff0aff82755194bbec5e6c2b2461993895c5f34a4fc25c3b9582"
+      "sha256": "2b1ce02251933b264840817d6467e36912b1d02014455a5dd864f784e0a29350"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationLoading.cs",
+      "sha256": "a866f40bb126282a4ec3cdcbe50f7df3ec201e36c25e07d15ee70d27f2a4e697"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
@@ -49474,7 +49594,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingCapabilities.cs",
-      "sha256": "30cdc8a79bb0aac78c33afbae4024f6e0d8705346f6c09ef12820a1dad0af2d9"
+      "sha256": "881e26d8b2523655beb944ab52a15558b5cabe383704999478ae118e0968d9c5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/DrawingResolveCapability.cs",
@@ -49626,7 +49746,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NativeObjectResourceFacts.cs",
-      "sha256": "80f5ebb7f1902b2b6994c330010728886ba87a580530588c87fa781085949fe7"
+      "sha256": "d75db93d862cf4542000c4fa96adc1ad61b5b4d99bd8475d54e178da7b2e4519"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/NativePhysicsResourceFacts.cs",
@@ -49646,7 +49766,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectCapabilities.cs",
-      "sha256": "1a916bb0ff75d2666f2a164206f34eaf557d5fa5ac6f318005dfc9aa3b24c1c3"
+      "sha256": "2a3211deb3a0968a2e927176b404836e1e2480504af60c49e3fad80fc0357471"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ObjectFeetCapability.cs",
@@ -49670,7 +49790,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PersistedEditOperation.cs",
-      "sha256": "0b551a885b691abdc349ab661a3ff0bcf0248738ddc066deeb71cd5020cfc271"
+      "sha256": "100f49941d90423012569e16fc9d785cdf92974b37d3b43c41624ed6dff564bc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicalSculptCapability.cs",
@@ -49682,7 +49802,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsInputFacts.cs",
-      "sha256": "50657db3d82c21ed306b8542f93e685ac144780eb538a418757f46f924e7754e"
+      "sha256": "03d92ec35d3bd8d5dbd8b7e2266bc42c315d887cb4380bde9dc9c4e60ff9b8a0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/PhysicsSimulationCapability.cs",
@@ -49734,7 +49854,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "0c2bd718a6aa93d45d86b805e0c29c66a1a15ed451b7c82fefb8c905e1caaa55"
+      "sha256": "5e4dae71251880b5c25e9717aa9e9a1927fb1a166792cb3d141d53dda7947b01"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -49830,7 +49950,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
-      "sha256": "452bf8cc8e55f0bc412e9ddb48db5cc60f75beacbc89708b25b28224680576d0"
+      "sha256": "b50854be61814fbd665229a7d17672be722a37204445f3fd2e19c7416cd726a3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterHabitatFacts.cs",
@@ -49886,7 +50006,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldGroundFacts.cs",
-      "sha256": "5978b9d1df7a83f6d3aa8ca2fe9f8f54f9e79b0df4252aec182698130f27317e"
+      "sha256": "81030af694c98aeb7a8a7de8a219099d88a655103a5cefac04caad292cc0dc43"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WorldIdentityFacts.cs",
@@ -50026,7 +50146,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationBatch.cs",
-      "sha256": "d5e17ac6adce6fc239e7d9ad7d760066ba4918fd0bac9869c3f7b545f62d0927"
+      "sha256": "4b5d414c36680e310c0ae33d729a21d081dc4e45647c006cb114acaf912982e3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
@@ -50210,11 +50330,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomCreation.cs",
-      "sha256": "d4257ae18b7266b7860b6c7d35fcd0111647ec80587c54c3468e077035e41862"
+      "sha256": "9a2c128ac725f4d0330e65be37ee85705dad984870bc1270dcce92e04c7c8d1f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomEdit.cs",
-      "sha256": "6bc1b18bbc48e60659a1e8edb9082028dc71088683c60008e068601af46fb197"
+      "sha256": "f7487b107e931f24b48ed8a2002e7fe2da760d630e1a716cc7e7a57eafef1720"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PendingRoomSettings.cs",
@@ -50338,7 +50458,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgent.cs",
-      "sha256": "cfcd7c348119942a9f2d5ab2097bc6f2b0876a91a951cc708656cec1ab03aacc"
+      "sha256": "65508587fc68a3ae60ae87fcdd1104d119910bae4f738914805c7d64a7e60953"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAgentWire.cs",
@@ -50382,7 +50502,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCapabilityCatalog.cs",
-      "sha256": "ab2a621598a5b795d0e3598706ccfe3c268f6f499e0fe9651955df655da08040"
+      "sha256": "f8868e0683361c5d2a3a4e055af26c015d2191823193ad5de05b2a0fd6b18089"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCheckpointSave.cs",
@@ -50421,6 +50541,10 @@
       "sha256": "92a55444bb81a26187191243abc2ba8cabc00ad9b6ddafa469871889acefbf4f"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
+      "sha256": "2572f682459373d446a80cd56a14cb99c9a16ef94c97cd4516924d9dd593d338"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDisplayAdmission.cs",
       "sha256": "c1b835ce6585f79b1e5239218f321f9efc58ecfaa3f778ef500ea7c8fef16d9a"
     },
@@ -50430,7 +50554,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "67f2394ce76e671c396c194e4f2e51f38de6a07acf5fdd4de2af542cb7f51fb1"
+      "sha256": "41cda5e64a3d56ad06c83057769188ce3c255c6e7d9c5ff48326c7a66829954f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -50450,15 +50574,15 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditPreparation.cs",
-      "sha256": "fb225f7efeaa69acac4a314abb1b94b59cd767c7788358ab5ff6b485f950104d"
+      "sha256": "066480ef126fb95375ed52d92406a6a4b7b3469ffe853ff1bf4f3ef18c8e2f8a"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.Temporary.cs",
-      "sha256": "f769ac51e5f29cedf73eab7e9ddd9ecd309df8b78e6a7efd821d725c2ce5b99d"
+      "sha256": "7c12ecf811065cd66cb740b3484ea16f7d79679312132bfed20cb49ba42f39de"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEditor.cs",
-      "sha256": "1784216d00ef620a472864559b99b0d2646ce16e311f4e67d1b05febfe837c23"
+      "sha256": "9e91445c32ef4cf8dfb7227c0cfdfa18dc01ae6e46730f2f4b1a86906bea606c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentEdits.cs",
@@ -50527,6 +50651,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHeightFieldTransfer.cs",
       "sha256": "407df1e7c306552a9c633d83ecb56a40955dd01d98dff8135efcfb9cc3d1a316"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomHistoryResidency.cs",
+      "sha256": "6ff2ede27bf1358f95bdbb34de272b648696d11e7e1d38014c117cc6b078960b"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLayerPresentation.cs",
@@ -50722,7 +50850,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparedEdit.cs",
-      "sha256": "fbc0ca065322bfe6d5dd7135663b91786ec21570d517151632a80fb69217b58d"
+      "sha256": "ee9bcb5d16c479482c339977228de9af0f2e95f72275b0746c505bbc8b7faf48"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRecipe.cs",
@@ -51466,7 +51594,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomOwnership.cs",
-      "sha256": "fad1028aed28be5379da4065d88dc3954a08823334d3d2044788dfd66fac48cb"
+      "sha256": "ef35a4c027be33a2a5ac0167bddfa211d32bc0058bd2d8190ba205eae2b7c794"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsLayers.cs",
@@ -51778,11 +51906,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "b19c6963c21589aec5285b2058c71b73b1cb8d205bf30fbc80dbbdfcab42a44a"
+      "sha256": "448e4030263507efb03d53b7646bc398f6c2596247ea0ae028e7b45a8002deb5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
-      "sha256": "8c7852b0e0ec0e9107911390ec7b503779b6e745771d7f942f544b21460f6c9a"
+      "sha256": "9c8b88f52d0c07a81b8622cd448b53013b66ca2126b37e0e2d16b0d69149e43e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/CalendarSubscription.cs",
@@ -51818,7 +51946,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMachine.cs",
-      "sha256": "2ec99eeb5d6f22fd85823ccb32e9fbf33f677ea03755332e04e4f03f06aece9e"
+      "sha256": "b64101faa34db3a8cb356b28c28ea235ade08c602494a3bdc69b713d46dd021c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/ProgramMemoryDocument.cs",
@@ -51854,7 +51982,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/InvocationReceipts.cs",
-      "sha256": "afad9faed7ed9bb8567b85fc443950ed04a0272d02cfea3d606fe0b26a51d8ff"
+      "sha256": "e69c1e319f52da58dd78c6a071178c196c6414d2b99d02d8e093518be71f877d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/InvocationRecovery.cs",
@@ -51898,7 +52026,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleInvocations.cs",
-      "sha256": "6d06bcb69768768ae624218ded01a512f127f98e2c633e92b3e84de68ef1e1bd"
+      "sha256": "58575f817934de9089f3becdb40e63f8c1cf4529a24f8249b08bc3f3898b2b41"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleLifecycleSave.cs",
@@ -51914,7 +52042,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleScheduler.cs",
-      "sha256": "3bcd47d7cc9d9f3cfb8974f2636577eeee7be6748f07b21a06b58e3336474113"
+      "sha256": "1ae0a0f20a41dcdc90ce2ad896dd3e509f5d9bc42075b8cd80a48ea375cdffe2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Rules/RuleStorage.cs",

@@ -45,10 +45,19 @@ namespace Maestro.Quest.Programs
         internal ProgramValue Constant(JToken expression)=>constants[expression];
         int expressions;
         public static IReadOnlyDictionary<string,ProgramDataType> Facts=>BehaviourCatalog.FactTypes;
-        public static bool TryParse(string source,out BehaviourProgram program,out string error)
+        public static bool TryParse(string source,out BehaviourProgram program,out string error)=>
+            TryRead(source,false,out program,out error);
+        // Only a validated capability call can create this private single-action
+        // wrapper. User-authored programs and imported modules retain their limit.
+        internal static bool TryInvocation(JObject call,out BehaviourProgram program,out string error) {
+            program=null;error="Invalid capability invocation";
+            if(!Maestro.Quest.Creation.RoomCapabilityCatalog.ValidCall(call)||BehaviourCatalog.Action((string)call["id"])==null)return false;
+            return TryRead(FromInvocation(call),true,out program,out error);
+        }
+        static bool TryRead(string source,bool invocation,out BehaviourProgram program,out string error)
         {
             program=null;error=null;
-            try {var value=new BehaviourProgram();value.Read(source);program=value;return true;}
+            try {var value=new BehaviourProgram();value.Read(source,invocation);program=value;return true;}
             catch(Exception ex) when(ex is ProgramFault || ex is JsonException || ex is ArgumentException || ex is OverflowException) {error=ex.Message;return false;}
         }
         public int NodeCount=>ids.Count;
@@ -102,19 +111,19 @@ namespace Maestro.Quest.Programs
             var needed=required.Split(' ',StringSplitOptions.RemoveEmptyEntries);var allowed=needed.Concat(optional.Split(' ',StringSplitOptions.RemoveEmptyEntries)).ToHashSet();
             Need(needed.All(key=>value.ContainsKey(key))&&value.Properties().All(p=>allowed.Contains(p.Name)),"Missing or unknown program field");
         }
-        void Read(string source)
+        void Read(string source,bool invocation=false)
         {
             Need(source!=null&&source.Length<=MaximumCharacters,"Program exceeds its size limit");
             using var reader=new JsonTextReader(new System.IO.StringReader(source)) {MaxDepth=48,DateParseHandling=DateParseHandling.None};
             var root=JObject.Load(reader,new JsonLoadSettings {DuplicatePropertyNameHandling=DuplicatePropertyNameHandling.Error});
             Need(!reader.Read(),"Extra data follows the program");
             var raw=root;
-            root=ProgramModules.Link(raw,value=>new BehaviourProgram().ReadRoot(value));
-            ReadRoot(root);
+            if(!invocation)root=ProgramModules.Link(raw,value=>new BehaviourProgram().ReadRoot(value));
+            ReadRoot(root,invocation?Maestro.Quest.Creation.RoomCapabilityCatalog.MaximumInvocationResources:MaximumResources);
             referencedIds=raw.Descendants().OfType<JValue>().Where(x=>x.Type==JTokenType.String&&Guid.TryParseExact((string)x,"N",out _)).Select(x=>(string)x).Distinct().ToArray();
             Source=raw.ToString(Formatting.None);
         }
-        void ReadRoot(JObject root)
+        void ReadRoot(JObject root,int resourceLimit=MaximumResources)
         {
             Need((root["version"]?.Type==JTokenType.Integer||root["version"]?.Type==JTokenType.Float)&&((double)root["version"]==2||(double)root["version"]==3),"Unsupported program version");
             Version=(int)root["version"];Keys(root,Version==3?"version entry resources functions state events":"version entry resources functions","dataVersion parallelVersion memoryVersion");
@@ -128,7 +137,7 @@ namespace Maestro.Quest.Programs
                     Need(System.Text.RegularExpressions.Regex.IsMatch(name,@"^user\.[a-zA-Z0-9_]{1,32}$")&&type!=ProgramType.Void&&CustomEvents.TryAdd(name,type),"Invalid or duplicate custom event");}
             }
             Entry=Text(root["entry"]);
-            foreach(var item in Array(root["resources"],MaximumResources)) {string id=Text(item);Need(RuleDocument.IsTarget(id)&&resources.Add(id),"Invalid or duplicate resource");}
+            foreach(var item in Array(root["resources"],resourceLimit)) {string id=Text(item);Need(RuleDocument.IsTarget(id)&&resources.Add(id),"Invalid or duplicate resource");}
             var definitions=Array(root["functions"],MaximumFunctions);Need(definitions.Count>0,"A program needs a function");
             foreach(var token in definitions)
             {

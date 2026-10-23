@@ -24,7 +24,7 @@ namespace Maestro.Quest.Programs
         public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[]{"room.capacity","drawing.valid","storage.writable"};
         public override string Description=>"Create one editable 3D pencil stroke through the physical pencil's saved creation path. points are ordered object-local metres, within 10 metres of its origin; x/y/z place that origin in room metres, and scale uniformly scales the stroke and radius. Supply 2–64 points per call, radius .001–.02 metres, and RGB colour. Use object.drawing.edit to grow or reshape it up to the native 2048-point stroke limit; all saved strokes together stay within 32768 points. Every intermediate shape must remain visible and valid. Return the exact new objectId only after saving with one Undo, or locally in a temporary room until Keep. Selection, pencil mode and other actors are unchanged. No automatic animation or physics start. Drawings are fixed initially; existing physics controls can change them. Collision uses the existing bounded approximate shape, not a flexible rope or a per-segment surface. Replay cannot create another stroke. No numeric action adapter is required."+PersistedEditOperation.CreationPersistence;
-        public override JObject InputSchema=>Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1),["radius"]=Number(.001,.02),["points"]=List(DrawingData.Point(),2,64)});
+        public override JObject InputSchema=>CreationLoading.Inputs(Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1),["radius"]=Number(.001,.02),["points"]=List(DrawingData.Point(),2,64)}));
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=DrawingData.Target()});
         public override JObject Example=>new() {["name"]="Pencil arch",["x"]=.3,["y"]=1.3,["z"]=.65,["scale"]=1,["red"]=.2,["green"]=.6,["blue"]=.9,["radius"]=.003,["points"]=DrawingData.ExamplePoints()};
         public override bool Validate(JObject args,out string error){error="Position must be within 25 metres of the room origin";return ObjectCapabilityData.Position(args).sqrMagnitude<=625&&RoomDocument.ValidateDrawing(DrawingData.Points(args["points"]),(float)args["radius"],out error);}
@@ -33,8 +33,9 @@ namespace Maestro.Quest.Programs
         {
             var editor=context.Editor;string name=(string)args["name"],id=null;var position=ObjectCapabilityData.Position(args);float scale=(float)args["scale"],radius=(float)args["radius"];
             var color=ObjectCapabilityData.Color(args);var points=DrawingData.Points(args["points"]);
+            bool deferCreations=CreationLoading.Deferred(args);
             return PersistedEditOperation.StartCreation(editor,
-                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateDrawing(name,position,scale,color,radius,points,out id,out pending,out issue),
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateDrawing(name,position,scale,color,radius,points,out id,out pending,out issue,deferCreations:deferCreations),
                 ()=>new JObject {["objectId"]=id},out operation,out error);
         }
     }

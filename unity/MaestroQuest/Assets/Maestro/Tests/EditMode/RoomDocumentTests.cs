@@ -105,7 +105,7 @@ namespace Maestro.Quest.Tests
         public void ObjectAndStrokeBudgetsRejectBeforeChangingScene()
         {
             var journal = new RoomJournal(EmptyRoom());
-            var tooMany = Enumerable.Range(0,65).Select(_ => new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.Block }).ToArray();
+            var tooMany = Enumerable.Range(0,RoomDocument.MaximumObjects+1).Select(_ => new RoomObjectData { id = Guid.NewGuid().ToString("N"), kind = RoomObjectKind.Block }).ToArray();
             Assert.That(journal.Apply(tooMany,Array.Empty<string>(),out _),Is.False);
             var tooLong = Drawing(); tooLong.points = Enumerable.Range(0,2049).Select(i => Vector3.right * (i * .001f)).ToArray();
             Assert.That(journal.Apply(new[] { tooLong },Array.Empty<string>(),out _),Is.False);

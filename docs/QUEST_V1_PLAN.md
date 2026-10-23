@@ -4,8 +4,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[restoration checkpoint](#restoring-unloaded-objects--2026-10-23) records this
+[saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
+[restoration](#restoring-unloaded-objects--2026-10-23),
 [physical discovery](#linear-physical-discovery--2026-10-23),
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -139,8 +140,11 @@ APK filtering, signing, installation and physical acceptance are separate result
 
 ### Larger-world capacity implementation gate
 
-Saved existence and native simulation capacity must become separate contracts
-before expanding the current 64-creation quota. The October 21 source audit found
+Saved existence and native simulation capacity are separate contracts. The
+October 23 deferred-creation increment adds a candidate 256-creation saved limit
+while retaining the 128-root native reservation limit. Its editor verification
+and remaining physical acceptance are recorded in the current checkpoint below.
+The preceding work established prerequisites for expanding the former 64-creation quota. The October 21 source audit found
 that liquid discovery derived its object limit from the saved-room limit and
 reserved quadratic physical-connection work. The October 23 physical discovery
 increment replaces the repeated full-edge traversal with an adjacency snapshot,
@@ -16310,3 +16314,74 @@ river/spill and underwater scope and measured Quest limits remain unfinished.
 No fresh full Headless/Book journey, Android compilation, headset, paid provider,
 signing, deployment or Meta operation was performed for this increment. Prior
 Headless at `db9eeb2e` and rendered Book at `0eed618d` remain separate evidence.
+
+
+## Saved-world capacity and deferred creation — 2026-10-23
+
+Status: complete discovered native coverage with a test-only rerun; not release acceptance.
+
+All five shared `object.create` kinds and atomic `object.batch.create` accept the
+optional `loading` choice. `now` remains the default; `onDemand` saves exact
+canonical definitions without allocating roots. Acceptance precedes dormant
+registration; receipts do not claim visible or simulated readiness. Later native
+actions acquire their targets through the same bounded loader.
+
+Transient cold membership is recorded only on successful history acceptance,
+on the existing bounded object deltas. Failed preparations cannot mutate Undo
+hints. Undo/Redo, temporary snapshots and Discard preserve cold saved existence,
+including deleted objects; a later live view overrides an older cold hint.
+
+Format 42 admits 256 saved creations plus book/Maestro. The versioned store still
+admits at most 4 MiB, and old formats retain their previous object-count bound.
+NativeObjectResources stays at 128 process-wide roots. Existing model, recipe-part,
+component and simulation budgets are unchanged. `world.creationBudget` reports
+saved slots without loading anything. Area, appearance and visual-layer member
+paging derives from the saved limit; compact context observations and paged search
+keep their existing output bounds. The legacy web receive ceiling remains 66:
+current native updates use the four-object overview, not the complete directory.
+One-off action conditions, receipt resources and ownership claims have a separate
+258-identity bound generated for the native and web clients. Program/module
+resource declarations remain at 66. Full-area updates retain every target revision
+guard and durable receipt identity; increasing saved capacity does not bypass
+ownership or convert unfinished actions into success.
+Internally generated one-off wrappers use the same program machine with their
+own resource bound. Arbitrary saved source and imported modules cannot opt into
+that bound. The scheduler reads the version of the actual running machine rather
+than reparsing a one-off wrapper as a saved program.
+
+
+Appearance and visual-layer **editing** still accepts at most 66 members and
+requires native readiness. Their membership paging can describe the larger world,
+but editing one definition shared by more members needs a follow-up metadata
+transaction that preserves dormant members without activating them. This remains
+a release gate, not an advertised large-world appearance capability.
+
+
+Verification covers the complete discovered native inventory: **1,642 EditMode +
+2,276 PlayMode cases passed**, with three explicitly named optional private-asset
+probes skipped because no private input was selected. The first full PlayMode
+process exited 2 on six old assertions expecting Undo to load deleted cold
+objects. After correcting those assertions, all 44 tests in the six affected files
+passed with clean native exit. Runtime and every other native input stayed
+byte-identical; exact source and case reconciliation retains the original failed
+report and attributes the repaired results to their rerun. This is complete
+coverage with a test-only rerun, not a claim that the original invocation passed.
+
+All **1,916 shared web/Quest-book/deterministic-headless tests**, **76 prompt tests**,
+TypeScript and the catalog source check passed. The web groups are 1,519 room,
+355 Quest-book and 42 deterministic headless cases. These use local/injected
+providers; no paid-provider acceptance is implied. Fourteen protected files
+remain unchanged. Source reconciliation covers 3,546 native inputs.
+
+The 256-creation reproduction visits eight areas with a peak of 32 native roots,
+keeps saved state unchanged, and stores 304,345 bytes. Context remains two objects
+for that fixture. These are Editor measurements against the unchanged 128-root
+budget, not Quest timing or frame-rate claims. Full-area actions check all 256
+revision guards, preserve durable receipts and leave cold targets unloaded.
+Evidence and reconciliation are under `.quest-evidence/deferred-creation-20261023/`.
+
+This increment does not establish headset performance, offscreen simulation,
+large imported-avatar populations or a fully incremental index. Current display
+demand and accepted reconciliation still visit saved members; query allocations
+and capacity profiling remain release work. No device, provider, signing,
+deployment or Meta actions are included. The full v1 goal remains active.

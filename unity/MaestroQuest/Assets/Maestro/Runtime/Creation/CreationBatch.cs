@@ -155,9 +155,9 @@ namespace Maestro.Quest.Creation
             return candidate.Validate(out error);
         }
         public bool CanCreateBatch(CreationBatch batch,out string error)=>PrepareCreationBatch(batch,out _,out _,out error);
-        public bool CreateBatch(CreationBatch batch,out string[] ids,out string error) {
+        public bool CreateBatch(CreationBatch batch,out string[] ids,out string error,bool deferCreations=false) {
             ids=null;if(!PrepareCreationBatch(batch,out var objects,out var resources,out error))return false;
-            if(!CommitPersisted(objects,Array.Empty<string>(),"Structure created — one Undo removes its pieces and resources",false,out error,appearanceEdits:new AppearanceEdits{Replacements=resources.appearances},audioEdits:new AudioDefinitionEdits{Replacements=resources.audioSources},environmentEdits:new EnvironmentProfileEdits{Replacements=resources.environmentProfiles},visibilityEdits:new VisibilityLayerEdits{Replacements=resources.visibilityLayers}))return false;
+            if(!CommitPersisted(objects,Array.Empty<string>(),"Structure created — one Undo removes its pieces and resources",false,out error,appearanceEdits:new AppearanceEdits{Replacements=resources.appearances},audioEdits:new AudioDefinitionEdits{Replacements=resources.audioSources},environmentEdits:new EnvironmentProfileEdits{Replacements=resources.environmentProfiles},visibilityEdits:new VisibilityLayerEdits{Replacements=resources.visibilityLayers},deferCreations:deferCreations))return false;
             ids=objects.Select(o=>o.id).ToArray();return true;
         }
     }

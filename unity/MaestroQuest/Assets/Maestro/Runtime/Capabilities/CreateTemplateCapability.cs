@@ -17,7 +17,7 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema {get {
             var choice=Choice(CreationTemplates.All.Select(entry=>entry.Hash).ToArray());choice["x-enum-labels"]=new JObject(CreationTemplates.All.Select(entry=>new JProperty(entry.Hash,entry.Name)));
             choice["x-enum-images"]=new JObject(CreationTemplates.All.Select(entry=>new JProperty(entry.Hash,"quest/templates/"+entry.Hash+".png")));
-            return Object(new JObject {["templateHash"]=choice,["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4)});
+            return CreationLoading.Inputs(Object(new JObject {["templateHash"]=choice,["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4)}));
         }}
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))});
         public override JObject Example=>new() {["templateHash"]=CreationTemplates.All.First(entry=>entry.Id=="cup").Hash,["name"]="",["x"]=.3,["y"]=1.3,["z"]=.65,["scale"]=1};
@@ -29,9 +29,10 @@ namespace Maestro.Quest.Programs
         public override bool Start(CapabilityContext context,string runId,JObject args,out CapabilityOperation operation,out string error) {
             operation=null;if(!CanRun(context,args,out error))return false;var entry=CreationTemplates.Find((string)args["templateHash"]);
             var editor=context.Editor;string name=(string)args["name"],id=null;var position=ObjectCapabilityData.Position(args);float scale=(float)args["scale"];
+            bool deferCreations=CreationLoading.Deferred(args);
             return PersistedEditOperation.StartCreation(editor,
                 (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateRecipe(string.IsNullOrEmpty(name)?entry.Name:name,position,scale,entry.Recipe,entry.Collision,entry.Physics,out id,out pending,out issue,
-                    surfaces:entry.Surfaces,drawingTips:entry.DrawingTips,snapPoints:entry.SnapPoints,containers:entry.Containers,heightFields:entry.HeightFields,sculptTips:entry.SculptTips,materialStores:entry.MaterialStores),
+                    surfaces:entry.Surfaces,drawingTips:entry.DrawingTips,snapPoints:entry.SnapPoints,containers:entry.Containers,heightFields:entry.HeightFields,sculptTips:entry.SculptTips,materialStores:entry.MaterialStores,deferCreations:deferCreations),
                 ()=>new JObject {["objectId"]=id},out operation,out error);
         }
         internal static BehaviourCatalog.FactDefinition Fact()=>new("creation.template",ProgramDataType.Read(JObject.Parse("{\"record\":{\"index\":\"number\",\"total\":\"number\",\"hash\":\"text\",\"id\":\"text\",\"name\":\"text\",\"details\":{\"record\":{\"description\":\"text\",\"tags\":\"text\",\"author\":\"text\",\"license\":\"text\"}},\"cost\":{\"record\":{\"parts\":\"number\",\"tracks\":\"number\",\"generatedVertices\":\"number\",\"collisionPieces\":\"number\"}},\"physics\":{\"record\":{\"mode\":\"text\",\"shape\":\"text\",\"mass\":\"number\"}}}}")),"Starter object template",

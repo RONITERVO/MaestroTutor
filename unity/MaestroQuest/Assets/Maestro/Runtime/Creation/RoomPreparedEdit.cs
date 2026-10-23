@@ -14,7 +14,7 @@ namespace Maestro.Quest.Creation
         // The candidate and history delta have one owner and never expose mutable
         // source references. Preparation neither advances revisions nor consumes
         // history. Save/admission callers accept this exact candidate once.
-        internal sealed class PreparedEdit:IDisposable
+        internal sealed partial class PreparedEdit:IDisposable
         {
             readonly RoomJournal owner;
             readonly Change change,undoTop,redoTop;
@@ -116,7 +116,7 @@ namespace Maestro.Quest.Creation
                 foreach(var id in regionMemberRevisions.Keys.ToArray())regionMemberRevisions[id]=owner.ObjectRevision(id);
                 foreach(var id in visibilityRevisions.Keys.ToArray())visibilityRevisions[id]=owner.VisibilityRevision(id);
                 acceptedLightingRevision=owner.LightingRevision;
-                accepted=true;error=null;return true;
+                PublishDormancy();accepted=true;error=null;return true;
             }
             // Reserve only the final save-before-apply boundary. Runtime placement,
             // viewer and clock checkpoints may advance; another authored edit may not.

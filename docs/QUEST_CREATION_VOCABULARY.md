@@ -29,10 +29,10 @@ room capacity, aggregate geometry and storage checks still apply.
 
 The current `object.create` action has five kinds: primitive, recipe, copy,
 drawing and template. All use completion duration through the same pending edit
-operation as placement, paint and deletion. The book, agent and programs wait for
-native application and durable saving before receiving the exact new `objectId`.
-In temporary play, completion confirms the live edit and local Undo; only Keep
-makes it durable. Imported-model loading remains a separate bounded operation.
+operation as placement, paint and deletion. The book, agent and programs wait for acceptance and durable saving before
+receiving the exact new `objectId`. With default immediate loading this includes
+native application. In temporary play, completion confirms the accepted edit and
+local Undo; only Keep makes it durable. Imported-model loading remains a separate bounded operation.
 
 Waiting for earlier edits does not allocate a saved object or native geometry.
 The shared queue rechecks capacity, workspace and any copy-source revision before
@@ -46,9 +46,48 @@ before retrying. A returned result is detached from the caller and never changes
 Duplicate one-off receipt delivery returns the historical result without creating
 again, including after Undo. Programs retain their native-result authority and
 per-run creation limits. Existing synchronous RoomEditor callers retain their
-completion contracts and reuse the same data builders. These changes do not
-increase world capacity or establish a frame-time guarantee. See the current
+completion contracts and reuse the same data builders. The current saved-world and native limits are separate contracts, described
+below; neither establishes a frame-time guarantee. See the current
 verification checkpoint in [the v1 plan](QUEST_V1_PLAN.md).
+
+## Saved existence and native loading
+
+`deferredCreation.v1` adds optional `loading: "now" | "onDemand"` to all five
+`object.create` kinds and to `object.batch.create`. Omission means `now`, preserving
+the familiar immediate creation behavior. The common generated form labels these
+choices **Now** and **When needed**; agents and programs use the same argument.
+
+`onDemand` validates and saves exact canonical definitions and returned IDs without
+allocating visible roots. A successful receipt confirms saved existence, not a
+visible model, animation or running simulation. Nearby observation and later
+native actions use the existing bounded acquisition path. A program acting on
+the returned ID must wait for that action's actual completion. Imported-model
+library and standalone import workflows retain their existing contracts; this
+option does not fetch or substitute assets. Copying keeps its existing source
+readiness and ownership checks; the loading choice controls the new copy.
+
+Private preparation records deferred identities; they become dormant native entries
+only after the journal accepts the edit. Cancellation or failure before acceptance
+publishes neither identities nor native entries. After acceptance, pending saves
+retain the existing drain/recovery rules. Undo/Redo records transient cold membership
+on its existing bounded deltas. Restoring a deleted unloaded object does not allocate
+it, and a later activated view takes priority over an older cold history hint.
+Temporary Keep/Discard follows the same saved-checkpoint distinction.
+
+Room format 42 permits **256 saved creations**, plus the included book and Maestro.
+Older supported formats keep their previous 64-creation validation and normalize
+through the existing versioned store. The file admission limit remains 4 MiB.
+`world.creationBudget` reports `saved`, `savedLimit` and `remaining` without
+loading anything. Native root reservations remain capped independently at **128**,
+including preparing, disabled and retiring roots across workspaces. Geometry,
+model, physics, connection, recipe-part, image and other component limits still
+apply; available identity slots do not guarantee that an arbitrary creation fits.
+
+Frequent chat observations remain a four-entry context, and object search remains
+paged. Area and appearance/visibility member paging follows saved capacity. Large
+saved worlds do not become one giant chat payload or one compulsory native load.
+Editor capacity tests are development evidence; measured Quest performance and
+the physical/provider acceptance journeys remain release requirements.
 
 ## Physical creation buttons
 
@@ -196,3 +235,11 @@ Later checkpoint: explicit shared temporary rooms and grouped snapshot commits
 are now integrated in the catalog, book, native tray and receipt path. See
 [temporary-room semantics](QUEST_TEMPORARY_ROOM.md). The earlier verification
 counts and remaining-work list above describe the typed-creation checkpoint.
+
+
+The generated catalog distinguishes saved-world, invocation and program budgets.
+A one-off area action can address all 256 creations, with 258 available identity
+slots including the built-ins. Its conditions, ownership claims and recovered
+receipt retain every exact identity. Programs and imported modules still declare
+at most 66 resources. Each capability keeps its own argument bounds; the larger
+invocation envelope does not make all operations accept 258 members.

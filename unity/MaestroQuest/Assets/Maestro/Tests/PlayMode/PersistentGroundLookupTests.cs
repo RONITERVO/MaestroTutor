@@ -87,7 +87,10 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{data},Array.Empty<string>(),out var error),Is.True,error);AssertGroundLookup(ids,near);
             editor.Undo();AssertGroundLookup(ids,near);
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{ids[0]},out error),Is.True,error);AssertGroundLookup(ids.Skip(1).ToArray(),near);
-            editor.Undo();Assert.That(editor.Find(ids[0]),Is.Not.Null);Assert.That(editor.GroundDependencies(near),Is.Empty,"Restored native support is ready, not a stale dormant dependency");
+            editor.Undo();Assert.That(editor.HasSavedObject(ids[0]),Is.True);Assert.That(editor.Find(ids[0]),Is.Null);Assert.That(editor.NativeEntityDormant(ids[0]),Is.True);
+            Assert.That(editor.GroundDependencies(near).Select(x=>(string)x["target"]),Does.Contain(ids[0]));Assert.That(editor.GroundComplete(near),Is.False,"Undo must not claim unloaded support is ready");
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(editor.RegionFor(ids[0])));
+            Assert.That(editor.Find(ids[0]),Is.Not.Null);Assert.That(editor.GroundDependencies(near),Is.Empty,"Restored native support is ready, not a stale dormant dependency");
             editor.enabled=false;editor.enabled=true;Assert.That(editor.GroundComplete(near),Is.True);
         }
         [UnityTest] public IEnumerator PersistentGroundLookupKeepsNativeAvailabilityAndPoseFreshWithoutEdits(){

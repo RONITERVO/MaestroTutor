@@ -61,8 +61,9 @@ namespace Maestro.Quest.Creation
     [Serializable]
     public sealed class RoomDocument
     {
-        public const int CurrentVersion=41;
-        public const int MaximumObjects = 64;
+        public const int CurrentVersion=42;
+        public const int MaximumObjects = 256;
+        internal const int LegacyMaximumObjects = 64;
         public const int MaximumStrokePoints = 2048;
         public const int MaximumTotalPoints = 32768;
         public int version;
@@ -87,7 +88,7 @@ namespace Maestro.Quest.Creation
         public bool Validate(out string error)
         {
             error = null;
-            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != 38 && version != 39 && version != 40 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > MaximumObjects + 2)
+            if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 && version != 13 && version != 14 && version != 15 && version != 16 && version != 17 && version != 18 && version != 19 && version != 20 && version != 21 && version != 22 && version != 23 && version != 24 && version != 25 && version != 26 && version != 27 && version != 28 && version != 29 && version != 30 && version != 33 && version != 34 && version != 35 && version != 36 && version != 37 && version != 38 && version != 39 && version != 40 && version != 41 && version != CurrentVersion || objects == null || objects.Length < 2 || objects.Length > (version>=42?MaximumObjects:LegacyMaximumObjects) + 2)
                 return Fail("This room file has an unsupported version or object count.", out error);
             if(world!=null&&!world.Valid||version>=23&&world==null)return Fail("This room has an invalid world or region identity.",out error);
             if(version>=22&&(viewpoint==null||!viewpoint.Valid))return Fail("This room has an invalid saved viewpoint.",out error);
@@ -219,7 +220,7 @@ namespace Maestro.Quest.Creation
     /// <summary>Bounded object deltas preserve drawings without retaining whole scene copies.</summary>
     public sealed partial class RoomJournal
     {
-        internal sealed class Change { public RoomEditScope Scope; public bool WeatherTransition; public WorldTimeEdit TimeEdit; public RoomRegion[] BeforeRegions,AfterRegions; public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; public RoomWeather BeforeWeather,AfterWeather; }
+        internal sealed class Change { public string[] BeforeDormant=Array.Empty<string>(),AfterDormant=Array.Empty<string>(); public RoomEditScope Scope; public bool WeatherTransition; public WorldTimeEdit TimeEdit; public RoomRegion[] BeforeRegions,AfterRegions; public RoomObjectData[] Before, After; public RoomStructure[] BeforeStructures,AfterStructures; public RoomAudioDefinition[] BeforeAudio,AfterAudio; public RoomEnvironmentProfile[] BeforeEnvironments,AfterEnvironments; public RoomAppearance[] BeforeAppearances,AfterAppearances; public RoomVisibilityLayer[] BeforeVisibility,AfterVisibility; public RoomLighting BeforeLighting,AfterLighting; public RoomWorldTime BeforeWorldTime,AfterWorldTime; public RoomWeather BeforeWeather,AfterWeather; }
         readonly List<Change> undo = new(), redo = new();
         readonly Dictionary<string, RoomObjectData> items = new();
         readonly Dictionary<string,int> revisions = new();
@@ -273,7 +274,7 @@ namespace Maestro.Quest.Creation
         // A temporary room has its own local Undo history; the saved history
         // remains untouched until a successfully written snapshot is accepted.
         public RoomJournal Fork() => new(this);
-        public bool ApplySnapshot(RoomDocument document,out string error)
+        public bool ApplySnapshot(RoomDocument document,out string error,IEnumerable<string> beforeDormant=null,IEnumerable<string> afterDormant=null)
         {
             if(document==null) {error="Room snapshot is missing";return false;}
             if(!document.Validate(out error))return false;
@@ -292,7 +293,8 @@ namespace Maestro.Quest.Creation
             var layers=new VisibilityLayerEdits{Replacements=(document.visibilityLayers??Array.Empty<RoomVisibilityLayer>()).Where(x=>!visibilityLayers.TryGetValue(x.id,out var before)||!EquivalentVisibility(new[]{before},new[]{x})).ToArray(),Removals=visibilityLayers.Keys.Where(id=>!visibilityIds.Contains(id)).ToArray()};
             var appearanceIds=(document.appearances??Array.Empty<RoomAppearance>()).Select(x=>x.id).ToHashSet();
             var styles=new AppearanceEdits{Replacements=(document.appearances??Array.Empty<RoomAppearance>()).Where(x=>!appearances.TryGetValue(x.id,out var before)||!EquivalentAppearances(new[]{before},new[]{x})).ToArray(),Removals=appearances.Keys.Where(id=>!appearanceIds.Contains(id)).ToArray()};
-            if(!Apply(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out error,structureEdits:edits,audioEdits:sounds,environmentEdits:profiles,appearanceEdits:styles,visibilityEdits:layers,lighting:document.lighting??new RoomLighting(),worldTime:document.worldTime??new RoomWorldTime(),weather:document.weather??new RoomWeather(),regionEdits:regionEdits))return false;
+            if(!Prepare(replacements,items.Keys.Where(id=>!ids.Contains(id)).ToArray(),out var prepared,out error,structureEdits:edits,audioEdits:sounds,environmentEdits:profiles,appearanceEdits:styles,visibilityEdits:layers,lighting:document.lighting??new RoomLighting(),worldTime:document.worldTime??new RoomWorldTime(),weather:document.weather??new RoomWeather(),regionEdits:regionEdits))return false;
+            using(prepared){prepared.CaptureDormancy(beforeDormant,afterDormant);if(!prepared.Accept(this,out error))return false;}
             if(document.version>=22)viewpoint=document.viewpoint.Copy();return true;
         }
         public void InvalidateChangedObservations(RoomJournal other)

@@ -91,17 +91,17 @@ namespace Maestro.Quest.Creation
             BeginContentEdit(()=>CanDeleteObject(id,out var issue)?null:issue,
                 (out RoomObjectData[] values,out string issue)=>{values=Array.Empty<RoomObjectData>();issue=null;return true;},new[]{id},"Object deleted — Undo restores it",out pending,out error,publicationCheckpoint);
         bool BeginContentEdit(Func<string> validate,PrepareContent prepare,string[] removals,string message,
-            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint)
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,bool deferCreations=false)
         {
             return BeginPreparedEdit(validate,(out RoomJournal.PreparedEdit edit,out string issue)=>{
                 edit=null;return prepare(out var replacements,out issue)&&journal.Prepare(replacements,removals,out edit,out issue);
-            },message,out pending,out error,publicationCheckpoint);
+            },message,out pending,out error,publicationCheckpoint,deferCreations:deferCreations);
         }
         delegate bool PrepareJournalEdit(out RoomJournal.PreparedEdit edit,out string error);
         // Resource definitions and object deltas share admission, publication and
         // native completion. Build one candidate only after its queue turn arrives.
         bool BeginPreparedEdit(Func<string> validate,PrepareJournalEdit prepare,string message,
-            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null,IDisposable acceptanceLease=null,Func<string> validateApplied=null)
+            out PendingPersistedEdit pending,out string error,Action<string> publicationCheckpoint,Func<string> validatePending=null,IDisposable acceptanceLease=null,Func<string> validateApplied=null,bool deferCreations=false)
         {
             pending=null;
             if(PendingEditSave){error="Wait for the pending room edit to finish or cancel it first";return false;}
@@ -113,7 +113,7 @@ namespace Maestro.Quest.Creation
                 if(!prepare(out edit,out error))return false;
                 // Creation/component changes do not hold existing physical poses.
                 // Deletion needs only saved identity, including unavailable models.
-                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint,validateApplied);
+                pendingEdit=pending=new PendingPersistedEdit(this,edit,write,acceptanceLease,validatePending??validate,message,false,publicationCheckpoint,validateApplied,deferCreations:deferCreations);
                 edit=null;write=null;return true;
             } finally {edit?.Dispose();write?.Dispose();}
         }
@@ -132,7 +132,7 @@ namespace Maestro.Quest.Creation
             readonly Action<string> checkpoint;
             readonly Action afterNativeApply;
             readonly string message;
-            readonly bool applyPose,temporary;
+            readonly bool applyPose,temporary,deferCreations;
             readonly CancellationTokenSource cancellation=new();
             Task<RoomStorage.PreparedSave> preparation;
             Task cleanup;
@@ -142,10 +142,10 @@ namespace Maestro.Quest.Creation
             bool ended,success,accepted,nativeApplied,committing,released;
             string failure;
             JObject acceptedWorldTime,acceptedWeather;
-            internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint,Func<string> validateApplied=null,Action afterNativeApply=null)
+            internal PendingPersistedEdit(RoomEditor editor,RoomJournal.PreparedEdit edit,IDisposable write,IDisposable pose,Func<string> validate,string message,bool applyPose,Action<string> checkpoint,Func<string> validateApplied=null,Action afterNativeApply=null,bool deferCreations=false)
             {
                 this.editor=editor;journal=editor.journal;storage=editor.storage;this.edit=edit;this.write=write;
-                this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;this.validateApplied=validateApplied;this.afterNativeApply=afterNativeApply;
+                this.pose=pose;this.validate=validate;this.message=message;this.applyPose=applyPose;temporary=editor.TemporaryRoom;this.checkpoint=checkpoint;this.validateApplied=validateApplied;this.afterNativeApply=afterNativeApply;this.deferCreations=deferCreations;
             }
             public bool Drained=>released&&(cleanup==null||cleanup.IsCompleted);
             public bool Accepted=>accepted;
@@ -230,7 +230,7 @@ namespace Maestro.Quest.Creation
             {
                 committing=true;error=null;
                 try {
-                    using var native=RoomEditPreparation.TryCreate(editor,edit,out error);
+                    using var native=RoomEditPreparation.TryCreate(editor,edit,out error,deferCreations);
                     if(native==null)return Fail(error);
                     error=CurrentIssue();if(error!=null)return Fail(error);
                     bool runtimeChanged=edit.RuntimeProgressChanged;

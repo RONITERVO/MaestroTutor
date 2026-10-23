@@ -47,7 +47,9 @@ namespace Maestro.Quest.Tests
             editor.Undo();Assert.That(editor.Read(id).position,Is.EqualTo(old.position));Assert.That(editor.Find(id).transform.localPosition,Is.EqualTo(old.position));
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{id},out error),Is.True,error);Assert.That(editor.NativeEntityDormant(id),Is.False);
-            editor.Undo();Assert.That(editor.HasSavedObject(id),Is.True);Assert.That((bool)editor.Find(id),Is.True);Assert.That(editor.Read(id).motion.frames.Length,Is.EqualTo(2));
+            editor.Undo();Assert.That(editor.HasSavedObject(id),Is.True);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);
+            Assert.That(editor.Read(id).motion.frames.Length,Is.EqualTo(2));Assert.That(editor.NativeActivationPending,Is.False);
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(id).transform.localPosition,Is.EqualTo(old.position));
         }
         [UnityTest] public IEnumerator NativeAreaImmediateActivationWaitsForDestructionAndCancelledActivationCanRetry()
         {

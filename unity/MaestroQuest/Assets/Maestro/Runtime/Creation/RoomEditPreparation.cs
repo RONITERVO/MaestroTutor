@@ -18,6 +18,8 @@ namespace Maestro.Quest.Creation
     internal sealed class RoomEditPreparation:IDisposable
     {
         readonly List<IDisposable> resources=new();
+        readonly HashSet<string> deferred=new(StringComparer.Ordinal);
+        internal bool Defers(string id)=>deferred.Contains(id);
         readonly Dictionary<string,NativeObjectResources.Lease> objects=new();
         readonly Dictionary<string,NativePhysicsResources.Lease> bodies=new();
         readonly Dictionary<string,PreparedRoomConnection> connections=new();
@@ -115,12 +117,12 @@ namespace Maestro.Quest.Creation
             if(!candidate.Ready||candidate.Encoded!=JsonUtility.ToJson(source))throw new InvalidOperationException("Recipe source changed or preparation is incomplete");
             recipes.Remove(target);resources.Remove(candidate);return candidate;
         }
-        internal static RoomEditPreparation TryCreate(RoomEditor editor,RoomJournal.PreparedEdit edit,out string error)
+        internal static RoomEditPreparation TryCreate(RoomEditor editor,RoomJournal.PreparedEdit edit,out string error,bool deferCreations=false)
         {
             var prepared=new RoomEditPreparation();error=null;
             // Content balances reuse existing views; dormant/missing entities remain
             // dormant/missing. Quantity history never allocates geometry or bodies.
-            if(edit.LiquidContentsOnly)return prepared;
+            if(edit.LiquidContentsOnly){edit.CaptureDormancy(editor.NativeEntityDormant,prepared.Defers);return prepared;}
             try {
                 foreach(var id in edit.ChangedObjects.OrderBy(x=>x,StringComparer.Ordinal)) {
                     // Only this edit's resident targets need copies or geometry.
@@ -128,9 +130,11 @@ namespace Maestro.Quest.Creation
                     if(editor.NativeEntityDormant(id))continue;
                     var data=edit.ReadObject(id);if(data==null)continue;
                     bool missing=!editor.Find(data.id)&&!data.IsBuiltIn;
+                    if(missing&&((deferCreations&&!editor.HasSavedObject(id))||edit.RestoresDormant(id))){prepared.deferred.Add(id);continue;}
                     var before=missing?null:editor.Read(data.id);
                     foreach(var step in prepared.PrepareGeometry(editor,data,before)){}
                 }
+                edit.CaptureDormancy(editor.NativeEntityDormant,prepared.Defers);
                 return prepared;
             }catch(Exception exception){prepared.Dispose();error=exception is ModelImportException or RoomResourceLimitException?exception.Message:"The room edit could not prepare its geometry; inspect the objects before retrying";return null;}
         }

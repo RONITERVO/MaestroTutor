@@ -40,7 +40,7 @@ namespace Maestro.Quest.Rules
             public float ChannelDeadline,ChannelPoll;public string ChannelStatus;
             public int EventDepth,WaitSerial,WatchSlot=-1;
             public IProgramEventWatch Watch;public bool WatchPending;
-            public bool Reactive=>Sequence.Compile(out _).Version==3;
+            public bool Reactive=>Machine.Reactive;
             public ProgramMachine Machine;
             public string MemoryIdentity;public System.Threading.Tasks.Task<ProgramMemoryStore.Result> MemoryWrite;
             public Run Parent;public Run[] Children;public string TerminalNode;

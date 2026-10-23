@@ -15,7 +15,7 @@ namespace Maestro.Quest.Programs
         static ProgramDataType ResultType()=>OutputType(Object(new JObject{
                 ["worldId"]=Text(null),["regionId"]=Text(null),["found"]=new JObject{["type"]="boolean"},
                 ["availability"]=Choice("ready","pending","unavailable"),
-                ["dependencyCount"]=Number(0,64,true),
+                ["dependencyCount"]=Number(0,RoomDocument.MaximumObjects,true),
                 ["dependencies"]=List(Object(new JObject{["target"]=Text(null,32),["state"]=Choice("pending","unavailable"),
                     ["boundsKnown"]=new JObject{["type"]="boolean"}}),0,4),
                 ["position"]=PointSchema(),["normal"]=Vector(),

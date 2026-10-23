@@ -23,6 +23,12 @@ priority field. Agent and book one-off catalog calls remain Program role; the
 shared direct avatar control remains Control role. This does not grant an agent
 permission to choose a stronger route merely to bypass a conflict.
 
+The current catalog separately publishes the ownership-claim bound (258 per
+owner) and program resource declaration bound (66). One-off area edits can claim
+every saved member without widening saved programs or imported modules. The
+64-owner limit and role priorities are unchanged. Receipt and book validators
+read the same generated limits.
+
 Claims name a target and channel. `wholeTarget` conflicts with every channel on
 that target. Walking plus gaze can still run alongside the existing upper-body
 layer; taking over movement does not stop the arms. Version-2 programs retain

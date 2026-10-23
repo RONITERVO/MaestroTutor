@@ -118,3 +118,17 @@ it('lets users choose area loading through the same catalog schema as agents',()
  fireEvent.change(screen.getByLabelText('Area loading'),{target:{value:'together'}});
  expect(onChange).toHaveBeenCalledWith({...call,loading:'together'});
 });
+
+it('lets the book opt into deferred creation and return to the original immediate default',()=>{
+ const action=capabilityDefinition('object.create')!,args=structuredClone(action.example!);
+ const onChange=vi.fn(),screen=render(<CapabilityFields label="Create" schema={action.input} value={args} objects={[]} onChange={onChange}/>);
+ expect(args).not.toHaveProperty('loading');expect(onChange).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByLabelText('Include Create loading'));
+ const immediate=onChange.mock.calls[onChange.mock.calls.length-1][0];expect(immediate.loading).toBe('now');
+ screen.rerender(<CapabilityFields label="Create" schema={action.input} value={immediate} objects={[]} onChange={onChange}/>);
+ expect(screen.getByRole('option',{name:'When needed'})).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Create loading'),{target:{value:'onDemand'}});
+ const deferred=onChange.mock.calls[onChange.mock.calls.length-1][0];expect(validateCapabilityArguments(action.id,1,deferred)).toBeNull();expect(deferred.loading).toBe('onDemand');
+ screen.rerender(<CapabilityFields label="Create" schema={action.input} value={deferred} objects={[]} onChange={onChange}/>);
+ fireEvent.click(screen.getByLabelText('Include Create loading'));expect(onChange.mock.calls[onChange.mock.calls.length-1][0]).toEqual(args);
+});

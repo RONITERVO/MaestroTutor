@@ -166,8 +166,14 @@ namespace Maestro.Quest.Tests
                 yield return Prepared(blocker);var module=BehaviourCatalog.Action("object.create").Module;
                 Assert.IsTrue(module.Start(new CapabilityContext(editor,animations),"waiting",(JObject)PendingCreationCall("primitive")["arguments"],out waiting,out error),error);
                 int remaining=RoomDocument.MaximumObjects+2-editor.Snapshot().objects.Length;
-                var fill=Enumerable.Range(0,remaining).Select(i=>new RoomObjectData{id=Guid.NewGuid().ToString("N"),kind=RoomObjectKind.Block,name="Capacity "+i,position=new Vector3(2,1,1),physics=Maestro.Quest.Interaction.ItemPhysics.Fixed}).ToArray();
-                Assert.IsTrue(editor.ApplyAgentEdit(editor.Revision,fill,Array.Empty<string>(),out error),error);blocker.Dispose();yield return Drained(blocker);
+                while(remaining>0){
+                    int take=Math.Min(16,remaining);
+                    var batch=new CreationBatch{position=new Vector3(2,1,1),blueprint=new CreationBlueprint{pieces=Enumerable.Range(0,take).Select(i=>new CreationPiece{
+                        slot="piece_"+i,name="Capacity "+i,source=new CreationSource{kind="prototype",prototype=new CreationPrototype{kind="block",physics=new ObjectPhysicsSettings{mode="fixed",shape="automatic",mass=.5f}}}
+                    }).ToArray()}};
+                    Assert.IsTrue(editor.CreateBatch(batch,out _,out error,deferCreations:true),error);remaining-=take;
+                }
+                blocker.Dispose();yield return Drained(blocker);
                 Assert.AreEqual(RuleActionState.Failed,waiting.State(out error));StringAssert.Contains("creation limit",error);Assert.IsEmpty(waiting.Result);
                 Assert.AreEqual(RoomDocument.MaximumObjects+2,editor.Snapshot().objects.Length);Assert.IsTrue(editor.WriteGate.CanFreeze(out error),error);
             }finally{waiting?.Stop(false);blocker.Dispose();}

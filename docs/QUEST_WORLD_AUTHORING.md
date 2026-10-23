@@ -29,6 +29,14 @@ imports retain their asset identity and editable component configuration. Blocks
 and source are views of the existing canonical program. A shared world does not
 require putting chat, assets, physics and all history in one enormous JSON file.
 
+Saved existence is also distinct from native loading. The current creation
+contract supports immediate loading or loading when observation/actions need it,
+with the same exact IDs, history and receipts. Format 42 admits 256 saved creations;
+native roots remain independently bounded at 128, with other resource limits
+unchanged. See [typed creation](QUEST_CREATION_VOCABULARY.md#saved-existence-and-native-loading).
+This provides bounded authoring capacity, not a promise to simulate a whole town
+or establish Quest performance.
+
 ## What already exists
 
 The checked-in generated capability catalog is the current vocabulary authority. It includes

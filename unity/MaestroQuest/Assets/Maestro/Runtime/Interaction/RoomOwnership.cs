@@ -14,7 +14,7 @@ namespace Maestro.Quest.Interaction
     /// <summary>One all-or-nothing channel arbiter for programs, manual tools and ambient actors.</summary>
     public sealed class RoomOwnership
     {
-        public const int MaximumOwners=64,MaximumClaims=128;
+        public const int MaximumOwners=64,MaximumClaims=Creation.RoomCapabilityCatalog.MaximumInvocationResources;
         public readonly struct Interruption {
             public readonly string By,Label;public readonly bool PreservePlacement;
             public string Message=>"Interrupted by "+Label;

@@ -92,7 +92,13 @@ namespace Maestro.Quest.Tests {
             Assert.That(anchored.Synchronizations,Is.GreaterThan(initial));Assert.That(cold.Synchronizations,Is.EqualTo(stable));
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{id},out error),Is.True,error);long removed=anchored.Synchronizations;
             for(int i=0;i<5;i++)yield return null;Assert.That(anchored.Synchronizations,Is.EqualTo(removed));Assert.That(editor.DormantCollisionGuard(id),Is.Null);
-            editor.Undo();Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);yield return null;
+            // This checks anchor invalidation, independently of the viewer's display
+            // grace period which can retain the newly restored unknown envelope.
+            var camera=viewer.GetComponent<Camera>();Assert.That(camera,Is.Not.Null);camera.enabled=false;
+            editor.Undo();Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);
+            var restored=editor.AcquireNativeEntities(new[]{id},()=>true,System.Threading.CancellationToken.None);
+            yield return Until(()=>restored.IsCompleted);Assert.That(restored.Exception,Is.Null);Assert.That(restored.Result,Is.Null);yield return null;
+            Assert.That(editor.Find(id),Is.Not.Null);Assert.That(editor.RetireNativeArea(area,out error),Is.True,error+"; "+editor.ObserveRegionRetention(area));yield return null;
             var replacement=editor.DormantCollisionGuard(id);Assert.That(replacement,Is.Not.SameAs(anchored));Assert.That(replacement.Known&&!replacement.HasBounds,Is.True);
             source.Entries=Array.Empty<ScannedSurface>();yield return null;yield return null;Assert.That(replacement.Known,Is.False);
             Assert.That(cold.Synchronizations,Is.EqualTo(stable));Assert.That(editor.Find(coldId),Is.Null);

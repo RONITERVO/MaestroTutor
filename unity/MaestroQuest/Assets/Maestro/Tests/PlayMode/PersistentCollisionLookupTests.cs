@@ -66,7 +66,9 @@ namespace Maestro.Quest.Tests
             Assert.That(editor.CaptureMovementCandidates(false).DormantBoundsReads,Is.Zero);
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{id},out error),Is.True,error);
             Assert.That(editor.SpatialMovementTargets(CollisionPoint(replacement.center),null),Does.Not.Contain(id));
-            editor.Undo();var restored=editor.Find(id);Assert.That(restored,Is.Not.Null);
+            editor.Undo();Assert.That(editor.HasSavedObject(id),Is.True);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);
+            Assert.That(editor.SpatialMovementTargets(CollisionPoint(replacement.center),null),Does.Contain(id),"Restored cold geometry remains a dependency until ready");
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));var restored=editor.Find(id);Assert.That(restored,Is.Not.Null);
             restored.transform.localPosition+=Vector3.forward*3;var live=editor.ReadCollisionBounds(id).Bounds;
             Assert.That(editor.SpatialMovementTargets(CollisionPoint(live.center),null),Does.Contain(id));
             Assert.That(editor.SpatialMovementTargets(CollisionPoint(replacement.center),null),Does.Not.Contain(id));yield return null;

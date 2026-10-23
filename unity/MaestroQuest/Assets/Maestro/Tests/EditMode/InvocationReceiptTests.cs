@@ -21,6 +21,13 @@ namespace Maestro.Quest.Tests
             public bool Start(string id,CapabilityCall invocation,out float seconds,out string error) { invocation.TryStep(out var step,out _);Starts++;seconds=1;error=null;return true;}
             public void Stop(string id,bool preserve) {Stops++;}
         }
+        sealed class PendingAreaActions : IRuleActions,IRuleReadiness {
+            public int Starts;
+            public bool CanRun(CapabilityCall step,out string error){error=null;return true;}
+            public bool Start(string id,CapabilityCall invocation,out float seconds,out string error){Starts++;seconds=0;error=null;return true;}
+            public RuleActionState State(string id,out string error){error=null;return RuleActionState.Preparing;}
+            public void Stop(string id,bool preserve){}
+        }
         static void Evidence(string name,JObject view)
         {
             string output=Environment.GetEnvironmentVariable("MAESTRO_RECEIPT_EVIDENCE");if(string.IsNullOrEmpty(output))return;
@@ -35,6 +42,24 @@ namespace Maestro.Quest.Tests
             string[] resources=((JArray)args["members"]).Values<string>().ToArray();
             Assert.That(receipts.Reserve(id,call,resources,out var error),Is.True,error);
             var loaded=new InvocationReceipts(directory);Assert.That(loaded.Error,Is.Null);Assert.That(((JArray)loaded.Find(id)["resources"]).Values<string>(),Is.EquivalentTo(resources));
+        }
+        [Test] public void FullSavedAreaClaimsSurviveReceiptReloadWithoutExpandingProgramResources() {
+            var resources=Enumerable.Range(0,RoomDocument.MaximumObjects).Select(i=>i.ToString("x32")).ToArray();
+            var args=new RegionSaveCapability().Example;args["members"]=new JArray(resources);
+            var call=new JObject{["id"]="world.region.save",["version"]=1,["arguments"]=args};
+            var receipts=new InvocationReceipts(directory);string id=receipts.NextId;
+            Assert.That(receipts.Reserve(id,call,resources,out var error),Is.True,error);
+            var loaded=new InvocationReceipts(directory);Assert.That(loaded.Error,Is.Null);
+            Assert.That(((JArray)loaded.Find(id)["resources"]).Values<string>(),Is.EquivalentTo(resources));
+            Assert.That((string)loaded.Find(id)["phase"],Is.EqualTo("interrupted"));
+            Assert.That(BehaviourProgram.MaximumResources,Is.EqualTo(66));
+            Assert.That(BehaviourProgram.TryInvocation(call,out var program,out error),Is.True,error);
+            Assert.That(program.Resources,Is.EquivalentTo(resources));
+            Assert.That(BehaviourProgram.TryParse(program.Source,out _,out _),Is.False,"The private one-off wrapper must not widen saved program declarations");
+            var actions=new PendingAreaActions();var scheduler=new RuleScheduler(actions,loaded);
+            Assert.That(scheduler.Invoke(call,0,out var run,out error),Is.True,error);Assert.That(actions.Starts,Is.EqualTo(1));
+            Assert.That(scheduler.CancelInvocation(run,out error),Is.True,error);
+            Assert.That((string)scheduler.Invocation(run)["phase"],Is.EqualTo("cancelled"));
         }
         [Test] public void RestartPreservesCompletedButMarksUnfinishedUncertainWithoutPlayback()
         {

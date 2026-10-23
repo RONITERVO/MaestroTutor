@@ -17,8 +17,8 @@ namespace Maestro.Quest.Rules
             if(!RoomCapabilityCatalog.ValidCall(call)||!BehaviourCatalog.TryCall((string)call["id"],(int)call["version"],(JObject)call["arguments"],out var step,out error))
             {error??="Invalid capability invocation";return false;}
             if(suspended||!float.IsFinite(now)) {error="Actions are paused";return false;}
-            string source=BehaviourProgram.FromInvocation(call);
-            if(!BehaviourProgram.TryParse(source,out var program,out error))return false;
+            if(!BehaviourProgram.TryInvocation(call,out var program,out error))return false;
+            string source=program.Source;
             if(ActionBusy(step)) {error=step.RequiresQuietRoom?"Stop other room actions before this room-wide action":"A running action owns a required animation channel or object";return false;}
             if(!HasCapacity) {error="All action slots are currently in use";return false;}
             var sequence=new RuleSequence {id=Guid.NewGuid().ToString("N"),name="One-off action",interruption=RuleInterruption.Ignore,program=source};

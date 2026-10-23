@@ -13,6 +13,7 @@ namespace Maestro.Quest.Creation
     public sealed class RoomCapabilityCatalog
     {
         public const int PageSize=6;
+        public const int MaximumInvocationResources=RoomDocument.MaximumObjects+2;
         readonly RoomEditor editor;readonly WorkspaceHost workspace;
         JObject request,cached;
         Entry inspected;
@@ -48,7 +49,7 @@ namespace Maestro.Quest.Creation
                 if(token is JObject obj)return obj.Properties().All(p=>p.Name.Length<=80&&!p.Name.Any(char.IsControl)&&Bounded(p.Value,depth+1,schema?["properties"]?[p.Name] as JObject));
                 if(token is JArray array) {
                     // Declared geometry arrays can exceed generic arrays; the total budget still applies.
-                    int limit=Math.Min(4096,Math.Max((string)schema?["items"]?["x-resource"]=="object"?BehaviourProgram.MaximumResources:64,(int?)schema?["maxItems"]??0));
+                    int limit=Math.Min(4096,Math.Max((string)schema?["items"]?["x-resource"]=="object"?MaximumInvocationResources:64,(int?)schema?["maxItems"]??0));
                     return array.Count<=limit&&array.All(x=>Bounded(x,depth+1,schema?["items"] as JObject));
                 }
                 return token.Type switch {JTokenType.String=>Text(token,128),JTokenType.Integer or JTokenType.Float=>ProgramValue.ValidNumber((double)token),JTokenType.Boolean or JTokenType.Null=>true,_=>false};

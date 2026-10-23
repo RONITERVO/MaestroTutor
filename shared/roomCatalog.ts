@@ -1,5 +1,5 @@
 import {roomGuide,type RoomGuide} from './prompts/roomguides';
-import {programResourceLimit} from './programLimits';
+import {invocationResourceLimit} from './programLimits';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {moduleHash,validModuleRecord,type ModuleRecord} from './programModuleIdentity';
@@ -34,7 +34,7 @@ export const boundedCapabilityCall=(v:unknown):v is CapabilityInvocation=>{
   if(record(v))return Object.entries(v).every(([key,x])=>text(key,80)&&bounded(x,depth+1,schema?.properties?.[key]));
   if(Array.isArray(v)) {
    // Declared geometry arrays can exceed generic arrays; the total budget still applies.
-   const limit=Math.min(4096,Math.max(schema?.items?.['x-resource']==='object'?programResourceLimit:64,schema?.maxItems??0));
+   const limit=Math.min(4096,Math.max(schema?.items?.['x-resource']==='object'?invocationResourceLimit:64,schema?.maxItems??0));
    return v.length<=limit&&v.every(x=>bounded(x,depth+1,schema?.items));
   }
   return v===null||typeof v==='boolean'||validProgramNumber(v)||text(v,128);
@@ -77,6 +77,6 @@ export function validCatalogView(v:unknown):v is CatalogView {
   return validateFactArguments(v.capability as string,v.version as number,v.arguments)===null&&validFactValue(v.capability as string,v.value);
  }
  return v.operation==='check'&&exact(v,['operation','call','valid','available','occupied','resources','status'])&&boundedCapabilityCall(v.call)&&
-  ['valid','available','occupied'].every(k=>typeof v[k]==='boolean')&&(!v.available||v.valid===true&&!v.occupied)&&Array.isArray(v.resources)&&v.resources.length<=programResourceLimit&&
+  ['valid','available','occupied'].every(k=>typeof v[k]==='boolean')&&(!v.available||v.valid===true&&!v.occupied)&&Array.isArray(v.resources)&&v.resources.length<=invocationResourceLimit&&
   v.resources.every(x=>typeof x==='string'&&/^(maestro|book|[a-fA-F0-9]{32})$/.test(x))&&new Set(v.resources).size===v.resources.length;
 }

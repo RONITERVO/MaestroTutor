@@ -63,7 +63,10 @@ namespace Maestro.Quest.Tests {
             Assert.That(editor.ApplyAgentEdit(editor.Revision,new[]{changed},Array.Empty<string>(),out var error),Is.True,error);Assert.That(VisualLookupVisible(camera),Is.Empty);
             editor.Undo();CollectionAssert.AreEqual(new[]{ids[0]},VisualLookupVisible(camera));
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{ids[0]},out error),Is.True,error);Assert.That(VisualLookupVisible(camera),Is.Empty);
-            editor.Undo();Assert.That(editor.Find(ids[0]),Is.Not.Null);Assert.That(VisualLookupVisible(camera),Is.Empty,"Restored live objects cannot remain in the dormant tree");
+            editor.Undo();Assert.That(editor.HasSavedObject(ids[0]),Is.True);Assert.That(editor.Find(ids[0]),Is.Null);Assert.That(editor.NativeEntityDormant(ids[0]),Is.True);
+            Assert.That(VisualLookupVisible(camera),Does.Contain(ids[0]),"Restored cold objects remain candidates for observation");
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(ids[0]),Is.Not.Null);
+            Assert.That(VisualLookupVisible(camera),Is.Empty,"Restored live objects cannot remain in the dormant tree");
             Assert.That(editor.RetireNativeArea(area,out error),Is.True,error);CollectionAssert.AreEqual(new[]{ids[0]},VisualLookupVisible(camera));
             editor.enabled=false;editor.enabled=true;CollectionAssert.AreEqual(new[]{ids[0]},VisualLookupVisible(camera));
         }

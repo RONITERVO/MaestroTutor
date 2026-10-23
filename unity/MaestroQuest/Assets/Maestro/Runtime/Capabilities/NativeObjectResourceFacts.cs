@@ -7,6 +7,9 @@ namespace Maestro.Quest.Programs
 {
     public static class NativeObjectResourceFacts
     {
+        public static BehaviourCatalog.FactDefinition SavedBudget()=>new("world.creationBudget",ProgramDataType.Read(JObject.Parse("{\"record\":{\"saved\":\"number\",\"savedLimit\":\"number\",\"remaining\":\"number\"}}")),
+            "Saved creation capacity","Saved creations in the active world, including unloaded objects; excludes the included book and Maestro. Remaining counts creation identities only. Native roots, geometry, physics, components and file-size admission retain independent limits, so this is not a guarantee that any requested creation fits. Reading never loads objects or edits the world. Native object reservations are separately reported by runtime.objectBudget when diagnostic observations are available.",null,null,
+            (context,args)=>context.Editor?ProgramValue.Literal(context.Editor.ObserveCreationBudget()):null,features:new[]{CreationLoading.Feature});
         static bool Available(BehaviourCatalog.FactContext context)=>context.Editor&&context.Editor.GetComponentInParent<RuntimeDiagnostics>();
         static readonly string[] Features={RuntimeDiagnosticFacts.Feature};
         public static BehaviourCatalog.FactDefinition Budget()=>new("runtime.objectBudget",ProgramDataType.Read(JObject.Parse("{\"record\":{\"instances\":\"number\",\"preparing\":\"number\",\"ready\":\"number\",\"retiring\":\"number\",\"instanceLimit\":\"number\"}}")),

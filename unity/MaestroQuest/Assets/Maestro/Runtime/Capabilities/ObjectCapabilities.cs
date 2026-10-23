@@ -41,7 +41,7 @@ namespace Maestro.Quest.Programs
         public override string Description=>"Create a ball, block or cylinder at x/y/z in room metres (within 25 m of the origin). Scale is a multiplier (1 is the usual tray shape); RGB is 0–1. Returns objectId after saving. The ball is bouncy; other shapes are solid, mass 0.5 kg. Each creation is one Undo edit."+PersistedEditOperation.CreationPersistence;
         public override string Duration=>"completion";
         public override IReadOnlyList<string> Requirements=>new[] {"room.capacity","storage.writable"};
-        public override JObject InputSchema=>Object(new JObject {["shape"]=Choice("ball","block","cylinder"),["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)});
+        public override JObject InputSchema=>CreationLoading.Inputs(Object(new JObject {["shape"]=Choice("ball","block","cylinder"),["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["red"]=Number(0,1),["green"]=Number(0,1),["blue"]=Number(0,1)}));
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))});
         public override JObject Example=>new JObject {["name"]="Ball",["x"]=.3f,["y"]=1.3f,["z"]=.65f,["scale"]=1 ,["shape"]="ball",["red"]=.2f,["green"]=.6f,["blue"]=.9f};
         public override bool Validate(JObject arguments,out string error) {
@@ -52,8 +52,9 @@ namespace Maestro.Quest.Programs
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
             var editor=context.Editor;var kind=Enum.Parse<RoomObjectKind>((string)arguments["shape"],true);string name=(string)arguments["name"],id=null;
             var position=ObjectCapabilityData.Position(arguments);float scale=(float)arguments["scale"];var color=ObjectCapabilityData.Color(arguments);
+            bool deferCreations=CreationLoading.Deferred(arguments);
             return PersistedEditOperation.StartCreation(editor,
-                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreatePrimitive(kind,name,position,scale,color,out id,out pending,out issue),
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreatePrimitive(kind,name,position,scale,color,out id,out pending,out issue,deferCreations:deferCreations),
                 ()=>new JObject {["objectId"]=id},out operation,out error);
         }
     }
@@ -67,7 +68,7 @@ namespace Maestro.Quest.Programs
         public override JObject InputSchema {get {
             var collision=CollisionCapability.RecipeSchema();((JArray)collision["x-features"]).Add("creationComponents.v1");
             var physics=PhysicsSettingsCapability.SettingsSchema();physics["x-features"]=new JArray("creationComponents.v1");
-            return Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema(),["collision"]=collision,["physics"]=physics},"collision","physics");
+            return CreationLoading.Inputs(Object(new JObject {["name"]=Text("^.{0,80}$",80),["x"]=Number(-25,25),["y"]=Number(-25,25),["z"]=Number(-25,25),["scale"]=Number(.1,4),["recipe"]=RecipeSchema(),["collision"]=collision,["physics"]=physics},"collision","physics"));
         }}
         public override JObject OutputSchema=>Object(new JObject {["objectId"]=Resource(Text("^[a-f0-9]{32}$",32))});
         public override JObject Example=>new JObject {["name"]="Box robot",["x"]=.3f,["y"]=1.3f,["z"]=.65f,["scale"]=1,["recipe"]=ObjectCapabilityData.RobotExample()};
@@ -79,8 +80,9 @@ namespace Maestro.Quest.Programs
         public override bool Start(CapabilityContext context,string runId,JObject arguments,out CapabilityOperation operation,out string error) {
             var editor=context.Editor;string name=(string)arguments["name"],id=null;var position=ObjectCapabilityData.Position(arguments);float scale=(float)arguments["scale"];
             var recipe=ObjectCapabilityData.Recipe(arguments);var collision=ObjectCapabilityData.Collision(arguments);var physics=ObjectCapabilityData.Physics(arguments);
+            bool deferCreations=CreationLoading.Deferred(arguments);
             return PersistedEditOperation.StartCreation(editor,
-                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateRecipe(name,position,scale,recipe,collision,physics,out id,out pending,out issue),
+                (out RoomEditor.PendingPersistedEdit pending,out string issue)=>editor.BeginCreateRecipe(name,position,scale,recipe,collision,physics,out id,out pending,out issue,deferCreations:deferCreations),
                 ()=>new JObject {["objectId"]=id},out operation,out error);
         }
     }

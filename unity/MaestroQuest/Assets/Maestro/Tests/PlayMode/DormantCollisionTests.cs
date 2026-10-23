@@ -38,7 +38,14 @@ namespace Maestro.Quest.Tests {
         [UnityTest]public IEnumerator DormantCollisionDeletionAndUndoCannotLeaveTheOldBarrier(){
             string id=editor.Identity(block),area=NativeAreaFor(id);Assert.That(editor.RetireNativeArea(area,out var error),Is.True,error);yield return null;var guard=editor.DormantCollisionGuard(id);var shape=guard.Shape;
             Assert.That(editor.ApplyAgentEdit(editor.Revision,Array.Empty<RoomObjectData>(),new[]{id},out error),Is.True,error);Assert.That(editor.DormantCollisionGuard(id),Is.Null);Assert.That(!shape||!shape.enabled,Is.True);
-            editor.Undo();Assert.That(editor.Find(id),Is.Not.Null);Assert.That(guard.Shape,Is.Null);yield return null;Assert.That((bool)shape,Is.False);
+            editor.Undo();Assert.That(editor.HasSavedObject(id),Is.True);Assert.That(editor.Find(id),Is.Null);Assert.That(editor.NativeEntityDormant(id),Is.True);
+            Assert.That(editor.NativeActivationPending,Is.False);Assert.That(editor.DormantCollisionGuard(id),Is.Null);
+            Assert.That(editor.ReadCollisionBounds(id).Known,Is.False,"Undo cannot reuse deleted native collision geometry");
+            Assert.That(editor.SpatialMovementTargets(new Bounds(editor.Read(id).position,Vector3.one),null),Does.Contain(id),"Unknown cold collision must remain required");
+            Assert.That(guard.Shape,Is.Null);
+            yield return null;Assert.That((bool)shape,Is.False);
+            yield return NativeAreaCompletion(editor.ActivateNativeArea(area));Assert.That(editor.Find(id),Is.Not.Null);
+            Assert.That(editor.DormantCollisionGuard(id),Is.Null);Assert.That(editor.ReadCollisionBounds(id).Known,Is.True);
         }
         [UnityTest]public IEnumerator DormantCollisionUnknownAndKnownEmptyAreDifferentAndNeverReuseStaleBounds(){
             using var guard=new RoomCollisionGuard(editor,"test-extent");var value=new RoomSpatialExtent{Known=true,HasBounds=true,Bounds=new Bounds(new(8,3,8),Vector3.one)};

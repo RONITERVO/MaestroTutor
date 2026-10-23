@@ -156,11 +156,11 @@ namespace Maestro.Quest.Creation
             }
             // Only the exact successfully written snapshot enters saved Undo.
             // No scene reconciliation or action replay occurs at completion.
-            savedBaseDurable=true;savedDormantTargets=dormant;
+            savedBaseDurable=true;var previousDormant=savedDormantTargets;savedDormantTargets=dormant;
             if(LastTemporarySave.IsBaseline) {
                 Revision++;SetStatus("Temporary room ready: its starting state is saved; later changes stay temporary");return;
             }
-            if(!savedJournal.ApplySnapshot(snapshot,out error))throw new InvalidOperationException(error);
+            if(!savedJournal.ApplySnapshot(snapshot,out error,previousDormant,dormant))throw new InvalidOperationException(error);
             TemporarySaveRevision++;LastTemporarySave.SavedRevision=TemporarySaveRevision;Revision++;
             SetStatus("Temporary room snapshot saved: later changes are still temporary");
         }

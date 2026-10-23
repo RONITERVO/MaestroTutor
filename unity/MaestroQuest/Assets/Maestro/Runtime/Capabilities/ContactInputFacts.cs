@@ -3,11 +3,12 @@
 using System.Linq;
 using Maestro.Quest.Book;
 using Maestro.Quest.Interaction;
+using Maestro.Quest.Creation;
 using Newtonsoft.Json.Linq;
 using static Maestro.Quest.Programs.CapabilitySchema;
 namespace Maestro.Quest.Programs {
     internal static class ContactInputFacts {
-        static ProgramDataType Type()=>OutputType(CapabilitySchema.Object(new JObject{["state"]=Choice("inactive","ready","pending","unavailable"),["ready"]=new JObject{["type"]="boolean"},["reason"]=Text(null,128),["dependencyCount"]=Number(0,66,true),["dependencies"]=List(Text(null,64),0,4)}));
+        static ProgramDataType Type()=>OutputType(CapabilitySchema.Object(new JObject{["state"]=Choice("inactive","ready","pending","unavailable"),["ready"]=new JObject{["type"]="boolean"},["reason"]=Text(null,128),["dependencyCount"]=Number(0,RoomDocument.MaximumObjects+2,true),["dependencies"]=List(Text(null,64),0,4)}));
         const string Meaning="Read the latest native contact-input ownership without loading, moving, saving or starting physics. pending means bounded preparation; unavailable must not be treated as clear space. Accepted dependency edits may be rechecked by the active owner; failed or cancelled loading requires a fresh action or tracking/grab owner after fixing its reason. ready rechecks required local geometry, not a clear path or regional-streaming guarantee. Dependencies report the full count and first four stable identities. The production whole-world physics gate remains.";
         internal static BehaviourCatalog.FactDefinition Object()=>new("object.contact.inputs",Type(),"Held object contact inputs",Meaning+" This fact covers an active physical controller/hand grab of a creation; unheld, paused or animation-owned items are inactive. A waiting grab holds its current pose and needs fresh throw samples before release. Scripted attachments use their separate existing ownership.",
             CapabilitySchema.Object(new JObject{["target"]=Text("^[a-zA-Z0-9_-]{1,64}$",64)}),new JObject{["target"]="example-object"},
