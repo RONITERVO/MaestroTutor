@@ -16,7 +16,7 @@ namespace Maestro.Quest.Tests {
   void CaptureFlowDiscovery(string name){
    string folder=Environment.GetEnvironmentVariable("MAESTRO_FLOW_DISCOVERY_EVIDENCE");if(string.IsNullOrEmpty(folder))return;
    Directory.CreateDirectory(folder);if(!root.GetComponent<RuntimeDiagnostics>())root.AddComponent<RuntimeDiagnostics>();var s=editor.Liquids.LastFlowDiscovery;
-   File.WriteAllText(Path.Combine(folder,name+".json"),new JObject{["budget"]=CollisionFact("runtime.flowDiscoveryBudget"),["captures"]=s.Captures,["collisionReads"]=s.CollisionReads,["collisionCandidates"]=s.CollisionCandidates,["cavityReads"]=s.CavityReads,["cavityCandidates"]=s.CavityCandidates,["probes"]=s.Probes,["pathSegments"]=s.PathSegments,["islandQueries"]=s.IslandQueries,["islandMembers"]=s.IslandMembers,["graphEdges"]=s.GraphEdges,["objects"]=editor.SpatialObjectCount,["nativePending"]=editor.NativeActivationPending}.ToString());
+   File.WriteAllText(Path.Combine(folder,name+".json"),new JObject{["budget"]=CollisionFact("runtime.flowDiscoveryBudget"),["captures"]=s.Captures,["collisionReads"]=s.CollisionReads,["collisionCandidates"]=s.CollisionCandidates,["collisionIndexBuild"]=s.CollisionIndexBuild,["collisionNodes"]=s.CollisionNodes,["cavityReads"]=s.CavityReads,["cavityCandidates"]=s.CavityCandidates,["probes"]=s.Probes,["pathSegments"]=s.PathSegments,["islandQueries"]=s.IslandQueries,["islandMembers"]=s.IslandMembers,["graphEdges"]=s.GraphEdges,["objects"]=editor.SpatialObjectCount,["nativePending"]=editor.NativeActivationPending}.ToString());
   }
   [UnityTest]public IEnumerator FlowDiscoveryPressureDefersGeometryAndServesColdRoomUnderContinuingDemand(){
    var(a,b)=FixedFlowCups();Assert.That(editor.RetireNativeArea(NativeAreaFor(b),out var error),Is.True,error);

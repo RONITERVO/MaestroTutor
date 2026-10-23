@@ -10,16 +10,17 @@ namespace Maestro.Quest.Creation {
    if(vessels<0||objects<0||vessels>objects||objects>MaximumObjects)return int.MaxValue;
    if(vessels==0)return 0;
    long n=vessels,m=objects;
-   // Snapshot/ground metadata, at most three spatial probes per vessel, two
-   // cavity probes, trajectory/rain points, transitive quantity edges/targets,
+   // Snapshot/ground metadata, one index construction, at most three spatial
+   // probes per vessel, tree-node and candidate visits, cavity probes,
+   // trajectory/rain points, transitive quantity edges/targets,
    // and worst-case physical-island visits. The accepted format has at most
    // one physical connection per object. Geometry/sort/PhysX internals excluded.
-   return (int)Math.Min(int.MaxValue,3*m+n*(m*m+6*m+4*n+40));
+   return (int)Math.Min(int.MaxValue,3*m+RoomSpatialLookup.MaximumBuildWork(objects)+n*(m*m+12*m+4*n+40));
   }
  }
  public sealed partial class LiquidPouring {
   internal struct DiscoveryWorkSample {
-   internal int Captures,CollisionReads,CollisionCandidates,CavityReads,CavityCandidates,Probes,PathSegments,IslandQueries,IslandMembers,GraphEdges;
+   internal int Captures,CollisionReads,CollisionCandidates,CollisionIndexBuild,CollisionNodes,CavityReads,CavityCandidates,Probes,PathSegments,IslandQueries,IslandMembers,GraphEdges;
   }
   DiscoveryWorkSample discoveryWork;
   internal DiscoveryWorkSample LastFlowDiscovery=>discoveryWork;

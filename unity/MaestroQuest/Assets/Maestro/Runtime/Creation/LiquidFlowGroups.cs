@@ -15,9 +15,9 @@ namespace Maestro.Quest.Creation {
   }
   void FlowProbeAt(FlowSeed seed,Bounds bounds,string actor,bool includeVessels,Dictionary<string,RoomSpatialExtent> cavities,RoomEditor.MovementCandidates spatial){
    discoveryWork.Probes++;bounds.Expand(.002f);seed.Probes.Add(new(bounds,actor));
-   int before=spatial.Visits;var roomBounds=editor.SpatialInputRoomBounds(bounds);
+   int before=spatial.Visits,nodesBefore=spatial.NodeVisits;var roomBounds=editor.SpatialInputRoomBounds(bounds);
    foreach(var id in spatial.Targets(roomBounds,roomBounds,actor))seed.Targets.Add(id);
-   discoveryWork.CollisionCandidates+=spatial.Visits-before;
+   discoveryWork.CollisionCandidates+=spatial.Visits-before;discoveryWork.CollisionNodes+=spatial.NodeVisits-nodesBefore;
    if(!includeVessels)return;
    foreach(var pair in cavities){
     discoveryWork.CavityCandidates++;
@@ -29,7 +29,7 @@ namespace Maestro.Quest.Creation {
    // This snapshot exists only inside the admitted synchronous discovery.
    // Never reuse collision placement across physics, loading or another tick.
    discoveryWork.Captures++;var spatial=editor.CaptureMovementCandidates(true);
-   discoveryWork.CollisionReads+=spatial.BoundsReads;
+   discoveryWork.CollisionReads+=spatial.BoundsReads;discoveryWork.CollisionIndexBuild+=spatial.IndexBuildWork;
    var cavities=new Dictionary<string,RoomSpatialExtent>(StringComparer.Ordinal);var poses=new Dictionary<string,(Matrix4x4 matrix,Quaternion rotation)>(StringComparer.Ordinal);
    foreach(var vessel in vessels.Values){discoveryWork.CavityReads++;cavities[vessel.Id]=editor.MissingLiquidExtent(vessel.Id,vessel.Live,out _,out var matrix,out var rotation);poses[vessel.Id]=vessel.Item?(vessel.Item.transform.localToWorldMatrix,vessel.Item.transform.rotation):(matrix,rotation);}
    var seeds=vessels.ToDictionary(pair=>pair.Key,_=>new FlowSeed(),StringComparer.Ordinal);var weather=editor.CurrentWeather;var rainVelocity=WeatherCover.Velocity(editor);

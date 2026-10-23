@@ -50066,7 +50066,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowDiscoveryWork.cs",
-      "sha256": "bcbc574b59f921c4c9608f41a3c204a333b6da1deff2b5eba6bb89ee3894bee4"
+      "sha256": "255baf619405c7c898be90550a50533fa9c23a57a69d136da42f9f0008aee9e5"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/FlowWorkClock.cs",
@@ -50122,7 +50122,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowGroups.cs",
-      "sha256": "4e3d2f0007ced945fa4e5390e7b215d0cad18c99136ee658a82a34740b149f40"
+      "sha256": "04ef30bed015ba71829846d96c637cf94d9216da06c8d1d4fdaa0368f4dd6b28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
@@ -50694,7 +50694,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPlacementDependencies.cs",
-      "sha256": "29910185be53a7cca723cbb0f619108c666682dee0b44ebb469e12d120117967"
+      "sha256": "c31a18a1fed90a8bdfce82c3f2114812a85e59faf6a360bff2c9476cb15a61ea"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomPreparationBudget.cs",
@@ -50771,6 +50771,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialIndex.cs",
       "sha256": "d1c287f732ad35c01f54cef56eeb8aa0c14d8de62bf490b63bc9f281203ab89b"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialLookup.cs",
+      "sha256": "4f45112a0ee9ee9c240ee74fb28b1ee30e45393e7cc4f31314d70537dda140d8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomSpatialObservation.cs",

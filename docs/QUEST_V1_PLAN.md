@@ -4,9 +4,10 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[area loading checkpoint](#independent-area-loading) records this increment's
-implementation, verification progress and remaining work. The preceding
-[shared movement checkpoint](#shared-locomotion-lifetime) remains separately verified. The
+[spatial lookup checkpoint](#coherent-local-collision-lookup--2026-10-23) records this
+increment's implementation, verification progress and remaining work. The preceding
+[area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
+checkpoints remain separately verified. The
 [world authoring guide](QUEST_WORLD_AUTHORING.md) describes the reusable user/agent
 contract; dated entries below retain the development evidence.
 
@@ -144,8 +145,10 @@ logical allowance includes an objects-squared term. Substituting 1,000 creations
 into that existing formula would exceed its 524,288-unit allowance even for one
 vessel; this is arithmetic evidence, not a performance measurement.
 
-The current spatial index prepares detached bounds by identity; it does not yet
-provide a spatial broad-phase. View demand still scans dormant members. Named
+The existing metadata index prepares detached bounds by identity. A separate
+immutable lookup now rejects distant collision branches inside a coherent query
+snapshot. Capturing that snapshot still visits saved objects; it is not a
+persistent index of the entire world. View demand still scans dormant members. Named
 areas now explicitly choose independent or together loading; enabled physical
 connections remain coupled across either type of area. This removes the implicit
 all-members residency requirement without increasing any quota. Larger logical
@@ -15876,3 +15879,57 @@ runtime poses, native moving objects, exact scan-anchor projection, separate
 visual/collision bounds and unknown-geometry handling. A bounded broad-phase and
 complete/pending query contract must precede larger saved quotas; the current
 metadata cache and exhaustive discovery scans do not establish city capacity.
+
+
+## Coherent local collision lookup — 2026-10-23
+
+The next capacity increment adds an immutable bounds tree for repeated collision
+queries inside one synchronous snapshot. Flow discovery captures current collision
+geometry once and queries that tree for each local stream/rain/scoop envelope.
+The tree is a candidate filter: exact native clearance, accepted ground and
+per-actor real-room participation still decide whether an action can proceed.
+Unknown geometry remains a dependency even when its visual artwork is distant.
+Empty ground, inclusive touching bounds and canonical result order are preserved.
+
+Snapshot data is detached from native objects and the edit journal. Moving or
+retiring an object, changing an accepted pose or Undo requires a fresh capture;
+no query result survives that synchronous read. Invalid extents stay unknown.
+Oversized input is rejected as a whole rather than silently dropping collisions.
+The lookup's internal 4,096-entry bound does not raise saved-world quotas.
+
+Tree construction and visited nodes are included in flow discovery's logical
+admission price. Geometry, sorting and PhysX internals remain outside that logical
+metric; it is not a measured CPU or allocation budget. Larger-world work still
+needs a persistent dormant spatial index, bounded observation queries, separate
+saved/resident/simulation capacity and measured headset limits. One-off movement
+queries retain a direct pass, avoiding tree construction for a single read.
+
+Initial verification under `.quest-evidence/spatial-lookup-20261023/first-native/`
+passed 21 EditMode and six PlayMode cases with clean native exits. Differential
+tests compare indexed answers to exhaustive queries, including invalid/unknown
+bounds, touching/extreme coordinates and the 4,096-entry internal limit. A real
+two-stream fixture with 33 objects captured collision bounds once, visited 80
+tree nodes and inspected eight candidates across six probes; both streams
+transferred liquid and conserved their amounts. Those counts prove candidate
+pruning in that fixture, not a frame-time or city-capacity improvement.
+
+Final-source verification passed **1,607 EditMode and 521 selected PlayMode tests**
+across 65 affected movement, collision, loading, placement, water and scheduling
+fixtures. Every selected method completed once and all native processes exited
+cleanly. The runtime set includes an actor walking below the physical room floor,
+moved/dormant collision bounds and live stream transfer. Both direct and indexed
+queries match exhaustive answers in the differential tests. The initial broader
+run also passed before the one-off-query refinement; its evidence is retained
+separately from `final-native/`.
+
+The shared room/catalog and Quest UI suite passed **1,861 tests**. Its source and
+capability definitions are unchanged by the final native refinement; generated
+source provenance passed again afterward. `verified-increment.json` checks all
+3,494 frozen native inputs, exact selected-case coverage and 14 unchanged protected
+files. No new user/agent capability vocabulary or saved quota is introduced.
+
+This increment does not rerun the entire PlayMode inventory, full offline journeys
+or Android compilation. The preceding full `ed286f6d` checkpoint above remains
+separate evidence. Installed and packaged builds, provider coverage and all release
+gates remain as recorded above. No headset, paid-provider, signing, deployment or
+Meta operation occurred.

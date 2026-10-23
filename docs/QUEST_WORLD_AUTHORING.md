@@ -3481,3 +3481,26 @@ position; it does not claim a blocked or moving leader was reached.
 These are bounded root/body movements using the same four-owner budget as
 navigation. They do not establish crowd capacity, animated-limb collision,
 foot planting, unrestricted world size or Quest performance acceptance.
+
+
+### Coherent nearby collision discovery
+
+Repeated local water queries now use a tree of collision extents captured from
+one synchronous world snapshot. This skips distant known geometry while keeping
+unknown collision sources, required ground and stable object identities. The
+same current/native-or-dormant collision projection used by movement supplies
+those extents; visual artwork is not treated as evidence of physical clearance.
+A new capture observes movement, unloading and accepted edits rather than
+reusing old object positions across ticks. One-off movement checks retain a
+direct pass over the same captured extents, avoiding an index build for one read.
+
+This changes how potential inputs are found, not the user/agent capability
+vocabulary or any actor's selected real-room participation. A virtual-only NPC
+can still use accepted terrain below the physical room while a different object
+obeys the real floor. Visibility, passthrough opacity and sound obstruction remain
+separate policies. Readiness and native clearance still govern actual movement.
+
+Capturing bounds still visits the saved inventory, and viewing demand still
+examines dormant members. Current saved limits remain unchanged. Persistent
+spatial indexing and measured larger-world/headset capacity are unfinished;
+fewer candidate checks alone do not establish a frame-time improvement.
