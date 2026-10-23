@@ -54,11 +54,7 @@ namespace Maestro.Quest.Creation
         }
         RoomSpatialExtent LightCasterBounds(string target)
         {
-            if(dormantNative.TryGetValue(target,out var dormant)){
-                var spatial=ReadDormantSpatial(target,dormant,out _,out var prepared,out var placed).Transform(transform.localToWorldMatrix);
-                if(prepared&&!placed)return RoomSpatialExtent.Empty;
-                return (spatial.VisualLayers&~(1<<Interaction.RoomPhysicsLayers.Scanned))==0?RoomSpatialExtent.Empty:spatial.Visual;
-            }
+            if(dormantNative.ContainsKey(target))return DormantCasterBounds(ReadDormantVisual(target));
             var item=Find(target);if(item&&item.TryGetComponent<ScannedDrawingView>(out var ink)&&!ink.Visible)return RoomSpatialExtent.Empty;
             if(!item||!item.isActiveAndEnabled)return default;
             // A loading import's small placeholder cannot prove that its final
@@ -76,6 +72,11 @@ namespace Maestro.Quest.Creation
             }
             lightingRenderers.Clear();return result;
         }
+        RoomSpatialExtent DormantCasterBounds(DormantVisual candidate){
+            if(candidate.Prepared&&!candidate.Placed)return RoomSpatialExtent.Empty;
+            return (candidate.Spatial.VisualLayers&~(1<<Interaction.RoomPhysicsLayers.Scanned))==0
+                ?RoomSpatialExtent.Empty:candidate.Spatial.Visual.Transform(transform.localToWorldMatrix);
+        }
         // Same result feeds retention, predictive display admission and captures.
         // A spot uses its enclosing sphere: conservative demand, not a visibility
         // or shadow guarantee. Disabled controls do not demand lighting inputs.
@@ -92,9 +93,17 @@ namespace Maestro.Quest.Creation
                 if(!observed)continue;required.Add(pair.Key.target);
                 if(state.Source.shadows=="hard")shadows.Add(influence);
             }
-            if(shadows.Count>0)foreach(var target in journal.SavedObjectIds()){
-                var bounds=LightCasterBounds(target);
-                foreach(var influence in shadows)if(RoomLightObservation.Intersects(influence,bounds)){required.Add(target);break;}
+            if(shadows.Count>0){
+                foreach(var candidate in QueryDormantShadows(shadows)){
+                    var bounds=DormantCasterBounds(candidate);
+                    foreach(var influence in shadows)if(RoomLightObservation.Intersects(influence,bounds)){required.Add(candidate.Id);break;}
+                }
+                // Live/skinned geometry, including unexpectedly missing roots,
+                // remains fresh. A dormant snapshot is never a live shadow pose.
+                foreach(var target in CurrentVisualTargets()){
+                    var bounds=LightCasterBounds(target);
+                    foreach(var influence in shadows)if(RoomLightObservation.Intersects(influence,bounds)){required.Add(target);break;}
+                }
             }
             return required;
         }

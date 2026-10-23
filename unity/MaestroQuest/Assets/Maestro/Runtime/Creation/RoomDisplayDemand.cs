@@ -45,20 +45,24 @@ namespace Maestro.Quest.Creation
             var predictedLights=predicted!=null?NativeDisplayDependencies(predicted):new HashSet<string>();
             var captureLights=new Dictionary<ObservationCamera,HashSet<string>>();
             foreach(var capture in captures)captureLights[capture.owner]=NativeDisplayDependencies(capture.view);
-            foreach(var pair in dormantNative){
-                if(pair.Value.Phase==NativeEntityPhase.Failed)continue;
-                var spatial=ReadDormantSpatial(pair.Key,pair.Value,out _,out var prepared,out var placed);
+            var views=new List<RoomObservationView>();if(direct!=null)views.Add(direct);if(predicted!=null)views.Add(predicted);
+            foreach(var capture in captures)views.Add(capture.view);
+            var required=new HashSet<string>(directLights,StringComparer.Ordinal);required.UnionWith(predictedLights);
+            foreach(var lights in captureLights.Values)required.UnionWith(lights);
+            foreach(var candidate in QueryDormantView(views,required)){
+                if(dormantNative[candidate.Id].Phase==NativeEntityPhase.Failed)continue;
+                var spatial=candidate.Spatial;bool prepared=candidate.Prepared,placed=candidate.Placed;
                 // A missing exact scan plane cannot display this ink. Keep facts
                 // unknown for retention, but do not acquire a useless hidden view.
-                if(!prepared||!placed){viewerDisplayDemand.Remove(pair.Key);continue;}
-                spatial=spatial.Transform(transform.localToWorldMatrix);int revision=ObjectRevision(pair.Key);
-                int priority=(directLights.Contains(pair.Key)||direct?.Includes(spatial)==true)?(spatial.Visual.Known?0:2):(predictedLights.Contains(pair.Key)||predicted?.Includes(spatial)==true)?1:4;
+                if(!prepared||!placed){viewerDisplayDemand.Remove(candidate.Id);continue;}
+                spatial=spatial.Transform(transform.localToWorldMatrix);int revision=ObjectRevision(candidate.Id);
+                int priority=(directLights.Contains(candidate.Id)||direct?.Includes(spatial)==true)?(spatial.Visual.Known?0:2):(predictedLights.Contains(candidate.Id)||predicted?.Includes(spatial)==true)?1:4;
                 if(priority<4){
-                    if(!viewerDisplayDemand.TryGetValue(pair.Key,out var demand))viewerDisplayDemand[pair.Key]=demand=new();
+                    if(!viewerDisplayDemand.TryGetValue(candidate.Id,out var demand))viewerDisplayDemand[candidate.Id]=demand=new();
                     demand.Revision=revision;demand.Priority=priority;demand.Until=now+ObservationGrace;
                 }
-                foreach(var capture in captures)if(captureLights[capture.owner].Contains(pair.Key)||capture.view.Includes(spatial)){
-                    if(!captureDisplayDemand.TryGetValue(pair.Key,out var demand))captureDisplayDemand[pair.Key]=demand=new();
+                foreach(var capture in captures)if(captureLights[capture.owner].Contains(candidate.Id)||capture.view.Includes(spatial)){
+                    if(!captureDisplayDemand.TryGetValue(candidate.Id,out var demand))captureDisplayDemand[candidate.Id]=demand=new();
                     demand.Revision=revision;demand.Priority=spatial.Visual.Known?0:2;demand.Captures.Add(capture.owner);
                 }
             }

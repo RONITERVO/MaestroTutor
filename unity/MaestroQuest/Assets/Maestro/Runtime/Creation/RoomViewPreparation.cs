@@ -62,13 +62,12 @@ namespace Maestro.Quest.Creation
             var view=new RoomObservationView(camera,sourceLayers:-1);var missing=new List<string>();
             var lighting=LightViewDependencies(new[]{view});
             if(!view.Reliable)throw new InvalidOperationException("The virtual camera projection is unavailable");
-            foreach(var pair in dormantNative){
-                if(pair.Key=="book")continue;
-                var bounds=ReadDormantSpatial(pair.Key,pair.Value,out _,out var prepared,out var placed);
+            foreach(var candidate in QueryDormantView(new[]{view},lighting)){
+                if(candidate.Id=="book")continue;
                 // Missing scan anchors intentionally hide anchored ink in the
                 // viewer too. Unknown geometry remains a capture dependency.
-                if(prepared&&!placed)continue;
-                if(lighting.Contains(pair.Key)||view.Includes(bounds.Transform(transform.localToWorldMatrix)))missing.Add(pair.Key);
+                if(candidate.Prepared&&!candidate.Placed)continue;
+                if(lighting.Contains(candidate.Id)||view.Includes(candidate.Spatial.Transform(transform.localToWorldMatrix)))missing.Add(candidate.Id);
             }
             return missing.ToArray();
         }

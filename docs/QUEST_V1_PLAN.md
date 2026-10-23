@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[dormant guard checkpoint](#change-driven-dormant-collision-guards--2026-10-23) records this
+[visual lookup checkpoint](#persistent-visual-candidate-lookup--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -151,9 +151,13 @@ Stable dormant collision geometry now survives between captures; current native
 objects and exact scan anchors are read afresh. Accepted journal edits, membership
 changes and metadata publication conservatively rebuild the dormant partition.
 Stable unanchored collision guards now update on accepted changes and retirement;
-only exact scan anchors refresh each frame. View demand and ground discovery still
-scan candidates, and accepted reconciliation still visits dormant members. This
-is not a fully incremental index of every world consumer. Named areas explicitly
+only exact scan anchors refresh each frame. Visual retention, display admission,
+prepared captures and shadow preparation now share a persistent lookup for
+unloaded unanchored visual bounds. Current renderers, skins and lamps remain fresh.
+Display scheduling still visits demand identities, ground discovery scans its
+candidates, and accepted reconciliation visits dormant members. Broad cache
+invalidation and query allocations remain capacity work; this is not a fully
+incremental index of every world consumer. Named areas explicitly
 choose independent or together loading; enabled physical connections remain
 coupled across either type of area. This removes the implicit
 all-members residency requirement without increasing any quota. Larger logical
@@ -16051,3 +16055,70 @@ ground discovery, conservative whole-partition invalidation and independent
 saved/resident/simulation/query budgets remain larger-world work before any quota
 increase. Device, paid-provider, signing, deployment and Meta work remain on hold.
 The complete v1 release goal is still active.
+
+## Persistent visual candidate lookup — 2026-10-23
+
+Observation, display admission, prepared view captures and off-screen shadow
+preparation now share a retained spatial lookup for unloaded, unanchored visual
+geometry. Query branches reject distant geometry before exact layer/projection
+checks. Explicit lighting and connected-area dependencies are retained even when
+they lie outside the camera view. Unknown bounds remain dependencies; unknown
+tracking cannot prove absence. Capture and ordinary display keep their different
+existing readiness rules: unprepared metadata retains content conservatively but
+does not by itself request that every area load.
+
+Current native renderer/skin poses and exact physical scan anchors stay fresh.
+Moving the virtual-world root transforms query envelopes without rebuilding its
+room-local tree. Accepted edits, Undo, deletion, world replacement, residency
+changes and metadata publication invalidate the partition. The index publishes
+only a complete immutable snapshot and is cleared with spatial preparation on
+lifecycle boundaries. Exact identity, per-actor room collisions, visibility,
+loading groups and shared user/agent capability definitions are unchanged.
+
+Conservative branch envelopes account for projection arithmetic and the whole
+predicted view sweep; they are never exposed as authored geometry or used to
+prove collision clearance. Exhaustive comparisons cover perspective and
+orthographic cameras, multiple views, layer masks, prediction margins, moved and
+scaled worlds, unknown/empty bounds and large/cancelling coordinates. Float-range
+overflow risk and non-finite bounds size remain unknown across backend precision
+differences. The two boundary regressions were reproduced before their fix. An
+earlier reproduction assumed Mono rounded intermediate products to float32; that
+assumption failed and is recorded separately, not as a reproduced device failure.
+
+The complete fresh inventory passed: 1,620 EditMode and 2,251 PlayMode tests,
+with exactly the three named private-model/motion skips. All native processes
+exited cleanly and both stereo HRTF probes passed. The corrected focused run
+passed 38 EditMode and 74 PlayMode cases. Shared room/catalog/Quest tests passed
+1,861 cases; app/probe TypeScript and the generated catalog check passed.
+Capability definitions are unchanged; only native source provenance changed.
+The owned test mirror reconciles 3,508 frozen source inputs, four known Configure
+differences and twelve generated inputs. Fourteen protected files and 1,205 shared
+client inputs remain unchanged.
+
+Eighteen unloaded objects over 30 frames required zero repeated bounds reads or
+index rebuild work, and the view query returned one candidate. Relocating the
+world retained the same saved state without loading those objects. These are
+Editor directory measurements, excluding current renderers, lamps, metadata work,
+query allocations and Quest frame time.
+
+Fresh full sparse Headless `d80a6134a96d4d748cdbf9674561650d` and rendered Book
+`fd43492b61cf4212a66218b9e5a9e56b` journeys passed with clean client/native exits
+and quiet confirmed stores. They exercise shared production operations using
+local fixtures, without providers. The book's area-dependency result and controls
+were visually reviewed; this is desktop evidence, not headset acceptance.
+
+Evidence is retained in `.quest-evidence/visual-lookup-20261023/`, including the
+initial interrupted full run, incorrect intermediate-precision assumption, two
+reproduced boundary failures, focused correction and complete final inventory.
+The prior unsigned Android compilation at `ed286f6d` remains separate; no fresh
+APK, device/provider run, signing, deployment or Meta operation was performed.
+The full v1 release goal remains active.
+
+This removes repeated dormant bounds reads from those visual consumers while
+inputs stay unchanged. It does not remove every scan: display scheduling still
+visits demand identities, live renderers and light sources remain fresh, and
+ground discovery still scans its candidates. Cache invalidation is conservative
+and can rebuild a partition after an unrelated authored change. Allocation and
+whole-frame Quest measurements, finer metadata invalidation and separate saved,
+resident, simulation and query budgets remain capacity work before quota changes.
+No larger-world capacity or new provider/physical-device acceptance is claimed.

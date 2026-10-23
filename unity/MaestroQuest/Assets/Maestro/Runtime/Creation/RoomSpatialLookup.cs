@@ -80,6 +80,19 @@ namespace Maestro.Quest.Creation
             Visit(node.Left,bodyMin,bodyMax,groundMin,groundMax,ground,all,result,ref visited);
             Visit(node.Right,bodyMin,bodyMax,groundMin,groundMax,ground,all,result,ref visited);
         }
+        // Caller supplies a conservative enclosing-branch test (for example a
+        // swept stereo view). Leaf policy/layers are still checked by the caller.
+        internal int Query(Func<Vector3,Vector3,bool> intersects,List<int> result,bool includeEmpty=false){
+            if(intersects==null)throw new ArgumentNullException(nameof(intersects));
+            if(result==null)throw new ArgumentNullException(nameof(result));
+            result.Clear();result.AddRange(unknown);if(includeEmpty)result.AddRange(empty);
+            int visited=0;if(nodes.Length>0)Visit(0,intersects,result,ref visited);return visited;
+        }
+        void Visit(int index,Func<Vector3,Vector3,bool> intersects,List<int> result,ref int visited){
+            visited++;var node=nodes[index];if(!intersects(node.Min,node.Max))return;
+            if(node.Entry>=0){result.Add(node.Entry);return;}
+            Visit(node.Left,intersects,result,ref visited);Visit(node.Right,intersects,result,ref visited);
+        }
         static bool Intersects(Vector3 a,Vector3 b,Vector3 c,Vector3 d)=>a.x<=d.x&&b.x>=c.x&&a.y<=d.y&&b.y>=c.y&&a.z<=d.z&&b.z>=c.z;
     }
 }

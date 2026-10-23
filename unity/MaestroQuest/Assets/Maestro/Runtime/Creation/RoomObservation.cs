@@ -52,7 +52,11 @@ namespace Maestro.Quest.Creation
             if(!spatial.Visual.Known)return true;
             return spatial.Visual.HasBounds&&Includes(spatial.Visual.Bounds);
         }
-        bool Includes(Bounds bounds)
+        // A branch encloses both leaf centres and leaf extents. Twice its
+        // diagonal bounds the leaf-dependent prediction margin; using the
+        // ordinary leaf margin here could incorrectly prune a swept view.
+        internal bool MayInclude(RoomSpatialExtent envelope)=>!envelope.Known||envelope.HasBounds&&Includes(envelope.Bounds,true);
+        bool Includes(Bounds bounds,bool branch=false)
         {
             // Unknown geometry/projection cannot be used as evidence to retire.
             if(!valid||!RoomRecipe.Finite(bounds.center)||!RoomRecipe.Finite(bounds.extents))return true;
@@ -60,7 +64,7 @@ namespace Maestro.Quest.Creation
             // 2*r*sin(theta/2). Expanding each actual eye's planes by this
             // distance plus translation contains the entire swept view, not
             // merely endpoint frusta. It also supports orthographic cameras.
-            float margin=translationMargin+angularChord*(Vector3.Distance(origin,bounds.center)+bounds.extents.magnitude);
+            float margin=translationMargin+angularChord*(Vector3.Distance(origin,bounds.center)+(branch?2:1)*bounds.extents.magnitude);
             if(!float.IsFinite(margin))return true;
             foreach(var planes in frusta){
                 bool inside=true;
@@ -129,9 +133,9 @@ namespace Maestro.Quest.Creation
             }
             observationRenderers.Clear();
             if(!includeDormant)return;
-            foreach(var pair in dormantNative){
-                var spatial=Frame.Valid?ReadDormantSpatial(pair.Key,pair.Value,out _).Transform(transform.localToWorldMatrix):RoomSpatialBounds.Unknown;
-                foreach(var view in views)if(view.Includes(spatial)){retain(pair.Key);break;}
+            foreach(var candidate in QueryDormantView(views)){
+                var spatial=Frame.Valid?candidate.Spatial.Transform(transform.localToWorldMatrix):RoomSpatialBounds.Unknown;
+                foreach(var view in views)if(view.Includes(spatial)){retain(candidate.Id);break;}
             }
         }
     }
