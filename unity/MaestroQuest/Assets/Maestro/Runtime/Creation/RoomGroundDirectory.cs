@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 namespace Maestro.Quest.Creation {
     public sealed partial class RoomEditor {
@@ -11,9 +12,7 @@ namespace Maestro.Quest.Creation {
             internal readonly bool Cached;
             internal GroundCandidate((string target,bool terrain,bool imported) definition,RoomSpatialExtent extent,bool cached){Definition=definition;Extent=extent;Cached=cached;}
         }
-        RoomJournal groundJournal;RoomSpatialIndex groundMetadata;
-        (int revision,int count) groundStamp;
-        int groundResidencyVersion,groundMetadataVersion;
+        RoomSpatialDirectoryState groundDirectoryState;
         GroundCandidate[] groundEntries=Array.Empty<GroundCandidate>();
         int[] groundStableSlots=Array.Empty<int>(),groundLiveSlots=Array.Empty<int>();
         RoomSpatialLookup groundLookup;
@@ -22,14 +21,12 @@ namespace Maestro.Quest.Creation {
         readonly List<int> groundMatches=new();
         long groundReads,groundBuildWork,groundNodeVisits,groundQueryCandidates;
         internal (long reads,long build,long nodes,long candidates) GroundQueryWork=>(groundReads,groundBuildWork,groundNodeVisits,groundQueryCandidates);
-        void ClearGroundDirectory(){groundJournal=null;groundMetadata=null;groundLookup=null;groundEntries=Array.Empty<GroundCandidate>();groundStableSlots=groundLiveSlots=Array.Empty<int>();groundMatches.Clear();}
+        void ClearGroundDirectory(){groundDirectoryState=null;groundLookup=null;groundEntries=Array.Empty<GroundCandidate>();groundStableSlots=groundLiveSlots=Array.Empty<int>();groundMatches.Clear();}
         RoomSpatialExtent ReadGroundExtent(string id){
             groundReads++;var spatial=ReadSpatialBounds(id,out var source);return RoomGroundBounds.ForReadiness(spatial,source=="authored");
         }
         void RefreshGroundDirectory(){
-            var stamp=journal.MovementCatalogStamp;int metadata=spatialIndex?.Generation??0;
-            if(groundLookup!=null&&ReferenceEquals(groundJournal,journal)&&groundStamp==stamp&&groundResidencyVersion==collisionResidencyVersion&&
-                ReferenceEquals(groundMetadata,spatialIndex)&&groundMetadataVersion==metadata)return;
+            if(groundDirectoryState?.Current(journal,spatialIndex,collisionResidencyVersion)==true)return;
             var definitions=journal.GroundCandidates();
             if(definitions.Length>RoomSpatialLookup.MaximumEntries)throw new ArgumentOutOfRangeException(nameof(definitions),"Spatial lookup capacity exceeded");
             var entries=new GroundCandidate[definitions.Length];var stable=new List<int>();var live=new List<int>();var bounds=new List<RoomSpatialExtent>();
@@ -41,8 +38,9 @@ namespace Maestro.Quest.Creation {
             var lookup=new RoomSpatialLookup(bounds);
             // Publish a complete immutable partition. Current native readiness,
             // live poses and exact anchors are always evaluated by the leaf.
+            var state=new RoomSpatialDirectoryState(journal,spatialIndex,collisionResidencyVersion,stable.Select(index=>entries[index].Definition.target));
             groundEntries=entries;groundStableSlots=stable.ToArray();groundLiveSlots=live.ToArray();groundLookup=lookup;groundBuildWork+=lookup.BuildWork;
-            groundJournal=journal;groundStamp=stamp;groundResidencyVersion=collisionResidencyVersion;groundMetadata=spatialIndex;groundMetadataVersion=metadata;
+            groundDirectoryState=state;
         }
         void SelectGroundCandidates(Bounds envelope){
             RefreshGroundDirectory();groundNodeVisits+=groundLookup.Query(envelope,null,groundMatches);

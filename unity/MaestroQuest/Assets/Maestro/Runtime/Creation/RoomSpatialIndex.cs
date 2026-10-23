@@ -15,7 +15,7 @@ namespace Maestro.Quest.Creation
     // in the background, with no native allocations or bundled-file publication.
     internal sealed class RoomSpatialIndex:IDisposable
     {
-        sealed class Entry {internal string Source,ModelHash;internal RoomObjectData Data;internal RoomSpatialBounds Bounds;internal bool Ready;}
+        sealed class Entry {internal string Id,Source,ModelHash;internal RoomObjectData Data;internal RoomSpatialBounds Bounds;internal bool Ready;}
         readonly Dictionary<string,Entry> entries=new(StringComparer.Ordinal);
         readonly Dictionary<string,ModelAssetBounds> inspected=new(StringComparer.Ordinal);
         readonly Queue<Entry> pending=new();
@@ -24,7 +24,9 @@ namespace Maestro.Quest.Creation
         readonly CancellationTokenSource lifetime=new();
         Task<ModelAssetBounds> reading;string readingHash;bool ended;
         internal int Count=>entries.Count;
-        internal int Generation {get;private set;}
+        readonly RoomSpatialChanges changes=new();
+        internal long Generation=>changes.Version;
+        internal bool ChangesAffect(long since,HashSet<string> targets)=>changes.Affects(since,targets);
         internal bool Pending=>!ended&&(pending.Count>0||reading!=null);
         internal RoomSpatialIndex(ModelLibrary library):this(library.PrepareRestBoundsAsync,hash=>library.TryReadBounds(hash,out var value,true)?value:null){}
         internal RoomSpatialIndex(Func<string,CancellationToken,Task<ModelAssetBounds>> inspect,Func<string,ModelAssetBounds?> cached=null)
@@ -32,16 +34,15 @@ namespace Maestro.Quest.Creation
         internal void Synchronize(RoomDocument document)
         {
             if(ended)throw new ObjectDisposedException(nameof(RoomSpatialIndex));
-            Generation++;
             var active=new HashSet<string>();var hashes=new HashSet<string>();pending.Clear();
             foreach(var data in document.objects){
                 active.Add(data.id);if(data.kind==RoomObjectKind.ImportedModel)hashes.Add(data.modelHash);
                 string source=RoomEditor.SpatialSource(data.Copy());
-                if(!entries.TryGetValue(data.id,out var entry)||entry.Source!=source){entry=new(){Source=source,Data=data.Copy(),ModelHash=data.kind==RoomObjectKind.ImportedModel?data.modelHash:null};entries[data.id]=entry;}
-                if(entry.Ready&&!entry.Bounds.Visual.Known&&data.kind==RoomObjectKind.ImportedModel&&cached(data.modelHash)?.Known==true)entry.Ready=false;
+                if(!entries.TryGetValue(data.id,out var entry)||entry.Source!=source){entry=new(){Id=data.id,Source=source,Data=data.Copy(),ModelHash=data.kind==RoomObjectKind.ImportedModel?data.modelHash:null};entries[data.id]=entry;changes.Record(data.id);}
+                if(entry.Ready&&!entry.Bounds.Visual.Known&&data.kind==RoomObjectKind.ImportedModel&&cached(data.modelHash)?.Known==true){entry.Ready=false;changes.Record(data.id);}
                 if(!entry.Ready){entry.Data??=data.Copy();pending.Enqueue(entry);}
             }
-            foreach(var id in entries.Keys.Where(id=>!active.Contains(id)).ToArray())entries.Remove(id);
+            foreach(var id in entries.Keys.Where(id=>!active.Contains(id)).ToArray()){entries.Remove(id);changes.Record(id);}
             foreach(var hash in inspected.Keys.Where(hash=>!hashes.Contains(hash)).ToArray())inspected.Remove(hash);
         }
         internal bool TryRead(string target,string source,out RoomSpatialBounds bounds)
@@ -75,7 +76,7 @@ namespace Maestro.Quest.Creation
                     }
                 }
                 try{entry.Bounds=RoomAuthoredBounds.Derive(entry.Data,asset);}catch(Exception){entry.Bounds=RoomSpatialBounds.Unknown;}
-                entry.Ready=true;entry.Data=null;Generation++;
+                entry.Ready=true;entry.Data=null;changes.Record(entry.Id);
             }
         }
         public void Dispose()

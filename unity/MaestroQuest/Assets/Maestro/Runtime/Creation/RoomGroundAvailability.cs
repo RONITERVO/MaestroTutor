@@ -15,8 +15,8 @@ namespace Maestro.Quest.Creation
         int groundCandidatesRevision=-1,groundCandidatesCount=-1;
         internal (string target,bool terrain,bool imported)[] GroundCandidates()
         {
-            if(groundCandidates!=null&&groundCandidatesRevision==clock.Next&&groundCandidatesCount==items.Count)return groundCandidates;
-            groundCandidatesRevision=clock.Next;groundCandidatesCount=items.Count;
+            if(groundCandidates!=null&&groundCandidatesRevision==spatialCatalogRevision&&groundCandidatesCount==items.Count)return groundCandidates;
+            groundCandidatesRevision=spatialCatalogRevision;groundCandidatesCount=items.Count;
             return groundCandidates=items.Values
                 .Where(x=>!x.IsBuiltIn&&x.physics==ItemPhysics.Fixed&&
                     ((x.heightFields?.Length??0)>0||x.kind==RoomObjectKind.ImportedModel&&x.modelGeometry?.walkable==true&&x.modelGeometry.meshCollision))

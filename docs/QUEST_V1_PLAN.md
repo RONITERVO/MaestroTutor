@@ -4,7 +4,7 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[ground readiness checkpoint](#persistent-ground-readiness-and-relocated-foot-probes--2026-10-23) records this
+[spatial invalidation checkpoint](#identity-scoped-spatial-invalidation--2026-10-23) records this
 increment's implementation, verification progress and remaining work. The preceding
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
 checkpoints remain separately verified. The
@@ -155,9 +155,12 @@ only exact scan anchors refresh each frame. Visual retention, display admission,
 prepared captures and shadow preparation now share a persistent lookup for
 unloaded unanchored visual bounds. Current renderers, skins and lamps remain fresh.
 Ground readiness also retains stable unloaded surface bounds, while live surfaces
-and exact scan anchors remain fresh. Display scheduling still visits demand
-identities, and accepted reconciliation visits dormant members. Broad cache
-invalidation and query allocations outside the warmed ground-completeness path
+and exact scan anchors remain fresh. These directories share bounded identity
+logs for runtime placement and metadata publication, avoiding rebuilds for
+unrelated world settings and uncached identities. Authored object and native
+residency changes still rebuild whole partitions. Display scheduling still visits
+demand identities, and accepted reconciliation visits dormant members. Query
+allocations outside warmed ground completeness and finer authored invalidation
 remain capacity work; this is not a fully incremental index of every world consumer. Named areas explicitly
 choose independent or together loading; enabled physical connections remain
 coupled across either type of area. This removes the implicit
@@ -16177,3 +16180,54 @@ increment does not establish new physical, provider or audio-quality acceptance.
 Broader cache invalidation can still rebuild unrelated partitions; live geometry,
 query scheduling and separate saved/resident/simulation budgets remain capacity
 work before increasing limits. The full v1 release goal remains active.
+
+## Identity-scoped spatial invalidation — 2026-10-23
+
+Collision, visual and ground directories now share one invalidation contract.
+Authored object edits remain conservative across all fields, including future
+components; creation, deletion, Undo, fork adoption and native residency replace
+the applicable snapshot. Unrelated world settings no longer borrow the global
+observation clock to invalidate geometry. That monotonic observation clock and
+its stale-edit protections are unchanged.
+
+Placement updates and detached metadata publications use bounded identity logs.
+A directory advances past changes to identities it does not cache without
+rebuilding its geometry. Current native objects and exact scan anchors remain
+fresh. A required identity change, replaced owner/index, or a missed 256-entry
+history window forces a refresh. This log is derived state, not a second world
+model or a saved schema. Metadata synchronization no longer publishes a change
+when its detached inputs and readiness remain identical. Changes to source,
+readiness, removal and prepared results still publish the affected identity.
+
+The pre-fix regression recorded 120 dormant bounds reads and 690 logical index
+build units in each directory while remembering one live object's movement over
+30 frames beside four unloaded surfaces. The corrected run records zero for all
+six counters. Saved placement advances and exhaustive view/ground answers remain
+correct. These are Editor directory-work measurements, not Quest frame time,
+whole-frame allocations or proof of durable Android storage. The existing warmed
+boolean ground-query allocation check remains part of regression coverage.
+
+Verification passed all 1,630 discovered EditMode tests and all 654 selected
+PlayMode cases across 88 source files, reconciled against fresh Unity discovery,
+with no skips and clean native exits. The focused run passed 23 EditMode and
+17 PlayMode cases. All 256 shared catalog tests and generated catalog verification
+passed; capability definitions are unchanged.
+
+The fresh full sparse Headless journey `be42f3c2ac4143518db4fcb899c8d094` passed
+with 2,625 observations, clean client/native exits and quiet confirmed stores.
+It uses the shared production operations and local model/gait/live-sound fixtures,
+without providers. Evidence reconciles 3,524 frozen native inputs, 1,205 unchanged
+shared client inputs and 14 unchanged protected files. The owned mirror has only
+the four known Configure differences and twelve generated inputs. The rendered
+Book journey at `0eed618d` remains separate prior evidence and was not rerun.
+
+Evidence is retained in `.quest-evidence/spatial-invalidation-20261023/`, including
+the pre-fix failure and unchanged source manifests. There is no new saved schema,
+capability definition, content quota or default behavior. No headset/provider,
+Android package, signing, deployment or Meta operation was performed.
+
+Authored object edits still rebuild whole partitions; source preparation and
+accepted reconciliation still visit objects. Native/live work and visual query
+allocations remain separate costs. Independent saved, resident, simulation and
+query budgets and measured headset capacity remain required before raising
+limits. The full v1 release goal remains active.

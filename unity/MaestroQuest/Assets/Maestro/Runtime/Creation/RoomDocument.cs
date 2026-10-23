@@ -253,7 +253,7 @@ namespace Maestro.Quest.Creation
         }
         RoomJournal(RoomJournal source)
         {
-            clock=source.clock;world=source.world.Copy();viewpoint=source.viewpoint.Copy();lighting=source.lighting.Copy();lightingRevision=source.lightingRevision;worldTime=source.worldTime.Copy();worldTimeRevision=source.worldTimeRevision;weather=source.weather.Copy();weatherRevision=source.weatherRevision;
+            clock=source.clock;spatialCatalogRevision=source.spatialCatalogRevision;world=source.world.Copy();viewpoint=source.viewpoint.Copy();lighting=source.lighting.Copy();lightingRevision=source.lightingRevision;worldTime=source.worldTime.Copy();worldTimeRevision=source.worldTimeRevision;weather=source.weather.Copy();weatherRevision=source.weatherRevision;
             foreach(var pair in source.items) items.Add(pair.Key,pair.Value.Copy());
             foreach(var pair in source.revisions) revisions.Add(pair.Key,pair.Value);
             foreach(var pair in source.regions)regions.Add(pair.Key,pair.Value.Copy());
@@ -316,7 +316,7 @@ namespace Maestro.Quest.Creation
             if(PublicationReserved&&!runtime)return false;
             if (!items.TryGetValue(id,out var data) || !float.IsFinite(position.sqrMagnitude) || position.sqrMagnitude > 625 || !MotionFrame.ValidRotation(rotation)) return false;
             if ((data.position-position).sqrMagnitude < .000001f && Quaternion.Angle(data.rotation,rotation) < .1f) return false;
-            data.position = position; data.rotation = rotation; revisions[id]=clock.Next++;
+            data.position = position; data.rotation = rotation; revisions[id]=clock.Next++;spatialPlacements.Record(id);
             if(runtime)runtimePlacementAdvances++;return true;
         }
         public RoomDocument Snapshot() => new() { version = RoomDocument.CurrentVersion, regions=RegionSnapshot(), world=world.Copy(), viewpoint=viewpoint.Copy(), objects = items.Values.Select(item => item.Copy()).OrderBy(item => item.id, StringComparer.Ordinal).ToArray(), structures = StructureSnapshot(), audioSources=AudioSnapshot(), environmentProfiles=EnvironmentSnapshot(), appearances=AppearanceSnapshot(), visibilityLayers=VisibilitySnapshot(), lighting=Lighting,worldTime=WorldTime,weather=Weather };
@@ -439,6 +439,7 @@ namespace Maestro.Quest.Creation
         }
         void Set(RoomObjectData[] before, RoomObjectData[] after)
         {
+            if(before.Length>0||after.Length>0)spatialCatalogRevision++;
             InvalidateRetentionObjects(before,after);
             InvalidateObjectSearch(before,after);
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
