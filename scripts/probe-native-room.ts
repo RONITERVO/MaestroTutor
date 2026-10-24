@@ -1,3 +1,4 @@
+import {validFactValue} from '../shared/behaviourFacts';
 // Copyright 2026 Roni Tervo
 // SPDX-License-Identifier: Apache-2.0
 import {probeRoomPersistence} from './probe-room-persistence';
@@ -512,6 +513,9 @@ try{
   if(boundValue.profileId!==profileId||boundValue.state.effectiveRealCollisions)throw new Error('Per-actor profile did not exclude the real room');
   const savedBinding=await savedEnvironment(),savedValue=savedBinding.catalog!.value as {profileId:string;profileRevision:number;realCollisions:boolean;state?:unknown};
   if(savedValue.profileId!==profileId||savedValue.profileRevision!==(profileBound.catalog!.value as {revision:number}).revision||savedValue.realCollisions||savedValue.state!==undefined)throw new Error('Saved environment intent was confused with live readiness');
+  const membershipRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'resource.members',version:1,arguments:{kind:'environment',id:profileId,cursor:''}}}]);
+  const savedMembers=membershipRead.catalog?.value as {id:string;revision:number;members:string[];total:number;offset:number;next:string};
+  if(!validFactValue('resource.members',savedMembers)||savedMembers.id!==profileId||savedMembers.revision!==savedValue.profileRevision||savedMembers.total!==1||savedMembers.offset!==0||savedMembers.next!==''||JSON.stringify(savedMembers.members)!==JSON.stringify(['maestro']))throw new Error('Shared saved membership did not match the native collision profile');
   const members=(profileBound.catalog!.value as {members:string[]}).members;
   if(JSON.stringify(members)!==JSON.stringify(['maestro']))throw new Error('Profile membership did not preserve exact target IDs');
   const profileEdited=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:profileId,revision:(profileBound.catalog!.value as {revision:number}).revision,name:'Downhill actors',realCollisions:false,members}}}}]));
@@ -522,7 +526,7 @@ try{
   if((bindingUndo.catalog!.value as {profileId:string}).profileId!=='')throw new Error('Assignment Undo did not restore inheritance');
   const unusedProfile=await profileRead();
   const profileRemoved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.remove',version:1,arguments:{id:profileId,revision:(unusedProfile.catalog!.value as {revision:number}).revision}}}}]));
-  await writeFile(join(directory,'entity-environment.json'),JSON.stringify({boundary:'Real native shared transport, persisted profile edits, binding facts and Undo. PlayMode separately tests physical motion; no headset or live provider proof.',profileSaved,unbound,profileInitial,profileAssigned,bound,savedBinding,profileBound,profileEdited,profileList,profileUndo,bindingUndo,profileRemoved},null,2));
+  await writeFile(join(directory,'entity-environment.json'),JSON.stringify({boundary:'Real native shared transport, persisted profile edits, binding facts and Undo. PlayMode separately tests physical motion; no headset or live provider proof.',profileSaved,unbound,profileInitial,profileAssigned,bound,savedBinding,savedMembers,profileBound,profileEdited,profileList,profileUndo,bindingUndo,profileRemoved},null,2));
 
   const appearanceStyle={tint:'#DDBBAA',patternMode:'inherit',imageHash:'',pattern:{kind:'solid',plane:'uv',secondary:'#FFFFFF',columns:1,rows:1},tiling:{x:1,y:1},offset:{x:0,y:0},renderMode:'blend',opacity:.4,cutoff:0,sidedness:'inherit',grain:-1,shading:-1};
   const appearanceSaved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'appearance.save',version:1,arguments:{id:'',revision:0,name:'Shared warm glass',style:appearanceStyle,members:[]}}}}]));

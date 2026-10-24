@@ -127,6 +127,32 @@ or establish physical room alignment. Those limits and the distinction between
 collision, visual and acoustic policy are part of the shared contract.
 
 
+## Consistent saved membership discovery
+
+Use `resource.members` (version 1) with `kind` equal to `environment`,
+`appearance`, `visibility` or `region`, the exact definition ID and an empty
+`cursor`. Pass its `next` unchanged until empty. Each page contains at most
+16 stable object IDs, the current definition revision and a membership generation.
+An existing empty definition returns zero members; a missing definition is
+unavailable. Appearance membership counts an object once even when several of its
+parts or materials use the same definition.
+
+The directory is canonical saved metadata. Reading it never loads a native view,
+acquires ownership or edits the world. Object movement, native residency and
+unrelated bindings do not invalidate continuation. Membership or definition edits,
+including Undo/Redo, invalidate it; an old cursor never becomes valid merely
+because Undo restores the previous list. Cursors also belong to the current
+workspace/temporary scope. If continuation becomes unavailable, discard the
+collected pages and restart rather than combine different generations.
+
+The existing offset-based appearance, visibility and region facts remain
+compatible. Appearance and visibility definition revisions alone do not detect
+binding changes, so use the shared cursor fact for coherent multi-page discovery.
+A completed read still does not reserve objects or freeze their revisions:
+subsequent edits must claim all affected members, provide exact current guards
+and pass the action's publication checks. This directory adds no saved format,
+native loading, physics, profile-member or program-resource allowance.
+
 ## Planned scaling of collision profiles
 
 This section records the remaining implementation contract. The saved-settings
@@ -147,13 +173,13 @@ Implement in this order:
    preparing, unavailable ground and obstruction explicitly. An absent
    body is not evidence that the requested policy is disabled or that motion is
    ready. The human inspector and agent facts must return the same distinction.
-2. Give profile membership a bounded, revision-checked discovery path before
-   raising its limit. The current `environment.profile` includes all members in a
-   program value; do not silently expand that old fact beyond its value budget.
-   A versioned summary and paged membership must reject mixing pages from different
-   revisions. Every affected object still needs an exact guard and ownership claim.
-   Saved programs retain their declared resource budget; a large one-off edit is
-   not a license for an unbounded program action.
+2. The shared `resource.members` continuation now detects definition and
+   membership changes without loading objects. Before raising the collision
+   profile limit, add a versioned summary: the current `environment.profile`
+   includes all members in one program value and cannot silently grow beyond its
+   value budget. Every affected object still needs an exact guard and ownership
+   claim. Saved programs retain their declared resource budget; a large one-off
+   edit is not a license for an unbounded program action.
 3. Extract one physical admission check shared by live policy changes and native
    restoration. Keep exact collider/scan penetration proof, selected ground,
    current world transform, tracking and object ownership checks. Preparation may

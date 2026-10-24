@@ -75,6 +75,7 @@ namespace Maestro.Quest.Creation
         internal int EnvironmentCount=>environments.Count;
         public RoomEnvironmentProfile[] EnvironmentSnapshot()=>environments.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();
         void SetEnvironments(RoomEnvironmentProfile[] before,RoomEnvironmentProfile[] after) {
+            foreach(var id in before.Concat(after).Select(p=>p.id).Distinct(StringComparer.Ordinal))InvalidateResourceDefinition("environment",id);
             foreach(var p in before){environments.Remove(p.id);environmentRevisions.Remove(p.id);}
             foreach(var p in after){environments[p.id]=p.Copy();environmentRevisions[p.id]=clock.Next++;}
         }

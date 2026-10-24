@@ -83,6 +83,7 @@ namespace Maestro.Quest.Creation
         public RoomRegion[] RegionSnapshot()=>regions.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();
         public string RegionFor(string target)=>regions.Values.FirstOrDefault(x=>x.members.Contains(target,StringComparer.Ordinal))?.id??"";
         void SetRegions(RoomRegion[] before,RoomRegion[] after) {
+            foreach(var id in before.Concat(after).Select(p=>p.id).Distinct(StringComparer.Ordinal))InvalidateResourceDefinition("region",id);
             InvalidateRetentionRegions(before,after);
             foreach(var value in before){regions.Remove(value.id);regionRevisions.Remove(value.id);}
             foreach(var value in after){regions[value.id]=value.Copy();regionRevisions[value.id]=clock.Next++;}

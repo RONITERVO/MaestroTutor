@@ -641,7 +641,11 @@ try{
  const savedCollisionSettings=await readResourceFact('object.environment.settings','Saved object environment',{target:ball.id});
  assert.equal(savedCollisionSettings.profileId,collisionProfile.output!.id);assert.equal(savedCollisionSettings.profileRevision,collisionProfile.output!.revision);
  assert.equal(savedCollisionSettings.realCollisions,false);assert.equal(savedCollisionSettings.state,undefined);
- await writeFile(join(directory,'book-native-environment.json'),JSON.stringify({boundary:'Original book generated profile and assignment forms, completed native receipts and exact saved choice reloaded. No headset, alignment, provider or physical collision claim.',collisionProfile,collisionBinding,savedCollisionSettings},null,2));
+ const savedCollisionMembers=await readResourceFact('resource.members','Saved resource members',{kind:'environment',id:String(collisionProfile.output!.id),cursor:''});
+ assert.equal(savedCollisionMembers.id,collisionProfile.output!.id);assert.equal(savedCollisionMembers.revision,collisionProfile.output!.revision);
+ assert.deepEqual(savedCollisionMembers.members,[ball.id]);assert.equal(savedCollisionMembers.total,1);assert.equal(savedCollisionMembers.offset,0);assert.equal(savedCollisionMembers.next,'');
+ await page.getByLabel('Current fact value',{exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-resource-members.png')});
+ await writeFile(join(directory,'book-native-environment.json'),JSON.stringify({boundary:'Original book generated profile and assignment forms, completed native receipts and exact saved choice reloaded. No headset, alignment, provider or physical collision claim.',collisionProfile,collisionBinding,savedCollisionSettings,savedCollisionMembers},null,2));
  await openNamedAction('Create or edit a reusable sound','audio.source.edit');
  await page.getByLabel('Action inputs definition name',{exact:true}).fill('Friendly ball beep');
  const sound=await runNamedAction('audio.source.edit');

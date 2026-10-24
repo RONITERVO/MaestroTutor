@@ -444,6 +444,7 @@ namespace Maestro.Quest.Creation
             if(before.Length>0||after.Length>0)spatialCatalogRevision++;
             InvalidateRetentionObjects(before,after);
             InvalidateObjectSearch(before,after);
+            InvalidateResourceMembers(before,after);
             foreach (var item in before) { items.Remove(item.id); revisions.Remove(item.id); }
             foreach (var item in after) { items[item.id] = item.Copy(); revisions[item.id]=clock.Next++; }
         }

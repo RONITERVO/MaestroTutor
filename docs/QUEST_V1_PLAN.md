@@ -16504,7 +16504,8 @@ The v1 goal and the device/provider holds remain active.
 ### Saved collision settings without native loading (2026-10-24)
 
 Status: focused native and shared-client checks passed with the bounded rerun
-below; fresh Headless/Book journeys are running. The complete integration entry
+below. Fresh Headless and Book journeys for `68d1eefb` both passed on October 24
+with client, Unity and wrapper exits zero. The complete Android integration entry
 above remains evidence for the preceding source, not this later increment.
 
 `object.environment.settings` exposes the canonical assignment, exact object and
@@ -16536,8 +16537,47 @@ claim that the first full web invocation passed. TypeScript, probe TypeScript,
 shared guide consistency, generated catalog provenance and native export equality
 passed. No test deadline was relaxed.
 
-Both end-to-end scripts now explicitly inspect the new saved fact and reject a
-fabricated live-state field. Fresh offline runs are in progress under
-`.quest-evidence/collision-settings-20261024/`; do not substitute the earlier
-complete journeys for these pending assertions. A fresh Android compile of this
-increment has not run. Device/provider/signing/deployment/Meta holds remain.
+Both end-to-end scripts explicitly inspected the new saved fact and rejected a
+fabricated live-state field. Headless run `e44929923b4643098c3b1413cfaa3da6`
+and Book run `0bbdf2a215de4d6890e078e04b4fbc7f` passed; the sequential wrapper
+exited zero at 02:57:13 UTC. Both used synthetic provider/media inputs. The
+rendered assignment form displayed its accepted virtual-terrain profile and
+reloaded exact saved values. This is desktop evidence, not headset legibility or
+physical alignment. The 3,550 native, 1,299 client/tool/catalog and 14 protected
+input hashes remained unchanged. CI release gate `40055012314` and native echo
+`40055012367` also passed for this commit. Evidence is under
+`.quest-evidence/collision-settings-20261024/` and
+`.quest-evidence/resource-members-20261024/preceding-journeys.json`.
+A fresh Android compile of this increment has not run.
+Device/provider/signing/deployment/Meta holds remain.
+
+
+### Shared saved-membership continuation (2026-10-24)
+
+Status: focused verification passed: **1,663 EditMode and 24 selected PlayMode**
+cases, with clean Unity exits and exact runtime case coverage. This adds 21
+metadata regressions and one no-load runtime test at native capacity. All
+**1,586 shared room and catalog UI tests** passed; the book form consumes a real
+native membership receipt and clears old values for changed/expired cursors.
+App/probe TypeScript, catalog provenance and native export equality passed.
+The 3,558 native inputs and 14 protected files remained unchanged.
+
+Both native journey scripts now explicitly inspect the new membership fact;
+fresh offline Headless/Book verification is the next integration gate. The
+completed journeys above belong to the preceding saved-settings increment.
+No new Android, headset or real-provider result is claimed.
+
+`resource.members` is one versioned fact for collision profiles, appearances,
+visibility layers and authored areas. It reads bounded pages from canonical
+metadata without native allocation. Definition and membership changes invalidate
+continuation independently, including an edit undone before the next read.
+Movement and unrelated bindings do not. Forks, reloads and temporary scopes cannot
+reuse a cursor. Existing offset facts remain compatible; their descriptions now
+direct coherent reads through the shared fact. This closes the earlier ambiguity
+where appearance/visibility binding edits did not change a definition revision.
+
+The new fact uses the existing generated catalog, Book inputs and agent transport.
+It does not enlarge the 16-member collision profile limit or permit dormant
+collision edits. Versioned profile summaries and shared physical admission remain
+the next collision-scaling steps. Evidence is in
+`.quest-evidence/resource-members-20261024/`.

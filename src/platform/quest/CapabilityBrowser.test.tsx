@@ -1029,3 +1029,33 @@ it('lets the human read the same exact guide and prerequisites without authoring
  expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'guides',capability:'guide.program.basic',version:1}}]);
  act(()=>client.cancel());
 });
+
+import nativeResourceMembers from '../../../test-fixtures/browser/resourceMembers.json';
+it('reads saved membership from the generated form and clears stale continuation results',async()=>{
+ const {client,screen,receive}=setup(true,['resourceMembers.v1']);
+ fireEvent.click(screen.getByRole('button',{name:'Action catalog'}));
+ fireEvent.change(screen.getByLabelText('Catalog category'),{target:{value:'facts'}});
+ fireEvent.click(screen.getByRole('button',{name:/^Search$/}));
+ const definition=behaviourFact('resource.members')!;
+ await receive({operation:'search',category:'facts',query:'',offset:0,total:1,pageSize:6,entries:[{id:definition.id,version:1,label:definition.label}],status:'Saved members'});
+ fireEvent.click(screen.getByRole('button',{name:new RegExp(definition.label)}));
+ const inspection:CatalogView={operation:'inspect',category:'facts',capability:definition.id,version:1,definition,available:false,value:null,status:'Choose inputs'};
+ await receive(inspection);
+ fireEvent.change(screen.getByLabelText('Fact inputs id'),{target:{value:nativeResourceMembers.arguments.id}});
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ expect(client.snapshot().request?.commands).toEqual([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:definition.id,version:1,arguments:nativeResourceMembers.arguments}}]);
+ const reading:CatalogView={...inspection,arguments:nativeResourceMembers.arguments,available:true,value:nativeResourceMembers.page};
+ await receive(reading);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain(nativeResourceMembers.page.members[0]);
+ expect(screen.queryByRole('button',{name:'Run action now'})).toBeNull();
+ const expired='16.'+'f'.repeat(32);
+ fireEvent.change(screen.getByLabelText('Fact inputs cursor'),{target:{value:expired}});
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');
+ await receive(reading);
+ expect(screen.getByLabelText('Current fact value').textContent).toContain('Not read yet');
+ fireEvent.click(screen.getByRole('button',{name:'Read fact'}));
+ expect(client.snapshot().request?.commands[0]).toMatchObject({catalog:{arguments:{...nativeResourceMembers.arguments,cursor:expired}}});
+ await receive({...inspection,arguments:{...nativeResourceMembers.arguments,cursor:expired},available:false,value:null,status:'Continuation expired'});
+ expect(screen.getByLabelText('Current fact value').textContent).not.toContain(nativeResourceMembers.page.members[0]);
+ expect(client.snapshot().request).toBeNull();act(()=>client.cancel());
+});

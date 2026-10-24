@@ -147,6 +147,7 @@ namespace Maestro.Quest.Creation
         public RoomAppearance ReadAppearance(string id)=>id!=null&&appearances.TryGetValue(id,out var value)?value.Copy():null;
         public RoomAppearance[] AppearanceSnapshot()=>appearances.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();
         void SetAppearances(RoomAppearance[] before,RoomAppearance[] after) {
+            foreach(var id in before.Concat(after).Select(p=>p.id).Distinct(StringComparer.Ordinal))InvalidateResourceDefinition("appearance",id);
             foreach(var p in before){appearances.Remove(p.id);appearanceRevisions.Remove(p.id);}
             foreach(var p in after){appearances[p.id]=p.Copy();appearanceRevisions[p.id]=clock.Next++;}
             // A shared edit changes each member's visible definition too. Old

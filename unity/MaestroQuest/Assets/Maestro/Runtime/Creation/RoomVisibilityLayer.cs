@@ -74,6 +74,7 @@ namespace Maestro.Quest.Creation
         public RoomVisibilityLayer ReadVisibility(string id)=>id!=null&&visibilityLayers.TryGetValue(id,out var value)?value.Copy():null;
         public RoomVisibilityLayer[] VisibilitySnapshot()=>visibilityLayers.Values.OrderBy(x=>x.id,StringComparer.Ordinal).Select(x=>x.Copy()).ToArray();
         void SetVisibility(RoomVisibilityLayer[] before,RoomVisibilityLayer[] after) {
+            foreach(var id in before.Concat(after).Select(p=>p.id).Distinct(StringComparer.Ordinal))InvalidateResourceDefinition("visibility",id);
             foreach(var p in before){visibilityLayers.Remove(p.id);visibilityRevisions.Remove(p.id);}
             foreach(var p in after){visibilityLayers[p.id]=p.Copy();visibilityRevisions[p.id]=clock.Next++;}
             var changed=before.Select(p=>p.id).Concat(after.Select(p=>p.id)).ToHashSet();

@@ -30969,7 +30969,7 @@
         "appearance.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and every page of appearance.members, supplying the exact revision and complete member list (up to the per-action member limit). Every affected object must still exist and be editable. Unloaded members stay unloaded; members currently loading or retiring must finish that transition first. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. image uses the exact imageHash from image.import or image.library and replaces procedural patterning. Other modes require imageHash empty. Missing/loading images show a neutral checker; inspect object.appearances and image.library for readiness. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. Images are explicitly imported through image.import; no emission, PBR or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Create or edit one of 64 reusable appearances. Empty id and revision 0 create; otherwise read appearance.definition and all resource.members pages with kind=appearance, supplying the exact revision and complete member list (up to the per-action member limit). Every affected object must still exist and be editable. Unloaded members stay unloaded; members currently loading or retiring must finish that transition first. style is the full supported definition. Tint multiplies source pigments/textures; binding-local tint overrides replace this tint, not multiply it. patternMode=inherit preserves source textures/patterns; replace clears the base image and uses the procedural pattern. image uses the exact imageHash from image.import or image.library and replaces procedural patterning. Other modes require imageHash empty. Missing/loading images show a neutral checker; inspect object.appearances and image.library for readiness. UV tiling/offset compose with imported UV transforms. renderMode=inherit requires opacity=1 and cutoff=0; opaque requires opacity=1,cutoff=0; blend uses opacity with cutoff=0; cutout uses cutoff. sidedness=inherit retains the source; grain/shading=-1 inherit, otherwise grain 0–1/shading 0–0.3. Images are explicitly imported through image.import; no emission, PBR or image generation is claimed. Shared edits update all bindings including dormant ones; a local tint override remains explicit. Saving alone does not bind an object. Saved source uses one Undo and temporary Keep/Discard. Identical assignments do not add Undo. Stable IDs are references, names are display text. Appearance changes never select a camera, change collision participation, acoustics, physical material contents or terrain height. Browser book pages and drawing-overlay ink retain their own display materials. Inspect facts after completion; saved source is not proof of headset appearance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -31351,7 +31351,7 @@
         "visibility.revision.current",
         "storage.writable"
       ],
-      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and every visibility.members page at its revision, then supply all members (up to the saved-world invocation limit). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. Unloaded members remain unloaded on definition edits and assignments; saved completion does not claim that they are visible. A member currently loading or retiring must finish that transition first. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Create or edit one of up to 16 reusable visual layers. Empty id and revision 0 create. Otherwise read visibility.layer and all resource.members pages with kind=visibility, then supply all members (up to the saved-world invocation limit). opacity 0–1 fades the group; realDepth=false keeps this layer visible in front of physical depth. Saving alone does not bind objects. Use object.visibility.assign for each object. Stable IDs identify saved definitions; names are display text. Unloaded members remain unloaded on definition edits and assignments; saved completion does not claim that they are visible. A member currently loading or retiring must finish that transition first. One Undo and temporary Keep/Discard apply. Compatible movement, animation and audio keep running; held objects and authoring gestures refuse. Layers multiply existing surface alpha, preserving cutouts and source textures. Book browser pages remain readable. Real-depth participation is independent of collisions, walking, sound and camera sharing, and cannot enable globally disabled or unavailable depth. Opacity zero does not disable physical collision. Inspect saved facts after completion; those are not proof of visual headset acceptance. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "id": "",
         "revision": 0,
@@ -39849,6 +39849,65 @@
       ]
     },
     {
+      "id": "resource.members",
+      "version": 1,
+      "type": {
+        "record": {
+          "kind": "text",
+          "id": "text",
+          "revision": "number",
+          "membership": "text",
+          "offset": "number",
+          "total": "number",
+          "next": "text",
+          "members": {
+            "list": "text"
+          }
+        }
+      },
+      "label": "Saved resource members",
+      "description": "Read the exact saved top-level object IDs bound to an environment collision profile, appearance, visibility layer or authored region. Includes unloaded objects without loading native views. Start cursor empty; pass next unchanged with the same kind/id until it is empty. Pages share the membership generation and definition revision. Any membership or definition edit, Undo/Redo of such an edit, or workspace/temporary scope change makes continuation unavailable: discard collected pages and restart. Object motion, unrelated edits and native loading do not invalidate this directory. Appearance membership counts each object once even with multiple bindings. Missing definitions are unavailable; an existing empty group has total 0. This read neither reserves objects nor freezes their edit revisions. Before a shared edit inspect current object revisions, claim every affected member and submit the exact definition revision; the action still checks current membership, ownership, physical admission and its declared resource limits. Paging does not raise collision profile, saved-world, native-view or program budgets.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "environment",
+              "appearance",
+              "visibility",
+              "region"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "cursor": {
+            "type": "string",
+            "pattern": null,
+            "maxLength": 36
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "cursor"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "kind": "environment",
+        "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "cursor": ""
+      },
+      "features": [
+        "factQueries.v1",
+        "resourceMembers.v1"
+      ]
+    },
+    {
       "id": "object.definition",
       "version": 1,
       "type": {
@@ -47211,7 +47270,7 @@
         }
       },
       "label": "World area",
-      "description": "Saved area definition and current revision. Loading explicitly distinguishes independent members from together assemblies; physical connections always remain coupled. Read every world.region.members page at this revision before updating. This is authored membership, not a regional runtime readiness report.",
+      "description": "Saved area definition and current revision. Loading explicitly distinguishes independent members from together assemblies; physical connections always remain coupled. Read all resource.members pages with kind=region before updating, using this definition revision. This is authored membership, not a regional runtime readiness report.",
       "input": {
         "type": "object",
         "properties": {
@@ -47293,7 +47352,7 @@
         }
       },
       "label": "Area creations",
-      "description": "Sixteen exact creation IDs per page at the area's revision. Membership is durable authored state, independent of current scene transforms.",
+      "description": "Offset-based compatibility read of sixteen exact creation IDs at the area's revision. resource.members with kind=region additionally validates continuation across definition and scope changes. Membership is durable authored state, independent of current scene transforms.",
       "input": {
         "type": "object",
         "properties": {
@@ -48447,7 +48506,7 @@
         }
       },
       "label": "Appearance members",
-      "description": "Sixteen exact object IDs per page, including dormant bindings; start offset 0. Before saving a shared change read all pages at the same definition revision. Save checks current complete membership and ownership again.",
+      "description": "Offset-based compatibility read of up to sixteen exact object IDs, including dormant bindings. Definition revision alone does not detect membership edits. For a coherent multi-page read use resource.members with kind=appearance and its continuation cursor. Save still checks current complete membership and ownership.",
       "input": {
         "type": "object",
         "properties": {
@@ -48606,7 +48665,7 @@
         }
       },
       "label": "Visual layer",
-      "description": "Saved opacity and physical-depth participation. Read all visibility.members pages at this revision before editing. Does not report effective device depth or camera sharing.",
+      "description": "Saved opacity and physical-depth participation. Read all resource.members pages with kind=visibility before editing, using this definition revision. Does not report effective device depth or camera sharing.",
       "input": {
         "type": "object",
         "properties": {
@@ -48688,7 +48747,7 @@
         }
       },
       "label": "Visual layer members",
-      "description": "Sixteen bound object IDs per page. Read every page at the same layer revision before a shared edit, supplying the full member set.",
+      "description": "Offset-based compatibility read of up to sixteen bound object IDs. Definition revision alone does not detect membership edits. Use resource.members with kind=visibility for coherent continuation, then supply the full member set to a shared edit.",
       "input": {
         "type": "object",
         "properties": {
@@ -49496,7 +49555,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AppearanceCapabilities.cs",
-      "sha256": "f0313a599d22b568444141dd4dc4cc6f462675dda53da70d9dccf91ddc6e2f21"
+      "sha256": "3f08144581cc7e22827fd116777eb76bf9ce7288480a61be870e01758d76e7ca"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/AquaticNavigationSchema.cs",
@@ -49892,7 +49951,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RegionCapabilities.cs",
-      "sha256": "5e4dae71251880b5c25e9717aa9e9a1927fb1a166792cb3d141d53dda7947b01"
+      "sha256": "d6cbb667620e4be9dea7c0e1cd00124aa16febc62d4565443f432d72365df193"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ResourceMembersFact.cs",
+      "sha256": "bc30f8bee7a9606242377c802d378573f5b541b77160c7198080f9c474913061"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/RoomEnvironmentCapability.cs",
@@ -49988,7 +50051,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/VisibilityLayerCapabilities.cs",
-      "sha256": "9c8fbe6a41856fa8f1e3938ec6b900f447a95edcb77eb103030d1c38f04f031d"
+      "sha256": "e7690a57a5fa0b3af7eed2c789a74c216c146eb73ca4fb67efc82887e0d61ba1"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/WaterHabitatFacts.cs",
@@ -50508,7 +50571,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearance.cs",
-      "sha256": "7b117a8554a063076925d836c0d7746c740c1c5afcd6d71a22526ce01c2f4936"
+      "sha256": "b639bd51fd8cf195d4e8095d3367dc1ba9aa020ec6c523119619ef7c761d297e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomAppearanceEdits.cs",
@@ -50576,7 +50639,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "92a55444bb81a26187191243abc2ba8cabc00ad9b6ddafa469871889acefbf4f"
+      "sha256": "fd4c3dc164a8317ee2687c760e1b7610caecfc69765aed976053947c9cb0cfcc"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -50592,7 +50655,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "41cda5e64a3d56ad06c83057769188ce3c255c6e7d9c5ff48326c7a66829954f"
+      "sha256": "019be71e721c83bb3ee8ce1faab7e61cef263ceb98539aab5c16f573c456dc58"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -50628,7 +50691,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomEnvironmentProfile.cs",
-      "sha256": "a932d8456706e2b003ae36864b1b5e41f7bc533bb65cf145f89c408910d2ab2e"
+      "sha256": "ad586372dc567bcd70b4d850cbe604357bea3f11574d316723e8b98626c55b99"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomExecutions.cs",
@@ -50900,7 +50963,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegion.cs",
-      "sha256": "147b0d01d6de21f9d06a0c465dd9c515175b882719e410f57538ca9287fba6a9"
+      "sha256": "c211470450f797eea573771395694b8dadc5325186c2a6ab44cc5505c6cb9ed2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomRegionAdmission.cs",
@@ -50921,6 +50984,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceLimitException.cs",
       "sha256": "cae80895e73270040746da6a40b8593e492a6818729826471036719cc67668f1"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceMembers.cs",
+      "sha256": "1fb5cddf8d3ef41c78c39b3631d6bb6ec2ad537414bed9ab1b7784211b416e5c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomResourceOwner.cs",
@@ -51040,7 +51107,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisibilityLayer.cs",
-      "sha256": "01188bd311aa873c040aec8f20f67d595af519e5b1a7957e8d6aeca1756115c7"
+      "sha256": "ceb8876483bf9966bb20557d4398e52640f13fefbf5286f20f42ae91134041b4"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomVisualDirectory.cs",
@@ -51948,7 +52015,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "0a8b07e01809894a0e5ec7cdbb871bae83b719779ffc2111e435ba8e47892838"
+      "sha256": "98233f312d0e96bf3492c0514d77c2ee3a315e861f9877aea7bdfdead8bc3378"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",
