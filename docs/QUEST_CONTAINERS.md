@@ -3,8 +3,9 @@
 The container component is a **measured, saved liquid store**. Explicit authoring
 and logical transfers use the same quantities as bounded native pouring and vessel scooping. The
 implementation uses the contract below; desktop checks do not establish
-headset acceptance. Drinking, mixing, buoyancy, fluid
-forces, fluid mass and uncontained puddles remain unfinished. Authored shallow
+headset acceptance. Later sections record medium buoyancy/drag and terrain-backed
+water. Drinking, mixing, carried liquid mass and persistent uncontained puddles
+remain unfinished. Authored shallow
 pools use the same saved vessel component. No provider or paid
 generation is involved.
 
@@ -253,3 +254,49 @@ preserves accepted water and allows an explicit retry. Saved container quotas
 and per-tick simulation limits are separate. See the shared
 [preparation and lifetime contract](QUEST_WORLD_AUTHORING.md#liquid-preparation-and-lifetime-2026-10-16)
 for native admission, missing-water behavior and user/agent diagnostics.
+
+## Explicit terrain-edge overflow
+
+The existing object.container.edit action accepts spillAtTerrainEdge: true
+together with terrainFloor: true. The generated book form exposes the same
+setting. This is a version 4 terrain container, carried by room format 44 and
+reusable prototype version 10. Earlier supported room files remain readable;
+saving publishes the current format without overwriting the older source.
+
+Liquid amounts and capacities cross the action, reusable-prototype, current room
+and paired-snapshot boundaries as exact JSON numbers. The writer replaces the
+numeric tokens explicitly because the JSON library can treat adjacent doubles
+as equal during an ordinary replacement. The reader restores those numbers
+before validation. This does not add a tolerance: an amount one representable
+step above capacity is invalid. Only derived terrain-capacity metadata retains
+the existing narrowly defined legacy-codec normalization; water is never clamped.
+
+The object.container.configuration fact returns the complete editable definition,
+including the overflow setting and the object revision. The object.container
+fact retains its original typed record so existing programs still parse. An edit
+that omits the new setting preserves it on an existing terrain container;
+explicit false closes its perimeter. A new terrain container defaults to
+closed. Deliberately changing to an ordinary cavity removes the terrain policy.
+
+When physics runs, the accepted terrain's lowest perimeter point in the gravity
+direction determines the retained water volume and stream origin. Linear edges
+need only endpoint comparisons; ties use stable edge order and the midpoint of
+a level segment. The immutable geometry caches that result until gravity changes.
+A sculpted bed produces new geometry and a new outlet. It never creates or
+silently removes water during authoring.
+
+Excess water leaves through the existing rate-limited, collision-checked stream.
+A lower configured cavity can receive it when the trajectory crosses its opening
+from above. Received quantity plus reported uncollected spill equals source loss.
+A solid obstruction clips the stream. Missing bed, collision or dependent
+recipient geometry suspends that flow group rather than letting water disappear.
+The existing admission limits, live episode, asynchronous checkpoint, events,
+temporary-room handling and Undo own this change too. Reading, loading or
+enabling the setting does not start physics.
+
+This is a bounded equalized basin with one deterministic outlet. It does not
+simulate river currents, pressure, erosion, simultaneous edge sheets, water
+flowing along arbitrary terrain, same-level connected lakes or persistent puddles.
+Uncollected spill remains explicitly reported loss from the finite-container
+system. Do not describe it as a complete fluid simulation. Quest visual and
+sustained performance acceptance remain separate.

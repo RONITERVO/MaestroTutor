@@ -53,7 +53,7 @@ it('generates visible per-member reads and indexed scalar guards without enlargi
 it('expands current optional container records into explicit typed bindings from one fact read',()=>{
  const definition=capabilityDefinition('object.container.edit')!,args:Record<string,unknown>={...structuredClone(definition.example!),target:'a'.repeat(32)};
  const result=insertProgramCapability(source,{id:definition.id,version:1,arguments:args},{kind:'current',fields:['revision','definition']});
- expect(result).toEqual(JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/current-container-program.json','utf8')));
+ expect(result).toEqual(JSON.parse(readFileSync('unity/MaestroQuest/Assets/Maestro/Tests/Fixtures/current-container-configuration-program.json','utf8')));
  expect(parseProgram(JSON.stringify(result)).error).toBeNull();expect(result.functions[0].body).toHaveLength(2);
  const action=result.functions[0].body[1];if(action.op!=='invoke')throw Error();
  expect(action.bindings.definition).toBeUndefined();expect(action.bindings['definition.rectangle.width']).toBeDefined();expect(action.bindings['definition.amountMl']).toBeDefined();

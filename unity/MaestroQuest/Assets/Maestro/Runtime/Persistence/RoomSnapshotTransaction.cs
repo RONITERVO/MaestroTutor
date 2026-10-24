@@ -64,7 +64,7 @@ namespace Maestro.Quest.Persistence
             if(index==1){_=ProgramMemoryDocument.Decode(bytes);return;}
             var json=Json(bytes,48);
             Need(Exact(json,"version","objects","structures","audioSources","viewpoint","world","environmentProfiles","appearances","visibilityLayers","lighting","worldTime","weather","regions")&&RoomFootPlacement.ValidWire(json)&&RoomRegion.ValidWire(json)&&RoomWaterTraversal.ValidWire(json)&&RoomFluid.ValidWire(json)&&RoomViewpoint.ValidWire(json)&&RoomWorldIdentity.ValidWire(json)&&RoomEnvironmentProfile.ValidWire(json)&&RoomAppearance.ValidWire(json)&&RoomVisibilityLayer.ValidWire(json)&&RoomLighting.ValidWire(json)&&RoomWorldTime.ValidWire(json)&&RoomWeather.ValidWire(json)&&RoomAudioDefinition.ValidWire(json)&&RoomWindow.ValidWire(json)&&RoomModelGeometry.ValidWire(json)&&json["version"]?.Type==JTokenType.Integer&&(int)json["version"]==RoomDocument.CurrentVersion,"Unsupported room snapshot.");
-            var room=JsonUtility.FromJson<RoomDocument>(Utf8.GetString(bytes));Need(room!=null,"Missing room snapshot.");RoomStorage.Normalize(room);
+            var room=JsonUtility.FromJson<RoomDocument>(Utf8.GetString(bytes));Need(room!=null,"Missing room snapshot.");RoomLiquidCodec.Decode(room,json);RoomStorage.Normalize(room);
             Need(room.Validate(out _),"Invalid room snapshot.");
         }
         internal static Snapshot FromDocuments(RoomDocument room,ProgramMemoryDocument memory)
@@ -72,7 +72,7 @@ namespace Maestro.Quest.Persistence
             Need(room!=null&&memory!=null,"Missing snapshot documents.");
             Need(room.Validate(out _),"Invalid room snapshot.");
             var copy=room.Copy();copy.version=RoomDocument.CurrentVersion;
-            var files=new[]{Utf8.GetBytes(JsonUtility.ToJson(copy)),memory.Encode()};
+            var files=new[]{Utf8.GetBytes(RoomLiquidCodec.Encode(copy)),memory.Encode()};
             for(int i=0;i<2;i++)Validate(i,files[i],true);return new Snapshot(files);
         }
         static string Root(string directory)

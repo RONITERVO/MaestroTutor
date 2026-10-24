@@ -38,6 +38,32 @@ namespace Maestro.Quest.Creation {
             for(int z=0;z<bed.cells;z++)for(int x=0;x<bed.cells;x++){int a=z*(bed.cells+1)+x,b=a+1,c=a+bed.cells+1,d=c+1;Add(a,c,b);Add(b,c,d);}
             if(!double.IsFinite(volume)||volume<=1e-12)throw new ArgumentException("The terrain leaves no liquid capacity below its opening");Volume=volume;
         }
+        // Perimeter edges are linear, so a minimum gravity projection lies at an
+        // endpoint, or anywhere on a level segment. Stable edge order and a level
+        // segment's midpoint avoid a flickering outlet. The immutable bed owns
+        // this cache; no second geometry or quantity enters the flow system.
+        bool spillCached;Vector3 spillNormal,spillPoint,spillOutward;
+        internal void SpillLip(Vector3 normal,out Vector3 point,out Vector3 outward){
+            if(!RoomRecipe.Finite(normal)||normal.sqrMagnitude<1e-12f)throw new ArgumentException("A known spill-plane normal is required");
+            if(!spillCached||!normal.Equals(spillNormal)){
+                double lowest=double.PositiveInfinity;Vector3 chosen=default,direction=default;
+                void Edge(Vector3 a,Vector3 b,Vector3 away){
+                    double da=(double)a.x*normal.x+(double)a.y*normal.y+(double)a.z*normal.z;
+                    double db=(double)b.x*normal.x+(double)b.y*normal.y+(double)b.z*normal.z;
+                    double level=Math.Min(da,db);
+                    if(level>=lowest)return;
+                    lowest=level;chosen=da==db?(a+b)*.5f:da<db?a:b;direction=away;
+                }
+                for(int i=0;i<bed.cells;i++){
+                    Edge(bed.Vertex(0,i),bed.Vertex(0,i+1),Vector3.left);
+                    Edge(bed.Vertex(bed.cells,i),bed.Vertex(bed.cells,i+1),Vector3.right);
+                    Edge(bed.Vertex(i,0),bed.Vertex(i+1,0),Vector3.back);
+                    Edge(bed.Vertex(i,bed.cells),bed.Vertex(i+1,bed.cells),Vector3.forward);
+                }
+                spillNormal=normal;spillPoint=chosen;spillOutward=direction;spillCached=true;
+            }
+            point=spillPoint;outward=spillOutward;
+        }
         internal static double Capacity(RoomHeightField field,float ceiling){
             double volume=0;
             double Part(Vector3 a,Vector3 b,Vector3 c)=>Math.Abs(((double)b.x-a.x)*((double)c.z-a.z)-((double)b.z-a.z)*((double)c.x-a.x))*(3.0*ceiling-a.y-b.y-c.y)/6;

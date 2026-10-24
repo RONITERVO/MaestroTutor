@@ -5,8 +5,8 @@ Status: active implementation. Nothing in this document claims store readiness.
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required) and the latest
 [complete integration checkpoint](#complete-native-book-and-android-integration-2026-10-24). The current
-[whole-world collision checkpoint](#shared-collision-policies-across-the-saved-world--2026-10-24) records the latest
-native increment, following the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
+[terrain-overflow checkpoint](#explicit-terrain-overflow-and-exact-liquid-persistence--2026-10-24) builds on the
+[whole-world collision checkpoint](#shared-collision-policies-across-the-saved-world--2026-10-24) and follows the [shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24). The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
 creation and residency foundation. The preceding
 [restoration](#restoring-unloaded-objects--2026-10-23),
 [physical discovery](#linear-physical-discovery--2026-10-23),
@@ -120,7 +120,7 @@ open until every required row has matching release-candidate evidence.
 | Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
 | One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
-| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming, shore transitions and continuous following have complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Named areas support independent or together loading. Broader region streaming, river/spill behavior, underwater interaction and candidate headset acceptance remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
+| Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming, shore transitions and continuous following have complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Named areas support independent or together loading. Explicit terrain-edge overflow now shares the bounded stream and liquid journal. Broader region streaming, river/landscape flow, underwater interaction and candidate headset acceptance remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
 | Speech and reusable world audio | Shared output/source ownership, object/joint emitters, finite imports and a bounded live MP3 adapter; direct obstruction is active. | Intelligible simultaneous user speech and world playback, actual audibility/latency, focus/route recovery and Quest performance. The native echo candidate still has 31 aligned quality failures. Reflection rendering/map scheduling remain disabled pending the retained crash/deadline and capture issues. See [audio](../unity/AUDIO.md). |
 | Durable user work and recovery | Ordered accepted edits, captured identities/revisions, save completion, undo boundaries, lifecycle checkpoints, backup/restore and failure-injection checks; full offline journeys include confirmed storage checkpoints. | Current Android suspend/process-loss, low-space, interrupted import/save and recovery acceptance. A checkpoint observed during a desktop journey is not end-of-process durability or headset evidence. |
 | Hands/controllers, accessibility and sustained use | Prior owner device confirmations plus current physical-control PlayMode tests and shared native handlers. | Recheck current controls, recall, binding conflicts, seated/standing use, text, reduced motion, comfort and sustained mixed-scene performance on Quest. Desktop timing and a short older device session do not satisfy this gate. |
@@ -16888,3 +16888,69 @@ remained unchanged. The only native source change after the complete journeys
 was this Editor-only adapter byte bound; application runtime sources are
 identical to those verified by the complete native and client runs. No fresh
 Android APK, signing, device, provider or Store acceptance is claimed.
+
+
+### Explicit terrain overflow and exact liquid persistence — 2026-10-24
+
+The existing container action now exposes an optional terrain-edge overflow
+policy through the shared catalog and generated book controls. A version-4
+terrain cavity drains above its lowest perimeter edge during active physics.
+The same immutable terrain geometry determines retained volume, the outlet,
+wet space and collision-backed readiness. Gravity changes refresh its cached
+outlet; a sculpted bed receives new geometry. A lower configured cavity can
+receive the bounded stream. Received water plus reported uncollected spill
+equals the source loss. Pause, missing geometry and existing flow admission
+keep authority; authoring or loading the setting does not start physics.
+
+Room format 44 and reusable prototype version 10 carry the policy. The original
+typed object.container fact remains unchanged so saved programs still parse.
+The new object.container.configuration fact supplies complete editable settings.
+Omission preserves an existing terrain policy; explicit false closes it and a
+new cavity defaults to closed. Ordinary cavity conversion removes the terrain
+policy. Saved membership, geometry and simulation limits are unchanged.
+
+The full-capacity physical fixture exposed a numeric boundary defect: Unity's
+field codec could read the measured amount one representable step above its
+derived capacity. A stricter regression also exposed the JSON library treating
+adjacent floating values as unchanged during token replacement. Current liquid
+action, prototype, room save, prepared checkpoint and paired snapshot paths now
+preserve the exact numeric tokens. No water is inferred, clamped or silently
+discarded, and a genuine one-step excess is refused. Older supported room files
+retain their existing read rules.
+
+Final native verification passed **1,677 EditMode and 68 selected PlayMode**
+cases with clean Editor and wrapper exits. The selected run retains every
+earlier 52-case container/flow test from this increment and adds relevant
+snapshot lifecycle coverage. It covers full-capacity serialization, synchronous
+and prepared saves, paired room/program-memory publication, strict over-capacity
+rejection, lower-vessel reception, obstruction, pause, unavailable bed, preserved
+legacy edits, explicit closing and Undo/Redo. All **1,543 shared room tests**,
+app/probe TypeScript and native-catalog/ten-guide provenance checks passed.
+Evidence, including earlier failed attempts and their corrections, is retained
+under .quest-evidence/terrain-spill-20261024/.
+
+Both complete actual-Unity client journeys passed with clean client, Editor and
+wrapper exits: Book 36791ef222424f20bf4e3a035a6e1a52 completed **2,259 requests and
+6,584 observations**, zero browser errors and reload without replay;
+Headless a22b995fef1a42599f8b170ce96ae511 completed **2,848 observations and
+2,847 read sets**. The Book uses generated controls to enable the
+policy, read it back, return to the workshop for ordinary Undo, and inspect the
+closed setting while preserving 50,000 ml. Headless enables it through the same
+shared action and preserves 200,000 ml and the legacy definition through Undo.
+Providers and media inputs are explicitly scripted offline.
+
+The first Book attempt 14e742565dc84df880d530c8cbbc7f6a completed
+configuration but its harness looked for Undo while still in the action catalog.
+The correction navigates through the existing workshop and complete fact controls;
+it changes no product/runtime code. The corrected Book/Headless source and all
+1,796 recorded inputs remain frozen; native inputs match the completed test run.
+All 14 unrelated protected files remain unchanged. Scalar summaries and exact
+run IDs are retained in journeys-verified.json alongside the earlier failed
+attempt; no device, real-provider or Android-package acceptance is implied.
+
+This is one equalized basin with one stable outlet. It does not implement river
+currents, pressure, arbitrary landscape propagation, simultaneous edge sheets,
+connected same-level lakes, erosion or persistent puddles. Uncollected spill is
+explicit loss from the finite-container system. The current native capacity,
+spatial limits, audio failures and release checklist remain unchanged. Device,
+paid-provider, signing, deployment and Meta holds remain active.

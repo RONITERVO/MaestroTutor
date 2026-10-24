@@ -64,9 +64,9 @@ it('invalidates a reviewed nested snapshot when an ancestor variant changes',()=
 });
 
 it('copies a complete typed container record without aliasing the native snapshot',()=>{
- const s=capabilityDefinition('object.container.edit')!.input,definition={terrainFloor:false,frame:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1}},radius:.04,rectangle:{width:1.18,depth:.78},height:.29,capacityMl:266916,amountMl:224209.44,liquid:'Water',fluid:{version:1,densityKgM3:1000,linearDrag:2,angularDrag:1},color:{r:.1,g:.4,b:.9,a:1}};
+ const s=capabilityDefinition('object.container.edit')!.input,definition={terrainFloor:false,spillAtTerrainEdge:false,frame:{position:{x:0,y:0,z:0},rotation:{x:0,y:0,z:0,w:1}},radius:.04,rectangle:{width:1.18,depth:.78},height:.29,capacityMl:266916,amountMl:224209.44,liquid:'Water',fluid:{version:1,densityKgM3:1000,linearDrag:2,angularDrag:1},color:{r:.1,g:.4,b:.9,a:1}};
  const args={operation:'configure',target:'a'.repeat(32),revision:1,definition:capabilityDefinition('object.container.edit')!.example!.definition};
- const snapshot:CatalogView={operation:'inspect',category:'facts',capability:'object.container',version:1,definition:behaviourFact('object.container')!,arguments:{target:args.target},available:true,value:{revision:12,configured:true,definition},status:'Available'};
+ const snapshot:CatalogView={operation:'inspect',category:'facts',capability:'object.container.configuration',version:1,definition:behaviourFact('object.container.configuration')!,arguments:{target:args.target},available:true,value:{revision:12,configured:true,definition},status:'Available'};
  const loaded=applyCurrentInputs(s,args,snapshot);expect(loaded).toEqual({...args,revision:12,definition});
  const key=currentInputIdentity(s,loaded,'session');(loaded.definition as typeof definition).rectangle.width=1;
  expect(definition.rectangle.width).toBe(1.18);expect(currentInputIdentity(s,loaded,'session')).toBe(key);

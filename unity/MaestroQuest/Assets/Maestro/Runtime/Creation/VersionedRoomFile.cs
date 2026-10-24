@@ -24,6 +24,9 @@ namespace Maestro.Quest.Creation
         readonly Func<JObject,bool> validWire;
         readonly Func<T,T> copy;
         readonly Action<T> normalize,upgrade;
+        readonly Func<T,string> encode;
+        readonly Action<T,JObject> decodeWire;
+        string Encode(T candidate)=>encode?.Invoke(candidate)??JsonUtility.ToJson(candidate);
         sealed class Retained { public long Length,Stamp; public bool Uncertain; public HashSet<string> Ids; }
         readonly object retainedGate=new();
         readonly Dictionary<string,Retained> retained=new();
@@ -32,12 +35,12 @@ namespace Maestro.Quest.Creation
         byte[] primaryInspectionHash;
         bool primaryInspectionValid,primaryInspectionNewer;
         public bool ReadOnly { get; private set; }
-        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null,int minimumVersion = 1,bool cachePrimaryInspection = false,bool trackAcceptedPrimary = false)
+        public VersionedRoomFile(string directory,string stem,int maximum,Func<T,bool> validate,Func<T,T> copy,Action<T> normalize,Action<T> upgrade,int version = 2,Func<T,bool> newerDocument = null,Func<JObject,bool> validWire = null,int minimumVersion = 1,bool cachePrimaryInspection = false,bool trackAcceptedPrimary = false,Func<T,string> encode=null,Action<T,JObject> decodeWire=null)
         {
             if(minimumVersion<1 || minimumVersion>version)throw new ArgumentOutOfRangeException(nameof(minimumVersion));
             this.cachePrimaryInspection=cachePrimaryInspection;this.trackAcceptedPrimary=trackAcceptedPrimary;
             this.minimumVersion=minimumVersion;this.directory = Path.GetFullPath(directory); this.stem=stem; this.version=version; primary = Path.Combine(this.directory,stem+".v"+version+".json");
-            this.newerDocument=newerDocument;this.validWire=validWire;
+            this.newerDocument=newerDocument;this.validWire=validWire;this.encode=encode;this.decodeWire=decodeWire;
             label = stem; this.maximum = maximum; this.validate = validate; this.copy = copy; this.normalize = normalize; this.upgrade = upgrade;
         }
         // A newer app writes a different filename. Do not load an older save
@@ -106,7 +109,7 @@ namespace Maestro.Quest.Creation
             var candidate = JsonUtility.FromJson<T>(text); if (candidate == null) return false;
             if(newerDocument?.Invoke(candidate)==true) {newer=true;return false;}
             if(validWire!=null && !validWire(json))return false;
-            normalize?.Invoke(candidate); if (!validate(candidate)) return false;
+            decodeWire?.Invoke(candidate,json);normalize?.Invoke(candidate); if (!validate(candidate)) return false;
             value = candidate; return true;
         }
         bool Read(string path,int expected,out T value,out bool newer)
@@ -194,7 +197,7 @@ namespace Maestro.Quest.Creation
             string pending = primary+".pending", phase="stage";bool staged=false;byte[] bytes=null;
             try
             {
-                bytes = new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(candidate));
+                bytes = new UTF8Encoding(false).GetBytes(Encode(candidate));
                 if (bytes.Length > maximum) { error = "The "+label+" collection is too large to save"; return false; }
                 Directory.CreateDirectory(directory);
                 if(File.Exists(pending)){error="An unfinished "+label+" save remains; preserve it before editing.";return false;}

@@ -25,7 +25,10 @@ export async function probeTerrainWater(execute:Execute,directory:string){
  const sculpted=await invoke('object.field.sculpt',{target,revision:saved.revision,mode:'lower',radius:.4,height:.05,path:[{x:0,z:0}]});
  const changed=await read('object.container',{target});assert.equal((changed.definition as Record<string,unknown>).amountMl,200000);assert.ok(Number((changed.definition as Record<string,unknown>).capacityMl)>Number(definition.capacityMl));
  await execute([{action:'undo'}]);const restored=await read('object.container',{target});assert.deepEqual(restored.definition,saved.definition);
+ const spillConfigured=await invoke('object.container.edit',{operation:'configure',target,revision:restored.revision,definition:{...(restored.definition as Record<string,unknown>),spillAtTerrainEdge:true}});
+ const spilling=await read('object.container.configuration',{target});assert.equal((spilling.definition as Record<string,unknown>).spillAtTerrainEdge,true);assert.equal((spilling.definition as Record<string,unknown>).amountMl,200000);
+ await execute([{action:'undo'}]);const closed=await read('object.container',{target});assert.deepEqual(closed.definition,restored.definition);
  for(let i=0;i<3;i++)await execute([{action:'undo'}]);
  const removed=factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'object.definition',version:1,arguments:{target}}}]));assert.equal(removed.available,false);
- await writeFile(join(directory,'terrain-water.json'),JSON.stringify({boundary:'Actual native shared catalog authoring, medium queries and terrain sculpting with quantity-preserving Undo. Physics and rendered shorelines are covered separately in PlayMode. Scripted offline run, no provider or headset acceptance.',created,configured,saved,wet,ground,sculpted,changed,restored},null,2));
+ await writeFile(join(directory,'terrain-water.json'),JSON.stringify({boundary:'Actual native shared catalog authoring, medium queries and terrain sculpting with quantity-preserving Undo. Physics and rendered shorelines are covered separately in PlayMode. Scripted offline run, no provider or headset acceptance.',created,configured,saved,wet,ground,sculpted,changed,restored,spillConfigured,spilling,closed},null,2));
 }

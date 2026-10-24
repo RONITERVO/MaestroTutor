@@ -15769,7 +15769,7 @@
                                 "version": {
                                   "type": "integer",
                                   "minimum": 1.0,
-                                  "maximum": 9.0
+                                  "maximum": 10.0
                                 },
                                 "footPlacement": {
                                   "type": "object",
@@ -17382,6 +17382,13 @@
                                           "terrainReservoirs.v1"
                                         ]
                                       },
+                                      "spillAtTerrainEdge": {
+                                        "type": "boolean",
+                                        "title": "Spill over low terrain edges",
+                                        "x-features": [
+                                          "terrainEdgeSpill.v1"
+                                        ]
+                                      },
                                       "frame": {
                                         "type": "object",
                                         "properties": {
@@ -17582,7 +17589,7 @@
                                       "version": {
                                         "type": "integer",
                                         "minimum": 1.0,
-                                        "maximum": 3.0
+                                        "maximum": 4.0
                                       }
                                     },
                                     "required": [
@@ -21670,6 +21677,13 @@
                       "terrainReservoirs.v1"
                     ]
                   },
+                  "spillAtTerrainEdge": {
+                    "type": "boolean",
+                    "title": "Spill over low terrain edges",
+                    "x-features": [
+                      "terrainEdgeSpill.v1"
+                    ]
+                  },
                   "frame": {
                     "type": "object",
                     "properties": {
@@ -21889,7 +21903,7 @@
             ],
             "additionalProperties": false,
             "x-current": {
-              "fact": "object.container",
+              "fact": "object.container.configuration",
               "version": 1,
               "arguments": {
                 "target": "target"
@@ -21940,7 +21954,7 @@
             ],
             "additionalProperties": false,
             "x-current": {
-              "fact": "object.container",
+              "fact": "object.container.configuration",
               "version": 1,
               "arguments": {
                 "target": "target"
@@ -21972,7 +21986,7 @@
         "source.revision.current",
         "storage.writable"
       ],
-      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration. With terrainFloor=true, the same fixed object must have one accepted height surface. Its frame, rectangle and capacity are derived from that surface; those input fields are ignored for this mode. height is the opening and must reach every terrain vertex. Capacity is the local geometric volume below the opening; amountMl remains authoritative. Terrain edits reshape the water while preserving amount and refuse overflow: transfer or explicitly remove enough water first. This is one bounded equalized reservoir, not connected rivers or separate-basin flow. Sculpting does not create water; no water volume exists inside the bed. Missing bed geometry refuses interaction. Set terrainFloor=false to deliberately return to an ordinary cavity. Use object.field and object.field.samples to inspect the bed. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
+      "description": "Configure one saved cylindrical or rectangular liquid store on any created object, or remove it. definition includes its contents: this authoring action can create, replace or empty liquid. Use object.container.transfer to conserve contents instead. The frame is the root-local bottom centre; +Y points toward the opening. An optional rectangle (width/depth) replaces the circular radius; removing it returns to the configured radius. Geometry describes the cavity and does not infer or modify mesh/colliders. Capacity is a logical game-rule value in millilitres, independent of visual scale; resizing a prop neither creates liquid nor changes capacity. One liquid identity and opaque display colour at a time, up to 16 containers per room. The shared saved amount survives Undo, duplication, prototypes, temporary rooms and archives. Room physics also runs bounded open-vessel pouring and immersion filling; inspect object.container.live, object.container.scooping, object.container.poured and object.container.scooped. Optional fluid properties explicitly set density (kg/m3) and linear/angular drag (per second); omitted properties use density 1000 and drag 2/1, independent of liquid name. Properties follow pouring/transfers and unlike properties cannot mix. Native medium physics applies bounded buoyancy/drag to supported free rigid props from accepted collider displacement and mass. Inspect world.medium and object.medium. Level displacement, carried liquid mass, splashes and drinking remain unsupported. Imported bowls require explicit cavity configuration. With terrainFloor=true, the same fixed object must have one accepted height surface. Its frame, rectangle and capacity are derived from that surface; those input fields are ignored for this mode. height is the opening and must reach every terrain vertex. Capacity is the local geometric volume below the opening; amountMl remains authoritative. Terrain edits reshape the water while preserving amount and refuse overflow: transfer or explicitly remove enough water first. Optional spillAtTerrainEdge=true opens the terrain perimeter: excess above its lowest gravity-height edge drains during active physics through the existing bounded collision-checked stream. The first lowest edge is a deterministic outlet; a lower configured cavity can receive matching liquid, otherwise it is reported as uncollected spill. No quantity changes merely by configuring, reading, loading or sculpting. False closes the authored perimeter; omission preserves an existing terrain policy and defaults to closed for a new cavity. Inspect object.container.configuration for complete editable settings. This is one equalized basin with bounded overflow, not river currents, connected same-level lakes or puddle simulation. Sculpting does not create water; no water volume exists inside the bed. Missing bed geometry refuses interaction. Set terrainFloor=false to deliberately return to an ordinary cavity. Use object.field and object.field.samples to inspect the bed. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running.",
       "example": {
         "operation": "configure",
         "target": "00000000000000000000000000000000",
@@ -21993,8 +22007,6 @@
           },
           "radius": 0.039999999105930328,
           "height": 0.10000000149011612,
-          "capacityMl": 250.0,
-          "amountMl": 200.0,
           "liquid": "Water",
           "fluid": {
             "version": 1,
@@ -22008,7 +22020,10 @@
             "b": 0.85000002384185791,
             "a": 1.0
           },
-          "terrainFloor": false
+          "capacityMl": 250.0,
+          "amountMl": 200.0,
+          "terrainFloor": false,
+          "spillAtTerrainEdge": false
         }
       }
     },
@@ -41306,7 +41321,7 @@
         }
       },
       "label": "Liquid container and contents",
-      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults, without creating a component. Both rectangle dimensions are zero for a cylinder; positive dimensions replace radius for a rectangular cavity. terrainFloor=true binds the cavity to the same object’s canonical height surface; frame/rectangle/capacity are derived and ground edits preserve amount or refuse overflow. Amount/capacity use local millilitres, independent of prop scale. Reads do not refill, transfer or simulate liquid.",
+      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults without creating anything. terrainFloor binds the same canonical terrain; frame, rectangle and capacity are derived. Quantities are independent of display scale. This original typed record is unchanged; inspect object.container.configuration for terrain-edge overflow policy. An edit omitting that policy preserves it on an existing terrain container.",
       "input": {
         "type": "object",
         "properties": {
@@ -41328,6 +41343,93 @@
       "features": [
         "factQueries.v1",
         "containers.v1"
+      ]
+    },
+    {
+      "id": "object.container.configuration",
+      "version": 1,
+      "type": {
+        "record": {
+          "revision": "number",
+          "configured": "boolean",
+          "definition": {
+            "record": {
+              "terrainFloor": "boolean",
+              "spillAtTerrainEdge": "boolean",
+              "frame": {
+                "record": {
+                  "position": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number"
+                    }
+                  },
+                  "rotation": {
+                    "record": {
+                      "x": "number",
+                      "y": "number",
+                      "z": "number",
+                      "w": "number"
+                    }
+                  }
+                }
+              },
+              "radius": "number",
+              "rectangle": {
+                "record": {
+                  "width": "number",
+                  "depth": "number"
+                }
+              },
+              "height": "number",
+              "capacityMl": "number",
+              "amountMl": "number",
+              "liquid": "text",
+              "fluid": {
+                "record": {
+                  "version": "number",
+                  "densityKgM3": "number",
+                  "linearDrag": "number",
+                  "angularDrag": "number"
+                }
+              },
+              "color": {
+                "record": {
+                  "r": "number",
+                  "g": "number",
+                  "b": "number",
+                  "a": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "label": "Liquid container including overflow policy",
+      "description": "Saved cavity, capacity, exact contents and current object revision. configured=false returns editable defaults without creating anything. terrainFloor binds the same canonical terrain; frame, rectangle and capacity are derived. Quantities are independent of display scale. spillAtTerrainEdge explicitly selects gravity-driven overflow at the lowest terrain perimeter. Reads do not simulate or publish flow.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{32}$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "00000000000000000000000000000000"
+      },
+      "features": [
+        "factQueries.v1",
+        "containers.v1",
+        "terrainEdgeSpill.v1"
       ]
     },
     {
@@ -49881,7 +49983,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerCapability.cs",
-      "sha256": "75670a985eea2cb4675f779ce56f57f5ec53af7cb8d56569b2d5f399bca355bc"
+      "sha256": "967f6f916fb9a4b1e138df51986fb973d8f6b654f958be0469220c0f2fe1ab19"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/ContainerPouringFacts.cs",
@@ -49917,7 +50019,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationPrototypeSchema.cs",
-      "sha256": "ce3708f6f9e834a0e0dbedb4dad45cceb131d6224c7c32e85c92b6bb483e2d71"
+      "sha256": "cbb17283c7a24ee9d28d569a468198cc91158de68d0c7290cc5f8b3d47957fa2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CreationResourcesSchema.cs",
@@ -50461,7 +50563,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerFlowGeometry.cs",
-      "sha256": "cc651e757664e32d794127daa9bfff90546f60183dfc33c482e735696785f88e"
+      "sha256": "891b137c6d7cff1f26d6d8d46ec15de929be2d89676fa254883be026243456ac"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/ContainerRipples.cs",
@@ -50489,7 +50591,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationPrototype.cs",
-      "sha256": "8fa87fe15292855305705d84902ac2c7568c229864193188bf19dabade1d5ea9"
+      "sha256": "b0d198bc564767b33583e6454918e4f066bd1092753d72e7f9f7964a0a75f121"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/CreationResources.cs",
@@ -50581,7 +50683,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowGroups.cs",
-      "sha256": "be2f9509973f82668c32cf63fc87f711c8ddde54fcce65b5e47f50b713ca05e5"
+      "sha256": "ea5ea4a167d2a4ce75cb630cd64664c22a6dc27ece1270eeff39427ac33b329f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidFlowInputs.cs",
@@ -50613,7 +50715,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidPouring.cs",
-      "sha256": "f79d937ebfbf98bdc38427928b8e97a1e52e4fb21774e153adcd29886f1e9eff"
+      "sha256": "8d3944f0b6ed184da77e70d1ec491ecd699076592db4bbb3d42cb9d0084e6f28"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/LiquidRainCollection.cs",
@@ -50713,7 +50815,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomFile.cs",
-      "sha256": "6d03ea921125cb02569b934eda4f50a638d3860579dfb847eccca1b65cddeb65"
+      "sha256": "1891d13eca4bf86986dbc92f627796b5b60cf1b0f4c41299be31defcba3075f9"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/PreparedRoomLights.cs",
@@ -50869,7 +50971,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainer.cs",
-      "sha256": "e69bb57642164bd18eab7870a4d70c445ee96a7b5feb6f637756712eca2f50cf"
+      "sha256": "9a0998edb59af3b37920bb2c18c3b0cc430c9dac2d80ef6a06e929aa041c662c"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomContainerEdits.cs",
@@ -50877,7 +50979,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "745a7426042b2ef50def02391b1491604422bc959351ed5b943a91f8d301b3cb"
+      "sha256": "15020c6da4dad474dc1084ba1a4788691ca631bb54985e28ec4b218f787e5efa"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -50893,7 +50995,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDocument.cs",
-      "sha256": "23f7afe707a4b249d831fe419a0c55147191a3d137d7d0666294369b252969d6"
+      "sha256": "10a17b20b78455f25ec812d8853b36e5ef76c0e933bf64b2803afa3a9eee153e"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomDormantRecovery.cs",
@@ -51034,6 +51136,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLighting.cs",
       "sha256": "d8c20c2df19952b0adf2361055e0dcd45d6ba4c75a5b25a782662b26481254e7"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidCodec.cs",
+      "sha256": "bdc066719c4f7132e8949de7c271f65c747ae0501586de6a9312d24bb64fb5cf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomLiquidEdits.cs",
@@ -51297,7 +51403,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStorage.cs",
-      "sha256": "620c1f4a7cba43464d38c1ac2285b03fa5221a10b22f7241fe29f86c15c1f7a5"
+      "sha256": "fe4f853add9c7fee6b207fb8ff8177c183a4338a03e2ca59f34d680ea352d7da"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomStructure.cs",
@@ -51317,7 +51423,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomTerrainReservoir.cs",
-      "sha256": "9306d155cbe2fdfd866cadcb4a078bec617f65f855aa0b83e96af9cc7cb74721"
+      "sha256": "e7384b4f342a4e24052f46ec9952b3a91bb23619eaae17f4cf046ad3d8429032"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomToolRecovery.cs",
@@ -51461,11 +51567,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/TerrainLiquidGeometry.cs",
-      "sha256": "a66f8f58d59d83e4bbfdef590ceb78e2c65a0717e55c804c419cb76fda8d261a"
+      "sha256": "30cb88b73c7f66e47e1e8944fd7109448103d853b9a6b8f5d047b02d4e233a0f"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VersionedRoomFile.cs",
-      "sha256": "b85f3e4e9049b41761e685af756732c5139aa133d097c8b5f9346abb5dcda266"
+      "sha256": "f836d935e29661355c4170ebde3006191fe51e1ae39beda4718c031082d17fc0"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/VirtualRoomCapture.cs",
@@ -52133,7 +52239,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/RoomSnapshotTransaction.cs",
-      "sha256": "b708a3297819237a3c99ed4124612690869dc65a98ad365308a20ce210a9c7a0"
+      "sha256": "ad480382c422ec7d0eab8bb42743d73fe5e25d8d034406f1b51920398c199cc8"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Persistence/WorkspaceAcceptedSave.cs",
@@ -52265,7 +52371,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "cd31107fd2cfb435d28fec042fdf10586254c00cdbeddd53745ffa21e6664c19"
+      "sha256": "722e796d77cce7a5ff1a60abf447bc229f921ef7fde260ff9ae6e0fc756ab944"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

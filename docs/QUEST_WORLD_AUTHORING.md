@@ -1148,8 +1148,11 @@ independent of owner/world display scale, matching existing container semantics.
 This is a bounded equalized reservoir. Its rectangular perimeter and opening are
 explicit authored cavity boundaries; it does not infer containment from an
 imported landscape or generate surrounding solid walls. Separate disconnected
-basins need separate owners. It does not simulate river flow, pressure, spilling
-across low terrain edges, aquatic NPCs or water displacement. Explicit submerged,
+basins need separate owners. The optional spillAtTerrainEdge setting now lets
+excess drain at a low terrain perimeter through the existing bounded stream; see
+[terrain-edge overflow](QUEST_CONTAINERS.md#explicit-terrain-edge-overflow).
+It does not simulate river currents, pressure, water displacement or a connected
+landscape fluid field. Explicit submerged,
 surface and shore navigation use the movement actions below. Ordinary grounded
 following conservatively avoids the reservoir's outer footprint; actual movement
 segments still test its wet triangles. Missing native bed geometry is unavailable, never silently treated as an

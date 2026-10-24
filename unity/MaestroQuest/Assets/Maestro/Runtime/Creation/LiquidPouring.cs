@@ -74,9 +74,10 @@ namespace Maestro.Quest.Creation {
             // journal still publishes one coherent episode for the whole host.
             foreach(var members in groups)foreach(var v in members){
                 if(!v.Ready||v.Live.amountMl<=0)continue;
-                double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up,RoomTerrainReservoir.Native(v.Live,v.Item.transform));
+                var terrain=RoomTerrainReservoir.Native(v.Live,v.Item.transform);
+                double excess=ContainerFlowGeometry.Excess(v.Live,v.Item.transform.rotation,up,terrain);
                 double requested=Math.Min(excess,v.Live.capacityMl*.75*seconds*Math.Sqrt(excess/v.Live.capacityMl));if(requested<.000001||Immersed(v,members,up))continue;
-                var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward);if(!physics.CanSimulate(origin,v.Item))continue;var velocity=outward*.15f;
+                var origin=ContainerFlowGeometry.Lip(v.Live,v.Item.transform,up,out var outward,terrain);if(!physics.CanSimulate(origin,v.Item))continue;var velocity=outward*.15f;
                 if(v.Rigid)velocity+=Vector3.ClampMagnitude(v.Rigid.FlowPointVelocity(origin),3);
                 if(!Trace(v,members,origin,velocity,gravity,up,out var receiver,out int count))continue;
                 if(receiver!=null&&ChangesEpisodeIdentity(v,receiver)){Finish(out _);return;}

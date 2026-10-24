@@ -18,10 +18,12 @@ namespace Maestro.Quest.Creation {
         public float radius=.04f,height=.1f;
         // An optional rectangular footprint replaces the circular radius. Version 1
         // remains cylindrical; version 2 is rectangular; version 3 derives its bed from the same owner’s
-        // canonical height field. No imported shape inference.
+        // canonical height field. Version 4 explicitly spills over its terrain perimeter.
+        // No imported shape inference.
         public ContainerRectangle rectangle;
-        public bool IsRectangular=>version is 2 or 3;
-        public bool TerrainFloor=>version==3;
+        public bool IsRectangular=>version is 2 or 3 or 4;
+        public bool TerrainFloor=>version is 3 or 4;
+        public bool SpillAtTerrainEdge=>version==4;
         internal float FootprintArea=>IsRectangular?rectangle.width*rectangle.depth:Mathf.PI*radius*radius;
         internal bool ContainsHorizontal(Vector3 point,float inset=1)=>IsRectangular
             ? Mathf.Abs(point.x)<=rectangle.width*.5f*inset&&Mathf.Abs(point.z)<=rectangle.depth*.5f*inset
@@ -37,8 +39,8 @@ namespace Maestro.Quest.Creation {
         public Color color=new(.16f,.55f,.85f,1);
         public RoomContainer Copy()=>new(){version=version,rectangle=rectangle?.Copy(),frame=frame?.Copy(),radius=radius,height=height,capacityMl=capacityMl,amountMl=amountMl,liquid=liquid,fluid=RoomFluid.Effective(fluid).Copy(),color=color};
         public bool Validate(out string error){
-            error="Use a cylindrical v1, rectangular v2 or terrain-backed v3 container, normalized bottom frame, bounded dimensions and contents within capacity (1–32000000 ml)";
-            if(!RoomFluid.Effective(fluid).Valid||version is not (1 or 2 or 3)||IsRectangular&&(rectangle==null||!(TerrainFloor?float.IsFinite(rectangle.width)&&rectangle.width>=.1f&&rectangle.width<=4&&float.IsFinite(rectangle.depth)&&rectangle.depth>=.1f&&rectangle.depth<=4:rectangle.Valid))||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
+            error="Use a cylindrical v1, rectangular v2 or terrain-backed v3/v4 container, normalized bottom frame, bounded dimensions and contents within capacity (1–32000000 ml)";
+            if(!RoomFluid.Effective(fluid).Valid||version is not (1 or 2 or 3 or 4)||IsRectangular&&(rectangle==null||!(TerrainFloor?float.IsFinite(rectangle.width)&&rectangle.width>=.1f&&rectangle.width<=4&&float.IsFinite(rectangle.depth)&&rectangle.depth>=.1f&&rectangle.depth<=4:rectangle.Valid))||version==1&&rectangle!=null&&(rectangle.width!=0||rectangle.depth!=0)||frame?.Valid!=true||!float.IsFinite(radius)||radius<.005f||radius>1||!float.IsFinite(height)||height<.01f||height>2||!double.IsFinite(capacityMl)||capacityMl<1||capacityMl>MaximumMillilitres||!double.IsFinite(amountMl)||amountMl<0||amountMl>capacityMl||!RoomSnapPoint.Identifier(liquid)||liquid.Any(char.IsControl)||!Unit(color.r)||!Unit(color.g)||!Unit(color.b)||color.a!=1)return false;
             error=null;return true;
         }
         static bool Unit(float n)=>float.IsFinite(n)&&n>=0&&n<=1;

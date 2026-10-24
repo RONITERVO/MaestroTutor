@@ -50,7 +50,7 @@ namespace Maestro.Quest.Creation {
      float duration=Segments*.025f;var possible=extent.Bounds;possible.Encapsulate(new Bounds(extent.Bounds.center+gravity*(.5f*duration*duration),extent.Bounds.size));possible.Expand(2*(3+.15f)*duration);
      FlowProbeAt(seed,possible,vessel.Id,true,cavities,spatial);
     }else if(vessel.Live.capacityMl-ContainerFlowGeometry.RetainedCapacity(vessel.Live,pose.rotation,up,terrain)>=.000001){
-     var origin=ContainerFlowGeometry.Lip(vessel.Live,pose.matrix,pose.rotation,up,out var outward);var velocity=outward*.15f;
+     var origin=ContainerFlowGeometry.Lip(vessel.Live,pose.matrix,pose.rotation,up,out var outward,terrain);var velocity=outward*.15f;
      if(vessel.Rigid)velocity+=Vector3.ClampMagnitude(vessel.Rigid.FlowPointVelocity(origin),3);
      var bounds=new Bounds(origin,Vector3.zero);
      for(int i=1;i<=Segments;i++){discoveryWork.PathSegments++;float t=i*.025f;var point=origin+velocity*t+gravity*(.5f*t*t);bounds.Encapsulate(point);if(vessel.Item&&!world.CanSimulate(point,vessel.Item))break;}

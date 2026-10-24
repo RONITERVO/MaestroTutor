@@ -483,6 +483,21 @@ try{
  const terrainCapacity=Number(await page.getByLabel('Action inputs definition capacityMl',{exact:true}).inputValue());assert.ok(terrainCapacity>50000);
  await page.getByRole('heading',{name:'Configure or fill a liquid container',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-terrain-water.png')});
  await writeFile(join(directory,'book-native-terrain-water.json'),JSON.stringify({boundary:'Original book generated controls create a terrain owner and configure its reservoir; native readback derives capacity and keeps the requested amount. No hidden fixture mutation, provider or headset acceptance.',terrainCreated,terrainConfigured,capacityMl:terrainCapacity},null,2));
+ // Author the shared spill setting using only the generated user controls.
+ await page.getByLabel('Include Action inputs definition spillAtTerrainEdge',{exact:true}).check();
+ await page.getByLabel('Action inputs definition spillAtTerrainEdge',{exact:true}).selectOption('true');
+ const terrainSpillConfigured=await runNamedAction('object.container.edit');
+ await page.getByRole('button',{name:'Load current values',exact:true}).click();await page.getByText('Current values loaded. Review your changes before running.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Action inputs definition spillAtTerrainEdge',{exact:true}).inputValue(),'true');
+ assert.equal(Number(await page.getByLabel('Action inputs definition amountMl',{exact:true}).inputValue()),50000);
+ await page.getByRole('heading',{name:'Configure or fill a liquid container',exact:true}).scrollIntoViewIfNeeded();await page.screenshot({path:join(directory,'book-native-terrain-spill.png')});
+ await book.workshop();
+ const spillRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
+ await page.getByRole('button',{name:'Undo',exact:true}).first().click();await page.waitForFunction(revision=>window.nativeBookEvidence!().state!.sceneRevision>revision,spillRevision);
+ const closedSpill=await book.fact('object.container.configuration','Liquid container including overflow policy',{target:terrainTarget});
+ const closedDefinition=(closedSpill.value as {definition:{spillAtTerrainEdge:boolean;amountMl:number}}).definition;
+ assert.equal(closedDefinition.spillAtTerrainEdge,false);assert.equal(closedDefinition.amountMl,50000);
+ await writeFile(join(directory,'book-native-terrain-spill.json'),JSON.stringify({terrainSpillConfigured,closedSpill,restoredClosedPerimeter:true,amountMl:50000,providerUsed:false},null,2));
  // The user selects both exact objects in the generated habitat fact form.
  const habitatRevision=await page.evaluate(()=>window.nativeBookEvidence!().state!.sceneRevision);
  const habitatView=await book.fact('object.water.habitat.path','Inspect a water habitat path',{target:ball.id,habitat:terrainTarget});

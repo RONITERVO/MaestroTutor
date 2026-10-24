@@ -7,7 +7,7 @@ export interface ReservoirContainer {version:number;frame:Frame;rectangle?:{widt
 export function validTerrainReservoirs(physics:{mode:string},fields:ReservoirBed[],containers:ReservoirContainer[]):boolean {
  const f=Math.fround;
  for(const c of containers){
-  if(c.version!==3)continue;
+  if(c.version!==3&&c.version!==4)continue;
   const bed=fields[0];
   if(physics.mode!=='fixed'||fields.length!==1||!bed||!c.rectangle||f(c.rectangle.width)!==f(bed.width)||f(c.rectangle.depth)!==f(bed.depth))return false;
   for(const key of ['x','y','z'] as const)if(f(c.frame.position[key])!==f(bed.frame.position[key])||f(c.frame.rotation[key])!==f(bed.frame.rotation[key]))return false;

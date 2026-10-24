@@ -89,7 +89,7 @@ namespace Maestro.Quest.Creation
                 if(value==null||!validate(value)){error="Invalid "+label+" data";return false;}
                 var candidate=copy(value);upgrade(candidate);
                 if(!validate(candidate)){error="Invalid "+label+" data";return false;}
-                byte[] bytes=new UTF8Encoding(false).GetBytes(JsonUtility.ToJson(candidate));
+                byte[] bytes=new UTF8Encoding(false).GetBytes(Encode(candidate));
                 if(bytes.Length>maximum){error="The "+label+" collection is too large to save";return false;}
                 // Prove the actual wire bytes on the worker, including normalization
                 // and strict field/version checks, before publication can cache them.

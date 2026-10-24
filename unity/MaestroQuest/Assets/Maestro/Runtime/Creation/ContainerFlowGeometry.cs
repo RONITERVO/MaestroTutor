@@ -51,12 +51,18 @@ namespace Maestro.Quest.Creation {
             var n=Quaternion.Inverse(worldRotation*container.frame.rotation)*up;
             if(n.y<=0)return 0;
             double lip=n.y*container.height*.5-container.HorizontalExtent(n);
+            if(container.SpillAtTerrainEdge){if(terrain==null)throw new InvalidOperationException("The accepted terrain spill edge is unavailable");terrain.SpillLip(n,out var edge,out _);lip=Vector3.Dot(n,edge)-n.y*container.height*.5;}
             return container.capacityMl*FractionBelow(container,n,lip,terrain);
         }
         internal static double Excess(RoomContainer container,Quaternion worldRotation,Vector3 up,TerrainLiquidGeometry terrain=null)=>Math.Max(0,container.amountMl-RetainedCapacity(container,worldRotation,up,terrain));
-        internal static Vector3 Lip(RoomContainer container,Transform root,Vector3 up,out Vector3 outward)=>Lip(container,root.localToWorldMatrix,root.rotation,up,out outward);
-        internal static Vector3 Lip(RoomContainer container,Matrix4x4 root,Quaternion worldRotation,Vector3 up,out Vector3 outward) {
+        internal static Vector3 Lip(RoomContainer container,Transform root,Vector3 up,out Vector3 outward,TerrainLiquidGeometry terrain=null)=>Lip(container,root.localToWorldMatrix,root.rotation,up,out outward,terrain);
+        internal static Vector3 Lip(RoomContainer container,Matrix4x4 root,Quaternion worldRotation,Vector3 up,out Vector3 outward,TerrainLiquidGeometry terrain=null) {
             var rotation=worldRotation*container.frame.rotation;var n=Quaternion.Inverse(rotation)*up;
+            if(container.SpillAtTerrainEdge){
+                if(terrain==null)throw new InvalidOperationException("The accepted terrain spill edge is unavailable");
+                terrain.SpillLip(n,out var edge,out var direction);outward=rotation*direction;
+                return root.MultiplyPoint3x4(container.frame.position+container.frame.rotation*edge);
+            }
             var radial=new Vector3(-n.x,0,-n.z);radial=radial.sqrMagnitude>1e-8f?radial.normalized:Vector3.right;
             var lip=container.IsRectangular
                 ? new Vector3(Mathf.Abs(n.x)<1e-8f?0:-Mathf.Sign(n.x)*container.rectangle.width*.5f,0,Mathf.Abs(n.z)<1e-8f?0:-Mathf.Sign(n.z)*container.rectangle.depth*.5f)

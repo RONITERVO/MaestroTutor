@@ -32,7 +32,7 @@ namespace Maestro.Quest.Creation {
         // Water, heights, frame and footprint are never repaired or inferred.
         internal static void NormalizeSerializedCapacity(RoomObjectData owner){
             var container=owner?.containers?.Length==1?owner.containers[0]:null;
-            if(container==null||container.version!=3||!Derive(owner,container,out _,out var capacity,out _)
+            if(container==null||!container.TerrainFloor||!Derive(owner,container,out _,out var capacity,out _)
                 ||container.capacityMl==capacity)return;
             var wire=JsonUtility.FromJson<CapacityWire>(JsonUtility.ToJson(new CapacityWire{capacityMl=capacity}));
             if(wire!=null&&container.capacityMl==wire.capacityMl)container.capacityMl=capacity;

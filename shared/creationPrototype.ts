@@ -23,7 +23,7 @@ export function validCreationPrototypeGeometry(value:Record<string,unknown>):boo
  const p=value as unknown as CreationPrototype,g=p.geometry;
  if(!validPrototypeResources(p)||g.recipe?.playing||(p.heightFields?.length??0)>0&&p.physics.mode!=='fixed')return false;
  if(g.kind==='drawing'&&(!hasLength(g.points!)||g.points!.some(v=>length2(v)>100)))return false;
- if(p.containers?.some(c=>c.version===3)&&(p.version??0)<6||!validTerrainReservoirs(p.physics,p.heightFields??[],p.containers??[]))return false;
+ if(p.containers?.some(c=>c.version===4)&&(p.version??0)<10||p.containers?.some(c=>c.version>=3)&&(p.version??0)<6||!validTerrainReservoirs(p.physics,p.heightFields??[],p.containers??[]))return false;
  if(p.walking&&((p.version??0)<7||g.kind!=='model'))return false;
  const feet=p.footPlacement;
  if(feet){

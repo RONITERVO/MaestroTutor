@@ -91,7 +91,7 @@ namespace Maestro.Quest.Tests
                 Assert.That(storage.Save(restored,out error),Is.True,error);
                 Assert.That(File.ReadAllText(Path.Combine(directory,"room.v42.json")),Is.EqualTo(old));
                 var loaded=new RoomStorage(directory).Load(out error);Assert.That(loaded,Is.Not.Null,error);
-                Assert.That(loaded.version,Is.EqualTo(43));Assert.That(loaded.objects.Count(x=>x.environmentProfile==profile.id),Is.EqualTo(258));
+                Assert.That(loaded.version,Is.EqualTo(RoomDocument.CurrentVersion));Assert.That(loaded.objects.Count(x=>x.environmentProfile==profile.id),Is.EqualTo(258));
             }finally{if(Directory.Exists(directory))Directory.Delete(directory,true);}
         }
         [Test]public void WholeWorldInvocationFitsWithoutIncreasingAuthoredProgramOrValueLimits() {
