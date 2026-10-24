@@ -17,7 +17,7 @@ export async function probeBookEnvironmentRecovery(page:Page,directory:string){
   const definition=capabilityDefinition(id);assert.ok(definition);
   await book.workshop();await page.getByRole('button',{name:'Action catalog',exact:true}).click();
   await page.getByLabel('Search actions',{exact:true}).fill(id);await page.getByRole('button',{name:'Search',exact:true}).click();
-  await page.getByRole('button',{name:definition.label+' '+id+' · v1',exact:true}).click();
+  await page.getByRole('button',{name:definition.label+' '+id+' · v'+definition.version,exact:true}).click();
  };
  const prepare=async(id:string,args:Record<string,unknown>,stale=false)=>{
   await open(id);

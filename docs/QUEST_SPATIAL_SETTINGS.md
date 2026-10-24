@@ -86,9 +86,10 @@ virtual object collisions remain active. Rendering, passthrough depth and audio
 are separate choices, so excluding a physical floor from a robot's movement does
 not make it invisible or silent.
 
-Read `environment.profiles` to find a saved definition, `environment.profile`
-for its current revision and complete membership, and `object.environment.settings`
-for an object's saved assignment and revision. `environment.profile.save`,
+Read `environment.profiles` to find a saved definition,
+`environment.profile.summary` for its revision and coherent membership token,
+`resource.members` for the member IDs, and `object.environment.settings` for
+each object's saved assignment and revision. `environment.profile.save`,
 `environment.profile.remove` and `object.environment.assign` all have
 `completion` duration and use the same bounded save queue as the settings above.
 The book generates the profile picker from these definitions; agent and program
@@ -107,12 +108,22 @@ the global switch. No simulation-readiness field is fabricated for an absent vie
 Use `object.presence` for native lifetime and `object.environment` for the existing
 live readiness observation. The latter remains unavailable without an active view.
 The generated assignment form loads current values from the saved-settings fact;
-that read does not relax the assignment action's native/physical requirements.
+deliberately unloaded objects can also be assigned without loading a view.
+Loading/retiring objects refuse until stable; unexpectedly missing views refuse.
+Resident objects must still pass physical clearance before accepting an edit.
 
-A shared definition edit must explicitly claim every member. An unused profile
-can be removed; a bound one cannot. A waiting edit rechecks membership, exact
-revisions, released/native targets, ground availability and scanned-surface
-penetration. It does not copy a whole room or reserve bodies while waiting. If a
+The version 2 `environment.profile.save` action requires the summary
+`membership` token and every member as `{target, revision}`. Creation requires
+empty id/membership/members and revision zero. Version 1 calls refuse; their
+unguarded member lists are not silently upgraded. The shared catalog advertises
+`environmentSavedEdits.v1` for these edits and the summary fact.
+
+A shared definition edit explicitly claims every member. An unused profile
+can be removed; a bound one cannot. A waiting edit and native acceptance recheck
+the membership generation and exact member revisions, including membership
+changes later undone. Resident targets require release, ownership, available
+ground and scanned-surface clearance. Dormant targets retain their pose and
+residency; their current geometry is checked when restored. It does not copy a whole room or reserve bodies while waiting. If a
 real wall becomes obstructive while a save prepares, enabling collisions refuses
 the entire change. It never teleports an actor to make a policy fit. Inputs and
 new IDs are captured once per started action. Cancellation before acceptance
@@ -164,18 +175,17 @@ an enabled shape for the exact penetration test. Pinned Unity tests show that
 `ComputePenetration` otherwise returns false for inactive intersecting shapes.
 That false result is treated as unavailable, never as permission to simulate.
 
-This is the geometry foundation for restoration, not a completed restoration
-admission path. Returning objects still need explicit non-simulating publication,
-a current exact check and visible recovery before unloaded collision edits can be
-supported. A blocked object must stay inspectable and movable for repair; loading
+Restoration uses this geometry proof with non-simulating publication,
+a current exact check and visible recovery. Canonical unloaded collision edits
+do not grant admission to a later native instance. A blocked object must stay inspectable and movable for repair; loading
 or clearing an obstacle must not replay an old action or throw.
 
-## Planned scaling of collision profiles
+## Collision-profile scaling contract
 
-This section records the remaining implementation contract. The saved-settings
-read above is available; the current 16-member and native-readiness requirements
-for editing remain in force. Appearance and visibility already support unloaded members; collision
-participation cannot use that path without physical admission work.
+Saved settings, compact summaries and canonical edits over deliberately unloaded
+members are implemented. The current 16-member limit remains in force. Collision
+participation uses the same saved journal as appearance and visibility, with
+additional physical admission and recovery for resident/restored geometry.
 
 The durable world should store what an object is meant to collide with. A native
 view should separately report what is currently prepared and safe to simulate.
@@ -183,7 +193,7 @@ That distinction lets a user edit a distant village's policy without loading the
 whole village, while an NPC down a virtual hill remains independent of the real
 floor. It also keeps rendered opacity and acoustic obstruction independent.
 
-Implement in this order:
+Maintain these invariants as the limits and world systems grow:
 
 1. Keep the implemented saved assignment/revision read independent of native
    presence. Extend readiness and recovery observations to distinguish unloaded,
@@ -192,9 +202,9 @@ Implement in this order:
    ready. The human inspector and agent facts must return the same distinction.
 2. The shared `resource.members` continuation now detects definition and
    membership changes without loading objects. Before raising the collision
-   profile limit, add a versioned summary: the current `environment.profile`
-   includes all members in one program value and cannot silently grow beyond its
-   value budget. Every affected object still needs an exact guard and ownership
+   profile limit, use the compact `environment.profile.summary` and explicit
+   member pages. The older `environment.profile` includes all members in one
+   program value and cannot silently grow beyond its value budget. Every affected object still needs an exact guard and ownership
    claim. Saved programs retain their declared resource budget; a large one-off
    edit is not a license for an unbounded program action.
 3. Native restoration now arms a per-object hold before enabling a candidate and
@@ -204,8 +214,8 @@ Implement in this order:
    checks leave the native view editable, with physics and navigation held.
    Unsupported or saturated geometry queries remain unavailable. See the recovery
    contract below; candidate headset and sustained-performance checks remain due.
-4. Permit canonical policy edits for deliberately unloaded members once that
-   admission contract exists. Preserve their saved poses and unloaded identity;
+4. Canonical policy edits now support deliberately unloaded members with the
+   version 2 guarded save contract. Preserve their saved poses and unloaded identity;
    do not acquire all roots to save a definition. Live members must pass the
    existing checks before the entire shared edit is accepted. Loading or retiring
    members cannot be treated as stable unloaded records.
@@ -219,8 +229,9 @@ Implement in this order:
 `RoomEnvironmentEdits.CanChangeEnvironment` currently performs the live check;
 `RoomNativeResidency.ActivateNativeTargets` prepares staged roots and publishes
 identities together and checks the same geometry proof while restored bodies are
-held. Canonical dormant policy edits still need their own atomic acceptance and
-versioned membership contract before the existing limits can be relaxed. Existing `RoomSimulationEnvironment` bounds and
+held. Canonical dormant policy edits share atomic acceptance and exact
+membership/member revision guards. Existing limits are unchanged; raising them
+requires a separate resource-budget contract. Existing `RoomSimulationEnvironment` bounds and
 `RigidRoomItem` readiness gates remain necessary; a centre-in-bounds check does
 not replace exact overlap proof.
 
@@ -259,5 +270,6 @@ changes and unload/reload never clear a failed hold automatically. A hold surviv
 native retirement in the same workspace. Workspace/process reload starts with
 physics paused; this transient recovery state is not a saved collision policy.
 
-This step does not yet allow collision-profile edits over unloaded members or
-raise the 16-member profile limit. It adds no new depth, visibility or audio policy.
+Collision-profile edits over unloaded members use this restoration contract.
+The 16-member profile limit is unchanged. This adds no new depth, visibility or
+audio policy.

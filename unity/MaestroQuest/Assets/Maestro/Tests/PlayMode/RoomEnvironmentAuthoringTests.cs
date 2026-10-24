@@ -14,7 +14,7 @@ namespace Maestro.Quest.Tests
 {
     public sealed partial class RoomRulesTests
     {
-        JObject SaveEnvironmentArgs()=>new(){["id"]="",["revision"]=0,["name"]="Virtual actors",["realCollisions"]=false,["members"]=new JArray()};
+        JObject SaveEnvironmentArgs()=>new(){["id"]="",["revision"]=0,["membership"]="",["name"]="Virtual actors",["realCollisions"]=false,["members"]=new JArray()};
         string NewEnvironment() {
             string id=Guid.NewGuid().ToString("N");
             Assert.That(editor.EditEnvironment(new(){id=id,name="Virtual actors",realCollisions=false},id,0,Array.Empty<string>(),out var error),Is.True,error);
@@ -43,10 +43,10 @@ namespace Maestro.Quest.Tests
         [UnityTest]public IEnumerator SharedProfileMutationRequiresExactMembersAndChecksAllBeforeChangingAny() {
             string id=NewEnvironment(),blockId=editor.Snapshot().objects.Single(x=>x.kind==RoomObjectKind.Block).id;
             Assert.That(AssignEnvironment("maestro",id,out var error),Is.True,error);Assert.That(AssignEnvironment(blockId,id,out error),Is.True,error);
-            var args=SaveEnvironmentArgs();args["id"]=id;args["revision"]=editor.EnvironmentRevision(id);args["realCollisions"]=true;args["members"]=new JArray("maestro");
+            var args=EditEnvironmentArgs(id);args["realCollisions"]=true;args["members"]=new JArray(EnvironmentMember("maestro"));
             var capability=new EnvironmentProfileSaveCapability();var context=new CapabilityContext(editor,animations);
             Assert.That(capability.CanRun(context,args,out error),Is.False);Assert.That(error,Does.Contain("every"));
-            args["members"]=new JArray("maestro",blockId);
+            args["members"]=new JArray(EnvironmentMember("maestro"),EnvironmentMember(blockId));
             Assert.That(capability.Claims(args).Select(c=>c.Target),Is.EquivalentTo(new[]{"maestro",blockId}));
             block.GetComponent<RigidRoomItem>().SetAnimationOwner(this,true);
             Assert.That(capability.Start(context,"blocked",args,out _,out error),Is.False);Assert.That(editor.ReadEnvironment(id).realCollisions,Is.False);
@@ -68,7 +68,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest]public IEnumerator EnvironmentCapabilitiesHaveReplayableReceiptsAndNativeFacts() {
             var executor=new RoomAgentExecutor(editor);string run=runtime.Scheduler.Receipts.NextId;var args=SaveEnvironmentArgs();
-            var call=new JObject{["id"]="environment.profile.save",["version"]=1,["arguments"]=args};
+            var call=new JObject{["id"]="environment.profile.save",["version"]=2,["arguments"]=args};
             var request=new RoomAgentRequest{version=2,conditions=Array.Empty<RoomObjectCondition>(),commands=new[]{new RoomAgentCommand{action="execution",execution=new JObject{["operation"]="start",["runId"]=run,["call"]=call}}}};
             Assert.That(executor.Execute(request,out var error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var receipt=runtime.Scheduler.Invocation(run);Assert.That((string)receipt["phase"],Is.EqualTo("completed"),receipt.ToString());
@@ -81,7 +81,7 @@ namespace Maestro.Quest.Tests
             request.conditions=new[]{new RoomObjectCondition{id="maestro",revision=editor.ObjectRevision("maestro")}};
             Assert.That(executor.Execute(request,out error,out _),Is.True,error);yield return SpatialSettingsCompletion.Wait(executor.Executions);
             var assigned=runtime.Scheduler.Invocation(assignRun);Assert.That((string)assigned["phase"],Is.EqualTo("completed"),assigned.ToString());
-            var evidence=new JObject{["capabilities"]=new JArray(RoomControls.Capabilities(editor)),["saveCall"]=call,["saveReceipt"]=receipt,["assignCall"]=assign,["assignReceipt"]=assigned,["before"]=before,["after"]=editor.ObserveEnvironmentBinding("maestro"),["profile"]=editor.ObserveEnvironmentProfile(id),["profiles"]=editor.ObserveEnvironmentProfiles(0),["emptyPage"]=editor.ObserveEnvironmentProfiles(16)};
+            var evidence=new JObject{["capabilities"]=new JArray(RoomControls.Capabilities(editor)),["saveCall"]=call,["saveReceipt"]=receipt,["assignCall"]=assign,["assignReceipt"]=assigned,["before"]=before,["after"]=editor.ObserveEnvironmentBinding("maestro"),["profile"]=editor.ObserveEnvironmentProfile(id),["summary"]=editor.ObserveEnvironmentSummary(id),["profiles"]=editor.ObserveEnvironmentProfiles(0),["emptyPage"]=editor.ObserveEnvironmentProfiles(16)};
             string output=Environment.GetEnvironmentVariable("MAESTRO_ENTITY_ENVIRONMENT");
             if(!string.IsNullOrEmpty(output)){System.IO.Directory.CreateDirectory(output);System.IO.File.WriteAllText(System.IO.Path.Combine(output,"profiles.json"),evidence.ToString());}
         }

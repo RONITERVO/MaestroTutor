@@ -16714,3 +16714,58 @@ current clearance and ownership, while later restoration must enforce the saved
 policy before motion. Group edits, Undo/Redo, temporary scopes and save failures
 need the same user/agent evidence before raising the current 16-member limit.
 Device/provider holds and the broader v1 release gates remain active.
+
+
+### Canonical collision edits without native loading (2026-10-24)
+
+`environment.profile.save` version 2 consumes a compact summary revision and
+membership generation plus `{target, revision}` for every bound object. The
+shared catalog, user controls and agent all use that contract. Version 1 calls
+refuse rather than invent missing guards. Membership changes undone back to the
+same list still invalidate the old read. Guards are copied at start and checked
+while queued and immediately before native acceptance.
+
+The profile save and individual assignment no longer acquire unloaded native
+roots. Stable deliberately unloaded records retain their saved pose and
+residency; preparing/retiring or unexpectedly lost views refuse. Resident members
+still pass current ownership and geometry checks before the entire edit applies.
+Restoration applies the saved policy before enabling simulation and holds blocked
+objects for explicit repair. The existing journal owns save, cancellation,
+Undo/Redo and temporary Keep/Discard. Saved room storage is unchanged.
+
+`environment.profile.summary` and `environmentSavedEdits.v1` expose the compact
+read and new edit semantics without silently changing old clients. The current
+16 profiles / 16 members per profile limits remain until the separate program
+and one-off edit budgets can be expanded with evidence. Device/provider holds
+and broader release gates remain active.
+
+Native verification covers **1,664 EditMode and 217 selected PlayMode** cases.
+The initial full runs exposed two test-maintenance errors: the catalog has 119
+current-input mappings rather than 118, and the stale-member test must paint a
+user-created object rather than built-in Maestro. Corrected catalog tests and
+the corrected member-revision case passed on rerun; initial reports remain in
+`.quest-evidence/saved-environment-20261024/`. The eight new PlayMode cases cover
+full-capacity dormant edits, preserved poses, mixed live/dormant refusal, guarded
+queue/acceptance, membership Undo, restoration inside a new wall, temporary
+Keep/Discard and unexpected native-view loss. No production runtime correction
+was needed after those full test runs.
+
+
+Fresh full rendered-Book run `da653d088f2b495bb7a9facc573dc174` passed with
+**1,723 requests, 5,294 observations and zero browser errors**. Full Headless run
+`690679ae5f6e49f4851aa6e6527d48fc` passed with **2,691 observations**. Both clients
+created a collision profile, assigned an unloaded object, removed/re-added its
+membership, refused the old membership token with fresh outer read sets, applied
+the guarded edit without loading the object, then restored it under the changed
+policy and exercised blocked-object repair. Cleanup restored the object count.
+Both clients, Editor processes and the wrapper exited successfully.
+
+All **1,532 room tests**, **74 generated-control tests**, the corrected 19-case
+contract rerun, app/probe TypeScript and catalog/ten-guide provenance checks
+passed. The older material transfer/packing fixtures contained prior catalog
+snapshots; they were refreshed byte-for-byte from the completed Headless run,
+with no parser relaxation. All 3,572 native, 740 client/tool/catalog and 14
+protected inputs stayed frozen during the two journeys; the two fixture updates
+were recorded afterward. Evidence and corrected initial test failures remain in
+`.quest-evidence/saved-environment-20261024/`. These are offline desktop Unity
+checks, with no new Android, headset, real-provider, signing or Store acceptance.

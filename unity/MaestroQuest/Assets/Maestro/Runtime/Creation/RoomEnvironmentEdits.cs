@@ -16,7 +16,16 @@ namespace Maestro.Quest.Creation
         internal string[] EnvironmentMembers(string id)=>journal.EnvironmentMembers(id);
         readonly RoomEnvironmentClearance environmentClearance=new();
         bool CanChangeEnvironment(string id,bool real,out string error) {
-            if(!CanEditStructures(out error)||!CanEditObject(id,false,out error))return false;
+            bool dormant=NativeEntityDormant(id);
+            if(!CanEditStructures(out error)||!CanChangeObject(id,false,!dormant,false,out error))return false;
+            if(GetComponent<AnimationWorkshop>()?.ControlsTarget(id)==true){error="Finish authoring this object before changing its environment";return false;}
+            if(dormant){
+                error="Wait for this object's loading or unloading to finish before changing its environment";
+                if(NativePhase(id) is NativeEntityPhase.Preparing or NativeEntityPhase.Retiring)return false;
+                // Policy is canonical metadata. Enabled geometry is checked by
+                // native restoration before this body can resume simulation.
+                error=null;return true;
+            }
             if(!new CapabilityContext(this,GetComponent<AnimationWorkshop>()).Target(new JObject{["target"]=id},out var item,out error))return false;
             var world=PhysicsWorld;if(!world)return true;
             if((world.RealCollisions&&real)==world.IncludesRealRoom(item))return true;
@@ -58,7 +67,7 @@ namespace Maestro.Quest.Creation
         }
         internal bool PrepareEnvironmentBinding(string target,int revision,string profile,int profileRevision,out RoomObjectData data,out string error) {
             data=null;if(!CanBindEnvironment(target,revision,profile,profileRevision,out error))return false;
-            data=Pose(Read(target),Find(target).transform);data.environmentProfile=profile;
+            data=NativeEntityDormant(target)?Read(target):Pose(Read(target),Find(target).transform);data.environmentProfile=profile;
             var candidate=Snapshot();var replacement=data;candidate.objects=candidate.objects.Select(x=>x.id==target?replacement:x).ToArray();return candidate.Validate(out error);
         }
         internal bool BindEnvironment(string target,int revision,string profile,int profileRevision,out string error) {
@@ -66,10 +75,10 @@ namespace Maestro.Quest.Creation
             return CommitPersisted(new[]{data},Array.Empty<string>(),"Object environment saved",false,out error);
         }
         internal bool BeginEnvironment(RoomEnvironmentProfile definition,string id,int revision,string[] members,
-            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null)
+            out PendingPersistedEdit pending,out string error,Action<string> checkpoint=null,Func<string> validateSnapshot=null)
         {
             var captured=definition?.Copy();var affected=members==null?null:(string[])members.Clone();
-            return BeginPreparedEdit(()=>CanEditEnvironment(captured,id,revision,affected,out var issue)?null:issue,
+            return BeginPreparedEdit(()=>validateSnapshot?.Invoke()??(CanEditEnvironment(captured,id,revision,affected,out var issue)?null:issue),
                 (out RoomJournal.PreparedEdit edit,out string issue)=>{
                     edit=null;
                     return PrepareEnvironment(captured,id,revision,affected,out var edits,out issue)&&

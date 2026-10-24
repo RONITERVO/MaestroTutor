@@ -47,10 +47,10 @@ namespace Maestro.Quest.Tests
             Assert.AreEqual(revision,editor.EnvironmentRevision(id));Assert.IsFalse(editor.ReadEnvironment(id).realCollisions);
             Assert.IsTrue(editor.BeginRotation("book",Quaternion.identity,out var blocker,out error),error);CapabilityOperation waiting=null;
             try {
-                yield return Prepared(blocker);var args=SaveEnvironmentArgs();args["id"]=id;args["revision"]=revision;args["realCollisions"]=true;args["members"]=new JArray("maestro");
+                yield return Prepared(blocker);var args=EditEnvironmentArgs(id);args["realCollisions"]=true;
                 Assert.IsTrue(new EnvironmentProfileSaveCapability().Start(new CapabilityContext(editor,animations),"waiting",args,out waiting,out error),error);
                 Assert.IsTrue(AssignEnvironment(editor.Identity(block),id,out error),error);blocker.Dispose();yield return Drained(blocker);
-                Assert.AreEqual(RuleActionState.Failed,waiting.State(out error));StringAssert.Contains("every",error);
+                Assert.AreEqual(RuleActionState.Failed,waiting.State(out error));StringAssert.Contains("membership",error);
                 Assert.IsEmpty(waiting.Result);Assert.IsFalse(editor.ReadEnvironment(id).realCollisions);
             }finally{waiting?.Stop(false);blocker.Dispose();}
         }
@@ -131,7 +131,7 @@ namespace Maestro.Quest.Tests
         }
         [UnityTest] public IEnumerator PendingEnvironmentNoopDoesNotAddUndoAndRemovalHasAConfirmedZeroRevision()
         {
-            string id=NewEnvironment();int revision=editor.EnvironmentRevision(id);var args=SaveEnvironmentArgs();args["id"]=id;args["revision"]=revision;
+            string id=NewEnvironment();int revision=editor.EnvironmentRevision(id);var args=EditEnvironmentArgs(id);
             Assert.IsTrue(new EnvironmentProfileSaveCapability().Start(new CapabilityContext(editor,animations),"same",args,out var same,out var error),error);
             yield return PlacementOperationDone(same);Assert.AreEqual(revision,(int)same.Result["revision"]);
             editor.Undo();Assert.IsNull(editor.ReadEnvironment(id));editor.Redo();

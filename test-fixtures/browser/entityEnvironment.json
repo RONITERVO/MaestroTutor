@@ -69,6 +69,7 @@
     "liquidMedium.v1",
     "liquidContacts.v1",
     "waterTraversal.v1",
+    "waterHabitat.v1",
     "containerScooping.v1",
     "physicalConnections.v1",
     "physicalSliders.v1",
@@ -94,6 +95,7 @@
     "animationAuthoring.v1",
     "animationRecording.v1",
     "animationPosing.v1",
+    "animationEditResolution.v1",
     "avatarModels.v1",
     "modelImport.v1",
     "modelArchiveImport.v1",
@@ -105,12 +107,20 @@
     "temporaryRoom.v1",
     "spatialSettings.v1",
     "groundedTravel.v1",
+    "aquaticTravel.v1",
+    "surfaceTravel.v1",
+    "shoreTravel.v1",
     "groundedFollowing.v1",
+    "waterFollowing.v1",
     "avatarAttention.v1",
+    "objectAttention.v1",
     "objectWalkingAnimation.v1",
+    "humanoidFootPlacement.v1",
     "physicsSimulation.v1",
     "physicsEnvironment.v1",
     "environmentProfiles.v1",
+    "environmentSavedEdits.v1",
+    "environmentRecovery.v1",
     "appearances.v1",
     "appearanceImages.v1",
     "chatImages.v1",
@@ -119,39 +129,42 @@
     "worldLighting.v1",
     "worldRegions.v1",
     "objectSearch.v1",
+    "resourceMembers.v1",
     "objectOverview.v1",
     "worldTime.v1",
     "worldWeather.v1"
   ],
   "saveCall": {
     "id": "environment.profile.save",
-    "version": 1,
+    "version": 2,
     "arguments": {
       "id": "",
       "revision": 0,
+      "membership": "",
       "name": "Virtual actors",
       "realCollisions": false,
       "members": []
     }
   },
   "saveReceipt": {
-    "id": "9d577ab1b8c04248ad7916876a1bf906",
+    "id": "7d98384b7f704c0ea95b06d9f44389ed",
     "capability": "environment.profile.save",
-    "version": 1,
+    "version": 2,
     "resources": [],
     "phase": "completed",
     "status": "Action completed",
     "output": {
-      "id": "0b3b7d46b2e34a208309312422b42b90",
+      "id": "7194e80aabaf4de6a84284a6b59f9a46",
       "revision": 10,
       "temporary": false
     },
     "call": {
       "id": "environment.profile.save",
-      "version": 1,
+      "version": 2,
       "arguments": {
         "id": "",
         "revision": 0,
+        "membership": "",
         "name": "Virtual actors",
         "realCollisions": false,
         "members": []
@@ -164,12 +177,12 @@
     "arguments": {
       "target": "maestro",
       "revision": 5,
-      "profileId": "0b3b7d46b2e34a208309312422b42b90",
+      "profileId": "7194e80aabaf4de6a84284a6b59f9a46",
       "profileRevision": 10
     }
   },
   "assignReceipt": {
-    "id": "f5cf928784674df9b5e11675f64dd7ba",
+    "id": "176059e98a5944c884dbbf07473ca4bd",
     "capability": "object.environment.assign",
     "version": 1,
     "resources": [
@@ -188,7 +201,7 @@
       "arguments": {
         "target": "maestro",
         "revision": 5,
-        "profileId": "0b3b7d46b2e34a208309312422b42b90",
+        "profileId": "7194e80aabaf4de6a84284a6b59f9a46",
         "profileRevision": 10
       }
     }
@@ -199,30 +212,30 @@
     "profileId": "",
     "profileRevision": 0,
     "realCollisions": true,
+    "temporary": false,
     "state": {
       "effectiveRealCollisions": true,
       "ready": false,
       "inside": false,
       "admitted": false
-    },
-    "temporary": false
+    }
   },
   "after": {
     "target": "maestro",
     "revision": 11,
-    "profileId": "0b3b7d46b2e34a208309312422b42b90",
+    "profileId": "7194e80aabaf4de6a84284a6b59f9a46",
     "profileRevision": 10,
     "realCollisions": false,
+    "temporary": false,
     "state": {
       "effectiveRealCollisions": false,
       "ready": false,
       "inside": false,
       "admitted": false
-    },
-    "temporary": false
+    }
   },
   "profile": {
-    "id": "0b3b7d46b2e34a208309312422b42b90",
+    "id": "7194e80aabaf4de6a84284a6b59f9a46",
     "revision": 10,
     "name": "Virtual actors",
     "realCollisions": false,
@@ -231,13 +244,22 @@
     ],
     "temporary": false
   },
+  "summary": {
+    "id": "7194e80aabaf4de6a84284a6b59f9a46",
+    "revision": 10,
+    "name": "Virtual actors",
+    "realCollisions": false,
+    "membership": "0c947109535d4fac803cb94c43f88b99",
+    "memberCount": 1,
+    "temporary": false
+  },
   "profiles": {
     "offset": 0,
     "total": 1,
     "pageSize": 3,
     "entries": [
       {
-        "id": "0b3b7d46b2e34a208309312422b42b90",
+        "id": "7194e80aabaf4de6a84284a6b59f9a46",
         "revision": 10,
         "name": "Virtual actors",
         "realCollisions": false

@@ -8,7 +8,7 @@ using NUnit.Framework;
 namespace Maestro.Quest.Tests {
     public sealed class NativeAuthoringDependenciesTests {
         static string A=>new('a',32);static string B=>new('b',32);
-        static string[] Dependencies(string id,JObject args){Assert.That(BehaviourCatalog.TryCall(id,1,args,out var call,out var error),Is.True,error);return call.Definition.Module.NativeEntities(call.Arguments).Distinct().ToArray();}
+        static string[] Dependencies(string id,JObject args){Assert.That(BehaviourCatalog.TryCall(id,BehaviourCatalog.Action(id).Version,args,out var call,out var error),Is.True,error);return call.Definition.Module.NativeEntities(call.Arguments).Distinct().ToArray();}
         [Test] public void TypedCreationAcquiresOnlyTheExistingCopySource(){
             foreach(var kind in CreateObjectCapability.Kinds){var args=kind.Adapter.Public(kind.Provider.Example);if(kind.Name=="copy")args["target"]=A;
                 Assert.That(Dependencies("object.create",args),Is.EquivalentTo(kind.Name=="copy"?new[]{A}:Array.Empty<string>()),kind.Name);
@@ -39,6 +39,14 @@ namespace Maestro.Quest.Tests {
             Assert.That(Dependencies("drawing.layer.edit",new ScanDrawingCapability().Example),Is.Empty);
             var args=new JObject{["operation"]="rebind",["target"]=A,["revision"]=1,["stateId"]=B,["anchorId"]=B,["x"]=0,["y"]=0,["angle"]=0};
             Assert.That(Dependencies("drawing.layer.edit",args),Is.EqualTo(new[]{A}));
+        }
+        [Test] public void SavedCollisionEditsClaimMembersWithoutLoadingThem(){
+            var args=new EnvironmentProfileSaveCapability().Example;args["id"]=A;args["revision"]=1;args["membership"]=B;
+            args["members"]=new JArray(new JObject{["target"]="maestro",["revision"]=2},new JObject{["target"]=B,["revision"]=4});
+            Assert.That(Dependencies("environment.profile.save",args),Is.Empty);
+            Assert.That(new EnvironmentProfileSaveCapability().Claims(args).Select(x=>x.Target),Is.EquivalentTo(new[]{"maestro",B}));
+            Assert.That(BehaviourCatalog.TryCall("environment.profile.save",1,args,out _,out _),Is.False);
+            Assert.That(Dependencies("object.environment.assign",new EnvironmentAssignCapability().Example),Is.Empty);
         }
         [TestCase("structure.forget")] [TestCase("appearance.save")] [TestCase("appearance.remove")]
         [TestCase("environment.profile.save")] [TestCase("environment.profile.remove")]

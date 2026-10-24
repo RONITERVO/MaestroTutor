@@ -504,9 +504,9 @@ try{
   await probeEnvironmentRecovery({
    fact:async(id,args)=>factReply(await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:id,version:1,arguments:args}}])),
    count:nativeObjects.count,
-   invoke:async(id,args)=>(await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}]))).execution!.selected!,
+   invoke:async(id,args)=>(await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id,version:capabilityDefinition(id)!.version,arguments:args}}}]))).execution!.selected!,
    reject:async(id,args)=>{
-    const commands:RoomCommand[]=[{action:'execution',execution:{operation:'start',call:{id,version:1,arguments:args}}}];
+    const commands:RoomCommand[]=[{action:'execution',execution:{operation:'start',call:{id,version:capabilityDefinition(id)!.version,arguments:args}}}];
     const prepared=await transport.client.prepare(commands,lease.state());if(!lease.valid())throw new Error('Recovery room changed while preparing stale action');
     readSets.push({commands:structuredClone(commands),session:prepared.state.session,sceneRevision:prepared.state.sceneRevision,objects:structuredClone(prepared.objects)});
     const result=await lease.execute(commands,prepared.state.sceneRevision,prepared.objects);checkSparse(result);observations.push(structuredClone(result));return result;
@@ -514,7 +514,7 @@ try{
    replay:async receipt=>(await execute([{action:'execution',execution:{operation:'start',runId:receipt.id,call:receipt.call}}])).execution!.selected!
   },directory,'headless');
 
-  const profileSaved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:'',revision:0,name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]));
+  const profileSaved=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:2,arguments:{id:'',revision:0,membership:'',name:'Virtual terrain actors',realCollisions:false,members:[]}}}}]));
   const profileId=profileSaved.execution?.selected?.output?.id;
   if(typeof profileId!=='string')throw new Error('Environment profile returned no stable ID');
   const profileRead=()=>execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'environment.profile',version:1,arguments:{id:profileId}}}]);
@@ -528,11 +528,11 @@ try{
   const savedBinding=await savedEnvironment(),savedValue=savedBinding.catalog!.value as {profileId:string;profileRevision:number;realCollisions:boolean;state?:unknown};
   if(savedValue.profileId!==profileId||savedValue.profileRevision!==(profileBound.catalog!.value as {revision:number}).revision||savedValue.realCollisions||savedValue.state!==undefined)throw new Error('Saved environment intent was confused with live readiness');
   const membershipRead=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'resource.members',version:1,arguments:{kind:'environment',id:profileId,cursor:''}}}]);
-  const savedMembers=membershipRead.catalog?.value as {id:string;revision:number;members:string[];total:number;offset:number;next:string};
+  const savedMembers=membershipRead.catalog?.value as {id:string;revision:number;membership:string;members:string[];total:number;offset:number;next:string};
   if(!validFactValue('resource.members',savedMembers)||savedMembers.id!==profileId||savedMembers.revision!==savedValue.profileRevision||savedMembers.total!==1||savedMembers.offset!==0||savedMembers.next!==''||JSON.stringify(savedMembers.members)!==JSON.stringify(['maestro']))throw new Error('Shared saved membership did not match the native collision profile');
   const members=(profileBound.catalog!.value as {members:string[]}).members;
   if(JSON.stringify(members)!==JSON.stringify(['maestro']))throw new Error('Profile membership did not preserve exact target IDs');
-  const profileEdited=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:1,arguments:{id:profileId,revision:(profileBound.catalog!.value as {revision:number}).revision,name:'Downhill actors',realCollisions:false,members}}}}]));
+  const profileEdited=await completeProbeAction(execute,await execute([{action:'execution',execution:{operation:'start',call:{id:'environment.profile.save',version:2,arguments:{id:profileId,revision:(profileBound.catalog!.value as {revision:number}).revision,membership:savedMembers.membership,name:'Downhill actors',realCollisions:false,members:[{target:'maestro',revision:(savedBinding.catalog!.value as {revision:number}).revision}]}}}}]));
   const profileList=await execute([{action:'catalog',catalog:{operation:'inspect',category:'facts',capability:'environment.profiles',version:1,arguments:{offset:0}}}]);
   await execute([{action:'undo'}]);const profileUndo=await profileRead();
   if((profileUndo.catalog!.value as {name:string}).name!=='Virtual terrain actors')throw new Error('Profile Undo did not restore the definition');

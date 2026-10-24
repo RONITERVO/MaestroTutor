@@ -2,12 +2,12 @@
   "boundary": "Real full-app native shared-client packing, material fact, ordinary geometry, measured source loss and atomic Undo. Browser separately replays these observations; no headset/provider proof.",
   "created": {
     "version": 1,
-    "revision": 3644,
-    "sceneRevision": 168,
-    "ack": 1507,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4023,
+    "sceneRevision": 192,
+    "ack": 1661,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -16,12 +16,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -120,6 +120,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -145,6 +146,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -156,12 +158,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -170,6 +180,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -205,7 +216,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -418,11 +429,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "d446a85d9ba04c6095edd16a8bbbafcd"
+        "target": "8d324d5751554edabd1b25e75101716b"
       },
       "available": true,
       "value": {
-        "revision": 176,
+        "revision": 208,
         "configured": true,
         "definition": {
           "cells": 16,
@@ -458,12 +469,12 @@
     },
     "execution": {
       "selected": {
-        "id": "2c117b1618394fb8ac2493e06aebbd28",
+        "id": "c77469db6c7f4bb8b90739c1b695c47b",
         "capability": "object.field.transfer",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e",
-          "d446a85d9ba04c6095edd16a8bbbafcd"
+          "593f6ba7bb9241799987ab9df37c8333",
+          "8d324d5751554edabd1b25e75101716b"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -477,8 +488,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 171,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 203,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -486,8 +497,8 @@
               "radius": 0.3
             },
             "destination": {
-              "target": "d446a85d9ba04c6095edd16a8bbbafcd",
-              "revision": 172,
+              "target": "8d324d5751554edabd1b25e75101716b",
+              "revision": 204,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -501,20 +512,20 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5118090107054e729f13b7068865c2ae",
+          "id": "326e44be15cd4021aee1e78df281cc52",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 142,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 174,
             "temporary": false
           }
         },
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -524,108 +535,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -633,8 +644,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -644,12 +655,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -660,7 +671,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -668,8 +679,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -679,7 +690,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -692,11 +703,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -705,23 +716,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -732,14 +743,14 @@
           }
         }
       ],
-      "nextRunId": "7ca4ee73048249a6bf3dbf684a5611e1",
+      "nextRunId": "88bfe482fadb466784457dceba99a14f",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -747,12 +758,12 @@
   },
   "before": {
     "version": 1,
-    "revision": 3651,
-    "sceneRevision": 168,
-    "ack": 1510,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4030,
+    "sceneRevision": 192,
+    "ack": 1664,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -761,12 +772,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -865,6 +876,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -890,6 +902,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -901,12 +914,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -915,6 +936,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -950,7 +972,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1163,11 +1185,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "3f192fbb5015405b99c7680e2d65d66e"
+        "target": "593f6ba7bb9241799987ab9df37c8333"
       },
       "available": true,
       "value": {
-        "revision": 175,
+        "revision": 207,
         "configured": true,
         "definition": {
           "cells": 16,
@@ -1203,12 +1225,12 @@
     },
     "execution": {
       "selected": {
-        "id": "2c117b1618394fb8ac2493e06aebbd28",
+        "id": "c77469db6c7f4bb8b90739c1b695c47b",
         "capability": "object.field.transfer",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e",
-          "d446a85d9ba04c6095edd16a8bbbafcd"
+          "593f6ba7bb9241799987ab9df37c8333",
+          "8d324d5751554edabd1b25e75101716b"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -1222,8 +1244,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 171,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 203,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -1231,8 +1253,8 @@
               "radius": 0.3
             },
             "destination": {
-              "target": "d446a85d9ba04c6095edd16a8bbbafcd",
-              "revision": 172,
+              "target": "8d324d5751554edabd1b25e75101716b",
+              "revision": 204,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -1246,20 +1268,20 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5118090107054e729f13b7068865c2ae",
+          "id": "326e44be15cd4021aee1e78df281cc52",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 142,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 174,
             "temporary": false
           }
         },
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -1269,108 +1291,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -1378,8 +1400,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -1389,12 +1411,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1405,7 +1427,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -1413,8 +1435,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -1424,7 +1446,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -1437,11 +1459,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1450,23 +1472,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -1477,14 +1499,14 @@
           }
         }
       ],
-      "nextRunId": "7ca4ee73048249a6bf3dbf684a5611e1",
+      "nextRunId": "88bfe482fadb466784457dceba99a14f",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -1492,12 +1514,12 @@
   },
   "search": {
     "version": 1,
-    "revision": 3646,
-    "sceneRevision": 168,
-    "ack": 1508,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4026,
+    "sceneRevision": 192,
+    "ack": 1662,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Found 2 actions. Search does not run or enable anything.",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -1506,12 +1528,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -1610,6 +1632,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -1635,6 +1658,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -1646,12 +1670,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -1660,6 +1692,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -1695,7 +1728,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -1849,12 +1882,12 @@
     },
     "execution": {
       "selected": {
-        "id": "2c117b1618394fb8ac2493e06aebbd28",
+        "id": "c77469db6c7f4bb8b90739c1b695c47b",
         "capability": "object.field.transfer",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e",
-          "d446a85d9ba04c6095edd16a8bbbafcd"
+          "593f6ba7bb9241799987ab9df37c8333",
+          "8d324d5751554edabd1b25e75101716b"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -1868,8 +1901,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 171,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 203,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -1877,8 +1910,8 @@
               "radius": 0.3
             },
             "destination": {
-              "target": "d446a85d9ba04c6095edd16a8bbbafcd",
-              "revision": 172,
+              "target": "8d324d5751554edabd1b25e75101716b",
+              "revision": 204,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -1892,20 +1925,20 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5118090107054e729f13b7068865c2ae",
+          "id": "326e44be15cd4021aee1e78df281cc52",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 142,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 174,
             "temporary": false
           }
         },
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -1915,108 +1948,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -2024,8 +2057,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -2035,12 +2068,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2051,7 +2084,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -2059,8 +2092,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -2070,7 +2103,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -2083,11 +2116,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2096,23 +2129,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2123,14 +2156,14 @@
           }
         }
       ],
-      "nextRunId": "7ca4ee73048249a6bf3dbf684a5611e1",
+      "nextRunId": "88bfe482fadb466784457dceba99a14f",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -2138,12 +2171,12 @@
   },
   "definition": {
     "version": 1,
-    "revision": 3648,
-    "sceneRevision": 168,
-    "ack": 1509,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4028,
+    "sceneRevision": 192,
+    "ack": 1663,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Action definition. Check concrete arguments before running it.",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -2152,12 +2185,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -2256,6 +2289,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -2281,6 +2315,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -2292,12 +2327,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -2306,6 +2349,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -2341,7 +2385,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -2616,7 +2660,7 @@
           "storage.writable",
           "room.capacity"
         ],
-        "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; refusal before acceptance leaves neither partial removal nor a partial object. An accepted save failure preserves both live changes and requires recovery. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying.",
+        "description": "Remove up to amountLitres from a local disk on a fixed height surface and create one editable, grabbable solid ball at the requested room position. Smooth footprint weights bound available volume; a grid-missing or less-than-0.001-litre footprint refuses. Stored amount is the measured actual loss, never more than requested. The new sphere recipe and sphere collider have matching diameter derived from that local volume; material label and colour are copied into its measured store. Rigid mass is explicitly supplied, not inferred density. One atomic save/Undo updates the patch and creates/removes the ball; refusal before acceptance leaves neither partial removal nor a partial object. An accepted save failure preserves both live changes and requires recovery. Returns exact objectId and amountLitres. Ordinary grip, hold, launch, collision, animation and copy apply. Consumes one program creation allowance. Both geometry and quantity remain editable: resizing or deforming later does not rewrite the store. Does not start physics, move a hand/shovel, check reach, auto-catch or simulate grains. Stop cannot retract a completed edit; receipt replay cannot create a second ball. Outside temporary play, prepares and publishes its save in the background with one Undo edit. Completion confirms native application and saving. Once preparation begins, newer authored changes invalidate its candidate. Cancellation before native acceptance leaves the requested edit unapplied. After acceptance, stopping cannot retract the edit or its pending save. A save conflict preserves files, blocks further saves and requires inspection; never blindly replay it. Runtime clock and viewer movement continue. Concurrent persisted object edits enter preparation in arrival order after earlier saves drain, without copying a waiting candidate. Stopping or invalidating a waiter releases its place; target changes while waiting require a new request. In a temporary room, changes the live room and local Undo; a kept snapshot makes it durable. Other objects keep running. Returns the exact new objectId only after successful completion. Waiting does not allocate a saved object or native geometry; room capacity is checked again before preparation and acceptance. Stopping an accepted creation leaves it in the room; inspect before retrying. Optional loading chooses now (the default, with native preparation) or onDemand (save the exact definitions and IDs without allocating visible objects). On-demand completion confirms saved existence, not visibility, simulation or animation playback. Nearby observation or a later native action acquires the object through the normal bounded loader; a program must wait for that action's readiness. No quota, permission or resource check is bypassed. Undo/Redo preserves unloaded existence; stopping a completed creation never erases it.",
         "example": {
           "source": {
             "target": "00000000000000000000000000000000",
@@ -2662,12 +2706,12 @@
     },
     "execution": {
       "selected": {
-        "id": "2c117b1618394fb8ac2493e06aebbd28",
+        "id": "c77469db6c7f4bb8b90739c1b695c47b",
         "capability": "object.field.transfer",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e",
-          "d446a85d9ba04c6095edd16a8bbbafcd"
+          "593f6ba7bb9241799987ab9df37c8333",
+          "8d324d5751554edabd1b25e75101716b"
         ],
         "phase": "completed",
         "status": "Action completed",
@@ -2681,8 +2725,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 171,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 203,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -2690,8 +2734,8 @@
               "radius": 0.3
             },
             "destination": {
-              "target": "d446a85d9ba04c6095edd16a8bbbafcd",
-              "revision": 172,
+              "target": "8d324d5751554edabd1b25e75101716b",
+              "revision": 204,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -2705,20 +2749,20 @@
       "running": [],
       "outcomes": [
         {
-          "id": "5118090107054e729f13b7068865c2ae",
+          "id": "326e44be15cd4021aee1e78df281cc52",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 142,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 174,
             "temporary": false
           }
         },
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -2728,108 +2772,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -2837,8 +2881,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -2848,12 +2892,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2864,7 +2908,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -2872,8 +2916,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -2883,7 +2927,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -2896,11 +2940,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2909,23 +2953,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -2936,14 +2980,14 @@
           }
         }
       ],
-      "nextRunId": "7ca4ee73048249a6bf3dbf684a5611e1",
+      "nextRunId": "88bfe482fadb466784457dceba99a14f",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -2954,8 +2998,8 @@
     "version": 1,
     "arguments": {
       "source": {
-        "target": "3f192fbb5015405b99c7680e2d65d66e",
-        "revision": 175,
+        "target": "593f6ba7bb9241799987ab9df37c8333",
+        "revision": 207,
         "centre": {
           "x": 0,
           "z": 0
@@ -2974,12 +3018,12 @@
   },
   "after": {
     "version": 1,
-    "revision": 3658,
-    "sceneRevision": 169,
-    "ack": 1513,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4038,
+    "sceneRevision": 193,
+    "ack": 1667,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Action completed",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -2988,12 +3032,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -3092,6 +3136,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -3117,6 +3162,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -3128,12 +3174,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -3142,6 +3196,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -3177,7 +3232,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -3376,12 +3431,12 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "3f192fbb5015405b99c7680e2d65d66e"
+        "target": "593f6ba7bb9241799987ab9df37c8333"
       },
       "available": true,
       "value": {
-        "target": "3f192fbb5015405b99c7680e2d65d66e",
-        "revision": 177,
+        "target": "593f6ba7bb9241799987ab9df37c8333",
+        "revision": 209,
         "kind": "Assembly",
         "name": "Editable snow",
         "position": {
@@ -3407,16 +3462,16 @@
     },
     "execution": {
       "selected": {
-        "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+        "id": "88bfe482fadb466784457dceba99a14f",
         "capability": "object.material.pack",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e"
+          "593f6ba7bb9241799987ab9df37c8333"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+          "objectId": "644edb17db8746e98c3816b795571bd4",
           "amountLitres": 0.4999998782295733
         },
         "call": {
@@ -3424,8 +3479,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 175,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 207,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -3446,7 +3501,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -3456,108 +3511,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -3565,8 +3620,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -3576,12 +3631,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -3592,7 +3647,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -3600,8 +3655,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -3611,7 +3666,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -3624,11 +3679,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -3637,23 +3692,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -3664,28 +3719,28 @@
           }
         },
         {
-          "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+          "id": "88bfe482fadb466784457dceba99a14f",
           "capability": "object.material.pack",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+            "objectId": "644edb17db8746e98c3816b795571bd4",
             "amountLitres": 0.4999998782295733
           }
         }
       ],
-      "nextRunId": "1582bb62167b48229c36cbcf0a784e36",
+      "nextRunId": "fdffa03162874cb9a68ed75b9ae300a8",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -3693,12 +3748,12 @@
   },
   "source": {
     "version": 1,
-    "revision": 3660,
-    "sceneRevision": 169,
-    "ack": 1514,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4040,
+    "sceneRevision": 193,
+    "ack": 1668,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -3707,12 +3762,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -3811,6 +3866,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -3836,6 +3892,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -3847,12 +3904,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -3861,6 +3926,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -3896,7 +3962,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4109,11 +4175,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "3f192fbb5015405b99c7680e2d65d66e"
+        "target": "593f6ba7bb9241799987ab9df37c8333"
       },
       "available": true,
       "value": {
-        "revision": 177,
+        "revision": 209,
         "configured": true,
         "definition": {
           "cells": 16,
@@ -4149,16 +4215,16 @@
     },
     "execution": {
       "selected": {
-        "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+        "id": "88bfe482fadb466784457dceba99a14f",
         "capability": "object.material.pack",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e"
+          "593f6ba7bb9241799987ab9df37c8333"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+          "objectId": "644edb17db8746e98c3816b795571bd4",
           "amountLitres": 0.4999998782295733
         },
         "call": {
@@ -4166,8 +4232,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 175,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 207,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -4188,7 +4254,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -4198,108 +4264,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -4307,8 +4373,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -4318,12 +4384,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -4334,7 +4400,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -4342,8 +4408,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -4353,7 +4419,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -4366,11 +4432,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -4379,23 +4445,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -4406,28 +4472,28 @@
           }
         },
         {
-          "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+          "id": "88bfe482fadb466784457dceba99a14f",
           "capability": "object.material.pack",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+            "objectId": "644edb17db8746e98c3816b795571bd4",
             "amountLitres": 0.4999998782295733
           }
         }
       ],
-      "nextRunId": "1582bb62167b48229c36cbcf0a784e36",
+      "nextRunId": "fdffa03162874cb9a68ed75b9ae300a8",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -4435,12 +4501,12 @@
   },
   "material": {
     "version": 1,
-    "revision": 3663,
-    "sceneRevision": 169,
-    "ack": 1515,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4042,
+    "sceneRevision": 193,
+    "ack": 1669,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "a8926097cc8347d4b0d9e1ca5df15102",
+    "selectedId": "2bc6060bdb40483e9f31c80a2a9d6a27",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -4449,12 +4515,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -4553,6 +4619,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -4578,6 +4645,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -4589,12 +4657,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -4603,6 +4679,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -4638,7 +4715,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -4826,11 +4903,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "dcb6ebb19a3449f48143c934f0717e01"
+        "target": "644edb17db8746e98c3816b795571bd4"
       },
       "available": true,
       "value": {
-        "revision": 178,
+        "revision": 210,
         "configured": true,
         "definition": {
           "capacityLitres": 0.4999998782295733,
@@ -4847,16 +4924,16 @@
     },
     "execution": {
       "selected": {
-        "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+        "id": "88bfe482fadb466784457dceba99a14f",
         "capability": "object.material.pack",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e"
+          "593f6ba7bb9241799987ab9df37c8333"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+          "objectId": "644edb17db8746e98c3816b795571bd4",
           "amountLitres": 0.4999998782295733
         },
         "call": {
@@ -4864,8 +4941,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 175,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 207,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -4886,7 +4963,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -4896,108 +4973,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -5005,8 +5082,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -5016,12 +5093,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -5032,7 +5109,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -5040,8 +5117,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -5051,7 +5128,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -5064,11 +5141,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -5077,23 +5154,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -5104,28 +5181,28 @@
           }
         },
         {
-          "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+          "id": "88bfe482fadb466784457dceba99a14f",
           "capability": "object.material.pack",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+            "objectId": "644edb17db8746e98c3816b795571bd4",
             "amountLitres": 0.4999998782295733
           }
         }
       ],
-      "nextRunId": "1582bb62167b48229c36cbcf0a784e36",
+      "nextRunId": "fdffa03162874cb9a68ed75b9ae300a8",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -5133,12 +5210,12 @@
   },
   "read": {
     "version": 1,
-    "revision": 3665,
-    "sceneRevision": 169,
-    "ack": 1516,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4044,
+    "sceneRevision": 193,
+    "ack": 1670,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Object inspected",
-    "selectedId": "dcb6ebb19a3449f48143c934f0717e01",
+    "selectedId": "644edb17db8746e98c3816b795571bd4",
     "ok": true,
     "canUndo": true,
     "canRedo": false,
@@ -5146,9 +5223,9 @@
     "visible": false,
     "workspaceReady": true,
     "inspection": {
-      "id": "dcb6ebb19a3449f48143c934f0717e01",
+      "id": "644edb17db8746e98c3816b795571bd4",
       "partId": "",
-      "objectRevision": 178,
+      "objectRevision": 210,
       "recipe": {
         "version": 1,
         "parts": [
@@ -5196,12 +5273,12 @@
         "duration": 2
       },
       "item": {
-        "id": "dcb6ebb19a3449f48143c934f0717e01",
+        "id": "644edb17db8746e98c3816b795571bd4",
         "name": "Packed snowball",
         "kind": "Assembly",
         "runtimeState": "unavailable",
         "positionSource": "saved",
-        "objectRevision": 178,
+        "objectRevision": 210,
         "position": {
           "x": 0.20000000298023224,
           "y": 1.399999976158142,
@@ -5226,12 +5303,12 @@
       }
     },
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -5330,6 +5407,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -5355,6 +5433,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -5366,12 +5445,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -5380,6 +5467,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -5415,7 +5503,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -5603,11 +5691,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "dcb6ebb19a3449f48143c934f0717e01"
+        "target": "644edb17db8746e98c3816b795571bd4"
       },
       "available": true,
       "value": {
-        "revision": 178,
+        "revision": 210,
         "configured": true,
         "definition": {
           "capacityLitres": 0.4999998782295733,
@@ -5624,16 +5712,16 @@
     },
     "execution": {
       "selected": {
-        "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+        "id": "88bfe482fadb466784457dceba99a14f",
         "capability": "object.material.pack",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e"
+          "593f6ba7bb9241799987ab9df37c8333"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+          "objectId": "644edb17db8746e98c3816b795571bd4",
           "amountLitres": 0.4999998782295733
         },
         "call": {
@@ -5641,8 +5729,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 175,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 207,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -5663,7 +5751,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -5673,108 +5761,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -5782,8 +5870,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -5793,12 +5881,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -5809,7 +5897,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -5817,8 +5905,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -5828,7 +5916,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -5841,11 +5929,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -5854,23 +5942,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -5881,28 +5969,28 @@
           }
         },
         {
-          "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+          "id": "88bfe482fadb466784457dceba99a14f",
           "capability": "object.material.pack",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+            "objectId": "644edb17db8746e98c3816b795571bd4",
             "amountLitres": 0.4999998782295733
           }
         }
       ],
-      "nextRunId": "1582bb62167b48229c36cbcf0a784e36",
+      "nextRunId": "fdffa03162874cb9a68ed75b9ae300a8",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -5910,12 +5998,12 @@
   },
   "undo": {
     "version": 1,
-    "revision": 3667,
-    "sceneRevision": 170,
-    "ack": 1517,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4046,
+    "sceneRevision": 194,
+    "ack": 1671,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Undone",
-    "selectedId": "dcb6ebb19a3449f48143c934f0717e01",
+    "selectedId": "644edb17db8746e98c3816b795571bd4",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -5924,12 +6012,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -6028,6 +6116,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -6053,6 +6142,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -6064,12 +6154,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -6078,6 +6176,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -6113,7 +6212,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -6301,23 +6400,23 @@
       "status": "Fact value is currently unavailable; do not treat it as false or zero.",
       "category": "facts",
       "arguments": {
-        "target": "dcb6ebb19a3449f48143c934f0717e01"
+        "target": "644edb17db8746e98c3816b795571bd4"
       },
       "available": false,
       "value": null
     },
     "execution": {
       "selected": {
-        "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+        "id": "88bfe482fadb466784457dceba99a14f",
         "capability": "object.material.pack",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e"
+          "593f6ba7bb9241799987ab9df37c8333"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+          "objectId": "644edb17db8746e98c3816b795571bd4",
           "amountLitres": 0.4999998782295733
         },
         "call": {
@@ -6325,8 +6424,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 175,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 207,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -6347,7 +6446,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -6357,108 +6456,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -6466,8 +6565,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -6477,12 +6576,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6493,7 +6592,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -6501,8 +6600,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -6512,7 +6611,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -6525,11 +6624,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6538,23 +6637,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -6565,28 +6664,28 @@
           }
         },
         {
-          "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+          "id": "88bfe482fadb466784457dceba99a14f",
           "capability": "object.material.pack",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+            "objectId": "644edb17db8746e98c3816b795571bd4",
             "amountLitres": 0.4999998782295733
           }
         }
       ],
-      "nextRunId": "1582bb62167b48229c36cbcf0a784e36",
+      "nextRunId": "fdffa03162874cb9a68ed75b9ae300a8",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }
@@ -6594,12 +6693,12 @@
   },
   "restored": {
     "version": 1,
-    "revision": 3669,
-    "sceneRevision": 170,
-    "ack": 1518,
-    "session": "5676e6b7f4654f698cf03cb79c25b0ce",
+    "revision": 4048,
+    "sceneRevision": 194,
+    "ack": 1672,
+    "session": "0e9ae30f1ec9444386cbc7fc1f6de616",
     "status": "Current fact value. Reading does not change the room.",
-    "selectedId": "dcb6ebb19a3449f48143c934f0717e01",
+    "selectedId": "644edb17db8746e98c3816b795571bd4",
     "ok": true,
     "canUndo": true,
     "canRedo": true,
@@ -6608,12 +6707,12 @@
     "workspaceReady": true,
     "inspection": null,
     "constructionSelection": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "collecting": false,
       "members": []
     },
     "constructionManipulation": {
-      "stateId": "98b0768daa0a4ea096f687932d28832d",
+      "stateId": "ff777f7204144700a566e10372af5a66",
       "error": "",
       "visible": false,
       "holding": false
@@ -6712,6 +6811,7 @@
       "liquidMedium.v1",
       "liquidContacts.v1",
       "waterTraversal.v1",
+      "waterHabitat.v1",
       "containerScooping.v1",
       "physicalConnections.v1",
       "physicalSliders.v1",
@@ -6737,6 +6837,7 @@
       "animationAuthoring.v1",
       "animationRecording.v1",
       "animationPosing.v1",
+      "animationEditResolution.v1",
       "avatarModels.v1",
       "modelImport.v1",
       "modelArchiveImport.v1",
@@ -6748,12 +6849,20 @@
       "temporaryRoom.v1",
       "spatialSettings.v1",
       "groundedTravel.v1",
+      "aquaticTravel.v1",
+      "surfaceTravel.v1",
+      "shoreTravel.v1",
       "groundedFollowing.v1",
+      "waterFollowing.v1",
       "avatarAttention.v1",
+      "objectAttention.v1",
       "objectWalkingAnimation.v1",
+      "humanoidFootPlacement.v1",
       "physicsSimulation.v1",
       "physicsEnvironment.v1",
       "environmentProfiles.v1",
+      "environmentSavedEdits.v1",
+      "environmentRecovery.v1",
       "appearances.v1",
       "appearanceImages.v1",
       "chatImages.v1",
@@ -6762,6 +6871,7 @@
       "worldLighting.v1",
       "worldRegions.v1",
       "objectSearch.v1",
+      "resourceMembers.v1",
       "objectOverview.v1",
       "worldTime.v1",
       "worldWeather.v1",
@@ -6797,7 +6907,7 @@
     "temporaryRoom": {
       "active": false,
       "pending": false,
-      "id": "300443a236cb44c69e5c722ed9e23760",
+      "id": "7d4ec84ca8104e06bf5e679c36b8200c",
       "saveId": "",
       "phase": "idle",
       "error": "",
@@ -7010,11 +7120,11 @@
       "status": "Current fact value. Reading does not change the room.",
       "category": "facts",
       "arguments": {
-        "target": "3f192fbb5015405b99c7680e2d65d66e"
+        "target": "593f6ba7bb9241799987ab9df37c8333"
       },
       "available": true,
       "value": {
-        "revision": 179,
+        "revision": 211,
         "configured": true,
         "definition": {
           "cells": 16,
@@ -7050,16 +7160,16 @@
     },
     "execution": {
       "selected": {
-        "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+        "id": "88bfe482fadb466784457dceba99a14f",
         "capability": "object.material.pack",
         "version": 1,
         "resources": [
-          "3f192fbb5015405b99c7680e2d65d66e"
+          "593f6ba7bb9241799987ab9df37c8333"
         ],
         "phase": "completed",
         "status": "Action completed",
         "output": {
-          "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+          "objectId": "644edb17db8746e98c3816b795571bd4",
           "amountLitres": 0.4999998782295733
         },
         "call": {
@@ -7067,8 +7177,8 @@
           "version": 1,
           "arguments": {
             "source": {
-              "target": "3f192fbb5015405b99c7680e2d65d66e",
-              "revision": 175,
+              "target": "593f6ba7bb9241799987ab9df37c8333",
+              "revision": 207,
               "centre": {
                 "x": 0,
                 "z": 0
@@ -7089,7 +7199,7 @@
       "running": [],
       "outcomes": [
         {
-          "id": "b6e58eeb7ba843b5a8c950b888bbb86f",
+          "id": "fd698d5e95d7448bae09a5554b303b5a",
           "capability": "object.environment.assign",
           "version": 1,
           "resources": [
@@ -7099,108 +7209,108 @@
           "status": "Action completed",
           "output": {
             "target": "maestro",
-            "revision": 143,
+            "revision": 175,
             "temporary": false
           }
         },
         {
-          "id": "737eb33ff1d745cbbfa76e08364bca22",
+          "id": "db8c5428d74c486fb29a056c96992f43",
           "capability": "environment.profile.save",
-          "version": 1,
+          "version": 2,
           "resources": [
             "maestro"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
-            "revision": 144,
+            "id": "5f440d15515a4281882d4ce77a79bee6",
+            "revision": 176,
             "temporary": false
           }
         },
         {
-          "id": "94e1103312f641389dc7074d3be6df4e",
+          "id": "340115166fcd4e36adb86bed60bea731",
           "capability": "environment.profile.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "8bef4520dafd45d390a906460fad766c",
+            "id": "5f440d15515a4281882d4ce77a79bee6",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "02c87f88129546f68dd8cd662ad02d4f",
+          "id": "9d907e2b48084680aa75c67ec685f11f",
           "capability": "appearance.save",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 147,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 179,
             "temporary": false
           }
         },
         {
-          "id": "f5b56ad83d404854913977537dead051",
+          "id": "52bde437aad54b28b535cd4247172f1e",
           "capability": "object.appearance.bind",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "target": "3f192fbb5015405b99c7680e2d65d66e",
-            "revision": 148,
-            "appearanceId": "b42c85c93d844e858949f331a9561d20",
-            "appearanceRevision": 147,
+            "target": "593f6ba7bb9241799987ab9df37c8333",
+            "revision": 180,
+            "appearanceId": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "appearanceRevision": 179,
             "temporary": false
           }
         },
         {
-          "id": "20c144ae96a6471ebe2d4789608b822e",
+          "id": "9dda3da3507148bf993361fb1f84809a",
           "capability": "object.color.set",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed"
         },
         {
-          "id": "ee5e837a2a01438baec3ad42b48d3fee",
+          "id": "bac4214ae7f9499f839bb9a4d11233f6",
           "capability": "appearance.save",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
-            "revision": 150,
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
+            "revision": 182,
             "temporary": false
           }
         },
         {
-          "id": "5095880ac6b5411e9f01126197d96e52",
+          "id": "c58bb00cbffe4be385fc57959f8e88a3",
           "capability": "appearance.remove",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "id": "b42c85c93d844e858949f331a9561d20",
+            "id": "f698f513b8c84ec8bbcaf6b0fdf2ca94",
             "revision": 0,
             "temporary": false
           }
         },
         {
-          "id": "e2e88de9d60e4cfaad3ddc56d340912d",
+          "id": "f337d79946c14edcb701140daac0893a",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -7208,8 +7318,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "9a03304680784d0a88150c7032e21766",
-              "7756186ea5a647f6968777b56985aacf"
+              "3e1c0a2caa724402bdc7d329ffd9beb3",
+              "b3256c781e634952b37ed4c240eeecae"
             ],
             "slots": [
               "base",
@@ -7219,12 +7329,12 @@
           }
         },
         {
-          "id": "083329c3b7744a0e80258259dc538f59",
+          "id": "5f4bcf19d26a4363a156ef66e27fad6c",
           "capability": "program.module.captureConstruction",
           "version": 1,
           "resources": [
-            "9a03304680784d0a88150c7032e21766",
-            "7756186ea5a647f6968777b56985aacf"
+            "3e1c0a2caa724402bdc7d329ffd9beb3",
+            "b3256c781e634952b37ed4c240eeecae"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -7235,7 +7345,7 @@
           }
         },
         {
-          "id": "4181fe862369483bad69e5fe76674b0d",
+          "id": "2749754015b045938c8aa565cd9b3ac1",
           "capability": "object.batch.create",
           "version": 1,
           "resources": [],
@@ -7243,8 +7353,8 @@
           "status": "Action completed",
           "output": {
             "objectIds": [
-              "3c403d6eb320488b930902206a960d04",
-              "d95b760bfceb40bfb482de6ebda62a3f"
+              "0d58cd7b235a4e0ab7d076781ab146bc",
+              "bf13b0bec1f64fed8903751d98553615"
             ],
             "slots": [
               "piece_0",
@@ -7254,7 +7364,7 @@
           }
         },
         {
-          "id": "dd32fd1e12d246b3b1553b72878fb82a",
+          "id": "618b1ba85dbd43fea01504c8aae24411",
           "capability": "program.module.remove",
           "version": 1,
           "resources": [],
@@ -7267,11 +7377,11 @@
           }
         },
         {
-          "id": "2e62d3bedf4c439dbd1074be2ce96f89",
+          "id": "0c1d85a2d2674c7c9249d2d26b0118e2",
           "capability": "object.field.sculpt",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -7280,23 +7390,23 @@
           }
         },
         {
-          "id": "658ceff76c144d78b566175f70649201",
+          "id": "20de6441810e4d749852dd57d43abe2c",
           "capability": "object.create",
           "version": 1,
           "resources": [],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "d446a85d9ba04c6095edd16a8bbbafcd"
+            "objectId": "8d324d5751554edabd1b25e75101716b"
           }
         },
         {
-          "id": "2c117b1618394fb8ac2493e06aebbd28",
+          "id": "c77469db6c7f4bb8b90739c1b695c47b",
           "capability": "object.field.transfer",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e",
-            "d446a85d9ba04c6095edd16a8bbbafcd"
+            "593f6ba7bb9241799987ab9df37c8333",
+            "8d324d5751554edabd1b25e75101716b"
           ],
           "phase": "completed",
           "status": "Action completed",
@@ -7307,28 +7417,28 @@
           }
         },
         {
-          "id": "7ca4ee73048249a6bf3dbf684a5611e1",
+          "id": "88bfe482fadb466784457dceba99a14f",
           "capability": "object.material.pack",
           "version": 1,
           "resources": [
-            "3f192fbb5015405b99c7680e2d65d66e"
+            "593f6ba7bb9241799987ab9df37c8333"
           ],
           "phase": "completed",
           "status": "Action completed",
           "output": {
-            "objectId": "dcb6ebb19a3449f48143c934f0717e01",
+            "objectId": "644edb17db8746e98c3816b795571bd4",
             "amountLitres": 0.4999998782295733
           }
         }
       ],
-      "nextRunId": "1582bb62167b48229c36cbcf0a784e36",
+      "nextRunId": "fdffa03162874cb9a68ed75b9ae300a8",
       "storageError": null,
       "recovery": null,
       "workspace": {
         "selected": null,
         "running": [],
         "outcomes": [],
-        "nextRunId": "320009727ab644f6b93fdc08cce6c08c",
+        "nextRunId": "017c4a6a8bea4ab2ab23d29791648b49",
         "storageError": null,
         "recovery": null
       }

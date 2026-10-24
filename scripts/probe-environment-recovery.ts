@@ -47,6 +47,29 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  assert.deepEqual(await fact('object.definition',{target}),definition,'Retirement or passive reads changed saved content');
  Object.assign(evidence,{target,areaId,initialCount,environment,simulation,obstructed,clear,dormant,unavailable});await checkpoint('dormant');
 
+ // Edit canonical collision membership while ordinary area retention keeps the
+ // object cold. The same public actions run through both clients.
+ const profile=await invoke('environment.profile.save',{...capabilityDefinition('environment.profile.save')!.example!,name:'Dormant recovery policy'});
+ const profileId=String(profile.output!.id);
+ const assign=async(profileId:string,profileRevision:number)=>invoke('object.environment.assign',{target,revision:(await fact('object.environment.settings',{target})).revision,profileId,profileRevision});
+ const assigned=await assign(profileId,Number(profile.output!.revision));
+ const firstSummary=await fact('environment.profile.summary',{id:profileId});
+ await assign('',0);await assign(profileId,Number(profile.output!.revision));
+ const currentSummary=await fact('environment.profile.summary',{id:profileId}),savedSettings=await fact('object.environment.settings',{target});
+ const memberPage=await fact('resource.members',{kind:'environment',id:profileId,cursor:''});
+ assert.equal(currentSummary.revision,firstSummary.revision);assert.notEqual(currentSummary.membership,firstSummary.membership);
+ assert.equal(memberPage.membership,currentSummary.membership);assert.deepEqual(memberPage.members,[target]);assert.equal(currentSummary.memberCount,1);
+ const edit={id:profileId,revision:currentSummary.revision,membership:currentSummary.membership,name:'Dormant physical recovery policy',realCollisions:true,members:[{target,revision:savedSettings.revision}]};
+ const staleMembership=await driver.reject('environment.profile.save',{...edit,membership:firstSummary.membership});
+ assert.equal(staleMembership.ok,false);assert.match(staleMembership.status,/membership.*changed/i);
+ assert.deepEqual(await fact('environment.profile.summary',{id:profileId}),currentSummary);
+ const edited=await invoke('environment.profile.save',edit);
+ const dormantSettings=await fact('object.environment.settings',{target}),dormantAfterEdit=await fact('object.presence',{target});
+ assert.equal(dormantSettings.realCollisions,true);assert.equal(dormantSettings.profileRevision,edited.output!.revision);
+ assert.equal(dormantAfterEdit.nativeInstance,false,'Editing saved collision policy loaded the dormant object');
+ const savedEdits={profile,assigned,firstSummary,currentSummary,memberPage,savedSettings,staleMembership:{ok:staleMembership.ok,status:staleMembership.status},edited,dormantSettings,dormantAfterEdit};
+ Object.assign(evidence,{savedEdits});await checkpoint('saved-policy');
+
  // Saved placement can intentionally stay unloaded. A visible member of a
  // together area is ordinary native demand for the same obstructed saved peer.
  const anchorCreated=await invoke('object.create',{...capabilityDefinition('object.create')!.example!,name:'Recovery area companion',...clear,x:clear.x+.7,scale:.2});
@@ -83,6 +106,8 @@ export async function probeEnvironmentRecovery(driver:RecoveryDriver,directory:s
  Object.assign(evidence,{moved,staleRevision:{ok:staleRevision.ok,status:staleRevision.status},before,recovered,after,alreadyClear,replay:replay??null,afterSimulation});await checkpoint('recovered');
  await invoke('object.delete',{target});
  await invoke('object.delete',{target:anchor});
+ const emptyProfile=await fact('environment.profile.summary',{id:profileId});assert.equal(emptyProfile.memberCount,0);
+ await invoke('environment.profile.remove',{id:profileId,revision:emptyProfile.revision});
  const emptyArea=await fact('world.region',{id:areaId});assert.equal(emptyArea.memberCount,0);
  await invoke('world.region.remove',{id:areaId,revision:emptyArea.revision});
  assert.equal(await driver.count(),initialCount,'Recovery proof left a saved object behind');
