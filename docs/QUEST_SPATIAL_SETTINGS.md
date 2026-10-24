@@ -113,3 +113,65 @@ profile. Virtual-only movement requires accepted authored ground within the
 existing simulation bounds. This does not override the headset's system boundary
 or establish physical room alignment. Those limits and the distinction between
 collision, visual and acoustic policy are part of the shared contract.
+
+
+## Planned scaling of collision profiles
+
+This section records the next implementation contract, not currently available
+behavior. The current 16-member and native-readiness requirements above remain in
+force. Appearance and visibility already support unloaded members; collision
+participation cannot use that path without physical admission work.
+
+The durable world should store what an object is meant to collide with. A native
+view should separately report what is currently prepared and safe to simulate.
+That distinction lets a user edit a distant village's policy without loading the
+whole village, while an NPC down a virtual hill remains independent of the real
+floor. It also keeps rendered opacity and acoustic obstruction independent.
+
+Implement in this order:
+
+1. Expose saved assignment/revision independently of native presence. Report
+   unloaded, preparing, unavailable ground and obstruction explicitly. An absent
+   body is not evidence that the requested policy is disabled or that motion is
+   ready. The human inspector and agent facts must return the same distinction.
+2. Give profile membership a bounded, revision-checked discovery path before
+   raising its limit. The current `environment.profile` includes all members in a
+   program value; do not silently expand that old fact beyond its value budget.
+   A versioned summary and paged membership must reject mixing pages from different
+   revisions. Every affected object still needs an exact guard and ownership claim.
+   Saved programs retain their declared resource budget; a large one-off edit is
+   not a license for an unbounded program action.
+3. Extract one physical admission check shared by live policy changes and native
+   restoration. Keep exact collider/scan penetration proof, selected ground,
+   current world transform, tracking and object ownership checks. Preparation may
+   cross frames, so repeat the relevant checks at publication. Unsupported or
+   saturated geometry queries remain unavailable rather than guessed clear.
+4. Permit canonical policy edits for deliberately unloaded members once that
+   admission contract exists. Preserve their saved poses and unloaded identity;
+   do not acquire all roots to save a definition. Live members must pass the
+   existing checks before the entire shared edit is accepted. Loading or retiring
+   members cannot be treated as stable unloaded records.
+5. When a native view returns, apply the saved policy before enabling physics.
+   A moved scan wall, missing support or changed geometry must not create a
+   penetration impulse, an accidental fall or automatic restart of a cancelled
+   action. Preserve the authored object and provide a visible, non-simulating
+   recovery path so user and agent can inspect or reposition it. Being blocked
+   from simulation must not make the object impossible to repair.
+
+`RoomEnvironmentEdits.CanChangeEnvironment` currently performs the live check;
+`RoomNativeResidency.ActivateNativeTargets` prepares staged roots and publishes
+identities together. They must use a coherent admission decision before dormant
+policy edits are introduced. Existing `RoomSimulationEnvironment` bounds and
+`RigidRoomItem` readiness gates remain necessary; a centre-in-bounds check does
+not replace exact overlap proof.
+
+Required regressions cover a shared profile spanning live and unloaded objects at
+the native-root budget; stale membership; an intervening human edit; cancellation
+and failed save; Undo/Redo and temporary Keep/Discard; a wall moved during native
+preparation; an imported collider without supported overlap proof; and loss of
+tracking or accepted ground. A below-floor NPC and a real-floor ball must coexist
+without changing each other's collision, visibility, audio or loading policy.
+Verify blocked-object repair through both generated Book controls and agent
+operations. Headless and rendered journeys establish those software contracts;
+actual Quest alignment, motion and sustained performance still need candidate
+headset evidence.

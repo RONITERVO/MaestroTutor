@@ -4,8 +4,9 @@ Status: active implementation. Nothing in this document claims store readiness.
 
 Start with the [accepted product scope](#accepted-product-scope) and
 [release evidence checklist](#release-evidence-still-required). The current
-[saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records this
-increment's implementation, verification progress and remaining work. The preceding
+[shared visual metadata checkpoint](#shared-visual-metadata-across-unloaded-world-objects-2026-10-24) records the latest
+native increment. The [saved-world capacity checkpoint](#saved-world-capacity-and-deferred-creation--2026-10-23) records its
+creation and residency foundation. The preceding
 [restoration](#restoring-unloaded-objects--2026-10-23),
 [physical discovery](#linear-physical-discovery--2026-10-23),
 [area loading](#independent-area-loading) and [shared movement](#shared-locomotion-lifetime)
@@ -115,7 +116,7 @@ open until every required row has matching release-candidate evidence.
 | --- | --- | --- |
 | Familiar language-learning chat and full-page book | Original web components, both book layouts, inline artifacts and ribbon bookmark; full offline Headless and visible Book journeys against current desktop Unity. | Fresh first-lesson, smalltalk, proactive artifact/tool combinations, image, weather, room actions and text-to-Live continuation on the chosen Quest candidate, through both managed and BYOK providers. See [coverage](QUEST_AGENT_RELEASE_COVERAGE.md) and [device QA](QUEST_DEVICE_QA.md). |
 | Language-first, shared user/agent actions | Shared capability catalog, generated user controls, event-driven programs, traces, cancellation and ownership; deterministic and actual Unity integration coverage. | Real-provider multi-step completion, recovery and understandable learner feedback on the release candidate. Offline execution cannot establish model reliability. |
-| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 64 creations, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
+| Creation, import and reusable authored worlds | Primitive/recipe/drawing/template creation, GLB/VRM models and motion collections, materials/images, editable constructions and shared saved completion. | Candidate import/rendering, memory pressure, interrupted work and restore acceptance with representative user content. Validate the declared capacity; the current 256 saved creations, 128 native roots, 16 liquid containers, 25-metre bounds and four height fields are not a city-scale promise. See [world authoring](QUEST_WORLD_AUTHORING.md) and [model imports](QUEST_MODEL_IMPORTS.md). |
 | Default Maestro, custom avatars and animation | Included avatar/motions, exact compatible motion IDs, activity/gait bindings, joint posing, recording, shared walk/follow and attention paths; optional exact-model foot fitting through the shared catalog. | Current-candidate motion fidelity, humanoid variety, hands-on posing, transitions and sustained performance. Bounded foot fitting uses a rest-bound shoe-plane estimate with explicit trims; visual calibration, real-headset acceptance and general crowd/interior planning remain unfinished. See [animation authoring](QUEST_ANIMATION_AUTHORING.md) and [library](QUEST_ANIMATION_LIBRARY.md). |
 | One world with adjustable reality | Per-entity real-room collision participation, accepted virtual ground, swept movement, saved visual layers, passthrough windows and separate camera-source paths have desktop evidence. Older physical depth-occlusion/alignment checks are retained. | Same-candidate physical alignment, independent collision/visibility/audio policy, virtual movement, camera permission/source lifecycle, hand/controller occlusion and recovery. An actor opting out of the real floor still needs valid virtual support. |
 | Living terrain, water, weather and objects | Bounded local physics, contact events, terrain, lighting/weather/time, live water quantities, shared grounded policies and owned submerged travel; surface swimming, shore transitions and continuous following have complete desktop and unsigned Android compilation evidence. Observation-driven residency/scheduling remains shared. See the [current movement evidence](#surface-swimming). | Mixed-scene long-session behavior, allocation/thermal/frame budgets and physical input acceptance. Named areas support independent or together loading. Broader region streaming, river/spill behavior, underwater interaction and candidate headset acceptance remain open; retain them as explicit unfinished scope rather than silently claiming a complete living-world system. |
@@ -16432,3 +16433,22 @@ in `.quest-evidence/shared-visual-metadata-20261024/`.
 This source has not been packaged, installed or exercised with a real provider.
 The saved-world and native-resource budgets remain unchanged; this is not a claim
 of unbounded worlds, background NPC simulation or measured Quest performance.
+
+
+### Collision-profile scaling audit (2026-10-24)
+
+Status: source-grounded next-step design; no collision runtime change in this audit.
+
+The user's real-room “glass box” remains an independently selected collision
+policy for each object. The shared visual-metadata change does not relax physical
+admission. Current environment-profile edits require native members and exact
+support/penetration checks; their 16-member cap also appears in storage validation
+and the inline profile fact. Increasing a schema constant alone would break that
+contract and could load too much native content during one shared edit.
+
+The next step must separate saved collision intent from native simulation readiness,
+retain atomic edits and current-revision ownership, and add recovery when changed
+room geometry obstructs a returning object. The bounded implementation sequence and
+acceptance cases are in [collision-profile scaling](QUEST_SPATIAL_SETTINGS.md#planned-scaling-of-collision-profiles).
+No new limit or dormant collision-edit capability is advertised until that work is
+implemented and verified through the same Book, program and agent paths.
