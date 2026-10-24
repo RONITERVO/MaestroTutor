@@ -16630,3 +16630,46 @@ before motion. The restored object must remain visible and editable when blocked
 Versioned profile summaries, larger profile membership and canonical collision
 edits for unloaded members remain unfinished. Device/provider holds and the
 broader v1 release gates remain active.
+
+
+### Native restoration and shared collision recovery (2026-10-24)
+
+Restored native objects now carry a per-object hold before their staged roots
+become active. After all group identities and enabled collision shapes exist,
+the shared clearance proof checks their current environment. Unsupported overlap,
+missing ground, inactive runtime or incomplete collision geometry leaves an
+editable, non-simulating view. Fixed virtual geometry can provide terrain without
+requiring another surface beneath itself. Physics and navigation honor the hold;
+walking reports its actual recovery reason. Saved poses and collision intent are
+not rewritten by restoration.
+
+The generated catalog adds `object.environment.recovery` and
+`object.environment.recheck`, advertised as `environmentRecovery.v1`. The passive
+fact supplies the saved revision, native state ID, hold and last check reason.
+The action requires both guards and whole-target ownership. It reports whether
+the hold remains, requires no creation capacity, and releases a successful hold
+from rest. It does not start a walk, animation or physics; already-enabled gravity
+may resume. A deliberate grab-and-release or an explicit physics Start can also
+check eligible held objects. Cancelled grabs cannot authorize recovery. Failed
+holds survive native retirement, and readiness, visibility or reload does not
+replay an old throw. An already-clear check preserves motion; duplicate receipts
+return their earlier result. Repairing an object by grabbing it remains possible
+while other room physics runs.
+
+Verification: **1,663 EditMode + 193 selected PlayMode** tests passed with clean
+process exits and exact case coverage. The selection includes 14 new recovery
+cases, prior environment/clearance tests and native lifetime/acquisition/physics
+regressions. All **1,531 web room tests**, the source-provenance check, native
+catalog export equality and ten bundled guides passed. The catalog adds only the
+new action and fact; existing contracts and limits remain unchanged. All 3,568
+native inputs and 14 protected files matched their frozen hashes. Evidence is in
+`.quest-evidence/environment-recovery-20261024/`, including the initial failures
+that exposed blocked grab repair and the corrected test setup/inventory checks.
+Preceding commit `9d632ba8` also passed release gate 40059877591 and native echo
+40059877645.
+
+This is focused offline native/web evidence, not a fresh Headless or rendered
+Book journey, Android build, provider or headset result. Next, exercise recovery
+through both integration clients and complete the versioned collision-profile
+summary/atomic dormant-member edit contract before raising its 16-member limit.
+Device/provider holds and the broader v1 release gates remain active.

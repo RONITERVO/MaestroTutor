@@ -50,6 +50,7 @@ namespace Maestro.Quest.Interaction
         {
             RefreshCollisionAdmission();
             if(!CanRun(running,out status)){Status=status;Notify();return false;}
+            if(running)RetryRestoredEnvironments();
             Running=running;Status=running?RunningStatus:IdleStatus;
             status=Status;Notify();return true;
         }
@@ -74,7 +75,7 @@ namespace Maestro.Quest.Interaction
         }
         internal bool EnvironmentActive=>runtimeGate?.Held!=true&&Active&&CollisionReady;
         internal bool SimulationActive=>EnvironmentActive&&Running;
-        public bool CanSimulate(Vector3 position,RoomItem item=null) => SimulationActive&&ContainsSimulation(position,item);
+        public bool CanSimulate(Vector3 position,RoomItem item=null) => SimulationActive&&RoomEnvironmentBinding.RestorationReady(item)&&ContainsSimulation(position,item);
         void OnApplicationPause(bool value) { paused=value;if (paused) PausePhysics();else Notify(); }
         void OnApplicationFocus(bool value) { focused=value;if (!focused) PausePhysics();else Notify(); }
         void OnEnable()=>Notify();

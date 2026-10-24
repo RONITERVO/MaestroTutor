@@ -131,7 +131,7 @@ namespace Maestro.Quest.Interaction {
             string state=!active?"inactive":ready?"ready":physicsInputs?.Pending==true||recovering&&recoveryPending?"pending":"unavailable";
             var targets=InputEditor?.DormantRecoveryTargets(item)??physicsInputs?.Targets??Array.Empty<string>();
             string reason=ready?null:!active?"Physics, geometry or object ownership is unavailable":
-                recovering?recoveryReason:!world.EnvironmentReady(item)?"Waiting for accepted ground for this object":
+                recovering?recoveryReason:item.GetComponent<RoomEnvironmentBinding>() is RoomEnvironmentBinding restored&&restored.RestorationHeld?restored.RestorationReason:!world.EnvironmentReady(item)?"Waiting for accepted ground for this object":
                 !world.CanSimulate(body.position,item)?"Object is outside its accepted ground columns":
                 collisionInterrupted?"Movement was interrupted; grab the object or pause and start physics to resume from rest":PhysicsInputStatus;
             return new JObject{["state"]=state,["ready"]=ready,["reason"]=ImportObservation.Text(reason),

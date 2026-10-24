@@ -74,6 +74,7 @@ namespace Maestro.Quest.Interaction
             bool bound=!ReferenceEquals(target,null);
             if(!ReferenceEquals(actor,target)||actorBound!=bound){Clear();actor=target;actorBound=bound;}
             if(!ActorAvailable){Clear();error="The walking actor is unavailable in this world";return false;}
+            if(!RoomEnvironmentBinding.RestorationReady(actor)){Clear();error=actor.GetComponent<RoomEnvironmentBinding>().RestorationReason;return false;}
             if(!ContextOwned||world.IncludesRealRoom(actor)&&!world.EnvironmentReady(actor)){Clear();error="Prepare the selected ground and Start physics before walking";return false;}
             if(!float.IsFinite(bodyRadius)||!float.IsFinite(bodyHeight)||bodyRadius<=0||bodyHeight<bodyRadius*2) { error="Choose a valid walking body";return false; }
             if(!configured||Mathf.Abs(radius-bodyRadius)>=.005f||Mathf.Abs(height-bodyHeight)>=.01f)Clear();
@@ -85,6 +86,7 @@ namespace Maestro.Quest.Interaction
         {
             error="Room navigation needs active physics and accepted surfaces";
             if(!ContextOwned){Clear();return false;}
+            if(!RoomEnvironmentBinding.RestorationReady(actor)){ReleaseMap();candidate.Clear();error=actor.GetComponent<RoomEnvironmentBinding>().RestorationReason;return false;}
             if(!world.EnvironmentReady(actor)){ReleaseMap();candidate.Clear();return false;}
             bool frameMoved=false;
             if(virtualFrame) {

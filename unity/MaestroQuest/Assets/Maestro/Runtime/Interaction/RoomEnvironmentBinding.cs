@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Maestro.Quest.Interaction
 {
     /// <summary>One owning item controls every child collider without consuming a layer per entity.</summary>
-    public sealed class RoomEnvironmentBinding:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
+    public sealed partial class RoomEnvironmentBinding:MonoBehaviour, Maestro.Quest.Art.INativeResourceOwner
     {
         RoomPhysicsWorld world;
         RoomItem item;

@@ -20,7 +20,7 @@ namespace Maestro.Quest.Interaction
         Rigidbody body;
         RoomPhysicsWorld world;
         RoomGrabContactInputs grabInputs;
-        internal bool ContactTracking=>isActiveAndEnabled&&item&&item.isActiveAndEnabled&&world&&world.Running&&Dynamic&&!AnimationOwned;
+        internal bool ContactTracking=>RoomEnvironmentBinding.RestorationReady(item)&&isActiveAndEnabled&&item&&item.isActiveAndEnabled&&world&&world.Running&&Dynamic&&!AnimationOwned;
         internal bool ContactEnvironmentReady=>InputBindingAvailable&&geometryReady&&world&&world.CanSimulate(transform.position,item);
         PhysicsMaterial material;
         Creation.NativePhysicsResources.Lease nativeBody;
@@ -133,6 +133,8 @@ namespace Maestro.Quest.Interaction
         {
             bool staleContact=grabInputs&&!grabInputs.FinishGrab();
             InterruptPhysicsInputs();MotionRevision++;canceled = args.isCanceled||staleContact;
+            var restored=item.GetComponent<RoomEnvironmentBinding>();
+            if(restored&&restored.RestorationHeld){bool deliberate=!args.isCanceled;canceled=true;StopVelocity();if(deliberate)restored.RetryRestoration();}
             if (canceled) { StopVelocity(); item.Grab.throwOnDetach = false; }
             Refresh();
         }
@@ -196,6 +198,7 @@ namespace Maestro.Quest.Interaction
             if(item.Grab.isSelected) {error="Release the object before changing its motion";return false;}
             if(constraints.Count>0) {error="A physical connection is suspended; inspect its state";return false;}
             if(AnimationOwned) {error="An animation or carried prop owns this object";return false;}
+            if(item.TryGetComponent<RoomEnvironmentBinding>(out var restored)&&restored.RestorationHeld){error=restored.RestorationReason;return false;}
             if(!world||!world.CanSimulate(transform.position,item)) {error="Start physics with the selected ground ready first";return false;}
             if(!InputsCurrent){error=PhysicsInputStatus;return false;}
             return true;

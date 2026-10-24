@@ -27,7 +27,7 @@ namespace Maestro.Quest.Creation
             internal string Error;
             internal RoomCollisionGuard CollisionGuard;internal int CollisionRevision=-1;
             internal RoomSpatialBounds Spatial;internal string SpatialSource,AuthoredSpatialSource;internal int SpatialRevision;
-            internal bool SuppressStartupAutoplay;
+            internal bool SuppressStartupAutoplay,RequireRestorationRetry;
             internal bool SpatialCurrent;internal Matrix4x4 SpatialPlacement;internal ScanSpatialPlacement ScanPlacement;
             internal Book.RoomAcoustics.AcousticResidency Acoustics;internal int AcousticRevision = -1;
             internal string AcousticSource,AcousticIssue;internal int AcousticAttempt = -1,AcousticCapacity = -1;internal Book.RoomAcoustics AcousticPendingOwner;internal int AcousticMetadataRevision=-1;internal bool AcousticBoundary;
@@ -92,7 +92,7 @@ namespace Maestro.Quest.Creation
                 var data=Read(id);var item=Find(id);
                 error="The area's native placement is unavailable";
                 if(data==null||data.IsBuiltIn||!item||!item.isActiveAndEnabled||!Frame.Read(item.transform,out var position,out var rotation,out var scale))return false;
-                snapshots.Add(id,new DormantEntity{Spatial=RoomSpatialBounds.Capture(item,data),Position=position,Rotation=rotation,Scale=scale,RetiringRoot=item.gameObject,Phase=NativeEntityPhase.Retiring,ConnectionSource=JsonUtility.ToJson(data.connections.FirstOrDefault()),Recipe=item.GetComponent<RecipeObject>()?.CaptureIdleState(),ConnectionBroken=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>()?.Broken==true});
+                snapshots.Add(id,new DormantEntity{Spatial=RoomSpatialBounds.Capture(item,data),Position=position,Rotation=rotation,Scale=scale,RetiringRoot=item.gameObject,Phase=NativeEntityPhase.Retiring,RequireRestorationRetry=item.GetComponent<Maestro.Quest.Interaction.RoomEnvironmentBinding>()?.RestorationHeld==true,ConnectionSource=JsonUtility.ToJson(data.connections.FirstOrDefault()),Recipe=item.GetComponent<RecipeObject>()?.CaptureIdleState(),ConnectionBroken=item.GetComponent<Maestro.Quest.Interaction.RoomConnectionView>()?.Broken==true});
             }
             using var write=WriteGate.TryWrite(out error);if(write==null)return false;
             // Dynamic placement uses the existing non-Undo capture policy. Other
@@ -170,6 +170,7 @@ namespace Maestro.Quest.Creation
                     await budget.Step();
                     var item=CreatedRoomObject.CreatePrepared(data,staging.transform,Models,RuntimeGate,WorldIdentity,prepared);roots.Add(item.gameObject);
                     ApplyPose(item,NativeActivationPose(data));ConfigureNativeObject(data,item,document,prepared,true,slots[data.id]);RestoreNativeRecipe(data,item);
+                    item.GetComponent<Maestro.Quest.Interaction.RoomEnvironmentBinding>()?.BeginRestoration(entries[data.id].RequireRestorationRetry);
                     candidates.Add(data.id,item);
                 }
                 Check();
@@ -189,6 +190,9 @@ namespace Maestro.Quest.Creation
                 }finally{applying=false;}
                 Liquids?.Synchronize(journal.Snapshot());
                 foreach(var id in targets){dormantNative[id].Acoustics?.Restore(candidates[id].gameObject);ReleaseNativeAcoustic(dormantNative[id]);ReleaseDormantCollision(id,dormantNative[id]);dormantNative.Remove(id);InvalidateMovementResidency();}
+                // All peers and shapes are now active, but every restored body is
+                // held. A failed proof publishes an editable view, never motion.
+                foreach(var item in candidates.Values)item.GetComponent<Maestro.Quest.Interaction.RoomEnvironmentBinding>()?.FinishRestoration();
             }
             catch(Exception failure){
                 foreach(var id in targets){var item=Find(id);if(item&&roots.Contains(item.gameObject)){DetachNativeIdentity(id,item);regionModels.Remove(id);}}

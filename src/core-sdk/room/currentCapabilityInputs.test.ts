@@ -12,7 +12,7 @@ const view=():CatalogView=>({operation:'inspect',category:'facts',capability:'ob
 it('checks every native current-input annotation against both registered contracts',()=>{
  let count=0;
  const visit=(s:CapabilitySchema)=>{if(s['x-current'])count++;expect(()=>validateCurrentInputMapping(s)).not.toThrow();for(const child of [...s.oneOf??[],...Object.values(s.properties??{}),...s.items?[s.items]:[]])visit(child);};
- for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(117);
+ for(const action of behaviourCatalog.actions)visit(action.input as CapabilitySchema);expect(count).toBe(118);
 });
 it('loads exact fact values atomically and distinguishes guards from editable preferences',()=>{
  const next=applyCurrentInputs(schema(),args(),view());expect(next).toEqual({target:native.beforePhysics.target,revision:native.beforePhysics.revision,mode:native.beforePhysics.mode,shape:native.beforePhysics.shape,mass:native.beforePhysics.mass});
@@ -138,4 +138,18 @@ it('loads an existing material store before editing capacity without discarding 
  expect(currentInputIdentity(schema,revised,'room')).toBe(currentInputIdentity(schema,loaded,'room'));
  expect(currentInputFields(schema,input).map(({path,guard})=>({path,guard}))).toEqual([{path:'revision',guard:true},{path:'definition',guard:false}]);
  expect(applyCurrentInputs(schema,{operation:'remove',target,revision:1},snapshot)).toEqual({operation:'remove',target,revision:9});
+});
+
+it('loads restored-object recovery guards without retrying or substituting an unloaded target',()=>{
+ const input=capabilityDefinition('object.environment.recheck')!.input;
+ const draft={target:'a'.repeat(32),revision:1,stateId:'0'.repeat(32)};
+ const observation:CatalogView={operation:'inspect',category:'facts',capability:'object.environment.recovery',version:1,definition:behaviourFact('object.environment.recovery')!,arguments:{target:draft.target},available:true,status:'Available',value:{target:draft.target,revision:7,stateId:'1'.repeat(32),held:true,reason:'Move clear of the scanned wall'}};
+ expect(currentInputRequest(input,draft)).toEqual({operation:'inspect',category:'facts',capability:'object.environment.recovery',version:1,arguments:{target:draft.target}});
+ const loaded=applyCurrentInputs(input,draft,observation);expect(loaded).toEqual({...draft,revision:7,stateId:'1'.repeat(32)});
+ expect(currentInputFields(input,draft).filter(f=>f.guard).map(f=>f.path)).toEqual(['stateId','revision']);
+ expect(currentInputIdentity(input,loaded,'session')).not.toBe(currentInputIdentity(input,{...loaded,revision:8},'session'));
+ expect(draft.revision).toBe(1);
+ expect(currentInputIdentity(input,loaded,'session')).not.toBe(currentInputIdentity(input,{...loaded,stateId:'2'.repeat(32)},'session'));
+ expect(()=>applyCurrentInputs(input,draft,{...observation,available:false,value:null})).toThrow();
+ expect(()=>applyCurrentInputs(input,draft,{...observation,arguments:{target:'b'.repeat(32)}})).toThrow();
 });

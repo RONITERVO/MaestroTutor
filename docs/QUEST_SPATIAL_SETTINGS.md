@@ -197,13 +197,13 @@ Implement in this order:
    value budget. Every affected object still needs an exact guard and ownership
    claim. Saved programs retain their declared resource budget; a large one-off
    edit is not a license for an unbounded program action.
-3. Integrate the shared geometry proof above into native restoration while keeping
-   newly enabled bodies non-simulating. Inactive overlap candidates cannot supply
-   exact penetration proof; repeat it with enabled shapes before releasing the
-   simulation hold. Keep selected ground,
-   current world transform, tracking and object ownership checks. Preparation may
-   cross frames, so repeat the relevant checks at publication. Unsupported or
-   saturated geometry queries remain unavailable rather than guessed clear.
+3. Native restoration now arms a per-object hold before enabling a candidate and
+   checks current enabled shapes after the complete group is published. It checks
+   the selected ground for dynamic objects and real-room participants; fixed
+   virtual geometry can provide ground without having to stand on itself. Failed
+   checks leave the native view editable, with physics and navigation held.
+   Unsupported or saturated geometry queries remain unavailable. See the recovery
+   contract below; candidate headset and sustained-performance checks remain due.
 4. Permit canonical policy edits for deliberately unloaded members once that
    admission contract exists. Preserve their saved poses and unloaded identity;
    do not acquire all roots to save a definition. Live members must pass the
@@ -218,8 +218,9 @@ Implement in this order:
 
 `RoomEnvironmentEdits.CanChangeEnvironment` currently performs the live check;
 `RoomNativeResidency.ActivateNativeTargets` prepares staged roots and publishes
-identities together. They must use a coherent admission decision before dormant
-policy edits are introduced. Existing `RoomSimulationEnvironment` bounds and
+identities together and checks the same geometry proof while restored bodies are
+held. Canonical dormant policy edits still need their own atomic acceptance and
+versioned membership contract before the existing limits can be relaxed. Existing `RoomSimulationEnvironment` bounds and
 `RigidRoomItem` readiness gates remain necessary; a centre-in-bounds check does
 not replace exact overlap proof.
 
@@ -233,3 +234,30 @@ Verify blocked-object repair through both generated Book controls and agent
 operations. Headless and rendered journeys establish those software contracts;
 actual Quest alignment, motion and sustained performance still need candidate
 headset evidence.
+
+
+## Restored object recovery
+
+`object.environment.recovery` is a passive native fact: it reports a restoration
+hold, its last checked reason, exact saved revision and a native-instance state
+ID. It does not load a view, test shapes or claim that the whole actor can move.
+Use `object.presence` and `object.environment.settings` for unloaded objects.
+
+`object.environment.recheck` uses those exact guards and the shared whole-target
+ownership rules. Its completion result can still have `held=true`: the check
+completed, but the object could not be admitted. A successful check releases only
+the restoration hold, from rest. Gravity may resume if physics is already enabled;
+paused physics stays paused. Existing physics, navigation, ground, contact
+recovery and ownership rules continue to apply. It does not start a walking
+command, replay an animation, start physics or restore an old throw.
+
+A deliberate grab-and-release and an explicit physics Start also recheck eligible
+held objects. Cancelled grabs and lost tracking do not count as release intent.
+An already-clear recheck preserves motion. Duplicate execution receipts return
+the earlier result without rechecking. Scan availability, observation, visibility
+changes and unload/reload never clear a failed hold automatically. A hold survives
+native retirement in the same workspace. Workspace/process reload starts with
+physics paused; this transient recovery state is not a saved collision policy.
+
+This step does not yet allow collision-profile edits over unloaded members or
+raise the 16-member profile limit. It adds no new depth, visibility or audio policy.

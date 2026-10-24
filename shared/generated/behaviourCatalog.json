@@ -34518,6 +34518,115 @@
       }
     },
     {
+      "id": "object.environment.recheck",
+      "version": 1,
+      "label": "Check restored object collisions",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "stateId"
+        ],
+        "additionalProperties": false,
+        "x-features": [
+          "environmentRecovery.v1"
+        ],
+        "x-current": {
+          "fact": "object.environment.recovery",
+          "version": 1,
+          "arguments": {
+            "target": "target"
+          },
+          "fields": {
+            "stateId": [
+              "stateId"
+            ],
+            "revision": [
+              "revision"
+            ]
+          },
+          "guards": [
+            "stateId",
+            "revision"
+          ]
+        }
+      },
+      "duration": "instant",
+      "ownership": "exclusiveTargetAndProp",
+      "channels": [
+        "wholeTarget"
+      ],
+      "requirements": [
+        "target.exists",
+        "target.unheld",
+        "authoring.inactive",
+        "environment.revision.current",
+        "room.active"
+      ],
+      "description": "Check a restored object's collision hold by exact saved revision and stateId from object.environment.recovery. Native restoration never moves its saved pose. Unproven scanned overlap or unavailable selected ground keeps physics/navigation stopped while the view remains editable. This explicit retry checks current enabled shapes; held=true in the result means it still cannot resume. Success releases only this restoration hold, from rest; it does not start physics, replay a throw, start a walk or replay an animation. Already-clear requests preserve motion. Loading, scan readiness, visibility and observing do not retry failed holds. A grab-and-release or an explicit Start physics also checks eligible held objects. Other ownership, geometry, contact recovery and ground checks still apply. Runtime-only: no saved edit or Undo. Reading this fact never loads an object.",
+      "example": {
+        "target": "maestro",
+        "revision": 1,
+        "stateId": "00000000000000000000000000000000"
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          },
+          "revision": {
+            "type": "integer",
+            "minimum": 1.0,
+            "maximum": 2147483647.0
+          },
+          "stateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{32}$",
+            "maxLength": 32
+          },
+          "held": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "pattern": "^.{0,256}$",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "target",
+          "revision",
+          "stateId",
+          "held",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
       "id": "object.physics.impulse",
       "version": 1,
       "label": "Push object",
@@ -48294,6 +48403,43 @@
       ]
     },
     {
+      "id": "object.environment.recovery",
+      "version": 1,
+      "type": {
+        "record": {
+          "target": "text",
+          "revision": "number",
+          "stateId": "text",
+          "held": "boolean",
+          "reason": "text"
+        }
+      },
+      "label": "Restored object collision hold",
+      "description": "Passive runtime restoration hold and last check reason, with exact saved revision and native stateId for object.environment.recheck. held=false only means no restoration hold, not overall motion readiness or a clear route. It never performs geometry work, loads a view, resumes motion or updates the last check when the environment changes. Unloaded/inactive views are unavailable; use object.presence and object.environment.settings for saved state.",
+      "input": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^(book|maestro|[a-fA-F0-9]{32})$",
+            "maxLength": 32,
+            "x-resource": "object"
+          }
+        },
+        "required": [
+          "target"
+        ],
+        "additionalProperties": false
+      },
+      "example": {
+        "target": "maestro"
+      },
+      "features": [
+        "factQueries.v1",
+        "environmentRecovery.v1"
+      ]
+    },
+    {
       "id": "environment.profile",
       "version": 1,
       "type": {
@@ -49599,7 +49745,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilityModules.cs",
-      "sha256": "5475d7da16a8ed78a5fc273df26a13da2b340479454fc2cf8af6b00e418976c4"
+      "sha256": "7ff4126bf529d6682ff16a22284da45dfd5b49ee6389f23b814a67f046dcf0c3"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/CapabilitySchema.cs",
@@ -49720,6 +49866,10 @@
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentProfileCapabilities.cs",
       "sha256": "4b3dde6d773669fce5641933b998ff2ec375d965ac110e5f7016fcbc270f9836"
+    },
+    {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/EnvironmentRecoveryCapability.cs",
+      "sha256": "fd54d477bd0c1083e68aa6f2fbed80b8e0dc1e1e4081a38219ac2e6c0dc5bf8d"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Capabilities/FlowGroupFacts.cs",
@@ -50639,7 +50789,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomControls.cs",
-      "sha256": "fd4c3dc164a8317ee2687c760e1b7610caecfc69765aed976053947c9cb0cfcc"
+      "sha256": "3a625ab8f795ee873bf341fe57b78ea8d4054efc9308e7560fb5e5c3717a3d96"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomCreationBudget.cs",
@@ -50871,7 +51021,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeResidency.cs",
-      "sha256": "898c609f8d7e0d3da9ba26b98ca93e596ac3b912668ecca2d8cecddb49c52a43"
+      "sha256": "915af1c76d070e6f05915702fc807a0200ce875243ea0edc753c4bb561b58a16"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Creation/RoomNativeRestoration.cs",
@@ -51579,11 +51729,11 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.Inputs.cs",
-      "sha256": "33507c06cb20828a3b52bd089f57cbb11a36392b57ea65f561f970c17443e989"
+      "sha256": "6761beee6cb1a193084bbcabe598af9d83f6209a01e35da3f14c5a33d3c93530"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RigidRoomItem.cs",
-      "sha256": "d0a6f0dcce013a21b43dfe548167d1a29b221bd2eeeec22c4d4be5a40a281aaa"
+      "sha256": "f376d1fdd402f51bdcf14dc448eac766b173af8b9529f9d1f70bdbf13b2ebc91"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomAnchorProbe.cs",
@@ -51630,12 +51780,16 @@
       "sha256": "3320045bfce8c60c5ca27de2db769efaf650e32597b382f5625ad2b82c649b9b"
     },
     {
+      "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentBinding.Recovery.cs",
+      "sha256": "d9c15e65106c45f24fa593bcc27a58c76715f58c28b40039867d98dd7a1eab4b"
+    },
+    {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentBinding.cs",
-      "sha256": "3b220055afb02a213e1980c4aad930d5902fbb717a1ef1119009b9608011ec8e"
+      "sha256": "dcbe2c19383b9e1fca02694e64907d1012ff3c7cd4cba49bffdd61d946926616"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentClearance.cs",
-      "sha256": "a015bafdd03222e27e2014a3eced90a3dbd86f929f1bcd16c808056001849026"
+      "sha256": "cbbe5707d66aa5dff6c3cc4ff59d56d0641b3a63c226b8e04670297ee3eb38cb"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomEnvironmentQueries.cs",
@@ -51671,7 +51825,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigation.cs",
-      "sha256": "d201bc5ae4a5f4d334c2ebfcf0d8f006b7113b85333d71fcb19c2acca5c30617"
+      "sha256": "9c52ab4d56623aa261cc4cf5d87c0eba8584cf4f82e2e38c319e924858841bbf"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomNavigationBuild.cs",
@@ -51715,7 +51869,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPhysicsWorld.cs",
-      "sha256": "e5d501b961ecb67bb9534369cc831be7d83da24c20223fe404251d44db9f5ff9"
+      "sha256": "56a9302427c2a6fdf6c679a52f7c9ff017f786e6e7cab9a652f04202ffa952b2"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomPlaybackClock.cs",
@@ -51755,7 +51909,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSimulationEnvironment.cs",
-      "sha256": "8456169554e7754917e93cd09c1af5785bcb056f8df70a40d8d278d784d3bfd7"
+      "sha256": "5fb412f1285205ec9194739e350cf2a093bc06a92bcc1b56f468a4a004783697"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Interaction/RoomSpatialInputs.cs",
@@ -52019,7 +52173,7 @@
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourCatalog.cs",
-      "sha256": "98233f312d0e96bf3492c0514d77c2ee3a315e861f9877aea7bdfdead8bc3378"
+      "sha256": "8562f90aab17a62eb7d3da1b5e80a2851508ccb9a8f1653921c3c3058df5f8c7"
     },
     {
       "path": "unity/MaestroQuest/Assets/Maestro/Runtime/Programs/BehaviourProgram.cs",

@@ -15,8 +15,13 @@ namespace Maestro.Quest.Interaction
         readonly HashSet<RoomEnvironmentBinding> environments=new();
         internal void RegisterEnvironment(RoomEnvironmentBinding value)=>environments.Add(value);
         internal void UnregisterEnvironment(RoomEnvironmentBinding value)=>environments.Remove(value);
+        void RetryRestoredEnvironments() {
+            // A Start is new intent; availability notifications never come here.
+            var snapshot=new RoomEnvironmentBinding[environments.Count];environments.CopyTo(snapshot);
+            foreach(var binding in snapshot)if(binding&&binding.RestorationHeld&&binding.CanRetry(out _))binding.RetryRestoration();
+        }
         internal bool IncludesRealRoom(RoomItem item)=>RealCollisions&&(!item||!item.TryGetComponent<RoomEnvironmentBinding>(out var binding)||binding.RealCollisions);
-        internal bool EnvironmentReady(RoomItem item)=>CollisionReady&&(IncludesRealRoom(item)?SurfacesReady:AuthoredReady());
+        internal bool EnvironmentReady(RoomItem item)=>RoomEnvironmentBinding.RestorationReady(item)&&CollisionReady&&(IncludesRealRoom(item)?SurfacesReady:AuthoredReady());
         internal bool AnySimulationReady {
             get {if(!CollisionReady)return false;if(SimulationReady)return true;foreach(var binding in environments)if(binding&&binding.isActiveAndEnabled&&!binding.RealCollisions)return AuthoredReady();return false;}
         }
